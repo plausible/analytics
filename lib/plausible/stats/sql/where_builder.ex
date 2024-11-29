@@ -94,7 +94,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp add_filter(:events, _query, [:is, "event:name" | _rest] = filter) do
-    is_in_clause(col_value(:name), filter)
+    in_clause(col_value(:name), filter)
   end
 
   defp add_filter(:events, query, [_, "event:goal" | _rest] = filter) do
@@ -160,7 +160,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
     dynamic(
       [t],
-      (has_key(t, column_name, ^prop_name) and ^is_in_clause(prop_value_expr, filter)) or
+      (has_key(t, column_name, ^prop_name) and ^in_clause(prop_value_expr, filter)) or
         (^none_value_included and not has_key(t, column_name, ^prop_name))
     )
   end
@@ -172,10 +172,10 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic(
       [t],
       (has_key(t, column_name, ^prop_name) and
-         not (^is_in_clause(prop_value_expr, filter))) or
+         not (^in_clause(prop_value_expr, filter))) or
         (^none_value_included and
            has_key(t, column_name, ^prop_name) and
-           not (^is_in_clause(prop_value_expr, filter))) or
+           not (^in_clause(prop_value_expr, filter))) or
         (not (^none_value_included) and not has_key(t, column_name, ^prop_name))
     )
   end
@@ -270,7 +270,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp filter_field(db_field, [:is, _dimension, clauses | _rest] = filter) do
     list = clauses |> Enum.map(&db_field_val(db_field, &1))
-    is_in_clause(col_value(db_field), filter, list)
+    in_clause(col_value(db_field), filter, list)
   end
 
   defp filter_field(db_field, [:is_not | rest]) do
@@ -306,7 +306,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([t], get_by_key(t, column_name, ^prop_name))
   end
 
-  defp is_in_clause(value_expression, [_, _, clauses | _] = filter, values \\ nil) do
+  defp in_clause(value_expression, [_, _, clauses | _] = filter, values \\ nil) do
     values = values || clauses
 
     if case_sensitive?(filter) do
