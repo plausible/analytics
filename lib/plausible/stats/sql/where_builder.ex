@@ -250,7 +250,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp filter_field(db_field, [:contains | _rest] = filter) do
-    contains_clause(col_value(db_field), filter)
+    contains_clause(col_value_string(db_field), filter)
   end
 
   defp filter_field(db_field, [:contains_not | rest]) do
@@ -293,15 +293,20 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   defp db_field_val(_, @not_set), do: ""
   defp db_field_val(_, val), do: val
 
-  def col_value(column_name) do
+  defp col_value(column_name) do
+    dynamic([t], field(t, ^column_name))
+  end
+
+  # Needed for string functions to work properly
+  defp col_value_string(column_name) do
     dynamic([t], type(field(t, ^column_name), :string))
   end
 
-  def custom_prop_value(column_name, prop_name) do
+  defp custom_prop_value(column_name, prop_name) do
     dynamic([t], get_by_key(t, column_name, ^prop_name))
   end
 
-  def is_in_clause(value_expression, [_, _, clauses | _] = filter, values \\ nil) do
+  defp is_in_clause(value_expression, [_, _, clauses | _] = filter, values \\ nil) do
     values = values || clauses
 
     if case_sensitive?(filter) do
@@ -312,7 +317,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     end
   end
 
-  def contains_clause(value_expression, [_, _, clauses | _] = filter) do
+  defp contains_clause(value_expression, [_, _, clauses | _] = filter) do
     if case_sensitive?(filter) do
       dynamic(
         [x],
