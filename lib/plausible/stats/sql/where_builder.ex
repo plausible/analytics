@@ -93,13 +93,8 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc or ^condition) end)
   end
 
-  defp add_filter(:events, _query, [:is, "event:name", clauses, %{case_sensitive: false}]) do
-    clauses = Enum.map(clauses, &String.downcase/1)
-    dynamic([e], fragment("lower(?)", e.name) in ^clauses)
-  end
-
-  defp add_filter(:events, _query, [:is, "event:name", clauses]) do
-    dynamic([e], e.name in ^clauses)
+  defp add_filter(:events, _query, [:is, "event:name" | _rest] = filter) do
+    is_in_clause(col_value(:name), filter)
   end
 
   defp add_filter(:events, query, [_, "event:goal" | _rest] = filter) do
@@ -159,24 +154,13 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     false
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is, _, clauses, %{case_sensitive: false}]) do
-    clauses = clauses |> Enum.map(&String.downcase/1)
+  defp filter_custom_prop(prop_name, column_name, [:is, _, clauses | _rest] = filter) do
     none_value_included = Enum.member?(clauses, "(none)")
+    prop_value_expr = custom_prop_value(column_name, prop_name)
 
     dynamic(
       [t],
-      (has_key(t, column_name, ^prop_name) and
-         fragment("lower(?)", get_by_key(t, column_name, ^prop_name)) in ^clauses) or
-        (^none_value_included and not has_key(t, column_name, ^prop_name))
-    )
-  end
-
-  defp filter_custom_prop(prop_name, column_name, [:is, _, clauses | _rest]) do
-    none_value_included = Enum.member?(clauses, "(none)")
-
-    dynamic(
-      [t],
-      (has_key(t, column_name, ^prop_name) and get_by_key(t, column_name, ^prop_name) in ^clauses) or
+      (has_key(t, column_name, ^prop_name) and ^is_in_clause(prop_value_expr, filter)) or
         (^none_value_included and not has_key(t, column_name, ^prop_name))
     )
   end
@@ -235,32 +219,11 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [
-         :contains,
-         _dimension,
-         clauses,
-         %{case_sensitive: false}
-       ]) do
+  defp filter_custom_prop(prop_name, column_name, [:contains | _rest] = filter) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
-        fragment(
-          "multiSearchAnyCaseInsensitive(?, ?)",
-          get_by_key(t, column_name, ^prop_name),
-          ^clauses
-        )
-    )
-  end
-
-  defp filter_custom_prop(prop_name, column_name, [:contains, _dimension, clauses | _rest]) do
-    dynamic(
-      [t],
-      has_key(t, column_name, ^prop_name) and
-        fragment(
-          "multiSearchAny(?, ?)",
-          get_by_key(t, column_name, ^prop_name),
-          ^clauses
-        )
+        ^contains_clause(custom_prop_value(column_name, prop_name), filter)
     )
   end
 
@@ -289,15 +252,8 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([], not (^filter_field(db_field, [:matches_wildcard | rest])))
   end
 
-  defp filter_field(db_field, [:contains, _dimension, values, %{case_sensitive: false}]) do
-    dynamic(
-      [x],
-      fragment("multiSearchAnyCaseInsensitive(?, ?)", type(field(x, ^db_field), :string), ^values)
-    )
-  end
-
-  defp filter_field(db_field, [:contains, _dimension, values | _rest]) do
-    dynamic([x], fragment("multiSearchAny(?, ?)", type(field(x, ^db_field), :string), ^values))
+  defp filter_field(db_field, [:contains | _rest] = filter) do
+    contains_clause(col_value(db_field), filter)
   end
 
   defp filter_field(db_field, [:contains_not | rest]) do
@@ -315,14 +271,9 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([], not (^filter_field(db_field, [:matches | rest])))
   end
 
-  defp filter_field(db_field, [:is, _dimension, clauses, %{case_sensitive: false}]) do
-    list = clauses |> Enum.map(&db_field_val(db_field, &1)) |> Enum.map(&String.downcase/1)
-    dynamic([x], fragment("lower(?)", field(x, ^db_field)) in ^list)
-  end
-
-  defp filter_field(db_field, [:is, _dimension, clauses | _rest]) do
+  defp filter_field(db_field, [:is, _dimension, clauses | _rest] = filter) do
     list = clauses |> Enum.map(&db_field_val(db_field, &1))
-    dynamic([x], field(x, ^db_field) in ^list)
+    is_in_clause(col_value(db_field), filter, list)
   end
 
   defp filter_field(db_field, [:is_not | rest]) do
@@ -344,4 +295,40 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   defp db_field_val(:utm_term, @no_ref), do: ""
   defp db_field_val(_, @not_set), do: ""
   defp db_field_val(_, val), do: val
+
+  def col_value(column_name) do
+    dynamic([t], type(field(t, ^column_name), :string))
+  end
+
+  def custom_prop_value(column_name, prop_name) do
+    dynamic([t], get_by_key(t, column_name, ^prop_name))
+  end
+
+  def is_in_clause(value_expression, [_, _, clauses | _] = filter, values \\ nil) do
+    values = values || clauses
+
+    if case_sensitive?(filter) do
+      dynamic([t], ^value_expression in ^values)
+    else
+      values = values |> Enum.map(&String.downcase/1)
+      dynamic([t], fragment("lower(?)", ^value_expression) in ^values)
+    end
+  end
+
+  def contains_clause(value_expression, [_, _, clauses | _] = filter) do
+    if case_sensitive?(filter) do
+      dynamic(
+        [x],
+        fragment("multiSearchAny(?, ?)", ^value_expression, ^clauses)
+      )
+    else
+      dynamic(
+        [x],
+        fragment("multiSearchAnyCaseInsensitive(?, ?)", ^value_expression, ^clauses)
+      )
+    end
+  end
+
+  defp case_sensitive?([_, _, _, %{case_sensitive: false}]), do: false
+  defp case_sensitive?(_), do: true
 end
