@@ -353,7 +353,7 @@ defmodule PlausibleWeb.SiteController do
       })
       |> Repo.insert()
 
-    :ok = tolerate_unique_contraint_violation(result, "weekly_reports_site_id_index")
+    :ok = tolerate_unique_constraint_violation(result, "weekly_reports_site_id_index")
 
     conn
     |> put_flash(:success, "You will receive an email report every Monday going forward")
@@ -407,7 +407,7 @@ defmodule PlausibleWeb.SiteController do
       })
       |> Repo.insert()
 
-    :ok = tolerate_unique_contraint_violation(result, "monthly_reports_site_id_index")
+    :ok = tolerate_unique_constraint_violation(result, "monthly_reports_site_id_index")
 
     conn
     |> put_flash(:success, "You will receive an email report every month going forward")
@@ -741,7 +741,7 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  defp tolerate_unique_contraint_violation(result, name) do
+  defp tolerate_unique_constraint_violation(result, name) do
     case result do
       {:ok, _} ->
         :ok

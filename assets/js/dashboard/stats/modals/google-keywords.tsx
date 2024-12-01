@@ -13,7 +13,7 @@ import {
 } from '../../util/number-formatter'
 import { apiPath } from '../../util/url'
 import { DashboardQuery } from '../../query'
-import { ColumnConfiguraton } from '../../components/table'
+import { ColumnConfiguration } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
 
 type GoogleKeywordItem = {
@@ -70,7 +70,7 @@ function GoogleKeywordsModal() {
     initialPageParam: 0
   })
 
-  const columns: ColumnConfiguraton<GoogleKeywordItem>[] = useMemo(
+  const columns: ColumnConfiguration<GoogleKeywordItem>[] = useMemo(
     () => [
       {
         label: 'Search term',
@@ -79,7 +79,7 @@ function GoogleKeywordsModal() {
         align: 'left'
       },
       ...metrics.map(
-        (m): ColumnConfiguraton<GoogleKeywordItem> => ({
+        (m): ColumnConfiguration<GoogleKeywordItem> => ({
           label: m.renderLabel(query),
           key: m.key,
           width: m.width,

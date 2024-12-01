@@ -46,7 +46,7 @@ defmodule Plausible.Stats.Imported.Base do
     "time:hour" => "imported_visitors"
   }
 
-  @queriable_time_dimensions ["time:month", "time:week", "time:day", "time:hour"]
+  @queryable_time_dimensions ["time:month", "time:week", "time:day", "time:hour"]
 
   @imported_custom_props Imported.imported_custom_props()
 
@@ -92,10 +92,10 @@ defmodule Plausible.Stats.Imported.Base do
     do_decide_custom_prop_table(query, dimension)
   end
 
-  @queriable_custom_prop_dimensions ["event:goal", "event:name"] ++ @queriable_time_dimensions
+  @queryable_custom_prop_dimensions ["event:goal", "event:name"] ++ @queryable_time_dimensions
   defp do_decide_custom_prop_table(%{dimensions: dimensions} = query) do
     if dimensions == [] or
-         (length(dimensions) == 1 and hd(dimensions) in @queriable_custom_prop_dimensions) do
+         (length(dimensions) == 1 and hd(dimensions) in @queryable_custom_prop_dimensions) do
       custom_prop_filters =
         dimensions_used_in_filters(query.filters)
         |> Enum.filter(&(&1 in @imported_custom_props))
@@ -169,7 +169,7 @@ defmodule Plausible.Stats.Imported.Base do
     table_candidates =
       dimensions_used_in_filters(query.filters)
       |> Enum.concat(query.dimensions)
-      |> Enum.reject(&(&1 in @queriable_time_dimensions or &1 == "event:goal"))
+      |> Enum.reject(&(&1 in @queryable_time_dimensions or &1 == "event:goal"))
       |> Enum.flat_map(fn
         "visit:screen" -> ["visit:device"]
         dimension -> [dimension]

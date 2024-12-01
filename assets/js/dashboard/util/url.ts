@@ -126,7 +126,7 @@ export function parseSearchFragment(
     return null
   }
   // tricky: the search string fragment is already decoded due to URLSearchParams intermediate (see tests),
-  // and these symbols are unparseable
+  // and these symbols are unparsable
   const fragmentWithReEncodedSymbols = searchStringFragment
     /* @ts-expect-error API supposedly not present in compilation target */
     .replaceAll('=', encodeURIComponent('='))

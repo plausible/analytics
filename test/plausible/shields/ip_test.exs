@@ -90,7 +90,7 @@ defmodule Plausible.Shields.IPTest do
   end
 
   describe "remove_ip_rule/2" do
-    test "is idempontent", %{site: site} do
+    test "is idempotent", %{site: site} do
       {:ok, rule} = add_ip_rule(site, %{"inet" => "127.0.0.1"})
       assert remove_ip_rule(site, rule.id) == :ok
       refute Repo.get(Plausible.Shield.IPRule, rule.id)

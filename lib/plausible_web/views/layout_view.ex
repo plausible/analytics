@@ -93,7 +93,7 @@ defmodule PlausibleWeb.LayoutView do
     |> List.flatten()
   end
 
-  def trial_notificaton(user) do
+  def trial_notification(user) do
     case Plausible.Users.trial_days_left(user) do
       days when days > 1 ->
         "#{days} trial days left"

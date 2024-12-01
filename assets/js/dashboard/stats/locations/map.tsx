@@ -221,7 +221,7 @@ const highlightedCountryClass = classNames(
 
 /**
  * Used to color the countries
- * @returns the svg elements represeting countries
+ * @returns the svg elements representing countries
  */
 function colorInCountriesWithValues(
   element: SVGSVGElement,
@@ -310,7 +310,7 @@ function setupProjetionPath() {
 
 function parseWorldTopoJsonToGeoJsonFeatures(): Array<WorldJsonCountryData> {
   const collection = topojson.feature(
-    // @ts-expect-error strings in worldJson not recongizable as the enum values declared in library
+    // @ts-expect-error strings in worldJson not recognizable as the enum values declared in library
     worldJson,
     worldJson.objects.countries
   )

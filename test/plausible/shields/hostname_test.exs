@@ -114,7 +114,7 @@ defmodule Plausible.Shields.HostnameTest do
   end
 
   describe "remove_hostname_rule/2" do
-    test "is idempontent", %{site: site} do
+    test "is idempotent", %{site: site} do
       {:ok, rule} = add_hostname_rule(site, %{"hostname" => "test"})
       assert remove_hostname_rule(site, rule.id) == :ok
       refute Repo.get(Plausible.Shield.HostnameRule, rule.id)

@@ -35,11 +35,11 @@ defmodule Plausible.Cache.Stats do
     {:ok, nil}
   end
 
-  def handle_telemetry_event(@telemetry_hit, _measurments, %{cache: %{name: cache_name}}, _) do
+  def handle_telemetry_event(@telemetry_hit, _measurements, %{cache: %{name: cache_name}}, _) do
     bump(cache_name, @hit)
   end
 
-  def handle_telemetry_event(@telemetry_miss, _measurments, %{cache: %{name: cache_name}}, _) do
+  def handle_telemetry_event(@telemetry_miss, _measurements, %{cache: %{name: cache_name}}, _) do
     bump(cache_name, @miss)
   end
 

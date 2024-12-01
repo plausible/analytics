@@ -36,7 +36,7 @@ defmodule Plausible.Workers.LockSitesTest do
     assert Repo.reload!(site).locked
   end
 
-  test "does not lock active subsriber's sites" do
+  test "does not lock active subscriber's sites" do
     user = insert(:user)
     insert(:subscription, status: Subscription.Status.active(), user: user)
     site = insert(:site, members: [user])

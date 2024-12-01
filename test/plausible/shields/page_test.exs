@@ -115,7 +115,7 @@ defmodule Plausible.Shields.PageTest do
   end
 
   describe "remove_page_rule/2" do
-    test "is idempontent", %{site: site} do
+    test "is idempotent", %{site: site} do
       {:ok, rule} = add_page_rule(site, %{"page_path" => "/test"})
       assert remove_page_rule(site, rule.id) == :ok
       refute Repo.get(Plausible.Shield.PageRule, rule.id)

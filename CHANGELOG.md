@@ -369,7 +369,7 @@ All notable changes to this project will be documented in this file.
 - Fix some links not opening correctly in new tab
 - UI fix for more than one row of custom event properties plausible/analytics#1383
 - UI fix for user menu and time picker overlapping plausible/analytics#1352
-- Respect the `path` component of BASE_URL to allow subfolder installatons
+- Respect the `path` component of BASE_URL to allow subfolder installations
 
 ### Removed
 - Removes AppSignal monitoring package

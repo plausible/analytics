@@ -80,7 +80,7 @@ defmodule Plausible.Shields.CountryTest do
   end
 
   describe "remove_country_rule/2" do
-    test "is idempontent", %{site: site} do
+    test "is idempotent", %{site: site} do
       {:ok, rule} = add_country_rule(site, %{"country_code" => "EE"})
       assert remove_country_rule(site, rule.id) == :ok
       refute Repo.get(Plausible.Shield.CountryRule, rule.id)

@@ -179,7 +179,7 @@ defmodule Plausible.ReleaseTest do
                * 20231204151831_backfill_last_bill_date_to_subscriptions
                * 20231208125624_add_data_retention_in_years_to_plans
                * 20231211092344_add_accept_traffic_until_to_sites
-               * 20231219083050_track_accept_traffic_until_notifcations
+               * 20231219083050_track_accept_traffic_until_notifications
                * 20231220072829_add_accept_traffic_until_to_user
                * 20231220101920_backfill_accept_traffic_until
                * 20240103090304_upgrade_oban_jobs_to_v12

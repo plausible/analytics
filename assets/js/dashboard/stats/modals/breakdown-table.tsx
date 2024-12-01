@@ -3,7 +3,7 @@
 import React, { ReactNode } from 'react'
 
 import { SearchInput } from '../../components/search-input'
-import { ColumnConfiguraton, Table } from '../../components/table'
+import { ColumnConfiguration, Table } from '../../components/table'
 import RocketIcon from './rocket-icon'
 import { QueryStatus } from '@tanstack/react-query'
 
@@ -30,7 +30,7 @@ export const BreakdownTable = <TListItem extends { name: string }>({
   hasNextPage: boolean
   isFetchingNextPage: boolean
   fetchNextPage: () => void
-  columns: ColumnConfiguraton<TListItem>[]
+  columns: ColumnConfiguration<TListItem>[]
   data?: { pages: TListItem[][] }
   status?: QueryStatus
   error?: Error | null

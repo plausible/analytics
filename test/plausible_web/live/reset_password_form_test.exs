@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
 
       lv = get_liveview(conn, "/password/reset?token=#{token}")
 
-      type_into_passowrd(lv, "very-secret-and-very-long-123")
+      type_into_password(lv, "very-secret-and-very-long-123")
       html = lv |> element("form") |> render_submit()
 
       assert [csrf_input, password_input | _] = find(html, "input")
@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
 
       lv = get_liveview(conn, "/password/reset?token=#{token}")
 
-      type_into_passowrd(lv, "very-secret-and-very-long-123")
+      type_into_password(lv, "very-secret-and-very-long-123")
       lv |> element("form") |> render_submit()
 
       updated_user = Repo.reload!(user)
@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
 
       lv = get_liveview(conn, "/password/reset?token=#{token}")
 
-      type_into_passowrd(lv, "too-short")
+      type_into_password(lv, "too-short")
       html = lv |> element("form") |> render_submit()
 
       assert html =~ "Password is too weak"
@@ -78,7 +78,7 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
 
       lv = get_liveview(conn, "/password/reset?token=#{token}")
 
-      type_into_passowrd(lv, "very-secret-and-very-long-123")
+      type_into_password(lv, "very-secret-and-very-long-123")
       lv |> element("form") |> render_submit()
 
       assert [] = Repo.preload(user, :sessions).sessions
@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
     lv
   end
 
-  defp type_into_passowrd(lv, text) do
+  defp type_into_password(lv, text) do
     lv
     |> element("form")
     |> render_change(%{"user[password]" => text})

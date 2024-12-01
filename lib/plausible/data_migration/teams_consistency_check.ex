@@ -1,4 +1,4 @@
-defmodule Plausible.DataMigration.TeamsConsitencyCheck do
+defmodule Plausible.DataMigration.TeamsConsistencyCheck do
   @moduledoc """
   Verify consistency of teams.
   """

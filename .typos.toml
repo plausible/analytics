@@ -1,0 +1,28 @@
+[files]
+extend-exclude = [
+    ".git/",
+    "fixture/*.csv",
+    "fixture/ga4_report_imported_entry_pages.json",
+    "fixture/ga4_report_imported_locations.json",
+    "priv/*.csv",
+    "priv/ref_inspector/*.yml",
+    "priv/referer_favicon_domains.json",
+    "priv/ua_inspector/*.yml",
+]
+ignore-hidden = false
+
+[default]
+extend-ignore-re = [
+    "\\bUku Taht\\b",
+    "Urfahr -> Linz",
+    "GOOGLE_CLIENT_SECRET=.+",
+    "\\bfo\\.wikipedia\\.org\\b",
+    'RecoveryCode.disambiguate\(".+"\) == ".+"',
+]
+
+[default.extend-words]
+"referers" = "referers"
+
+[default.extend-identifiers]
+# Typos
+"Github" = "GitHub"

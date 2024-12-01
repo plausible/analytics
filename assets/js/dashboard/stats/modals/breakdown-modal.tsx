@@ -15,7 +15,7 @@ import {
 } from '../../hooks/use-order-by'
 import { Metric } from '../reports/metrics'
 import { BreakdownResultMeta, DashboardQuery } from '../../query'
-import { ColumnConfiguraton } from '../../components/table'
+import { ColumnConfiguration } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
 import { useSiteContext } from '../../site-context'
 
@@ -130,7 +130,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     afterFetchNextPage
   })
 
-  const columns: ColumnConfiguraton<TListItem>[] = useMemo(
+  const columns: ColumnConfiguration<TListItem>[] = useMemo(
     () => [
       {
         label: reportInfo.dimensionLabel,
@@ -147,7 +147,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
         )
       },
       ...metrics.map(
-        (m): ColumnConfiguraton<TListItem> => ({
+        (m): ColumnConfiguration<TListItem> => ({
           label: m.renderLabel(query),
           key: m.key,
           width: m.width,
