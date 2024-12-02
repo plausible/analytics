@@ -48,7 +48,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     @tag :ee_only
     test "shows enterprise plan subscription", %{conn: conn, user: user} do
-      subscribe_to_plan(user, "123")
       configure_enterprise_plan(user)
 
       conn = get(conn, Routes.settings_path(conn, :subscription))
@@ -117,13 +116,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      configure_enterprise_plan(user)
-
-      insert(:subscription,
-        user: user,
-        status: Subscription.Status.past_due(),
-        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
-      )
+      configure_enterprise_plan(user, subscription: [status: Subscription.Status.past_due()])
 
       doc =
         conn
@@ -137,13 +130,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      configure_enterprise_plan(user)
-
-      insert(:subscription,
-        user: user,
-        status: Subscription.Status.paused(),
-        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
-      )
+      configure_enterprise_plan(user, subscription: [status: Subscription.Status.paused()])
 
       doc =
         conn
@@ -185,8 +172,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
     @tag :ee_only
     test "links to '/billing/choose-plan' with the text 'Change plan' for a configured enterprise plan with an existing subscription + renders cancel button",
          %{conn: conn, user: user} do
-      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
-
       configure_enterprise_plan(user)
 
       doc =
@@ -1105,11 +1090,17 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
-  defp configure_enterprise_plan(user) do
-    subscribe_to_enterprise_plan(user,
-      paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
-      monthly_pageview_limit: 20_000_000,
-      billing_interval: :yearly
+  defp configure_enterprise_plan(user, attrs \\ []) do
+    subscribe_to_enterprise_plan(
+      user,
+      Keyword.merge(
+        [
+          paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
+          monthly_pageview_limit: 20_000_000,
+          billing_interval: :yearly
+        ],
+        attrs
+      )
     )
   end
 end
