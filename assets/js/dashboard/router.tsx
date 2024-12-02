@@ -166,7 +166,7 @@ export const customPropsRoute = {
 }
 
 export const editSegmentRoute = {
-  path: 'filter/segment/:id/*',
+  path: 'filter/segments/:id/*',
   element: <></>
 }
 
@@ -176,7 +176,7 @@ export const filterRoute = {
 }
 
 export const editSegmentFilterRoute = {
-  path: `filter/segment/:id/${filterRoute.path}`,
+  path: `filter/segments/:id/${filterRoute.path}`,
   element: <FilterModal />
 }
 
