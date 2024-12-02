@@ -212,6 +212,40 @@ defmodule Plausible.SitesTest do
              } = Plausible.Teams.Sites.list_with_invitations(user, %{})
     end
 
+    test "prioritizes pending transfer over pinned site with guest membership" do
+      owner = new_user()
+      pending_owner = new_user()
+      site = new_site(owner: owner, domain: "one.example.com")
+      add_guest(site, user: pending_owner, role: :editor)
+
+      invite_transfer(site, pending_owner, inviter: owner)
+
+      {:ok, _} = Sites.toggle_pin(pending_owner, site)
+
+      assert %{
+               entries: [
+                 %{domain: "one.example.com", entry_type: "invitation"}
+               ]
+             } =
+               Sites.list_with_invitations(pending_owner, %{})
+    end
+
+    test "prioritizes pending transfer over site with guest membership" do
+      owner = new_user()
+      pending_owner = new_user()
+      site = new_site(owner: owner, domain: "one.example.com")
+      add_guest(site, user: pending_owner, role: :editor)
+
+      invite_transfer(site, pending_owner, inviter: owner)
+
+      assert %{
+               entries: [
+                 %{domain: "one.example.com", entry_type: "invitation"}
+               ]
+             } =
+               Sites.list_with_invitations(pending_owner, %{})
+    end
+
     test "pinned site doesn't matter with membership revoked (no active invitations)" do
       user1 = new_user(email: "user1@example.com")
       _user2 = new_user(email: "user2@example.com")
