@@ -147,6 +147,7 @@ Plausible.Release.html
 Plausible.Repo.html
 Plausible.RequestLogger.html
 Plausible.S3.html
+Plausible.Segment.html
 Plausible.Sentry.Client.html
 Plausible.SentryFilter.html
 Plausible.Session.CacheStore.html
@@ -464,8 +465,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-8F5F2E93.js
-dist/sidebar_items-F7C93BEC.js
+dist/search_data-3F270068.js
+dist/sidebar_items-EC6E1389.js
 index.html
 readme.html
 search.html
