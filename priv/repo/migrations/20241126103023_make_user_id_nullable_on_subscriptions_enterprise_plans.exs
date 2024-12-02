@@ -9,7 +9,6 @@ defmodule Plausible.Repo.Migrations.MakeUserIdNullableOnSubscriptionsEnterpriseP
             alter table subscriptions alter column user_id set not null
             """
 
-
     execute """
             alter table enterprise_plans alter column user_id drop not null
             """,
