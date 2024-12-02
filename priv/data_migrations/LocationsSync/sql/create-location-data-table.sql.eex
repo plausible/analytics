@@ -10,4 +10,4 @@ ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_pro
 ENGINE = MergeTree()
 <% end %>
 ORDER BY (type, id)
-SETTINGS index_granularity = 128
+SETTINGS index_granularity = 128 <%= @table_settings %>

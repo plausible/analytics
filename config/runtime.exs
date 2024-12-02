@@ -26,26 +26,15 @@ log_level =
   |> get_var_from_path_or_env("LOG_LEVEL", default_log_level)
   |> String.to_existing_atom()
 
-config :logger,
-  level: log_level,
-  backends: [:console]
-
-config :logger, Sentry.LoggerBackend,
-  capture_log_messages: true,
-  level: :error
+config :logger, level: log_level
+config :logger, :default_formatter, metadata: [:request_id]
 
 case String.downcase(log_format) do
   "standard" ->
-    config :logger, :console,
-      format: "$time $metadata[$level] $message\n",
-      metadata: [:request_id]
+    config :logger, :default_formatter, format: "$time $metadata[$level] $message\n"
 
   "json" ->
-    config :logger, :console,
-      format: {ExJsonLogger, :format},
-      metadata: [
-        :request_id
-      ]
+    config :logger, :default_formatter, format: {ExJsonLogger, :format}
 end
 
 # Listen IP supports IPv4 and IPv6 addresses.
@@ -560,6 +549,9 @@ config :plausible, Plausible.IngestRepo,
   pool_size: ingest_pool_size,
   settings: [
     materialized_views_ignore_errors: 1
+  ],
+  table_settings: [
+    storage_policy: get_var_from_path_or_env(config_dir, "CLICKHOUSE_DEFAULT_STORAGE_POLICY")
   ]
 
 config :plausible, Plausible.AsyncInsertRepo,
