@@ -36,6 +36,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
 
     {:ok,
      assign(socket,
+       current_team: socket.assigns.site.team,
        site_id: site_id,
        domain: domain,
        displayed_goals: socket.assigns.all_goals,

@@ -199,13 +199,16 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
   def get_for_user!(user, domain, roles \\ [:owner, :admin, :viewer]) do
     {query_fn, roles} = for_user_query_and_roles(user, roles)
 
-    if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
-      Plausible.Sites.get_by_domain!(domain)
-    else
-      user.id
-      |> query_fn.(domain, List.delete(roles, :super_admin))
-      |> Repo.one!()
-    end
+    site =
+      if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
+        Plausible.Sites.get_by_domain!(domain)
+      else
+        user.id
+        |> query_fn.(domain, List.delete(roles, :super_admin))
+        |> Repo.one!()
+      end
+
+    Repo.preload(site, :team)
   end
 
   def get_for_user(user, domain, roles \\ [:owner, :admin, :viewer]) do
