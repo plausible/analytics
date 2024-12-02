@@ -26,6 +26,9 @@ defmodule Plausible.Teams.Team do
     has_one :subscription, Plausible.Billing.Subscription
     has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
 
+    has_one :ownership, Plausible.Teams.Membership, where: [role: :owner]
+    has_one :owner, through: [:ownership, :user]
+
     timestamps()
   end
 

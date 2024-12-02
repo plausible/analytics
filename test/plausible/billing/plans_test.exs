@@ -12,6 +12,7 @@ defmodule Plausible.Billing.PlansTest do
     test "growth_plans_for/1 returns v1 plans for a user on a legacy plan" do
       new_user()
       |> subscribe_to_plan(@legacy_plan_id)
+      |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
       |> assert_generation(1)
@@ -20,6 +21,7 @@ defmodule Plausible.Billing.PlansTest do
     test "growth_plans_for/1 returns v1 plans for users who are already on v1 pricing" do
       new_user()
       |> subscribe_to_plan(@v1_plan_id)
+      |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
       |> assert_generation(1)
@@ -28,6 +30,7 @@ defmodule Plausible.Billing.PlansTest do
     test "growth_plans_for/1 returns v2 plans for users who are already on v2 pricing" do
       new_user()
       |> subscribe_to_plan(@v2_plan_id)
+      |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
       |> assert_generation(2)
@@ -36,6 +39,7 @@ defmodule Plausible.Billing.PlansTest do
     test "growth_plans_for/1 returns v4 plans for expired legacy subscriptions" do
       new_user()
       |> subscribe_to_plan(@v1_plan_id, status: :deleted, next_bill_date: ~D[2023-11-10])
+      |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
       |> assert_generation(4)
@@ -43,7 +47,7 @@ defmodule Plausible.Billing.PlansTest do
 
     test "growth_plans_for/1 shows v4 plans for everyone else" do
       new_user()
-      |> Repo.preload(:subscription)
+      |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
       |> assert_generation(4)
@@ -51,7 +55,7 @@ defmodule Plausible.Billing.PlansTest do
 
     test "growth_plans_for/1 does not return business plans" do
       new_user()
-      |> Repo.preload(:subscription)
+      |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
       |> Enum.each(fn plan ->
@@ -62,6 +66,7 @@ defmodule Plausible.Billing.PlansTest do
     test "growth_plans_for/1 returns the latest generation of growth plans for a user with a business subscription" do
       new_user()
       |> subscribe_to_plan(@v3_business_plan_id)
+      |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
       |> assert_generation(4)
@@ -70,6 +75,7 @@ defmodule Plausible.Billing.PlansTest do
     test "business_plans_for/1 returns v3 business plans for a user on a legacy plan" do
       new_user()
       |> subscribe_to_plan(@legacy_plan_id)
+      |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.business_plans_for()
       |> assert_generation(3)
@@ -78,7 +84,9 @@ defmodule Plausible.Billing.PlansTest do
     test "business_plans_for/1 returns v3 business plans for a v2 subscriber" do
       user = new_user() |> subscribe_to_plan(@v2_plan_id)
 
-      business_plans = Plans.business_plans_for(user.subscription)
+      subscription = team_of(user, with_subscription?: true).subscription
+
+      business_plans = Plans.business_plans_for(subscription)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
       assert_generation(business_plans, 3)
@@ -97,14 +105,22 @@ defmodule Plausible.Billing.PlansTest do
         new_user()
         |> subscribe_to_plan(@v2_plan_id, status: :deleted, next_bill_date: ~D[2023-11-10])
 
-      user.subscription
+      user
+      |> team_of(with_subscription?: true)
+      |> Map.fetch!(:subscription)
       |> Plans.business_plans_for()
       |> assert_generation(4)
     end
 
     test "business_plans_for/1 returns v4 business plans for everyone else" do
-      user = new_user() |> Repo.preload(:subscription)
-      business_plans = Plans.business_plans_for(user.subscription)
+      user = new_user()
+
+      subscription =
+        user
+        |> team_of(with_subscription?: true)
+        |> Map.fetch!(:subscription)
+
+      business_plans = Plans.business_plans_for(subscription)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
       assert_generation(business_plans, 4)
@@ -113,8 +129,13 @@ defmodule Plausible.Billing.PlansTest do
     test "available_plans returns all plans for user with prices when asked for" do
       user = new_user() |> subscribe_to_plan(@v2_plan_id)
 
+      subscription =
+        user
+        |> team_of(with_subscription?: true)
+        |> Map.fetch!(:subscription)
+
       %{growth: growth_plans, business: business_plans} =
-        Plans.available_plans_for(user.subscription, with_prices: true, customer_ip: "127.0.0.1")
+        Plans.available_plans_for(subscription, with_prices: true, customer_ip: "127.0.0.1")
 
       assert Enum.find(growth_plans, fn plan ->
                (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v2_plan_id
@@ -128,7 +149,9 @@ defmodule Plausible.Billing.PlansTest do
     test "available_plans returns all plans without prices by default" do
       user = new_user() |> subscribe_to_plan(@v2_plan_id)
 
-      assert %{growth: [_ | _], business: [_ | _]} = Plans.available_plans_for(user.subscription)
+      subscription = team_of(user, with_subscription?: true).subscription
+
+      assert %{growth: [_ | _], business: [_ | _]} = Plans.available_plans_for(subscription)
     end
 
     test "latest_enterprise_plan_with_price/1" do
@@ -156,24 +179,30 @@ defmodule Plausible.Billing.PlansTest do
 
   describe "subscription_interval" do
     test "is based on the plan if user is on a standard plan" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+      subscription =
+        new_user()
+        |> subscribe_to_plan(@v1_plan_id)
+        |> team_of(with_subscription?: true)
+        |> Map.fetch!(:subscription)
 
-      assert Plans.subscription_interval(user.subscription) == "monthly"
+      assert Plans.subscription_interval(subscription) == "monthly"
     end
 
     test "is N/A for free plan" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
+      subscription =
+        new_user()
+        |> subscribe_to_plan("free_10k")
+        |> team_of(with_subscription?: true)
+        |> Map.fetch!(:subscription)
 
-      assert Plans.subscription_interval(user.subscription) == "N/A"
+      assert Plans.subscription_interval(subscription) == "N/A"
     end
 
     test "is based on the enterprise plan if user is on an enterprise plan" do
-      user = insert(:user)
+      user = new_user()
+      subscribe_to_enterprise_plan(user, billing_interval: :yearly)
 
-      enterprise_plan = insert(:enterprise_plan, user_id: user.id, billing_interval: :yearly)
-
-      subscription =
-        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
+      subscription = user |> team_of(with_subscription?: true) |> Map.fetch!(:subscription)
 
       assert Plans.subscription_interval(subscription) == :yearly
     end

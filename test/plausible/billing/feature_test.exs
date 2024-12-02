@@ -24,7 +24,7 @@ defmodule Plausible.Billing.FeatureTest do
     end
 
     test "#{mod}.check_availability/1 returns error when site owner is on an old plan" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+      user = new_user() |> subscribe_to_plan(@v1_plan_id)
       assert {:error, :upgrade_required} == unquote(mod).check_availability(user)
     end
   end

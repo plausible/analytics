@@ -46,22 +46,40 @@ defmodule Plausible.Teams.Test do
   end
 
   def new_user(args \\ []) do
+    {team_args, args} = Keyword.pop(args, :team, [])
     user = insert(:user, args)
 
     if user.trial_expiry_date do
-      {:ok, _team} = Teams.get_or_create(user)
+      {:ok, team} = Teams.get_or_create(user)
+
+      team_args = Keyword.merge(team_args, trial_expiry_date: user.trial_expiry_date)
+
+      team
+      |> Ecto.Changeset.change(team_args)
+      |> Repo.update!()
     end
 
     Repo.preload(user, team_memberships: :team)
   end
 
-  def team_of(%{team_memberships: [%{role: :owner, team: %Teams.Team{} = team}]}) do
-    team
+  def team_of(subject, opts \\ [])
+
+  def team_of(%{team_memberships: [%{role: :owner, team: %Teams.Team{} = team}]}, opts) do
+    if opts[:with_subscription?] do
+      Plausible.Teams.with_subscription(team)
+    else
+      team
+    end
   end
 
-  def team_of(user) do
+  def team_of(user, opts) do
     {:ok, team} = Plausible.Teams.get_by_owner(user)
-    team
+
+    if opts[:with_subscription?] do
+      Plausible.Teams.with_subscription(team)
+    else
+      team
+    end
   end
 
   def add_guest(site, args \\ []) do
@@ -121,15 +139,21 @@ defmodule Plausible.Teams.Test do
     old_model_invitation
   end
 
-  def invite_transfer(site, invitee, args \\ []) do
+  def invite_transfer(site, invitee_or_email, args \\ []) do
     inviter = Keyword.fetch!(args, :inviter)
 
+    email =
+      case invitee_or_email do
+        %{email: email} -> email
+        email when is_binary(email) -> email
+      end
+
     old_model_invitation =
-      insert(:invitation, email: invitee.email, inviter: inviter, role: :owner, site: site)
+      insert(:invitation, email: email, inviter: inviter, role: :owner, site: site)
 
     insert(:site_transfer,
       transfer_id: old_model_invitation.invitation_id,
-      email: invitee.email,
+      email: email,
       site: site,
       initiator: inviter
     )
@@ -170,8 +194,7 @@ defmodule Plausible.Teams.Test do
     {:ok, team} = Teams.get_or_create(user)
     attrs = Keyword.merge([user: user, team: team, paddle_plan_id: paddle_plan_id], attrs)
 
-    subscription =
-      insert(:subscription, attrs)
+    subscription = insert(:subscription, attrs)
 
     %{user | subscription: subscription}
   end
@@ -180,14 +203,21 @@ defmodule Plausible.Teams.Test do
     {:ok, team} = Teams.get_or_create(user)
 
     {subscription?, attrs} = Keyword.pop(attrs, :subscription?, true)
+    {subscription_attrs, attrs} = Keyword.pop(attrs, :subscription, [])
 
     enterprise_plan = insert(:enterprise_plan, Keyword.merge([user: user, team: team], attrs))
 
     if subscription? do
-      insert(:subscription,
-        team: team,
-        user: user,
-        paddle_plan_id: enterprise_plan.paddle_plan_id
+      insert(
+        :subscription,
+        Keyword.merge(
+          [
+            team: team,
+            user: user,
+            paddle_plan_id: enterprise_plan.paddle_plan_id
+          ],
+          subscription_attrs
+        )
       )
     end
 

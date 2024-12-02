@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
+  use Plausible.Teams.Test
   use PlausibleWeb.ConnCase
 
   describe "API authorization - as anonymous user" do
@@ -37,21 +38,21 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
     end
 
     test "Sends 404 Not found when user does not have access to site", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
       assert conn.status == 404
     end
 
     test "returns stats for public site", %{conn: conn} do
-      site = insert(:site, public: true)
+      site = new_site(public: true)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
       assert %{"plot" => _any} = json_response(conn, 200)
     end
 
     test "returns stats for a private site that the user owns", %{conn: conn, user: user} do
-      site = insert(:site, public: false, members: [user])
+      site = new_site(public: false, owner: user)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
 
       assert %{"plot" => _any} = json_response(conn, 200)

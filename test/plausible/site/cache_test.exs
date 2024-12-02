@@ -13,26 +13,15 @@ defmodule Plausible.Site.CacheTest do
           name: :"cache_supervisor_#{test}"
         )
 
-      %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
+      %{id: first_id} = site1 = new_site(domain: "site1.example.com")
 
-      _ =
-        insert(:site,
-          domain: "site2.example.com",
-          memberships: [
-            build(:site_membership,
-              user: build(:user, accept_traffic_until: ~D[2022-01-01]),
-              role: :viewer
-            ),
-            build(:site_membership,
-              user: build(:user, accept_traffic_until: ~D[2021-01-01]),
-              role: :owner
-            ),
-            build(:site_membership,
-              user: build(:user, accept_traffic_until: ~D[2020-01-01]),
-              role: :admin
-            )
-          ]
-        )
+      owner = new_user(team: [accept_traffic_until: ~D[2021-01-01]])
+      viewer = new_user(team: [accept_traffic_until: ~D[2022-01-01]])
+      admin = new_user(team: [accept_traffic_until: ~D[2020-01-01]])
+
+      site = new_site(owner: owner, domain: "site2.example.com")
+      add_guest(site, user: viewer, role: :viewer)
+      add_guest(site, user: admin, role: :editor)
 
       :ok = Cache.refresh_all(cache_name: test)
 
@@ -46,7 +35,7 @@ defmodule Plausible.Site.CacheTest do
       assert %Site{from_cache?: true} =
                Cache.get("site2.example.com", force?: true, cache_name: test)
 
-      assert %Site{from_cache?: false, owner: %{accept_traffic_until: ~D[2021-01-01]}} =
+      assert %Site{from_cache?: false, team: %{accept_traffic_until: ~D[2021-01-01]}} =
                Cache.get("site2.example.com", cache_name: test)
 
       refute Cache.get("site3.example.com", cache_name: test, force?: true)
@@ -143,14 +132,14 @@ defmodule Plausible.Site.CacheTest do
 
     test "cache is ready when refreshed", %{test: test} do
       {:ok, _} = start_test_cache(test)
-      insert(:site)
+      new_site()
       :ok = Cache.refresh_all(cache_name: test)
       assert Cache.ready?(test)
     end
 
     test "cache allows lookups for sites with changed domain", %{test: test} do
       {:ok, _} = start_test_cache(test)
-      insert(:site, domain: "new.example.com", domain_changed_from: "old.example.com")
+      new_site(domain: "new.example.com", domain_changed_from: "old.example.com")
       :ok = Cache.refresh_all(cache_name: test)
 
       assert Cache.get("old.example.com", force?: true, cache_name: test)
@@ -160,7 +149,7 @@ defmodule Plausible.Site.CacheTest do
     test "cache exposes hit rate", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
-      insert(:site, domain: "site1.example.com")
+      new_site(domain: "site1.example.com")
       :ok = Cache.refresh_all(cache_name: test)
 
       assert Cache.hit_rate(test) == 0
@@ -179,9 +168,9 @@ defmodule Plausible.Site.CacheTest do
       cache_opts = [cache_name: test, force?: true]
 
       yesterday = DateTime.utc_now() |> DateTime.add(-1 * 60 * 60 * 24)
-      insert(:site, domain: domain1, inserted_at: yesterday, updated_at: yesterday)
+      new_site(domain: domain1, inserted_at: yesterday, updated_at: yesterday)
 
-      insert(:site, domain: domain2)
+      new_site(domain: domain2)
 
       assert Cache.get(domain1, cache_opts) == nil
       assert Cache.get(domain2, cache_opts) == nil
@@ -199,7 +188,7 @@ defmodule Plausible.Site.CacheTest do
       domain1 = "first.example.com"
       domain2 = "second.example.com"
 
-      site = insert(:site, domain: domain1)
+      site = new_site(domain: domain1)
       assert :ok = Cache.refresh_updated_recently(cache_opts)
       assert item = Cache.get(domain1, cache_opts)
       refute item.domain_changed_from
@@ -250,7 +239,7 @@ defmodule Plausible.Site.CacheTest do
     test "get_site_id/2", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
-      site = insert(:site)
+      site = new_site()
 
       domain1 = site.domain
       domain2 = "nonexisting.example.com"
@@ -353,8 +342,8 @@ defmodule Plausible.Site.CacheTest do
       domain1 = "site1.example.com"
       domain2 = "site2.example.com"
 
-      site1 = insert(:site, domain: domain1)
-      _site2 = insert(:site, domain: domain2)
+      site1 = new_site(domain: domain1)
+      _site2 = new_site(domain: domain2)
 
       cache_opts = [cache_name: test, force?: true]
 

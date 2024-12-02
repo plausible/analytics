@@ -2,27 +2,27 @@
   <%= render("_flash.html", assigns) %>
 <% end %>
 
-<%= if @conn.assigns[:current_user] do %>
+<%= if @conn.assigns[:current_team] do %>
   <div class="flex flex-col gap-y-2">
     <Notice.active_grace_period
-      :if={Plausible.Auth.GracePeriod.active?(@conn.assigns.current_user)}
+      :if={Plausible.Auth.GracePeriod.active?(@conn.assigns.current_team)}
       enterprise?={
-        Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(@conn.assigns.current_user)
+        Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(@conn.assigns.current_team)
       }
-      grace_period_end={grace_period_end(@conn.assigns.current_user)}
+      grace_period_end={grace_period_end(@conn.assigns.current_team)}
     />
 
-    <Notice.dashboard_locked :if={Plausible.Auth.GracePeriod.expired?(@conn.assigns.current_user)} />
+    <Notice.dashboard_locked :if={Plausible.Auth.GracePeriod.expired?(@conn.assigns.current_team)} />
 
-    <Notice.subscription_cancelled user={@conn.assigns.current_user} />
+    <Notice.subscription_cancelled subscription={@conn.assigns.current_team.subscription} />
 
     <Notice.subscription_past_due
-      subscription={@conn.assigns.current_user.subscription}
+      subscription={@conn.assigns.current_team.subscription}
       class="container"
     />
 
     <Notice.subscription_paused
-      subscription={@conn.assigns.current_user.subscription}
+      subscription={@conn.assigns.current_team.subscription}
       class="container"
     />
   </div>

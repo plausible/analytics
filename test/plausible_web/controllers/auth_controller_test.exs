@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
+  use Plausible.Teams.Test
   use Plausible.Repo
 
   import Plausible.Test.Support.HTML
@@ -582,14 +583,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       ])
 
       insert(:google_auth, site: site, user: user)
-      insert(:subscription, user: user, status: Subscription.Status.deleted())
-      insert(:subscription, user: user, status: Subscription.Status.active())
-
-      insert(:enterprise_plan,
-        user: user,
-        paddle_plan_id: "whatever",
-        site_limit: 1
-      )
+      subscribe_to_growth_plan(user, status: Subscription.Status.deleted())
+      subscribe_to_growth_plan(user, status: Subscription.Status.active())
+      subscribe_to_enterprise_plan(user, site_limit: 1, subscription?: false)
 
       {:ok, _team} = Plausible.Teams.get_or_create(user)
 
@@ -598,6 +594,8 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Repo.reload(site) == nil
       assert Repo.reload(user) == nil
       assert Repo.all(Plausible.Billing.Subscription) == []
+      assert Repo.all(Plausible.Billing.EnterprisePlan) == []
+      assert Repo.all(Plausible.Site.Membership) == []
       assert Repo.all(Plausible.Teams.Team) == []
     end
 

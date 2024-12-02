@@ -1,12 +1,13 @@
 defmodule Plausible.Site.SiteRemovalTest do
   use Plausible.DataCase, async: true
   use Oban.Testing, repo: Plausible.Repo
+  use Plausible.Teams.Test
 
   alias Plausible.Site.Removal
   alias Plausible.Sites
 
   test "site from postgres is immediately deleted" do
-    site = insert(:site)
+    site = new_site()
     assert {:ok, context} = Removal.run(site)
     assert context.delete_all == {1, nil}
     refute Sites.get_by_domain(site.domain)
@@ -14,7 +15,8 @@ defmodule Plausible.Site.SiteRemovalTest do
 
   @tag :teams
   test "site deletion prunes team guest memberships" do
-    site = insert(:site) |> Plausible.Teams.load_for_site() |> Repo.preload(:owner)
+    owner = new_user()
+    site = new_site(owner: owner)
 
     team_membership =
       insert(:team_membership, user: build(:user), team: site.team, role: :guest)
@@ -25,7 +27,7 @@ defmodule Plausible.Site.SiteRemovalTest do
       insert(:team_invitation,
         email: "sitedeletion@example.test",
         team: site.team,
-        inviter: site.owner,
+        inviter: owner,
         role: :guest
       )
 

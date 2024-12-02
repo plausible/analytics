@@ -1545,15 +1545,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     @describetag :ee_only
 
     setup %{user: user} do
-      plan =
-        insert(:enterprise_plan,
-          features: [Plausible.Billing.Feature.RevenueGoals],
-          user_id: user.id
-        )
-
-      subscription = insert(:subscription, user: user, paddle_plan_id: plan.paddle_plan_id)
-
-      {:ok, subscription: subscription}
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.RevenueGoals])
+      :ok
     end
 
     test "not valid in public schema", %{site: site} do
@@ -1590,8 +1583,9 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    test "no access", %{site: site, user: user, subscription: subscription} do
-      Repo.delete!(subscription)
+    test "no access" do
+      user = new_user()
+      site = new_site(owner: user)
 
       subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 

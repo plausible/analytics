@@ -160,7 +160,9 @@ export default class SiteSwitcher extends React.Component {
 
   renderSettingsLink() {
     if (
-      ['owner', 'admin', 'super_admin'].includes(this.props.currentUserRole)
+      ['owner', 'admin', 'editor', 'super_admin'].includes(
+        this.props.currentUserRole
+      )
     ) {
       return (
         <React.Fragment>

@@ -324,6 +324,8 @@ defmodule Plausible.Teams.Billing do
 
   def features_usage(team, site_ids \\ nil)
 
+  def features_usage(nil, nil), do: []
+
   def features_usage(%Teams.Team{} = team, nil) do
     owned_site_ids = team |> Teams.owned_sites() |> Enum.map(& &1.id)
     features_usage(team, owned_site_ids)

@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
@@ -102,9 +103,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
       # UTC+1
       site =
-        insert(:site,
+        new_site(
           domain: "tz-test.com",
-          members: [user],
+          owner: user,
           timezone: "CET"
         )
 
@@ -1273,7 +1274,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "bugfix: don't crash when timezone gap occurs", %{conn: conn, user: user} do
-      site = insert(:site, members: [user], timezone: "America/Santiago")
+      site = new_site(owner: user, timezone: "America/Santiago")
 
       populate_stats(site, [
         build(:pageview, timestamp: relative_time(minutes: -5))

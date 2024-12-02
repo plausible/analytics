@@ -43,6 +43,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       user: user
     } do
       subscribe_to_plan(user, "123123")
+      team = team_of(user)
 
       for _ <- 1..11, do: new_site(owner: user)
 
@@ -50,7 +51,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
-      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "are exceeded: site limit"
       assert subscription.paddle_plan_id == "123123"
@@ -61,6 +62,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       user: user
     } do
       subscribe_to_plan(user, "123123")
+      team = team_of(user)
       site = new_site(owner: user)
       now = NaiveDateTime.utc_now()
 
@@ -69,7 +71,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       conn1 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
-      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
 
       assert Phoenix.Flash.get(conn1.assigns.flash, :error) =~
                "are exceeded: monthly pageview limit"
@@ -88,10 +90,11 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
       subscribe_to_plan(user, "321321")
+      team = team_of(user)
 
       post(conn, Routes.billing_path(conn, :change_plan, "123123"))
 
-      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
       assert subscription.paddle_plan_id == "123123"
       assert subscription.next_bill_date == ~D[2019-07-10]
       assert subscription.next_bill_amount == "6.00"

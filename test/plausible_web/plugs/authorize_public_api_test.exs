@@ -64,8 +64,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
   @tag :ee_only
   test "halts with error when upgrade is required", %{conn: conn} do
-    user = insert(:user, trial_expiry_date: nil)
-    site = insert(:site, members: [user])
+    user = new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [])
+    site = new_site(owner: user)
     api_key = insert(:api_key, user: user)
 
     conn =
@@ -82,8 +82,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   test "halts with error when site is locked", %{conn: conn} do
-    user = insert(:user)
-    site = insert(:site, members: [user], locked: true)
+    user = new_user()
+    site = new_site(owner: user, locked: true)
     api_key = insert(:api_key, user: user)
 
     conn =
@@ -202,9 +202,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
   @tag :ee_only
   test "passes for super admin user even if not a member of the requested site", %{conn: conn} do
-    user = insert(:user)
+    user = new_user()
     patch_env(:super_admin_user_ids, [user.id])
-    site = insert(:site, locked: true)
+    site = new_site(locked: true)
     api_key = insert(:api_key, user: user)
 
     conn =

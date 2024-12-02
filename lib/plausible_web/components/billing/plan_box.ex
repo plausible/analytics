@@ -225,7 +225,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> assign(:confirm_message, losing_features_message(feature_usage_check))
 
     ~H"""
-    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@current_user.subscription) do %>
+    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@current_team.subscription) do %>
       <.change_plan_link {assigns} />
     <% else %>
       <PlausibleWeb.Components.Billing.paddle_button

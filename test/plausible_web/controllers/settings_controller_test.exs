@@ -48,7 +48,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     @tag :ee_only
     test "shows enterprise plan subscription", %{conn: conn, user: user} do
-      subscribe_to_plan(user, "123")
       configure_enterprise_plan(user)
 
       conn = get(conn, Routes.settings_path(conn, :subscription))
@@ -117,13 +116,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      configure_enterprise_plan(user)
-
-      insert(:subscription,
-        user: user,
-        status: Subscription.Status.past_due(),
-        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
-      )
+      configure_enterprise_plan(user, subscription: [status: Subscription.Status.past_due()])
 
       doc =
         conn
@@ -137,13 +130,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      configure_enterprise_plan(user)
-
-      insert(:subscription,
-        user: user,
-        status: Subscription.Status.paused(),
-        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
-      )
+      configure_enterprise_plan(user, subscription: [status: Subscription.Status.paused()])
 
       doc =
         conn
@@ -185,8 +172,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
     @tag :ee_only
     test "links to '/billing/choose-plan' with the text 'Change plan' for a configured enterprise plan with an existing subscription + renders cancel button",
          %{conn: conn, user: user} do
-      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
-
       configure_enterprise_plan(user)
 
       doc =
@@ -207,9 +192,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     @tag :ee_only
     test "renders cancelled subscription notice", %{conn: conn, user: user} do
-      insert(:subscription,
-        paddle_plan_id: @v4_plan_id,
-        user: user,
+      subscribe_to_plan(
+        user,
+        @v4_plan_id,
         status: :deleted,
         next_bill_date: ~D[2023-01-01]
       )
@@ -229,11 +214,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription,
-        paddle_plan_id: @v4_plan_id,
-        user: user,
+      subscribe_to_plan(user, @v4_plan_id,
         status: :deleted,
-        next_bill_date: Timex.shift(Timex.today(), days: 10)
+        next_bill_date: Date.shift(Date.utc_today(), day: 10)
       )
 
       notice_text =
@@ -252,11 +235,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription,
-        paddle_plan_id: @v3_plan_id,
-        user: user,
+      subscribe_to_plan(
+        user,
+        @v3_plan_id,
         status: :deleted,
-        next_bill_date: Timex.shift(Timex.today(), days: 10)
+        next_bill_date: Date.shift(Date.utc_today(), day: 10)
       )
 
       notice_text =
@@ -353,11 +336,16 @@ defmodule PlausibleWeb.SettingsControllerTest do
         assert element_exists?(doc, "#total_pageviews_penultimate_cycle")
       end
 
+      subscribe_to_plan(user, @v4_plan_id,
+        status: :active,
+        last_bill_date: Timex.shift(Timex.now(), months: -6)
+      )
+
       subscription =
-        subscribe_to_plan(user, @v4_plan_id,
-          status: :active,
-          last_bill_date: Timex.shift(Timex.now(), months: -6)
-        ).subscription
+        user
+        |> team_of()
+        |> Plausible.Teams.with_subscription()
+        |> Map.fetch!(:subscription)
 
       get(conn, Routes.settings_path(conn, :subscription))
       |> html_response(200)
@@ -458,12 +446,17 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> html_response(200)
       |> assert_usage.()
 
+      subscribe_to_plan(user, @v4_plan_id,
+        status: :deleted,
+        last_bill_date: ~D[2022-01-01],
+        next_bill_date: ~D[2022-02-01]
+      )
+
       subscription =
-        subscribe_to_plan(user, @v4_plan_id,
-          status: :deleted,
-          last_bill_date: ~D[2022-01-01],
-          next_bill_date: ~D[2022-02-01]
-        ).subscription
+        user
+        |> team_of()
+        |> Plausible.Teams.with_subscription()
+        |> Map.fetch!(:subscription)
 
       conn
       |> get(Routes.settings_path(conn, :subscription))
@@ -1097,11 +1090,17 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
-  defp configure_enterprise_plan(user) do
-    subscribe_to_enterprise_plan(user,
-      paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
-      monthly_pageview_limit: 20_000_000,
-      billing_interval: :yearly
+  defp configure_enterprise_plan(user, attrs \\ []) do
+    subscribe_to_enterprise_plan(
+      user,
+      Keyword.merge(
+        [
+          paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
+          monthly_pageview_limit: 20_000_000,
+          billing_interval: :yearly
+        ],
+        attrs
+      )
     )
   end
 end

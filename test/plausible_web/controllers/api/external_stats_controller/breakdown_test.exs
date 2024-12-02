@@ -65,8 +65,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       user: user,
       site: site
     } do
-      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         get(conn, "/api/v1/stats/breakdown", %{

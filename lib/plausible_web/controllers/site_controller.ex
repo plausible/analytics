@@ -9,7 +9,7 @@ defmodule PlausibleWeb.SiteController do
 
   plug(
     PlausibleWeb.Plugs.AuthorizeSiteAccess,
-    [:owner, :admin, :super_admin] when action not in [:new, :create_site]
+    [:owner, :admin, :editor, :super_admin] when action not in [:new, :create_site]
   )
 
   def new(conn, params) do

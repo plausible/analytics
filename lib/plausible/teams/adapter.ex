@@ -18,7 +18,9 @@ defmodule Plausible.Teams.Adapter do
     )
   end
 
-  def switch(user, opts \\ []) do
+  def switch(switch_on, opts \\ [])
+
+  def switch(%Plausible.Auth.User{} = user, opts) do
     team_fn = Keyword.fetch!(opts, :team_fn)
     user_fn = Keyword.fetch!(opts, :user_fn)
 
@@ -36,5 +38,11 @@ defmodule Plausible.Teams.Adapter do
       user = Plausible.Users.with_subscription(user)
       user_fn.(user)
     end
+  end
+
+  def switch(team_or_nil, opts) do
+    team_fn = Keyword.fetch!(opts, :team_fn)
+    team = Plausible.Teams.with_subscription(team_or_nil)
+    team_fn.(team)
   end
 end
