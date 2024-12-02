@@ -604,6 +604,20 @@ defmodule Plausible.SitesTest do
       assert prefs.pinned_at
     end
 
+    test "handles multiple guest memberships with same team properly (regression)" do
+      user = new_user()
+      owner = new_user()
+      site1 = new_site(owner: owner)
+      site2 = new_site(owner: owner)
+      add_guest(site1, user: user, role: :viewer)
+      add_guest(site2, user: user, role: :viewer)
+
+      assert {:ok, prefs} = Sites.toggle_pin(user, site1)
+      assert prefs.site_id == site1.id
+      assert prefs.user_id == user.id
+      assert prefs.pinned_at
+    end
+
     test "returns error when pins limit hit" do
       user = new_user()
 
