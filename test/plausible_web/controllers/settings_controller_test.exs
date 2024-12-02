@@ -1004,6 +1004,20 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  describe "GET /settings/api-keys" do
+    setup [:create_user, :log_in]
+
+    test "handles user without a team gracefully", %{conn: conn, user: user} do
+      user
+      |> team_of()
+      |> Repo.delete!()
+
+      conn = get(conn, Routes.settings_path(conn, :api_keys))
+
+      assert html_response(conn, 200)
+    end
+  end
+
   describe "POST /settings/api-keys" do
     setup [:create_user, :log_in]
 
