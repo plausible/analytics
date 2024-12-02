@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   attr(:billable_user, User, required: true)
   attr(:current_user, User, required: true)
-  attr(:current_team, Plausible.Teams.Team, required: true)
+  attr(:current_team, :any, required: true)
   attr(:feature_mod, :atom, required: true, values: Feature.list())
   attr(:grandfathered?, :boolean, default: false)
   attr(:rest, :global)
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   attr(:billable_user, User, required: true)
   attr(:current_user, User, required: true)
-  attr(:current_team, Plausible.Teams.Team, required: true)
+  attr(:current_team, :any, required: true)
   attr(:limit, :integer, required: true)
   attr(:resource, :string, required: true)
   attr(:rest, :global)
@@ -307,14 +307,14 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   attr(:current_user, :map)
-  attr(:current_team, :map)
+  attr(:current_team, :any)
   attr(:billable_user, :map)
 
   defp upgrade_call_to_action(assigns) do
     team = Plausible.Teams.with_subscription(assigns.current_team)
 
     upgrade_assistance_required? =
-      case Plans.get_subscription_plan(team.subscription) do
+      case Plans.get_subscription_plan(team && team.subscription) do
         %Plausible.Billing.Plan{kind: :business} -> true
         %Plausible.Billing.EnterprisePlan{} -> true
         _ -> false
