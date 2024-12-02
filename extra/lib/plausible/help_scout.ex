@@ -82,28 +82,19 @@ defmodule Plausible.HelpScout do
   def get_details_for_emails(emails, customer_id) do
     with {:ok, user} <- get_user(emails) do
       set_mapping(customer_id, user.email)
-
-      {team, subscription, plan} =
-        case Plausible.Teams.get_by_owner(user) do
-          {:ok, team} ->
-            team = Plausible.Teams.with_subscription(team)
-            plan = Billing.Plans.get_subscription_plan(team.subscription)
-            {team, team.subscription, plan}
-
-          {:error, :no_team} ->
-            {nil, nil, nil}
-        end
+      user = Plausible.Users.with_subscription(user.id)
+      plan = Billing.Plans.get_subscription_plan(user.subscription)
 
       {:ok,
        %{
          email: user.email,
          notes: user.notes,
-         status_label: status_label(team, subscription),
+         status_label: status_label(user),
          status_link:
            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id),
-         plan_label: plan_label(subscription, plan),
-         plan_link: plan_link(subscription),
-         sites_count: Plausible.Teams.owned_sites_count(team),
+         plan_label: plan_label(user.subscription, plan),
+         plan_link: plan_link(user.subscription),
+         sites_count: Plausible.Sites.owned_sites_count(user),
          sites_link:
            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
              search: user.email
@@ -120,9 +111,8 @@ defmodule Plausible.HelpScout do
 
     domain_query =
       from(s in Plausible.Site,
-        inner_join: t in assoc(s, :team),
-        inner_join: tm in assoc(t, :team_memberships),
-        where: tm.user_id == parent_as(:user).id and tm.role == :owner,
+        inner_join: sm in assoc(s, :memberships),
+        where: sm.user_id == parent_as(:user).id and sm.role == :owner,
         where: ilike(s.domain, ^search_term) or ilike(s.domain_changed_from, ^search_term),
         select: 1
       )
@@ -133,7 +123,7 @@ defmodule Plausible.HelpScout do
       like(u.email, ^search_term) or exists(domain_query)
     )
     |> limit(5)
-    |> select([user: u, sites: s], %{email: u.email, sites_count: count(s.id)})
+    |> select([user: u, site_membership: sm], %{email: u.email, sites_count: count(sm.id)})
     |> Repo.all()
   end
 
@@ -147,31 +137,31 @@ defmodule Plausible.HelpScout do
     ])
   end
 
-  defp status_label(team, subscription) do
-    subscription_active? = Billing.Subscriptions.active?(subscription)
-    trial? = Plausible.Teams.on_trial?(team)
+  defp status_label(user) do
+    subscription_active? = Billing.Subscriptions.active?(user.subscription)
+    trial? = Plausible.Users.on_trial?(user)
 
     cond do
-      not subscription_active? and not trial? and (is_nil(team) or is_nil(team.trial_expiry_date)) ->
+      not subscription_active? and not trial? and is_nil(user.trial_expiry_date) ->
         "None"
 
-      is_nil(subscription) and not trial? ->
+      is_nil(user.subscription) and not trial? ->
         "Expired trial"
 
       trial? ->
         "Trial"
 
-      subscription.status == Subscription.Status.deleted() ->
+      user.subscription.status == Subscription.Status.deleted() ->
         if subscription_active? do
           "Pending cancellation"
         else
           "Canceled"
         end
 
-      subscription.status == Subscription.Status.paused() ->
+      user.subscription.status == Subscription.Status.paused() ->
         "Paused"
 
-      Plausible.Teams.owned_sites_locked?(team) ->
+      Plausible.Sites.owned_sites_locked?(user) ->
         "Dashboard locked"
 
       subscription_active? ->
@@ -238,14 +228,13 @@ defmodule Plausible.HelpScout do
   defp users_query() do
     from(u in Plausible.Auth.User,
       as: :user,
-      left_join: tm in assoc(u, :team_memberships),
-      on: tm.role == :owner,
-      as: :team_memberships,
-      left_join: t in assoc(tm, :team),
-      left_join: s in assoc(t, :sites),
-      as: :sites,
+      left_join: sm in assoc(u, :site_memberships),
+      on: sm.role == :owner,
+      as: :site_membership,
+      left_join: s in assoc(sm, :site),
+      as: :site,
       group_by: u.id,
-      order_by: [desc: count(s.id)]
+      order_by: [desc: count(sm.id)]
     )
   end
 

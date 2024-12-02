@@ -217,27 +217,20 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "is based on the enterprise plan if user is on an enterprise plan" do
-      user = new_user()
+      user = insert(:user)
+
+      enterprise_plan =
+        insert(:enterprise_plan, user_id: user.id, monthly_pageview_limit: 100_000)
 
       subscription =
-        user
-        |> subscribe_to_enterprise_plan(monthly_pageview_limit: 100_000)
-        |> team_of()
-        |> Repo.preload(:subscription)
-        |> Map.fetch!(:subscription)
+        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
 
       assert Quota.Limits.monthly_pageview_limit(subscription) == 100_000
     end
 
     test "does not limit pageviews when user has a pending enterprise plan" do
-      user = new_user()
-
-      subscription =
-        user
-        |> subscribe_to_plan("pending-enterprise")
-        |> team_of()
-        |> Repo.preload(:subscription)
-        |> Map.fetch!(:subscription)
+      user = insert(:user)
+      subscription = insert(:subscription, user_id: user.id, paddle_plan_id: "pending-enterprise")
 
       assert Quota.Limits.monthly_pageview_limit(subscription) == :unlimited
     end
@@ -469,11 +462,14 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "returns the enterprise plan limit" do
-      user = new_user()
-      subscribe_to_enterprise_plan(user, team_member_limit: 27)
-      team = team_of(user)
+      user =
+        insert(:user,
+          enterprise_plan:
+            build(:enterprise_plan, paddle_plan_id: "123321", team_member_limit: 27),
+          subscription: build(:subscription, paddle_plan_id: "123321")
+        )
 
-      assert 27 == Plausible.Teams.Billing.team_member_limit(team)
+      assert 27 == Quota.Limits.team_member_limit(user)
     end
 
     test "reads from json file when the user is on a v4 plan" do
@@ -516,14 +512,13 @@ defmodule Plausible.Billing.QuotaTest do
       test "returns [Funnels] when user/site uses funnels" do
         user = new_user()
         site = new_site(owner: user)
-        team = team_of(user)
 
         goals = insert_list(3, :goal, site: site, event_name: fn -> Ecto.UUID.generate() end)
         steps = Enum.map(goals, &%{"goal_id" => &1.id})
         Plausible.Funnels.create(site, "dummy", steps)
 
-        assert [Funnels] == Plausible.Teams.Billing.features_usage(nil, [site.id])
-        assert [Funnels] == Plausible.Teams.Billing.features_usage(team)
+        assert [Funnels] == Quota.Usage.features_usage(nil, [site.id])
+        assert [Funnels] == Quota.Usage.features_usage(user)
       end
 
       test "returns [RevenueGoals] when user/site uses revenue goals" do
@@ -564,21 +559,25 @@ defmodule Plausible.Billing.QuotaTest do
             owner: user
           )
 
-        team = team_of(user)
-
         insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
         goals = insert_list(3, :goal, site: site, event_name: fn -> Ecto.UUID.generate() end)
         steps = Enum.map(goals, &%{"goal_id" => &1.id})
         Plausible.Funnels.create(site, "dummy", steps)
 
-        assert [Props, Funnels, RevenueGoals, StatsAPI] ==
-                 Plausible.Teams.Billing.features_usage(team)
+        assert [Props, Funnels, RevenueGoals, StatsAPI] == Quota.Usage.features_usage(user)
       end
     end
 
     test "accounts only for sites the user owns" do
-      assert [] == Plausible.Teams.Billing.features_usage(nil)
+      user = insert(:user)
+
+      insert(:site,
+        allowed_event_props: ["dummy"],
+        memberships: [build(:site_membership, user: user, role: :admin)]
+      )
+
+      assert [] == Quota.Usage.features_usage(user)
     end
   end
 
@@ -607,18 +606,21 @@ defmodule Plausible.Billing.QuotaTest do
 
     on_ee do
       test "returns the enterprise plan features" do
-        user = new_user()
+        user = insert(:user)
 
-        subscribe_to_enterprise_plan(user,
-          monthly_pageview_limit: 100_000,
-          site_limit: 500,
-          features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels]
-        )
+        enterprise_plan =
+          insert(:enterprise_plan,
+            user_id: user.id,
+            monthly_pageview_limit: 100_000,
+            site_limit: 500,
+            features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels]
+          )
 
-        team = team_of(user)
+        _subscription =
+          insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
 
         assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels] ==
-                 Plausible.Teams.Billing.allowed_features_for(team)
+                 Quota.Limits.allowed_features_for(user)
       end
     end
 
@@ -649,22 +651,18 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "returns old plan features for enterprise customers who are due to change a plan" do
-      user = new_user()
+      user =
+        insert(:user,
+          enterprise_plan:
+            build(:enterprise_plan,
+              paddle_plan_id: "old-paddle-plan-id",
+              features: [Plausible.Billing.Feature.StatsAPI]
+            ),
+          subscription: build(:subscription, paddle_plan_id: "old-paddle-plan-id")
+        )
 
-      subscribe_to_enterprise_plan(user,
-        paddle_plan_id: "old-paddle-plan-id",
-        features: [Plausible.Billing.Feature.StatsAPI]
-      )
-
-      subscribe_to_enterprise_plan(user,
-        paddle_plan_id: "new-paddle-plan-id",
-        subscription?: false
-      )
-
-      team = team_of(user)
-
-      assert [Plausible.Billing.Feature.StatsAPI] ==
-               Plausible.Teams.Billing.allowed_features_for(team)
+      insert(:enterprise_plan, user_id: user.id, paddle_plan_id: "new-paddle-plan-id")
+      assert [Plausible.Billing.Feature.StatsAPI] == Quota.Limits.allowed_features_for(user)
     end
   end
 

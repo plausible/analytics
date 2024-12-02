@@ -259,7 +259,6 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
       where: tm.user_id == ^user_id,
       where: coalesce(gm.role, tm.role) in ^roles,
       where: s.domain == ^domain or s.domain_changed_from == ^domain,
-      where: is_nil(gm.id) or gm.site_id == s.id,
       select: s
     )
   end

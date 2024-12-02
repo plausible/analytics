@@ -1,16 +1,20 @@
 defmodule Plausible.Site.Memberships.RemoveInvitationTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
 
   alias Plausible.Site.Memberships.RemoveInvitation
 
   test "removes invitation" do
-    inviter = new_user()
-    invitee = new_user()
-    site = new_site(owner: inviter)
+    inviter = insert(:user)
+    invitee = insert(:user)
+    site = insert(:site, members: [inviter])
 
     invitation =
-      invite_guest(site, invitee, inviter: inviter, role: :editor)
+      insert(:invitation,
+        site_id: site.id,
+        inviter: inviter,
+        email: invitee.email,
+        role: :admin
+      )
 
     assert {:ok, removed_invitation} =
              RemoveInvitation.remove_invitation(invitation.invitation_id, site)

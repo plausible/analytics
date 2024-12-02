@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       end
 
       test "computes all-time funnel with filters", %{conn: conn, user: user} do
-        site = new_site(stats_start_date: ~D[2020-01-01], owner: user)
+        site = insert(:site, stats_start_date: ~D[2020-01-01], members: [user])
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
 
         populate_stats(site, [

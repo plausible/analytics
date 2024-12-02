@@ -1,6 +1,5 @@
 defmodule Plausible.HelpScoutTest do
   use Plausible.DataCase, async: true
-  use Plausible.Teams.Test
   use Plausible
 
   @moduletag :ee_only
@@ -55,7 +54,7 @@ defmodule Plausible.HelpScoutTest do
 
     describe "get_details_for_customer/2" do
       test "returns details for user on trial" do
-        %{id: user_id, email: email} = new_user()
+        %{id: user_id, email: email} = insert(:user)
         stub_help_scout_requests(email)
 
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
@@ -75,7 +74,7 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user without trial or subscription" do
-        %{email: email} = new_user(trial_expiry_date: nil)
+        %{email: email} = insert(:user, trial_expiry_date: nil)
         stub_help_scout_requests(email)
 
         assert {:ok,
@@ -88,9 +87,7 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with trial expired" do
-        %{email: email} =
-          new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
-
+        %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
         stub_help_scout_requests(email)
 
         assert {:ok,
@@ -103,15 +100,10 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with paid subscription on standard plan" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_plan(user, @v4_business_monthly_plan_id)
-
-        paddle_subscription_id =
-          user
-          |> team_of(with_subscription?: true)
-          |> Map.fetch!(:subscription)
-          |> Map.fetch!(:paddle_subscription_id)
+        %{paddle_subscription_id: paddle_subscription_id} =
+          insert(:subscription, user: user, paddle_plan_id: @v4_business_monthly_plan_id)
 
         stub_help_scout_requests(email)
 
@@ -128,15 +120,10 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with paid subscription on standard yearly plan" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_plan(user, @v4_business_yearly_plan_id)
-
-        paddle_subscription_id =
-          user
-          |> team_of(with_subscription?: true)
-          |> Map.fetch!(:subscription)
-          |> Map.fetch!(:paddle_subscription_id)
+        %{paddle_subscription_id: paddle_subscription_id} =
+          insert(:subscription, user: user, paddle_plan_id: @v4_business_yearly_plan_id)
 
         stub_help_scout_requests(email)
 
@@ -153,9 +140,9 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with paid subscription on free 10k plan" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_plan(user, "free_10k")
+        insert(:subscription, user: user, paddle_plan_id: "free_10k")
 
         stub_help_scout_requests(email)
 
@@ -169,11 +156,15 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with paid subscription on enterprise plan" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_enterprise_plan(user,
-          features: [Plausible.Billing.Feature.StatsAPI]
-        )
+        ep =
+          insert(:enterprise_plan,
+            features: [Plausible.Billing.Feature.StatsAPI],
+            user_id: user.id
+          )
+
+        insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
         stub_help_scout_requests(email)
 
@@ -187,12 +178,16 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with paid subscription on yearly enterprise plan" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_enterprise_plan(user,
-          features: [Plausible.Billing.Feature.StatsAPI],
-          billing_interval: :yearly
-        )
+        ep =
+          insert(:enterprise_plan,
+            features: [Plausible.Billing.Feature.StatsAPI],
+            user_id: user.id,
+            billing_interval: :yearly
+          )
+
+        insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
         stub_help_scout_requests(email)
 
@@ -206,10 +201,12 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with subscription pending cancellation" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_plan(user, @v4_business_monthly_plan_id,
-          status: Subscription.Status.deleted()
+        insert(:subscription,
+          user: user,
+          status: Subscription.Status.deleted(),
+          paddle_plan_id: @v4_business_monthly_plan_id
         )
 
         stub_help_scout_requests(email)
@@ -224,10 +221,12 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with canceled subscription" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_plan(user, @v4_business_monthly_plan_id,
+        insert(:subscription,
+          user: user,
           status: Subscription.Status.deleted(),
+          paddle_plan_id: @v4_business_monthly_plan_id,
           next_bill_date: Date.add(Date.utc_today(), -1)
         )
 
@@ -243,10 +242,12 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with paused subscription" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        subscribe_to_plan(user, @v4_business_monthly_plan_id,
-          status: Subscription.Status.paused()
+        insert(:subscription,
+          user: user,
+          status: Subscription.Status.paused(),
+          paddle_plan_id: @v4_business_monthly_plan_id
         )
 
         stub_help_scout_requests(email)
@@ -261,10 +262,11 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns for user with locked site" do
-        user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
+        user = %{email: email} = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        new_site(owner: user, locked: true)
-        subscribe_to_plan(user, @v4_business_monthly_plan_id)
+        insert(:site, members: [user], locked: true)
+
+        insert(:subscription, user: user, paddle_plan_id: @v4_business_monthly_plan_id)
 
         stub_help_scout_requests(email)
 
@@ -279,7 +281,7 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "returns error when no matching user found in database" do
-        new_user()
+        insert(:user)
 
         stub_help_scout_requests("another@example.com")
 
@@ -327,7 +329,7 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "uses existing access token when available" do
-        %{email: email} = new_user()
+        %{email: email} = insert(:user)
         now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
         Repo.insert_all("help_scout_credentials", [
@@ -357,7 +359,7 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "refreshes token on expiry" do
-        %{email: email} = new_user()
+        %{email: email} = insert(:user)
         now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
         Repo.insert_all("help_scout_credentials", [
@@ -405,7 +407,7 @@ defmodule Plausible.HelpScoutTest do
 
     describe "get_details_for_emails/2" do
       test "returns details for user and persists mapping" do
-        %{id: user_id, email: email} = new_user()
+        %{id: user_id, email: email} = insert(:user)
 
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
 
@@ -426,9 +428,8 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "updates mapping if one already exists" do
-        user = new_user()
-        %{email: new_email} = new_user()
-
+        user = insert(:user)
+        %{email: new_email} = insert(:user)
         HelpScout.set_mapping("123", user.email)
 
         assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123")
@@ -436,14 +437,12 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "picks the match with largest number of owned sites" do
-        user1 = new_user()
-        new_site(owner: user1)
-        add_guest(new_site(), user: user1, role: :viewer)
-        add_guest(new_site(), user: user1, role: :editor)
-
-        user2 = new_user()
-        new_site(owner: user2)
-        new_site(owner: user2)
+        user1 = insert(:user)
+        insert(:site, members: [user1])
+        insert(:site_membership, site: build(:site), user: user1, role: :viewer)
+        insert(:site_membership, site: build(:site), user: user1, role: :admin)
+        user2 = insert(:user)
+        insert_list(2, :site, members: [user2])
 
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user2.id}"
 
@@ -474,14 +473,14 @@ defmodule Plausible.HelpScoutTest do
 
     describe "search_users/2" do
       test "lists matching users by email or site domain ordered by site counts" do
-        user1 = new_user(email: "user1@match.example.com")
+        user1 = insert(:user, email: "user1@match.example.com")
 
-        user2 = new_user(email: "user2@match.example.com")
-        new_site(owner: user2)
+        user2 = insert(:user, email: "user2@match.example.com")
+        insert(:site, members: [user2])
 
-        user3 = new_user(email: "user3@umatched.example.com")
-        new_site(owner: user3)
-        new_site(domain: "big.match.example.com/hit", owner: user3)
+        user3 = insert(:user, email: "user3@umatched.example.com")
+        insert(:site, members: [user3])
+        insert(:site, domain: "big.match.example.com/hit", members: [user3])
 
         assert HelpScout.search_users("match.example.co", "123") == [
                  %{email: user3.email, sites_count: 2},

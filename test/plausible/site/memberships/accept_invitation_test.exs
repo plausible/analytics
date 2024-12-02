@@ -108,16 +108,25 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
   describe "accept_invitation/3 - invitations" do
     test "converts an invitation into a membership" do
-      inviter = new_user()
-      invitee = new_user()
-      site = new_site(owner: inviter)
+      inviter = insert(:user)
+      invitee = insert(:user)
+      site = insert(:site, members: [inviter])
 
-      invitation = invite_guest(site, invitee, inviter: inviter, role: :editor)
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: invitee.email,
+          role: :admin
+        )
 
-      assert {:ok, _} =
+      assert {:ok, membership} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
 
-      assert_team_membership(invitee, site.team, :editor)
+      assert membership.site_id == site.id
+      assert membership.user_id == invitee.id
+      assert membership.role == :admin
+      refute Repo.reload(invitation)
 
       assert_email_delivered_with(
         to: [nil: inviter.email],
@@ -148,26 +157,71 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert team_membership.guest_memberships == []
     end
 
+    @tag :teams
+    test "sync newly converted membership with team" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+      site = insert(:site, members: [inviter])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: invitee.email,
+          role: :admin
+        )
+
+      assert {:ok, membership} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
+
+      assert membership.site_id == site.id
+      assert membership.user_id == invitee.id
+      assert membership.role == :admin
+
+      team = assert_team_exists(inviter)
+      assert_team_attached(site, team.id)
+
+      assert_guest_membership(team, site, invitee, :editor)
+    end
+
     test "does not degrade role when trying to invite self as an owner" do
-      user = new_user()
-      site = new_site(owner: user)
+      user = insert(:user)
 
-      invitation = invite_guest(site, user, inviter: user, role: :editor)
+      %{memberships: [membership]} =
+        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
 
-      assert {:ok, _} =
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: user,
+          email: user.email,
+          role: :admin
+        )
+
+      assert {:ok, invited_membership} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, user)
 
-      assert_team_membership(user, site.team, :owner)
+      assert invited_membership.id == membership.id
+      membership = Repo.reload!(membership)
+      assert membership.role == :owner
+      assert membership.site_id == site.id
+      assert membership.user_id == user.id
+      refute Repo.reload(invitation)
     end
 
     test "handles accepting invitation as already a member gracefully" do
-      inviter = new_user()
-      invitee = new_user()
-      site = new_site(owner: inviter)
-      user = add_guest(site, user: invitee, role: :editor)
-      existing_membership = List.first(user.site_memberships)
+      inviter = insert(:user)
+      invitee = insert(:user)
+      site = insert(:site, members: [inviter])
+      existing_membership = insert(:site_membership, user: invitee, site: site, role: :admin)
 
-      invitation = invite_guest(site, invitee, inviter: inviter, role: :viewer)
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: invitee.email,
+          role: :viewer
+        )
 
       assert {:ok, new_membership} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
@@ -371,10 +425,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       generate_usage_for(old_owner_site, 6_000, somewhere_last_month)
       generate_usage_for(old_owner_site, 10_000, somewhere_penultimate_month)
 
-      transfer_id = invite_transfer(old_owner_site, new_owner, inviter: old_owner).invitation_id
+      invitation = invite_transfer(old_owner_site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:monthly_pageview_limit]}} =
-               AcceptInvitation.accept_invitation(transfer_id, new_owner)
+               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
     end
 
     @tag :ee_only

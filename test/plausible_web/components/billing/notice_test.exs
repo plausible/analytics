@@ -10,20 +10,17 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
     assert render_component(&Notice.premium_feature/1,
              billable_user: me,
              current_user: me,
-             current_team: team_of(me),
              feature_mod: Plausible.Billing.Feature.Props
            ) == ""
   end
 
   test "premium_feature/1 renders an upgrade link when user is the site owner and does not have access to the feature" do
     me = new_user() |> subscribe_to_growth_plan()
-    team = team_of(me)
 
     rendered =
       render_component(&Notice.premium_feature/1,
         billable_user: me,
         current_user: me,
-        current_team: team,
         feature_mod: Plausible.Billing.Feature.Props
       )
 
@@ -40,7 +37,6 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       render_component(&Notice.premium_feature/1,
         billable_user: owner,
         current_user: me,
-        current_team: team_of(me),
         feature_mod: Plausible.Billing.Feature.Funnels
       )
 
@@ -55,7 +51,6 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       render_component(&Notice.premium_feature/1,
         billable_user: me,
         current_user: me,
-        current_team: team_of(me),
         feature_mod: Plausible.Billing.Feature.Funnels
       )
 
@@ -64,13 +59,11 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
   test "limit_exceeded/1 when billable user is on growth displays upgrade link" do
     me = new_user() |> subscribe_to_growth_plan()
-    team = team_of(me)
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
         billable_user: me,
         current_user: me,
-        current_team: team,
         limit: 10,
         resource: "users"
       )
@@ -87,7 +80,6 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       render_component(&Notice.limit_exceeded/1,
         billable_user: me,
         current_user: insert(:user),
-        current_team: team_of(me),
         limit: 10,
         resource: "users"
       )
@@ -104,7 +96,6 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       render_component(&Notice.limit_exceeded/1,
         billable_user: me,
         current_user: me,
-        current_team: team_of(me),
         limit: 10,
         resource: "users"
       )
@@ -122,7 +113,6 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       render_component(&Notice.limit_exceeded/1,
         billable_user: me,
         current_user: me,
-        current_team: team_of(me),
         limit: 10,
         resource: "users"
       )
@@ -136,13 +126,11 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   @tag :ee_only
   test "limit_exceeded/1 when billable user is on a business plan displays support email" do
     me = new_user() |> subscribe_to_business_plan()
-    team = team_of(me)
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
         billable_user: me,
         current_user: me,
-        current_team: team,
         limit: 10,
         resource: "users"
       )

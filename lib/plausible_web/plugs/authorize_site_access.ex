@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   import Plug.Conn
   import Phoenix.Controller, only: [get_format: 1]
 
-  @all_roles [:public, :viewer, :admin, :editor, :super_admin, :owner]
+  @all_roles [:public, :viewer, :admin, :super_admin, :owner]
 
   def init([]), do: {@all_roles, nil}
 
@@ -147,18 +147,29 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   end
 
   defp get_site_with_role(conn, current_user, domain) do
-    site = Repo.get_by(Plausible.Site, domain: domain)
+    site_query =
+      from(
+        s in Plausible.Site,
+        where: s.domain == ^domain,
+        select: %{site: s}
+      )
 
-    if site do
-      site_role =
-        case Plausible.Teams.Memberships.site_role(site, current_user) do
-          {:ok, role} -> role
-          _ -> nil
-        end
+    full_query =
+      if current_user do
+        from(s in site_query,
+          left_join: sm in Plausible.Site.Membership,
+          on: sm.site_id == s.id and sm.user_id == ^current_user.id,
+          select_merge: %{role: sm.role}
+        )
+      else
+        from(s in site_query,
+          select_merge: %{role: nil}
+        )
+      end
 
-      {:ok, %{site: site, role: site_role}}
-    else
-      error_not_found(conn)
+    case Repo.one(full_query) do
+      %{site: _site} = result -> {:ok, result}
+      _ -> error_not_found(conn)
     end
   end
 

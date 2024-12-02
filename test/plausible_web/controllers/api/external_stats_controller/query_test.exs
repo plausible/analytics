@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   use PlausibleWeb.ConnCase
-  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
@@ -1382,7 +1381,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
     test "timeseries with quarter-hour timezone", %{conn: conn, user: user} do
       # GMT+05:45
-      site = new_site(timezone: "Asia/Katmandu", owner: user)
+      site = insert(:site, timezone: "Asia/Katmandu", members: [user])
 
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-02 05:00:00]),

@@ -42,11 +42,12 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      subscribe_to_enterprise_plan(user)
+      ep = insert(:enterprise_plan, user: user)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
-      new_site(owner: user)
-      new_site(owner: user)
-      new_site(owner: user)
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
 
       conn = get(conn, "/sites/new")
       refute html_response(conn, 200) =~ "is limited to"
@@ -341,9 +342,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      subscribe_to_enterprise_plan(user, site_limit: 1)
-      new_site(owner: user)
-      new_site(owner: user)
+      ep = insert(:enterprise_plan, user: user, site_limit: 1)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      insert_list(2, :site, members: [user])
 
       conn =
         post(conn, "/sites", %{
@@ -621,17 +622,19 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to make site public with insufficient permissions", %{conn: conn, user: user} do
-      site = new_site()
-      add_guest(site, user: user, role: :viewer)
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
       conn = post(conn, "/sites/#{site.domain}/make-public")
       assert conn.status == 404
       refute Repo.get(Plausible.Site, site.id).public
     end
 
     test "fails to make foreign site public", %{conn: my_conn, user: me} do
-      _my_site = new_site(owner: me)
-      other_user = new_user()
-      other_site = new_site(owner: other_user)
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
+
+      other_user = insert(:user)
+
+      other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       my_conn = post(my_conn, "/sites/#{other_site.domain}/make-public")
       assert my_conn.status == 404
@@ -657,7 +660,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes the site", %{conn: conn, user: user} do
-      site = new_site(owner: user)
+      site = insert(:site, members: [user])
       insert(:google_auth, user: user, site: site)
       insert(:spike_notification, site: site)
       insert(:drop_notification, site: site)
@@ -668,8 +671,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to delete a site with insufficient permissions", %{conn: conn, user: user} do
-      site = new_site()
-      add_guest(site, user: user, role: :viewer)
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
       insert(:google_auth, user: user, site: site)
       insert(:spike_notification, site: site)
 
@@ -680,9 +682,12 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to delete a foreign site", %{conn: my_conn, user: me} do
-      _my_site = new_site(owner: me)
-      other_user = new_user()
-      other_site = new_site(owner: other_user)
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
+
+      other_user = insert(:user)
+
+      other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       insert(:google_auth, user: other_user, site: other_site)
       insert(:spike_notification, site: other_site)
@@ -729,7 +734,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      other_site = new_site()
+      other_site = insert(:site)
       insert(:google_auth, user: user, site: other_site)
       conn = delete(conn, "/#{URI.encode_www_form(other_site.domain)}/settings/google-search")
 
@@ -902,7 +907,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "displays Continue with Google link", %{conn: conn, user: user} do
-      site = new_site(domain: "notconnectedyet.example.com", owner: user)
+      site = insert(:site, domain: "notconnectedyet.example.com", members: [user])
 
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
@@ -1021,8 +1026,13 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn: conn0,
         conn_with_url: conn_with_url
       } do
-        site = new_site()
-        add_guest(site, user: user, role: :editor)
+        site =
+          insert(:site,
+            memberships: [
+              build(:site_membership, user: build(:user), role: :owner),
+              build(:site_membership, user: user, role: :admin)
+            ]
+          )
 
         conn =
           put(
@@ -1072,8 +1082,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn: conn0,
         conn_with_url: conn_with_url
       } do
-        site = new_site()
-        add_guest(site, user: user, role: :viewer)
+        site = insert(:site)
+        insert(:site_membership, user: user, site: site, role: :viewer)
 
         conn =
           put(
@@ -1096,8 +1106,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn0,
       conn_with_url: conn_with_url
     } do
-      site = new_site()
-      add_guest(site, user: user, role: :editor)
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :admin)
 
       setting = :funnels_enabled
 
@@ -1162,7 +1172,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to delete the weekly report record for a foreign site", %{conn: conn} do
-      site = new_site()
+      site = insert(:site)
       insert(:weekly_report, site: site)
 
       post(conn, "/sites/#{site.domain}/weekly-report/disable")
@@ -1197,7 +1207,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to remove a recipient from the weekly report in a foreign website", %{conn: conn} do
-      site = new_site()
+      site = insert(:site)
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
 
       conn1 = delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient@email.com")
@@ -1280,7 +1290,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "fails to remove a recipient from the monthly report in a foreign website", %{
       conn: conn
     } do
-      site = new_site()
+      site = insert(:site)
       insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
 
       conn1 = delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient@email.com")
@@ -1409,7 +1419,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       test "fails to remove a recipient from the #{type} notification in a foreign website", %{
         conn: conn
       } do
-        site = new_site()
+        site = insert(:site)
         insert(:"#{unquote(type)}_notification", site: site, recipients: ["recipient@email.com"])
 
         conn =

@@ -1,7 +1,6 @@
 defmodule Plausible.Workers.SendEmailReportTest do
   use Plausible.DataCase
   use Bamboo.Test
-  use Plausible.Teams.Test
   use Oban.Testing, repo: Plausible.Repo
   import Plausible.Test.Support.HTML
   alias Plausible.Workers.SendEmailReport
@@ -12,7 +11,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
   describe "weekly reports" do
     test "sends weekly report to all recipients" do
-      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
+      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
@@ -34,7 +33,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "does not crash when weekly report has been deleted since scheduling job" do
-      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
+      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
 
       assert :discard =
                perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
@@ -42,7 +41,9 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
     test "calculates timezone correctly" do
       site =
-        new_site(timezone: "US/Eastern")
+        insert(:site,
+          timezone: "US/Eastern"
+        )
 
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
@@ -80,7 +81,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
     test "includes the correct stats" do
       now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      site = new_site(domain: "test-site.com", inserted_at: Timex.shift(now, days: -8))
+      site = insert(:site, domain: "test-site.com", inserted_at: Timex.shift(now, days: -8))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -113,7 +114,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
       week_ago = now |> Timex.shift(days: -7)
       two_weeks_ago = now |> Timex.shift(days: -14)
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+      site = insert(:site, inserted_at: Timex.shift(now, days: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -148,7 +149,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
       week_ago = now |> Timex.shift(days: -7)
       two_weeks_ago = now |> Timex.shift(days: -14)
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+      site = insert(:site, inserted_at: Timex.shift(now, days: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -183,7 +184,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
       week_ago = now |> Timex.shift(days: -7)
       two_weeks_ago = now |> Timex.shift(days: -14)
 
-      site = new_site(inserted_at: Timex.shift(now, days: -15))
+      site = insert(:site, inserted_at: Timex.shift(now, days: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
@@ -214,7 +215,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
   describe "monthly_reports" do
     test "sends monthly report to all recipients" do
-      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
+      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
 
       last_month =
@@ -237,7 +238,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "does not crash when monthly report has been deleted since scheduling job" do
-      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
+      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
 
       assert :discard =
                perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})

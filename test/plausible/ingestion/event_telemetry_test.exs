@@ -1,6 +1,5 @@
 defmodule Plausible.Ingestion.EventTelemetryTest do
   import Phoenix.ConnTest
-  import Plausible.Teams.Test
 
   alias Plausible.Ingestion.Request
   alias Plausible.Ingestion.Event
@@ -25,7 +24,7 @@ defmodule Plausible.Ingestion.EventTelemetryTest do
       %{}
     )
 
-    site = new_site(ingest_rate_limit_threshold: 2)
+    site = insert(:site, ingest_rate_limit_threshold: 2)
 
     payload = %{
       name: "pageview",

@@ -1,6 +1,5 @@
 defmodule Plausible.Ingestion.CountersTest do
   use Plausible.DataCase, async: false
-  use Plausible.Teams.Test
   import Ecto.Query
 
   alias Plausible.Ingestion.Counters
@@ -116,7 +115,7 @@ defmodule Plausible.Ingestion.CountersTest do
     domain = Keyword.get(opts, :domain, random_domain())
     at = Keyword.get(opts, :at, NaiveDateTime.utc_now())
 
-    site = new_site(domain: domain)
+    site = insert(:site, domain: domain)
 
     payload = %{
       name: "pageview",

@@ -48,13 +48,13 @@ defmodule Plausible.Site.Cache do
   def base_db_query() do
     from s in Site,
       left_join: rg in assoc(s, :revenue_goals),
-      inner_join: team in assoc(s, :team),
+      inner_join: owner in assoc(s, :owner),
       select: {
         s.domain,
         s.domain_changed_from,
         %{struct(s, ^@cached_schema_fields) | from_cache?: true}
       },
-      preload: [revenue_goals: rg, team: team]
+      preload: [revenue_goals: rg, owner: owner]
   end
 
   @impl true

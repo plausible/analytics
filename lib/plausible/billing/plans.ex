@@ -188,7 +188,7 @@ defmodule Plausible.Billing.Plans do
 
   defp get_enterprise_plan(%Subscription{} = subscription) do
     Repo.get_by(EnterprisePlan,
-      team_id: subscription.team_id,
+      user_id: subscription.user_id,
       paddle_plan_id: subscription.paddle_plan_id
     )
   end

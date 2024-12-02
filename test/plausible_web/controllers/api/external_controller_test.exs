@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalControllerTest do
   use PlausibleWeb.ConnCase
   use Plausible.ClickhouseRepo
-  use Plausible.Teams.Test
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
   @user_agent_mobile "Mozilla/5.0 (Linux; Android 6.0; U007 Pro Build/MRA58K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/44.0.2403.119 Mobile Safari/537.36"
@@ -9,7 +8,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   describe "POST /api/event" do
     setup do
-      site = new_site()
+      site = insert(:site)
       {:ok, site: site}
     end
 
@@ -73,7 +72,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn: conn,
       site: site1
     } do
-      site2 = new_site()
+      site2 = insert(:site)
 
       params = %{
         name: "pageview",
@@ -303,7 +302,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "blocks traffic from a domain when it's blocked", %{
       conn: conn
     } do
-      site = new_site(ingest_rate_limit_threshold: 0)
+      site = insert(:site, ingest_rate_limit_threshold: 0)
 
       params = %{
         domain: site.domain,
@@ -1256,7 +1255,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   describe "scroll depth tests" do
     setup do
-      site = new_site()
+      site = insert(:site)
       {:ok, site: site}
     end
 
@@ -1314,7 +1313,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   describe "acquisition channel tests" do
     setup do
-      site = new_site()
+      site = insert(:site)
       {:ok, site: site}
     end
 
@@ -2114,7 +2113,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   describe "custom source parsing rules" do
     setup do
-      site = new_site()
+      site = insert(:site)
       {:ok, site: site}
     end
 
@@ -2992,7 +2991,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   describe "custom channel parsing rules" do
     setup do
-      site = new_site()
+      site = insert(:site)
       {:ok, site: site}
     end
 
@@ -3318,7 +3317,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   describe "user_id generation" do
     setup do
-      site = new_site()
+      site = insert(:site)
       {:ok, site: site}
     end
 
@@ -3392,7 +3391,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
 
     test "different domain value results in different user ID", %{conn: conn, site: site1} do
-      site2 = new_site()
+      site2 = insert(:site)
 
       params = %{
         url: "https://user-id-test-domain.com/",
@@ -3466,7 +3465,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
   describe "remaining" do
     setup do
-      site = new_site()
+      site = insert(:site)
       {:ok, site: site}
     end
 

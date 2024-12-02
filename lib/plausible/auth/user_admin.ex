@@ -123,27 +123,18 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp subscription_status(user) do
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} ->
-          Plausible.Teams.with_subscription(team)
-
-        {:error, :no_team} ->
-          nil
-      end
-
     cond do
-      team && team.subscription ->
+      user.subscription ->
         status_str =
-          PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
+          PlausibleWeb.SettingsView.present_subscription_status(user.subscription.status)
 
-        if team.subscription.paddle_subscription_id do
-          {:safe, ~s(<a href="#{manage_url(team.subscription)}">#{status_str}</a>)}
+        if user.subscription.paddle_subscription_id do
+          {:safe, ~s(<a href="#{manage_url(user.subscription)}">#{status_str}</a>)}
         else
           status_str
         end
 
-      Plausible.Teams.on_trial?(team) ->
+      Plausible.Users.on_trial?(user) ->
         "On trial"
 
       true ->

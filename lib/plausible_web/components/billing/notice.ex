@@ -63,7 +63,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   attr(:billable_user, User, required: true)
   attr(:current_user, User, required: true)
-  attr(:current_team, Plausible.Teams.Team, required: true)
   attr(:feature_mod, :atom, required: true, values: Feature.list())
   attr(:grandfathered?, :boolean, default: false)
   attr(:rest, :global)
@@ -77,18 +76,13 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       {@rest}
     >
       <%= account_label(@current_user, @billable_user) %> does not have access to <%= @feature_mod.display_name() %>. To get access to this feature,
-      <.upgrade_call_to_action
-        current_team={@current_team}
-        current_user={@current_user}
-        billable_user={@billable_user}
-      />.
+      <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
     </.notice>
     """
   end
 
   attr(:billable_user, User, required: true)
   attr(:current_user, User, required: true)
-  attr(:current_team, Plausible.Teams.Team, required: true)
   attr(:limit, :integer, required: true)
   attr(:resource, :string, required: true)
   attr(:rest, :global)
@@ -97,16 +91,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <.notice {@rest} title="Notice">
       <%= account_label(@current_user, @billable_user) %> is limited to <%= @limit %> <%= @resource %>. To increase this limit,
-      <.upgrade_call_to_action
-        current_team={@current_team}
-        current_user={@current_user}
-        billable_user={@billable_user}
-      />.
+      <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
     </.notice>
     """
   end
 
-  attr(:subscription, :map, required: true)
+  attr(:user, :map, required: true)
   attr(:dismissable, :boolean, default: true)
 
   @doc """
@@ -127,18 +117,18 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def subscription_cancelled(
         %{
           dismissable: true,
-          subscription: %Subscription{status: Subscription.Status.deleted()}
+          user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
         } = assigns
       ) do
     ~H"""
     <aside id="global-subscription-cancelled-notice" class="container">
       <.notice
-        dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@subscription.id)}
+        dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@user)}
         title="Subscription cancelled"
         theme={:red}
         class="shadow-md dark:shadow-none"
       >
-        <.subscription_cancelled_notice_body subscription={@subscription} />
+        <.subscription_cancelled_notice_body user={@user} />
       </.notice>
     </aside>
     """
@@ -147,7 +137,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def subscription_cancelled(
         %{
           dismissable: false,
-          subscription: %Subscription{status: Subscription.Status.deleted()}
+          user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
         } = assigns
       ) do
     assigns = assign(assigns, :container_id, "local-subscription-cancelled-notice")
@@ -155,11 +145,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <aside id={@container_id} class="hidden">
       <.notice title="Subscription cancelled" theme={:red} class="shadow-md dark:shadow-none">
-        <.subscription_cancelled_notice_body subscription={@subscription} />
+        <.subscription_cancelled_notice_body user={@user} />
       </.notice>
     </aside>
     <script
-      data-localstorage-key={"notice_dismissed__#{Plausible.Billing.cancelled_subscription_notice_dismiss_id(@subscription.id)}"}
+      data-localstorage-key={"notice_dismissed__#{Plausible.Billing.cancelled_subscription_notice_dismiss_id(assigns.user)}"}
       data-container-id={@container_id}
     >
       const dataset = document.currentScript.dataset
@@ -261,7 +251,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   defp subscription_cancelled_notice_body(assigns) do
-    if Subscriptions.expired?(assigns.subscription) do
+    if Subscriptions.expired?(assigns.user.subscription) do
       ~H"""
       <.link
         class="underline inline-block"
@@ -274,7 +264,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     else
       ~H"""
       <p>
-        You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
+        You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@user.subscription.next_bill_date, "%b %-d, %Y") %></span>.
         <.link
           class="underline inline-block"
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
@@ -283,12 +273,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         </.link>
         to make sure you don't lose access.
       </p>
-      <.lose_grandfathering_warning subscription={@subscription} />
+      <.lose_grandfathering_warning user={@user} />
       """
     end
   end
 
-  defp lose_grandfathering_warning(%{subscription: subscription} = assigns) do
+  defp lose_grandfathering_warning(%{user: %{subscription: subscription}} = assigns) do
     plan = Plans.get_regular_plan(subscription, only_non_expired: true)
     loses_grandfathering = plan && plan.generation < 4
 
@@ -307,14 +297,13 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   attr(:current_user, :map)
-  attr(:current_team, :map)
   attr(:billable_user, :map)
 
   defp upgrade_call_to_action(assigns) do
-    team = Plausible.Teams.with_subscription(assigns.current_team)
+    billable_user = Plausible.Users.with_subscription(assigns.billable_user)
 
     upgrade_assistance_required? =
-      case Plans.get_subscription_plan(team.subscription) do
+      case Plans.get_subscription_plan(billable_user.subscription) do
         %Plausible.Billing.Plan{kind: :business} -> true
         %Plausible.Billing.EnterprisePlan{} -> true
         _ -> false

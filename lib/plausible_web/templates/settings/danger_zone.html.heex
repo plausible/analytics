@@ -7,7 +7,7 @@
     <:title>Delete Account</:title>
     <:subtitle>Deleting your account removes all sites and stats you've collected</:subtitle>
 
-    <%= if Plausible.Billing.Subscription.Status.active?(@current_team && @current_team.subscription) do %>
+    <%= if Plausible.Billing.Subscription.Status.active?(@current_user.subscription) do %>
       <.notice theme={:gray} title="Cannot delete account at this time">
         Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.
       </.notice>

@@ -8,11 +8,15 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
   describe "POST /sites/invitations/:invitation_id/accept" do
     test "converts the invitation into a membership", %{conn: conn, user: user} do
-      owner = new_user()
-      site = new_site(owner: owner)
+      site = insert(:site)
 
       invitation =
-        invite_guest(site, user.email, inviter: owner, role: :editor)
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :admin
+        )
 
       conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
 
@@ -27,7 +31,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert membership.role == :admin
     end
 
-    @tag :teams
+    @tag :team
     test "multiple invites per same team sync regression", %{conn: conn, user: user} do
       inviter = insert(:user)
       {:ok, team} = Plausible.Teams.get_or_create(inviter)
@@ -78,7 +82,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     end
 
     test "does not crash if clicked for the 2nd time in another tab", %{conn: conn, user: user} do
-      site = new_site()
+      site = insert(:site)
 
       invitation =
         insert(:invitation,
@@ -164,10 +168,15 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
   describe "POST /sites/invitations/:invitation_id/reject" do
     test "rejects the invitation", %{conn: conn, user: user} do
-      owner = new_user()
-      site = new_site(owner: owner)
+      site = insert(:site)
 
-      invitation = invite_guest(site, user.email, inviter: owner, role: :editor)
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :admin
+        )
 
       conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/reject")
 
@@ -188,10 +197,19 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
   describe "DELETE /sites/:domain/invitations/:invitation_id" do
     test "removes the invitation", %{conn: conn, user: user} do
-      owner = new_user()
-      site = new_site(owner: owner)
-      add_guest(site, user: user, role: :editor)
-      invitation = invite_guest(site, "jane@example.com", inviter: owner, role: :editor)
+      site =
+        insert(:site,
+          members: [build(:user)],
+          memberships: [build(:site_membership, user: user, role: :admin)]
+        )
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: "jane@example.com",
+          role: :admin
+        )
 
       conn =
         delete(
@@ -205,10 +223,19 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     end
 
     test "removes the invitation for ownership transfer", %{conn: conn, user: user} do
-      owner = new_user()
-      site = new_site(owner: owner)
-      add_guest(site, user: user, role: :editor)
-      invitation = invite_transfer(site, "jane@example.com", inviter: owner)
+      site =
+        insert(:site,
+          members: [build(:user)],
+          memberships: [build(:site_membership, user: user, role: :admin)]
+        )
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: "jane@example.com",
+          role: :owner
+        )
 
       conn =
         delete(
@@ -222,11 +249,15 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     end
 
     test "fails to remove an invitation with insufficient permission", %{conn: conn, user: user} do
-      owner = new_user()
-      site = new_site(owner: owner)
-      add_guest(site, user: user, role: :viewer)
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
 
-      invitation = invite_guest(site, "jane@example.com", inviter: owner, role: :editor)
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: "jane@example.com",
+          role: :admin
+        )
 
       delete(
         conn,
@@ -237,14 +268,20 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     end
 
     test "fails to remove an invitation from the outside", %{conn: my_conn, user: me} do
-      new_site(owner: me)
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
 
-      other_user = new_user()
+      other_user = insert(:user)
 
-      other_site = new_site(owner: other_user)
+      other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       invitation =
-        invite_guest(other_site, "jane@example.com", role: :editor, inviter: other_user)
+        insert(:invitation,
+          site_id: other_site.id,
+          inviter: other_user,
+          email: "jane@example.com",
+          role: :admin
+        )
 
       remove_invitation_path =
         Routes.invitation_path(
@@ -260,8 +297,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     end
 
     test "renders error for non-existent invitation", %{conn: conn, user: user} do
-      site = new_site()
-      add_guest(site, user: user, role: :editor)
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
 
       remove_invitation_path =
         Routes.invitation_path(

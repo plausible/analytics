@@ -1,6 +1,5 @@
 defmodule Plausible.Site.Memberships.RejectInvitationTest do
   use Plausible
-  use Plausible.Teams.Test
   use Plausible.DataCase, async: true
   use Bamboo.Test
 
@@ -9,11 +8,17 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
   alias Plausible.Site.Memberships.RejectInvitation
 
   test "rejects invitation and sends email to inviter" do
-    inviter = new_user()
-    invitee = new_user()
-    site = new_site(owner: inviter)
+    inviter = insert(:user)
+    invitee = insert(:user)
+    site = insert(:site, members: [inviter])
 
-    invitation = invite_guest(site, invitee, inviter: inviter, role: :editor)
+    invitation =
+      insert(:invitation,
+        site_id: site.id,
+        inviter: inviter,
+        email: invitee.email,
+        role: :admin
+      )
 
     assert {:ok, rejected_invitation} =
              RejectInvitation.reject_invitation(invitation.invitation_id, invitee)

@@ -280,8 +280,8 @@ defmodule Plausible.Billing do
 
   def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 
-  def cancelled_subscription_notice_dismiss_id(id) do
-    "subscription_cancelled__#{id}"
+  def cancelled_subscription_notice_dismiss_id(%User{} = user) do
+    "subscription_cancelled__#{user.id}"
   end
 
   defp active_subscription_query(user) do

@@ -8,7 +8,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
   plug(PlausibleWeb.RequireAccountPlug)
 
-  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess, [:owner, :editor, :admin, :super_admin])
+  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess, [:owner, :admin, :super_admin])
 
   def property_form(
         conn,

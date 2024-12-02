@@ -212,40 +212,6 @@ defmodule Plausible.SitesTest do
              } = Plausible.Teams.Sites.list_with_invitations(user, %{})
     end
 
-    test "prioritizes pending transfer over pinned site with guest membership" do
-      owner = new_user()
-      pending_owner = new_user()
-      site = new_site(owner: owner, domain: "one.example.com")
-      add_guest(site, user: pending_owner, role: :editor)
-
-      invite_transfer(site, pending_owner, inviter: owner)
-
-      {:ok, _} = Sites.toggle_pin(pending_owner, site)
-
-      assert %{
-               entries: [
-                 %{domain: "one.example.com", entry_type: "invitation"}
-               ]
-             } =
-               Sites.list_with_invitations(pending_owner, %{})
-    end
-
-    test "prioritizes pending transfer over site with guest membership" do
-      owner = new_user()
-      pending_owner = new_user()
-      site = new_site(owner: owner, domain: "one.example.com")
-      add_guest(site, user: pending_owner, role: :editor)
-
-      invite_transfer(site, pending_owner, inviter: owner)
-
-      assert %{
-               entries: [
-                 %{domain: "one.example.com", entry_type: "invitation"}
-               ]
-             } =
-               Sites.list_with_invitations(pending_owner, %{})
-    end
-
     test "pinned site doesn't matter with membership revoked (no active invitations)" do
       user1 = new_user(email: "user1@example.com")
       _user2 = new_user(email: "user2@example.com")
@@ -600,20 +566,6 @@ defmodule Plausible.SitesTest do
       assert %{pinned_at: %NaiveDateTime{}} = prefs
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
-      assert prefs.user_id == user.id
-      assert prefs.pinned_at
-    end
-
-    test "handles multiple guest memberships with same team properly (regression)" do
-      user = new_user()
-      owner = new_user()
-      site1 = new_site(owner: owner)
-      site2 = new_site(owner: owner)
-      add_guest(site1, user: user, role: :viewer)
-      add_guest(site2, user: user, role: :viewer)
-
-      assert {:ok, prefs} = Sites.toggle_pin(user, site1)
-      assert prefs.site_id == site1.id
       assert prefs.user_id == user.id
       assert prefs.pinned_at
     end

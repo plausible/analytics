@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.Api.StatsController.RegionsTest do
-  use Plausible.Teams.Test
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/regions" do
@@ -100,7 +99,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       # Given it's 28th Nov and there's 30 day range, the starting day falls on 29th Oct
       # which coincides with daylight savings time change there:
       # https://www.timeanddate.com/time/change/portugal/ponta-delgada-azores.
-      site = new_site(owner: user, timezone: "Atlantic/Azores")
+      site = insert(:site, members: [user], timezone: "Atlantic/Azores")
 
       populate_stats(site, [
         build(:pageview, timestamp: relative_time(minutes: -5))

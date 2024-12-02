@@ -129,17 +129,8 @@ defmodule Plausible.Teams.Sites do
     team_membership_query =
       from tm in Teams.Membership,
         inner_join: t in assoc(tm, :team),
-        inner_join: u in assoc(tm, :user),
-        as: :user,
         inner_join: s in assoc(t, :sites),
-        as: :site,
         where: tm.user_id == ^user.id and tm.role != :guest,
-        where:
-          not exists(
-            from st in Teams.SiteTransfer,
-              where: st.email == parent_as(:user).email,
-              where: st.site_id == parent_as(:site).id
-          ),
         select: %{
           site_id: s.id,
           entry_type: "site",
@@ -151,18 +142,9 @@ defmodule Plausible.Teams.Sites do
 
     guest_membership_query =
       from(tm in Teams.Membership,
-        inner_join: u in assoc(tm, :user),
-        as: :user,
         inner_join: gm in assoc(tm, :guest_memberships),
         inner_join: s in assoc(gm, :site),
-        as: :site,
         where: tm.user_id == ^user.id and tm.role == :guest,
-        where:
-          not exists(
-            from st in Teams.SiteTransfer,
-              where: st.email == parent_as(:user).email,
-              where: st.site_id == parent_as(:site).id
-          ),
         select: %{
           site_id: s.id,
           entry_type: "site",
@@ -270,13 +252,11 @@ defmodule Plausible.Teams.Sites do
                 """
                 CASE
                   WHEN ? IS NOT NULL THEN 'invitation'
-                  WHEN ? IS NOT NULL THEN 'invitation'
                   WHEN ? IS NOT NULL THEN 'pinned_site'
                   ELSE ?
                 END
                 """,
                 gi.id,
-                st.id,
                 up.pinned_at,
                 u.entry_type
               ),

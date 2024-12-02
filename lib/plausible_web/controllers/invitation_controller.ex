@@ -4,7 +4,7 @@ defmodule PlausibleWeb.InvitationController do
   plug PlausibleWeb.RequireAccountPlug
 
   plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
-       [:owner, :editor, :admin] when action in [:remove_invitation]
+       [:owner, :admin] when action in [:remove_invitation]
 
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
     case Plausible.Site.Memberships.accept_invitation(invitation_id, conn.assigns.current_user) do

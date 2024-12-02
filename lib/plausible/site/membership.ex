@@ -2,7 +2,7 @@ defmodule Plausible.Site.Membership do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @roles [:owner, :admin, :editor, :viewer]
+  @roles [:owner, :admin, :viewer]
 
   @type t() :: %__MODULE__{}
 

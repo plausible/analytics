@@ -54,29 +54,6 @@ defmodule Plausible.Teams do
     )
   end
 
-  def owned_sites_locked?(nil) do
-    false
-  end
-
-  def owned_sites_locked?(team) do
-    Repo.exists?(
-      from s in Plausible.Site,
-        where: s.team_id == ^team.id,
-        where: s.locked == true
-    )
-  end
-
-  def owned_sites_count(nil), do: 0
-
-  def owned_sites_count(team) do
-    Repo.aggregate(
-      from(s in Plausible.Site,
-        where: s.team_id == ^team.id
-      ),
-      :count
-    )
-  end
-
   @doc """
   Create (when necessary) and load team relation for provided site.
 
@@ -130,11 +107,11 @@ defmodule Plausible.Teams do
     |> Repo.update!()
   end
 
-  def get_by_owner(user_id) when is_integer(user_id) do
+  def get_by_owner(user) do
     result =
       from(tm in Teams.Membership,
         inner_join: t in assoc(tm, :team),
-        where: tm.user_id == ^user_id and tm.role == :owner,
+        where: tm.user_id == ^user.id and tm.role == :owner,
         select: t,
         order_by: t.id
       )
@@ -147,10 +124,6 @@ defmodule Plausible.Teams do
       team ->
         {:ok, team}
     end
-  end
-
-  def get_by_owner(%Plausible.Auth.User{} = user) do
-    get_by_owner(user.id)
   end
 
   def last_subscription_join_query() do
