@@ -49,14 +49,12 @@ defmodule Plausible.AuthTest do
     user_with_plan_no_subscription =
       new_user() |> subscribe_to_enterprise_plan(subscription?: false)
 
-    assert Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(user_with_plan)
+    assert Plausible.Teams.Billing.enterprise_configured?(team_of(user_with_plan))
 
-    assert Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(
-             user_with_plan_no_subscription
-           )
+    assert Plausible.Teams.Billing.enterprise_configured?(team_of(user_with_plan_no_subscription))
 
-    refute Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(user_without_plan)
-    refute Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(nil)
+    refute Plausible.Teams.Billing.enterprise_configured?(team_of(user_without_plan))
+    refute Plausible.Teams.Billing.enterprise_configured?(nil)
   end
 
   describe "create_api_key/3" do

@@ -55,14 +55,6 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
     )
   end
 
-  def ensure_can_add_new_site(user) do
-    switch(
-      user,
-      team_fn: &Teams.Billing.ensure_can_add_new_site/1,
-      user_fn: &Plausible.Billing.Quota.ensure_can_add_new_site/1
-    )
-  end
-
   on_ee do
     def check_feature_availability_for_stats_api(user) do
       {unlimited_trial?, subscription?} =

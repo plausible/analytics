@@ -20,7 +20,10 @@ defmodule Plausible.Teams.Billing do
   @site_limit_for_trials 10
 
   def get_subscription(nil), do: nil
-  def get_subscription(%Teams.Team{subscription: %Subscription{} = subscription}), do: subscription
+
+  def get_subscription(%Teams.Team{subscription: %Subscription{} = subscription}),
+    do: subscription
+
   def get_subscription(%Teams.Team{} = team) do
     Teams.with_subscription(team).subscription
   end
@@ -258,6 +261,7 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def team_member_usage(team, opts \\ [])
   def team_member_usage(nil, _), do: 0
 
   def team_member_usage(team, opts) do

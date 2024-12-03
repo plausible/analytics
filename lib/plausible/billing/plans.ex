@@ -217,10 +217,13 @@ defmodule Plausible.Billing.Plans do
   """
   def suggest(team, usage_during_cycle) do
     cond do
-      usage_during_cycle > @enterprise_level_usage -> :enterprise
-      Teams.Billing.enterprise_configured?(team) -> :enterprise
+      usage_during_cycle > @enterprise_level_usage ->
+        :enterprise
 
-      true -> 
+      Teams.Billing.enterprise_configured?(team) ->
+        :enterprise
+
+      true ->
         subscription = Teams.Billing.get_subscription(team)
         suggest_by_usage(subscription, usage_during_cycle)
     end

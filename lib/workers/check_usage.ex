@@ -114,8 +114,14 @@ defmodule Plausible.Workers.CheckUsage do
   defp check_regular_subscriber(subscriber, usage_mod) do
     case check_pageview_usage_two_cycles(subscriber, usage_mod) do
       {:over_limit, pageview_usage} ->
+        team =
+          case Plausible.Teams.get_by_owner(subscriber) do
+            {:ok, team} -> team
+            _ -> nil
+          end
+
         suggested_plan =
-          Plausible.Billing.Plans.suggest(subscriber, pageview_usage.last_cycle.total)
+          Plausible.Billing.Plans.suggest(team, pageview_usage.last_cycle.total)
 
         PlausibleWeb.Email.over_limit_email(subscriber, pageview_usage, suggested_plan)
         |> Plausible.Mailer.send()

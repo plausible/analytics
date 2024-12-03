@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:ok, %{site: site}} ->
         json(conn, site)
 
-      {:error, {:over_limit, limit}} ->
+      {:error, _, {:over_limit, limit}, _} ->
         conn
         |> put_status(402)
         |> json(%{

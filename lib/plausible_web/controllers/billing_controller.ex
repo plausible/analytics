@@ -16,9 +16,9 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def choose_plan(conn, _params) do
-    current_user = conn.assigns.current_user
+    current_team = conn.assigns.current_team
 
-    if Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(current_user) do
+    if Plausible.Teams.Billing.enterprise_configured?(current_team) do
       redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
     else
       render(conn, "choose_plan.html",

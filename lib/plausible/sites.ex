@@ -83,42 +83,46 @@ defmodule Plausible.Sites do
   end
 
   def create(user, params) do
-    with :ok <- Plausible.Teams.Adapter.Read.Billing.ensure_can_add_new_site(user) do
-      Ecto.Multi.new()
-      |> Ecto.Multi.put(:site_changeset, Site.new(params))
-      |> Ecto.Multi.run(:create_team, fn _repo, _context ->
-        Plausible.Teams.get_or_create(user)
-      end)
-      |> Ecto.Multi.run(:clear_changed_from, fn
-        _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
-          case Plausible.Teams.Adapter.Read.Sites.get_for_user(user, domain, [:owner]) do
-            %Site{domain_changed_from: ^domain} = site ->
-              site
-              |> Ecto.Changeset.change()
-              |> Ecto.Changeset.put_change(:domain_changed_from, nil)
-              |> Ecto.Changeset.put_change(:domain_changed_at, nil)
-              |> Repo.update()
+    Ecto.Multi.new()
+    |> Ecto.Multi.put(:site_changeset, Site.new(params))
+    |> Ecto.Multi.run(:create_team, fn _repo, _context ->
+      Plausible.Teams.get_or_create(user)
+    end)
+    |> Ecto.Multi.run(:ensure_can_add_new_site, fn _repo, %{create_team: team} ->
+      case Plausible.Teams.Billing.ensure_can_add_new_site(team) do
+        :ok -> {:ok, :proceed}
+        error -> error
+      end
+    end)
+    |> Ecto.Multi.run(:clear_changed_from, fn
+      _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
+        case Plausible.Teams.Adapter.Read.Sites.get_for_user(user, domain, [:owner]) do
+          %Site{domain_changed_from: ^domain} = site ->
+            site
+            |> Ecto.Changeset.change()
+            |> Ecto.Changeset.put_change(:domain_changed_from, nil)
+            |> Ecto.Changeset.put_change(:domain_changed_at, nil)
+            |> Repo.update()
 
-            _ ->
-              {:ok, :ignore}
-          end
+          _ ->
+            {:ok, :ignore}
+        end
 
-        _repo, _context ->
-          {:ok, :ignore}
-      end)
-      |> Ecto.Multi.insert(:site, fn %{site_changeset: site, create_team: team} ->
-        Ecto.Changeset.put_assoc(site, :team, team)
-      end)
-      |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
-        Site.Membership.new(site, user)
-      end)
-      |> maybe_start_trial(user)
-      |> Ecto.Multi.run(:sync_team, fn _repo, %{user: user} ->
-        Plausible.Teams.sync_team(user)
-        {:ok, nil}
-      end)
-      |> Repo.transaction()
-    end
+      _repo, _context ->
+        {:ok, :ignore}
+    end)
+    |> Ecto.Multi.insert(:site, fn %{site_changeset: site, create_team: team} ->
+      Ecto.Changeset.put_assoc(site, :team, team)
+    end)
+    |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
+      Site.Membership.new(site, user)
+    end)
+    |> maybe_start_trial(user)
+    |> Ecto.Multi.run(:sync_team, fn _repo, %{user: user} ->
+      Plausible.Teams.sync_team(user)
+      {:ok, nil}
+    end)
+    |> Repo.transaction()
   end
 
   defp maybe_start_trial(multi, user) do
