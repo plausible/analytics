@@ -450,7 +450,7 @@ defmodule Plausible.Teams.Invitations do
       else
         PlausibleWeb.Email.new_user_invitation(
           team_invitation.email,
-          team_invitation.invitation_id,
+          guest_invitation.invitation_id,
           guest_invitation.site,
           team_invitation.inviter
         )
