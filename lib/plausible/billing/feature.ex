@@ -206,8 +206,6 @@ defmodule Plausible.Billing.Feature.StatsAPI do
     name: :stats_api,
     display_name: "Stats API"
 
-  alias Plausible.Repo
-
   @impl true
   @doc """
   Checks whether the user has access to Stats API or not.
@@ -228,13 +226,17 @@ defmodule Plausible.Billing.Feature.StatsAPI do
 
       {unlimited_trial?, subscription?}
 
-      owner = team && Repo.preload(team, :owner).owner
+      owner = team && Plausible.Repo.preload(team, :owner).owner
 
       pre_business_tier_account? =
         not is_nil(owner) and
           NaiveDateTime.before?(owner.inserted_at, Plausible.Billing.Plans.business_tier_launch())
 
       cond do
+        # FIXME: this is unreachable code - unlimited_trial? means that basically team is nil
+        # (we don't create teams with nil trial_expiry_date), ergo, we can't reach the owner,
+        # ergo, there's on insertion time to compare against. If we must maintain it, we have to
+        # work it around.
         !subscription? && unlimited_trial? && pre_business_tier_account? ->
           :ok
 

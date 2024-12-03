@@ -142,10 +142,16 @@ defmodule Plausible.Auth do
   @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
   def create_api_key(user, name, key) do
+    team =
+      case Plausible.Teams.get_by_owner(user) do
+        {:ok, team} -> team
+        _ -> nil
+      end
+
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
 
-    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(user),
+    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(team),
          do: Repo.insert(changeset)
   end
 
