@@ -6,7 +6,6 @@ defmodule Plausible.Teams.Adapter.Read.Ownership do
   use Plausible.Teams.Adapter
   alias Plausible.Site
   alias Plausible.Auth
-  alias Plausible.Site.Memberships.Invitations
 
   def all_pending_site_transfers(email, user) do
     switch(user,
@@ -26,14 +25,6 @@ defmodule Plausible.Teams.Adapter.Read.Ownership do
       user_fn: fn _ ->
         Plausible.Repo.preload(site, :owner).owner
       end
-    )
-  end
-
-  def ensure_can_take_ownership(site, user) do
-    switch(
-      user,
-      team_fn: &Teams.Invitations.ensure_can_take_ownership(site, &1),
-      user_fn: &Invitations.ensure_can_take_ownership(site, &1)
     )
   end
 

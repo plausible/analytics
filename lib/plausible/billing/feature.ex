@@ -67,7 +67,7 @@ defmodule Plausible.Billing.Feature do
   @doc """
   Checks whether the site owner or the user plan includes the given feature.
   """
-  @callback check_availability(Plausible.Auth.User.t() | Plausible.Teams.Team.t() | nil) ::
+  @callback check_availability(Plausible.Teams.Team.t() | nil) ::
               :ok | {:error, :upgrade_required} | {:error, :not_implemented}
 
   @features [
@@ -120,8 +120,8 @@ defmodule Plausible.Billing.Feature do
 
       @impl true
       def enabled?(%Plausible.Site{} = site) do
-        site = Plausible.Repo.preload(site, :owner)
-        check_availability(site.owner) == :ok && !opted_out?(site)
+        site = Plausible.Repo.preload(site, :team)
+        check_availability(site.team) == :ok && !opted_out?(site)
       end
 
       @impl true
@@ -130,8 +130,12 @@ defmodule Plausible.Billing.Feature do
       end
 
       @impl true
-      def check_availability(%Plausible.Auth.User{} = user) do
-        Plausible.Teams.Adapter.Read.Billing.check_feature_availability(__MODULE__, user)
+      def check_availability(team_or_nil) do
+        cond do
+          free?() -> :ok
+          __MODULE__ in Teams.Billing.allowed_features_for(team_or_nil) -> :ok
+          true -> {:error, :upgrade_required}
+        end
       end
 
       @impl true
@@ -195,6 +199,8 @@ defmodule Plausible.Billing.Feature.Props do
 end
 
 defmodule Plausible.Billing.Feature.StatsAPI do
+  use Plausible
+
   @moduledoc false
   use Plausible.Billing.Feature,
     name: :stats_api,
@@ -210,7 +216,34 @@ defmodule Plausible.Billing.Feature.StatsAPI do
   site owner invites a new user. In such cases, using the owner's API key is
   recommended.
   """
-  def check_availability(%Plausible.Auth.User{} = user) do
-    Plausible.Teams.Adapter.Read.Billing.check_feature_availability_for_stats_api(user)
+  on_ee do
+    def check_availability(team) do
+      team = Plausible.Teams.with_subscription(team)
+      unlimited_trial? = is_nil(team) or is_nil(team.trial_expiry_date)
+
+      subscription? =
+        not is_nil(team) and Plausible.Billing.Subscriptions.active?(team.subscription)
+
+      {unlimited_trial?, subscription?}
+
+      owner = team && Repo.preload(team, :owner).owner
+
+      pre_business_tier_account? =
+        not is_nil(owner) and
+          NaiveDateTime.before?(owner.inserted_at, Plausible.Billing.Plans.business_tier_launch())
+
+      cond do
+        !subscription? && unlimited_trial? && pre_business_tier_account? ->
+          :ok
+
+        !subscription? && unlimited_trial? && !pre_business_tier_account? ->
+          {:error, :upgrade_required}
+
+        true ->
+          super(team)
+      end
+    end
+  else
+    def check_availability(_), do: :ok
   end
 end

@@ -163,9 +163,9 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   end
 
   def check_team_member_limit(site, _role, invitee_email) do
-    site = Plausible.Repo.preload(site, :owner)
-    limit = Quota.Limits.team_member_limit(site.owner)
-    usage = Quota.Usage.team_member_usage(site.owner, exclude_emails: [invitee_email])
+    team = Plausible.Repo.preload(site, :team).team
+    limit = Plausible.Teams.Billing.team_member_limit(team)
+    usage = Plausible.Teams.Billing.team_member_usage(team, exclude_emails: [invitee_email])
 
     if Quota.below_limit?(usage, limit),
       do: :ok,

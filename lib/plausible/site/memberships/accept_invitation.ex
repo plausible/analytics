@@ -71,7 +71,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
              new_owner,
              :owner
            ),
-         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, new_owner) do
+         {:ok, new_team} = Plausible.Teams.get_or_create(new_owner),
+         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, new_team) do
       membership = get_or_create_owner_membership(site, new_owner)
 
       multi = add_and_transfer_ownership(site, membership, new_owner)
@@ -101,7 +102,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
              user,
              :owner
            ),
-         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, user) do
+         {:ok, team} = Plausible.Teams.get_or_create(user),
+         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, team) do
       site
       |> add_and_transfer_ownership(membership, user)
       |> Multi.delete(:invitation, invitation)

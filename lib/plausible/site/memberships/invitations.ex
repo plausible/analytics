@@ -62,31 +62,4 @@ defmodule Plausible.Site.Memberships.Invitations do
   def ensure_transfer_valid(_site, _invitee, _role) do
     :ok
   end
-
-  on_ee do
-    alias Plausible.Billing.Quota
-
-    @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) ::
-            :ok | {:error, Quota.Limits.over_limits_error() | :no_plan}
-    def ensure_can_take_ownership(site, new_owner) do
-      site = Repo.preload(site, :owner)
-      new_owner = Plausible.Users.with_subscription(new_owner)
-      plan = Plausible.Billing.Plans.get_subscription_plan(new_owner.subscription)
-
-      active_subscription? = Plausible.Billing.Subscriptions.active?(new_owner.subscription)
-
-      if active_subscription? && plan != :free_10k do
-        new_owner
-        |> Quota.Usage.usage(pending_ownership_site_ids: [site.id])
-        |> Quota.ensure_within_plan_limits(plan)
-      else
-        {:error, :no_plan}
-      end
-    end
-  else
-    @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) :: :ok
-    def ensure_can_take_ownership(_site, _new_owner) do
-      :ok
-    end
-  end
 end

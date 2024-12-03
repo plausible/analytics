@@ -19,6 +19,20 @@ defmodule Plausible.Teams.Billing do
   @limit_sites_since ~D[2021-05-05]
   @site_limit_for_trials 10
 
+  @type cycles_usage() :: %{cycle() => usage_cycle()}
+
+  @typep cycle :: :current_cycle | :last_cycle | :penultimate_cycle
+
+  @typep usage_cycle :: %{
+           date_range: Date.Range.t(),
+           pageviews: non_neg_integer(),
+           custom_events: non_neg_integer(),
+           total: non_neg_integer()
+         }
+
+  @typep last_30_days_usage() :: %{:last_30_days => usage_cycle()}
+  @typep monthly_pageview_usage() :: cycles_usage() | last_30_days_usage()
+
   def get_subscription(nil), do: nil
 
   def get_subscription(%Teams.Team{subscription: %Subscription{} = subscription}),
@@ -107,6 +121,11 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  @doc """
+  Enterprise plans are always allowed to add more sites (even when
+  over limit) to avoid service disruption. Their usage is checked
+  in a background job instead (see `check_usage.ex`).
+  """
   def ensure_can_add_new_site(nil) do
     :ok
   end
@@ -142,6 +161,10 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  @doc """
+  Returns the number of sites the given team owns.
+  """
+  @spec site_usage(Teams.Team.t()) :: non_neg_integer()
   def site_usage(nil), do: 0
 
   def site_usage(team) do
@@ -179,6 +202,21 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  @doc """
+  Returns a full usage report for the team.
+
+  ### Options
+
+  * `pending_ownership_site_ids` - a list of site IDs from which to count
+  additional usage. This allows us to look at the total usage from pending
+  ownerships and owned sites at the same time, which is useful, for example,
+  when deciding whether to let the user upgrade to a plan, or accept a site
+  ownership.
+
+  * `with_features` - when `true`, the returned map will contain features
+  usage. Also counts usage from `pending_ownership_site_ids` if that option
+  is given.
+  """
   def quota_usage(team, opts \\ []) do
     team = Teams.with_subscription(team)
     with_features? = Keyword.get(opts, :with_features, false)
@@ -236,6 +274,31 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  @doc """
+  Queries the ClickHouse database for the monthly pageview usage. If the given user's
+  subscription is `active`, `past_due`, or a `deleted` (but not yet expired), a map
+  with the following structure is returned:
+
+  ```elixir
+  %{
+    current_cycle: usage_cycle(),
+    last_cycle: usage_cycle(),
+    penultimate_cycle: usage_cycle()
+  }
+  ```
+
+  In all other cases of the subscription status (or a `free_10k` subscription which
+    does not have a `last_bill_date` defined) - the following structure is returned:
+
+  ```elixir
+  %{last_30_days: usage_cycle()}
+  ```
+
+  Given only a user as input, the usage is queried from across all the sites that the
+  user owns. Alternatively, given an optional argument of `site_ids`, the usage from
+  across all those sites is queried instead.
+  """
+  @spec monthly_pageview_usage(Teams.Team.t(), list() | nil) :: monthly_pageview_usage()
   def monthly_pageview_usage(team, site_ids \\ nil)
 
   def monthly_pageview_usage(team, nil) do
@@ -261,6 +324,28 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  @spec team_member_usage(Teams.Team.t(), Keyword.t()) :: non_neg_integer()
+  @doc """
+  Returns the total count of team members associated with the team's sites.
+
+  * The given team's owner is not counted as a team member.
+
+  * Pending invitations (but not ownership transfers) are counted as team
+  members even before accepted.
+
+  * Users are counted uniquely - i.e. even if an account is associated with
+  many sites owned by the given user, they still count as one team member.
+
+  ### Options
+
+  * `exclude_emails` - a list of emails to not count towards the usage. This
+  allows us to exclude a user from being counted as a team member when
+  checking whether a site invitation can be created for that same user.
+
+  * `pending_ownership_site_ids` - a list of site IDs from which to count
+  additional team member usage. Without this option, usage is queried only
+  across sites owned by the given user.
+  """
   def team_member_usage(team, opts \\ [])
   def team_member_usage(nil, _), do: 0
 
@@ -335,6 +420,17 @@ defmodule Plausible.Teams.Billing do
     }
   end
 
+  @spec features_usage(Teams.Team.t() | nil, list() | nil) :: [atom()]
+  @doc """
+  Given only a user, this function returns the features used across all the
+  sites this team owns + StatsAPI if the user has a configured Stats API key.
+
+  Given a team, and a list of site_ids, returns the features used by those
+  sites instead + StatsAPI if the any user in the team has a configured Stats API key.
+
+  The user can also be passed as `nil`, in which case we will never return
+  Stats API as a used feature.
+  """
   def features_usage(team, site_ids \\ nil)
 
   def features_usage(nil, nil), do: []
