@@ -49,7 +49,7 @@ defmodule Plausible.Stats.Imported.SQL.WhereBuilder do
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc or ^condition) end)
   end
 
-  defp add_filter(query, [_operation, dimension, _clauses] = filter) do
+  defp add_filter(query, [_operation, dimension, _clauses | _rest] = filter) do
     db_field = Plausible.Stats.Filters.without_prefix(dimension)
 
     if db_field == :goal do

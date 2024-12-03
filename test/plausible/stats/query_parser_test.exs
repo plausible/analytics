@@ -598,6 +598,156 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "Invalid filters. Dimension `event:hostname` can only be filtered at the top level."
       )
     end
+
+    for operation <- [:is, :contains, :is_not, :contains_not] do
+      test "#{operation} allows case_sensitive modifier", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            [
+              Atom.to_string(unquote(operation)),
+              "event:page",
+              ["/foo"],
+              %{"case_sensitive" => false}
+            ],
+            [
+              Atom.to_string(unquote(operation)),
+              "event:name",
+              ["/foo"],
+              %{"case_sensitive" => true}
+            ]
+          ]
+        }
+        |> check_success(site, %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [
+            [unquote(operation), "event:page", ["/foo"], %{case_sensitive: false}],
+            [unquote(operation), "event:name", ["/foo"], %{case_sensitive: true}]
+          ],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        })
+      end
+    end
+
+    for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
+      test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            [
+              Atom.to_string(unquote(operation)),
+              "event:hostname",
+              ["a.plausible.io"],
+              %{"case_sensitive" => false}
+            ]
+          ]
+        }
+        |> check_error(
+          site,
+          "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:hostname\", [\"a.plausible.io\"], %{\"case_sensitive\" => false}]",
+          :internal
+        )
+      end
+    end
+  end
+
+  describe "preloading goals" do
+    setup %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Purchase"})
+      insert(:goal, %{site: site, event_name: "Contact"})
+
+      :ok
+    end
+
+    test "with exact match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Signup", "Purchase"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:goal", ["Signup", "Purchase"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+    end
+
+    test "with case insensitive match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["signup", "purchase"], %{"case_sensitive" => false}]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:goal", ["signup", "purchase"], %{case_sensitive: false}]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+    end
+
+    test "with contains match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["contains", "event:goal", ["Sign", "pur"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:contains, "event:goal", ["Sign", "pur"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Signup"], revenue_currencies: %{})
+    end
+
+    test "with case insensitive contains match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["contains", "event:goal", ["sign", "CONT"], %{"case_sensitive" => false}]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:contains, "event:goal", ["sign", "CONT"], %{case_sensitive: false}]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Contact", "Signup"], revenue_currencies: %{})
+    end
   end
 
   describe "include validation" do

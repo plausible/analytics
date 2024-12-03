@@ -40,7 +40,7 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
     end
   end
 
-  defp reject_invalid_country_codes([_op, "visit:country", code_or_codes] = filter) do
+  defp reject_invalid_country_codes([_op, "visit:country", code_or_codes | _rest] = filter) do
     code_or_codes
     |> List.wrap()
     |> Enum.reduce_while(filter, fn
