@@ -104,6 +104,7 @@ function DropdownContent({ wrapped }) {
   if (wrapped === WRAPSTATE.unwrapped || addingFilter) {
     let filterModals = { ...FILTER_MODAL_TO_FILTER_GROUP }
     if (!site.propsAvailable) delete filterModals.props
+    if (!site.flags.saved_segments) delete filterModals.segment
 
     return <>{Object.keys(filterModals).map((option) => <OpenFilterGroupOptionsButton key={option} option={option} />)}</>
   }
