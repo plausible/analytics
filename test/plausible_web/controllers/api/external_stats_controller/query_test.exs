@@ -3187,6 +3187,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:browser"],
         "filters" => [
           ["is", "event:props:browser", ["CHROME", "sAFari"], %{"case_sensitive" => false}],
+          # Negate a previously set filter
           ["is_not", "event:props:browser", ["Chrome"], %{"case_sensitive" => false}],
           ["is", "event:props:prop", ["target_value"]]
         ]
