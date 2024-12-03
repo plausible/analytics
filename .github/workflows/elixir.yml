@@ -27,9 +27,6 @@ jobs:
         include:
           - mix_env: "test"
             postgres_image: "postgres:15"
-            test_read_team_schemas: "0"
-          - mix_env: "test"
-            postgres_image: "postgres:16"
             test_read_team_schemas: "1"
 
     env:
