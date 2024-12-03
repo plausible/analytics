@@ -77,6 +77,12 @@ defmodule Plausible.Teams do
     )
   end
 
+  def has_active_sites?(team) do
+    team
+    |> owned_sites()
+    |> Enum.any?(&Plausible.Sites.has_stats?/1)
+  end
+
   @doc """
   Create (when necessary) and load team relation for provided site.
 

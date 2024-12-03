@@ -3,10 +3,9 @@ defmodule Plausible.Billing.Quota.Usage do
 
   use Plausible
   import Ecto.Query
-  alias Plausible.Users
   alias Plausible.Auth.User
   alias Plausible.Site
-  alias Plausible.Billing.{Subscriptions, Feature}
+  alias Plausible.Billing.Feature
 
   def query_team_member_emails(site_ids) do
     memberships_q =

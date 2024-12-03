@@ -22,10 +22,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         |> Enum.map(& &1.site_id)
       end)
       |> assign_new(:usage, fn %{
-                                 current_user: current_user,
+                                 current_team: current_team,
                                  pending_ownership_site_ids: pending_ownership_site_ids
                                } ->
-        Plausible.Teams.Adapter.Read.Billing.quota_usage(current_user,
+        Plausible.Teams.Billing.quota_usage(current_team,
           with_features: true,
           pending_ownership_site_ids: pending_ownership_site_ids
         )

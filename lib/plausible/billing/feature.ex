@@ -133,7 +133,7 @@ defmodule Plausible.Billing.Feature do
       def check_availability(team_or_nil) do
         cond do
           free?() -> :ok
-          __MODULE__ in Teams.Billing.allowed_features_for(team_or_nil) -> :ok
+          __MODULE__ in Plausible.Teams.Billing.allowed_features_for(team_or_nil) -> :ok
           true -> {:error, :upgrade_required}
         end
       end
@@ -205,6 +205,8 @@ defmodule Plausible.Billing.Feature.StatsAPI do
   use Plausible.Billing.Feature,
     name: :stats_api,
     display_name: "Stats API"
+
+  alias Plausible.Repo
 
   @impl true
   @doc """
