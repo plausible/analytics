@@ -29,9 +29,8 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade_to_enterprise_plan(conn, _params) do
-    current_user = conn.assigns.current_user
     current_team = conn.assigns.current_team
-    subscription = Plausible.Teams.Adapter.Read.Billing.get_subscription(current_user)
+    subscription = Plausible.Teams.Billing.get_subscription(current_team)
 
     {latest_enterprise_plan, price} =
       Plausible.Teams.Billing.latest_enterprise_plan_with_price(

@@ -2,7 +2,7 @@ defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.Subscriptions
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
-  alias Plausible.Auth.User
+  alias Plausible.Teams
 
   for f <- [
         :legacy_plans,
@@ -203,7 +203,7 @@ defmodule Plausible.Billing.Plans do
   end
 
   @enterprise_level_usage 10_000_000
-  @spec suggest(User.t(), non_neg_integer()) :: Plan.t()
+  @spec suggest(Teams.Team.t(), non_neg_integer()) :: Plan.t()
   @doc """
   Returns the most appropriate plan for a user based on their usage during a
   given cycle.
@@ -215,11 +215,14 @@ defmodule Plausible.Billing.Plans do
   Otherwise, it recommends the plan where the cycle usage falls just under the
   plan's limit from the available options for the user.
   """
-  def suggest(user, usage_during_cycle) do
+  def suggest(team, usage_during_cycle) do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
-      Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(user) -> :enterprise
-      true -> Plausible.Teams.Adapter.Read.Billing.suggest_by_usage(user, usage_during_cycle)
+      Teams.Billing.enterprise_configured?(team) -> :enterprise
+
+      true -> 
+        subscription = Teams.Billing.get_subscription(team)
+        suggest_by_usage(subscription, usage_during_cycle)
     end
   end
 

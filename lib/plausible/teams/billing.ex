@@ -5,6 +5,7 @@ defmodule Plausible.Teams.Billing do
 
   alias Plausible.Billing.EnterprisePlan
   alias Plausible.Billing.Plans
+  alias Plausible.Billing.Subscription
   alias Plausible.Billing.Subscriptions
   alias Plausible.Repo
   alias Plausible.Teams
@@ -17,6 +18,12 @@ defmodule Plausible.Teams.Billing do
   @team_member_limit_for_trials 3
   @limit_sites_since ~D[2021-05-05]
   @site_limit_for_trials 10
+
+  def get_subscription(nil), do: nil
+  def get_subscription(%Teams.Team{subscription: %Subscription{} = subscription}), do: subscription
+  def get_subscription(%Teams.Team{} = team) do
+    Teams.with_subscription(team).subscription
+  end
 
   def change_plan(team, new_plan_id) do
     subscription = active_subscription_for(team)

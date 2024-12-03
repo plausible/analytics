@@ -3,6 +3,7 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
   Transition adapter for new schema reads
   """
   use Plausible.Teams.Adapter
+  use Plausible
 
   def quota_usage(user, opts \\ []) do
     switch(user,
@@ -22,15 +23,6 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
     switch(user,
       team_fn: &Plausible.Teams.Billing.change_plan(&1, new_plan_id),
       user_fn: &Plausible.Billing.change_plan(&1, new_plan_id)
-    )
-  end
-
-  def enterprise_configured?(nil), do: false
-
-  def enterprise_configured?(user) do
-    switch(user,
-      team_fn: &Plausible.Teams.Billing.enterprise_configured?/1,
-      user_fn: &Plausible.Auth.enterprise_configured?/1
     )
   end
 
@@ -55,55 +47,11 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
     )
   end
 
-  def get_subscription(user) do
-    case user_or_team(user) do
-      %{subscription: subscription} -> subscription
-      _ -> nil
-    end
-  end
-
-  def team_member_limit(user) do
-    switch(user,
-      team_fn: &Teams.Billing.team_member_limit/1,
-      user_fn: &Plausible.Billing.Quota.Limits.team_member_limit/1
-    )
-  end
-
-  def team_member_usage(user, opts \\ []) do
-    switch(user,
-      team_fn: &Teams.Billing.team_member_usage(&1, opts),
-      user_fn: &Plausible.Billing.Quota.Usage.team_member_usage(&1, opts)
-    )
-  end
-
-  def monthly_pageview_limit(user) do
-    switch(user,
-      team_fn: &Teams.Billing.monthly_pageview_limit/1,
-      user_fn: &Plausible.Billing.Quota.Limits.monthly_pageview_limit/1
-    )
-  end
-
-  def monthly_pageview_usage(user, site_ids \\ nil) do
-    switch(
-      user,
-      team_fn: &Teams.Billing.monthly_pageview_usage(&1, site_ids),
-      user_fn: &Plausible.Billing.Quota.Usage.monthly_pageview_usage(&1, site_ids)
-    )
-  end
-
   def check_needs_to_upgrade(user) do
     switch(
       user,
       team_fn: &Teams.Billing.check_needs_to_upgrade/1,
       user_fn: &Plausible.Billing.check_needs_to_upgrade/1
-    )
-  end
-
-  def site_limit(user) do
-    switch(
-      user,
-      team_fn: &Teams.Billing.site_limit/1,
-      user_fn: &Plausible.Billing.Quota.Limits.site_limit/1
     )
   end
 
@@ -114,15 +62,6 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
       user_fn: &Plausible.Billing.Quota.ensure_can_add_new_site/1
     )
   end
-
-  def site_usage(user) do
-    switch(user,
-      team_fn: &Teams.Billing.site_usage/1,
-      user_fn: &Plausible.Billing.Quota.Usage.site_usage/1
-    )
-  end
-
-  use Plausible
 
   on_ee do
     def check_feature_availability_for_stats_api(user) do
@@ -181,10 +120,5 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
         end
       end
     )
-  end
-
-  def suggest_by_usage(user, usage_during_cycle) do
-    subscription = get_subscription(user)
-    Plausible.Billing.Plans.suggest_by_usage(subscription, usage_during_cycle)
   end
 end

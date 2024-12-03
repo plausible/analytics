@@ -175,7 +175,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     change_plan_link_text = change_plan_link_text(assigns)
 
     subscription =
-      Plausible.Teams.Adapter.Read.Billing.get_subscription(assigns.current_user)
+      Plausible.Teams.Billing.get_subscription(assigns.current_team)
 
     billing_details_expired =
       Subscription.Status.in?(subscription, [

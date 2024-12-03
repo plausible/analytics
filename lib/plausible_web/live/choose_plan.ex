@@ -30,8 +30,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           pending_ownership_site_ids: pending_ownership_site_ids
         )
       end)
-      |> assign_new(:subscription, fn %{current_user: current_user} ->
-        Plausible.Teams.Adapter.Read.Billing.get_subscription(current_user)
+      |> assign_new(:subscription, fn %{current_team: current_team} ->
+        Plausible.Teams.Billing.get_subscription(current_team)
       end)
       |> assign_new(:owned_plan, fn %{subscription: subscription} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)

@@ -4,6 +4,7 @@ defmodule PlausibleWeb.SettingsController do
 
   alias Plausible.Auth
   alias PlausibleWeb.UserAuth
+  alias Plausible.Teams
 
   require Logger
 
@@ -20,24 +21,23 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def subscription(conn, _params) do
-    current_user = conn.assigns.current_user
-    subscription = Plausible.Teams.Adapter.Read.Billing.get_subscription(current_user)
+    current_team = conn.assigns.current_team
+    subscription = Teams.Billing.get_subscription(current_team)
 
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
       subscription: subscription,
-      pageview_limit: Plausible.Teams.Adapter.Read.Billing.monthly_pageview_limit(current_user),
-      pageview_usage: Plausible.Teams.Adapter.Read.Billing.monthly_pageview_usage(current_user),
-      site_usage: Plausible.Teams.Adapter.Read.Billing.site_usage(current_user),
-      site_limit: Plausible.Teams.Adapter.Read.Billing.site_limit(current_user),
-      team_member_limit: Plausible.Teams.Adapter.Read.Billing.team_member_limit(current_user),
-      team_member_usage: Plausible.Teams.Adapter.Read.Billing.team_member_usage(current_user)
+      pageview_limit: Teams.Billing.monthly_pageview_limit(subscription),
+      pageview_usage: Teams.Billing.monthly_pageview_usage(current_team),
+      site_usage: Teams.Billing.site_usage(current_team),
+      site_limit: Teams.Billing.site_limit(current_team),
+      team_member_limit: Teams.Billing.team_member_limit(current_team),
+      team_member_usage: Teams.Billing.team_member_usage(current_team)
     )
   end
 
   def invoices(conn, _params) do
-    subscription =
-      Plausible.Teams.Adapter.Read.Billing.get_subscription(conn.assigns.current_user)
+    subscription = Teams.Billing.get_subscription(conn.assigns.current_team)
 
     invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
     render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings}, invoices: invoices)
