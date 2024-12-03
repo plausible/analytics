@@ -251,6 +251,8 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def team_member_usage(nil, _), do: 0
+
   def team_member_usage(team, opts) do
     {:ok, owner} = Teams.Sites.get_owner(team)
     exclude_emails = Keyword.get(opts, :exclude_emails, []) ++ [owner.email]
