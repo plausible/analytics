@@ -113,10 +113,12 @@ defmodule Plausible.Ingestion.Request do
     case conn.body_params do
       %Plug.Conn.Unfetched{} ->
         with max_length <- conn.assigns[:read_body_limit] || 1_000_000,
-             {:ok, body, _conn} <- Plug.Conn.read_body(conn, length: max_length, read_length: max_length),
+             {:ok, body, _conn} <-
+               Plug.Conn.read_body(conn, length: max_length, read_length: max_length),
              {:ok, params} when is_map(params) <- Jason.decode(body) do
-            {:ok, params}
-        else _ -> {:error, :invalid_json}
+          {:ok, params}
+        else
+          _ -> {:error, :invalid_json}
         end
 
       params ->
