@@ -402,6 +402,12 @@ defmodule Plausible.Factory do
     }
   end
 
+  def segment_factory do
+    %Plausible.Segment{
+      segment_data: %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
+    }
+  end
+
   defp hash_key() do
     Keyword.fetch!(
       Application.get_env(:plausible, PlausibleWeb.Endpoint),
