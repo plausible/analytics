@@ -55,12 +55,13 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       inviter = new_user()
       site = new_site(owner: inviter)
 
-      assert {:ok, %Plausible.Auth.Invitation{}} =
+      assert {:ok, %Plausible.Auth.Invitation{invitation_id: invitation_id}} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
-        subject: @subject_prefix <> "You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to #{site.domain}",
+        html_body: ~r/#{invitation_id}/
       )
     end
 
