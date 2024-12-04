@@ -25,9 +25,6 @@ defmodule Plausible.Billing.Plans do
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
-  @business_tier_launch ~N[2023-11-08 12:00:00]
-  def business_tier_launch, do: @business_tier_launch
-
   @spec growth_plans_for(Subscription.t()) :: [Plan.t()]
   @doc """
   Returns a list of growth plans available for the subscription to choose.

@@ -205,49 +205,4 @@ defmodule Plausible.Billing.Feature.StatsAPI do
   use Plausible.Billing.Feature,
     name: :stats_api,
     display_name: "Stats API"
-
-  @impl true
-  @doc """
-  Checks whether the user has access to Stats API or not.
-
-  Before the business tier, users who had not yet started their trial had
-  access to Stats API. With the business tier work, access is blocked and they
-  must either start their trial or subscribe to a plan. This is common when a
-  site owner invites a new user. In such cases, using the owner's API key is
-  recommended.
-  """
-  on_ee do
-    def check_availability(team) do
-      team = Plausible.Teams.with_subscription(team)
-      unlimited_trial? = is_nil(team) or is_nil(team.trial_expiry_date)
-
-      subscription? =
-        not is_nil(team) and Plausible.Billing.Subscriptions.active?(team.subscription)
-
-      {unlimited_trial?, subscription?}
-
-      owner = team && Plausible.Repo.preload(team, :owner).owner
-
-      pre_business_tier_account? =
-        not is_nil(owner) and
-          NaiveDateTime.before?(owner.inserted_at, Plausible.Billing.Plans.business_tier_launch())
-
-      cond do
-        # FIXME: this is unreachable code - unlimited_trial? means that basically team is nil
-        # (we don't create teams with nil trial_expiry_date), ergo, we can't reach the owner,
-        # ergo, there's on insertion time to compare against. If we must maintain it, we have to
-        # work it around.
-        !subscription? && unlimited_trial? && pre_business_tier_account? ->
-          :ok
-
-        !subscription? && unlimited_trial? && !pre_business_tier_account? ->
-          {:error, :upgrade_required}
-
-        true ->
-          super(team)
-      end
-    end
-  else
-    def check_availability(_), do: :ok
-  end
 end

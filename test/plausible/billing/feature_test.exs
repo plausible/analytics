@@ -65,18 +65,6 @@ defmodule Plausible.Billing.FeatureTest do
              Plausible.Billing.Feature.StatsAPI.check_availability(team)
   end
 
-  @tag :skip
-  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user trial hasn't started and was created before the business tier launch" do
-    # FIXME can't trigger this condition
-    _user = new_user(inserted_at: ~N[2020-01-01T00:00:00], trial_expiry_date: nil)
-    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(nil)
-  end
-
-  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok if user is subscribed and account was created after business tier launch" do
-    team = new_user(trial_expiry_date: nil) |> subscribe_to_business_plan() |> team_of()
-    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(team)
-  end
-
   @tag :ee_only
   test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user trial hasn't started and was created after the business tier launch" do
     _user = new_user(trial_expiry_date: nil)
