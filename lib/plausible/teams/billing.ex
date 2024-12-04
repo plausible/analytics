@@ -119,6 +119,9 @@ defmodule Plausible.Teams.Billing do
     |> Repo.one()
   end
 
+  @spec check_needs_to_upgrade(Teams.Team.t() | nil) ::
+          {:needs_to_upgrade, :no_trial | :no_active_subscription | :grace_period_ended}
+          | :no_upgrade_needed
   def check_needs_to_upgrade(nil), do: {:needs_to_upgrade, :no_trial}
 
   def check_needs_to_upgrade(team) do
