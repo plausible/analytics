@@ -318,21 +318,19 @@ defmodule Plausible.Stats.Imported do
     |> select_joined_metrics(metrics)
   end
 
-  # This function speeds up cases where grouping by a very high cardinality column by limiting the JOINed
-  # main and imported results.
+  # Optimization for cases when grouping by a very high cardinality column.
   #
-  # For example when grouping by pathname and every path is dynamically generated, this can reduce
-  # time spent JOINing billions of rows in ClickHouse by an order of magnitude.
+  # Instead of joining all rows from main and imported tables, we limit the number of rows
+  # in both tables to LIMIT N * 100.
   #
-  # Mathematically, we can't limit main and imported results to LIMIT N since the true top N values
-  # can arise from outside the top N items of either subquery. Instead we multiply the limit by a
-  # reasonably large constant to ensure it _should_ be captured.
+  # This speeds up cases where a site has millions of unique pathnames, reducing the time spent
+  # JOINing tables by an order of magnitude.
   #
-  # This isn't always correct either as in degenerate cases but should be a reasonable trade-off that
-  # doesn't affect user experience in any conceivable realworld cases.
+  # Note that this optimization is lossy as the true top N values can arise from outside the top C
+  # items of either subquery. In practice though, this will give plausible results.
   #
-  # Note we only apply this optimization in cases where we can deterministically ORDER BY. This covers
-  # opening Plausible dashboard but not more complicated use-cases
+  # We only apply this optimization in cases where we can deterministically ORDER BY. This covers
+  # opening Plausible dashboard but not more complicated use-cases.
   defp paginate_optimization(q, query) do
     if is_map(query.pagination) and can_order_by?(query) do
       n = (query.pagination.limit + query.pagination.offset) * 100
