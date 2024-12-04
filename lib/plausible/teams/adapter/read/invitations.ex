@@ -7,28 +7,6 @@ defmodule Plausible.Teams.Adapter.Read.Invitations do
 
   alias Plausible.Repo
 
-  def check_invitation_permissions(site, inviter, role, opts) do
-    switch(
-      inviter,
-      team_fn: fn _ ->
-        Plausible.Teams.Invitations.check_invitation_permissions(
-          site,
-          inviter,
-          role,
-          opts
-        )
-      end,
-      user_fn: fn _ ->
-        Plausible.Site.Memberships.CreateInvitation.check_invitation_permissions(
-          site,
-          inviter,
-          role,
-          opts
-        )
-      end
-    )
-  end
-
   def check_team_member_limit(inviter, site, role, invitee_email) do
     switch(
       inviter,

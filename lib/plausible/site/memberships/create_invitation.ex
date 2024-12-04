@@ -52,7 +52,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
 
     with site <- Plausible.Repo.preload(site, :owner),
          :ok <-
-           Plausible.Teams.Adapter.Read.Invitations.check_invitation_permissions(
+           Plausible.Teams.Invitations.check_invitation_permissions(
              site,
              inviter,
              role,
@@ -89,24 +89,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
       invitation
     else
       {:error, cause} -> Plausible.Repo.rollback(cause)
-    end
-  end
-
-  @doc false
-  def check_invitation_permissions(site, inviter, requested_role, opts) do
-    check_permissions? = Keyword.get(opts, :check_permissions, true)
-
-    if check_permissions? do
-      required_roles = if requested_role == :owner, do: [:owner], else: [:admin, :owner]
-
-      membership_query =
-        from(m in Membership,
-          where: m.user_id == ^inviter.id and m.site_id == ^site.id and m.role in ^required_roles
-        )
-
-      if Plausible.Repo.exists?(membership_query), do: :ok, else: {:error, :forbidden}
-    else
-      :ok
     end
   end
 
