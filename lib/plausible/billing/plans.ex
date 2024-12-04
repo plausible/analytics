@@ -112,19 +112,6 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def latest_enterprise_plan_with_price(user, customer_ip) do
-    enterprise_plan =
-      Repo.one!(
-        from(e in EnterprisePlan,
-          where: e.user_id == ^user.id,
-          order_by: [desc: e.inserted_at],
-          limit: 1
-        )
-      )
-
-    {enterprise_plan, get_price_for(enterprise_plan, customer_ip)}
-  end
-
   def subscription_interval(subscription) do
     case get_subscription_plan(subscription) do
       %EnterprisePlan{billing_interval: interval} ->
