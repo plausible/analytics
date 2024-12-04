@@ -445,21 +445,17 @@ defmodule Plausible.Billing.QuotaTest do
 
   describe "features_usage/2" do
     test "returns an empty list for a user/site who does not use any feature" do
-      assert [] == Quota.Usage.features_usage(insert(:user))
-      assert [] == Quota.Usage.features_usage(nil, [insert(:site).id])
+      assert [] == Plausible.Teams.Billing.features_usage(team_of(new_user()))
+      assert [] == Plausible.Teams.Billing.features_usage(nil, [new_site().id])
     end
 
     test "returns [Props] when user/site uses custom props" do
-      user = insert(:user)
+      user = new_user()
+      site = new_site(owner: user, allowed_event_props: ["dummy"])
+      team = team_of(user)
 
-      site =
-        insert(:site,
-          allowed_event_props: ["dummy"],
-          memberships: [build(:site_membership, user: user, role: :owner)]
-        )
-
-      assert [Props] == Quota.Usage.features_usage(nil, [site.id])
-      assert [Props] == Quota.Usage.features_usage(user)
+      assert [Props] == Plausible.Teams.Billing.features_usage(nil, [site.id])
+      assert [Props] == Plausible.Teams.Billing.features_usage(team)
     end
 
     on_ee do
@@ -477,30 +473,32 @@ defmodule Plausible.Billing.QuotaTest do
       end
 
       test "returns [RevenueGoals] when user/site uses revenue goals" do
-        user = insert(:user)
-        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+        user = new_user()
+        team = team_of(user)
+        site = new_site(owner: user)
         insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
-        assert [RevenueGoals] == Quota.Usage.features_usage(nil, [site.id])
-        assert [RevenueGoals] == Quota.Usage.features_usage(user)
+        assert [RevenueGoals] == Plausible.Teams.Billing.features_usage(nil, [site.id])
+        assert [RevenueGoals] == Plausible.Teams.Billing.features_usage(team)
       end
     end
 
     test "returns [StatsAPI] when user has a stats api key" do
-      user = insert(:user)
+      user = new_user()
+      team = team_of(user)
       insert(:api_key, user: user)
 
-      assert [StatsAPI] == Quota.Usage.features_usage(user)
+      assert [StatsAPI] == Plausible.Teams.Billing.features_usage(team)
     end
 
     test "returns feature usage based on a user and a custom list of site_ids" do
-      user = insert(:user)
+      user = new_user()
+      team = team_of(user)
       insert(:api_key, user: user)
-
-      site_using_props = insert(:site, allowed_event_props: ["dummy"])
+      site_using_props = new_site(allowed_event_props: ["dummy"])
 
       site_ids = [site_using_props.id]
-      assert [Props, StatsAPI] == Quota.Usage.features_usage(user, site_ids)
+      assert [Props, StatsAPI] == Plausible.Teams.Billing.features_usage(team, site_ids)
     end
 
     on_ee do

@@ -719,7 +719,7 @@ defmodule PlausibleWeb.Live.Sites do
   on_ee do
     defp check_feature_access(site, new_owner) do
       missing_features =
-        Plausible.Billing.Quota.Usage.features_usage(nil, [site.id])
+        Plausible.Teams.Billing.features_usage(nil, [site.id])
         |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
 
       if missing_features == [] do

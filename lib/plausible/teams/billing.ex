@@ -1,6 +1,8 @@
 defmodule Plausible.Teams.Billing do
   @moduledoc false
 
+  use Plausible
+
   import Ecto.Query
 
   alias Plausible.Billing.EnterprisePlan
@@ -449,13 +451,13 @@ defmodule Plausible.Teams.Billing do
 
   @spec features_usage(Teams.Team.t() | nil, list() | nil) :: [atom()]
   @doc """
-  Given only a user, this function returns the features used across all the
-  sites this team owns + StatsAPI if the user has a configured Stats API key.
+  Given only a team, this function returns the features used across all the
+  sites this team owns + StatsAPI if any team user has a configured Stats API key.
 
   Given a team, and a list of site_ids, returns the features used by those
-  sites instead + StatsAPI if the any user in the team has a configured Stats API key.
+  sites instead + StatsAPI if any user in the team has a configured Stats API key.
 
-  The user can also be passed as `nil`, in which case we will never return
+  The team can also be passed as `nil`, in which case we will never return
   Stats API as a used feature.
   """
   def features_usage(team, site_ids \\ nil)
@@ -471,7 +473,7 @@ defmodule Plausible.Teams.Billing do
     site_scoped_feature_usage = features_usage(nil, owned_site_ids)
 
     stats_api_used? =
-      Plausible.Repo.exists?(
+      Repo.exists?(
         from tm in Plausible.Teams.Membership,
           as: :team_membership,
           where: tm.team_id == ^team.id,
@@ -489,8 +491,34 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-  def features_usage(nil, owned_site_ids) when is_list(owned_site_ids) do
-    Plausible.Billing.Quota.Usage.features_usage(nil, owned_site_ids)
+  def features_usage(nil, site_ids) when is_list(site_ids) do
+    props_usage_q =
+      from s in Plausible.Site,
+        where: s.id in ^site_ids and fragment("cardinality(?) > 0", s.allowed_event_props)
+
+    revenue_goals_usage_q =
+      from g in Plausible.Goal,
+        where: g.site_id in ^site_ids and not is_nil(g.currency)
+
+    queries =
+      on_ee do
+        funnels_usage_q = from f in "funnels", where: f.site_id in ^site_ids
+
+        [
+          {Feature.Props, props_usage_q},
+          {Feature.Funnels, funnels_usage_q},
+          {Feature.RevenueGoals, revenue_goals_usage_q}
+        ]
+      else
+        [
+          {Feature.Props, props_usage_q},
+          {Feature.RevenueGoals, revenue_goals_usage_q}
+        ]
+      end
+
+    Enum.reduce(queries, [], fn {feature, query}, acc ->
+      if Repo.exists?(query), do: acc ++ [feature], else: acc
+    end)
   end
 
   defp query_team_member_emails(team, pending_ownership_site_ids, exclude_emails) do
