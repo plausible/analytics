@@ -264,7 +264,6 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   defp check_usage_within_plan_limits(%{
          available: true,
          usage: usage,
-         current_user: current_user,
          current_team: current_team,
          plan_to_render: plan
        }) do
@@ -276,7 +275,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     trial_active_or_ended_recently? =
       not invited_user? &&
-        Plausible.Teams.Adapter.Read.Teams.trial_days_left(current_user) >= -10
+        current_team && current_team.trial_expiry_date &&
+        Plausible.Teams.trial_days_left(current_team) >= -10
 
     limit_checking_opts =
       cond do
