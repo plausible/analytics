@@ -5,13 +5,6 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
   use Plausible.Teams.Adapter
   use Plausible
 
-  def has_active_subscription?(user) do
-    switch(user,
-      team_fn: &Plausible.Teams.Billing.has_active_subscription?/1,
-      user_fn: &Plausible.Billing.has_active_subscription?/1
-    )
-  end
-
   def active_subscription_for(user) do
     switch(user,
       team_fn: &Plausible.Teams.Billing.active_subscription_for/1,

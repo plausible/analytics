@@ -9,8 +9,7 @@ defmodule PlausibleWeb.BillingController do
   plug PlausibleWeb.RequireAccountPlug
 
   def ping_subscription(%Plug.Conn{} = conn, _params) do
-    subscribed? =
-      Plausible.Teams.Adapter.Read.Billing.has_active_subscription?(conn.assigns.current_user)
+    subscribed? = Plausible.Teams.Billing.has_active_subscription?(conn.assigns.current_team)
 
     json(conn, %{is_subscribed: subscribed?})
   end

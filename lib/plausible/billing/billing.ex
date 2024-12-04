@@ -11,11 +11,6 @@ defmodule Plausible.Billing do
     user |> active_subscription_query() |> Repo.one()
   end
 
-  @spec has_active_subscription?(User.t()) :: boolean()
-  def has_active_subscription?(user) do
-    user |> active_subscription_query() |> Repo.exists?()
-  end
-
   def subscription_created(params) do
     Repo.transaction(fn ->
       handle_subscription_created(params)
