@@ -514,12 +514,11 @@ defmodule Plausible.BillingTest do
 
   describe "change_plan" do
     test "sets the next bill amount and date" do
-      user = insert(:user)
-      insert(:subscription, user: user)
+      team = new_user() |> subscribe_to_growth_plan() |> team_of()
 
-      Billing.change_plan(user, "123123")
+      Plausible.Teams.Billing.change_plan(team, "123123")
 
-      subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      subscription = Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
       assert subscription.paddle_plan_id == "123123"
       assert subscription.next_bill_date == ~D[2019-07-10]
       assert subscription.next_bill_amount == "6.00"

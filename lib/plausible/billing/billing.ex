@@ -3,7 +3,7 @@ defmodule Plausible.Billing do
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscriptions
-  alias Plausible.Billing.{Subscription, Plans, Quota}
+  alias Plausible.Billing.Subscription
   alias Plausible.Auth.User
 
   @spec active_subscription_for(User.t()) :: Subscription.t() | nil
@@ -38,44 +38,6 @@ defmodule Plausible.Billing do
     Repo.transaction(fn ->
       handle_subscription_payment_succeeded(params)
     end)
-  end
-
-  def change_plan(user, new_plan_id) do
-    subscription = active_subscription_for(user)
-    plan = Plans.find(new_plan_id)
-
-    limit_checking_opts =
-      if user.allow_next_upgrade_override do
-        [ignore_pageview_limit: true]
-      else
-        []
-      end
-
-    with :ok <- Quota.ensure_within_plan_limits(user, plan, limit_checking_opts),
-         do: do_change_plan(subscription, new_plan_id)
-  end
-
-  @doc false
-  def do_change_plan(subscription, new_plan_id) do
-    res =
-      paddle_api().update_subscription(subscription.paddle_subscription_id, %{
-        plan_id: new_plan_id
-      })
-
-    case res do
-      {:ok, response} ->
-        amount = :erlang.float_to_binary(response["next_payment"]["amount"] / 1, decimals: 2)
-
-        Subscription.changeset(subscription, %{
-          paddle_plan_id: Integer.to_string(response["plan_id"]),
-          next_bill_amount: amount,
-          next_bill_date: response["next_payment"]["date"]
-        })
-        |> Repo.update()
-
-      e ->
-        e
-    end
   end
 
   def change_plan_preview(subscription, new_plan_id) do

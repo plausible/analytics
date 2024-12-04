@@ -57,8 +57,31 @@ defmodule Plausible.Teams.Billing do
 
     with :ok <-
            Plausible.Billing.Quota.ensure_within_plan_limits(usage, plan, limit_checking_opts),
-         do: Plausible.Billing.do_change_plan(subscription, new_plan_id)
+         do: do_change_plan(subscription, new_plan_id)
   end
+
+  defp do_change_plan(subscription, new_plan_id) do
+    res =
+      Plausible.Billing.paddle_api().update_subscription(subscription.paddle_subscription_id, %{
+        plan_id: new_plan_id
+      })
+
+    case res do
+      {:ok, response} ->
+        amount = :erlang.float_to_binary(response["next_payment"]["amount"] / 1, decimals: 2)
+
+        Subscription.changeset(subscription, %{
+          paddle_plan_id: Integer.to_string(response["plan_id"]),
+          next_bill_amount: amount,
+          next_bill_date: response["next_payment"]["date"]
+        })
+        |> Repo.update()
+
+      e ->
+        e
+    end
+  end
+
 
   def enterprise_configured?(nil), do: false
 
