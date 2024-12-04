@@ -7,28 +7,6 @@ defmodule Plausible.Teams.Adapter.Read.Invitations do
 
   alias Plausible.Repo
 
-  def check_team_member_limit(inviter, site, role, invitee_email) do
-    switch(
-      inviter,
-      team_fn: fn _ ->
-        site_team = Repo.preload(site, :team).team
-
-        Plausible.Teams.Invitations.check_team_member_limit(
-          site_team,
-          role,
-          invitee_email
-        )
-      end,
-      user_fn: fn _ ->
-        Plausible.Site.Memberships.CreateInvitation.check_team_member_limit(
-          site,
-          role,
-          invitee_email
-        )
-      end
-    )
-  end
-
   def ensure_transfer_valid(current_user, site, invitee, role) do
     switch(
       current_user,

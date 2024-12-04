@@ -5,9 +5,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   """
 
   alias Plausible.Auth.{User, Invitation}
-  alias Plausible.{Site, Sites, Site.Membership}
-  alias Plausible.Billing.Quota
-  import Ecto.Query
+  alias Plausible.{Site, Sites}
   use Plausible
 
   @type invite_error() ::
@@ -50,7 +48,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   defp do_invite(site, inviter, invitee_email, role, opts \\ []) do
     attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
 
-    with site <- Plausible.Repo.preload(site, :owner),
+    with site <- Plausible.Repo.preload(site, [:owner, :team]),
          :ok <-
            Plausible.Teams.Invitations.check_invitation_permissions(
              site,
@@ -59,9 +57,8 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
              opts
            ),
          :ok <-
-           Plausible.Teams.Adapter.Read.Invitations.check_team_member_limit(
-             inviter,
-             site,
+           Plausible.Teams.Invitations.check_team_member_limit(
+             site.team,
              role,
              invitee_email
            ),
@@ -137,20 +134,5 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     else
       :ok
     end
-  end
-
-  @doc false
-  def check_team_member_limit(_site, :owner, _invitee_email) do
-    :ok
-  end
-
-  def check_team_member_limit(site, _role, invitee_email) do
-    team = Plausible.Repo.preload(site, :team).team
-    limit = Plausible.Teams.Billing.team_member_limit(team)
-    usage = Plausible.Teams.Billing.team_member_usage(team, exclude_emails: [invitee_email])
-
-    if Quota.below_limit?(usage, limit),
-      do: :ok,
-      else: {:error, {:over_limit, limit}}
   end
 end
