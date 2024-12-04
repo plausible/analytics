@@ -7,28 +7,6 @@ defmodule Plausible.Teams.Adapter.Read.Invitations do
 
   alias Plausible.Repo
 
-  def ensure_transfer_valid(current_user, site, invitee, role) do
-    switch(
-      current_user,
-      team_fn: fn _ ->
-        site_team = Repo.preload(site, :team).team
-
-        Plausible.Teams.Invitations.ensure_transfer_valid(
-          site_team,
-          invitee,
-          role
-        )
-      end,
-      user_fn: fn _ ->
-        Plausible.Site.Memberships.Invitations.ensure_transfer_valid(
-          site,
-          invitee,
-          role
-        )
-      end
-    )
-  end
-
   def ensure_new_membership(inviter, site, invitee, role) do
     switch(
       inviter,

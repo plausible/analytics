@@ -5,7 +5,6 @@ defmodule Plausible.Site.Memberships.Invitations do
 
   import Ecto.Query, only: [from: 2]
 
-  alias Plausible.Site
   alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Billing.Feature
@@ -46,20 +45,6 @@ defmodule Plausible.Site.Memberships.Invitations do
   def delete_invitation(invitation) do
     Repo.delete_all(from(i in Auth.Invitation, where: i.id == ^invitation.id))
 
-    :ok
-  end
-
-  @spec ensure_transfer_valid(Site.t(), Auth.User.t() | nil, Site.Membership.role()) ::
-          :ok | {:error, :transfer_to_self}
-  def ensure_transfer_valid(%Site{} = site, %Auth.User{} = new_owner, :owner) do
-    if Plausible.Sites.role(new_owner.id, site) == :owner do
-      {:error, :transfer_to_self}
-    else
-      :ok
-    end
-  end
-
-  def ensure_transfer_valid(_site, _invitee, _role) do
     :ok
   end
 end

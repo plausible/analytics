@@ -64,9 +64,8 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
            ),
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
          :ok <-
-           Plausible.Teams.Adapter.Read.Invitations.ensure_transfer_valid(
-             inviter,
-             site,
+           Plausible.Teams.Invitations.ensure_transfer_valid(
+             site.team,
              invitee,
              role
            ),
