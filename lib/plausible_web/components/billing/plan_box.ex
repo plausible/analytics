@@ -265,13 +265,14 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
          available: true,
          usage: usage,
          current_user: current_user,
+         current_team: current_team,
          plan_to_render: plan
        }) do
     # At this point, the user is *not guaranteed* to have a `trial_expiry_date`,
     # because in the past we've let users upgrade without that constraint, as
     # well as transfer sites to those accounts. to these accounts we won't be
     # offering an extra pageview limit allowance margin though.
-    invited_user? = is_nil(Plausible.Teams.Adapter.Read.Teams.trial_expiry_date(current_user))
+    invited_user? = current_team && is_nil(current_team.trial_expiry_date)
 
     trial_active_or_ended_recently? =
       not invited_user? &&
@@ -279,7 +280,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     limit_checking_opts =
       cond do
-        Plausible.Teams.Adapter.Read.Billing.allow_next_upgrade_override?(current_user) ->
+        current_team && current_team.allow_next_upgrade_override ->
           [ignore_pageview_limit: true]
 
         trial_active_or_ended_recently? && plan.volume == "10k" ->
