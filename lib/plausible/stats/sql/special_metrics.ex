@@ -58,11 +58,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         |> Query.set(
           dimensions: [],
           include_imported: query.include_imported,
-<<<<<<< HEAD
           preloaded_goals: []
-=======
-          pagination: nil
->>>>>>> 71ef81755 (Splitting should no longer remove pagination. Handle special cases in special_metrics.ex)
         )
 
       q
@@ -105,11 +101,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           metrics: [:visitors],
           order_by: [],
           include_imported: query.include_imported,
-<<<<<<< HEAD
           preloaded_goals: []
-=======
-          pagination: nil
->>>>>>> 71ef81755 (Splitting should no longer remove pagination. Handle special cases in special_metrics.ex)
         )
 
       from(e in subquery(q),
