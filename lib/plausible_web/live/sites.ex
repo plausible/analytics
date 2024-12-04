@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.Sites do
       end)
       |> assign_new(:needs_to_upgrade, fn %{
                                             current_user: current_user,
-                                            current_team: current_team,
+                                            current_team: current_team
                                           } ->
         Plausible.Teams.Users.owns_sites?(current_user, include_pending?: true) &&
           Plausible.Teams.Billing.check_needs_to_upgrade(current_team)
@@ -701,8 +701,6 @@ defmodule PlausibleWeb.Live.Sites do
 
   defdelegate ensure_can_take_ownership(site, team), to: Plausible.Teams.Invitations
 
-  defdelegate check_feature_access(site, user), to: Plausible.Teams.Adapter.Read.Ownership
-
   def check_features(%{role: :owner, site: site} = invitation, user) do
     case check_feature_access(site, user) do
       :ok ->
@@ -715,6 +713,24 @@ defmodule PlausibleWeb.Live.Sites do
           |> PlausibleWeb.TextHelpers.pretty_list()
 
         %{invitation: invitation, missing_features: feature_names}
+    end
+  end
+
+  on_ee do
+    defp check_feature_access(site, new_owner) do
+      missing_features =
+        Plausible.Billing.Quota.Usage.features_usage(nil, [site.id])
+        |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
+
+      if missing_features == [] do
+        :ok
+      else
+        {:error, {:missing_features, missing_features}}
+      end
+    end
+  else
+    defp check_feature_access(_site, _new_owner) do
+      :ok
     end
   end
 
