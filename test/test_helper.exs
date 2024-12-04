@@ -8,7 +8,6 @@ Application.ensure_all_started(:double)
 
 FunWithFlags.enable(:channels)
 FunWithFlags.enable(:scroll_depth)
-FunWithFlags.enable(:read_team_schemas)
 
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 

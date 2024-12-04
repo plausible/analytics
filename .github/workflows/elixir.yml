@@ -16,22 +16,19 @@ env:
 
 jobs:
   build:
-    name: "Build and test (${{ matrix.mix_env }}, ${{ matrix.postgres_image }}${{ matrix.test_read_team_schemas == '1' && ', read_team_schemas' || '' }})"
+    name: "Build and test (${{ matrix.mix_env }}, ${{ matrix.postgres_image }})"
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mix_env: ["test", "ce_test"]
-        postgres_image: ["postgres:16"]
-        test_read_team_schemas: ["0"]
+        mix_env: ["test"]
+        postgres_image: ["postgres:15"]
 
         include:
-          - mix_env: "test"
-            postgres_image: "postgres:15"
-            test_read_team_schemas: "1"
+          - mix_env: "ce_test"
+            postgres_image: "postgres:16"
 
     env:
       MIX_ENV: ${{ matrix.mix_env }}
-      TEST_READ_TEAM_SCHEMAS: ${{ matrix.test_read_team_schemas }}
     services:
       postgres:
         image: ${{ matrix.postgres_image }}
