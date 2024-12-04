@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     invited_user? = current_team && is_nil(current_team.trial_expiry_date)
 
     trial_active_or_ended_recently? =
-      not invited_user? &&
+      !invited_user? &&
         current_team && current_team.trial_expiry_date &&
         Plausible.Teams.trial_days_left(current_team) >= -10
 
