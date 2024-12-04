@@ -82,7 +82,6 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-
   def enterprise_configured?(nil), do: false
 
   def enterprise_configured?(%Teams.Team{} = team) do

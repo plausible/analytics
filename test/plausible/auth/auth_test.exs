@@ -76,7 +76,7 @@ defmodule Plausible.AuthTest do
 
     @tag :ce_build_only
     test "defaults to 1000000 requests per hour limit in CE" do
-      user = insert(:user)
+      user = new_user()
 
       {:ok, %Auth.ApiKey{hourly_request_limit: hourly_request_limit}} =
         Auth.create_api_key(user, "my new CE key", Ecto.UUID.generate())
