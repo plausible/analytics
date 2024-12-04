@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:params, params)
       |> load_sites()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
-        Plausible.Teams.Users.has_sites?(current_user)
+        Plausible.Teams.Users.has_sites?(current_user, include_pending?: true)
       end)
       |> assign_new(:needs_to_upgrade, fn %{
                                             current_user: current_user,
