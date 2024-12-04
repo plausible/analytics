@@ -6,11 +6,6 @@ defmodule Plausible.Billing do
   alias Plausible.Billing.Subscription
   alias Plausible.Auth.User
 
-  @spec active_subscription_for(User.t()) :: Subscription.t() | nil
-  def active_subscription_for(user) do
-    user |> active_subscription_query() |> Repo.one()
-  end
-
   def subscription_created(params) do
     Repo.transaction(fn ->
       handle_subscription_created(params)
@@ -239,14 +234,6 @@ defmodule Plausible.Billing do
 
   def cancelled_subscription_notice_dismiss_id(id) do
     "subscription_cancelled__#{id}"
-  end
-
-  defp active_subscription_query(user) do
-    from(s in Subscription,
-      where: s.user_id == ^user.id and s.status == ^Subscription.Status.active(),
-      order_by: [desc: s.inserted_at],
-      limit: 1
-    )
   end
 
   defp after_subscription_update(subscription) do

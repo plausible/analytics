@@ -111,6 +111,8 @@ defmodule Plausible.Teams.Billing do
     |> Repo.exists?()
   end
 
+  def active_subscription_for(nil), do: nil
+
   def active_subscription_for(team) do
     team
     |> active_subscription_query()

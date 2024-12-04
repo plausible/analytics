@@ -70,8 +70,9 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
+    current_team = conn.assigns.current_team
     current_user = conn.assigns.current_user
-    subscription = Plausible.Teams.Adapter.Read.Billing.active_subscription_for(current_user)
+    subscription = Plausible.Teams.Billing.active_subscription_for(current_team)
 
     case preview_subscription(subscription, new_plan_id) do
       {:ok, {subscription, preview_info}} ->
@@ -90,6 +91,7 @@ defmodule PlausibleWeb.BillingController do
           extra: %{
             message: msg,
             new_plan_id: new_plan_id,
+            current_team: current_team.id,
             user_id: current_user.id
           }
         )

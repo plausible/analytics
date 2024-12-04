@@ -526,13 +526,22 @@ defmodule Plausible.BillingTest do
   end
 
   test "active_subscription_for/1 returns active subscription" do
-    active = insert(:subscription, user: insert(:user), status: Subscription.Status.active())
-    paused = insert(:subscription, user: insert(:user), status: Subscription.Status.paused())
-    user_without_subscription = insert(:user)
+    active_team =
+      new_user()
+      |> subscribe_to_growth_plan(status: Subscription.Status.active())
+      |> team_of()
+      |> Plausible.Teams.with_subscription()
 
-    assert Billing.active_subscription_for(active.user).id == active.id
-    assert Billing.active_subscription_for(paused.user) == nil
-    assert Billing.active_subscription_for(user_without_subscription) == nil
+    paused_team =
+      new_user()
+      |> subscribe_to_growth_plan(status: Subscription.Status.paused())
+      |> team_of()
+
+    assert Plausible.Teams.Billing.active_subscription_for(active_team).id ==
+             active_team.subscription.id
+
+    assert Plausible.Teams.Billing.active_subscription_for(paused_team) == nil
+    assert Plausible.Teams.Billing.active_subscription_for(nil) == nil
   end
 
   test "has_active_subscription?/1 returns whether the user has an active subscription" do
