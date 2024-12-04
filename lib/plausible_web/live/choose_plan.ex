@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       socket
       |> assign_new(:pending_ownership_site_ids, fn %{current_user: current_user} ->
         current_user.email
-        |> Plausible.Teams.Adapter.Read.Ownership.all_pending_site_transfers(current_user)
+        |> Plausible.Teams.Memberships.all_pending_site_transfers()
         |> Enum.map(& &1.site_id)
       end)
       |> assign_new(:usage, fn %{

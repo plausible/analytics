@@ -38,18 +38,6 @@ defmodule Plausible.Site.Memberships do
     )
   end
 
-  @spec all_pending_ownerships(String.t()) :: list()
-  def all_pending_ownerships(email) do
-    pending_ownership_invitation_q(email)
-    |> Repo.all()
-  end
-
-  @spec pending_ownerships?(String.t()) :: boolean()
-  def pending_ownerships?(email) do
-    pending_ownership_invitation_q(email)
-    |> Repo.exists?()
-  end
-
   @spec any_or_pending?(Plausible.Auth.User.t()) :: boolean()
   def any_or_pending?(user) do
     invitation_query =
@@ -63,11 +51,5 @@ defmodule Plausible.Site.Memberships do
       select: 1
     )
     |> Repo.exists?()
-  end
-
-  defp pending_ownership_invitation_q(email) do
-    from(i in Plausible.Auth.Invitation,
-      where: i.email == ^email and i.role == ^:owner
-    )
   end
 end
