@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Site.MembershipController do
   def invite_member_form(conn, _params) do
     site =
       conn.assigns.current_user
-      |> Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.site.domain)
+      |> Plausible.Sites.get_for_user!(conn.assigns.site.domain)
       |> Plausible.Repo.preload(:owner)
 
     limit = Plausible.Teams.Billing.team_member_limit(site.team)
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site_domain = conn.assigns.site.domain
 
     site =
-      Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.current_user, site_domain)
+      Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
       |> Plausible.Repo.preload(:owner)
 
     case Memberships.create_invitation(site, conn.assigns.current_user, email, role) do
@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site_domain = conn.assigns.site.domain
 
     site =
-      Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.current_user, site_domain)
+      Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
     render(
       conn,
@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site_domain = conn.assigns.site.domain
 
     site =
-      Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.current_user, site_domain)
+      Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
     case Memberships.create_invitation(site, conn.assigns.current_user, email, :owner) do
       {:ok, _invitation} ->

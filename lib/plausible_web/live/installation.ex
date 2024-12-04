@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Live.Installation do
         socket
       ) do
     site =
-      Plausible.Teams.Adapter.Read.Sites.get_for_user!(socket.assigns.current_user, domain, [
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
         :owner,
         :admin,
         :super_admin,

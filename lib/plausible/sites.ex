@@ -56,7 +56,7 @@ defmodule Plausible.Sites do
 
   @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
   def set_option(user, site, option, value) when option in Site.UserPreference.options() do
-    Plausible.Teams.Adapter.Read.Sites.get_for_user!(user, site.domain)
+    Plausible.Sites.get_for_user!(user, site.domain)
 
     user
     |> Site.UserPreference.changeset(site, %{option => value})
@@ -172,7 +172,7 @@ defmodule Plausible.Sites do
     end)
     |> Ecto.Multi.run(:clear_changed_from, fn
       _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
-        case Plausible.Teams.Adapter.Read.Sites.get_for_user(user, domain, [:owner]) do
+        case Plausible.Sites.get_for_user(user, domain, [:owner]) do
           %Site{domain_changed_from: ^domain} = site ->
             site
             |> Ecto.Changeset.change()
@@ -309,6 +309,55 @@ defmodule Plausible.Sites do
 
   def locked?(%Site{locked: locked}) do
     locked
+  end
+
+  def get_for_user!(user, domain, roles \\ [:owner, :admin, :viewer]) do
+    roles = translate_roles(roles)
+
+    site =
+      if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
+        get_by_domain!(domain)
+      else
+        user.id
+        |> get_for_user_query(domain, List.delete(roles, :super_admin))
+        |> Repo.one!()
+      end
+
+    Repo.preload(site, :team)
+  end
+
+  def get_for_user(user, domain, roles \\ [:owner, :admin, :viewer]) do
+    roles = translate_roles(roles)
+
+    if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
+      get_by_domain(domain)
+    else
+      user.id
+      |> get_for_user_query(domain, List.delete(roles, :super_admin))
+      |> Repo.one()
+    end
+  end
+
+  defp translate_roles(roles) do
+    Enum.map(roles, fn
+      :admin -> :editor
+      role -> role
+    end)
+  end
+
+  defp get_for_user_query(user_id, domain, roles) do
+    roles = Enum.map(roles, &to_string/1)
+
+    from(s in Plausible.Site,
+      join: t in assoc(s, :team),
+      join: tm in assoc(t, :team_memberships),
+      left_join: gm in assoc(tm, :guest_memberships),
+      where: tm.user_id == ^user_id,
+      where: coalesce(gm.role, tm.role) in ^roles,
+      where: s.domain == ^domain or s.domain_changed_from == ^domain,
+      where: is_nil(gm.id) or gm.site_id == s.id,
+      select: s
+    )
   end
 
   def role(user_id, site) do
