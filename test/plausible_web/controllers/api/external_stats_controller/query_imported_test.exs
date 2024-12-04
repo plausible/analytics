@@ -1249,7 +1249,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{"imports" => true},
-          "pagination" => %{limit: 1}
+          "pagination" => %{"limit" => 1}
         })
 
       assert json_response(conn, 200)["results"] == [%{"dimensions" => ["/99"], "metrics" => [3]}]
