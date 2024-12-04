@@ -8,6 +8,7 @@ defmodule Plausible.Sites do
   alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Site
+  alias Plausible.Teams
   alias Plausible.Site.SharedLink
 
   require Plausible.Site.UserPreference
@@ -68,10 +69,85 @@ defmodule Plausible.Sites do
     )
   end
 
-  defdelegate list(user, pagination_params, opts \\ []), to: Plausible.Teams.Adapter.Read.Sites
+  defdelegate list(user, pagination_params, opts \\ []), to: Plausible.Teams.Sites
 
   defdelegate list_with_invitations(user, pagination_params, opts \\ []),
-    to: Plausible.Teams.Adapter.Read.Sites
+    to: Plausible.Teams.Sites
+
+  def list_people(site) do
+    owner_membership =
+      from(
+        tm in Teams.Membership,
+        where: tm.team_id == ^site.team_id,
+        where: tm.role == :owner,
+        select: %Plausible.Site.Membership{
+          user_id: tm.user_id,
+          role: tm.role
+        }
+      )
+      |> Repo.one!()
+
+    memberships =
+      from(
+        gm in Teams.GuestMembership,
+        inner_join: tm in assoc(gm, :team_membership),
+        where: gm.site_id == ^site.id,
+        select: %Plausible.Site.Membership{
+          user_id: tm.user_id,
+          role:
+            fragment(
+              """
+              CASE
+              WHEN ? = 'editor' THEN 'admin'
+              ELSE ?
+              END
+              """,
+              gm.role,
+              gm.role
+            )
+        }
+      )
+      |> Repo.all()
+
+    memberships = Repo.preload([owner_membership | memberships], :user)
+
+    invitations =
+      from(
+        gi in Teams.GuestInvitation,
+        inner_join: ti in assoc(gi, :team_invitation),
+        where: gi.site_id == ^site.id,
+        select: %Plausible.Auth.Invitation{
+          invitation_id: gi.invitation_id,
+          email: ti.email,
+          role:
+            fragment(
+              """
+              CASE
+              WHEN ? = 'editor' THEN 'admin'
+              ELSE ?
+              END
+              """,
+              gi.role,
+              gi.role
+            )
+        }
+      )
+      |> Repo.all()
+
+    site_transfers =
+      from(
+        st in Teams.SiteTransfer,
+        where: st.site_id == ^site.id,
+        select: %Plausible.Auth.Invitation{
+          invitation_id: st.transfer_id,
+          email: st.email,
+          role: :owner
+        }
+      )
+      |> Repo.all()
+
+    %{memberships: memberships, invitations: site_transfers ++ invitations}
+  end
 
   @spec for_user_query(Auth.User.t()) :: Ecto.Query.t()
   def for_user_query(user) do

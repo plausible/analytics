@@ -122,11 +122,10 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_people(conn, _params) do
-    current_user = conn.assigns.current_user
     site = conn.assigns.site
 
     %{memberships: memberships, invitations: invitations} =
-      Plausible.Teams.Adapter.Read.Sites.list_people(site, current_user)
+      Sites.list_people(site)
 
     conn
     |> render("settings_people.html",
