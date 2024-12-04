@@ -63,6 +63,18 @@
           "default": false,
           "description": "If set, returns the total number of result rows rows before pagination under `meta.total_rows`"
         },
+        "format_revenue_metrics": {
+          "type": "boolean",
+          "default": false,
+          "description": "If set, returns revenue metrics as an object containing `short`, `long` and `value` keys. `short` and `long` are formatted strings and `value` is the raw metric value.",
+          "$comment": "only :ee"
+        },
+        "remove_unavailable_revenue_metrics": {
+          "type": "boolean",
+          "default": false,
+          "description": "If set, removes revenue metrics that are not available for the site or query.",
+          "$comment": "only :internal"
+        },
         "comparisons": {
           "$comment": "only :internal",
           "type": "object",
@@ -259,15 +271,17 @@
           "markdownDescription": "The percentage of visitors who completed the goal with the same dimension. Requires: dimension list passed, an `event:goal` filter or `event:goal` dimension"
         },
         {
-          "const": "time_on_page",
-          "$comment": "only :internal"
-        },
-        {
           "const": "total_revenue",
-          "$comment": "only :internal"
+          "markdownDescription": "Total revenue",
+          "$comment": "only :ee"
         },
         {
           "const": "average_revenue",
+          "markdownDescription": "Average revenue",
+          "$comment": "only :ee"
+        },
+        {
+          "const": "time_on_page",
           "$comment": "only :internal"
         },
         {

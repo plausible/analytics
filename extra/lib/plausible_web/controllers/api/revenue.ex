@@ -17,7 +17,8 @@ defmodule PlausibleWeb.Controllers.API.Revenue do
       %Money{} ->
         %{
           short: Money.to_string!(value, format: :short, fractional_digits: 1),
-          long: Money.to_string!(value)
+          long: Money.to_string!(value),
+          currency: value.currency
         }
 
       _any ->

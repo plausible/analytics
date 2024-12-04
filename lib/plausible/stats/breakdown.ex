@@ -32,8 +32,7 @@ defmodule Plausible.Stats.Breakdown do
         filters: query.filters ++ dimension_filters(dimension),
         pagination: %{limit: limit, offset: (page - 1) * limit},
         # Allow pageview and event metrics to be queried off of sessions table
-        legacy_breakdown: true,
-        remove_unavailable_revenue_metrics: true
+        legacy_breakdown: true
       )
       |> QueryOptimizer.optimize()
 

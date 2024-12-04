@@ -176,7 +176,7 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   on_ee do
     defp remove_revenue_metrics_if_unavailable(query) do
-      if query.remove_unavailable_revenue_metrics and map_size(query.revenue_currencies) == 0 do
+      if query.include[:remove_unavailable_revenue_metrics] and map_size(query.revenue_currencies) == 0 do
         Query.set(query, metrics: query.metrics -- Plausible.Stats.Goal.Revenue.revenue_metrics())
       else
         query

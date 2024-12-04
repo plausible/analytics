@@ -19,9 +19,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
-      |> put_preloaded_goals(site)
       |> put_order_by(params)
-      |> put_include_comparisons(site, params)
+      |> put_include(site, params)
+      |> put_preloaded_goals(site)
       |> Query.put_imported_opts(site, params)
 
     on_ee do
@@ -37,7 +37,8 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
         site,
         query.metrics,
         query.filters,
-        query.dimensions
+        query.dimensions,
+        query.include
       )
 
     struct!(query, preloaded_goals: preloaded_goals, revenue_currencies: revenue_currencies)
@@ -196,9 +197,15 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
   end
 
-  defp put_include_comparisons(query, site, params) do
-    comparisons = parse_comparison_params(site, params)
-    struct!(query, include: Map.put(query.include, :comparisons, comparisons))
+  defp put_include(query, site, params) do
+    include = Map.merge(query.include, %{
+      comparisons: parse_comparison_params(site, params),
+      # Legacy defaults
+      format_revenue_metrics: true,
+      remove_unavailable_revenue_metrics: true
+    })
+
+    struct!(query, include: include)
   end
 
   @doc """

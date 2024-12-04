@@ -178,9 +178,14 @@ defmodule Plausible.Stats.QueryRunner do
   on_ee do
     defp get_metric(entry, metric, dimensions, query, _time_on_page)
          when metric in [:average_revenue, :total_revenue] do
+
       value = Map.get(entry, metric)
 
-      Plausible.Stats.Goal.Revenue.format_revenue_metric(value, query, dimensions)
+      if query.include[:format_revenue_metrics] do
+        Plausible.Stats.Goal.Revenue.format_revenue_metric(value, query, dimensions)
+      else
+        value
+      end
     end
   end
 

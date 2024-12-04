@@ -38,8 +38,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
-         {preloaded_goals, revenue_currencies} <-
-           preload_needed_goals(site, metrics, filters, dimensions),
+         {:ok, {preloaded_goals, revenue_currencies}} <-
+           preload_needed_goals(site, metrics, filters, dimensions, include),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -422,19 +422,24 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def preload_needed_goals(site, metrics, filters, dimensions) do
+  def preload_needed_goals(site, metrics, filters, dimensions, include) do
+    remove_unavailable_revenue_metrics = include[:remove_unavailable_revenue_metrics]
+
     goal_filters? =
       Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
-    if goal_filters? or Enum.member?(dimensions, "event:goal") do
-      goals = Plausible.Goals.Filters.preload_needed_goals(site, filters)
+    revenue_metric? = Enum.member?(metrics, :average_revenue) or Enum.member?(metrics, :total_revenue)
 
-      {
-        goals,
-        preload_revenue_currencies(site, goals, metrics, dimensions)
-      }
+    if goal_filters? or Enum.member?(dimensions, "event:goal") or revenue_metric? do
+      with goals = Plausible.Goals.Filters.preload_needed_goals(site, filters),
+           {:ok, revenue_currencies} <-
+              preload_revenue_currencies(site, goals, metrics, dimensions, remove_unavailable_revenue_metrics)
+      do
+        {:ok, {goals, revenue_currencies}}
+      end
     else
-      {[], %{}}
+      # Raise error if revenue metrics are requested but no goals? Alternatively do this in metric validation?
+      {:ok, {[], %{}}}
     end
   end
 
@@ -485,7 +490,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   on_ee do
     alias Plausible.Stats.Goal.Revenue
 
-    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions),
+    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions, remove_unavailable_revenue_metrics),
       to: Plausible.Stats.Goal.Revenue
 
     defp validate_revenue_metrics_access(site, query) do
@@ -496,7 +501,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end
     end
   else
-    defp preload_revenue_currencies(_site, _preloaded_goals, _metrics, _dimensions), do: %{}
+    defp preload_revenue_currencies(_site, _preloaded_goals, _metrics, _dimensions, _remove_unavailable_revenue_metrics), do: {:ok, %{}}
 
     defp validate_revenue_metrics_access(_site, _query), do: :ok
   end
@@ -576,6 +581,18 @@ defmodule Plausible.Stats.Filters.QueryParser do
         :ok
     end
   end
+
+  # on_ee do
+  #   defp validate_metric(metric, query) when metric in [:average_revenue, :total_revenue] do
+  #     goal_dimension? = Enum.member?(query.dimensions, "event:goal")
+
+  #     if goal_dimension? or map_size(query.revenue_currencies) > 0 do
+  #       :ok
+  #     else
+  #       {:error, "To use `#{metric}` metric, event:goal dimension or filter must be present and all filtered goals must have the same revenue tracking currency configured in Plausible."}
+  #     end
+  #   end
+  # end
 
   defp validate_metric(_, _), do: :ok
 

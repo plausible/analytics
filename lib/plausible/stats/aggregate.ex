@@ -13,7 +13,7 @@ defmodule Plausible.Stats.Aggregate do
 
     query =
       query
-      |> Query.set(metrics: metrics, remove_unavailable_revenue_metrics: true)
+      |> Query.set(metrics: metrics)
       |> QueryOptimizer.optimize()
 
     query_result = QueryRunner.run(site, query)

@@ -15,7 +15,6 @@ defmodule Plausible.Stats.Query do
             order_by: nil,
             timezone: nil,
             legacy_breakdown: false,
-            remove_unavailable_revenue_metrics: false,
             preloaded_goals: [],
             revenue_currencies: %{},
             include: Plausible.Stats.Filters.QueryParser.default_include(),
