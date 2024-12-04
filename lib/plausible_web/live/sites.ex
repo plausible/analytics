@@ -27,14 +27,13 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:params, params)
       |> load_sites()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
-        has_sites?(current_user)
+        Plausible.Teams.Users.has_sites?(current_user)
       end)
       |> assign_new(:needs_to_upgrade, fn %{
                                             current_user: current_user,
                                             current_team: current_team,
-                                            sites: sites
                                           } ->
-        owns_sites?(current_user, sites) &&
+        Plausible.Teams.Users.owns_sites?(current_user, include_pending?: true) &&
           Plausible.Teams.Billing.check_needs_to_upgrade(current_team)
       end)
 
@@ -644,10 +643,6 @@ defmodule PlausibleWeb.Live.Sites do
 
     {:noreply, socket}
   end
-
-  defdelegate has_sites?(user), to: Plausible.Teams.Adapter.Read.Ownership
-
-  defdelegate owns_sites?(user, sites), to: Plausible.Teams.Adapter.Read.Ownership
 
   defp load_sites(%{assigns: assigns} = socket) do
     sites =

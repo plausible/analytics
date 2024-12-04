@@ -4,29 +4,6 @@ defmodule Plausible.Teams.Adapter.Read.Ownership do
   """
   use Plausible
   use Plausible.Teams.Adapter
-  alias Plausible.Site
-  alias Plausible.Auth
-
-  def has_sites?(user) do
-    switch(
-      user,
-      team_fn: fn _ -> Teams.Users.has_sites?(user, include_pending?: true) end,
-      user_fn: &Site.Memberships.any_or_pending?/1
-    )
-  end
-
-  def owns_sites?(user, sites) do
-    switch(
-      user,
-      team_fn: fn _ -> Teams.Users.owns_sites?(user, include_pending?: true) end,
-      user_fn: fn user ->
-        Enum.any?(sites.entries, fn site ->
-          length(site.invitations) > 0 && List.first(site.invitations).role == :owner
-        end) ||
-          Auth.user_owns_sites?(user)
-      end
-    )
-  end
 
   on_ee do
     def check_feature_access(site, new_owner) do

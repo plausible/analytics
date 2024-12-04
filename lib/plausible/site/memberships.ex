@@ -37,19 +37,4 @@ defmodule Plausible.Site.Memberships do
       )
     )
   end
-
-  @spec any_or_pending?(Plausible.Auth.User.t()) :: boolean()
-  def any_or_pending?(user) do
-    invitation_query =
-      from(i in Plausible.Auth.Invitation,
-        where: i.email == ^user.email,
-        select: 1
-      )
-
-    from(sm in Plausible.Site.Membership,
-      where: sm.user_id == ^user.id or exists(invitation_query),
-      select: 1
-    )
-    |> Repo.exists?()
-  end
 end

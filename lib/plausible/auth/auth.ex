@@ -117,17 +117,6 @@ defmodule Plausible.Auth do
     end)
   end
 
-  def user_owns_sites?(user) do
-    Repo.exists?(
-      from(s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.user_id == ^user.id,
-        where: sm.role == :owner
-      )
-    )
-  end
-
   on_ee do
     def is_super_admin?(nil), do: false
     def is_super_admin?(%Plausible.Auth.User{id: id}), do: is_super_admin?(id)
