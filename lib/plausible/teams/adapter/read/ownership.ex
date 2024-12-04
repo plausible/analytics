@@ -7,20 +7,6 @@ defmodule Plausible.Teams.Adapter.Read.Ownership do
   alias Plausible.Site
   alias Plausible.Auth
 
-  def get_owner(site, user) do
-    switch(user,
-      team_fn: fn team ->
-        case Teams.Sites.get_owner(team) do
-          {:ok, user} -> user
-          _ -> nil
-        end
-      end,
-      user_fn: fn _ ->
-        Plausible.Repo.preload(site, :owner).owner
-      end
-    )
-  end
-
   def has_sites?(user) do
     switch(
       user,

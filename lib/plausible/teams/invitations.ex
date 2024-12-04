@@ -276,7 +276,7 @@ defmodule Plausible.Teams.Invitations do
     Repo.delete_all(from gm in Teams.GuestMembership, where: gm.id in ^old_guest_ids)
     :ok = Teams.Memberships.prune_guests(prior_team)
 
-    {:ok, prior_owner} = Teams.Sites.get_owner(prior_team)
+    {:ok, prior_owner} = Teams.get_owner(prior_team)
 
     {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)
 

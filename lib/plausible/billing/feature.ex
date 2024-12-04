@@ -144,11 +144,9 @@ defmodule Plausible.Billing.Feature do
       end
 
       defp do_toggle(%Plausible.Site{} = site, user, opts) do
-        owner = Plausible.Teams.Adapter.Read.Ownership.get_owner(site, user)
-
         override = Keyword.get(opts, :override)
         toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, toggle_field())
-        availability = if toggle, do: check_availability(owner), else: :ok
+        availability = if toggle, do: check_availability(site.team), else: :ok
 
         case availability do
           :ok ->
