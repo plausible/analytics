@@ -21,23 +21,23 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def subscription(conn, _params) do
-    current_team = conn.assigns.current_team
-    subscription = Teams.Billing.get_subscription(current_team)
+    my_team = conn.assigns.my_team
+    subscription = Teams.Billing.get_subscription(my_team)
 
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
       subscription: subscription,
       pageview_limit: Teams.Billing.monthly_pageview_limit(subscription),
-      pageview_usage: Teams.Billing.monthly_pageview_usage(current_team),
-      site_usage: Teams.Billing.site_usage(current_team),
-      site_limit: Teams.Billing.site_limit(current_team),
-      team_member_limit: Teams.Billing.team_member_limit(current_team),
-      team_member_usage: Teams.Billing.team_member_usage(current_team)
+      pageview_usage: Teams.Billing.monthly_pageview_usage(my_team),
+      site_usage: Teams.Billing.site_usage(my_team),
+      site_limit: Teams.Billing.site_limit(my_team),
+      team_member_limit: Teams.Billing.team_member_limit(my_team),
+      team_member_usage: Teams.Billing.team_member_usage(my_team)
     )
   end
 
   def invoices(conn, _params) do
-    subscription = Teams.Billing.get_subscription(conn.assigns.current_team)
+    subscription = Teams.Billing.get_subscription(conn.assigns.my_team)
 
     invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
     render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings}, invoices: invoices)

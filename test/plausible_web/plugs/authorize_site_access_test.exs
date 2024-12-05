@@ -230,7 +230,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
 
     refute conn.halted
     assert conn.assigns.site.id == site.id
-    assert conn.assigns.current_user_role == :owner
+    assert conn.assigns.site_role == :owner
   end
 
   for role <- [:viewer, :editor] do
@@ -248,7 +248,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
 
       refute conn.halted
       assert conn.assigns.site.id == site.id
-      assert conn.assigns.current_user_role == unquote(role)
+      assert conn.assigns.site_role == unquote(role)
     end
   end
 
@@ -268,7 +268,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
 
     refute conn.halted
     assert conn.assigns.site.id == site.id
-    assert conn.assigns.current_user_role == :super_admin
+    assert conn.assigns.site_role == :super_admin
   end
 
   test "allows user based on website visibility (authenticated user)", %{conn: conn} do

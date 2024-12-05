@@ -26,6 +26,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
     {:ok,
      assign(socket,
+       site_team: socket.assigns.site.team,
        site_id: site_id,
        domain: domain,
        add_prop?: false,

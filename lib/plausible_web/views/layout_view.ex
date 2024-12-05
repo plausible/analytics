@@ -71,7 +71,7 @@ defmodule PlausibleWeb.LayoutView do
         ]
       },
       %{key: "Email Reports", value: "email-reports", icon: :envelope},
-      if conn.assigns[:current_user_role] == :owner do
+      if conn.assigns[:site_role] == :owner do
         %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]

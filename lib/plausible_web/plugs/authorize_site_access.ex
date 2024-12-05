@@ -115,10 +115,10 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
             owner: [subscription: Plausible.Users.last_subscription_query()]
           )
 
-        conn = merge_assigns(conn, site: site, current_user_role: role)
+        conn = merge_assigns(conn, site: site, site_role: role)
 
         if not is_nil(current_user) and role not in [:public, nil] do
-          assign(conn, :current_team, site.team)
+          assign(conn, :site_team, site.team)
         else
           conn
         end

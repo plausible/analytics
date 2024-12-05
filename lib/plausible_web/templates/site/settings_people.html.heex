@@ -100,7 +100,7 @@
                         </svg>
                       </span>
                     </li>
-                    <%= if @conn.assigns[:current_user_role] == :owner do %>
+                    <%= if @conn.assigns[:site_role] == :owner do %>
                       <li
                         class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
                         role="option"

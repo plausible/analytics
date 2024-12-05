@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.AuthContext do
           _ -> nil
         end
       end)
-      |> assign_new(:current_team, fn context ->
+      |> assign_new(:my_team, fn context ->
         case context.current_user do
           nil -> nil
           %{team_memberships: [%{team: team}]} -> team

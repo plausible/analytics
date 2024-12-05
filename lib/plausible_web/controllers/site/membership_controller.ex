@@ -155,7 +155,7 @@ defmodule PlausibleWeb.Site.MembershipController do
                  |> Enum.into(%{})
 
   def update_role_by_user(conn, %{"id" => user_id, "new_role" => new_role_str}) do
-    %{site: site, current_user: current_user, current_user_role: current_user_role} = conn.assigns
+    %{site: site, current_user: current_user, site_role: site_role} = conn.assigns
 
     membership =
       Membership |> Repo.get_by!(user_id: user_id, site_id: site.id) |> Repo.preload(:user)
@@ -164,9 +164,9 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     can_grant_role? =
       if membership.user.id == current_user.id do
-        can_grant_role_to_self?(current_user_role, new_role)
+        can_grant_role_to_self?(site_role, new_role)
       else
-        can_grant_role_to_other?(current_user_role, new_role)
+        can_grant_role_to_other?(site_role, new_role)
       end
 
     if can_grant_role? do
