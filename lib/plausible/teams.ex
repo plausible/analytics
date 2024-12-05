@@ -6,8 +6,11 @@ defmodule Plausible.Teams do
   import Ecto.Query
 
   alias __MODULE__
+  alias Plausible.Auth.GracePeriod
   alias Plausible.Repo
   use Plausible
+
+  @accept_traffic_until_free ~D[2135-01-01]
 
   @spec get_owner(Teams.Team.t()) ::
           {:ok, Plausible.Auth.User.t()} | {:error, :no_owner | :multiple_owners}
@@ -162,6 +165,64 @@ defmodule Plausible.Teams do
 
   def get_by_owner(%Plausible.Auth.User{} = user) do
     get_by_owner(user.id)
+  end
+
+  @spec update_accept_traffic_until(Teams.Team.t()) :: Teams.Team.t()
+  def update_accept_traffic_until(team) do
+    team
+    |> Ecto.Changeset.change(accept_traffic_until: accept_traffic_until(team))
+    |> Repo.update!()
+  end
+
+  def end_grace_period(team) do
+    team
+    |> GracePeriod.end_changeset()
+    |> Repo.update!()
+  end
+
+  def remove_grace_period(team) do
+    team
+    |> GracePeriod.remove_changeset()
+    |> Repo.update!()
+  end
+
+  def maybe_reset_next_upgrade_override(%Teams.Team{} = team) do
+    if team.allow_next_upgrade_override do
+      team
+      |> Ecto.Changeset.change(allow_next_upgrade_override: false)
+      |> Repo.update!()
+    else
+      team
+    end
+  end
+
+  @spec accept_traffic_until(Teams.Team.t()) :: Date.t()
+  on_ee do
+    def accept_traffic_until(team) do
+      team = with_subscription(team)
+
+      cond do
+        on_trial?(team) ->
+          Date.shift(team.trial_expiry_date,
+            day: Teams.Team.trial_accept_traffic_until_offset_days()
+          )
+
+        team.subscription && team.subscription.paddle_plan_id == "free_10k" ->
+          @accept_traffic_until_free
+
+        team.subscription && team.subscription.next_bill_date ->
+          Date.shift(team.subscription.next_bill_date,
+            day: Teams.Team.subscription_accept_traffic_until_offset_days()
+          )
+
+        true ->
+          raise "This user is neither on trial or has a valid subscription. Manual intervention required."
+      end
+    end
+  else
+    def accept_traffic_until(_user) do
+      @accept_traffic_until_free
+    end
   end
 
   def last_subscription_join_query() do

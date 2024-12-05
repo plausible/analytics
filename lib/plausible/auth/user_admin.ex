@@ -6,7 +6,7 @@ defmodule Plausible.Auth.UserAdmin do
 
   def custom_index_query(_conn, _schema, query) do
     subscripton_q = from(s in Plausible.Billing.Subscription, order_by: [desc: s.inserted_at])
-    from(r in query, preload: [subscription: ^subscripton_q])
+    from(r in query, preload: [:my_team, subscription: ^subscripton_q])
   end
 
   def form_fields(_) do
@@ -49,11 +49,11 @@ defmodule Plausible.Auth.UserAdmin do
     [
       unlock: %{
         name: "Unlock",
-        action: fn _, user -> unlock(user) end
+        action: fn _, user -> unlock(user.my_team) end
       },
       lock: %{
         name: "Lock",
-        action: fn _, user -> lock(user) end
+        action: fn _, user -> lock(user.my_team) end
       },
       reset_2fa: %{
         name: "Reset 2FA",
@@ -69,18 +69,19 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp lock(user) do
-    if user.grace_period do
-      Plausible.Billing.SiteLocker.set_lock_status_for(user, true)
-      {:ok, Plausible.Users.end_grace_period(user)}
+    if user.my_team.grace_period do
+      Plausible.Billing.SiteLocker.set_lock_status_for(user.my_team, true)
+      Plausible.Teams.end_grace_period(user.my_team)
+      {:ok, user}
     else
       {:error, user, "No active grace period on this user"}
     end
   end
 
   defp unlock(user) do
-    if user.grace_period do
-      Plausible.Users.remove_grace_period(user)
-      Plausible.Billing.SiteLocker.set_lock_status_for(user, false)
+    if user.my_team.grace_period do
+      Plausible.Teams.remove_grace_period(user.my_team)
+      Plausible.Billing.SiteLocker.set_lock_status_for(user.my_team, false)
       {:ok, user}
     else
       {:error, user, "No active grace period on this user"}

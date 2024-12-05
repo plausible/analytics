@@ -59,6 +59,8 @@ defmodule Plausible.Teams.Team do
     )
   end
 
+  def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
+
   defp embed_params(nil), do: nil
 
   defp embed_params(grace_period) do
