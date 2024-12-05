@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Details modal search inputs are now case-insensitive.
+- Improved report performance in cases where site has a lot of unique pathnames
 
 ### Fixed
 

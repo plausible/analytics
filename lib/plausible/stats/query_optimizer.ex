@@ -37,8 +37,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     {
       Query.set(query,
         metrics: event_metrics,
-        include_imported: query.include_imported,
-        pagination: nil
+        include_imported: query.include_imported
       ),
       split_sessions_query(query, sessions_metrics)
     }
@@ -171,8 +170,7 @@ defmodule Plausible.Stats.QueryOptimizer do
       filters: filters,
       metrics: session_metrics,
       dimensions: dimensions,
-      include_imported: query.include_imported,
-      pagination: nil
+      include_imported: query.include_imported
     )
   end
 

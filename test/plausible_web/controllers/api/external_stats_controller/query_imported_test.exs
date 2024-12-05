@@ -1223,5 +1223,68 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                %{"dimensions" => ["Kärdla", "Estonia"], "metrics" => [2]}
              ]
     end
+
+    test "page breakdown with paginate_optimization (ideal case)", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(
+        site,
+        site_import.id,
+        [
+          build(:pageview, pathname: "/99", timestamp: ~N[2021-01-01 00:00:00])
+        ] ++
+          Enum.map(1..100, fn i ->
+            build(:imported_pages, page: "/#{i}", pageviews: 1, visitors: 1, date: ~D[2021-01-01])
+          end)
+      )
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{"imports" => true},
+          "pagination" => %{"limit" => 1}
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => ["/99"], "metrics" => [2]}]
+    end
+
+    test "page breakdown with paginate_optimization (lossy case)", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(
+        site,
+        site_import.id,
+        [
+          build(:pageview, pathname: "/99", timestamp: ~N[2021-01-01 00:00:00])
+        ] ++
+          Enum.map(1..200, fn i ->
+            build(:imported_pages, page: "/#{i}", pageviews: 1, visitors: 1, date: ~D[2021-01-01])
+          end)
+      )
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{"imports" => true},
+          "pagination" => %{"limit" => 1}
+        })
+
+      [%{"dimensions" => ["/99"], "metrics" => [pageviews]}] = json_response(conn, 200)["results"]
+
+      # This is non-deterministic since /99 might not be in the top N items of imported pages subquery.
+      assert pageviews in 1..2
+    end
   end
 end
