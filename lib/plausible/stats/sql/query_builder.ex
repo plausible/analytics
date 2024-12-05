@@ -60,7 +60,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         )
 
       on_ee do
-        sessions_q = Plausible.Stats.Sampling.add_query_hint(q, query)
+        sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
       end
 
       from(
