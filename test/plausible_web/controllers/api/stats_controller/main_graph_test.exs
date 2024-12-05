@@ -197,7 +197,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:imported_visitors, date: ~D[2021-01-31])
       ])
 
-      filters = Jason.encode!(%{page: "/pageA"})
+      filters = Jason.encode!([[:is, "event:page", ["/pageA"]]])
 
       conn =
         get(
@@ -621,7 +621,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
 
       conn =
         get(
@@ -663,7 +663,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:event, name: "Signup", timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -710,7 +710,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:event, name: "Signup", user_id: 123, timestamp: ~N[2021-01-31 00:00:00])
       ])
 
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -743,7 +743,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:event, name: "Signup", timestamp: ~N[2021-01-11 18:00:00])
       ])
 
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -773,7 +773,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:event, name: "Signup", timestamp: ~N[2021-08-11 00:00:00])
       ])
 
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1325,7 +1325,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-08 00:01:00])
       ])
 
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1375,7 +1375,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "Payment"})
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
 
       conn =
         get(
@@ -1461,7 +1461,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "PaymentUSD"})
+      filters = Jason.encode!([[:is, "event:goal", ["PaymentUSD"]]])
 
       conn =
         get(
@@ -1516,7 +1516,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "Payment"})
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
 
       conn =
         get(
@@ -1602,7 +1602,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "PaymentUSD"})
+      filters = Jason.encode!([[:is, "event:goal", ["PaymentUSD"]]])
 
       conn =
         get(
