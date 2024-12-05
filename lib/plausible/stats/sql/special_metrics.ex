@@ -58,7 +58,8 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         |> Query.set(
           dimensions: [],
           include_imported: query.include_imported,
-          preloaded_goals: []
+          preloaded_goals: [],
+          pagination: nil
         )
 
       q
@@ -101,7 +102,8 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           metrics: [:visitors],
           order_by: [],
           include_imported: query.include_imported,
-          preloaded_goals: []
+          preloaded_goals: [],
+          pagination: nil
         )
 
       from(e in subquery(q),
