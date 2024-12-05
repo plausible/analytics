@@ -21,5 +21,5 @@ const ClearFiltersKeybind = () => (
 )
 
 export function DashboardKeybinds() {
-  return <>{false && <ClearFiltersKeybind />}</> // temp disable
+  return <ClearFiltersKeybind /> // temp disable
 }

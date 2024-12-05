@@ -23,16 +23,11 @@ import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import {
-  XMarkIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  // TrashIcon,
-  CheckIcon
 } from '@heroicons/react/24/outline'
-import { FilterPill } from '../nav-menu/filter-pill'
 import { Filter } from '../query'
 import { SegmentAuthorship } from './segment-authorship'
-// import { SegmentExpandedLocationState } from './segment-expanded-context'
 
 export const buttonClass =
   'transition border text-md font-medium py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
@@ -232,7 +227,7 @@ const SegmentTypeInput = ({
           id="segment-type-personal"
           type="radio"
           value=""
-          onClick={() => onChange(SegmentType.personal)}
+          onChange={() => onChange(SegmentType.personal)}
           className={radioClassName}
           disabled={disabled}
         />
@@ -247,7 +242,7 @@ const SegmentTypeInput = ({
           id="segment-type-site"
           type="radio"
           value=""
-          onClick={() => onChange(SegmentType.site)}
+          onChange={() => onChange(SegmentType.site)}
           className={radioClassName}
           disabled={disabled}
         />
@@ -511,7 +506,7 @@ export const AllSegmentsModal = () => {
         ]
           .filter((i) => !!i.segments?.length)
           .map(({ segments, title, sliceEnd, showMore }) => (
-            <>
+            <React.Fragment key={title}>
               <h2 className="mt-2 text-l font-bold dark:text-gray-100">
                 {title}
               </h2>
@@ -536,7 +531,7 @@ export const AllSegmentsModal = () => {
                   Show more
                 </button>
               )}
-            </>
+            </React.Fragment>
           ))}
         {!personalSegments?.length && !siteSegments?.length && (
           <p>No segments found.</p>
@@ -583,7 +578,8 @@ export const AllSegmentsModal = () => {
               }
             }}
           >
-            Apply
+            Apply {selectedSegmentIds.length}{' '}
+            {selectedSegmentIds.length === 1 ? 'segment' : 'segments'}
           </AppNavigationLink>
           <AppNavigationLink
             className={primaryNegativeButtonClass}

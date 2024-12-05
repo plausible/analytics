@@ -11,7 +11,7 @@ import {
 import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { SegmentExpandedLocationState } from '../segments/segment-expanded-context'
+import { SegmentExpandedLocationState, useSegmentExpandedContext } from '../segments/segment-expanded-context'
 import {
   buttonClass,
   primaryNeutralButtonClass,
@@ -109,6 +109,8 @@ export const FiltersBar = () => {
   const seeMoreRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { query } = useQueryContext()
+  const { expandedSegment
+   } = useSegmentExpandedContext()
 
   const [opened, setOpened] = useState(false)
 
@@ -168,8 +170,8 @@ export const FiltersBar = () => {
     return null
   }
 
-  const canSave = !query.filters.some(isSegmentFilter)
-  const canClear = query.filters.length > 2
+  const canSave = !query.filters.some(isSegmentFilter) && !expandedSegment
+  const canClear = query.filters.length > 1
 
   return (
     <div
@@ -212,15 +214,17 @@ export const FiltersBar = () => {
                 <DropdownMenuWrapper
                   id="more-filters-menu"
                   className="md:right-auto"
-                  innerContainerClassName="flex flex-col p-4"
+                  innerContainerClassName="flex flex-col p-4 gap-y-2"
                 >
-                  <AppliedFilterPillsList
-                    direction="vertical"
-                    slice={{
-                      type: 'no-render-outside',
-                      start: visibility.visibleCount
-                    }}
-                  />
+                  {query.filters.length !== visibility.visibleCount && (
+                    <AppliedFilterPillsList
+                      direction="vertical"
+                      slice={{
+                        type: 'no-render-outside',
+                        start: visibility.visibleCount
+                      }}
+                    />
+                  )}
                   {canSave && <SaveSelectionAsSegment />}
                   {canClear && <ClearAction />}
                 </DropdownMenuWrapper>
@@ -233,7 +237,7 @@ export const FiltersBar = () => {
 }
 
 const chillButtonClass =
-  '!flex !self-start mt-2 !text-sm !px-3 !py-2 whitespace-nowrap'
+  '!flex !self-start !text-sm !px-3 !py-2 whitespace-nowrap'
 
 const SaveSelectionAsSegment = () => (
   <AppNavigationLink

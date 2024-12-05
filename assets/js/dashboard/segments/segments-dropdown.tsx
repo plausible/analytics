@@ -152,59 +152,55 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
 
   const filteredData = data?.filter(getFilterSegmentsByNameInsensitive(search))
 
-  const personalSegments = filteredData?.filter(
-    (i) => i.type === SegmentType.personal
-  )
-  const siteSegments = filteredData?.filter((i) => i.type === SegmentType.site)
+  const showableSlice = filteredData?.slice(0, 5)
+
+  // const personalSegments = filteredData?.filter(
+  //   (i) => i.type === SegmentType.personal
+  // )
+  // const siteSegments = filteredData?.filter((i) => i.type === SegmentType.site)
 
   return (
     <>
       {!!data?.length && (
-        // <DropdownLinkGroup>
-        <>
+        <DropdownLinkGroup>
+          {/* <> */}
           <DropdownSubtitle>Segments</DropdownSubtitle>
 
           <div className="px-4 py-1">
             <SearchInput
+              placeholderUnfocused="Press / to search segments"
               className="w-full text-xs sm:text-xs"
               onSearch={setSearch}
             />
           </div>
-          {[
-            { segments: personalSegments, title: 'Personal' },
-            { segments: siteSegments, title: 'Site' }
-          ]
-            .filter((i) => !!i.segments?.length)
-            .map(({ segments, title }) => (
-              <>
-                <DropdownSubtitle className="normal-case">
-                  {title}
-                </DropdownSubtitle>
-
-                {segments!.slice(0, 3).map((s) => {
-                  return (
-                    <Tooltip
-                      key={s.id}
-                      info={
-                        <div className="max-w-60">
-                          <div className="break-all">{s.name}</div>
-                          <SegmentAuthorship
-                            {...s}
-                            className="font-normal text-xs"
-                          />
-                        </div>
+          {showableSlice!.map((s) => {
+            return (
+              <Tooltip
+                key={s.id}
+                info={
+                  <div className="max-w-60">
+                    <div className="break-all">{s.name}</div>
+                    <div className="font-normal text-xs">
+                      {
+                        {
+                          personal: 'Personal segment',
+                          site: 'Site segment'
+                        }[s.type]
                       }
-                    >
-                      <SegmentLink
-                        {...s}
-                        appliedSegmentIds={appliedSegmentIds}
-                        closeList={closeList}
-                      />
-                    </Tooltip>
-                  )
-                })}
-              </>
-            ))}
+                    </div>
+
+                    <SegmentAuthorship {...s} className="font-normal text-xs" />
+                  </div>
+                }
+              >
+                <SegmentLink
+                  {...s}
+                  appliedSegmentIds={appliedSegmentIds}
+                  closeList={closeList}
+                />
+              </Tooltip>
+            )
+          })}
           {!!data?.length && (
             <DropdownNavigationLink
               className={classNames(
@@ -220,8 +216,7 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
               <ChevronRightIcon className="block w-4 h-4" />
             </DropdownNavigationLink>
           )}
-        </>
-        // </DropdownLinkGroup>
+        </DropdownLinkGroup>
       )}
       {/* <DropdownLinkGroup> */}
       {/* <SaveSelectionAsSegment closeList={closeList} /> */}
