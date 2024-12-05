@@ -30,18 +30,18 @@ defmodule Plausible.Auth.User do
     field :password_confirmation, :string, virtual: true
     field :name, :string
     field :last_seen, :naive_datetime
-    field :trial_expiry_date, :date
+    ## field :trial_expiry_date, :date
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
-    field :accept_traffic_until, :date
+    ## field :accept_traffic_until, :date
 
     # Field for purely informational purposes in CRM context
     field :notes, :string
 
     # A field only used as a manual override - allow subscribing
     # to any plan, even when exceeding its pageview limit
-    field :allow_next_upgrade_override, :boolean, default: false
+    ## field :allow_next_upgrade_override, :boolean, default: false
 
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
     field :totp_enabled, :boolean, default: false
@@ -49,16 +49,16 @@ defmodule Plausible.Auth.User do
     field :totp_token, :string
     field :totp_last_used_at, :naive_datetime
 
-    embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
+    ## embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
     has_many :sessions, Plausible.Auth.UserSession
-    has_many :site_memberships, Plausible.Site.Membership
+    ## has_many :site_memberships, Plausible.Site.Membership
     has_many :team_memberships, Plausible.Teams.Membership
-    has_many :sites, through: [:site_memberships, :site]
+    ## has_many :sites, through: [:site_memberships, :site]
     has_many :api_keys, Plausible.Auth.ApiKey
     has_one :google_auth, Plausible.Site.GoogleAuth
-    has_one :subscription, Plausible.Billing.Subscription
-    has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
+    ## has_one :subscription, Plausible.Billing.Subscription
+    ## has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
 
     timestamps()
   end
