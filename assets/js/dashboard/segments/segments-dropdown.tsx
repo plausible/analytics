@@ -160,7 +160,8 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
   return (
     <>
       {!!data?.length && (
-        <DropdownLinkGroup>
+        // <DropdownLinkGroup>
+        <>
           <DropdownSubtitle>Segments</DropdownSubtitle>
 
           <div className="px-4 py-1">
@@ -219,11 +220,12 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
               <ChevronRightIcon className="block w-4 h-4" />
             </DropdownNavigationLink>
           )}
-        </DropdownLinkGroup>
+        </>
+        // </DropdownLinkGroup>
       )}
-      <DropdownLinkGroup>
-        <SaveSelectionAsSegment closeList={closeList} />
-        {/* <DropdownNavigationLink
+      {/* <DropdownLinkGroup> */}
+      {/* <SaveSelectionAsSegment closeList={closeList} /> */}
+      {/* <DropdownNavigationLink
           className={classNames(linkClass, 'font-bold')}
           search={(s) => s}
           navigateOptions={{
@@ -242,12 +244,16 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
         >
           Save selection as segment
         </DropdownNavigationLink> */}
-      </DropdownLinkGroup>
+      {/* </DropdownLinkGroup> */}
     </>
   )
 }
 
-const SaveSelectionAsSegment = ({ closeList }: { closeList: () => void }) => {
+export const SaveSelectionAsSegment = ({
+  closeList
+}: {
+  closeList: () => void
+}) => {
   const { query } = useQueryContext()
   const disabledReason = !query.filters.length
     ? 'Add filters to the dashboard to save a segment.'
@@ -377,8 +383,8 @@ const SegmentLink = ({
   name,
   // type,
   // owner_id,
-  appliedSegmentIds
-  // closeList
+  appliedSegmentIds,
+  closeList
 }: SavedSegment & { appliedSegmentIds: number[]; closeList: () => void }) => {
   const user = useUserContext()
   const canSeeActions = user.loggedIn
@@ -400,11 +406,10 @@ const SegmentLink = ({
       navigateOptions={{
         state: { expandedSegment: null } as SegmentExpandedLocationState
       }}
+      onLinkClick={closeList}
       search={(search) => {
         const otherFilters = query.filters.filter((f) => !isSegmentFilter(f))
-        const updatedSegmentIds = appliedSegmentIds.includes(id)
-          ? appliedSegmentIds.filter((i) => i !== id)
-          : [...appliedSegmentIds, id]
+        const updatedSegmentIds = appliedSegmentIds.includes(id) ? [] : [id]
 
         if (!updatedSegmentIds.length) {
           return {
@@ -433,9 +438,10 @@ const SegmentLink = ({
             <button
               title="Edit segment"
               className={classNames(iconButtonClass, 'ml-2 shrink-0')}
-              onClick={async () =>
+              onClick={async () => {
                 expandSegment(data ?? (await fetchSegment()))
-              }
+                closeList()
+              }}
             >
               <EditSegmentIcon className="block w-4 h-4" />
             </button>

@@ -8,7 +8,7 @@ import {
   DropdownSubtitle,
   ToggleDropdownButton
 } from '../components/dropdown'
-import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+// import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import {
   cleanLabels,
   FILTER_MODAL_TO_FILTER_GROUP,
@@ -37,9 +37,11 @@ import {
   SavedSegment
 } from '../segments/segments'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAppNavigate } from '../navigation/use-app-navigate'
+import {
+  useAppNavigate
+} from '../navigation/use-app-navigate'
 import { DashboardQuery } from '../query'
-import { AdjustmentsHorizontalIcon } from '@heroicons/react/24/solid'
+import {  PlusIcon } from '@heroicons/react/20/solid'
 
 export function getFilterListItems({
   propsAvailable
@@ -317,18 +319,22 @@ export const FilterMenu = () => {
         onClick={() => setOpened((opened) => !opened)}
         currentOption={
           <div className="flex items-center gap-1 ">
-            {!expandedSegment && (
-              <>
-                <MagnifyingGlassIcon className="block h-4 w-4" />
-                Filter
-              </>
-            )}
-            {!!expandedSegment && (
+            {/* {!expandedSegment && ( */}
+            <>
+              {/* <MagnifyingGlassIcon className="block h-4 w-4" /> */}
+              <PlusIcon className="block h-4 w-4" />
+              Add filter
+              {/* {!expandedSegment && 'Add filter'} */}
+              {/* {!!expandedSegment && 'Add filter'} */}
+            </>
+
+            {/* )} */}
+            {/* {!!expandedSegment && (
               <>
                 <AdjustmentsHorizontalIcon className="block h-4 w-4" />
                 Edit segment
               </>
-            )}
+            )} */}
             {/* <span className="block ml-1">{expandedSegment ? 'Segment' : 'Filter'}</span> */}
           </div>
         }
@@ -338,7 +344,9 @@ export const FilterMenu = () => {
             id="filter-menu"
             className="md:left-auto md:w-80"
           >
-            <SegmentsList closeList={() => setOpened(false)} />
+            {!expandedSegment && (
+              <SegmentsList closeList={() => setOpened(false)} />
+            )}
             <DropdownLinkGroup className="flex flex-row">
               {columns.map((filterGroups, index) => (
                 <div key={index} className="flex flex-col w-1/2">
@@ -370,6 +378,72 @@ export const FilterMenu = () => {
           </DropdownMenuWrapper>
         )}
       </ToggleDropdownButton>
+      {!!expandedSegment && (
+        <>
+          <DropdownSubtitle className="break-all">
+            {expandedSegment.name}
+          </DropdownSubtitle>
+          <DropdownNavigationLink
+            className="hi"
+            search={(s) => ({
+              ...s,
+              filters: [['is', 'segment', [expandedSegment.id]]],
+              labels: {
+                [formatSegmentIdAsLabelKey(expandedSegment.id)]:
+                  expandedSegment.name
+              }
+            })}
+            navigateOptions={{
+              state: {
+                expandedSegment: null,
+                modal: null
+              } as SegmentExpandedLocationState
+            }}
+          >
+            Cancel editing
+          </DropdownNavigationLink>
+
+          <DropdownNavigationLink
+            className={'hi'}
+            search={(s) => s}
+            navigateOptions={{
+              state: {
+                expandedSegment: expandedSegment,
+                modal: 'update'
+              } as SegmentExpandedLocationState
+            }}
+            onClick={() => setOpened(false)}
+          >
+            Update segment
+          </DropdownNavigationLink>
+          <DropdownNavigationLink
+            className={'hi'}
+            search={(s) => s}
+            navigateOptions={{
+              state: {
+                expandedSegment: expandedSegment,
+                modal: 'create'
+              } as SegmentExpandedLocationState
+            }}
+            onClick={() => setOpened(false)}
+          >
+            Save as a new segment
+          </DropdownNavigationLink>
+          <DropdownNavigationLink
+            className={'hi'}
+            search={(s) => s}
+            navigateOptions={{
+              state: {
+                expandedSegment: expandedSegment,
+                modal: 'delete'
+              } as SegmentExpandedLocationState
+            }}
+            onClick={() => setOpened(false)}
+          >
+            Delete segment
+          </DropdownNavigationLink>
+        </>
+      )}
     </>
   )
 }

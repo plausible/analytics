@@ -11,6 +11,13 @@ import {
 import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
+import { SegmentExpandedLocationState } from '../segments/segment-expanded-context'
+import {
+  buttonClass,
+  primaryNeutralButtonClass,
+  secondaryButtonClass
+} from '../segments/segment-modals'
+import { isSegmentFilter } from '../segments/segments'
 
 const LEFT_ACTIONS_GAP_PX = 16
 const SEE_MORE_GAP_PX = 16
@@ -161,6 +168,9 @@ export const FiltersBar = () => {
     return null
   }
 
+  const canSave = !query.filters.some(isSegmentFilter)
+  const canClear = query.filters.length > 2
+
   return (
     <div
       className={classNames(
@@ -182,14 +192,14 @@ export const FiltersBar = () => {
       />
       <div className="flex items-center gap-x-4 py-1" ref={actionsRef}>
         {visibility !== null &&
-          visibility.visibleCount !== query.filters.length && (
+          (query.filters.length !== visibility.visibleCount ||
+            canSave ||
+            canClear) && (
             <ToggleDropdownButton
               className={classNames('w-9 md:relative')}
               ref={seeMoreRef}
               dropdownContainerProps={{
-                ['title']: opened
-                  ? 'Hide rest of the filters'
-                  : 'Show rest of the filters',
+                ['title']: opened ? 'Show more' : 'Show less',
                 ['aria-controls']: 'more-filters-menu',
                 ['aria-expanded']: opened
               }}
@@ -198,11 +208,11 @@ export const FiltersBar = () => {
                 <EllipsisHorizontalIcon className="h-full w-full" />
               }
             >
-              {opened && typeof visibility.visibleCount === 'number' ? (
+              {opened ? (
                 <DropdownMenuWrapper
                   id="more-filters-menu"
                   className="md:right-auto"
-                  innerContainerClassName="p-4"
+                  innerContainerClassName="flex flex-col p-4"
                 >
                   <AppliedFilterPillsList
                     direction="vertical"
@@ -211,7 +221,8 @@ export const FiltersBar = () => {
                       start: visibility.visibleCount
                     }}
                   />
-                  <ClearAction />
+                  {canSave && <SaveSelectionAsSegment />}
+                  {canClear && <ClearAction />}
                 </DropdownMenuWrapper>
               ) : null}
             </ToggleDropdownButton>
@@ -221,17 +232,39 @@ export const FiltersBar = () => {
   )
 }
 
+const chillButtonClass =
+  '!flex !self-start mt-2 !text-sm !px-3 !py-2 whitespace-nowrap'
+
+const SaveSelectionAsSegment = () => (
+  <AppNavigationLink
+    // title="Save as segment"
+    className={classNames(
+      buttonClass,
+      primaryNeutralButtonClass,
+      chillButtonClass
+    )}
+    search={(s) => s}
+    state={
+      {
+        modal: 'create',
+        expandedSegment: null
+      } as SegmentExpandedLocationState
+    }
+  >
+    Save as segment
+  </AppNavigationLink>
+)
 
 const ClearAction = () => (
   <AppNavigationLink
     title="Clear all filters"
-    className="flex mt-2 px-3 py-2 text-sm text-gray-500 hover:text-indigo-700 dark:hover:text-indigo-500"
+    className={classNames(buttonClass, secondaryButtonClass, chillButtonClass)}
     search={(search) => ({
       ...search,
       filters: null,
       labels: null
     })}
   >
-    Clear all filters
+    <div>Clear all filters</div>
   </AppNavigationLink>
 )

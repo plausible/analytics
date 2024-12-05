@@ -34,10 +34,10 @@ import { Filter } from '../query'
 import { SegmentAuthorship } from './segment-authorship'
 // import { SegmentExpandedLocationState } from './segment-expanded-context'
 
-const buttonClass =
+export const buttonClass =
   'transition border text-md font-medium py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
 
-const primaryNeutralButtonClass = classNames(
+export const primaryNeutralButtonClass = classNames(
   buttonClass,
   'bg-indigo-600 hover:bg-indigo-700 text-white border-transparent'
 )
@@ -47,7 +47,7 @@ const primaryNegativeButtonClass = classNames(
   'border-transparent bg-red-500 hover:bg-red-600 text-white border-transparent'
 )
 
-const secondaryButtonClass = classNames(
+export const secondaryButtonClass = classNames(
   buttonClass,
   'border-indigo-500 text-indigo-500 hover:border-indigo-600 hover:text-indigo-600',
   'dark:hover:border-indigo-400 dark:hover:text-indigo-400'
@@ -314,59 +314,68 @@ const SegmentRow = ({
   id,
   name,
   toggleSelected,
-  selected
-}: SavedSegment & { toggleSelected: () => void; selected: boolean }) => {
+  selected,
+
+  segmentDataVisible,
+  toggleSegmentDataVisible
+}: SavedSegment & {
+  toggleSelected: () => void
+  selected: boolean
+  segmentDataVisible: boolean
+  toggleSegmentDataVisible: () => void
+}) => {
   const { prefetchSegment, data, expandSegment, fetchSegment } =
     useSegmentPrefetch({
       id
     })
-  const [segmentDataVisible, setSegmentDataVisible] = useState(false)
-  const toggleSegmentDataVisible = useCallback(async () => {
-    setSegmentDataVisible((currentVisible) => {
-      if (currentVisible) {
-        return false
-      }
+  // const [segmentDataVisible, setSegmentDataVisible] = useState(false)
+  // const toggleSegmentDataVisible = useCallback(async () => {
+  //   setSegmentDataVisible((currentVisible) => {
+  //     if (currentVisible) {
+  //       return false
+  //     }
+  //     fetchSegment()
+  //     return true
+  //   })
+  // }, [fetchSegment])
+  useEffect(() => {
+    if (segmentDataVisible) {
       fetchSegment()
-      return true
-    })
-  }, [fetchSegment])
+    }
+  }, [segmentDataVisible, fetchSegment])
   return (
     <div
-      className="grid grid-cols-[1fr_20px] shadow rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm py-3 px-3 transition-all"
+      className="grid grid-cols-[1fr_20px] gap-x-2 shadow rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm py-3 px-3 transition-all"
       onMouseEnter={prefetchSegment}
     >
-      <button
-        className="group flex justify-between text-left"
-        onClick={toggleSegmentDataVisible}
-      >
-        <div
+      <div className="flex gap-x-2 text-left">
+        <input
+          id={String(id)}
+          type="checkbox"
+          checked={selected}
+          value=""
+          onChange={toggleSelected}
+          className="my-0.5 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+        />
+        <label
+          htmlFor={String(id)}
           className={classNames(
             'cursor-pointer break-all',
             selected && 'font-extrabold'
           )}
         >
           {name}
-        </div>
-        <div className="flex w-5 h-5 items-center ml-4">
-          {segmentDataVisible ? (
-            <ChevronUpIcon className="block w-4 h-4" />
-          ) : (
-            <ChevronDownIcon className="block w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-          )}
-        </div>
-      </button>
-
+        </label>
+      </div>
       <button
-        className="flex items-center justify-center w-5 h-5 group"
-        title={selected ? 'Unselect segment' : 'Select segment'}
-        onClick={toggleSelected}
+        className="flex w-5 h-5 items-center justify-center"
+        onClick={toggleSegmentDataVisible}
       >
-        <CheckIcon
-          className={classNames(
-            'w-4 h-4 block opacity-0 transition-opacity',
-            selected ? 'opacity-100' : 'opacity-30 group-hover:opacity-100'
-          )}
-        />
+        {segmentDataVisible ? (
+          <ChevronUpIcon className="block w-4 h-4" />
+        ) : (
+          <ChevronDownIcon className="block w-4 h-4" />
+        )}
       </button>
 
       {segmentDataVisible && (
@@ -430,6 +439,9 @@ export const AllSegmentsModal = () => {
   const [search, setSearch] = useState<string>()
   const [selectedSegmentIds, setSelectedSegmentIds] =
     useState<number[]>(querySegmentIds)
+  const [segmentDataVisibleIds, setSegmentDataVisibleIds] =
+    useState<number[]>(querySegmentIds)
+
   const getToggleSelected = useCallback(
     (id: number) => () =>
       setSelectedSegmentIds((current) =>
@@ -440,19 +452,19 @@ export const AllSegmentsModal = () => {
     []
   )
 
+  const getToggleExpanded = useCallback(
+    (id: number) => () =>
+      setSegmentDataVisibleIds((current) =>
+        current.includes(id)
+          ? current.filter((i) => i !== id)
+          : current.concat([id])
+      ),
+    []
+  )
+
   const proposedSegmentFilter: Filter | null = selectedSegmentIds.length
     ? ['is', 'segment', selectedSegmentIds]
     : null
-
-  const labelsForProposedSegmentFilter = !data
-    ? {}
-    : Object.fromEntries(
-        data?.flatMap((d) =>
-          selectedSegmentIds.includes(d.id)
-            ? [[formatSegmentIdAsLabelKey(d.id), d.name]]
-            : []
-        )
-      )
 
   const searchResults = data?.filter(getFilterSegmentsByNameInsensitive(search))
 
@@ -505,6 +517,8 @@ export const AllSegmentsModal = () => {
               </h2>
               {segments!.slice(0, sliceEnd).map((item) => (
                 <SegmentRow
+                  segmentDataVisible={segmentDataVisibleIds.includes(item.id)}
+                  toggleSegmentDataVisible={getToggleExpanded(item.id)}
                   key={item.id}
                   {...item}
                   toggleSelected={getToggleSelected(item.id)}
@@ -530,37 +544,6 @@ export const AllSegmentsModal = () => {
       </div>
 
       <div className="mt-4">
-        <h2 className="text-l font-bold dark:text-gray-100">Selected filter</h2>
-
-        {!!data && !!proposedSegmentFilter && (
-          <div className="mt-2 justify-self-start">
-            <FilterPill
-              // className="dark:!bg-gray-700"
-              interactive={false}
-              plainText={plainFilterText(
-                labelsForProposedSegmentFilter,
-                proposedSegmentFilter
-              )}
-              actions={
-                <button
-                  title={`Remove filter: ${plainFilterText(labelsForProposedSegmentFilter, proposedSegmentFilter)}`}
-                  className="flex items-center h-full px-2 mr-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
-                  onClick={() => setSelectedSegmentIds([])}
-                >
-                  <XMarkIcon className="block w-4 h-4" />
-                </button>
-              }
-            >
-              {styledFilterText(
-                labelsForProposedSegmentFilter,
-                proposedSegmentFilter
-              )}
-            </FilterPill>
-          </div>
-        )}
-        {proposedSegmentFilter === null && (
-          <p className="mt-2">No segments selected.</p>
-        )}
         <ButtonsRow>
           <AppNavigationLink
             className={primaryNeutralButtonClass}
