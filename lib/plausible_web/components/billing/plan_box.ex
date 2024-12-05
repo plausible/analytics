@@ -271,11 +271,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     # because in the past we've let users upgrade without that constraint, as
     # well as transfer sites to those accounts. to these accounts we won't be
     # offering an extra pageview limit allowance margin though.
-    invited_user? = current_team && is_nil(current_team.trial_expiry_date)
-
     trial_active_or_ended_recently? =
-      !invited_user? &&
-        current_team && current_team.trial_expiry_date &&
+      not is_nil(current_team) and not is_nil(current_team.trial_expiry_date) and
         Plausible.Teams.trial_days_left(current_team) >= -10
 
     limit_checking_opts =
