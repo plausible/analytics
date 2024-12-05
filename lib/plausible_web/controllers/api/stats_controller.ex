@@ -6,7 +6,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider}
-  alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -803,11 +802,9 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:referrer")
 
-    referrer_filter = LegacyDashboardFilterParser.filter_value("visit:source", referrer)
-
     query =
       Query.from(site, params, debug_metadata(conn))
-      |> Query.add_filter(referrer_filter)
+      |> Query.add_filter([:is, "visit:source", [referrer]])
 
     pagination = parse_pagination(params)
 

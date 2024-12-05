@@ -1,7 +1,6 @@
 defmodule Plausible.Stats.Filters.Utils do
   @moduledoc """
-  Contains utility functions shared between `LegacyDashboardFilterParser`
-  and `StatsAPIFilterParser`.
+  Contains utility functions for `StatsAPIFilterParser`.
   """
 
   @non_escaped_pipe_regex ~r/(?<!\\)\|/
