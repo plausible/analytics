@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:ok, %{site: site}} ->
         json(conn, site)
 
-      {:error, {:over_limit, limit}} ->
+      {:error, _, {:over_limit, limit}, _} ->
         conn
         |> put_status(402)
         |> json(%{
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   defp get_site(user, site_id, roles) do
-    case Plausible.Teams.Adapter.Read.Sites.get_for_user(user, site_id, roles) do
+    case Plausible.Sites.get_for_user(user, site_id, roles) do
       nil -> {:error, :site_not_found}
       site -> {:ok, site}
     end

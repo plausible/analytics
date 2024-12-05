@@ -2,7 +2,7 @@ defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.Subscriptions
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
-  alias Plausible.Auth.User
+  alias Plausible.Teams
 
   for f <- [
         :legacy_plans,
@@ -24,9 +24,6 @@ defmodule Plausible.Billing.Plans do
     # https://hexdocs.pm/elixir/1.15/Module.html#module-external_resource
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
-
-  @business_tier_launch ~N[2023-11-08 12:00:00]
-  def business_tier_launch, do: @business_tier_launch
 
   @spec growth_plans_for(Subscription.t()) :: [Plan.t()]
   @doc """
@@ -115,19 +112,6 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def latest_enterprise_plan_with_price(user, customer_ip) do
-    enterprise_plan =
-      Repo.one!(
-        from(e in EnterprisePlan,
-          where: e.user_id == ^user.id,
-          order_by: [desc: e.inserted_at],
-          limit: 1
-        )
-      )
-
-    {enterprise_plan, get_price_for(enterprise_plan, customer_ip)}
-  end
-
   def subscription_interval(subscription) do
     case get_subscription_plan(subscription) do
       %EnterprisePlan{billing_interval: interval} ->
@@ -202,24 +186,30 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  @enterprise_level_usage 10_000_000
-  @spec suggest(User.t(), non_neg_integer()) :: Plan.t()
   @doc """
-  Returns the most appropriate plan for a user based on their usage during a
+  Returns the most appropriate plan for a team based on its usage during a
   given cycle.
 
   If the usage during the cycle exceeds the enterprise-level threshold, or if
-  the user already belongs to an enterprise plan, it suggests the :enterprise
+  the team already has an enterprise plan, it suggests the :enterprise
   plan.
 
   Otherwise, it recommends the plan where the cycle usage falls just under the
-  plan's limit from the available options for the user.
+  plan's limit from the available options for the team.
   """
-  def suggest(user, usage_during_cycle) do
+  @enterprise_level_usage 10_000_000
+  @spec suggest(Teams.Team.t(), non_neg_integer()) :: Plan.t()
+  def suggest(team, usage_during_cycle) do
     cond do
-      usage_during_cycle > @enterprise_level_usage -> :enterprise
-      Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(user) -> :enterprise
-      true -> Plausible.Teams.Adapter.Read.Billing.suggest_by_usage(user, usage_during_cycle)
+      usage_during_cycle > @enterprise_level_usage ->
+        :enterprise
+
+      Teams.Billing.enterprise_configured?(team) ->
+        :enterprise
+
+      true ->
+        subscription = Teams.Billing.get_subscription(team)
+        suggest_by_usage(subscription, usage_during_cycle)
     end
   end
 

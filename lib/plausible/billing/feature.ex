@@ -65,9 +65,9 @@ defmodule Plausible.Billing.Feature do
   @callback opted_out?(Plausible.Site.t()) :: boolean()
 
   @doc """
-  Checks whether the site owner or the user plan includes the given feature.
+  Checks whether the team or the team plan includes the given feature.
   """
-  @callback check_availability(Plausible.Auth.User.t() | Plausible.Teams.Team.t() | nil) ::
+  @callback check_availability(Plausible.Teams.Team.t() | nil) ::
               :ok | {:error, :upgrade_required} | {:error, :not_implemented}
 
   @features [
@@ -120,8 +120,8 @@ defmodule Plausible.Billing.Feature do
 
       @impl true
       def enabled?(%Plausible.Site{} = site) do
-        site = Plausible.Repo.preload(site, :owner)
-        check_availability(site.owner) == :ok && !opted_out?(site)
+        site = Plausible.Repo.preload(site, :team)
+        check_availability(site.team) == :ok && !opted_out?(site)
       end
 
       @impl true
@@ -130,8 +130,12 @@ defmodule Plausible.Billing.Feature do
       end
 
       @impl true
-      def check_availability(%Plausible.Auth.User{} = user) do
-        Plausible.Teams.Adapter.Read.Billing.check_feature_availability(__MODULE__, user)
+      def check_availability(team_or_nil) do
+        cond do
+          free?() -> :ok
+          __MODULE__ in Plausible.Teams.Billing.allowed_features_for(team_or_nil) -> :ok
+          true -> {:error, :upgrade_required}
+        end
       end
 
       @impl true
@@ -140,11 +144,9 @@ defmodule Plausible.Billing.Feature do
       end
 
       defp do_toggle(%Plausible.Site{} = site, user, opts) do
-        owner = Plausible.Teams.Adapter.Read.Ownership.get_owner(site, user)
-
         override = Keyword.get(opts, :override)
         toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, toggle_field())
-        availability = if toggle, do: check_availability(owner), else: :ok
+        availability = if toggle, do: check_availability(site.team), else: :ok
 
         case availability do
           :ok ->
@@ -195,22 +197,10 @@ defmodule Plausible.Billing.Feature.Props do
 end
 
 defmodule Plausible.Billing.Feature.StatsAPI do
+  use Plausible
+
   @moduledoc false
   use Plausible.Billing.Feature,
     name: :stats_api,
     display_name: "Stats API"
-
-  @impl true
-  @doc """
-  Checks whether the user has access to Stats API or not.
-
-  Before the business tier, users who had not yet started their trial had
-  access to Stats API. With the business tier work, access is blocked and they
-  must either start their trial or subscribe to a plan. This is common when a
-  site owner invites a new user. In such cases, using the owner's API key is
-  recommended.
-  """
-  def check_availability(%Plausible.Auth.User{} = user) do
-    Plausible.Teams.Adapter.Read.Billing.check_feature_availability_for_stats_api(user)
-  end
 end

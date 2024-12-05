@@ -342,6 +342,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       user: user
     } do
       subscribe_to_enterprise_plan(user, site_limit: 1)
+      team = team_of(user)
       new_site(owner: user)
       new_site(owner: user)
 
@@ -354,7 +355,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
-      assert Plausible.Billing.Quota.Usage.site_usage(user) == 3
+      assert Plausible.Teams.Billing.site_usage(team) == 3
     end
 
     for url <- ["https://Example.com/", "HTTPS://EXAMPLE.COM/", "/Example.com/", "//Example.com/"] do

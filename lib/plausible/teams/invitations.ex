@@ -1,6 +1,8 @@
 defmodule Plausible.Teams.Invitations do
   @moduledoc false
 
+  use Plausible
+
   import Ecto.Query
 
   alias Plausible.Billing
@@ -274,7 +276,7 @@ defmodule Plausible.Teams.Invitations do
     Repo.delete_all(from gm in Teams.GuestMembership, where: gm.id in ^old_guest_ids)
     :ok = Teams.Memberships.prune_guests(prior_team)
 
-    {:ok, prior_owner} = Teams.Sites.get_owner(prior_team)
+    {:ok, prior_owner} = Teams.get_owner(prior_team)
 
     {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)
 
@@ -312,19 +314,25 @@ defmodule Plausible.Teams.Invitations do
     :ok
   end
 
-  def ensure_can_take_ownership(_site, nil), do: {:error, :no_plan}
+  on_ee do
+    def ensure_can_take_ownership(_site, nil), do: {:error, :no_plan}
 
-  def ensure_can_take_ownership(site, team) do
-    team = Teams.with_subscription(team)
-    plan = Billing.Plans.get_subscription_plan(team.subscription)
-    active_subscription? = Billing.Subscriptions.active?(team.subscription)
+    def ensure_can_take_ownership(site, team) do
+      team = Teams.with_subscription(team)
+      plan = Billing.Plans.get_subscription_plan(team.subscription)
+      active_subscription? = Billing.Subscriptions.active?(team.subscription)
 
-    if active_subscription? and plan != :free_10k do
-      team
-      |> Teams.Billing.quota_usage(pending_ownership_site_ids: [site.id])
-      |> Billing.Quota.ensure_within_plan_limits(plan)
-    else
-      {:error, :no_plan}
+      if active_subscription? and plan != :free_10k do
+        team
+        |> Teams.Billing.quota_usage(pending_ownership_site_ids: [site.id])
+        |> Billing.Quota.ensure_within_plan_limits(plan)
+      else
+        {:error, :no_plan}
+      end
+    end
+  else
+    def ensure_can_take_ownership(_site, _team) do
+      :ok
     end
   end
 

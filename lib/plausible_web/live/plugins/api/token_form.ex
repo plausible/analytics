@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Teams.Adapter.Read.Sites.get_for_user!(current_user, domain, [
+        Plausible.Sites.get_for_user!(current_user, domain, [
           :owner,
           :admin,
           :super_admin

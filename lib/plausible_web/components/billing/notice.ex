@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def premium_feature(assigns) do
     ~H"""
     <.notice
-      :if={@feature_mod.check_availability(@billable_user) !== :ok}
+      :if={@feature_mod.check_availability(@current_team) !== :ok}
       class="rounded-t-md rounded-b-none"
       title="Notice"
       {@rest}

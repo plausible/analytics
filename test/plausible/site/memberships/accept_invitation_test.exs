@@ -18,7 +18,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert {:ok, _} =
                AcceptInvitation.bulk_transfer_ownership_direct(
-                 current_owner,
                  [site1, site2],
                  new_owner
                )
@@ -39,7 +38,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert {:error, :transfer_to_self} =
                AcceptInvitation.bulk_transfer_ownership_direct(
-                 current_owner,
                  [site1, site2],
                  new_owner
                )
@@ -56,7 +54,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       for _ <- 1..3, do: add_guest(site, role: :editor)
 
       assert {:error, {:over_plan_limits, [:team_member_limit]}} =
-               AcceptInvitation.bulk_transfer_ownership_direct(old_owner, [site], new_owner)
+               AcceptInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
     @tag :ee_only
@@ -68,7 +66,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       for _ <- 1..2, do: add_guest(site, role: :editor)
 
       assert {:ok, _} =
-               AcceptInvitation.bulk_transfer_ownership_direct(old_owner, [site], new_owner)
+               AcceptInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
     @tag :ee_only
@@ -81,7 +79,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       site = new_site(owner: old_owner)
 
       assert {:error, {:over_plan_limits, [:site_limit]}} =
-               AcceptInvitation.bulk_transfer_ownership_direct(old_owner, [site], new_owner)
+               AcceptInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
     @tag :ee_only
@@ -102,7 +100,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       for _ <- 1..3, do: add_guest(site, role: :editor)
 
       assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit]}} =
-               AcceptInvitation.bulk_transfer_ownership_direct(old_owner, [site], new_owner)
+               AcceptInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
   end
 

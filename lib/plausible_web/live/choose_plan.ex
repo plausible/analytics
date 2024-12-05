@@ -18,20 +18,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       socket
       |> assign_new(:pending_ownership_site_ids, fn %{current_user: current_user} ->
         current_user.email
-        |> Plausible.Teams.Adapter.Read.Ownership.all_pending_site_transfers(current_user)
+        |> Plausible.Teams.Memberships.all_pending_site_transfers()
         |> Enum.map(& &1.site_id)
       end)
       |> assign_new(:usage, fn %{
-                                 current_user: current_user,
+                                 current_team: current_team,
                                  pending_ownership_site_ids: pending_ownership_site_ids
                                } ->
-        Plausible.Teams.Adapter.Read.Billing.quota_usage(current_user,
+        Plausible.Teams.Billing.quota_usage(current_team,
           with_features: true,
           pending_ownership_site_ids: pending_ownership_site_ids
         )
       end)
-      |> assign_new(:subscription, fn %{current_user: current_user} ->
-        Plausible.Teams.Adapter.Read.Billing.get_subscription(current_user)
+      |> assign_new(:subscription, fn %{current_team: current_team} ->
+        Plausible.Teams.Billing.get_subscription(current_team)
       end)
       |> assign_new(:owned_plan, fn %{subscription: subscription} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)

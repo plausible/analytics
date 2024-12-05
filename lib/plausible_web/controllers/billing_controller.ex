@@ -9,16 +9,15 @@ defmodule PlausibleWeb.BillingController do
   plug PlausibleWeb.RequireAccountPlug
 
   def ping_subscription(%Plug.Conn{} = conn, _params) do
-    subscribed? =
-      Plausible.Teams.Adapter.Read.Billing.has_active_subscription?(conn.assigns.current_user)
+    subscribed? = Plausible.Teams.Billing.has_active_subscription?(conn.assigns.current_team)
 
     json(conn, %{is_subscribed: subscribed?})
   end
 
   def choose_plan(conn, _params) do
-    current_user = conn.assigns.current_user
+    current_team = conn.assigns.current_team
 
-    if Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(current_user) do
+    if Plausible.Teams.Billing.enterprise_configured?(current_team) do
       redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
     else
       render(conn, "choose_plan.html",
@@ -29,9 +28,8 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade_to_enterprise_plan(conn, _params) do
-    current_user = conn.assigns.current_user
     current_team = conn.assigns.current_team
-    subscription = Plausible.Teams.Adapter.Read.Billing.get_subscription(current_user)
+    subscription = Plausible.Teams.Billing.get_subscription(current_team)
 
     {latest_enterprise_plan, price} =
       Plausible.Teams.Billing.latest_enterprise_plan_with_price(
@@ -72,8 +70,9 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
+    current_team = conn.assigns.current_team
     current_user = conn.assigns.current_user
-    subscription = Plausible.Teams.Adapter.Read.Billing.active_subscription_for(current_user)
+    subscription = Plausible.Teams.Billing.active_subscription_for(current_team)
 
     case preview_subscription(subscription, new_plan_id) do
       {:ok, {subscription, preview_info}} ->
@@ -92,6 +91,7 @@ defmodule PlausibleWeb.BillingController do
           extra: %{
             message: msg,
             new_plan_id: new_plan_id,
+            current_team: current_team.id,
             user_id: current_user.id
           }
         )
@@ -103,9 +103,9 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan(conn, %{"new_plan_id" => new_plan_id}) do
-    current_user = conn.assigns.current_user
+    current_team = conn.assigns.current_team
 
-    case Plausible.Teams.Adapter.Read.Billing.change_plan(current_user, new_plan_id) do
+    case Plausible.Teams.Billing.change_plan(current_team, new_plan_id) do
       {:ok, _subscription} ->
         conn
         |> put_flash(:success, "Plan changed successfully")
@@ -133,7 +133,8 @@ defmodule PlausibleWeb.BillingController do
             errors: inspect(e),
             message: msg,
             new_plan_id: new_plan_id,
-            user_id: current_user.id
+            current_team: current_team.id,
+            user_id: conn.assigns.current_user.id
           }
         )
 

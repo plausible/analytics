@@ -14,21 +14,21 @@ defmodule PlausibleWeb.SiteController do
 
   def new(conn, params) do
     flow = params["flow"] || PlausibleWeb.Flows.register()
-    current_user = conn.assigns[:current_user]
+    current_team = conn.assigns.current_team
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      site_limit: Plausible.Teams.Adapter.Read.Billing.site_limit(current_user),
-      site_limit_exceeded?:
-        Plausible.Teams.Adapter.Read.Billing.ensure_can_add_new_site(current_user) != :ok,
+      site_limit: Plausible.Teams.Billing.site_limit(current_team),
+      site_limit_exceeded?: Plausible.Teams.Billing.ensure_can_add_new_site(current_team) != :ok,
       form_submit_url: "/sites?flow=#{flow}",
       flow: flow
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
-    user = conn.assigns[:current_user]
-    first_site? = Plausible.Teams.Adapter.Read.Billing.site_usage(user) == 0
+    team = conn.assigns.current_team
+    user = conn.assigns.current_user
+    first_site? = Plausible.Teams.Billing.site_usage(team) == 0
     flow = conn.params["flow"]
 
     case Sites.create(user, site_params) do
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.SiteController do
             )
         )
 
-      {:error, {:over_limit, limit}} ->
+      {:error, _, {:over_limit, limit}, _} ->
         render(conn, "new.html",
           changeset: Plausible.Site.changeset(%Plausible.Site{}),
           first_site?: first_site?,
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.SiteController do
         render(conn, "new.html",
           changeset: changeset,
           first_site?: first_site?,
-          site_limit: Plausible.Teams.Adapter.Read.Billing.site_limit(user),
+          site_limit: Plausible.Teams.Billing.site_limit(team),
           site_limit_exceeded?: false,
           flow: flow,
           form_submit_url: "/sites?flow=#{flow}"
@@ -122,11 +122,10 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_people(conn, _params) do
-    current_user = conn.assigns.current_user
     site = conn.assigns.site
 
     %{memberships: memberships, invitations: invitations} =
-      Plausible.Teams.Adapter.Read.Sites.list_people(site, current_user)
+      Sites.list_people(site)
 
     conn
     |> render("settings_people.html",

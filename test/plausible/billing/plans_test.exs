@@ -155,22 +155,30 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "latest_enterprise_plan_with_price/1" do
-      user = insert(:user)
-      insert(:enterprise_plan, user: user, paddle_plan_id: "123", inserted_at: Timex.now())
+      now = NaiveDateTime.utc_now()
+      user = new_user()
+      team = team_of(user)
 
-      insert(:enterprise_plan,
-        user: user,
+      subscribe_to_enterprise_plan(user,
+        paddle_plan_id: "123",
+        inserted_at: now,
+        subscription?: false
+      )
+
+      subscribe_to_enterprise_plan(user,
         paddle_plan_id: "456",
-        inserted_at: Timex.shift(Timex.now(), hours: -10)
+        inserted_at: NaiveDateTime.shift(now, hour: -10),
+        subscription?: false
       )
 
-      insert(:enterprise_plan,
-        user: user,
+      subscribe_to_enterprise_plan(user,
         paddle_plan_id: "789",
-        inserted_at: Timex.shift(Timex.now(), minutes: -2)
+        inserted_at: NaiveDateTime.shift(now, minute: -2),
+        subscription?: false
       )
 
-      {enterprise_plan, price} = Plans.latest_enterprise_plan_with_price(user, "127.0.0.1")
+      {enterprise_plan, price} =
+        Plausible.Teams.Billing.latest_enterprise_plan_with_price(team, "127.0.0.1")
 
       assert enterprise_plan.paddle_plan_id == "123"
       assert price == Money.new(:EUR, "10.0")
@@ -210,7 +218,7 @@ defmodule Plausible.Billing.PlansTest do
 
   describe "suggested_plan/2" do
     test "returns suggested plan based on usage" do
-      user = new_user() |> subscribe_to_plan(@v1_plan_id)
+      team = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
 
       assert %Plausible.Billing.Plan{
                monthly_pageview_limit: 100_000,
@@ -219,7 +227,7 @@ defmodule Plausible.Billing.PlansTest do
                volume: "100k",
                yearly_cost: nil,
                yearly_product_id: "590752"
-             } = Plans.suggest(user, 10_000)
+             } = Plans.suggest(team, 10_000)
 
       assert %Plausible.Billing.Plan{
                monthly_pageview_limit: 200_000,
@@ -228,21 +236,22 @@ defmodule Plausible.Billing.PlansTest do
                volume: "200k",
                yearly_cost: nil,
                yearly_product_id: "597486"
-             } = Plans.suggest(user, 100_000)
+             } = Plans.suggest(team, 100_000)
     end
 
     test "returns nil when user has enterprise-level usage" do
-      user = new_user() |> subscribe_to_plan(@v1_plan_id)
-      assert :enterprise == Plans.suggest(user, 100_000_000)
+      team = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
+      assert :enterprise == Plans.suggest(team, 100_000_000)
     end
 
     test "returns nil when user is on an enterprise plan" do
-      user =
+      team =
         new_user()
         |> subscribe_to_plan(@v1_plan_id)
         |> subscribe_to_enterprise_plan(billing_interval: :yearly, subscription?: false)
+        |> team_of()
 
-      assert :enterprise == Plans.suggest(user, 10_000)
+      assert :enterprise == Plans.suggest(team, 10_000)
     end
   end
 
