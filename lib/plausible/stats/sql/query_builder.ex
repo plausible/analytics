@@ -59,6 +59,10 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
           group_by: s.session_id
         )
 
+      on_ee do
+        sessions_q = Plausible.Stats.Sampling.add_query_hint(q, query)
+      end
+
       from(
         e in q,
         join: sq in subquery(sessions_q),
