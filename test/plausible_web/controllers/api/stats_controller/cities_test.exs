@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
     end
 
     test "when list is filtered returns one city only", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{city: "591632"})
+      filters = Jason.encode!([[:is, "visit:city", ["591632"]]])
       conn = get(conn, "/api/stats/#{site.domain}/cities?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
