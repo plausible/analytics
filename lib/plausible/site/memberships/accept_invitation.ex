@@ -149,7 +149,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
       on_ee do
         # At this point this function should be guaranteed to unlock
         # the site, via `Invitations.ensure_can_take_ownership/2`.
-        :unlocked = Billing.SiteLocker.update_sites_for(user, send_email?: false)
+        team = Repo.preload(site, :team).team
+        :unlocked = Billing.SiteLocker.update_sites_for(team, send_email?: false)
       end
 
       {:ok, :unlocked}
