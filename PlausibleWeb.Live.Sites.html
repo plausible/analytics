@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D2608CD6.js"></script>
+    <script src="dist/sidebar_items-FB8ECD14.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -161,29 +161,9 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_feature_access/2" translate="no">check_feature_access(site, user)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>See <a href="Plausible.Teams.Adapter.Read.Ownership.html#check_feature_access/2"><code class="inline">Plausible.Teams.Adapter.Read.Ownership.check_feature_access/2</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#check_features/2" translate="no">check_features(invitation, user)</a>
 
       </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#check_needs_to_upgrade/1" translate="no">check_needs_to_upgrade(user)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>See <a href="Plausible.Teams.Adapter.Read.Billing.html#check_needs_to_upgrade/1"><code class="inline">Plausible.Teams.Adapter.Read.Billing.check_needs_to_upgrade/1</code></a>.</p></div>
 
     </div>
 
@@ -197,11 +177,11 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ensure_can_take_ownership/2" translate="no">ensure_can_take_ownership(site, user)</a>
+        <a href="#ensure_can_take_ownership/2" translate="no">ensure_can_take_ownership(site, team)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>See <a href="Plausible.Teams.Adapter.Read.Ownership.html#ensure_can_take_ownership/2"><code class="inline">Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>See <code class="inline">Plausible.Teams.Invitations.ensure_can_take_ownership/2</code>.</p></div>
 
     </div>
 
@@ -245,16 +225,6 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#has_sites?/1" translate="no">has_sites?(user)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>See <a href="Plausible.Teams.Adapter.Read.Ownership.html#has_sites?/1"><code class="inline">Plausible.Teams.Adapter.Read.Ownership.has_sites?/1</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#icon_pin/1" translate="no">icon_pin(assigns)</a>
 
       </div>
@@ -288,16 +258,6 @@ Pages
       </div>
 
         <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#owns_sites?/2" translate="no">owns_sites?(user, sites)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>See <a href="Plausible.Teams.Adapter.Read.Ownership.html#owns_sites?/2"><code class="inline">Plausible.Teams.Adapter.Read.Ownership.owns_sites?/2</code></a>.</p></div>
 
     </div>
 
@@ -372,28 +332,6 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="check_feature_access/2">
-
-  <div class="detail-header">
-    <a href="#check_feature_access/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">check_feature_access(site, user)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L700" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>See <a href="Plausible.Teams.Adapter.Read.Ownership.html#check_feature_access/2"><code class="inline">Plausible.Teams.Adapter.Read.Ownership.check_feature_access/2</code></a>.</p>
-  </section>
-</section>
 <section class="detail" id="check_features/2">
 
   <div class="detail-header">
@@ -403,7 +341,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">check_features(invitation, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L702" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L704" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -414,28 +352,6 @@ Pages
   <section class="docstring">
 
 
-  </section>
-</section>
-<section class="detail" id="check_needs_to_upgrade/1">
-
-  <div class="detail-header">
-    <a href="#check_needs_to_upgrade/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">check_needs_to_upgrade(user)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L647" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>See <a href="Plausible.Teams.Adapter.Read.Billing.html#check_needs_to_upgrade/1"><code class="inline">Plausible.Teams.Adapter.Read.Billing.check_needs_to_upgrade/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="ellipsis_menu/1">
@@ -447,7 +363,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">ellipsis_menu(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L224" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L228" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -467,9 +383,9 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">ensure_can_take_ownership(site, user)</h1>
+    <h1 class="signature" translate="no">ensure_can_take_ownership(site, team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L698" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L702" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -479,7 +395,7 @@ Pages
 
   <section class="docstring">
 
-<p>See <a href="Plausible.Teams.Adapter.Read.Ownership.html#ensure_can_take_ownership/2"><code class="inline">Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership/2</code></a>.</p>
+<p>See <code class="inline">Plausible.Teams.Invitations.ensure_can_take_ownership/2</code>.</p>
   </section>
 </section>
 <section class="detail" id="favicon/1">
@@ -491,7 +407,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">favicon(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L563" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L567" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -513,7 +429,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">handle_event(binary, arg2, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L572" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L576" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -570,28 +486,6 @@ Pages
 <p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.html#c:handle_params/3"><code class="inline">Phoenix.LiveView.handle_params/3</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="has_sites?/1">
-
-  <div class="detail-header">
-    <a href="#has_sites?/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">has_sites?(user)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L643" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>See <a href="Plausible.Teams.Adapter.Read.Ownership.html#has_sites?/1"><code class="inline">Plausible.Teams.Adapter.Read.Ownership.has_sites?/1</code></a>.</p>
-  </section>
-</section>
 <section class="detail" id="icon_pin/1">
 
   <div class="detail-header">
@@ -601,7 +495,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">icon_pin(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L270" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L274" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -629,7 +523,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">invitation(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L148" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L152" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -657,7 +551,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">invitation_modal(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L358" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L362" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -692,28 +586,6 @@ Pages
 <p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="owns_sites?/2">
-
-  <div class="detail-header">
-    <a href="#owns_sites?/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">owns_sites?(user, sites)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L645" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>See <a href="Plausible.Teams.Adapter.Read.Ownership.html#owns_sites?/2"><code class="inline">Plausible.Teams.Adapter.Read.Ownership.owns_sites?/2</code></a>.</p>
-  </section>
-</section>
 <section class="detail" id="percentage_change/1">
 
   <div class="detail-header">
@@ -723,7 +595,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">percentage_change(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L320" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L324" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -751,7 +623,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L39" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L43" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -773,7 +645,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">search_form(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L521" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L525" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -801,7 +673,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">site(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L182" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L186" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -829,7 +701,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">site_stats(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L287" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L291" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -857,7 +729,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">upgrade_nag_screen(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L107" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L111" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D2608CD6.js"></script>
+    <script src="dist/sidebar_items-FB8ECD14.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -171,23 +171,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#all_pending_ownerships/1" translate="no">all_pending_ownerships(email)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#any?/1" translate="no">any?(user)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#any_or_pending?/1" translate="no">any_or_pending?(user)</a>
 
       </div>
 
@@ -205,11 +189,11 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bulk_transfer_ownership_direct/3" translate="no">bulk_transfer_ownership_direct(current_user, sites, new_owner)</a>
+        <a href="#bulk_transfer_ownership_direct/2" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#bulk_transfer_ownership_direct/3"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.bulk_transfer_ownership_direct/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#bulk_transfer_ownership_direct/2"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.bulk_transfer_ownership_direct/2</code></a>.</p></div>
 
     </div>
 
@@ -226,14 +210,6 @@ Pages
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#pending?/1" translate="no">pending?(email)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#pending_ownerships?/1" translate="no">pending_ownerships?(email)</a>
 
       </div>
 
@@ -294,34 +270,6 @@ Pages
 <p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#accept_invitation/2"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.accept_invitation/2</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="all_pending_ownerships/1">
-
-  <div class="detail-header">
-    <a href="#all_pending_ownerships/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">all_pending_ownerships(email)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L42" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> all_pending_ownerships(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="any?/1">
 
   <div class="detail-header">
@@ -350,34 +298,6 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="any_or_pending?/1">
-
-  <div class="detail-header">
-    <a href="#any_or_pending?/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">any_or_pending?(user)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L54" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> any_or_pending?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="bulk_create_invitation/5">
 
   <div class="detail-header">
@@ -400,14 +320,14 @@ Pages
 <p>See <a href="Plausible.Site.Memberships.CreateInvitation.html#bulk_create_invitation/5"><code class="inline">Plausible.Site.Memberships.CreateInvitation.bulk_create_invitation/5</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="bulk_transfer_ownership_direct/3">
+<section class="detail" id="bulk_transfer_ownership_direct/2">
 
   <div class="detail-header">
-    <a href="#bulk_transfer_ownership_direct/3" class="detail-link" title="Link to this function">
+    <a href="#bulk_transfer_ownership_direct/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">bulk_transfer_ownership_direct(current_user, sites, new_owner)</h1>
+    <h1 class="signature" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L22" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -419,7 +339,7 @@ Pages
 
   <section class="docstring">
 
-<p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#bulk_transfer_ownership_direct/3"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.bulk_transfer_ownership_direct/3</code></a>.</p>
+<p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#bulk_transfer_ownership_direct/2"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.bulk_transfer_ownership_direct/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="create_invitation/4">
@@ -466,34 +386,6 @@ Pages
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> pending?(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="pending_ownerships?/1">
-
-  <div class="detail-header">
-    <a href="#pending_ownerships?/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">pending_ownerships?(email)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L48" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> pending_ownerships?(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 

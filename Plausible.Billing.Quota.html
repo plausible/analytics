@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D2608CD6.js"></script>
+    <script src="dist/sidebar_items-FB8ECD14.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -180,18 +180,6 @@ Returns false if usage is equal to the limit.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ensure_can_add_new_site/1" translate="no">ensure_can_add_new_site(user)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Enterprise plans are always allowed to add more sites (even when
-over limit) to avoid service disruption. Their usage is checked
-in a background job instead (see <code class="inline">check_usage.ex</code>).</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#ensure_feature_access/2" translate="no">ensure_feature_access(usage, plan)</a>
 
       </div>
@@ -200,11 +188,11 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ensure_within_plan_limits/3" translate="no">ensure_within_plan_limits(user_or_usage, plan, opts \\ [])</a>
+        <a href="#ensure_within_plan_limits/3" translate="no">ensure_within_plan_limits(usage, plan_mod, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Ensures that the given user (or the usage map) is within the limits
+        <div class="summary-synopsis"><p>Ensures that the given usage map is within the limits
 of the given plan.</p></div>
 
     </div>
@@ -268,7 +256,7 @@ Returns true if usage is equal to the limit.</p></div>
     </a>
     <h1 class="signature" translate="no">below_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L148" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L123" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -297,7 +285,7 @@ Returns false if usage is equal to the limit.</p>
     </a>
     <h1 class="signature" translate="no">eligible_for_upgrade?(usage)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L59" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L33" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -308,30 +296,6 @@ Returns false if usage is equal to the limit.</p>
   <section class="docstring">
 
 
-  </section>
-</section>
-<section class="detail" id="ensure_can_add_new_site/1">
-
-  <div class="detail-header">
-    <a href="#ensure_can_add_new_site/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">ensure_can_add_new_site(user)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L17" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Enterprise plans are always allowed to add more sites (even when
-over limit) to avoid service disruption. Their usage is checked
-in a background job instead (see <code class="inline">check_usage.ex</code>).</p>
   </section>
 </section>
 <section class="detail" id="ensure_feature_access/2">
@@ -343,7 +307,7 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
     </a>
     <h1 class="signature" translate="no">ensure_feature_access(usage, plan)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L61" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L35" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -365,9 +329,9 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">ensure_within_plan_limits(user_or_usage, plan, opts \\ [])</h1>
+    <h1 class="signature" translate="no">ensure_within_plan_limits(usage, plan_mod, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L42" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L21" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -379,16 +343,12 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> ensure_within_plan_limits(
-  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(),
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">struct</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | nil,
-  <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()
-) ::
+          <pre translate="no"><span class="attribute">@spec</span> ensure_within_plan_limits(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">struct</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | nil, <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
   :ok | {:error, Plausible.Billing.Quota.Limits.over_limits_error()}</pre>
 
       </div>
 
-<p>Ensures that the given user (or the usage map) is within the limits
+<p>Ensures that the given usage map is within the limits
 of the given plan.</p><p>An <code class="inline">opts</code> argument can be passed with <code class="inline">ignore_pageview_limit: true</code>
 which bypasses the pageview limit check and returns <code class="inline">:ok</code> as long as
 the other limits are not exceeded.</p>
@@ -403,7 +363,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">exceeded_cycles(cycles_usage, allowed_volume)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L131" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L106" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -415,7 +375,7 @@ the other limits are not exceeded.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> exceeded_cycles(Plausible.Billing.Quota.Usage.cycles_usage(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> exceeded_cycles(Plausible.Teams.Billing.cycles_usage(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
   <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()</pre>
 
       </div>
@@ -432,7 +392,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">exceeds_last_two_usage_cycles?(cycles_usage, allowed_volume)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L125" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L100" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -445,7 +405,7 @@ the other limits are not exceeded.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> exceeds_last_two_usage_cycles?(
-  Plausible.Billing.Quota.Usage.cycles_usage(),
+  Plausible.Teams.Billing.cycles_usage(),
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
 ) ::
   <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
@@ -464,7 +424,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">suggest_tier(usage, highest_growth_plan, highest_business_plan)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L77" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L51" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -488,7 +448,7 @@ a custom plan.</p><p><code class="inline">nil</code> is returned if the usage is
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L157" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L132" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

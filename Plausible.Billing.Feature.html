@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D2608CD6.js"></script>
+    <script src="dist/sidebar_items-FB8ECD14.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -185,7 +185,7 @@ always return <code class="inline">:ok</code> (no matter the user's subscription
 
       </div>
 
-        <div class="summary-synopsis"><p>Checks whether the site owner or the user plan includes the given feature.</p></div>
+        <div class="summary-synopsis"><p>Checks whether the team or the team plan includes the given feature.</p></div>
 
     </div>
 
@@ -369,12 +369,12 @@ have access to.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@callback</span> check_availability(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil) ::
+          <pre translate="no"><span class="attribute">@callback</span> check_availability(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil) ::
   :ok | {:error, :upgrade_required} | {:error, :not_implemented}</pre>
 
       </div>
 
-<p>Checks whether the site owner or the user plan includes the given feature.</p>
+<p>Checks whether the team or the team plan includes the given feature.</p>
   </section>
 </section>
 <section class="detail" id="c:display_name/0">
