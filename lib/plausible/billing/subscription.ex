@@ -33,7 +33,7 @@ defmodule Plausible.Billing.Subscription do
     field :last_bill_date, :date
     field :currency_code, :string
 
-    belongs_to :user, Plausible.Auth.User
+    ## belongs_to :user, Plausible.Auth.User
     belongs_to :team, Plausible.Teams.Team
 
     timestamps()

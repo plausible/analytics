@@ -28,7 +28,7 @@ defmodule Plausible.Billing.EnterprisePlan do
     field :features, Plausible.Billing.Ecto.FeatureList, default: []
     field :hourly_api_request_limit, :integer
 
-    belongs_to :user, Plausible.Auth.User
+    ## belongs_to :user, Plausible.Auth.User
     belongs_to :team, Plausible.Teams.Team
 
     timestamps()
