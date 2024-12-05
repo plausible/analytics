@@ -512,7 +512,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "Uku"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["Uku"]]])
 
       conn =
         get(
