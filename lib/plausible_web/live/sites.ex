@@ -31,10 +31,10 @@ defmodule PlausibleWeb.Live.Sites do
       end)
       |> assign_new(:needs_to_upgrade, fn %{
                                             current_user: current_user,
-                                            current_team: current_team
+                                            my_team: my_team
                                           } ->
         Plausible.Teams.Users.owns_sites?(current_user, include_pending?: true) &&
-          Plausible.Teams.Billing.check_needs_to_upgrade(current_team)
+          Plausible.Teams.Billing.check_needs_to_upgrade(my_team)
       end)
 
     {:noreply, socket}

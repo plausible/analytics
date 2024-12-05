@@ -35,7 +35,7 @@ defmodule PlausibleWeb.AuthPlug do
         conn
         |> assign(:current_user, user)
         |> assign(:current_user_session, user_session)
-        |> assign(:current_team, team)
+        |> assign(:my_team, team)
 
       _ ->
         conn

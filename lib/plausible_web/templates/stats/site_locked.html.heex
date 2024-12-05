@@ -20,7 +20,7 @@
         Dashboard locked
       </h3>
 
-      <%= case @conn.assigns[:current_user_role] do %>
+      <%= case @conn.assigns[:site_role] do %>
         <% :owner -> %>
           <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
             <p>
