@@ -186,19 +186,19 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  @enterprise_level_usage 10_000_000
-  @spec suggest(Teams.Team.t(), non_neg_integer()) :: Plan.t()
   @doc """
-  Returns the most appropriate plan for a user based on their usage during a
+  Returns the most appropriate plan for a team based on its usage during a
   given cycle.
 
   If the usage during the cycle exceeds the enterprise-level threshold, or if
-  the user already belongs to an enterprise plan, it suggests the :enterprise
+  the team already has an enterprise plan, it suggests the :enterprise
   plan.
 
   Otherwise, it recommends the plan where the cycle usage falls just under the
-  plan's limit from the available options for the user.
+  plan's limit from the available options for the team.
   """
+  @enterprise_level_usage 10_000_000
+  @spec suggest(Teams.Team.t(), non_neg_integer()) :: Plan.t()
   def suggest(team, usage_during_cycle) do
     cond do
       usage_during_cycle > @enterprise_level_usage ->

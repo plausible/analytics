@@ -267,10 +267,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
          current_team: current_team,
          plan_to_render: plan
        }) do
-    # At this point, the user is *not guaranteed* to have a `trial_expiry_date`,
-    # because in the past we've let users upgrade without that constraint, as
-    # well as transfer sites to those accounts. to these accounts we won't be
-    # offering an extra pageview limit allowance margin though.
+    # At this point, the user is *not guaranteed* to have a team,
+    # with ongoing trial.
     trial_active_or_ended_recently? =
       not is_nil(current_team) and not is_nil(current_team.trial_expiry_date) and
         Plausible.Teams.trial_days_left(current_team) >= -10

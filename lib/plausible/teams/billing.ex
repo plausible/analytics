@@ -239,8 +239,8 @@ defmodule Plausible.Teams.Billing do
   * `pending_ownership_site_ids` - a list of site IDs from which to count
   additional usage. This allows us to look at the total usage from pending
   ownerships and owned sites at the same time, which is useful, for example,
-  when deciding whether to let the user upgrade to a plan, or accept a site
-  ownership.
+  when deciding whether to let the team owner upgrade to a plan, or accept a 
+  site ownership.
 
   * `with_features` - when `true`, the returned map will contain features
   usage. Also counts usage from `pending_ownership_site_ids` if that option
@@ -304,7 +304,7 @@ defmodule Plausible.Teams.Billing do
   end
 
   @doc """
-  Queries the ClickHouse database for the monthly pageview usage. If the given user's
+  Queries the ClickHouse database for the monthly pageview usage. If the given team's
   subscription is `active`, `past_due`, or a `deleted` (but not yet expired), a map
   with the following structure is returned:
 
@@ -323,8 +323,8 @@ defmodule Plausible.Teams.Billing do
   %{last_30_days: usage_cycle()}
   ```
 
-  Given only a user as input, the usage is queried from across all the sites that the
-  user owns. Alternatively, given an optional argument of `site_ids`, the usage from
+  Given only a team as input, the usage is queried from across all the sites that the
+  team owns. Alternatively, given an optional argument of `site_ids`, the usage from
   across all those sites is queried instead.
   """
   @spec monthly_pageview_usage(Teams.Team.t(), list() | nil) :: monthly_pageview_usage()

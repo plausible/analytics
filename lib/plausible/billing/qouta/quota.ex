@@ -8,7 +8,7 @@ defmodule Plausible.Billing.Quota do
   alias Plausible.Billing.Quota.Limits
 
   @doc """
-  Ensures that the given user (or the usage map) is within the limits
+  Ensures that the given usage map is within the limits
   of the given plan.
 
   An `opts` argument can be passed with `ignore_pageview_limit: true`

@@ -65,7 +65,7 @@ defmodule Plausible.Billing.Feature do
   @callback opted_out?(Plausible.Site.t()) :: boolean()
 
   @doc """
-  Checks whether the site owner or the user plan includes the given feature.
+  Checks whether the team or the team plan includes the given feature.
   """
   @callback check_availability(Plausible.Teams.Team.t() | nil) ::
               :ok | {:error, :upgrade_required} | {:error, :not_implemented}

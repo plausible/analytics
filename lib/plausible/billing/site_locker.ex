@@ -22,7 +22,6 @@ defmodule Plausible.Billing.SiteLocker do
         _ -> nil
       end
 
-    # TODO: Use team version once we start switching writes.
     case Plausible.Teams.Billing.check_needs_to_upgrade(team) do
       {:needs_to_upgrade, :grace_period_ended} ->
         set_lock_status_for(user, true)
