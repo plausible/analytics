@@ -11,7 +11,10 @@ import {
 import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { SegmentExpandedLocationState, useSegmentExpandedContext } from '../segments/segment-expanded-context'
+import {
+  SegmentExpandedLocationState,
+  useSegmentExpandedContext
+} from '../segments/segment-expanded-context'
 import {
   buttonClass,
   primaryNeutralButtonClass,
@@ -109,8 +112,7 @@ export const FiltersBar = () => {
   const seeMoreRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { query } = useQueryContext()
-  const { expandedSegment
-   } = useSegmentExpandedContext()
+  const { expandedSegment } = useSegmentExpandedContext()
 
   const [opened, setOpened] = useState(false)
 
@@ -225,7 +227,11 @@ export const FiltersBar = () => {
                       }}
                     />
                   )}
-                  {canSave && <SaveSelectionAsSegment />}
+                  {canSave && (
+                    <SaveSelectionAsSegment
+                      closeMenu={() => setOpened(false)}
+                    />
+                  )}
                   {canClear && <ClearAction />}
                 </DropdownMenuWrapper>
               ) : null}
@@ -239,7 +245,7 @@ export const FiltersBar = () => {
 const chillButtonClass =
   '!flex !self-start !text-sm !px-3 !py-2 whitespace-nowrap'
 
-const SaveSelectionAsSegment = () => (
+const SaveSelectionAsSegment = ({ closeMenu }: { closeMenu: () => void }) => (
   <AppNavigationLink
     // title="Save as segment"
     className={classNames(
@@ -254,6 +260,7 @@ const SaveSelectionAsSegment = () => (
         expandedSegment: null
       } as SegmentExpandedLocationState
     }
+    onClick={closeMenu}
   >
     Save as segment
   </AppNavigationLink>

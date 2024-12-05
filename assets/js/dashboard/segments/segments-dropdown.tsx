@@ -15,7 +15,6 @@ import {
   parseApiSegmentData,
   SavedSegment,
   SegmentData,
-  SegmentType
 } from './segments'
 import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanLabels } from '../util/filters'
@@ -103,7 +102,8 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
           <div>Cancel editing</div>
         </AppNavigationLink>
         <DropdownLinkGroup>
-          <DropdownSubtitle className="break-all">
+          <DropdownSubtitle>Edit personal segment</DropdownSubtitle>
+          <DropdownSubtitle className="break-all normal-case">
             {expandedSegment.name}
           </DropdownSubtitle>
           <DropdownNavigationLink
