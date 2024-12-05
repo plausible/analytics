@@ -281,7 +281,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user: user
     } do
       for _ <- 1..9, do: new_site(owner: user)
-      assert user |> team_of() |> Plausible.Teams.Billing.site_usage() == 10
+      assert 10 = Plausible.Teams.Adapter.Read.Billing.site_usage(user)
 
       another_user = new_user()
       pending_ownership_site = new_site(owner: another_user)
@@ -611,13 +611,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
            conn: conn,
            user: user
          } do
-      team = team_of(user)
-
       for _ <- 1..49 do
         new_site(owner: user)
       end
 
-      assert 50 = Plausible.Teams.Billing.quota_usage(team).sites
+      assert 50 = Plausible.Teams.Adapter.Read.Billing.quota_usage(user).sites
 
       another_user = new_user()
       pending_ownership_site = new_site(owner: another_user)

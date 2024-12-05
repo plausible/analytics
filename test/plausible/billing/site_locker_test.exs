@@ -7,8 +7,15 @@ defmodule Plausible.Billing.SiteLockerTest do
 
   describe "update_sites_for/1" do
     test "does not lock sites if user is on trial" do
-      user = new_user(trial_expiry_date: Date.utc_today())
-      site = new_site(owner: user, locked: true)
+      user = insert(:user, trial_expiry_date: Timex.today())
+
+      site =
+        insert(:site,
+          locked: true,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
 
       assert SiteLocker.update_sites_for(user) == :unlocked
 
@@ -16,8 +23,16 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "does not lock if user has an active subscription" do
-      user = new_user() |> subscribe_to_growth_plan()
-      site = new_site(owner: user)
+      user = insert(:user)
+      insert(:subscription, status: Subscription.Status.active(), user: user)
+
+      site =
+        insert(:site,
+          locked: true,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
 
       assert SiteLocker.update_sites_for(user) == :unlocked
 
@@ -25,8 +40,15 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "does not lock user who is past due" do
-      user = new_user() |> subscribe_to_growth_plan(status: Subscription.Status.past_due())
-      site = new_site(owner: user)
+      user = insert(:user)
+      insert(:subscription, status: Subscription.Status.past_due(), user: user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
 
       assert SiteLocker.update_sites_for(user) == :unlocked
 
@@ -34,8 +56,15 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "does not lock user who cancelled subscription but it hasn't expired yet" do
-      user = new_user() |> subscribe_to_growth_plan(status: Subscription.Status.deleted())
-      site = new_site(owner: user)
+      user = insert(:user)
+      insert(:subscription, status: Subscription.Status.deleted(), user: user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
 
       assert SiteLocker.update_sites_for(user) == :unlocked
 
@@ -44,12 +73,16 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "does not lock user who has an active subscription and is on grace period" do
       grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: 1)}
+      user = insert(:user, grace_period: grace_period)
 
-      user =
-        new_user(grace_period: grace_period, team: [grace_period: grace_period])
-        |> subscribe_to_growth_plan()
+      insert(:subscription, status: Subscription.Status.active(), user: user)
 
-      site = new_site(owner: user)
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
 
       assert SiteLocker.update_sites_for(user) == :unlocked
 
@@ -57,14 +90,20 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "locks user who cancelled subscription and the cancelled subscription has expired" do
-      user =
-        new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
-        |> subscribe_to_growth_plan(
-          next_bill_date: Date.utc_today() |> Date.shift(day: -1),
-          status: Subscription.Status.deleted()
-        )
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
-      site = new_site(owner: user)
+      insert(:subscription,
+        status: Subscription.Status.deleted(),
+        next_bill_date: Timex.today() |> Timex.shift(days: -1),
+        user: user
+      )
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
 
       assert SiteLocker.update_sites_for(user) == {:locked, :no_active_subscription}
 
@@ -73,7 +112,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "locks all sites if user has active subscription but grace period has ended" do
       grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
-      user = new_user(grace_period: grace_period, team: [grace_period: grace_period])
+      user = new_user(grace_period: grace_period)
       subscribe_to_plan(user, "123")
       site = new_site(owner: user)
 
@@ -85,7 +124,7 @@ defmodule Plausible.Billing.SiteLockerTest do
     @tag :teams
     test "syncs grace period end with teams" do
       grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
-      user = new_user(grace_period: grace_period, team: [grace_period: grace_period])
+      user = new_user(grace_period: grace_period)
       subscribe_to_plan(user, "123")
       new_site(owner: user)
 
@@ -99,7 +138,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "sends email if grace period has ended" do
       grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
-      user = new_user(grace_period: grace_period, team: [grace_period: grace_period])
+      user = new_user(grace_period: grace_period)
       subscribe_to_plan(user, "123")
       new_site(owner: user)
 
@@ -117,8 +156,7 @@ defmodule Plausible.Billing.SiteLockerTest do
         is_over: false
       }
 
-      user = new_user(grace_period: grace_period, team: [grace_period: grace_period])
-
+      user = new_user(grace_period: grace_period)
       subscribe_to_plan(user, "123")
       new_site(owner: user)
 
@@ -136,8 +174,14 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "locks all sites if user has no trial or active subscription" do
-      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
-      site = new_site(owner: user)
+      user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
 
       assert SiteLocker.update_sites_for(user) == {:locked, :no_active_subscription}
 
@@ -160,11 +204,21 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "only locks sites that the user owns" do
-      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
+      user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
 
-      owner_site = new_site(owner: user)
-      viewer_site = new_site()
-      add_guest(viewer_site, user: user, role: :viewer)
+      owner_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
+
+      viewer_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :viewer)
+          ]
+        )
 
       assert SiteLocker.update_sites_for(user) == {:locked, :no_active_subscription}
 

@@ -8,7 +8,7 @@ defmodule PlausibleWeb.AuthView do
   def subscription_quota(nil, _options), do: "Free trial"
 
   def subscription_quota(subscription, options) do
-    pageview_limit = Plausible.Teams.Billing.monthly_pageview_limit(subscription)
+    pageview_limit = Plausible.Billing.Quota.Limits.monthly_pageview_limit(subscription)
 
     quota =
       if pageview_limit == :unlimited do

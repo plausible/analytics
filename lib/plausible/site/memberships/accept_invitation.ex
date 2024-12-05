@@ -35,12 +35,12 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           | Ecto.Changeset.t()
           | :no_plan
 
-  @spec bulk_transfer_ownership_direct([Site.t()], Auth.User.t()) ::
+  @spec bulk_transfer_ownership_direct(Auth.User.t(), [Site.t()], Auth.User.t()) ::
           {:ok, [Site.Membership.t()]} | {:error, transfer_error()}
-  def bulk_transfer_ownership_direct(sites, new_owner) do
+  def bulk_transfer_ownership_direct(current_user, sites, new_owner) do
     Repo.transaction(fn ->
       for site <- sites do
-        case transfer_ownership(site, new_owner) do
+        case transfer_ownership(current_user, site, new_owner) do
           {:ok, membership} ->
             membership
 
@@ -63,17 +63,15 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp transfer_ownership(site, new_owner) do
-    site = Repo.preload(site, :team)
-
+  defp transfer_ownership(current_user, site, new_owner) do
     with :ok <-
-           Plausible.Teams.Invitations.ensure_transfer_valid(
-             site.team,
+           Plausible.Teams.Adapter.Read.Invitations.ensure_transfer_valid(
+             current_user,
+             site,
              new_owner,
              :owner
            ),
-         {:ok, new_team} = Plausible.Teams.get_or_create(new_owner),
-         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, new_team) do
+         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, new_owner) do
       membership = get_or_create_owner_membership(site, new_owner)
 
       multi = add_and_transfer_ownership(site, membership, new_owner)
@@ -94,16 +92,16 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   defp do_accept_ownership_transfer(invitation, user) do
     membership = get_or_create_membership(invitation, user)
-    site = Repo.preload(invitation.site, :team)
+    site = invitation.site
 
     with :ok <-
-           Plausible.Teams.Invitations.ensure_transfer_valid(
-             site.team,
+           Plausible.Teams.Adapter.Read.Invitations.ensure_transfer_valid(
+             user,
+             site,
              user,
              :owner
            ),
-         {:ok, team} = Plausible.Teams.get_or_create(user),
-         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, team) do
+         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, user) do
       site
       |> add_and_transfer_ownership(membership, user)
       |> Multi.delete(:invitation, invitation)

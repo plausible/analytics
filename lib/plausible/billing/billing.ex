@@ -2,8 +2,19 @@ defmodule Plausible.Billing do
   use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.Subscriptions
+  alias Plausible.Billing.{Subscription, Plans, Quota}
   alias Plausible.Auth.User
+
+  @spec active_subscription_for(User.t()) :: Subscription.t() | nil
+  def active_subscription_for(user) do
+    user |> active_subscription_query() |> Repo.one()
+  end
+
+  @spec has_active_subscription?(User.t()) :: boolean()
+  def has_active_subscription?(user) do
+    user |> active_subscription_query() |> Repo.exists?()
+  end
 
   def subscription_created(params) do
     Repo.transaction(fn ->
@@ -29,6 +40,44 @@ defmodule Plausible.Billing do
     end)
   end
 
+  def change_plan(user, new_plan_id) do
+    subscription = active_subscription_for(user)
+    plan = Plans.find(new_plan_id)
+
+    limit_checking_opts =
+      if user.allow_next_upgrade_override do
+        [ignore_pageview_limit: true]
+      else
+        []
+      end
+
+    with :ok <- Quota.ensure_within_plan_limits(user, plan, limit_checking_opts),
+         do: do_change_plan(subscription, new_plan_id)
+  end
+
+  @doc false
+  def do_change_plan(subscription, new_plan_id) do
+    res =
+      paddle_api().update_subscription(subscription.paddle_subscription_id, %{
+        plan_id: new_plan_id
+      })
+
+    case res do
+      {:ok, response} ->
+        amount = :erlang.float_to_binary(response["next_payment"]["amount"] / 1, decimals: 2)
+
+        Subscription.changeset(subscription, %{
+          paddle_plan_id: Integer.to_string(response["plan_id"]),
+          next_bill_amount: amount,
+          next_bill_date: response["next_payment"]["date"]
+        })
+        |> Repo.update()
+
+      e ->
+        e
+    end
+  end
+
   def change_plan_preview(subscription, new_plan_id) do
     case paddle_api().update_subscription_preview(
            subscription.paddle_subscription_id,
@@ -39,6 +88,33 @@ defmodule Plausible.Billing do
 
       {:error, reason} ->
         {:error, reason}
+    end
+  end
+
+  @spec check_needs_to_upgrade(User.t()) ::
+          {:needs_to_upgrade, :no_trial | :no_active_subscription | :grace_period_ended}
+          | :no_upgrade_needed
+  def check_needs_to_upgrade(user) do
+    user = Plausible.Users.with_subscription(user)
+
+    trial_over? =
+      not is_nil(user.trial_expiry_date) and
+        Date.before?(user.trial_expiry_date, Date.utc_today())
+
+    subscription_active? = Subscriptions.active?(user.subscription)
+
+    cond do
+      is_nil(user.trial_expiry_date) and not subscription_active? ->
+        {:needs_to_upgrade, :no_trial}
+
+      trial_over? and not subscription_active? ->
+        {:needs_to_upgrade, :no_active_subscription}
+
+      Plausible.Auth.GracePeriod.expired?(user) ->
+        {:needs_to_upgrade, :grace_period_ended}
+
+      true ->
+        :no_upgrade_needed
     end
   end
 
@@ -206,6 +282,14 @@ defmodule Plausible.Billing do
 
   def cancelled_subscription_notice_dismiss_id(id) do
     "subscription_cancelled__#{id}"
+  end
+
+  defp active_subscription_query(user) do
+    from(s in Subscription,
+      where: s.user_id == ^user.id and s.status == ^Subscription.Status.active(),
+      order_by: [desc: s.inserted_at],
+      limit: 1
+    )
   end
 
   defp after_subscription_update(subscription) do

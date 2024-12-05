@@ -6,10 +6,10 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   alias Plausible.Workers.SendTrialNotifications
 
   test "does not send a notification if user didn't create a site" do
-    new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 7))
-    new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 1))
-    new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 0))
-    new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
+    insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
+    insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 1))
+    insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 0))
+    insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: -1))
 
     perform_job(SendTrialNotifications, %{})
 
@@ -17,8 +17,8 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   end
 
   test "does not send a notification if user does not have a trial" do
-    user = new_user(trial_expiry_date: nil)
-    new_site(members: user)
+    user = insert(:user, trial_expiry_date: nil)
+    insert(:site, members: [user])
 
     perform_job(SendTrialNotifications, %{})
 
@@ -26,8 +26,8 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   end
 
   test "does not send a notification if user created a site but there are no pageviews" do
-    user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 7))
-    new_site(owner: user)
+    user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
+    insert(:site, members: [user])
 
     perform_job(SendTrialNotifications, %{})
 
@@ -35,9 +35,14 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   end
 
   test "does not send a notification if user is a collaborator on sites but not an owner" do
-    user = new_user(trial_expiry_date: Date.utc_today())
-    site = new_site()
-    add_guest(site, user: user, role: :editor)
+    user = insert(:user, trial_expiry_date: Timex.now())
+
+    site =
+      insert(:site,
+        memberships: [
+          build(:site_membership, user: user, role: :admin)
+        ]
+      )
 
     populate_stats(site, [build(:pageview)])
 
@@ -48,8 +53,8 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
   describe "with site and pageviews" do
     test "sends a reminder 7 days before trial ends (16 days after user signed up)" do
-      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 7))
-      site = new_site(owner: user)
+      user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
+      site = insert(:site, members: [user])
       populate_stats(site, [build(:pageview)])
 
       perform_job(SendTrialNotifications, %{})
@@ -58,8 +63,8 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "sends an upgrade email the day before the trial ends" do
-      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 1))
-      site = new_site(owner: user)
+      user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 1))
+      site = insert(:site, members: [user])
       usage = %{total: 3, custom_events: 0}
 
       populate_stats(site, [
@@ -74,8 +79,8 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "sends an upgrade email the day the trial ends" do
-      user = new_user(trial_expiry_date: Date.utc_today())
-      site = new_site(owner: user)
+      user = insert(:user, trial_expiry_date: Timex.today())
+      site = insert(:site, members: [user])
       usage = %{total: 3, custom_events: 0}
 
       populate_stats(site, [
@@ -90,7 +95,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "does not include custom event note if user has not used custom events" do
-      user = new_user(trial_expiry_date: Date.utc_today())
+      user = insert(:user, trial_expiry_date: Timex.today())
       usage = %{total: 9_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -100,7 +105,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "includes custom event note if user has used custom events" do
-      user = new_user(trial_expiry_date: Date.utc_today())
+      user = insert(:user, trial_expiry_date: Timex.today())
       usage = %{total: 9_100, custom_events: 100}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -110,8 +115,8 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "sends a trial over email the day after the trial ends" do
-      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
-      site = new_site(owner: user)
+      user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+      site = insert(:site, members: [user])
 
       populate_stats(site, [
         build(:pageview),
@@ -125,8 +130,8 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "does not send a notification if user has a subscription" do
-      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 7))
-      site = new_site(owner: user)
+      user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
+      site = insert(:site, members: [user])
 
       populate_stats(site, [
         build(:pageview),
@@ -134,7 +139,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
         build(:pageview)
       ])
 
-      subscribe_to_growth_plan(user)
+      insert(:subscription, user: user)
 
       perform_job(SendTrialNotifications, %{})
 
@@ -144,7 +149,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
 
   describe "Suggested plans" do
     test "suggests 10k/mo plan" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 9_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -152,7 +157,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "suggests 100k/mo plan" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 90_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -160,7 +165,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "suggests 200k/mo plan" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 180_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -168,7 +173,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "suggests 500k/mo plan" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 450_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -176,7 +181,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "suggests 1m/mo plan" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 900_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -184,7 +189,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "suggests 2m/mo plan" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 1_800_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -192,7 +197,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "suggests 5m/mo plan" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 4_500_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -200,7 +205,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "suggests 10m/mo plan" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 9_000_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
@@ -208,7 +213,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "does not suggest a plan above that" do
-      user = new_user()
+      user = insert(:user)
       usage = %{total: 20_000_000, custom_events: 0}
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)

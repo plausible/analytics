@@ -175,7 +175,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     change_plan_link_text = change_plan_link_text(assigns)
 
     subscription =
-      Plausible.Teams.Billing.get_subscription(assigns.current_team)
+      Plausible.Teams.Adapter.Read.Billing.get_subscription(assigns.current_user)
 
     billing_details_expired =
       Subscription.Status.in?(subscription, [
@@ -264,18 +264,22 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   defp check_usage_within_plan_limits(%{
          available: true,
          usage: usage,
-         current_team: current_team,
+         current_user: current_user,
          plan_to_render: plan
        }) do
-    # At this point, the user is *not guaranteed* to have a team,
-    # with ongoing trial.
+    # At this point, the user is *not guaranteed* to have a `trial_expiry_date`,
+    # because in the past we've let users upgrade without that constraint, as
+    # well as transfer sites to those accounts. to these accounts we won't be
+    # offering an extra pageview limit allowance margin though.
+    invited_user? = is_nil(Plausible.Teams.Adapter.Read.Teams.trial_expiry_date(current_user))
+
     trial_active_or_ended_recently? =
-      not is_nil(current_team) and not is_nil(current_team.trial_expiry_date) and
-        Plausible.Teams.trial_days_left(current_team) >= -10
+      not invited_user? &&
+        Plausible.Teams.Adapter.Read.Teams.trial_days_left(current_user) >= -10
 
     limit_checking_opts =
       cond do
-        current_team && current_team.allow_next_upgrade_override ->
+        Plausible.Teams.Adapter.Read.Billing.allow_next_upgrade_override?(current_user) ->
           [ignore_pageview_limit: true]
 
         trial_active_or_ended_recently? && plan.volume == "10k" ->

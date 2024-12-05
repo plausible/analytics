@@ -117,6 +117,17 @@ defmodule Plausible.Auth do
     end)
   end
 
+  def user_owns_sites?(user) do
+    Repo.exists?(
+      from(s in Plausible.Site,
+        join: sm in Plausible.Site.Membership,
+        on: sm.site_id == s.id,
+        where: sm.user_id == ^user.id,
+        where: sm.role == :owner
+      )
+    )
+  end
+
   on_ee do
     def is_super_admin?(nil), do: false
     def is_super_admin?(%Plausible.Auth.User{id: id}), do: is_super_admin?(id)
@@ -128,19 +139,21 @@ defmodule Plausible.Auth do
     def is_super_admin?(_), do: false
   end
 
+  def enterprise_configured?(nil), do: false
+
+  def enterprise_configured?(%Plausible.Auth.User{} = user) do
+    user
+    |> Ecto.assoc(:enterprise_plan)
+    |> Repo.exists?()
+  end
+
   @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
   def create_api_key(user, name, key) do
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} -> team
-        _ -> nil
-      end
-
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
 
-    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(team),
+    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(user),
          do: Repo.insert(changeset)
   end
 

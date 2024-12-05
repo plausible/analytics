@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Components.Billing do
       </div>
       <.styled_link
         :if={
-          not (Plausible.Teams.Billing.enterprise_configured?(@team) &&
+          not (Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(@user) &&
                  Subscriptions.halted?(@subscription))
         }
         id="#upgrade-or-change-plan-link"

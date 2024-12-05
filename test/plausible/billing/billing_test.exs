@@ -8,94 +8,79 @@ defmodule Plausible.BillingTest do
 
   describe "check_needs_to_upgrade" do
     test "is false for a trial user" do
-      team = new_user() |> team_of()
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) == :no_upgrade_needed
+      user = insert(:user)
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
     end
 
     test "is true for a user with an expired trial" do
-      team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1)) |> team_of()
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_active_subscription}
     end
 
     test "is true for a user with empty trial expiry date" do
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(nil) ==
-               {:needs_to_upgrade, :no_trial}
+      user = insert(:user, trial_expiry_date: nil)
+
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_trial}
     end
 
     test "is false for user with empty trial expiry date but with an active subscription" do
-      team =
-        new_user()
-        |> subscribe_to_growth_plan()
-        |> team_of()
-        |> Ecto.Changeset.change(trial_expiry_date: nil)
-        |> Repo.update!()
+      user = insert(:user, trial_expiry_date: nil)
+      insert(:subscription, user: user)
 
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) == :no_upgrade_needed
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
     end
 
     test "is false for a user with an expired trial but an active subscription" do
-      team =
-        new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
-        |> subscribe_to_growth_plan()
-        |> team_of()
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, user: user)
 
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) == :no_upgrade_needed
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
     end
 
     test "is false for a user with a cancelled subscription IF the billing cycle isn't completed yet" do
-      team =
-        new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
-        |> subscribe_to_growth_plan(
-          status: Subscription.Status.deleted(),
-          next_bill_date: Date.utc_today()
-        )
-        |> team_of()
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) == :no_upgrade_needed
+      insert(:subscription,
+        user: user,
+        status: Subscription.Status.deleted(),
+        next_bill_date: Timex.today()
+      )
+
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
     end
 
     test "is true for a user with a cancelled subscription IF the billing cycle is complete" do
-      team =
-        new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
-        |> subscribe_to_growth_plan(
-          status: Subscription.Status.deleted(),
-          next_bill_date: Date.shift(Date.utc_today(), day: -1)
-        )
-        |> team_of()
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+      insert(:subscription,
+        user: user,
+        status: Subscription.Status.deleted(),
+        next_bill_date: Timex.shift(Timex.today(), days: -1)
+      )
+
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_active_subscription}
     end
 
     test "is true for a deleted subscription if no next_bill_date specified" do
-      team =
-        new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
-        |> subscribe_to_growth_plan(
-          status: Subscription.Status.deleted(),
-          next_bill_date: nil
-        )
-        |> team_of()
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+      insert(:subscription,
+        user: user,
+        status: Subscription.Status.deleted(),
+        next_bill_date: nil
+      )
+
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_active_subscription}
     end
 
     test "is true for a user past their grace period" do
-      user =
-        new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
-        |> subscribe_to_growth_plan(
-          status: Subscription.Status.deleted(),
-          next_bill_date: Date.utc_today()
-        )
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, user: user, next_bill_date: Timex.today())
 
       user = Plausible.Users.end_grace_period(user)
 
-      team = user |> Repo.reload!() |> team_of()
-
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :grace_period_ended}
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :grace_period_ended}
     end
   end
 
@@ -529,11 +514,12 @@ defmodule Plausible.BillingTest do
 
   describe "change_plan" do
     test "sets the next bill amount and date" do
-      team = new_user() |> subscribe_to_growth_plan() |> team_of()
+      user = insert(:user)
+      insert(:subscription, user: user)
 
-      Plausible.Teams.Billing.change_plan(team, "123123")
+      Billing.change_plan(user, "123123")
 
-      subscription = Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
+      subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_plan_id == "123123"
       assert subscription.next_bill_date == ~D[2019-07-10]
       assert subscription.next_bill_amount == "6.00"
@@ -541,33 +527,22 @@ defmodule Plausible.BillingTest do
   end
 
   test "active_subscription_for/1 returns active subscription" do
-    active_team =
-      new_user()
-      |> subscribe_to_growth_plan(status: Subscription.Status.active())
-      |> team_of()
-      |> Plausible.Teams.with_subscription()
+    active = insert(:subscription, user: insert(:user), status: Subscription.Status.active())
+    paused = insert(:subscription, user: insert(:user), status: Subscription.Status.paused())
+    user_without_subscription = insert(:user)
 
-    paused_team =
-      new_user()
-      |> subscribe_to_growth_plan(status: Subscription.Status.paused())
-      |> team_of()
-
-    assert Plausible.Teams.Billing.active_subscription_for(active_team).id ==
-             active_team.subscription.id
-
-    assert Plausible.Teams.Billing.active_subscription_for(paused_team) == nil
-    assert Plausible.Teams.Billing.active_subscription_for(nil) == nil
+    assert Billing.active_subscription_for(active.user).id == active.id
+    assert Billing.active_subscription_for(paused.user) == nil
+    assert Billing.active_subscription_for(user_without_subscription) == nil
   end
 
   test "has_active_subscription?/1 returns whether the user has an active subscription" do
-    active_team =
-      new_user() |> subscribe_to_growth_plan(status: Subscription.Status.active()) |> team_of()
+    active = insert(:subscription, user: insert(:user), status: Subscription.Status.active())
+    paused = insert(:subscription, user: insert(:user), status: Subscription.Status.paused())
+    user_without_subscription = insert(:user)
 
-    paused_team =
-      new_user() |> subscribe_to_growth_plan(status: Subscription.Status.paused()) |> team_of()
-
-    assert Plausible.Teams.Billing.has_active_subscription?(active_team)
-    refute Plausible.Teams.Billing.has_active_subscription?(paused_team)
-    refute Plausible.Teams.Billing.has_active_subscription?(nil)
+    assert Billing.has_active_subscription?(active.user)
+    refute Billing.has_active_subscription?(paused.user)
+    refute Billing.has_active_subscription?(user_without_subscription)
   end
 end

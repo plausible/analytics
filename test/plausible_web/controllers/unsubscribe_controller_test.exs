@@ -1,13 +1,12 @@
 defmodule PlausibleWeb.UnsubscribeControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
-  use Plausible.Teams.Test
 
   setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
 
   describe "GET /sites/:domain/weekly-report/unsubscribe" do
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do
-      site = new_site()
+      site = insert(:site)
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
 
       conn =
@@ -36,7 +35,7 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
 
   describe "GET /sites/:domain/monthly-report/unsubscribe" do
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do
-      site = new_site()
+      site = insert(:site)
       insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
 
       conn =

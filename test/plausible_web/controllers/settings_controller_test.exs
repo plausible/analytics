@@ -1063,9 +1063,12 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "can't create api key into another site", %{conn: conn, user: me} do
-      _my_site = new_site(owner: me)
-      other_user = new_user()
-      _other_site = new_site(owner: other_user)
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
+
+      other_user = insert(:user)
+
+      _other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       conn =
         post(conn, Routes.settings_path(conn, :api_keys), %{

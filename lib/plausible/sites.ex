@@ -8,7 +8,6 @@ defmodule Plausible.Sites do
   alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Site
-  alias Plausible.Teams
   alias Plausible.Site.SharedLink
 
   require Plausible.Site.UserPreference
@@ -56,7 +55,7 @@ defmodule Plausible.Sites do
 
   @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
   def set_option(user, site, option, value) when option in Site.UserPreference.options() do
-    Plausible.Sites.get_for_user!(user, site.domain)
+    Plausible.Teams.Adapter.Read.Sites.get_for_user!(user, site.domain)
 
     user
     |> Site.UserPreference.changeset(site, %{option => value})
@@ -69,85 +68,10 @@ defmodule Plausible.Sites do
     )
   end
 
-  defdelegate list(user, pagination_params, opts \\ []), to: Plausible.Teams.Sites
+  defdelegate list(user, pagination_params, opts \\ []), to: Plausible.Teams.Adapter.Read.Sites
 
   defdelegate list_with_invitations(user, pagination_params, opts \\ []),
-    to: Plausible.Teams.Sites
-
-  def list_people(site) do
-    owner_membership =
-      from(
-        tm in Teams.Membership,
-        where: tm.team_id == ^site.team_id,
-        where: tm.role == :owner,
-        select: %Plausible.Site.Membership{
-          user_id: tm.user_id,
-          role: tm.role
-        }
-      )
-      |> Repo.one!()
-
-    memberships =
-      from(
-        gm in Teams.GuestMembership,
-        inner_join: tm in assoc(gm, :team_membership),
-        where: gm.site_id == ^site.id,
-        select: %Plausible.Site.Membership{
-          user_id: tm.user_id,
-          role:
-            fragment(
-              """
-              CASE
-              WHEN ? = 'editor' THEN 'admin'
-              ELSE ?
-              END
-              """,
-              gm.role,
-              gm.role
-            )
-        }
-      )
-      |> Repo.all()
-
-    memberships = Repo.preload([owner_membership | memberships], :user)
-
-    invitations =
-      from(
-        gi in Teams.GuestInvitation,
-        inner_join: ti in assoc(gi, :team_invitation),
-        where: gi.site_id == ^site.id,
-        select: %Plausible.Auth.Invitation{
-          invitation_id: gi.invitation_id,
-          email: ti.email,
-          role:
-            fragment(
-              """
-              CASE
-              WHEN ? = 'editor' THEN 'admin'
-              ELSE ?
-              END
-              """,
-              gi.role,
-              gi.role
-            )
-        }
-      )
-      |> Repo.all()
-
-    site_transfers =
-      from(
-        st in Teams.SiteTransfer,
-        where: st.site_id == ^site.id,
-        select: %Plausible.Auth.Invitation{
-          invitation_id: st.transfer_id,
-          email: st.email,
-          role: :owner
-        }
-      )
-      |> Repo.all()
-
-    %{memberships: memberships, invitations: site_transfers ++ invitations}
-  end
+    to: Plausible.Teams.Adapter.Read.Sites
 
   @spec for_user_query(Auth.User.t()) :: Ecto.Query.t()
   def for_user_query(user) do
@@ -159,46 +83,42 @@ defmodule Plausible.Sites do
   end
 
   def create(user, params) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.put(:site_changeset, Site.new(params))
-    |> Ecto.Multi.run(:create_team, fn _repo, _context ->
-      Plausible.Teams.get_or_create(user)
-    end)
-    |> Ecto.Multi.run(:ensure_can_add_new_site, fn _repo, %{create_team: team} ->
-      case Plausible.Teams.Billing.ensure_can_add_new_site(team) do
-        :ok -> {:ok, :proceed}
-        error -> error
-      end
-    end)
-    |> Ecto.Multi.run(:clear_changed_from, fn
-      _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
-        case Plausible.Sites.get_for_user(user, domain, [:owner]) do
-          %Site{domain_changed_from: ^domain} = site ->
-            site
-            |> Ecto.Changeset.change()
-            |> Ecto.Changeset.put_change(:domain_changed_from, nil)
-            |> Ecto.Changeset.put_change(:domain_changed_at, nil)
-            |> Repo.update()
+    with :ok <- Plausible.Teams.Adapter.Read.Billing.ensure_can_add_new_site(user) do
+      Ecto.Multi.new()
+      |> Ecto.Multi.put(:site_changeset, Site.new(params))
+      |> Ecto.Multi.run(:create_team, fn _repo, _context ->
+        Plausible.Teams.get_or_create(user)
+      end)
+      |> Ecto.Multi.run(:clear_changed_from, fn
+        _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
+          case Plausible.Teams.Adapter.Read.Sites.get_for_user(user, domain, [:owner]) do
+            %Site{domain_changed_from: ^domain} = site ->
+              site
+              |> Ecto.Changeset.change()
+              |> Ecto.Changeset.put_change(:domain_changed_from, nil)
+              |> Ecto.Changeset.put_change(:domain_changed_at, nil)
+              |> Repo.update()
 
-          _ ->
-            {:ok, :ignore}
-        end
+            _ ->
+              {:ok, :ignore}
+          end
 
-      _repo, _context ->
-        {:ok, :ignore}
-    end)
-    |> Ecto.Multi.insert(:site, fn %{site_changeset: site, create_team: team} ->
-      Ecto.Changeset.put_assoc(site, :team, team)
-    end)
-    |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
-      Site.Membership.new(site, user)
-    end)
-    |> maybe_start_trial(user)
-    |> Ecto.Multi.run(:sync_team, fn _repo, %{user: user} ->
-      Plausible.Teams.sync_team(user)
-      {:ok, nil}
-    end)
-    |> Repo.transaction()
+        _repo, _context ->
+          {:ok, :ignore}
+      end)
+      |> Ecto.Multi.insert(:site, fn %{site_changeset: site, create_team: team} ->
+        Ecto.Changeset.put_assoc(site, :team, team)
+      end)
+      |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
+        Site.Membership.new(site, user)
+      end)
+      |> maybe_start_trial(user)
+      |> Ecto.Multi.run(:sync_team, fn _repo, %{user: user} ->
+        Plausible.Teams.sync_team(user)
+        {:ok, nil}
+      end)
+      |> Repo.transaction()
+    end
   end
 
   defp maybe_start_trial(multi, user) do
@@ -309,55 +229,6 @@ defmodule Plausible.Sites do
 
   def locked?(%Site{locked: locked}) do
     locked
-  end
-
-  def get_for_user!(user, domain, roles \\ [:owner, :admin, :viewer]) do
-    roles = translate_roles(roles)
-
-    site =
-      if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
-        get_by_domain!(domain)
-      else
-        user.id
-        |> get_for_user_query(domain, List.delete(roles, :super_admin))
-        |> Repo.one!()
-      end
-
-    Repo.preload(site, :team)
-  end
-
-  def get_for_user(user, domain, roles \\ [:owner, :admin, :viewer]) do
-    roles = translate_roles(roles)
-
-    if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
-      get_by_domain(domain)
-    else
-      user.id
-      |> get_for_user_query(domain, List.delete(roles, :super_admin))
-      |> Repo.one()
-    end
-  end
-
-  defp translate_roles(roles) do
-    Enum.map(roles, fn
-      :admin -> :editor
-      role -> role
-    end)
-  end
-
-  defp get_for_user_query(user_id, domain, roles) do
-    roles = Enum.map(roles, &to_string/1)
-
-    from(s in Plausible.Site,
-      join: t in assoc(s, :team),
-      join: tm in assoc(t, :team_memberships),
-      left_join: gm in assoc(tm, :guest_memberships),
-      where: tm.user_id == ^user_id,
-      where: coalesce(gm.role, tm.role) in ^roles,
-      where: s.domain == ^domain or s.domain_changed_from == ^domain,
-      where: is_nil(gm.id) or gm.site_id == s.id,
-      select: s
-    )
   end
 
   def role(user_id, site) do

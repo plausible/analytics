@@ -162,15 +162,15 @@ defmodule Plausible.SitesTest do
       patch_env(:super_admin_user_ids, [user2.id])
 
       %{id: site_id, domain: domain} = new_site(owner: user1)
-      assert %{id: ^site_id} = Plausible.Sites.get_for_user(user1, domain)
+      assert %{id: ^site_id} = Plausible.Teams.Adapter.Read.Sites.get_for_user(user1, domain)
 
       assert %{id: ^site_id} =
-               Plausible.Sites.get_for_user(user1, domain, [:owner])
+               Plausible.Teams.Adapter.Read.Sites.get_for_user(user1, domain, [:owner])
 
-      assert is_nil(Plausible.Sites.get_for_user(user2, domain))
+      assert is_nil(Plausible.Teams.Adapter.Read.Sites.get_for_user(user2, domain))
 
       assert %{id: ^site_id} =
-               Plausible.Sites.get_for_user(user2, domain, [:super_admin])
+               Plausible.Teams.Adapter.Read.Sites.get_for_user(user2, domain, [:super_admin])
     end
   end
 

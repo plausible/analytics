@@ -47,6 +47,23 @@ defmodule Plausible.Teams.Sites do
     end
   end
 
+  @spec get_owner(Teams.Team.t()) :: {:ok, Auth.User.t()} | {:error, :no_owner | :multiple_owners}
+  def get_owner(team) do
+    owner_query =
+      from(
+        tm in Teams.Membership,
+        inner_join: u in assoc(tm, :user),
+        where: tm.team_id == ^team.id and tm.role == :owner,
+        select: u
+      )
+
+    case Repo.all(owner_query) do
+      [owner_user] -> {:ok, owner_user}
+      [] -> {:error, :no_owner}
+      _ -> {:error, :multiple_owners}
+    end
+  end
+
   @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)

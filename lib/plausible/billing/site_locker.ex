@@ -16,13 +16,8 @@ defmodule Plausible.Billing.SiteLocker do
 
     user = Plausible.Users.with_subscription(user)
 
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} -> team
-        _ -> nil
-      end
-
-    case Plausible.Teams.Billing.check_needs_to_upgrade(team) do
+    # TODO: Use team version once we start switching writes.
+    case Plausible.Billing.check_needs_to_upgrade(user) do
       {:needs_to_upgrade, :grace_period_ended} ->
         set_lock_status_for(user, true)
 
@@ -72,14 +67,8 @@ defmodule Plausible.Billing.SiteLocker do
 
   @spec send_grace_period_end_email(Plausible.Auth.User.t()) :: Plausible.Mailer.result()
   def send_grace_period_end_email(user) do
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} -> team
-        _ -> nil
-      end
-
-    usage = Plausible.Teams.Billing.monthly_pageview_usage(team)
-    suggested_plan = Plausible.Billing.Plans.suggest(team, usage.last_cycle.total)
+    usage = Plausible.Teams.Adapter.Read.Billing.monthly_pageview_usage(user)
+    suggested_plan = Plausible.Billing.Plans.suggest(user, usage.last_cycle.total)
 
     user
     |> PlausibleWeb.Email.dashboard_locked(usage, suggested_plan)

@@ -13,11 +13,11 @@ defmodule Plausible.Plugins.API.Capabilities do
 
     features =
       if site do
-        site = Plausible.Repo.preload(site, :team)
+        site = Plausible.Repo.preload(site, :owner)
 
         Feature.list()
         |> Enum.map(fn mod ->
-          result = mod.check_availability(site.team)
+          result = mod.check_availability(site.owner)
           feature = mod |> Module.split() |> List.last()
           {feature, result == :ok}
         end)
