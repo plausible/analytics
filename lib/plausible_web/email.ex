@@ -197,35 +197,35 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def yearly_renewal_notification(user) do
-    date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
+  def yearly_renewal_notification(team) do
+    date = Calendar.strftime(team.subscription.next_bill_date, "%B %-d, %Y")
 
     priority_email()
-    |> to(user)
+    |> to(team.owner)
     |> tag("yearly-renewal")
     |> subject("Your Plausible subscription is up for renewal")
     |> render("yearly_renewal_notification.html", %{
-      user: user,
+      user: team.owner,
       date: date,
-      next_bill_amount: user.subscription.next_bill_amount,
-      currency: user.subscription.currency_code
+      next_bill_amount: team.subscription.next_bill_amount,
+      currency: team.subscription.currency_code
     })
   end
 
-  def yearly_expiration_notification(user) do
-    next_bill_date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
+  def yearly_expiration_notification(team) do
+    next_bill_date = Calendar.strftime(team.subscription.next_bill_date, "%B %-d, %Y")
 
     accept_traffic_until =
-      user
-      |> Plausible.Users.accept_traffic_until()
+      team
+      |> Plausible.Teams.accept_traffic_until()
       |> Calendar.strftime("%B %-d, %Y")
 
     priority_email()
-    |> to(user)
+    |> to(team.owner)
     |> tag("yearly-expiration")
     |> subject("Your Plausible subscription is about to expire")
     |> render("yearly_expiration_notification.html", %{
-      user: user,
+      user: team.owner,
       next_bill_date: next_bill_date,
       accept_traffic_until: accept_traffic_until
     })

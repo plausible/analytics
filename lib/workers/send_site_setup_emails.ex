@@ -38,7 +38,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         on: se.site_id == s.id,
         where: is_nil(se.id),
         where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
-        preload: [:owner]
+        preload: [:owner, :team]
       )
 
     for site <- Repo.all(q) do
