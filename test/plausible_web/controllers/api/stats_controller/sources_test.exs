@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
 
       conn =
         get(
@@ -133,7 +133,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
 
       conn =
         get(
@@ -183,7 +183,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "(none)"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -494,7 +494,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{"page" => "/page1"})
+      filters = Jason.encode!([[:is, "event:page", ["/page1"]]])
       conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -519,7 +519,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!([["is", "event:page", ["/page1"]]])
+      filters = Jason.encode!([[:is, "event:page", ["/page1"]]])
       conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -707,7 +707,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           )
         ])
 
-        filters = Jason.encode!(%{hostname: "one.example.com"})
+        filters = Jason.encode!([[:is, "event:hostname", ["one.example.com"]]])
 
         conn =
           get(
@@ -1478,7 +1478,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1520,7 +1520,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "Signup", hostname: "app.example.com"})
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Signup"]],
+          [:is, "event:hostname", ["app.example.com"]]
+        ])
 
       conn =
         get(
@@ -1552,7 +1556,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup", hostname: "app.example.com"})
+
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Signup"]],
+          [:is, "event:hostname", ["app.example.com"]]
+        ])
 
       conn =
         get(
@@ -1603,7 +1612,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Download")
-      filters = Jason.encode!(%{goal: "Download", props: %{"logged_in" => "true"}})
+
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Download"]],
+          [:is, "event:props:logged_in", ["true"]]
+        ])
 
       conn =
         get(
@@ -1655,7 +1669,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Download")
-      filters = Jason.encode!(%{goal: "Download", props: %{"logged_in" => "!true"}})
+
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Download"]],
+          [:is_not, "event:props:logged_in", ["true"]]
+        ])
 
       conn =
         get(
@@ -1698,7 +1717,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, page_path: "/register")
-      filters = Jason.encode!(%{goal: "Visit /register"})
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /register"]]])
 
       conn =
         get(
@@ -1784,7 +1803,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{hostname: "one.example.com"})
+      filters = Jason.encode!([[:is, "event:hostname", ["one.example.com"]]])
 
       conn =
         get(
@@ -1861,38 +1880,6 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == %{"results" => terms}
     end
 
-    test "works when filter expression is provided for source", %{
-      conn: conn,
-      site: site
-    } do
-      populate_stats(site, [
-        build(:pageview,
-          referrer_source: "DuckDuckGo",
-          referrer: "duckduckgo.com"
-        ),
-        build(:pageview,
-          referrer_source: "Google",
-          referrer: "google.com"
-        ),
-        build(:pageview,
-          referrer_source: "Google",
-          referrer: "google.com"
-        )
-      ])
-
-      conn1 = get(conn, "/api/stats/#{site.domain}/referrers/!Google?period=day")
-
-      assert json_response(conn1, 200)["results"] == [
-               %{"name" => "duckduckgo.com", "visitors" => 1}
-             ]
-
-      conn2 = get(conn, "/api/stats/#{site.domain}/referrers/Google|DuckDuckGo?period=day")
-
-      assert [entry1, entry2] = json_response(conn2, 200)["results"]
-      assert %{"name" => "google.com", "visitors" => 2} in [entry1, entry2]
-      assert %{"name" => "duckduckgo.com", "visitors" => 1} in [entry1, entry2]
-    end
-
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1914,7 +1901,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1954,7 +1941,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, site: site, page_path: "/register")
 
-      filters = Jason.encode!(%{goal: "Visit /register"})
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /register"]]])
 
       conn =
         get(
