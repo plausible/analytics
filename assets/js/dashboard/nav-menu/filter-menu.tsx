@@ -18,7 +18,7 @@ import {
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
 import { useOnClickOutside } from '../util/use-on-click-outside'
-import { SegmentsList } from '../segments/segments-dropdown'
+import { EditSegmentMenu, SegmentsList } from '../segments/segments-dropdown'
 import { useQueryContext } from '../query-context'
 import {
   SegmentExpandedLocationState,
@@ -40,12 +40,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import { DashboardQuery } from '../query'
 import { PlusIcon } from '@heroicons/react/20/solid'
-import {
-  CheckIcon,
-  PencilSquareIcon,
-  TrashIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline'
+// import {
+//   PlusIcon,
+// } from '@heroicons/react/24/outline'
+import { SearchInput } from '../components/search-input'
+import classNames from 'classnames'
 
 export function getFilterListItems({
   propsAvailable
@@ -89,6 +88,8 @@ export const FilterMenu = () => {
   const { expandedSegment, modal } = useSegmentExpandedContext()
   const queryClient = useQueryClient()
   const navigate = useAppNavigate()
+  const [search, setSearch] = useState<string>()
+
   const patchSegment = useMutation({
     mutationFn: ({
       id,
@@ -333,6 +334,14 @@ export const FilterMenu = () => {
               id="filter-menu"
               className="md:left-auto md:w-80"
             >
+              <div className="px-4 pb-1 pt-4">
+                <SearchInput
+                  placeholderUnfocused="Press / to search"
+                  className="w-full text-xs sm:text-xs"
+                  onSearch={setSearch}
+                />
+              </div>
+
               <DropdownLinkGroup className="flex flex-row">
                 {columns.map((filterGroups, index) => (
                   <div key={index} className="flex flex-col w-1/2">
@@ -345,7 +354,16 @@ export const FilterMenu = () => {
                           .filter((m) => !!m)
                           .map((modalKey) => (
                             <DropdownNavigationLink
-                              className="text-xs"
+                              className={classNames('text-xs', {
+                                'opacity-50':
+                                  search?.trim().length &&
+                                  !title
+                                    .toLowerCase()
+                                    .includes(search.trim().toLowerCase()) &&
+                                  !formatFilterGroup(modalKey)
+                                    .toLowerCase()
+                                    .includes(search.trim().toLowerCase())
+                              })}
                               onLinkClick={() => setOpened(false)}
                               active={false}
                               key={modalKey}
@@ -362,7 +380,10 @@ export const FilterMenu = () => {
                 ))}
               </DropdownLinkGroup>
               {!expandedSegment && (
-                <SegmentsList closeList={() => setOpened(false)} />
+                <SegmentsList
+                  closeList={() => setOpened(false)}
+                  searchValue={search}
+                />
               )}
             </DropdownMenuWrapper>
           )}
@@ -374,103 +395,3 @@ export const FilterMenu = () => {
   )
 }
 
-const EditSegmentMenu = () => {
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const { expandedSegment, modal } = useSegmentExpandedContext()
-  const [opened, setOpened] = useState(false)
-  useOnClickOutside({
-    ref: dropdownRef,
-    active: opened && modal === null,
-    handler: () => setOpened(false)
-  })
-  if (!expandedSegment) {
-    return null
-  }
-  return (
-    <ToggleDropdownButton
-      ref={dropdownRef}
-      variant="ghost"
-      className="ml-auto md:relative shrink-0"
-      dropdownContainerProps={{
-        ['aria-controls']: 'edit-segment-menu',
-        ['aria-expanded']: opened
-      }}
-      onClick={() => setOpened((v) => !v)}
-      currentOption={
-        <div>
-          <PencilSquareIcon className="w-4 h-4 block" />
-        </div>
-      }
-    >
-      {opened && (
-        <DropdownMenuWrapper
-          id="edit-segment-menu"
-          className="md:left-auto md:w-60"
-        >
-          <DropdownLinkGroup>
-            <DropdownSubtitle className="break-all normal-case">
-              {expandedSegment.name}
-            </DropdownSubtitle>
-
-            <DropdownNavigationLink
-              className="text-xs"
-              search={(s) => s}
-              navigateOptions={{
-                state: {
-                  expandedSegment: expandedSegment,
-                  modal: 'update'
-                } as SegmentExpandedLocationState
-              }}
-              onLinkClick={() => setOpened(false)}
-            >
-              <div className="flex items-center gap-x-2">
-                <CheckIcon className="w-4 h-4 block" />
-                Update
-              </div>
-            </DropdownNavigationLink>
-            <DropdownNavigationLink
-              className="text-xs"
-              search={(s) => s}
-              navigateOptions={{
-                state: {
-                  expandedSegment: expandedSegment,
-                  modal: 'delete'
-                } as SegmentExpandedLocationState
-              }}
-              onLinkClick={() => setOpened(false)}
-              // onClick={closeList}
-            >
-              <div className="flex items-center gap-x-2">
-                <TrashIcon className="w-4 h-4 block" />
-                Delete
-              </div>
-            </DropdownNavigationLink>
-            <DropdownNavigationLink
-              className="text-xs"
-              search={(s) => ({
-                ...s,
-                filters: [['is', 'segment', [expandedSegment.id]]],
-                labels: {
-                  [formatSegmentIdAsLabelKey(expandedSegment.id)]:
-                    expandedSegment.name
-                }
-              })}
-              navigateOptions={{
-                state: {
-                  expandedSegment: null,
-                  modal: null
-                } as SegmentExpandedLocationState
-              }}
-              onLinkClick={() => setOpened(false)}
-            >
-              <div className="flex items-center gap-x-2">
-                <XMarkIcon className="w-4 h-4 block" />
-                Close without saving
-              </div>
-            </DropdownNavigationLink>
-          </DropdownLinkGroup>
-        </DropdownMenuWrapper>
-      )}
-    </ToggleDropdownButton>
-  )
-}

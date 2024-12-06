@@ -1,10 +1,12 @@
 /** @format */
 
-import React, { ReactNode, useCallback, useMemo, useState } from 'react'
+import React, { ReactNode, useCallback, useMemo, useRef, useState } from 'react'
 import {
   DropdownLinkGroup,
+  DropdownMenuWrapper,
   DropdownNavigationLink,
-  DropdownSubtitle
+  DropdownSubtitle,
+  ToggleDropdownButton
 } from '../components/dropdown'
 import { useQueryContext } from '../query-context'
 import { useSiteContext } from '../site-context'
@@ -14,25 +16,29 @@ import {
   isSegmentFilter,
   parseApiSegmentData,
   SavedSegment,
-  SegmentData,
+  SegmentData
 } from './segments'
 import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanLabels } from '../util/filters'
-import {
-  AppNavigationLink,
-  useAppNavigate
-} from '../navigation/use-app-navigate'
+import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { Tooltip } from '../util/tooltip'
 import { useUserContext } from '../user-context'
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid'
 import {
   SegmentExpandedLocationState,
   useSegmentExpandedContext
 } from './segment-expanded-context'
 import { filterRoute, rootRoute } from '../router'
-import { SearchInput } from '../components/search-input'
 import { SegmentAuthorship } from './segment-authorship'
+import {
+  CheckIcon,
+  PencilSquareIcon,
+  Square2StackIcon,
+  TrashIcon,
+  XMarkIcon,
+  ChevronRightIcon
+} from '@heroicons/react/24/outline'
+import { useOnClickOutside } from '../util/use-on-click-outside'
 
 export const useSegmentsListQuery = () => {
   const site = useSiteContext()
@@ -67,97 +73,23 @@ export const useSegmentsListQuery = () => {
 
 const linkClass = 'text-xs'
 
-export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
-  const { expandedSegment } = useSegmentExpandedContext()
+export const SegmentsList = ({
+  closeList,
+  searchValue
+}: {
+  closeList: () => void
+  searchValue?: string
+}) => {
   const { query } = useQueryContext()
 
   const { data } = useSegmentsListQuery()
 
   const segmentFilter = query.filters.find(isSegmentFilter)
   const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
-
-  const [search, setSearch] = useState<string>()
-
-  if (expandedSegment) {
-    return (
-      <>
-        <AppNavigationLink
-          className="flex text-xs px-4 py-2 gap-1 bg-gray-50 dark:bg-gray-900 rounded-t-md"
-          search={(s) => ({
-            ...s,
-            filters: [['is', 'segment', [expandedSegment.id]]],
-            labels: {
-              [formatSegmentIdAsLabelKey(expandedSegment.id)]:
-                expandedSegment.name
-            }
-          })}
-          state={
-            {
-              expandedSegment: null,
-              modal: null
-            } as SegmentExpandedLocationState
-          }
-        >
-          <ChevronLeftIcon className="block h-4 w-4"></ChevronLeftIcon>
-          <div>Cancel editing</div>
-        </AppNavigationLink>
-        <DropdownLinkGroup>
-          <DropdownSubtitle>Edit personal segment</DropdownSubtitle>
-          <DropdownSubtitle className="break-all normal-case">
-            {expandedSegment.name}
-          </DropdownSubtitle>
-          <DropdownNavigationLink
-            className={linkClass}
-            search={(s) => s}
-            navigateOptions={{
-              state: {
-                expandedSegment: expandedSegment,
-                modal: 'update'
-              } as SegmentExpandedLocationState
-            }}
-            onClick={closeList}
-          >
-            Update segment
-          </DropdownNavigationLink>
-          <DropdownNavigationLink
-            className={linkClass}
-            search={(s) => s}
-            navigateOptions={{
-              state: {
-                expandedSegment: expandedSegment,
-                modal: 'create'
-              } as SegmentExpandedLocationState
-            }}
-            onClick={closeList}
-          >
-            Save as a new segment
-          </DropdownNavigationLink>
-          <DropdownNavigationLink
-            className={linkClass}
-            search={(s) => s}
-            navigateOptions={{
-              state: {
-                expandedSegment: expandedSegment,
-                modal: 'delete'
-              } as SegmentExpandedLocationState
-            }}
-            onClick={closeList}
-          >
-            Delete segment
-          </DropdownNavigationLink>
-        </DropdownLinkGroup>
-      </>
-    )
-  }
-
-  const filteredData = data?.filter(getFilterSegmentsByNameInsensitive(search))
-
+  const filteredData = data?.filter(
+    getFilterSegmentsByNameInsensitive(searchValue)
+  )
   const showableSlice = filteredData?.slice(0, 5)
-
-  // const personalSegments = filteredData?.filter(
-  //   (i) => i.type === SegmentType.personal
-  // )
-  // const siteSegments = filteredData?.filter((i) => i.type === SegmentType.site)
 
   return (
     <>
@@ -166,13 +98,6 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
           {/* <> */}
           <DropdownSubtitle>Segments</DropdownSubtitle>
 
-          <div className="px-4 py-1">
-            <SearchInput
-              placeholderUnfocused="Press / to search segments"
-              className="w-full text-xs sm:text-xs"
-              onSearch={setSearch}
-            />
-          </div>
           {showableSlice!.map((s) => {
             return (
               <Tooltip
@@ -487,3 +412,121 @@ export const EditSegmentIcon = ({ className }: { className?: string }) => (
     <path d="M14.2075 4.58572L11.4144 1.79322C11.3215 1.70034 11.2113 1.62666 11.0899 1.57639C10.9686 1.52612 10.8385 1.50024 10.7072 1.50024C10.5759 1.50024 10.4458 1.52612 10.3245 1.57639C10.2031 1.62666 10.0929 1.70034 10 1.79322L2.29313 9.50009C2.19987 9.59262 2.12593 9.70275 2.0756 9.82411C2.02528 9.94546 1.99959 10.0756 2.00001 10.207V13.0001C2.00001 13.2653 2.10536 13.5197 2.2929 13.7072C2.48043 13.8947 2.73479 14.0001 3 14.0001H13.5C13.6326 14.0001 13.7598 13.9474 13.8536 13.8536C13.9473 13.7599 14 13.6327 14 13.5001C14 13.3675 13.9473 13.2403 13.8536 13.1465C13.7598 13.0528 13.6326 13.0001 13.5 13.0001H7.2075L14.2075 6.00009C14.3004 5.90723 14.3741 5.79698 14.4243 5.67564C14.4746 5.5543 14.5005 5.42425 14.5005 5.29291C14.5005 5.16156 14.4746 5.03151 14.4243 4.91017C14.3741 4.78883 14.3004 4.67858 14.2075 4.58572ZM5.79313 13.0001H3V10.207L8.5 4.70697L11.2931 7.50009L5.79313 13.0001ZM12 6.79322L9.20751 4.00009L10.7075 2.50009L13.5 5.29322L12 6.79322Z" />
   </svg>
 )
+
+export const EditSegmentMenu = () => {
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const { expandedSegment, modal } = useSegmentExpandedContext()
+  const [opened, setOpened] = useState(false)
+  useOnClickOutside({
+    ref: dropdownRef,
+    active: opened && modal === null,
+    handler: () => setOpened(false)
+  })
+  if (!expandedSegment) {
+    return null
+  }
+  return (
+    <ToggleDropdownButton
+      ref={dropdownRef}
+      variant="ghost"
+      className="ml-auto md:relative shrink-0"
+      dropdownContainerProps={{
+        ['aria-controls']: 'edit-segment-menu',
+        ['aria-expanded']: opened
+      }}
+      onClick={() => setOpened((v) => !v)}
+      currentOption={
+        <div>
+          <EditSegmentIcon className="w-4 h-4 block fill-current"/>
+        </div>
+      }
+    >
+      {opened && (
+        <DropdownMenuWrapper
+          id="edit-segment-menu"
+          className="md:left-auto md:w-60"
+        >
+          <DropdownLinkGroup>
+            <DropdownSubtitle className="break-all normal-case">
+              {expandedSegment.name}
+            </DropdownSubtitle>
+
+            <DropdownNavigationLink
+              className={linkClass}
+              search={(s) => s}
+              navigateOptions={{
+                state: {
+                  expandedSegment: expandedSegment,
+                  modal: 'update'
+                } as SegmentExpandedLocationState
+              }}
+              onLinkClick={() => setOpened(false)}
+            >
+              <div className="flex items-center gap-x-2">
+                <CheckIcon className="w-4 h-4 block" />
+                Update segment
+              </div>
+            </DropdownNavigationLink>
+            <DropdownNavigationLink
+              className={linkClass}
+              search={(s) => s}
+              navigateOptions={{
+                state: {
+                  expandedSegment: expandedSegment,
+                  modal: 'create'
+                } as SegmentExpandedLocationState
+              }}
+              onClick={() => setOpened(false)}
+            >
+              <div className="flex items-center gap-x-2">
+                <Square2StackIcon className="w-4 h-4 block" />
+                Save as a new segment
+              </div>
+            </DropdownNavigationLink>
+
+            <DropdownNavigationLink
+              className={linkClass}
+              search={(s) => s}
+              navigateOptions={{
+                state: {
+                  expandedSegment: expandedSegment,
+                  modal: 'delete'
+                } as SegmentExpandedLocationState
+              }}
+              onLinkClick={() => setOpened(false)}
+              // onClick={closeList}
+            >
+              <div className="flex items-center gap-x-2">
+                <TrashIcon className="w-4 h-4 block" />
+                Delete segment
+              </div>
+            </DropdownNavigationLink>
+            <DropdownNavigationLink
+              className={linkClass}
+              search={(s) => ({
+                ...s,
+                filters: [['is', 'segment', [expandedSegment.id]]],
+                labels: {
+                  [formatSegmentIdAsLabelKey(expandedSegment.id)]:
+                    expandedSegment.name
+                }
+              })}
+              navigateOptions={{
+                state: {
+                  expandedSegment: null,
+                  modal: null
+                } as SegmentExpandedLocationState
+              }}
+              onLinkClick={() => setOpened(false)}
+            >
+              <div className="flex items-center gap-x-2">
+                <XMarkIcon className="w-4 h-4 block" />
+                Close without saving
+              </div>
+            </DropdownNavigationLink>
+          </DropdownLinkGroup>
+        </DropdownMenuWrapper>
+      )}
+    </ToggleDropdownButton>
+  )
+}
