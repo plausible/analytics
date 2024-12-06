@@ -17,6 +17,7 @@ defmodule Plausible.ClickhouseEventV2 do
 
     field :"meta.key", {:array, :string}
     field :"meta.value", {:array, :string}
+    field :scroll_depth, Ch, type: "UInt8"
 
     field :revenue_source_amount, Ch, type: "Nullable(Decimal64(3))"
     field :revenue_source_currency, Ch, type: "FixedString(3)"
@@ -26,7 +27,7 @@ defmodule Plausible.ClickhouseEventV2 do
     # Session attributes
     field :referrer, :string
     field :referrer_source, :string
-    field :channel, Ch, type: "LowCardinality(String)"
+    field :click_id_param, Ch, type: "LowCardinality(String)"
     field :utm_medium, :string
     field :utm_source, :string
     field :utm_campaign, :string
@@ -43,6 +44,8 @@ defmodule Plausible.ClickhouseEventV2 do
     field :operating_system_version, Ch, type: "LowCardinality(String)"
     field :browser, Ch, type: "LowCardinality(String)"
     field :browser_version, Ch, type: "LowCardinality(String)"
+
+    field :acquisition_channel, Ch, type: "LowCardinality(String)", writable: :never
   end
 
   def new(attrs) do
@@ -58,6 +61,7 @@ defmodule Plausible.ClickhouseEventV2 do
         :timestamp,
         :"meta.key",
         :"meta.value",
+        :scroll_depth,
         :revenue_source_amount,
         :revenue_source_currency,
         :revenue_reporting_amount,
@@ -71,7 +75,7 @@ defmodule Plausible.ClickhouseEventV2 do
     :session_id,
     :referrer,
     :referrer_source,
-    :channel,
+    :click_id_param,
     :utm_medium,
     :utm_source,
     :utm_campaign,

@@ -197,6 +197,7 @@ defmodule Plausible.Stats.Imported do
 
   @filter_suggestions_mapping %{
     referrer_source: :source,
+    acquisition_channel: :channel,
     screen_size: :device,
     pathname: :page
   }
@@ -221,10 +222,13 @@ defmodule Plausible.Stats.Imported do
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
 
   def merge_imported(q, site, %Query{dimensions: []} = query, metrics) do
+    q = paginate_optimization(q, query)
+
     imported_q =
       site
       |> Imported.Base.query_imported(query)
       |> select_imported_metrics(metrics)
+      |> paginate_optimization(query)
 
     from(
       s in subquery(q),
@@ -274,12 +278,15 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, query, metrics) do
     if schema_supports_query?(query) do
+      q = paginate_optimization(q, query)
+
       imported_q =
         site
         |> Imported.Base.query_imported(query)
         |> where([i], i.visitors > 0)
         |> group_imported_by(query)
         |> select_imported_metrics(metrics)
+        |> paginate_optimization(query)
 
       from(s in subquery(q),
         full_join: i in subquery(imported_q),
@@ -297,5 +304,49 @@ defmodule Plausible.Stats.Imported do
     site
     |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
+  end
+
+  defp naive_dimension_join(q1, q2, metrics) do
+    from(a in subquery(q1),
+      full_join: b in subquery(q2),
+      on: a.dim0 == b.dim0,
+      select: %{}
+    )
+    |> select_merge_as([a, b], %{
+      dim0: fragment("if(? != 0, ?, ?)", a.dim0, a.dim0, b.dim0)
+    })
+    |> select_joined_metrics(metrics)
+  end
+
+  # Optimization for cases when grouping by a very high cardinality column.
+  #
+  # Instead of joining all rows from main and imported tables, we limit the number of rows
+  # in both tables to LIMIT N * 100.
+  #
+  # This speeds up cases where a site has millions of unique pathnames, reducing the time spent
+  # JOINing tables by an order of magnitude.
+  #
+  # Note that this optimization is lossy as the true top N values can arise from outside the top C
+  # items of either subquery. In practice though, this will give plausible results.
+  #
+  # We only apply this optimization in cases where we can deterministically ORDER BY. This covers
+  # opening Plausible dashboard but not more complicated use-cases.
+  defp paginate_optimization(q, query) do
+    if is_map(query.pagination) and can_order_by?(query) do
+      n = (query.pagination.limit + query.pagination.offset) * 100
+
+      q
+      |> QueryBuilder.build_order_by(query)
+      |> limit(^n)
+    else
+      q
+    end
+  end
+
+  defp can_order_by?(query) do
+    Enum.all?(query.order_by, fn
+      {metric, _direction} when is_atom(metric) -> metric in query.metrics
+      _ -> true
+    end)
   end
 end

@@ -31,11 +31,21 @@ defmodule PlausibleWeb.Favicon do
 
   @placeholder_icon_location "priv/placeholder_favicon.ico"
   @placeholder_icon File.read!(@placeholder_icon_location)
+  @custom_icons %{
+    "Brave" => "search.brave.com",
+    "Sogou" => "sogou.com",
+    "Wikipedia" => "en.wikipedia.org",
+    "Discord" => "discord.com",
+    "Perplexity" => "perplexity.ai",
+    "Microsoft Teams" => "microsoft.com",
+    "LinkedIn" => "linkedin.com"
+  }
 
   def init(_) do
     domains =
       File.read!(Application.app_dir(:plausible, @referer_domains_file))
       |> Jason.decode!()
+      |> Map.merge(@custom_icons)
 
     [favicon_domains: domains]
   end

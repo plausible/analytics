@@ -1,13 +1,14 @@
 defmodule Plausible.Stats.QueryResultTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
   alias Plausible.Stats.{Query, QueryResult, QueryOptimizer}
 
   setup do
     user = insert(:user)
 
     site =
-      insert(:site,
-        members: [user],
+      new_site(
+        owner: user,
         inserted_at: ~N[2020-01-01T00:00:00],
         stats_start_date: ~D[2020-01-01]
       )
@@ -15,9 +16,7 @@ defmodule Plausible.Stats.QueryResultTest do
     {:ok, site: site}
   end
 
-  test "serializing query to JSON keeps keys ordered" do
-    site = insert(:site)
-
+  test "serializing query to JSON keeps keys ordered", %{site: site} do
     {:ok, query} =
       Query.build(
         site,

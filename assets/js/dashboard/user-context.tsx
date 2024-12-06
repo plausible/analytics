@@ -4,7 +4,8 @@ import React, { createContext, ReactNode, useContext } from 'react'
 export enum Role {
   owner = 'owner',
   admin = 'admin',
-  viewer = 'viewer'
+  viewer = 'viewer',
+  editor = 'editor'
 }
 
 const userContextDefaultValue = {

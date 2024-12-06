@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util}
+  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time}
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -37,8 +37,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     {
       Query.set(query,
         metrics: event_metrics,
-        include_imported: query.include_imported,
-        pagination: nil
+        include_imported: query.include_imported
       ),
       split_sessions_query(query, sessions_metrics)
     }
@@ -85,8 +84,8 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp resolve_time_dimension(first, last) do
     cond do
-      Timex.diff(last, first, :hours) <= 48 -> "time:hour"
-      Timex.diff(last, first, :days) <= 40 -> "time:day"
+      DateTime.diff(last, first, :hour) <= 48 -> "time:hour"
+      DateTime.diff(last, first, :day) <= 40 -> "time:day"
       Timex.diff(last, first, :weeks) <= 52 -> "time:week"
       true -> "time:month"
     end
@@ -147,7 +146,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp time_dimension(query) do
-    Enum.find(query.dimensions, &String.starts_with?(&1, "time"))
+    Enum.find(query.dimensions, &Time.time_dimension?/1)
   end
 
   defp split_sessions_query(query, session_metrics) do
@@ -171,8 +170,7 @@ defmodule Plausible.Stats.QueryOptimizer do
       filters: filters,
       metrics: session_metrics,
       dimensions: dimensions,
-      include_imported: query.include_imported,
-      pagination: nil
+      include_imported: query.include_imported
     )
   end
 

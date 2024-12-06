@@ -1,9 +1,10 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
   import Plausible.TestUtils
   alias Plausible.Billing.Feature
 
-  setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+  setup [:create_user, :create_site, :create_api_key, :use_api_key]
   @user_id Enum.random(1000..9999)
 
   describe "feature access" do
@@ -12,8 +13,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       user: user,
       site: site
     } do
-      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -30,8 +30,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       user: user,
       site: site
     } do
-      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -124,6 +123,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 400) == %{
                "error" =>
                  "The metric `led_zeppelin` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
+             }
+    end
+
+    test "scroll depth metric is not recognized in the legacy API v1", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "30d",
+          "metrics" => "scroll_depth"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "The metric `scroll_depth` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
              }
     end
 
@@ -1629,12 +1642,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       populate_stats(site, [
         build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:00], pathname: "/1"),
         build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:05], pathname: "/2"),
-        build(:event,
-          name: "pageleave",
-          user_id: 1234,
-          timestamp: ~N[2021-01-01 12:01:00],
-          pathname: "/1"
-        )
+        build(:pageleave, user_id: 1234, timestamp: ~N[2021-01-01 12:01:00], pathname: "/1")
       ])
 
       conn =

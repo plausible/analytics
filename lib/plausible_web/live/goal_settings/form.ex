@@ -37,6 +37,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         event_name_options_count: length(assigns.event_name_options),
         event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
         current_user: assigns.current_user,
+        site_team: assigns.site_team,
         domain: assigns.domain,
         selected_tab: selected_tab,
         tab_sequence_id: 0,
@@ -73,6 +74,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         f={f}
         suffix={@context_unique_id}
         current_user={@current_user}
+        site_team={@site_team}
         site={@site}
         goal={@goal}
         existing_goals={@existing_goals}
@@ -115,6 +117,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         f={f}
         suffix={suffix(@context_unique_id, @tab_sequence_id)}
         current_user={@current_user}
+        site_team={@site_team}
         site={@site}
         existing_goals={@existing_goals}
         goal_options={@event_name_options}
@@ -199,6 +202,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
   attr(:current_user, Plausible.Auth.User)
+  attr(:site_team, Plausible.Teams.Team)
   attr(:suffix, :string)
   attr(:existing_goals, :list)
   attr(:goal_options, :list)
@@ -259,6 +263,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           f={@f}
           site={@site}
           current_user={@current_user}
+          site_team={@site_team}
           has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
           goal={@goal}
           suffix={@suffix}
@@ -282,6 +287,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       <PlausibleWeb.Components.Billing.Notice.premium_feature
         billable_user={@site.owner}
         current_user={@current_user}
+        current_team={@site_team}
         feature_mod={Plausible.Billing.Feature.RevenueGoals}
         class="rounded-b-md"
       />

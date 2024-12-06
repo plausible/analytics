@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:ok, %{site: site}} ->
         json(conn, site)
 
-      {:error, {:over_limit, limit}} ->
+      {:error, _, {:over_limit, limit}, _} ->
         conn
         |> put_status(402)
         |> json(%{
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   def delete_site(conn, %{"site_id" => site_id}) do
     case get_site(conn.assigns.current_user, site_id, [:owner]) do
       {:ok, site} ->
-        {:ok, _} = Plausible.Site.Removal.run(site.domain)
+        {:ok, _} = Plausible.Site.Removal.run(site)
         json(conn, %{"deleted" => true})
 
       {:error, :site_not_found} ->
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   defp get_site(user, site_id, roles) do
-    case Sites.get_for_user(user.id, site_id, roles) do
+    case Plausible.Sites.get_for_user(user, site_id, roles) do
       nil -> {:error, :site_not_found}
       site -> {:ok, site}
     end

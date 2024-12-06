@@ -6,19 +6,16 @@ defmodule Plausible.DataMigration do
 
   defmacro __using__(opts) do
     dir = Keyword.fetch!(opts, :dir)
-    repo = Keyword.get(opts, :repo, Plausible.DataMigration.Repo)
+    repo = Keyword.get(opts, :repo, Plausible.DataMigration.ClickhouseRepo)
 
     quote bind_quoted: [dir: dir, repo: repo] do
       @dir dir
       @repo repo
 
-      def run_sql_confirm(name, options \\ []) do
-        {prompt_options, assigns} =
-          Keyword.split(options, [:prompt_message, :prompt_default_choice])
-
+      def run_sql_confirm(name, assigns \\ [], options \\ []) do
         query = unwrap_with_io(name, assigns)
-        message = prompt_options[:prompt_message] || "Execute?"
-        default_choice = Keyword.get(prompt_options, :prompt_default_choice, :yes)
+        message = Keyword.get(options, :prompt_message, "Execute?")
+        default_choice = Keyword.get(options, :prompt_default_choice, :yes)
         confirm(message, fn -> do_run(name, query) end, default_choice)
       end
 
@@ -52,7 +49,7 @@ defmodule Plausible.DataMigration do
         end
       end
 
-      defp unwrap(name, assigns) do
+      def unwrap(name, assigns \\ []) do
         :plausible
         |> :code.priv_dir()
         |> Path.join("data_migrations")
@@ -62,16 +59,52 @@ defmodule Plausible.DataMigration do
         |> EEx.eval_file(assigns: assigns)
       end
 
+      @doc """
+      Runs a single SQL query in a file.
+
+      Valid options:
+      - `quiet` - reduces output from running the SQL
+      - `params` - List of query parameters.
+      - `query_options` - passed to Repo.query
+      """
       def run_sql(name, assigns \\ [], options \\ []) do
         query = unwrap(name, assigns)
+
         do_run(name, query, options)
       end
 
-      defp do_run(name, query, options \\ []) do
-        case @repo.query(query, [], [timeout: :infinity] ++ options) do
+      @doc """
+      Runs multiple SQL queries from a single file.
+
+      Note that each query must be separated by semicolons.
+      """
+      def run_sql_multi(name, assigns \\ [], options \\ []) do
+        unwrap(name, assigns)
+        |> String.trim()
+        |> String.split(";", trim: true)
+        |> Enum.with_index(1)
+        |> Enum.reduce_while(:ok, fn {query, index}, _ ->
+          case do_run("#{name}-#{index}", query, options) do
+            {:ok, _} -> {:cont, :ok}
+            error -> {:halt, error}
+          end
+        end)
+      end
+
+      def do_run(name, query, options \\ []) do
+        params = Keyword.get(options, :params, [])
+        query_options = Keyword.get(options, :query_options, [])
+
+        case @repo.query(query, params, [timeout: :infinity] ++ query_options) do
           {:ok, res} ->
-            IO.puts("    #{IO.ANSI.yellow()}#{name} #{IO.ANSI.green()}Done!#{IO.ANSI.reset()}\n")
-            IO.puts(String.duplicate("-", 78))
+            if not Keyword.get(options, :quiet, false) do
+              IO.puts(
+                "    #{IO.ANSI.yellow()}#{name} #{IO.ANSI.green()}Done!#{IO.ANSI.reset()}\n"
+              )
+
+              IO.puts(String.duplicate("-", 78))
+            end
+
             {:ok, res}
 
           result ->

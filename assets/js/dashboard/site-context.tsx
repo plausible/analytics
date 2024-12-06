@@ -25,6 +25,11 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
   }
 }
 
+type FeatureFlags = {
+  channels?: boolean
+  saved_segments?: boolean
+}
+
 const siteContextDefaultValue = {
   domain: '',
   /** offset in seconds from UTC at site load time, @example 7200 */
@@ -45,7 +50,7 @@ const siteContextDefaultValue = {
   embedded: false,
   background: undefined as string | undefined,
   isDbip: false,
-  flags: {},
+  flags: {} as FeatureFlags,
   validIntervalsByPeriod: {} as Record<string, Array<string>>,
   shared: false
 }

@@ -16,9 +16,13 @@ defmodule Plausible.IngestRepo do
   end
 
   def clustered_table?(table) do
-    case query("SELECT 1 FROM system.replicas WHERE table = '#{table}'") do
-      {:ok, %{rows: []}} -> false
-      {:ok, _} -> true
-    end
+    replica_count(table) > 1
+  end
+
+  def replica_count(table) do
+    {:ok, %{rows: [[count]]}} =
+      query("SELECT sum(active_replicas) FROM system.replicas WHERE table = '#{table}'")
+
+    count
   end
 end

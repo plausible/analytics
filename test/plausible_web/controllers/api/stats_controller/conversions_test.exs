@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/conversions" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns mixed conversions in ordered by count", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -304,8 +304,16 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "visitors" => 5,
                  "events" => 5,
                  "conversion_rate" => 100.0,
-                 "average_revenue" => %{"short" => "€166.7M", "long" => "€166,733,566.75"},
-                 "total_revenue" => %{"short" => "€500.2M", "long" => "€500,200,700.25"}
+                 "average_revenue" => %{
+                   "short" => "€166.7M",
+                   "long" => "€166,733,566.75",
+                   "value" => 166_733_566.748
+                 },
+                 "total_revenue" => %{
+                   "short" => "€500.2M",
+                   "long" => "€500,200,700.25",
+                   "value" => 500_200_700.246
+                 }
                }
              ]
     end
@@ -316,9 +324,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       site: site,
       user: user
     } do
-      user
-      |> Plausible.Auth.User.end_trial()
-      |> Plausible.Repo.update!()
+      user =
+        user
+        |> Plausible.Auth.User.end_trial()
+        |> Plausible.Repo.update!()
+
+      Plausible.Teams.sync_team(user)
 
       populate_stats(site, [
         build(:event,
@@ -380,11 +391,11 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       assert [
                %{
-                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0", "value" => 10.0},
                  "conversion_rate" => 16.7,
                  "name" => "Payment",
                  "events" => 1,
-                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0", "value" => 10.0},
                  "visitors" => 1
                },
                %{
@@ -430,7 +441,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   end
 
   describe "GET /api/stats/:domain/conversions - with goal filter" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "does not consider custom event pathname as a pageview goal completion", %{
       conn: conn,
@@ -617,7 +628,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   end
 
   describe "GET /api/stats/:domain/conversions - with goal and prop=(none) filter" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns only the conversion that is filtered for", %{conn: conn, site: site} do
       populate_stats(site, [

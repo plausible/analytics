@@ -4,9 +4,21 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Dashboard shows comparisons for all reports
+- UTM Medium report and API shows (gclid) and (msclkid) for paid searches when no explicit utm medium present.
+- Support for `case_sensitive: false` modifiers in Stats API V2 filters for case-insensitive searches.
+
 ### Removed
 ### Changed
+
+- Details modal search inputs are now case-insensitive.
+- Improved report performance in cases where site has a lot of unique pathnames
+
 ### Fixed
+
+- Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal
+- Fix typo on login screen
+- Fix Direct / None details modal not opening
 
 ## v2.1.4 - 2024-10-08
 

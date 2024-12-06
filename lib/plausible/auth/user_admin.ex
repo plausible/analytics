@@ -62,10 +62,16 @@ defmodule Plausible.Auth.UserAdmin do
     ]
   end
 
+  def after_update(_conn, user) do
+    Plausible.Teams.sync_team(user)
+
+    {:ok, user}
+  end
+
   defp lock(user) do
     if user.grace_period do
       Plausible.Billing.SiteLocker.set_lock_status_for(user, true)
-      user |> Plausible.Auth.GracePeriod.end_changeset() |> Repo.update()
+      {:ok, Plausible.Users.end_grace_period(user)}
     else
       {:error, user, "No active grace period on this user"}
     end
@@ -73,7 +79,7 @@ defmodule Plausible.Auth.UserAdmin do
 
   defp unlock(user) do
     if user.grace_period do
-      Plausible.Auth.GracePeriod.remove_changeset(user) |> Repo.update()
+      Plausible.Users.remove_grace_period(user)
       Plausible.Billing.SiteLocker.set_lock_status_for(user, false)
       {:ok, user}
     else
@@ -100,7 +106,7 @@ defmodule Plausible.Auth.UserAdmin do
         "ended"
 
       %{end_date: %Date{} = end_date} ->
-        days_left = Timex.diff(end_date, DateTime.utc_now(), :days)
+        days_left = Date.diff(end_date, Date.utc_today())
         "#{days_left} days left"
     end
   end
@@ -117,18 +123,27 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp subscription_status(user) do
-    cond do
-      user.subscription ->
-        status_str =
-          PlausibleWeb.SettingsView.present_subscription_status(user.subscription.status)
+    team =
+      case Plausible.Teams.get_by_owner(user) do
+        {:ok, team} ->
+          Plausible.Teams.with_subscription(team)
 
-        if user.subscription.paddle_subscription_id do
-          {:safe, ~s(<a href="#{manage_url(user.subscription)}">#{status_str}</a>)}
+        {:error, :no_team} ->
+          nil
+      end
+
+    cond do
+      team && team.subscription ->
+        status_str =
+          PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
+
+        if team.subscription.paddle_subscription_id do
+          {:safe, ~s(<a href="#{manage_url(team.subscription)}">#{status_str}</a>)}
         else
           status_str
         end
 
-      Plausible.Users.on_trial?(user) ->
+      Plausible.Teams.on_trial?(team) ->
         "On trial"
 
       true ->

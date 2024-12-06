@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   # :not_mounted_at_router ensures we have already done auth checks in the controller
   # if this liveview becomes available from the router, please make sure
-  # to check that current_user_role is allowed to make site imports
+  # to check that site_role is allowed to make site imports
   @impl true
   def mount(:not_mounted_at_router, session, socket) do
     %{"site_id" => site_id, "storage" => storage} = session

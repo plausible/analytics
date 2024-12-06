@@ -23,7 +23,7 @@ function PropsModal() {
   const reportInfo = {
     title: specialTitleWhenGoalFilter(query, 'Custom Property Breakdown'),
     dimension: propKey,
-    endpoint: url.apiPath(site, `/custom-prop-values/${propKey}`),
+    endpoint: url.apiPath(site, `/custom-prop-values/${url.maybeEncodeRouteParam(propKey)}`),
     dimensionLabel: propKey,
     defaultOrder: ["visitors", SortDirection.desc]
   }
@@ -36,7 +36,7 @@ function PropsModal() {
   }, [propKey])
 
   const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString]])
+    return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString], { case_sensitive: false }])
   }, [propKey])
 
   function chooseMetrics() {

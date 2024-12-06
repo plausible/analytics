@@ -1,10 +1,11 @@
 defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/main-graph - plot" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "displays pageviews for the last 30 minutes in realtime graph", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -102,9 +103,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
       # UTC+1
       site =
-        insert(:site,
+        new_site(
           domain: "tz-test.com",
-          members: [user],
+          owner: user,
           timezone: "CET"
         )
 
@@ -389,7 +390,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - pageviews plot" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "displays pageviews for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -455,7 +456,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - visitors plot" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "displays visitors per hour with short visits", %{
       conn: conn,
@@ -584,8 +585,58 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
+  describe "GET /api/stats/main-graph - scroll_depth plot" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "returns 400 when scroll_depth is queried without a page filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=scroll_depth"
+        )
+
+      assert %{"error" => error} = json_response(conn, 400)
+      assert error =~ "can only be queried with a page filter"
+    end
+
+    test "returns scroll depth per day", %{conn: conn, site: site} do
+      t0 = ~N[2020-01-01 00:00:00]
+      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, timestamp: t0),
+        build(:pageleave, user_id: 12, timestamp: t1, scroll_depth: 20),
+        build(:pageview, user_id: 34, timestamp: t0),
+        build(:pageleave, user_id: 34, timestamp: t1, scroll_depth: 17),
+        build(:pageview, user_id: 34, timestamp: t2),
+        build(:pageleave, user_id: 34, timestamp: t3, scroll_depth: 60),
+        build(:pageview, user_id: 56, timestamp: NaiveDateTime.add(t0, 1, :day)),
+        build(:pageleave,
+          user_id: 56,
+          timestamp: NaiveDateTime.add(t1, 1, :day),
+          scroll_depth: 20
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2020-01-07&metric=scroll_depth&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [40, 20, 0, 0, 0, 0, 0]
+    end
+  end
+
   describe "GET /api/stats/main-graph - conversion_rate plot" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns 400 when conversion rate is queried without a goal filter", %{
       conn: conn,
@@ -630,7 +681,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - events (total conversions) plot" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns 400 when the `events` metric is queried without a goal filter", %{
       conn: conn,
@@ -737,7 +788,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - bounce_rate plot" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "displays bounce_rate for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -801,7 +852,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - visit_duration plot" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "displays visit_duration for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -868,7 +919,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - varying intervals" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "displays visitors for 6mo on a day scale", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1118,7 +1169,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - comparisons" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns past month stats when period=30d and comparison=previous_period", %{
       conn: conn,
@@ -1223,7 +1274,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
 
     test "bugfix: don't crash when timezone gap occurs", %{conn: conn, user: user} do
-      site = insert(:site, members: [user], timezone: "America/Santiago")
+      site = new_site(owner: user, timezone: "America/Santiago")
 
       populate_stats(site, [
         build(:pageview, timestamp: relative_time(minutes: -5))
@@ -1292,7 +1343,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
   describe "GET /api/stats/main-graph - total_revenue plot" do
     @describetag :ee_only
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "plots total_revenue for a month", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
@@ -1427,7 +1478,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
   describe "GET /api/stats/main-graph - average_revenue plot" do
     @describetag :ee_only
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "plots total_revenue for a month", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
@@ -1567,7 +1618,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "present_index" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "exists for a date range that includes the current day", %{conn: conn, site: site} do
       populate_stats(site, [

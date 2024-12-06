@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/screen-sizes" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns screen sizes by new visitors", %{conn: conn, site: site} do
       populate_stats(site, [

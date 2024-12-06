@@ -1,5 +1,5 @@
 const { mockRequest, expectCustomEvent, metaKey } = require('./support/test-utils')
-const { expect, test } = require('@playwright/test');
+const { expect, test } = require('@playwright/test')
 
 test.describe('outbound-links extension', () => {
 
@@ -14,7 +14,7 @@ test.describe('outbound-links extension', () => {
 
     expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
     expect(await navigationRequestMock, "should not have made navigation request").toBeNull()
-  });
+  })
 
   test('sends event and navigates to target when link child is clicked', async ({ page }) => {
     await page.goto('/outbound-link.html')
@@ -28,7 +28,7 @@ test.describe('outbound-links extension', () => {
     const navigationRequest = await navigationRequestMock
     expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
     expect(navigationRequest.url()).toContain(outboundURL)
-  });
+  })
 
   test('sends event and does not navigate if default externally prevented', async ({ page }) => {
     await page.goto('/outbound-link.html')
@@ -41,5 +41,5 @@ test.describe('outbound-links extension', () => {
 
     expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
     expect(await navigationRequestMock, "should not have made navigation request").toBeNull()
-  });
-});
+  })
+})

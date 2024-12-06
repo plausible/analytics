@@ -14,7 +14,7 @@ import {
   useRememberOrderBy
 } from '../../hooks/use-order-by'
 import { Metric } from '../reports/metrics'
-import { DashboardQuery } from '../../query'
+import { BreakdownResultMeta, DashboardQuery } from '../../query'
 import { ColumnConfiguraton } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
 import { useSiteContext } from '../../site-context'
@@ -30,7 +30,7 @@ export type ReportInfo = {
   defaultOrder?: Order
 }
 
-/** 
+/**
   BreakdownModal is for rendering the "Details" reports on the dashboard,
   i.e. a breakdown by a single (non-time) dimension, with a given set of metrics.
 
@@ -79,6 +79,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
 }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
+  const [meta, setMeta] = useState<BreakdownResultMeta | undefined>(undefined)
 
   const [search, setSearch] = useState('')
   const defaultOrderBy = getStoredOrderBy({
@@ -97,7 +98,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     reportInfo
   })
   const apiState = usePaginatedGetAPI<
-    { results: Array<TListItem> },
+    { results: Array<TListItem>; meta: BreakdownResultMeta },
     [string, { query: DashboardQuery; search: string; orderBy: OrderBy }]
   >({
     key: [reportInfo.endpoint, { query, search, orderBy }],
@@ -122,7 +123,10 @@ export default function BreakdownModal<TListItem extends { name: string }>({
         }
       ]
     },
-    afterFetchData,
+    afterFetchData: (response) => {
+      setMeta(response.meta)
+      afterFetchData?.(response)
+    },
     afterFetchNextPage
   })
 
@@ -131,7 +135,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       {
         label: reportInfo.dimensionLabel,
         key: 'name',
-        width: 'w-48 md:w-80 flex items-center break-all',
+        width: 'w-48 md:w-full flex items-center break-all',
         align: 'left',
         renderItem: (item) => (
           <NameCell
@@ -148,7 +152,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           key: m.key,
           width: m.width,
           align: 'right',
-          renderValue: m.renderValue,
+          renderValue: (item) => m.renderValue(item, meta),
           onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
           sortDirection: orderByDictionary[m.key]
         })
@@ -162,7 +166,8 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       orderByDictionary,
       toggleSortByMetric,
       renderIcon,
-      getExternalLinkURL
+      getExternalLinkURL,
+      meta
     ]
   )
 

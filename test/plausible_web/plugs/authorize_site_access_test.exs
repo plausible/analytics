@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   use PlausibleWeb.ConnCase, async: false
+  use Plausible.Teams.Test
   alias PlausibleWeb.Plugs.AuthorizeSiteAccess
 
   setup [:create_user, :log_in, :create_site]
@@ -14,10 +15,10 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
         [],
         :all_roles,
         {:all_roles, nil},
-        {[:public, :viewer, :admin, :super_admin, :owner], nil}
+        {[:public, :viewer, :admin, :editor, :super_admin, :owner], nil}
       ] do
     test "init resolves to expected options with argument #{inspect(init_argument)}" do
-      assert {[:public, :viewer, :admin, :super_admin, :owner], nil} ==
+      assert {[:public, :viewer, :admin, :editor, :super_admin, :owner], nil} ==
                AuthorizeSiteAccess.init(unquote(init_argument))
     end
   end
@@ -46,7 +47,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   test "rejects user completely unrelated to the site", %{conn: conn} do
     opts = AuthorizeSiteAccess.init(:all_roles)
 
-    site = insert(:site, members: [build(:user)])
+    site = new_site()
 
     conn =
       conn
@@ -98,7 +99,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn: conn,
     site: site
   } do
-    other_site = insert(:site, members: [build(:user)])
+    other_site = new_site()
 
     opts = AuthorizeSiteAccess.init([:admin, :owner])
 
@@ -116,7 +117,8 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   end
 
   test "returns 404 with custom error message for failed API routes", %{conn: conn, user: user} do
-    site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+    site = new_site()
+    add_guest(site, user: user, role: :viewer)
 
     opts = AuthorizeSiteAccess.init([:admin, :owner, :super_admin])
 
@@ -137,7 +139,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn: conn,
     site: site
   } do
-    shared_link_other_site = insert(:shared_link, site: build(:site))
+    shared_link_other_site = insert(:shared_link, site: new_site())
 
     params = %{"shared_link" => %{"name" => "some name"}}
 
@@ -160,7 +162,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
          site: site
        } do
     shared_link = insert(:shared_link, site: site)
-    other_site = insert(:site, members: [user])
+    other_site = new_site(owner: user)
 
     opts = AuthorizeSiteAccess.init([:super_admin, :admin, :owner])
 
@@ -200,8 +202,8 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   end
 
   test "rejects user on mismatched membership role", %{conn: conn, user: user} do
-    site =
-      insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
+    site = new_site()
+    add_guest(site, user: user, role: :editor)
 
     opts = AuthorizeSiteAccess.init([:owner])
 
@@ -215,10 +217,26 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     assert html_response(conn, 404)
   end
 
-  for role <- [:viewer, :admin, :owner] do
+  test "allows user based on ownership", %{conn: conn, user: user} do
+    site = new_site(owner: user)
+
+    opts = AuthorizeSiteAccess.init([:owner])
+
+    conn =
+      conn
+      |> bypass_through(PlausibleWeb.Router)
+      |> get("/plug-tests/#{site.domain}/with-domain")
+      |> AuthorizeSiteAccess.call(opts)
+
+    refute conn.halted
+    assert conn.assigns.site.id == site.id
+    assert conn.assigns.site_role == :owner
+  end
+
+  for role <- [:viewer, :editor] do
     test "allows user based on their #{role} membership", %{conn: conn, user: user} do
-      site =
-        insert(:site, memberships: [build(:site_membership, user: user, role: unquote(role))])
+      site = new_site()
+      add_guest(site, user: user, role: unquote(role))
 
       opts = AuthorizeSiteAccess.init([unquote(role)])
 
@@ -230,13 +248,13 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
 
       refute conn.halted
       assert conn.assigns.site.id == site.id
-      assert conn.assigns.current_user_role == unquote(role)
+      assert conn.assigns.site_role == unquote(role)
     end
   end
 
   @tag :ee_only
   test "allows user based on their superadmin status", %{conn: conn, user: user} do
-    site = insert(:site, members: [build(:user)])
+    site = new_site()
 
     patch_env(:super_admin_user_ids, [user.id])
 
@@ -250,11 +268,11 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
 
     refute conn.halted
     assert conn.assigns.site.id == site.id
-    assert conn.assigns.current_user_role == :super_admin
+    assert conn.assigns.site_role == :super_admin
   end
 
   test "allows user based on website visibility (authenticated user)", %{conn: conn} do
-    site = insert(:site, members: [build(:user)], public: true)
+    site = new_site(public: true)
 
     opts = AuthorizeSiteAccess.init([:public])
 
@@ -284,7 +302,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   end
 
   test "allows user based on shared link auth (authenticated user)", %{conn: conn} do
-    site = insert(:site, members: [build(:user)])
+    site = new_site()
     shared_link = insert(:shared_link, site: site)
 
     opts = AuthorizeSiteAccess.init([:public])

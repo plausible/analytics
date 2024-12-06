@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Site.MembershipController do
 
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Sites
+  use Plausible
   alias Plausible.Site.{Membership, Memberships}
 
   @only_owner_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
@@ -21,16 +21,16 @@ defmodule PlausibleWeb.Site.MembershipController do
   plug PlausibleWeb.Plugs.AuthorizeSiteAccess, [:owner] when action in @only_owner_is_allowed_to
 
   plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
-       [:owner, :admin] when action not in @only_owner_is_allowed_to
+       [:owner, :editor, :admin] when action not in @only_owner_is_allowed_to
 
   def invite_member_form(conn, _params) do
     site =
-      conn.assigns.current_user.id
-      |> Sites.get_for_user!(conn.assigns.site.domain)
+      conn.assigns.current_user
+      |> Plausible.Sites.get_for_user!(conn.assigns.site.domain)
       |> Plausible.Repo.preload(:owner)
 
-    limit = Plausible.Billing.Quota.Limits.team_member_limit(site.owner)
-    usage = Plausible.Billing.Quota.Usage.team_member_usage(site.owner)
+    limit = Plausible.Teams.Billing.team_member_limit(site.team)
+    usage = Plausible.Teams.Billing.team_member_usage(site.team)
     below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
 
     render(
@@ -44,10 +44,10 @@ defmodule PlausibleWeb.Site.MembershipController do
   end
 
   def invite_member(conn, %{"email" => email, "role" => role}) do
-    site_domain = conn.assigns[:site].domain
+    site_domain = conn.assigns.site.domain
 
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+      Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
       |> Plausible.Repo.preload(:owner)
 
     case Memberships.create_invitation(site, conn.assigns.current_user, email, role) do
@@ -93,8 +93,10 @@ defmodule PlausibleWeb.Site.MembershipController do
   end
 
   def transfer_ownership_form(conn, _params) do
-    site_domain = conn.assigns[:site].domain
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+    site_domain = conn.assigns.site.domain
+
+    site =
+      Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
     render(
       conn,
@@ -105,8 +107,10 @@ defmodule PlausibleWeb.Site.MembershipController do
   end
 
   def transfer_ownership(conn, %{"email" => email}) do
-    site_domain = conn.assigns[:site].domain
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+    site_domain = conn.assigns.site.domain
+
+    site =
+      Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
     case Memberships.create_invitation(site, conn.assigns.current_user, email, :owner) do
       {:ok, _invitation} ->
@@ -150,17 +154,19 @@ defmodule PlausibleWeb.Site.MembershipController do
                  |> Enum.map(fn {k, v} -> {v, k} end)
                  |> Enum.into(%{})
 
-  def update_role(conn, %{"id" => id, "new_role" => new_role_str}) do
-    %{site: site, current_user: current_user, current_user_role: current_user_role} = conn.assigns
+  def update_role_by_user(conn, %{"id" => user_id, "new_role" => new_role_str}) do
+    %{site: site, current_user: current_user, site_role: site_role} = conn.assigns
 
-    membership = Repo.get!(Membership, id) |> Repo.preload(:user)
+    membership =
+      Membership |> Repo.get_by!(user_id: user_id, site_id: site.id) |> Repo.preload(:user)
+
     new_role = Map.fetch!(@role_mappings, new_role_str)
 
     can_grant_role? =
       if membership.user.id == current_user.id do
-        can_grant_role_to_self?(current_user_role, new_role)
+        can_grant_role_to_self?(site_role, new_role)
       else
-        can_grant_role_to_other?(current_user_role, new_role)
+        can_grant_role_to_other?(site_role, new_role)
       end
 
     if can_grant_role? do
@@ -169,6 +175,8 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> Ecto.Changeset.change()
         |> Membership.set_role(new_role)
         |> Repo.update!()
+
+      Plausible.Teams.Memberships.update_role_sync(membership)
 
       redirect_target =
         if membership.user.id == current_user.id and new_role == :viewer do
@@ -190,22 +198,26 @@ defmodule PlausibleWeb.Site.MembershipController do
     end
   end
 
+  defp can_grant_role_to_self?(:editor, :viewer), do: true
   defp can_grant_role_to_self?(:admin, :viewer), do: true
   defp can_grant_role_to_self?(_, _), do: false
 
+  defp can_grant_role_to_other?(:owner, :editor), do: true
   defp can_grant_role_to_other?(:owner, :admin), do: true
   defp can_grant_role_to_other?(:owner, :viewer), do: true
+  defp can_grant_role_to_other?(:editor, :editor), do: true
   defp can_grant_role_to_other?(:admin, :admin), do: true
+  defp can_grant_role_to_other?(:editor, :viewer), do: true
   defp can_grant_role_to_other?(:admin, :viewer), do: true
   defp can_grant_role_to_other?(_, _), do: false
 
-  def remove_member(conn, %{"id" => id}) do
-    site = conn.assigns[:site]
+  def remove_member_by_user(conn, %{"id" => user_id} = _params) do
+    site = conn.assigns.site
     site_id = site.id
 
     membership_q =
       from m in Membership,
-        where: m.id == ^id,
+        where: m.user_id == ^user_id,
         where: m.site_id == ^site_id,
         inner_join: user in assoc(m, :user),
         inner_join: site in assoc(m, :site),
@@ -215,6 +227,8 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     if membership do
       Repo.delete!(membership)
+
+      Plausible.Teams.Memberships.remove_sync(membership)
 
       membership
       |> PlausibleWeb.Email.site_member_removed()

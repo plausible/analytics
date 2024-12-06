@@ -19,7 +19,8 @@ function ReferrerDrilldownModal() {
   const reportInfo = {
     title: "Referrer Drilldown",
     dimension: 'referrer',
-    endpoint: url.apiPath(site, `/referrers/${referrer}`),
+    endpoint: url.apiPath(site, `/referrers/${url.maybeEncodeRouteParam(referrer)}`
+  ),
     dimensionLabel: "Referrer",
     defaultOrder: ["visitors", SortDirection.desc]
   }
@@ -32,7 +33,7 @@ function ReferrerDrilldownModal() {
   }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
+    return addFilter(query, ['contains', reportInfo.dimension, [searchString], { case_sensitive: false }])
   }, [reportInfo.dimension])
 
   function chooseMetrics() {

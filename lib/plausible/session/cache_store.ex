@@ -62,7 +62,7 @@ defmodule Plausible.Session.CacheStore do
         nil
 
       session ->
-        if Timex.diff(event.timestamp, session.timestamp, :minutes) <= 30 do
+        if NaiveDateTime.diff(event.timestamp, session.timestamp, :minute) <= 30 do
           session
         end
     end
@@ -93,7 +93,7 @@ defmodule Plausible.Session.CacheStore do
         exit_page_hostname:
           if(event.name == "pageview", do: event.hostname, else: session.exit_page_hostname),
         is_bounce: false,
-        duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
+        duration: NaiveDateTime.diff(event.timestamp, session.start) |> abs,
         pageviews:
           if(event.name == "pageview", do: session.pageviews + 1, else: session.pageviews),
         events: session.events + 1
@@ -115,7 +115,7 @@ defmodule Plausible.Session.CacheStore do
       pageviews: if(event.name == "pageview", do: 1, else: 0),
       events: 1,
       referrer: Map.get(session_attributes, :referrer),
-      channel: Map.get(session_attributes, :channel),
+      click_id_param: Map.get(session_attributes, :click_id_param),
       referrer_source: Map.get(session_attributes, :referrer_source),
       utm_medium: Map.get(session_attributes, :utm_medium),
       utm_source: Map.get(session_attributes, :utm_source),

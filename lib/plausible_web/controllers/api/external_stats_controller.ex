@@ -351,7 +351,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end)
   end
 
-  defp validate_filter(site, [_type, "event:goal", goal_filter]) do
+  defp validate_filter(site, [_type, "event:goal", goal_filter | _rest]) do
     configured_goals =
       site
       |> Plausible.Goals.for_site()

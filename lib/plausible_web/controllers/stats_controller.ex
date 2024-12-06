@@ -53,7 +53,7 @@ defmodule PlausibleWeb.StatsController do
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owner)
     stats_start_date = Plausible.Sites.stats_start_date(site)
-    can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
+    can_see_stats? = not Sites.locked?(site) or conn.assigns[:site_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
@@ -143,6 +143,15 @@ defmodule PlausibleWeb.StatsController do
         ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end,
         ~c"custom_props.csv" => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
       }
+
+      # credo:disable-for-lines:7
+      csvs =
+        if FunWithFlags.enabled?(:channels, for: site) ||
+             FunWithFlags.enabled?(:channels, for: conn.assigns[:current_user]) do
+          Map.put(csvs, ~c"channels.csv", fn -> Api.StatsController.channels(conn, params) end)
+        else
+          csvs
+        end
 
       csv_values =
         Map.values(csvs)
@@ -365,10 +374,12 @@ defmodule PlausibleWeb.StatsController do
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 
   defp get_flags(user, site),
-    do: %{
-      channels:
-        FunWithFlags.enabled?(:channels, for: user) || FunWithFlags.enabled?(:channels, for: site)
-    }
+    do:
+      [:channels, :saved_segments, :scroll_depth]
+      |> Enum.map(fn flag ->
+        {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
+      end)
+      |> Map.new()
 
   defp is_dbip() do
     on_ee do

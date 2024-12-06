@@ -50,7 +50,10 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
-    plug PlausibleWeb.Plugs.AuthorizeSiteAccess, {[:admin, :super_admin, :owner], "site_id"}
+
+    plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
+         {[:admin, :editor, :super_admin, :owner], "site_id"}
+
     plug PlausibleWeb.Plugs.NoRobots
   end
 
@@ -197,6 +200,10 @@ defmodule PlausibleWeb.Router do
     get "/:domain/conversions", StatsController, :conversions
     get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
     get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
+
+    get "/:domain/suggestions/custom-prop-values/:prop_key",
+        StatsController,
+        :custom_prop_value_filter_suggestions
   end
 
   scope "/api/v1/stats", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
@@ -208,16 +215,22 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
+  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*", schema_type: :public} do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
+
+    if Mix.env() in [:test, :ce_test] do
+      scope assigns: %{schema_type: :internal} do
+        post "/query-internal-test", ExternalQueryApiController, :query
+      end
+    end
   end
 
   scope "/api/docs", PlausibleWeb.Api do
     get "/query/schema.json", ExternalQueryApiController, :schema
 
-    scope [] do
+    scope assigns: %{schema_type: :public} do
       pipe_through :docs_stats_api
 
       post "/query", ExternalQueryApiController, :query
@@ -441,8 +454,11 @@ defmodule PlausibleWeb.Router do
     get "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership_form
     post "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership
 
-    put "/sites/:domain/memberships/:id/role/:new_role", Site.MembershipController, :update_role
-    delete "/sites/:domain/memberships/:id", Site.MembershipController, :remove_member
+    put "/sites/:domain/memberships/u/:id/role/:new_role",
+        Site.MembershipController,
+        :update_role_by_user
+
+    delete "/sites/:domain/memberships/u/:id", Site.MembershipController, :remove_member_by_user
 
     get "/sites/:domain/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:domain/monthly-report/unsubscribe", UnsubscribeController, :monthly_report

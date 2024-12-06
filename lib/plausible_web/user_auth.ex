@@ -123,16 +123,25 @@ defmodule PlausibleWeb.UserAuth do
   defp get_session_by_token(token) do
     now = NaiveDateTime.utc_now(:second)
 
-    last_subscription_query = Plausible.Users.last_subscription_join_query()
+    last_user_subscription_query = Plausible.Users.last_subscription_join_query()
+    last_team_subscription_query = Plausible.Teams.last_subscription_join_query()
 
     token_query =
       from(us in Auth.UserSession,
         inner_join: u in assoc(us, :user),
         as: :user,
-        left_lateral_join: s in subquery(last_subscription_query),
+        left_join: tm in assoc(u, :team_memberships),
+        # NOTE: whenever my_team.subscription is used to prevent user action, we must check whether the team association is ownership.
+        # Otherwise regular members will be limited by team owner in cases like deleting their own account.
+        on: tm.role != :guest,
+        left_join: t in assoc(tm, :team),
+        as: :team,
+        left_lateral_join: ts in subquery(last_team_subscription_query),
+        on: true,
+        left_lateral_join: s in subquery(last_user_subscription_query),
         on: true,
         where: us.token == ^token and us.timeout_at > ^now,
-        preload: [user: {u, subscription: s}]
+        preload: [user: {u, subscription: s, team_memberships: {tm, team: {t, subscription: ts}}}]
       )
 
     case Repo.one(token_query) do

@@ -311,7 +311,22 @@ defmodule PlausibleWeb.Live.RegisterForm do
   end
 
   defp add_user(socket, user) do
-    case Repo.insert(user) do
+    result =
+      Repo.transaction(fn ->
+        case Repo.insert(user) do
+          {:ok, user} when not is_nil(user.trial_expiry_date) ->
+            Plausible.Teams.get_or_create(user)
+            user
+
+          {:ok, user} ->
+            user
+
+          {:error, reason} ->
+            Repo.rollback(reason)
+        end
+      end)
+
+    case result do
       {:ok, _user} ->
         socket = assign(socket, disable_submit: true)
 

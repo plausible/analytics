@@ -160,7 +160,9 @@ export default class SiteSwitcher extends React.Component {
 
   renderSettingsLink() {
     if (
-      ['owner', 'admin', 'super_admin'].includes(this.props.currentUserRole)
+      ['owner', 'admin', 'editor', 'super_admin'].includes(
+        this.props.currentUserRole
+      )
     ) {
       return (
         <React.Fragment>
@@ -237,17 +239,17 @@ export default class SiteSwitcher extends React.Component {
       <div className="relative inline-block text-left mr-2 sm:mr-4">
         <button
           ref={this.siteSwitcherButton}
-          className={`inline-flex items-center md:text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}
+          className={`inline-flex items-center rounded-md h-9 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}
         >
           <Favicon
             domain={this.props.site.domain}
-            className="w-4 mr-1 md:mr-2 align-middle w-4 mr-2 align-middle"
-          ></Favicon>
+            className="w-4 mr-2 align-middle w-4"
+          />
           <span className="hidden sm:inline-block">
             {this.props.site.domain}
           </span>
           {this.props.loggedIn && (
-            <ChevronDownIcon className="-mr-1 ml-1 md:ml-2 h-5 w-5" />
+            <ChevronDownIcon className="ml-2 h-5 w-5 shrink-0" />
           )}
         </button>
 

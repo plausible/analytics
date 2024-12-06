@@ -4,13 +4,19 @@ defmodule Plausible.Site.Memberships.RejectInvitation do
   """
 
   alias Plausible.Auth
+  alias Plausible.Repo
   alias Plausible.Site.Memberships.Invitations
+  alias Plausible.Teams
 
   @spec reject_invitation(String.t(), Auth.User.t()) ::
           {:ok, Auth.Invitation.t()} | {:error, :invitation_not_found}
   def reject_invitation(invitation_id, user) do
     with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
-      Invitations.delete_invitation(invitation)
+      Repo.transaction(fn ->
+        Invitations.delete_invitation(invitation)
+        Teams.Invitations.remove_invitation_sync(invitation)
+      end)
+
       notify_invitation_rejected(invitation)
 
       {:ok, invitation}

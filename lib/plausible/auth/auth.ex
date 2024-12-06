@@ -95,31 +95,26 @@ defmodule Plausible.Auth do
 
   def delete_user(user) do
     Repo.transaction(fn ->
-      user =
-        user
-        |> Repo.preload(site_memberships: :site)
+      case Plausible.Teams.get_by_owner(user) do
+        {:ok, team} ->
+          for site <- Plausible.Teams.owned_sites(team) do
+            Plausible.Site.Removal.run(site)
+          end
 
-      for membership <- user.site_memberships do
-        Repo.delete!(membership)
+          Repo.delete_all(from s in Plausible.Billing.Subscription, where: s.team_id == ^team.id)
 
-        if membership.role == :owner do
-          Plausible.Site.Removal.run(membership.site.domain)
-        end
+          Repo.delete_all(
+            from ep in Plausible.Billing.EnterprisePlan, where: ep.team_id == ^team.id
+          )
+
+          Repo.delete!(team)
+
+        _ ->
+          :skip
       end
 
       Repo.delete!(user)
     end)
-  end
-
-  def user_owns_sites?(user) do
-    Repo.exists?(
-      from(s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.user_id == ^user.id,
-        where: sm.role == :owner
-      )
-    )
   end
 
   on_ee do
@@ -133,21 +128,19 @@ defmodule Plausible.Auth do
     def is_super_admin?(_), do: false
   end
 
-  def enterprise_configured?(nil), do: false
-
-  def enterprise_configured?(%Plausible.Auth.User{} = user) do
-    user
-    |> Ecto.assoc(:enterprise_plan)
-    |> Repo.exists?()
-  end
-
   @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
   def create_api_key(user, name, key) do
+    team =
+      case Plausible.Teams.get_by_owner(user) do
+        {:ok, team} -> team
+        _ -> nil
+      end
+
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
 
-    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(user),
+    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(team),
          do: Repo.insert(changeset)
   end
 

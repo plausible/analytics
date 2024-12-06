@@ -4,7 +4,7 @@ defmodule Plausible.Imported.BufferTest do
   import Ecto.Query
   alias Plausible.Imported.Buffer
 
-  setup [:create_user, :create_new_site, :set_buffer_size]
+  setup [:create_user, :create_site, :set_buffer_size]
 
   defp set_buffer_size(_setup_args) do
     imported_setting = Application.fetch_env!(:plausible, :imported)

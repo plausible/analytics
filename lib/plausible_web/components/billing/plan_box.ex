@@ -174,7 +174,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
-    subscription = assigns.current_user.subscription
+    subscription =
+      Plausible.Teams.Billing.get_subscription(assigns.my_team)
 
     billing_details_expired =
       Subscription.Status.in?(subscription, [
@@ -224,10 +225,10 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> assign(:confirm_message, losing_features_message(feature_usage_check))
 
     ~H"""
-    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@current_user.subscription) do %>
+    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@my_team.subscription) do %>
       <.change_plan_link {assigns} />
     <% else %>
-      <PlausibleWeb.Components.Billing.paddle_button user={@current_user} {assigns}>
+      <PlausibleWeb.Components.Billing.paddle_button user={@current_user} team={@my_team} {assigns}>
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
@@ -259,22 +260,18 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   defp check_usage_within_plan_limits(%{
          available: true,
          usage: usage,
-         current_user: current_user,
+         my_team: my_team,
          plan_to_render: plan
        }) do
-    # At this point, the user is *not guaranteed* to have a `trial_expiry_date`,
-    # because in the past we've let users upgrade without that constraint, as
-    # well as transfer sites to those accounts. to these accounts we won't be
-    # offering an extra pageview limit allowance margin though.
-    invited_user? = is_nil(current_user.trial_expiry_date)
-
+    # At this point, the user is *not guaranteed* to have a team,
+    # with ongoing trial.
     trial_active_or_ended_recently? =
-      not invited_user? &&
-        Timex.diff(Date.utc_today(), current_user.trial_expiry_date, :days) <= 10
+      not is_nil(my_team) and not is_nil(my_team.trial_expiry_date) and
+        Plausible.Teams.trial_days_left(my_team) >= -10
 
     limit_checking_opts =
       cond do
-        current_user.allow_next_upgrade_override ->
+        my_team && my_team.allow_next_upgrade_override ->
           [ignore_pageview_limit: true]
 
         trial_active_or_ended_recently? && plan.volume == "10k" ->
@@ -353,7 +350,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> Enum.map(fn feature_mod -> feature_mod.display_name() end)
       |> PlausibleWeb.TextHelpers.pretty_join()
 
-    "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features) == 1, do: "this feature", else: "these features"}."
+    "This plan does not support #{features_list_str}, which you have been using. By subscribing to this plan, you will not have access to #{if length(features) == 1, do: "this feature", else: "these features"}."
   end
 
   defp contact_button(assigns) do
