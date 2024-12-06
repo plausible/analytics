@@ -482,12 +482,37 @@ defmodule PlausibleWeb.Email do
 
   defp textify(html) do
     html
-    |> Floki.parse_document!()
-    |> Floki.traverse_and_update(&textify_link/1)
+    |> Floki.parse_fragment!()
+    |> traverse_and_textify()
     |> Floki.text()
   end
 
-  defp textify_link(node) do
+  defp traverse_and_textify([head | tail]) do
+    [traverse_and_textify(head) | traverse_and_textify(tail)]
+  end
+
+  defp traverse_and_textify(text) when is_binary(text) do
+    IO.inspect(text, label: "before")
+    trimmed = String.replace_leading(text, "\n", "")
+    trimmed = String.replace_trailing(trimmed, "\n", "\s")
+    IO.inspect(trimmed, label: "after")
+
+    # if String.ends_with?(text, ["\n", "\s"]) do
+    #   trimmed <> "\s"
+    # else
+    #   trimmed
+    # end
+  end
+
+  defp traverse_and_textify(node) when is_tuple(node) do
+    with {elem, attrs, children} <- maybe_textify_link(node) do
+      {elem, attrs, traverse_and_textify(children)}
+    end
+  end
+
+  defp traverse_and_textify([] = empty), do: empty
+
+  defp maybe_textify_link(node) do
     case node do
       {"a", attrs, children} ->
         {"href", href} = List.keyfind!(attrs, "href", 0)

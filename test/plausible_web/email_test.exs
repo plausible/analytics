@@ -326,6 +326,7 @@ defmodule PlausibleWeb.EmailTest do
   end
 
   describe "text_body" do
+    @tag :ee_only
     test "renders text version of the email" do
       email =
         Email.base_email()
@@ -335,53 +336,32 @@ defmodule PlausibleWeb.EmailTest do
         })
 
       assert email.text_body == """
-             Hey John,
-
-
+             Hey John,\s
 
              We are building Plausible to provide a simple and ethical approach to tracking website visitors.
              We're super excited to have you on board!\s
 
-
              Here's how to get the most out of your Plausible experience:\s
 
-              *
-             Enable email reports (https://plausible.io/docs/email-reports) and notifications for
-             traffic spikes (https://plausible.io/docs/traffic-spikes)
-              *
-             Integrate with Search Console (https://plausible.io/docs/google-search-console-integration) to get keyword phrases people find your site with
-
+             * Enable email reports (https://plausible.io/docs/email-reports) and notifications for traffic spikes (https://plausible.io/docs/traffic-spikes)
+             * Integrate with Search Console (https://plausible.io/docs/google-search-console-integration) to get keyword phrases people find your site with
              * Invite team members and other collaborators (https://plausible.io/docs/users-roles)
-              * Set up easy goals including
-             404 error pages (https://plausible.io/docs/error-pages-tracking-404),
-             file downloads (https://plausible.io/docs/file-downloads-tracking) and
-             outbound link clicks (https://plausible.io/docs/outbound-link-click-tracking)
-              * Opt out from counting your own visits (https://plausible.io/docs/excluding)
-              * If you're concerned about adblockers,
-             set up a proxy to bypass them (https://plausible.io/docs/proxy/introduction)
+             * Set up easy goals including 404 error pages (https://plausible.io/docs/error-pages-tracking-404), file downloads (https://plausible.io/docs/file-downloads-tracking) and outbound link clicks (https://plausible.io/docs/outbound-link-click-tracking)
+             * Opt out from counting your own visits (https://plausible.io/docs/excluding)
+             * If you're concerned about adblockers, set up a proxy to bypass them (https://plausible.io/docs/proxy/introduction)
 
 
-              Then you're ready to start exploring your fast loading, ethical and actionable
-             Plausible dashboard (https://plausible.io/sites).\s
+             Then you're ready to start exploring your fast loading, ethical and actionable Plausible dashboard (https://plausible.io/sites).\s
 
+             Have a question, feedback or need some guidance? Do reply back to this email.\s
 
-             Have a question, feedback or need some guidance? Do reply back to this email.
-
-
-
-
-
-               Regards,
-              The Plausible Team 💌\s
-
-
+             Regards,
+             The Plausible Team 💌\s
 
              --\s
 
              http://localhost:8000
-
-
-               {{{ pm:unsubscribe }}}
+             {{{ pm:unsubscribe }}}\s\
              """
     end
   end
