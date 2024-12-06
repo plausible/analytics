@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
 
   @user_id Enum.random(1000..9999)
 
-  setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+  setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
   describe "breakdown by event:goal" do
     test "returns custom event goals and pageview goals", %{conn: conn, site: site} do

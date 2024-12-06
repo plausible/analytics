@@ -2,7 +2,7 @@ defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.Subscriptions
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
-  alias Plausible.Auth.User
+  alias Plausible.Teams
 
   for f <- [
         :legacy_plans,
@@ -25,24 +25,20 @@ defmodule Plausible.Billing.Plans do
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
-  @business_tier_launch ~N[2023-11-08 12:00:00]
-  def business_tier_launch, do: @business_tier_launch
-
-  @spec growth_plans_for(User.t()) :: [Plan.t()]
+  @spec growth_plans_for(Subscription.t()) :: [Plan.t()]
   @doc """
-  Returns a list of growth plans available for the user to choose.
+  Returns a list of growth plans available for the subscription to choose.
 
-  As new versions of plans are introduced, users who were on old plans can
+  As new versions of plans are introduced, subscriptions which were on old plans can
   still choose from old plans.
   """
-  def growth_plans_for(%User{} = user) do
-    user = Plausible.Users.with_subscription(user)
-    owned_plan = get_regular_plan(user.subscription)
+  def growth_plans_for(subscription) do
+    owned_plan = get_regular_plan(subscription)
 
     cond do
       Application.get_env(:plausible, :environment) in ["dev", "staging"] -> @sandbox_plans
       is_nil(owned_plan) -> @plans_v4
-      user.subscription && Subscriptions.expired?(user.subscription) -> @plans_v4
+      subscription && Subscriptions.expired?(subscription) -> @plans_v4
       owned_plan.kind == :business -> @plans_v4
       owned_plan.generation == 1 -> @plans_v1 |> drop_high_plans(owned_plan)
       owned_plan.generation == 2 -> @plans_v2 |> drop_high_plans(owned_plan)
@@ -52,21 +48,20 @@ defmodule Plausible.Billing.Plans do
     |> Enum.filter(&(&1.kind == :growth))
   end
 
-  def business_plans_for(%User{} = user) do
-    user = Plausible.Users.with_subscription(user)
-    owned_plan = get_regular_plan(user.subscription)
+  def business_plans_for(subscription) do
+    owned_plan = get_regular_plan(subscription)
 
     cond do
       Application.get_env(:plausible, :environment) in ["dev", "staging"] -> @sandbox_plans
-      user.subscription && Subscriptions.expired?(user.subscription) -> @plans_v4
+      subscription && Subscriptions.expired?(subscription) -> @plans_v4
       owned_plan && owned_plan.generation < 4 -> @plans_v3
       true -> @plans_v4
     end
     |> Enum.filter(&(&1.kind == :business))
   end
 
-  def available_plans_for(%User{} = user, opts \\ []) do
-    plans = growth_plans_for(user) ++ business_plans_for(user)
+  def available_plans_for(subscription, opts \\ []) do
+    plans = growth_plans_for(subscription) ++ business_plans_for(subscription)
 
     plans =
       if Keyword.get(opts, :with_prices) do
@@ -105,6 +100,8 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
+  @spec get_subscription_plan(nil | Subscription.t()) ::
+          nil | :free_10k | Plan.t() | EnterprisePlan.t()
   def get_subscription_plan(nil), do: nil
 
   def get_subscription_plan(subscription) do
@@ -113,19 +110,6 @@ defmodule Plausible.Billing.Plans do
     else
       get_regular_plan(subscription) || get_enterprise_plan(subscription)
     end
-  end
-
-  def latest_enterprise_plan_with_price(user, customer_ip) do
-    enterprise_plan =
-      Repo.one!(
-        from(e in EnterprisePlan,
-          where: e.user_id == ^user.id,
-          order_by: [desc: e.inserted_at],
-          limit: 1
-        )
-      )
-
-    {enterprise_plan, get_price_for(enterprise_plan, customer_ip)}
   end
 
   def subscription_interval(subscription) do
@@ -188,7 +172,7 @@ defmodule Plausible.Billing.Plans do
 
   defp get_enterprise_plan(%Subscription{} = subscription) do
     Repo.get_by(EnterprisePlan,
-      user_id: subscription.user_id,
+      team_id: subscription.team_id,
       paddle_plan_id: subscription.paddle_plan_id
     )
   end
@@ -202,34 +186,38 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  @enterprise_level_usage 10_000_000
-  @spec suggest(User.t(), non_neg_integer()) :: Plan.t()
   @doc """
-  Returns the most appropriate plan for a user based on their usage during a
+  Returns the most appropriate plan for a team based on its usage during a
   given cycle.
 
   If the usage during the cycle exceeds the enterprise-level threshold, or if
-  the user already belongs to an enterprise plan, it suggests the :enterprise
+  the team already has an enterprise plan, it suggests the :enterprise
   plan.
 
   Otherwise, it recommends the plan where the cycle usage falls just under the
-  plan's limit from the available options for the user.
+  plan's limit from the available options for the team.
   """
-  def suggest(user, usage_during_cycle) do
+  @enterprise_level_usage 10_000_000
+  @spec suggest(Teams.Team.t(), non_neg_integer()) :: Plan.t()
+  def suggest(team, usage_during_cycle) do
     cond do
-      usage_during_cycle > @enterprise_level_usage -> :enterprise
-      Plausible.Auth.enterprise_configured?(user) -> :enterprise
-      true -> suggest_by_usage(user, usage_during_cycle)
+      usage_during_cycle > @enterprise_level_usage ->
+        :enterprise
+
+      Teams.Billing.enterprise_configured?(team) ->
+        :enterprise
+
+      true ->
+        subscription = Teams.Billing.get_subscription(team)
+        suggest_by_usage(subscription, usage_during_cycle)
     end
   end
 
-  defp suggest_by_usage(user, usage_during_cycle) do
-    user = Plausible.Users.with_subscription(user)
-
+  def suggest_by_usage(subscription, usage_during_cycle) do
     available_plans =
-      if business_tier?(user.subscription),
-        do: business_plans_for(user),
-        else: growth_plans_for(user)
+      if business_tier?(subscription),
+        do: business_plans_for(subscription),
+        else: growth_plans_for(subscription)
 
     Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
   end

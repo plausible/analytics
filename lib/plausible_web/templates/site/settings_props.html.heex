@@ -13,13 +13,15 @@
       create custom metrics.
     </:subtitle>
 
+    <PlausibleWeb.Components.Billing.Notice.premium_feature
+      billable_user={@site.owner}
+      current_user={@current_user}
+      current_team={@site_team}
+      feature_mod={Plausible.Billing.Feature.Props}
+      grandfathered?
+    />
+
     <div :if={Plausible.Billing.Feature.Props.enabled?(@site)}>
-      <PlausibleWeb.Components.Billing.Notice.premium_feature
-        billable_user={@site.owner}
-        current_user={@current_user}
-        feature_mod={Plausible.Billing.Feature.Props}
-        grandfathered?
-      />
       <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,
         id: "props-form",
         session: %{"site_id" => @site.id, "domain" => @site.domain}

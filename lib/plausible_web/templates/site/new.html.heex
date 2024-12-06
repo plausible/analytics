@@ -9,6 +9,7 @@
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={@site_limit_exceeded?}
       current_user={@current_user}
+      current_team={@my_team}
       billable_user={@current_user}
       limit={@site_limit}
       resource="sites"

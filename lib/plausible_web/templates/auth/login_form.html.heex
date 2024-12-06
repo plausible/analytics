@@ -41,7 +41,7 @@
       <:item :if={
         Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == false
       }>
-        Don't have an account
+        Don't have an account?
         <.styled_link href="/register">
           Register
         </.styled_link>

@@ -105,9 +105,7 @@ defmodule PlausibleWeb.Api.StatsController do
          :ok <- validate_interval(params),
          :ok <- validate_interval_granularity(site, params, dates),
          params <- realtime_period_to_30m(params),
-         query =
-           Query.from(site, params, debug_metadata(conn))
-           |> Query.set_include(:comparisons, parse_comparison_options(site, params)),
+         query = Query.from(site, params, debug_metadata(conn)),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
       {timeseries_result, comparison_result, _meta} = Stats.timeseries(site, query, [metric])
 
@@ -133,7 +131,7 @@ defmodule PlausibleWeb.Api.StatsController do
     Enum.map(timeseries, fn row ->
       case row[metric] do
         nil -> 0
-        %Money{} = money -> Decimal.to_float(money.amount)
+        %{value: value} -> value
         value -> value
       end
     end)
@@ -195,15 +193,14 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def top_stats(conn, params) do
     site = conn.assigns[:site]
+    current_user = conn.assigns[:current_user]
 
     params = realtime_period_to_30m(params)
 
-    query =
-      Query.from(site, params, debug_metadata(conn))
-      |> Query.set_include(:comparisons, parse_comparison_options(site, params))
+    query = Query.from(site, params, debug_metadata(conn))
 
-    {top_stats, sample_percent} = fetch_top_stats(site, query)
-    comparison_query = comparison_query(site, query, params)
+    {top_stats, sample_percent} = fetch_top_stats(site, query, current_user)
+    comparison_query = comparison_query(query)
 
     json(conn, %{
       top_stats: top_stats,
@@ -212,8 +209,8 @@ defmodule PlausibleWeb.Api.StatsController do
       with_imported_switch: with_imported_switch_info(query, comparison_query),
       includes_imported: includes_imported?(query, comparison_query),
       imports_exist: site.complete_import_ids != [],
-      comparing_from: comparison_query && Query.date_range(comparison_query).first,
-      comparing_to: comparison_query && Query.date_range(comparison_query).last,
+      comparing_from: query.include.comparisons && Query.date_range(comparison_query).first,
+      comparing_to: query.include.comparisons && Query.date_range(comparison_query).last,
       from: Query.date_range(query).first,
       to: Query.date_range(query).last
     })
@@ -297,7 +294,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp fetch_top_stats(site, query) do
+  defp fetch_top_stats(site, query, current_user) do
     goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
 
     cond do
@@ -311,7 +308,7 @@ defmodule PlausibleWeb.Api.StatsController do
         fetch_goal_top_stats(site, query)
 
       true ->
-        fetch_other_top_stats(site, query)
+        fetch_other_top_stats(site, query, current_user)
     end
   end
 
@@ -326,6 +323,7 @@ defmodule PlausibleWeb.Api.StatsController do
     stats = [
       %{
         name: "Current visitors",
+        graph_metric: :current_visitors,
         value: Stats.current_visitors(site)
       },
       %{
@@ -354,6 +352,7 @@ defmodule PlausibleWeb.Api.StatsController do
     stats = [
       %{
         name: "Current visitors",
+        graph_metric: :current_visitors,
         value: Stats.current_visitors(site)
       },
       %{
@@ -379,54 +378,57 @@ defmodule PlausibleWeb.Api.StatsController do
 
     [
       top_stats_entry(results, "Unique visitors", :total_visitors),
-      top_stats_entry(results, "Unique conversions", :visitors, graphable?: true),
-      top_stats_entry(results, "Total conversions", :events, graphable?: true),
+      top_stats_entry(results, "Unique conversions", :visitors),
+      top_stats_entry(results, "Total conversions", :events),
       on_ee do
-        top_stats_entry(results, "Average revenue", :average_revenue,
-          formatter: &format_money/1,
-          graphable?: true
-        )
+        top_stats_entry(results, "Average revenue", :average_revenue)
       end,
       on_ee do
-        top_stats_entry(results, "Total revenue", :total_revenue,
-          formatter: &format_money/1,
-          graphable?: true
-        )
+        top_stats_entry(results, "Total revenue", :total_revenue)
       end,
-      top_stats_entry(results, "Conversion rate", :conversion_rate, graphable?: true)
+      top_stats_entry(results, "Conversion rate", :conversion_rate)
     ]
     |> Enum.reject(&is_nil/1)
     |> then(&{&1, 100})
   end
 
-  defp fetch_other_top_stats(site, query) do
+  defp fetch_other_top_stats(site, query, current_user) do
     page_filter? = Filters.filtering_on_dimension?(query, "event:page")
 
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
       cond do
-        page_filter? && query.include_imported -> metrics
-        page_filter? -> metrics ++ [:bounce_rate, :time_on_page]
-        true -> metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
+        page_filter? && query.include_imported ->
+          metrics
+
+        page_filter? && scroll_depth_enabled?(site, current_user) ->
+          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
+
+        page_filter? ->
+          metrics ++ [:bounce_rate, :time_on_page]
+
+        true ->
+          metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
 
     stats =
       [
-        top_stats_entry(current_results, "Unique visitors", :visitors, graphable?: true),
-        top_stats_entry(current_results, "Total visits", :visits, graphable?: true),
-        top_stats_entry(current_results, "Total pageviews", :pageviews, graphable?: true),
-        top_stats_entry(current_results, "Views per visit", :views_per_visit, graphable?: true),
-        top_stats_entry(current_results, "Bounce rate", :bounce_rate, graphable?: true),
-        top_stats_entry(current_results, "Visit duration", :visit_duration, graphable?: true),
+        top_stats_entry(current_results, "Unique visitors", :visitors),
+        top_stats_entry(current_results, "Total visits", :visits),
+        top_stats_entry(current_results, "Total pageviews", :pageviews),
+        top_stats_entry(current_results, "Views per visit", :views_per_visit),
+        top_stats_entry(current_results, "Bounce rate", :bounce_rate),
+        top_stats_entry(current_results, "Visit duration", :visit_duration),
         top_stats_entry(current_results, "Time on page", :time_on_page,
           formatter: fn
             nil -> 0
             value -> value
           end
-        )
+        ),
+        top_stats_entry(current_results, "Scroll depth", :scroll_depth)
       ]
       |> Enum.filter(& &1)
 
@@ -438,17 +440,8 @@ defmodule PlausibleWeb.Api.StatsController do
       formatter = Keyword.get(opts, :formatter, & &1)
       value = get_in(current_results, [key, :value])
 
-      %{name: name, value: formatter.(value)}
-      |> maybe_put_graph_metric(opts, key)
+      %{name: name, value: formatter.(value), graph_metric: key}
       |> maybe_put_comparison(current_results, key, formatter)
-    end
-  end
-
-  defp maybe_put_graph_metric(entry, opts, key) do
-    if Keyword.get(opts, :graphable?) do
-      entry |> Map.put(:graph_metric, key)
-    else
-      entry
     end
   end
 
@@ -491,6 +484,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -511,10 +505,21 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{channel: :name})
 
-    json(conn, %{
-      results: res,
-      skip_imported_reason: query.skip_imported_reason
-    })
+    if params["csv"] do
+      if Filters.filtering_on_dimension?(query, "event:goal") do
+        res
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
+      else
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
+      end
+    else
+      json(conn, %{
+        results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
+        skip_imported_reason: query.skip_imported_reason
+      })
+    end
   end
 
   on_ee do
@@ -593,6 +598,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -620,6 +626,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -647,6 +654,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -674,6 +682,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -701,6 +710,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -728,6 +738,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -811,19 +822,29 @@ defmodule PlausibleWeb.Api.StatsController do
 
     json(conn, %{
       results: referrers,
+      meta: Stats.Breakdown.formatted_date_ranges(query),
       skip_imported_reason: query.skip_imported_reason
     })
   end
 
   def pages(conn, params) do
     site = conn.assigns[:site]
+    current_user = conn.assigns[:current_user]
+
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
     extra_metrics =
-      if params["detailed"],
-        do: [:pageviews, :bounce_rate, :time_on_page],
-        else: []
+      cond do
+        params["detailed"] && !query.include_imported && scroll_depth_enabled?(site, current_user) ->
+          [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
+
+        params["detailed"] ->
+          [:pageviews, :bounce_rate, :time_on_page]
+
+        true ->
+          []
+      end
 
     metrics = breakdown_metrics(query, extra_metrics)
     pagination = parse_pagination(params)
@@ -843,6 +864,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: pages,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -877,6 +899,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: entry_pages,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -912,6 +935,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: exit_pages,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -998,6 +1022,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: countries,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1036,6 +1061,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: regions,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1079,6 +1105,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: cities,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1110,6 +1137,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: browsers,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1150,6 +1178,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: results,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1181,6 +1210,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: systems,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1221,6 +1251,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: results,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1252,6 +1283,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: sizes,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1274,11 +1306,6 @@ defmodule PlausibleWeb.Api.StatsController do
       site
       |> Stats.breakdown(query, metrics, pagination)
       |> transform_keys(%{goal: :name})
-      |> Enum.map(fn goal ->
-        goal
-        |> Enum.map(&format_revenue_metric/1)
-        |> Map.new()
-      end)
 
     if params["csv"] do
       to_csv(conversions, [:name, :visitors, :events], [
@@ -1289,6 +1316,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: conversions,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1361,12 +1389,12 @@ defmodule PlausibleWeb.Api.StatsController do
     props =
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{prop_key => :name})
-      |> Enum.map(fn entry ->
-        Enum.map(entry, &format_revenue_metric/1)
-        |> Map.new()
-      end)
 
-    %{results: props, skip_imported_reason: query.skip_imported_reason}
+    %{
+      results: props,
+      meta: Stats.Breakdown.formatted_date_ranges(query),
+      skip_imported_reason: query.skip_imported_reason
+    }
   end
 
   def current_visitors(conn, _) do
@@ -1384,6 +1412,17 @@ defmodule PlausibleWeb.Api.StatsController do
     json(
       conn,
       Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
+    )
+  end
+
+  def custom_prop_value_filter_suggestions(conn, %{"prop_key" => prop_key} = params) do
+    site = conn.assigns[:site]
+
+    query = Query.from(site, params, debug_metadata(conn))
+
+    json(
+      conn,
+      Stats.custom_prop_value_filter_suggestions(site, query, prop_key, params["q"])
     )
   end
 
@@ -1512,11 +1551,20 @@ defmodule PlausibleWeb.Api.StatsController do
       end
 
     requires_goal_filter? = metric in [:conversion_rate, :events]
+    has_goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
 
-    if requires_goal_filter? and !Filters.filtering_on_dimension?(query, "event:goal") do
-      {:error, "Metric `#{metric}` can only be queried with a goal filter"}
-    else
-      {:ok, metric}
+    requires_page_filter? = metric == :scroll_depth
+    has_page_filter? = Filters.filtering_on_dimension?(query, "event:page")
+
+    cond do
+      requires_goal_filter? and not has_goal_filter? ->
+        {:error, "Metric `#{metric}` can only be queried with a goal filter"}
+
+      requires_page_filter? and not has_page_filter? ->
+        {:error, "Metric `#{metric}` can only be queried with a page filter"}
+
+      true ->
+        {:ok, metric}
     end
   end
 
@@ -1529,55 +1577,17 @@ defmodule PlausibleWeb.Api.StatsController do
     |> halt()
   end
 
-  def comparison_query(site, query, params) do
-    options = parse_comparison_options(site, params)
-
-    if options do
-      Comparisons.get_comparison_query(query, options)
+  def comparison_query(query) do
+    if query.include.comparisons do
+      Comparisons.get_comparison_query(query, query.include.comparisons)
     end
   end
-
-  def parse_comparison_options(_site, %{"period" => period}) when period in ~w(realtime all),
-    do: nil
-
-  def parse_comparison_options(_site, %{"comparison" => mode} = params)
-      when mode in ["previous_period", "year_over_year"] do
-    %{
-      mode: mode,
-      match_day_of_week: params["match_day_of_week"] == "true"
-    }
-  end
-
-  def parse_comparison_options(site, %{"comparison" => "custom"} = params) do
-    {:ok, date_range} =
-      Filters.QueryParser.parse_date_range_pair(site, [
-        params["compare_from"],
-        params["compare_to"]
-      ])
-
-    %{
-      mode: "custom",
-      date_range: date_range,
-      match_day_of_week: params["match_day_of_week"] == "true"
-    }
-  end
-
-  def parse_comparison_options(_site, _options), do: nil
 
   defp includes_imported?(source_query, comparison_query) do
     cond do
       source_query.include_imported -> true
       comparison_query && comparison_query.include_imported -> true
       true -> false
-    end
-  end
-
-  on_ee do
-    defdelegate format_revenue_metric(metric_value), to: PlausibleWeb.Controllers.API.Revenue
-    defdelegate format_money(money), to: PlausibleWeb.Controllers.API.Revenue
-  else
-    defp format_revenue_metric({metric, value}) do
-      {metric, value}
     end
   end
 
@@ -1606,4 +1616,9 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp realtime_period_to_30m(params), do: params
+
+  defp scroll_depth_enabled?(site, user) do
+    FunWithFlags.enabled?(:scroll_depth, for: user) ||
+      FunWithFlags.enabled?(:scroll_depth, for: site)
+  end
 end

@@ -398,7 +398,12 @@ export const getDatePeriodGroups = (
 export const last6MonthsLinkItem: LinkItem = [
   ['Last 6 months', 'S'],
   {
-    search: (s) => ({ ...s, period: QueryPeriod['6mo'], keybindHint: 'S' }),
+    search: (s) => ({
+      ...s,
+      ...clearedDateSearch,
+      period: QueryPeriod['6mo'],
+      keybindHint: 'S'
+    }),
     isActive: ({ query }) => query.period === QueryPeriod['6mo']
   }
 ]

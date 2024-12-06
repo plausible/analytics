@@ -2,19 +2,8 @@ defmodule Plausible.Billing do
   use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.Subscriptions
-  alias Plausible.Billing.{Subscription, Plans, Quota}
+  alias Plausible.Billing.Subscription
   alias Plausible.Auth.User
-
-  @spec active_subscription_for(integer()) :: Subscription.t() | nil
-  def active_subscription_for(user_id) do
-    user_id |> active_subscription_query() |> Repo.one()
-  end
-
-  @spec has_active_subscription?(integer()) :: boolean()
-  def has_active_subscription?(user_id) do
-    user_id |> active_subscription_query() |> Repo.exists?()
-  end
 
   def subscription_created(params) do
     Repo.transaction(fn ->
@@ -40,43 +29,6 @@ defmodule Plausible.Billing do
     end)
   end
 
-  def change_plan(user, new_plan_id) do
-    subscription = active_subscription_for(user.id)
-    plan = Plans.find(new_plan_id)
-
-    limit_checking_opts =
-      if user.allow_next_upgrade_override do
-        [ignore_pageview_limit: true]
-      else
-        []
-      end
-
-    with :ok <- Quota.ensure_within_plan_limits(user, plan, limit_checking_opts),
-         do: do_change_plan(subscription, new_plan_id)
-  end
-
-  defp do_change_plan(subscription, new_plan_id) do
-    res =
-      paddle_api().update_subscription(subscription.paddle_subscription_id, %{
-        plan_id: new_plan_id
-      })
-
-    case res do
-      {:ok, response} ->
-        amount = :erlang.float_to_binary(response["next_payment"]["amount"] / 1, decimals: 2)
-
-        Subscription.changeset(subscription, %{
-          paddle_plan_id: Integer.to_string(response["plan_id"]),
-          next_bill_amount: amount,
-          next_bill_date: response["next_payment"]["date"]
-        })
-        |> Repo.update()
-
-      e ->
-        e
-    end
-  end
-
   def change_plan_preview(subscription, new_plan_id) do
     case paddle_api().update_subscription_preview(
            subscription.paddle_subscription_id,
@@ -90,43 +42,23 @@ defmodule Plausible.Billing do
     end
   end
 
-  @spec check_needs_to_upgrade(User.t()) ::
-          {:needs_to_upgrade, :no_trial | :no_active_subscription | :grace_period_ended}
-          | :no_upgrade_needed
-  def check_needs_to_upgrade(user) do
-    user = Plausible.Users.with_subscription(user)
-
-    trial_over? =
-      not is_nil(user.trial_expiry_date) and
-        Date.before?(user.trial_expiry_date, Date.utc_today())
-
-    subscription_active? = Subscriptions.active?(user.subscription)
-
-    cond do
-      is_nil(user.trial_expiry_date) and not subscription_active? ->
-        {:needs_to_upgrade, :no_trial}
-
-      trial_over? and not subscription_active? ->
-        {:needs_to_upgrade, :no_active_subscription}
-
-      Plausible.Auth.GracePeriod.expired?(user) ->
-        {:needs_to_upgrade, :grace_period_ended}
-
-      true ->
-        :no_upgrade_needed
-    end
-  end
-
   defp handle_subscription_created(params) do
     params =
       if present?(params["passthrough"]) do
-        params
+        format_params(params)
       else
-        user = Repo.get_by(User, email: params["email"])
-        Map.put(params, "passthrough", user && user.id)
+        user = Repo.get_by!(User, email: params["email"])
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+
+        params
+        |> Map.put("passthrough", user.id)
+        |> Map.put("team_id", team.id)
       end
 
-    subscription_params = format_subscription(params) |> add_last_bill_date(params)
+    subscription_params =
+      params
+      |> format_subscription()
+      |> add_last_bill_date(params)
 
     %Subscription{}
     |> Subscription.changeset(subscription_params)
@@ -153,8 +85,13 @@ defmodule Plausible.Billing do
     irrelevant? = params["old_status"] == "paused" && params["status"] == "past_due"
 
     if subscription && not irrelevant? do
+      params =
+        params
+        |> format_params()
+        |> format_subscription()
+
       subscription
-      |> Subscription.changeset(format_subscription(params))
+      |> Subscription.changeset(params)
       |> Repo.update!()
       |> after_subscription_update()
     end
@@ -208,8 +145,26 @@ defmodule Plausible.Billing do
     end
   end
 
+  defp format_params(%{"passthrough" => passthrough} = params) do
+    case String.split(to_string(passthrough), ";") do
+      [user_id] ->
+        user = Repo.get!(User, user_id)
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        Map.put(params, "team_id", team.id)
+
+      ["user:" <> user_id, "team:" <> team_id] ->
+        params
+        |> Map.put("passthrough", user_id)
+        |> Map.put("team_id", team_id)
+    end
+  end
+
+  defp format_params(params) do
+    params
+  end
+
   defp format_subscription(params) do
-    %{
+    subscription_params = %{
       paddle_subscription_id: params["subscription_id"],
       paddle_plan_id: params["subscription_plan_id"],
       cancel_url: params["cancel_url"],
@@ -220,6 +175,12 @@ defmodule Plausible.Billing do
       next_bill_amount: params["unit_price"] || params["new_unit_price"],
       currency_code: params["currency"]
     }
+
+    if team_id = params["team_id"] do
+      Map.put(subscription_params, :team_id, team_id)
+    else
+      subscription_params
+    end
   end
 
   defp add_last_bill_date(subscription_params, paddle_params) do
@@ -236,12 +197,6 @@ defmodule Plausible.Billing do
   defp present?(nil), do: false
   defp present?(_), do: true
 
-  defp remove_grace_period(%User{} = user) do
-    user
-    |> Plausible.Auth.GracePeriod.remove_changeset()
-    |> Repo.update!()
-  end
-
   @spec format_price(Money.t()) :: String.t()
   def format_price(money) do
     Money.to_string!(money, fractional_digits: 2, no_fraction_if_integer: true)
@@ -249,16 +204,8 @@ defmodule Plausible.Billing do
 
   def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 
-  def cancelled_subscription_notice_dismiss_id(%User{} = user) do
-    "subscription_cancelled__#{user.id}"
-  end
-
-  defp active_subscription_query(user_id) do
-    from(s in Subscription,
-      where: s.user_id == ^user_id and s.status == ^Subscription.Status.active(),
-      order_by: [desc: s.inserted_at],
-      limit: 1
-    )
+  def cancelled_subscription_notice_dismiss_id(id) do
+    "subscription_cancelled__#{id}"
   end
 
   defp after_subscription_update(subscription) do
@@ -275,7 +222,7 @@ defmodule Plausible.Billing do
 
     user
     |> Plausible.Users.update_accept_traffic_until()
-    |> remove_grace_period()
+    |> Plausible.Users.remove_grace_period()
     |> Plausible.Users.maybe_reset_next_upgrade_override()
     |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)
     |> maybe_adjust_api_key_limits()

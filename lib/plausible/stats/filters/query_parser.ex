@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   use Plausible
 
-  alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema}
+  alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema, Time}
 
   @default_include %{
     imports: false,
@@ -133,31 +133,35 @@ defmodule Plausible.Stats.Filters.QueryParser do
               :matches_wildcard_not,
               :contains,
               :contains_not
-            ],
-       do: parse_clauses_list(filter)
+            ] do
+    with {:ok, clauses} <- parse_clauses_list(filter),
+         {:ok, modifiers} <- parse_filter_modifiers(Enum.at(filter, 3)) do
+      {:ok, [clauses | modifiers]}
+    end
+  end
 
   defp parse_filter_rest(operator, _filter)
        when operator in [:not, :and, :or],
        do: {:ok, []}
 
-  defp parse_clauses_list([operation, filter_key, list] = filter) when is_list(list) do
+  defp parse_clauses_list([operator, filter_key, list | _rest] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
     all_integers? = Enum.all?(list, &is_integer/1)
 
     case {filter_key, all_strings?} do
       {"visit:city", false} when all_integers? ->
-        {:ok, [list]}
+        {:ok, list}
 
-      {"visit:country", true} when operation in ["is", "is_not"] ->
+      {"visit:country", true} when operator in ["is", "is_not"] ->
         if Enum.all?(list, &(String.length(&1) == 2)) do
-          {:ok, [list]}
+          {:ok, list}
         else
           {:error,
            "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."}
         end
 
       {_, true} ->
-        {:ok, [list]}
+        {:ok, list}
 
       _ ->
         {:error, "Invalid filter '#{i(filter)}'."}
@@ -165,6 +169,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'"}
+
+  defp parse_filter_modifiers(modifiers) when is_map(modifiers) do
+    {:ok, [atomize_keys(modifiers)]}
+  end
+
+  defp parse_filter_modifiers(nil) do
+    {:ok, []}
+  end
 
   defp parse_date(_site, date_string, _date) when is_binary(date_string) do
     case Date.from_iso8601(date_string) do
@@ -541,6 +553,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_metric(:scroll_depth = metric, query) do
+    page_dimension? = Enum.member?(query.dimensions, "event:page")
+    toplevel_page_filter? = not is_nil(Filters.get_toplevel_filter(query, "event:page"))
+
+    if page_dimension? or toplevel_page_filter? do
+      :ok
+    else
+      {:error, "Metric `#{metric}` can only be queried with event:page filters or dimensions."}
+    end
+  end
+
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
       Filters.filtering_on_dimension?(query, "event:page") ->
@@ -578,7 +601,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_include(query) do
-    time_dimension? = Enum.any?(query.dimensions, &String.starts_with?(&1, "time"))
+    time_dimension? = Enum.any?(query.dimensions, &Time.time_dimension?/1)
 
     if query.include.time_labels and not time_dimension? do
       {:error, "Invalid include.time_labels: requires a time dimension."}

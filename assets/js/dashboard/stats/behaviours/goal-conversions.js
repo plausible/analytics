@@ -72,7 +72,7 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel={prop}
       metrics={chooseMetrics()}
-      detailsLinkProps={{ path: customPropsRoute.path, params: {propKey: prop}, search: (search) => search }}
+      detailsLinkProps={{ path: customPropsRoute.path, params: {propKey: url.maybeEncodeRouteParam(prop)}, search: (search) => search }}
       externalLinkDest={externalLinkDest()}
       maybeHideDetails={true}
       color="bg-red-50"

@@ -17,7 +17,7 @@ defmodule Plausible.Stats.Time do
   end
 
   defp beginning_of_time(candidate, native_stats_start_at) do
-    if Timex.after?(native_stats_start_at, candidate) do
+    if NaiveDateTime.after?(native_stats_start_at, candidate) do
       native_stats_start_at
     else
       candidate
@@ -33,8 +33,11 @@ defmodule Plausible.Stats.Time do
   def format_datetime(other), do: other
 
   def time_dimension(query) do
-    Enum.find(query.dimensions, &String.starts_with?(&1, "time"))
+    Enum.find(query.dimensions, &time_dimension?/1)
   end
+
+  def time_dimension?("time" <> _rest), do: true
+  def time_dimension?(_dimension), do: false
 
   @doc """
   Returns list of time bucket labels for the given query.

@@ -1,5 +1,5 @@
 <.settings_tiles>
-  <.tile docs="user-roles">
+  <.tile docs="users-roles">
     <:title>People</:title>
     <:subtitle>Invite your friends or coworkers</:subtitle>
 
@@ -14,8 +14,8 @@
 
     <div class="flow-root">
       <ul class="divide-y divide-gray-200 dark:divide-gray-400">
-        <%= for membership <- @site.memberships do %>
-          <li class="py-4">
+        <%= for membership <- @memberships do %>
+          <li class="py-4" id={"membership-#{membership.user_id}"}>
             <div class="flex items-center space-x-4">
               <div class="flex-shrink-0">
                 <img
@@ -47,7 +47,7 @@
                   @click="open = !open"
                   class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
-                  <%= membership.role |> Atom.to_string() |> String.capitalize() %>
+                  <%= membership.role |> to_string() |> String.capitalize() %>
                   <svg
                     class="w-4 h-4 pt-px ml-1"
                     fill="currentColor"
@@ -100,7 +100,7 @@
                         </svg>
                       </span>
                     </li>
-                    <%= if @conn.assigns[:current_user_role] == :owner do %>
+                    <%= if @conn.assigns[:site_role] == :owner do %>
                       <li
                         class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
                         role="option"
@@ -124,9 +124,9 @@
                       href={
                         Routes.membership_path(
                           @conn,
-                          :update_role,
+                          :update_role_by_user,
                           @site.domain,
-                          membership.id,
+                          membership.user.id,
                           "admin"
                         )
                       }
@@ -164,9 +164,9 @@
                       href={
                         Routes.membership_path(
                           @conn,
-                          :update_role,
+                          :update_role_by_user,
                           @site.domain,
-                          membership.id,
+                          membership.user.id,
                           "viewer"
                         )
                       }
@@ -203,7 +203,12 @@
 
                     <.unstyled_link
                       href={
-                        Routes.membership_path(@conn, :remove_member, @site.domain, membership.id)
+                        Routes.membership_path(
+                          @conn,
+                          :remove_member_by_user,
+                          @site.domain,
+                          membership.user.id
+                        )
                       }
                       method="delete"
                       class="p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
@@ -220,11 +225,14 @@
     </div>
   </.tile>
 
-  <.tile :if={Enum.count(@site.invitations) > 0}>
+  <.tile :if={Enum.count(@invitations) > 0}>
     <:title>Pending invitations</:title>
     <:subtitle>Waiting for new members to accept their invitations</:subtitle>
 
-    <.table rows={@site.invitations}>
+    <.table
+      rows={@invitations}
+      row_attrs={fn invitation -> %{id: "invitation-#{invitation.invitation_id}"} end}
+    >
       <:thead>
         <.th>Email</.th>
         <.th hide_on_mobile>Role</.th>

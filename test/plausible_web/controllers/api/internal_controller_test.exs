@@ -1,13 +1,14 @@
 defmodule PlausibleWeb.Api.InternalControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
+  use Plausible.Teams.Test
 
   describe "GET /api/sites" do
     setup [:create_user, :log_in]
 
     test "returns a list of site domains for the current user", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
-      site2 = insert(:site, members: [user])
+      site = new_site(owner: user)
+      site2 = new_site(owner: user)
       conn = get(conn, "/api/sites")
 
       %{"data" => sites} = json_response(conn, 200)
@@ -23,28 +24,15 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       inserted =
         for i <- 1..10 do
           i = to_string(i)
-
-          insert(:site,
-            members: [user],
-            domain: "site#{String.pad_leading(i, 2, "0")}.example.com"
-          )
+          new_site(owner: user, domain: "site#{String.pad_leading(i, 2, "0")}.example.com")
         end
 
-      _rogue = insert(:site, domain: "site00.example.com")
+      _rogue = new_site(domain: "site00.example.com")
 
-      insert(:site,
-        domain: "friend.example.com",
-        invitations: [
-          build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
-        ]
-      )
-
-      insert(:invitation,
-        email: "friend@example.com",
-        inviter: user,
-        role: :viewer,
-        site: hd(inserted)
-      )
+      inviter = new_user()
+      site = new_site(owner: inviter, domain: "friend.example.com")
+      invite_guest(site, user, inviter: inviter, role: :viewer)
+      invite_guest(List.first(inserted), user, inviter: inviter, role: :viewer)
 
       {:ok, _} =
         Plausible.Sites.toggle_pin(user, Plausible.Sites.get_by_domain!("site07.example.com"))

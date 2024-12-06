@@ -41,7 +41,7 @@ defmodule Plausible.Auth.User do
 
     # A field only used as a manual override - allow subscribing
     # to any plan, even when exceeding its pageview limit
-    field :allow_next_upgrade_override, :boolean
+    field :allow_next_upgrade_override, :boolean, default: false
 
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
     field :totp_enabled, :boolean, default: false
@@ -53,6 +53,7 @@ defmodule Plausible.Auth.User do
 
     has_many :sessions, Plausible.Auth.UserSession
     has_many :site_memberships, Plausible.Site.Membership
+    has_many :team_memberships, Plausible.Teams.Membership
     has_many :sites, through: [:site_memberships, :site]
     has_many :api_keys, Plausible.Auth.ApiKey
     has_one :google_auth, Plausible.Site.GoogleAuth

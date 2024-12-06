@@ -131,7 +131,7 @@ defmodule Plausible.Google.API do
 
   defp needs_to_refresh_token?(%NaiveDateTime{} = expires_at) do
     thirty_seconds_ago = DateTime.shift(DateTime.utc_now(), second: 30)
-    Timex.before?(expires_at, thirty_seconds_ago)
+    NaiveDateTime.before?(expires_at, thirty_seconds_ago)
   end
 
   defp ensure_search_console_property(site) do

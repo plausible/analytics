@@ -2,7 +2,7 @@ import React from 'react';
 import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
-import numberFormatter from '../../util/number-formatter'
+import { numberShortFormatter } from '../../util/number-formatter'
 import RocketIcon from '../modals/rocket-icon'
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
@@ -69,7 +69,7 @@ export default class SearchTerms extends React.Component {
             </span>
           </span>
         </Bar>
-        <span className="font-medium dark:text-gray-200">{numberFormatter(term.visitors)}</span>
+        <span className="font-medium dark:text-gray-200">{numberShortFormatter(term.visitors)}</span>
       </div>
     )
   }

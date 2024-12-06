@@ -5,7 +5,6 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
   use PlausibleWeb, live_view: :no_sentry_context
   import PlausibleWeb.Live.Components.Form
 
-  alias Plausible.Sites
   alias Plausible.Plugins.API.{Token, Tokens}
 
   def mount(
@@ -20,7 +19,11 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
+        Plausible.Sites.get_for_user!(current_user, domain, [
+          :owner,
+          :admin,
+          :super_admin
+        ])
       end)
 
     token = Token.generate()

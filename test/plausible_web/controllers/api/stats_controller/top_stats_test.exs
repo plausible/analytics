@@ -1,10 +1,11 @@
 defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/top-stats - default" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns graph_metric key for graphable top stats", %{conn: conn, site: site} do
       [visitors, visits, pageviews, views_per_visit, bounce_rate, visit_duration] =
@@ -21,7 +22,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"graph_metric" => "visit_duration"} = visit_duration
     end
 
-    test "returns graph_metric key for graphable top stats in realtime mode", %{
+    test "returns graph_metric key for top stats in realtime mode", %{
       conn: conn,
       site: site
     } do
@@ -31,7 +32,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         |> json_response(200)
         |> Map.get("top_stats")
 
-      refute Map.has_key?(current_visitors, "graph_metric")
+      assert %{"graph_metric" => "current_visitors"} = current_visitors
       assert %{"graph_metric" => "visitors"} = unique_visitors
       assert %{"graph_metric" => "pageviews"} = pageviews
     end
@@ -189,7 +190,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 900} in res["top_stats"]
+      assert %{"name" => "Time on page", "value" => 900, "graph_metric" => "time_on_page"} in res[
+               "top_stats"
+             ]
     end
 
     test "calculates time on page when filtered for multiple pages", %{
@@ -228,7 +231,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 480} in res["top_stats"]
+      assert %{"name" => "Time on page", "value" => 480, "graph_metric" => "time_on_page"} in res[
+               "top_stats"
+             ]
     end
 
     test "calculates time on page when filtered for multiple negated pages", %{
@@ -267,7 +272,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 60} in res["top_stats"]
+      assert %{"name" => "Time on page", "value" => 60, "graph_metric" => "time_on_page"} in res[
+               "top_stats"
+             ]
     end
 
     test "calculates time on page when filtered for multiple wildcard pages", %{
@@ -307,7 +314,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 480} in res["top_stats"]
+      assert %{"name" => "Time on page", "value" => 480, "graph_metric" => "time_on_page"} in res[
+               "top_stats"
+             ]
     end
 
     test "calculates time on page when filtered for multiple negated wildcard pages", %{
@@ -349,7 +358,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 600} in res["top_stats"]
+      assert %{"name" => "Time on page", "value" => 600, "graph_metric" => "time_on_page"} in res[
+               "top_stats"
+             ]
     end
 
     test "doesn't calculate time on page with only single page visits", %{conn: conn, site: site} do
@@ -361,7 +372,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{page: "/"})
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
-      assert %{"name" => "Time on page", "value" => 0} ==
+      assert %{"name" => "Time on page", "value" => 0, "graph_metric" => "time_on_page"} ==
                conn
                |> get(path)
                |> json_response(200)
@@ -397,7 +408,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{page: "/"})
       path = "/api/stats/#{site.domain}/top-stats?&filters=#{filters}"
 
-      assert %{"name" => "Time on page", "value" => 0} ==
+      assert %{"name" => "Time on page", "value" => 0, "graph_metric" => "time_on_page"} ==
                conn
                |> get(path)
                |> json_response(200)
@@ -416,7 +427,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{page: "/"})
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
-      assert %{"name" => "Time on page", "value" => _three_minutes = 180} ==
+      assert %{
+               "name" => "Time on page",
+               "value" => _three_minutes = 180,
+               "graph_metric" => "time_on_page"
+             } ==
                conn
                |> get(path)
                |> json_response(200)
@@ -453,7 +468,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{page: "/a"})
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
-      assert %{"name" => "Time on page", "value" => 100} ==
+      assert %{"name" => "Time on page", "value" => 100, "graph_metric" => "time_on_page"} ==
                conn
                |> get(path)
                |> json_response(200)
@@ -463,7 +478,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - with imported data" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns divisible metrics as 0 when no stats exist", %{
       site: site,
@@ -629,7 +644,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - with_imported_switch info" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     setup context do
       insert(:site_import,
@@ -763,7 +778,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - realtime" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "shows current visitors (last 5 minutes)", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -775,7 +790,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Current visitors", "value" => 2} in res["top_stats"]
+
+      assert %{"name" => "Current visitors", "value" => 2, "graph_metric" => "current_visitors"} in res[
+               "top_stats"
+             ]
     end
 
     test "shows unique visitors (last 30 minutes)", %{conn: conn, site: site} do
@@ -826,7 +844,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Current visitors", "value" => 3} in res["top_stats"]
+
+      assert %{"name" => "Current visitors", "value" => 3, "graph_metric" => "current_visitors"} in res[
+               "top_stats"
+             ]
     end
 
     test "shows unique/total conversions (last 30 min) with goal filter", %{
@@ -863,15 +884,15 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - filters" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
-    test "returns graph_metric key for graphable top stats with a page filter", %{
+    test "returns graph_metric key for top stats with a page filter", %{
       conn: conn,
       site: site
     } do
       filters = Jason.encode!(%{page: "/A"})
 
-      [visitors, visits, pageviews, bounce_rate, time_on_page] =
+      [visitors, visits, pageviews, bounce_rate, time_on_page, scroll_depth] =
         conn
         |> get("/api/stats/#{site.domain}/top-stats?filters=#{filters}")
         |> json_response(200)
@@ -881,11 +902,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"graph_metric" => "visits"} = visits
       assert %{"graph_metric" => "pageviews"} = pageviews
       assert %{"graph_metric" => "bounce_rate"} = bounce_rate
-
-      refute Map.has_key?(time_on_page, "graph_metric")
+      assert %{"graph_metric" => "time_on_page"} = time_on_page
+      assert %{"graph_metric" => "scroll_depth"} = scroll_depth
     end
 
-    test "returns graph_metric key for graphable top stats with a goal filter", %{
+    test "returns graph_metric key for top stats with a goal filter", %{
       conn: conn,
       site: site
     } do
@@ -897,13 +918,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         |> json_response(200)
         |> Map.get("top_stats")
 
-      refute Map.has_key?(unique_visitors, "graph_metric")
+      assert %{"graph_metric" => "total_visitors"} = unique_visitors
       assert %{"graph_metric" => "visitors"} = unique_conversions
       assert %{"graph_metric" => "events"} = total_conversions
       assert %{"graph_metric" => "conversion_rate"} = cr
     end
 
-    test "returns graph_metric key for graphable top stats with a goal filter in realtime mode",
+    test "returns graph_metric key for top stats with a goal filter in realtime mode",
          %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Signup"})
 
@@ -913,7 +934,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         |> json_response(200)
         |> Map.get("top_stats")
 
-      refute Map.has_key?(current_visitors, "graph_metric")
+      assert %{"graph_metric" => "current_visitors"} = current_visitors
       assert %{"graph_metric" => "visitors"} = unique_conversions
       assert %{"graph_metric" => "events"} = total_conversions
     end
@@ -936,6 +957,31 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+               "top_stats"
+             ]
+    end
+
+    test "returns scroll_depth with a page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:10]),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
+        build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Scroll depth", "value" => 70, "graph_metric" => "scroll_depth"} in res[
                "top_stats"
              ]
     end
@@ -1238,7 +1284,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - filtered for goal" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns total unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1258,7 +1304,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 3} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "total_visitors"} in res[
+               "top_stats"
+             ]
     end
 
     test "returns converted visitors", %{conn: conn, site: site} do
@@ -1381,13 +1429,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"},
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K", "value" => 1659.5},
                "graph_metric" => "average_revenue"
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$3,319.00", "short" => "$3.3K"},
+               "value" => %{"long" => "$3,319.00", "short" => "$3.3K", "value" => 3319.0},
                "graph_metric" => "total_revenue"
              } in top_stats
     end
@@ -1440,13 +1488,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"},
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K", "value" => 1659.5},
                "graph_metric" => "average_revenue"
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$6,638.00", "short" => "$6.6K"},
+               "value" => %{"long" => "$6,638.00", "short" => "$6.6K", "value" => 6638.0},
                "graph_metric" => "total_revenue"
              } in top_stats
     end
@@ -1516,13 +1564,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$1,000.00", "short" => "$1.0K"},
+               "value" => %{"long" => "$1,000.00", "short" => "$1.0K", "value" => 1000.0},
                "graph_metric" => "average_revenue"
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$2,000.00", "short" => "$2.0K"},
+               "value" => %{"long" => "$2,000.00", "short" => "$2.0K", "value" => 2000.0},
                "graph_metric" => "total_revenue"
              } in top_stats
     end
@@ -1538,13 +1586,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$0.00", "short" => "$0.0"},
+               "value" => %{"long" => "$0.00", "short" => "$0.0", "value" => 0.0},
                "graph_metric" => "average_revenue"
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$0.00", "short" => "$0.0"},
+               "value" => %{"long" => "$0.00", "short" => "$0.0", "value" => 0.0},
                "graph_metric" => "total_revenue"
              } in top_stats
     end
@@ -1578,7 +1626,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "does not return average and total when site owner is on a growth plan",
          %{conn: conn, site: site, user: user} do
-      insert(:growth_subscription, user: user)
+      subscribe_to_growth_plan(user)
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
 
       populate_stats(site, [
@@ -1600,7 +1648,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - with comparisons" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "does not return comparisons by default", %{site: site, conn: conn} do
       populate_stats(site, [

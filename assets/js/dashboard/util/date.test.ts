@@ -4,6 +4,21 @@ import { formatISO, nowForSite, shiftMonths, yesterday } from './date'
 
 jest.useFakeTimers()
 
+describe(`${nowForSite.name} and ${formatISO.name}`, () => {
+  /* prettier-ignore */
+  const cases = [
+    [ 'Los Angeles/America', -3600 * 6, '2024-11-01T20:00:00.000Z', '2024-11-01' ],
+    [ 'Sydney/Australia', 3600 * 6, '2024-11-01T20:00:00.000Z', '2024-11-02' ]
+  ]
+  test.each(cases)(
+    'in timezone of %s (offset %p) at %s, today is %s',
+    (_tz, offset, utcTime, expectedToday) => {
+      jest.setSystemTime(new Date(utcTime))
+      expect(formatISO(nowForSite({ offset }))).toEqual(expectedToday)
+    }
+  )
+})
+
 /* prettier-ignore */
 const dstChangeOverDayEstonia = [
 //  system time                 today         yesterday     today-2mo     today+2mo     today-12mo    offset 

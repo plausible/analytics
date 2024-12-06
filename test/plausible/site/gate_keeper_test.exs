@@ -1,5 +1,6 @@
 defmodule Plausible.Site.GateKeeperTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
 
   alias Plausible.Site.Cache
   alias Plausible.Site.GateKeeper
@@ -18,10 +19,12 @@ defmodule Plausible.Site.GateKeeperTest do
     domain = "expired.example.com"
     yesterday = Date.utc_today() |> Date.add(-1)
 
+    owner = new_user(team: [accept_traffic_until: yesterday])
+
     %{id: _} =
       add_site_and_refresh_cache(test,
         domain: domain,
-        members: [build(:user, accept_traffic_until: yesterday)]
+        owner: owner
       )
 
     assert {:deny, :payment_required} = GateKeeper.check(domain, opts)
@@ -88,7 +91,7 @@ defmodule Plausible.Site.GateKeeperTest do
     {:ok, _} = Plausible.Repo.delete(site)
     # We need some dummy site, otherwise the cache won't refresh in case the DB
     # is completely empty
-    insert(:site)
+    new_site()
     deleted_site_id = site.id
 
     assert {:allow, %Plausible.Site{id: ^deleted_site_id, from_cache?: true}} =
@@ -104,7 +107,7 @@ defmodule Plausible.Site.GateKeeperTest do
   end
 
   defp add_site_and_refresh_cache(cache_name, site_data) do
-    site = insert(:site, site_data)
+    site = new_site(site_data)
 
     Cache.refresh_updated_recently(cache_name: cache_name, force?: true)
     site

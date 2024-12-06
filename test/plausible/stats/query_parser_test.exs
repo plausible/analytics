@@ -1,11 +1,12 @@
 defmodule Plausible.Stats.Filters.QueryParserTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
 
   alias Plausible.Stats.DateTimeRange
   alias Plausible.Stats.Filters
   import Plausible.Stats.Filters.QueryParser
 
-  setup [:create_user, :create_new_site]
+  setup [:create_user, :create_site]
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
   @date_range_realtime %DateTimeRange{
@@ -596,6 +597,156 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         site,
         "Invalid filters. Dimension `event:hostname` can only be filtered at the top level."
       )
+    end
+
+    for operation <- [:is, :contains, :is_not, :contains_not] do
+      test "#{operation} allows case_sensitive modifier", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            [
+              Atom.to_string(unquote(operation)),
+              "event:page",
+              ["/foo"],
+              %{"case_sensitive" => false}
+            ],
+            [
+              Atom.to_string(unquote(operation)),
+              "event:name",
+              ["/foo"],
+              %{"case_sensitive" => true}
+            ]
+          ]
+        }
+        |> check_success(site, %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [
+            [unquote(operation), "event:page", ["/foo"], %{case_sensitive: false}],
+            [unquote(operation), "event:name", ["/foo"], %{case_sensitive: true}]
+          ],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        })
+      end
+    end
+
+    for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
+      test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            [
+              Atom.to_string(unquote(operation)),
+              "event:hostname",
+              ["a.plausible.io"],
+              %{"case_sensitive" => false}
+            ]
+          ]
+        }
+        |> check_error(
+          site,
+          "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:hostname\", [\"a.plausible.io\"], %{\"case_sensitive\" => false}]",
+          :internal
+        )
+      end
+    end
+  end
+
+  describe "preloading goals" do
+    setup %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Purchase"})
+      insert(:goal, %{site: site, event_name: "Contact"})
+
+      :ok
+    end
+
+    test "with exact match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Signup", "Purchase"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:goal", ["Signup", "Purchase"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+    end
+
+    test "with case insensitive match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["signup", "purchase"], %{"case_sensitive" => false}]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:goal", ["signup", "purchase"], %{case_sensitive: false}]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+    end
+
+    test "with contains match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["contains", "event:goal", ["Sign", "pur"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:contains, "event:goal", ["Sign", "pur"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Signup"], revenue_currencies: %{})
+    end
+
+    test "with case insensitive contains match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["contains", "event:goal", ["sign", "CONT"], %{"case_sensitive" => false}]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:contains, "event:goal", ["sign", "CONT"], %{case_sensitive: false}]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Contact", "Signup"], revenue_currencies: %{})
     end
   end
 
@@ -1289,10 +1440,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   describe "custom props access" do
     test "filters - no access", %{site: site, user: user} do
-      ep =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,
@@ -1307,10 +1455,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "dimensions - no access", %{site: site, user: user} do
-      ep =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,
@@ -1421,6 +1566,81 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "scroll_depth metric" do
+    test "fails validation on its own", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `scroll_depth` can only be queried with event:page filters or dimensions.",
+        :internal
+      )
+    end
+
+    test "fails with only a non-top-level event:page filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "filters" => [["not", ["is", "event:page", ["/"]]]]
+      }
+      |> check_error(
+        site,
+        "Metric `scroll_depth` can only be queried with event:page filters or dimensions.",
+        :internal
+      )
+    end
+
+    test "succeeds with top-level event:page filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:scroll_depth],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:page", ["/"]]],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+
+    test "succeeds with event:page dimension", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "dimensions" => ["event:page"]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:scroll_depth],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["event:page"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+  end
+
   describe "views_per_visit metric" do
     test "succeeds with normal filters", %{site: site} do
       insert(:goal, %{site: site, event_name: "Signup"})
@@ -1475,15 +1695,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     @describetag :ee_only
 
     setup %{user: user} do
-      plan =
-        insert(:enterprise_plan,
-          features: [Plausible.Billing.Feature.RevenueGoals],
-          user_id: user.id
-        )
-
-      subscription = insert(:subscription, user: user, paddle_plan_id: plan.paddle_plan_id)
-
-      {:ok, subscription: subscription}
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.RevenueGoals])
+      :ok
     end
 
     test "not valid in public schema", %{site: site} do
@@ -1520,13 +1733,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    test "no access", %{site: site, user: user, subscription: subscription} do
-      Repo.delete!(subscription)
+    test "no access" do
+      user = new_user()
+      site = new_site(owner: user)
 
-      plan =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: plan.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,

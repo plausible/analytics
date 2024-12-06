@@ -43,7 +43,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     for partition <- partitions do
       {:ok, _} =
         run_sql("update-table", [cluster?: cluster?, partition: partition],
-          settings: [allow_nondeterministic_mutations: 1]
+          query_options: [settings: [allow_nondeterministic_mutations: 1]]
         )
     end
 

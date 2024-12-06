@@ -8,7 +8,6 @@ defmodule Plausible.Stats.FilterSuggestions do
 
   alias Plausible.Stats.Query
   alias Plausible.Stats.Imported
-  alias Plausible.Stats.Filters
 
   def filter_suggestions(site, query, "country", filter_search) do
     matches = Location.search_country(filter_search)
@@ -180,38 +179,6 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> wrap_suggestions()
   end
 
-  def filter_suggestions(site, query, "prop_value", filter_search) do
-    filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
-
-    [_op, "event:props:" <> key | _rest] = Filters.get_toplevel_filter(query, "event:props")
-
-    none_q =
-      from(e in base_event_query(site, Query.remove_top_level_filters(query, ["event:props"])),
-        select: "(none)",
-        where: not has_key(e, :meta, ^key),
-        limit: 1
-      )
-
-    search_q =
-      from(e in base_event_query(site, query),
-        select: get_by_key(e, :meta, ^key),
-        where:
-          has_key(e, :meta, ^key) and
-            fragment(
-              "? ilike ?",
-              get_by_key(e, :meta, ^key),
-              ^filter_query
-            ),
-        group_by: get_by_key(e, :meta, ^key),
-        order_by: [desc: fragment("count(*)")],
-        limit: 25
-      )
-
-    ClickhouseRepo.all(none_q)
-    |> Kernel.++(ClickhouseRepo.all(search_q))
-    |> wrap_suggestions()
-  end
-
   def filter_suggestions(site, query, filter_name, filter_search) do
     filter_search = if filter_search == nil, do: "", else: filter_search
 
@@ -225,7 +192,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         "page" -> :pathname
         "entry_page" -> :entry_page
         "source" -> :referrer_source
-        "channel" -> :channel
+        "channel" -> :acquisition_channel
         "os" -> :operating_system
         "os_version" -> :operating_system_version
         "screen" -> :screen_size
@@ -267,6 +234,40 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> limit(25)
     |> ClickhouseRepo.all()
     |> Enum.filter(fn suggestion -> suggestion != "" end)
+    |> wrap_suggestions()
+  end
+
+  def custom_prop_value_filter_suggestions(site, query, prop_key, filter_search) do
+    filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
+
+    none_q =
+      from(
+        e in base_event_query(
+          site,
+          Query.remove_top_level_filters(query, ["event:props:#{prop_key}"])
+        ),
+        select: "(none)",
+        where: not has_key(e, :meta, ^prop_key),
+        limit: 1
+      )
+
+    search_q =
+      from(e in base_event_query(site, query),
+        select: get_by_key(e, :meta, ^prop_key),
+        where:
+          has_key(e, :meta, ^prop_key) and
+            fragment(
+              "? ilike ?",
+              get_by_key(e, :meta, ^prop_key),
+              ^filter_query
+            ),
+        group_by: get_by_key(e, :meta, ^prop_key),
+        order_by: [desc: fragment("count(*)")],
+        limit: 25
+      )
+
+    ClickhouseRepo.all(none_q)
+    |> Kernel.++(ClickhouseRepo.all(search_q))
     |> wrap_suggestions()
   end
 

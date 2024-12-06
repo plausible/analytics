@@ -12,6 +12,7 @@ defmodule Plausible.Stats.Imported.Base do
 
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
+    "visit:channel" => "imported_sources",
     "visit:referrer" => "imported_sources",
     "visit:utm_source" => "imported_sources",
     "visit:utm_medium" => "imported_sources",
@@ -116,8 +117,8 @@ defmodule Plausible.Stats.Imported.Base do
     has_required_name_filter? =
       query.filters
       |> Enum.flat_map(fn
-        [:is, "event:name", names] -> names
-        [:is, "event:goal", names] -> names
+        [:is, "event:name", names | _rest] -> names
+        [:is, "event:goal", names | _rest] -> names
         _ -> []
       end)
       |> Enum.any?(&(&1 in special_goals_for(property)))
@@ -143,7 +144,7 @@ defmodule Plausible.Stats.Imported.Base do
   defp do_decide_tables(%Query{dimensions: ["event:goal"]} = query) do
     filter_dimensions = dimensions_used_in_filters(query.filters)
 
-    filter_goals = get_filter_goals(query)
+    filter_goals = query.preloaded_goals
 
     any_event_goals? = Enum.any?(filter_goals, fn goal -> Plausible.Goal.type(goal) == :event end)
 
@@ -176,8 +177,7 @@ defmodule Plausible.Stats.Imported.Base do
       |> Enum.map(&@property_to_table_mappings[&1])
 
     filter_goal_table_candidates =
-      query
-      |> get_filter_goals()
+      query.preloaded_goals
       |> Enum.map(&Plausible.Goal.type/1)
       |> Enum.map(fn
         :event -> "imported_custom_events"
@@ -190,17 +190,6 @@ defmodule Plausible.Stats.Imported.Base do
       [candidate] -> [candidate]
       _ -> []
     end
-  end
-
-  defp get_filter_goals(query) do
-    query.filters
-    |> Enum.filter(fn [_, dimension | _rest] -> dimension == "event:goal" end)
-    |> Enum.flat_map(fn [operation, _dimension, clauses] ->
-      Enum.flat_map(clauses, fn clause ->
-        query.preloaded_goals
-        |> Plausible.Goals.Filters.filter_preloaded(operation, clause)
-      end)
-    end)
   end
 
   def special_goals_for("event:props:url"), do: Imported.goals_with_url()

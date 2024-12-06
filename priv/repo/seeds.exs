@@ -9,12 +9,13 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+import Plausible.Teams.Test
 
 words =
   for i <- 0..(:erlang.system_info(:atom_count) - 1),
       do: :erlang.binary_to_term(<<131, 75, i::24>>)
 
-user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
+user = new_user(email: "user@plausible.test", password: "plausible")
 
 native_stats_range =
   Date.range(
@@ -51,18 +52,16 @@ long_random_urls =
   end
 
 site =
-  Plausible.Factory.insert(:site,
+  new_site(
     domain: "dummy.site",
-    native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
-    stats_start_date: NaiveDateTime.new!(legacy_imported_stats_range.first, ~T[00:00:00]),
-    memberships: [
-      Plausible.Factory.build(:site_membership, user: user, role: :owner),
-      Plausible.Factory.build(:site_membership,
-        user: Plausible.Factory.build(:user, name: "Arnold Wallaby", password: "plausible"),
-        role: :viewer
-      )
-    ]
+    team: [
+      native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
+      stats_start_date: NaiveDateTime.new!(legacy_imported_stats_range.first, ~T[00:00:00])
+    ],
+    owner: user
   )
+
+add_guest(site, user: new_user(name: "Arnold Wallaby", password: "plausible"), role: :viewer)
 
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
 Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")

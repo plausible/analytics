@@ -3,6 +3,12 @@ const fs = require('fs')
 const path = require('path')
 const Handlebars = require("handlebars");
 const g = require("generatorics");
+const { canSkipCompile } = require("./dev-compile/can-skip-compile");
+
+if (process.env.NODE_ENV === 'dev' && canSkipCompile()) {
+  console.info('COMPILATION SKIPPED: No changes detected in tracker dependencies')
+  process.exit(0)
+}
 
 Handlebars.registerHelper('any', function (...args) {
   return args.slice(0, -1).some(Boolean)

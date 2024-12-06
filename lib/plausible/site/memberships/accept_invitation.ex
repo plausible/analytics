@@ -23,40 +23,36 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   require Logger
 
-  @spec transfer_ownership(Site.t(), Auth.User.t()) ::
-          {:ok, Site.Membership.t()}
-          | {:error,
-             Billing.Quota.Limits.over_limits_error()
-             | Ecto.Changeset.t()
-             | :transfer_to_self
-             | :no_plan}
-  def transfer_ownership(site, user) do
-    site = Repo.preload(site, :owner)
+  @type transfer_error() ::
+          Billing.Quota.Limits.over_limits_error()
+          | Ecto.Changeset.t()
+          | :transfer_to_self
+          | :no_plan
 
-    with :ok <- Invitations.ensure_transfer_valid(site, user, :owner),
-         :ok <- Invitations.ensure_can_take_ownership(site, user) do
-      membership = get_or_create_owner_membership(site, user)
-      multi = add_and_transfer_ownership(site, membership, user)
+  @type accept_error() ::
+          :invitation_not_found
+          | Billing.Quota.Limits.over_limits_error()
+          | Ecto.Changeset.t()
+          | :no_plan
 
-      case Repo.transaction(multi) do
-        {:ok, changes} ->
-          membership = Repo.preload(changes.membership, [:site, :user])
+  @spec bulk_transfer_ownership_direct([Site.t()], Auth.User.t()) ::
+          {:ok, [Site.Membership.t()]} | {:error, transfer_error()}
+  def bulk_transfer_ownership_direct(sites, new_owner) do
+    Repo.transaction(fn ->
+      for site <- sites do
+        case transfer_ownership(site, new_owner) do
+          {:ok, membership} ->
+            membership
 
-          {:ok, membership}
-
-        {:error, _operation, error, _changes} ->
-          {:error, error}
+          {:error, error} ->
+            Repo.rollback(error)
+        end
       end
-    end
+    end)
   end
 
   @spec accept_invitation(String.t(), Auth.User.t()) ::
-          {:ok, Site.Membership.t()}
-          | {:error,
-             :invitation_not_found
-             | Billing.Quota.Limits.over_limits_error()
-             | Ecto.Changeset.t()
-             | :no_plan}
+          {:ok, Site.Membership.t()} | {:error, accept_error()}
   def accept_invitation(invitation_id, user) do
     with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
       if invitation.role == :owner do
@@ -67,14 +63,54 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
+  defp transfer_ownership(site, new_owner) do
+    site = Repo.preload(site, :team)
+
+    with :ok <-
+           Plausible.Teams.Invitations.ensure_transfer_valid(
+             site.team,
+             new_owner,
+             :owner
+           ),
+         {:ok, new_team} = Plausible.Teams.get_or_create(new_owner),
+         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, new_team) do
+      membership = get_or_create_owner_membership(site, new_owner)
+
+      multi = add_and_transfer_ownership(site, membership, new_owner)
+
+      case Repo.transaction(multi) do
+        {:ok, changes} ->
+          Plausible.Teams.Invitations.transfer_site_sync(site, new_owner)
+
+          membership = Repo.preload(changes.membership, [:site, :user])
+
+          {:ok, membership}
+
+        {:error, _operation, error, _changes} ->
+          {:error, error}
+      end
+    end
+  end
+
   defp do_accept_ownership_transfer(invitation, user) do
     membership = get_or_create_membership(invitation, user)
-    site = Repo.preload(invitation.site, :owner)
+    site = Repo.preload(invitation.site, :team)
 
-    with :ok <- Invitations.ensure_can_take_ownership(site, user) do
+    with :ok <-
+           Plausible.Teams.Invitations.ensure_transfer_valid(
+             site.team,
+             user,
+             :owner
+           ),
+         {:ok, team} = Plausible.Teams.get_or_create(user),
+         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, team) do
       site
       |> add_and_transfer_ownership(membership, user)
       |> Multi.delete(:invitation, invitation)
+      |> Multi.run(:sync_transfer, fn _repo, _context ->
+        Plausible.Teams.Invitations.accept_transfer_sync(invitation, user)
+        {:ok, nil}
+      end)
       |> finalize_invitation(invitation)
     end
   end
@@ -84,6 +120,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
     invitation
     |> add(membership, user)
+    |> Multi.run(:sync_invitation, fn _repo, _context ->
+      Plausible.Teams.Invitations.accept_invitation_sync(invitation, user)
+      {:ok, nil}
+    end)
     |> finalize_invitation(invitation)
   end
 
@@ -182,12 +222,17 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   defp notify_invitation_accepted(%Auth.Invitation{role: :owner} = invitation) do
-    PlausibleWeb.Email.ownership_transfer_accepted(invitation)
+    PlausibleWeb.Email.ownership_transfer_accepted(
+      invitation.email,
+      invitation.inviter.email,
+      invitation.site
+    )
     |> Plausible.Mailer.send()
   end
 
   defp notify_invitation_accepted(invitation) do
-    PlausibleWeb.Email.invitation_accepted(invitation)
+    invitation.inviter.email
+    |> PlausibleWeb.Email.invitation_accepted(invitation.email, invitation.site)
     |> Plausible.Mailer.send()
   end
 end

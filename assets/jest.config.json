@@ -6,7 +6,6 @@
   "globals": {
     "BUILD_EXTRA": true
   },
-  "setupFiles": ["<rootDir>/test-utils/set-fixed-timezone.ts"],
   "setupFilesAfterEnv": [
     "<rootDir>/test-utils/extend-expect.ts",
     "<rootDir>/test-utils/reset-state.ts"

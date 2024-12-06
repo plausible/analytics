@@ -26,26 +26,15 @@ log_level =
   |> get_var_from_path_or_env("LOG_LEVEL", default_log_level)
   |> String.to_existing_atom()
 
-config :logger,
-  level: log_level,
-  backends: [:console]
-
-config :logger, Sentry.LoggerBackend,
-  capture_log_messages: true,
-  level: :error
+config :logger, level: log_level
+config :logger, :default_formatter, metadata: [:request_id]
 
 case String.downcase(log_format) do
   "standard" ->
-    config :logger, :console,
-      format: "$time $metadata[$level] $message\n",
-      metadata: [:request_id]
+    config :logger, :default_formatter, format: "$time $metadata[$level] $message\n"
 
   "json" ->
-    config :logger, :console,
-      format: {ExJsonLogger, :format},
-      metadata: [
-        :request_id
-      ]
+    config :logger, :default_formatter, format: {ExJsonLogger, :format}
 end
 
 # Listen IP supports IPv4 and IPv6 addresses.
@@ -246,14 +235,9 @@ data_dir = data_dir || persistent_cache_dir || System.get_env("DEFAULT_DATA_DIR"
 persistent_cache_dir = persistent_cache_dir || data_dir
 
 enable_email_verification =
-  config_dir
-  |> get_var_from_path_or_env("ENABLE_EMAIL_VERIFICATION", "false")
-  |> String.to_existing_atom()
+  get_bool_from_path_or_env(config_dir, "ENABLE_EMAIL_VERIFICATION", false)
 
-is_selfhost =
-  config_dir
-  |> get_var_from_path_or_env("SELFHOST", "true")
-  |> String.to_existing_atom()
+is_selfhost = get_bool_from_path_or_env(config_dir, "SELFHOST", true)
 
 # by default, only registration from invites is enabled in CE
 disable_registration_default =
@@ -279,15 +263,10 @@ custom_script_name =
   config_dir
   |> get_var_from_path_or_env("CUSTOM_SCRIPT_NAME", "script")
 
-disable_cron =
-  config_dir
-  |> get_var_from_path_or_env("DISABLE_CRON", "false")
-  |> String.to_existing_atom()
+disable_cron = get_bool_from_path_or_env(config_dir, "DISABLE_CRON", false)
 
 log_failed_login_attempts =
-  config_dir
-  |> get_var_from_path_or_env("LOG_FAILED_LOGIN_ATTEMPTS", "false")
-  |> String.to_existing_atom()
+  get_bool_from_path_or_env(config_dir, "LOG_FAILED_LOGIN_ATTEMPTS", false)
 
 websocket_url = get_var_from_path_or_env(config_dir, "WEBSOCKET_URL", "")
 
@@ -426,7 +405,7 @@ if config_env() in [:ce, :ce_dev, :ce_test] do
 end
 
 db_maybe_ipv6 =
-  if get_var_from_path_or_env(config_dir, "ECTO_IPV6") do
+  if get_bool_from_path_or_env(config_dir, "ECTO_IPV6") do
     if config_env() in [:ce, :ce_dev, :ce_test] do
       Logger.warning(
         "ECTO_IPV6 is no longer necessary as all TCP connections now try IPv6 automatically with IPv4 fallback"
@@ -527,9 +506,7 @@ config :plausible, Plausible.HelpScout,
 config :plausible, :imported,
   max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)
 
-maybe_ch_ipv6 =
-  get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
-  |> String.to_existing_atom()
+maybe_ch_ipv6 = get_bool_from_path_or_env(config_dir, "ECTO_CH_IPV6", false)
 
 if maybe_ch_ipv6 && config_env() in [:ce, :ce_dev, :ce_test] do
   Logger.warning(
@@ -572,6 +549,9 @@ config :plausible, Plausible.IngestRepo,
   pool_size: ingest_pool_size,
   settings: [
     materialized_views_ignore_errors: 1
+  ],
+  table_settings: [
+    storage_policy: get_var_from_path_or_env(config_dir, "CLICKHOUSE_DEFAULT_STORAGE_POLICY")
   ]
 
 config :plausible, Plausible.AsyncInsertRepo,
@@ -637,27 +617,22 @@ case mailer_adapter do
       password: get_var_from_path_or_env(config_dir, "SMTP_USER_PWD"),
       tls: :if_available,
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-      ssl: get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") || false,
+      ssl: get_bool_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED", false),
       retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES") || 2,
-      no_mx_lookups: get_var_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED") || true
+      no_mx_lookups: get_bool_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED", true)
 
   "Bamboo.Mua" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
 
     # prevents common problems with Erlang's TLS v1.3
     middlebox_comp_mode =
-      get_var_from_path_or_env(config_dir, "SMTP_MIDDLEBOX_COMP_MODE", "false")
+      get_bool_from_path_or_env(config_dir, "SMTP_MIDDLEBOX_COMP_MODE", false)
 
-    middlebox_comp_mode = String.to_existing_atom(middlebox_comp_mode)
     config :plausible, Plausible.Mailer, ssl: [middlebox_comp_mode: middlebox_comp_mode]
 
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
       port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 587)
-
-      ssl_enabled =
-        if ssl_enabled = get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") do
-          String.to_existing_atom(ssl_enabled)
-        end
+      ssl_enabled = get_bool_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED")
 
       protocol =
         cond do
@@ -897,10 +872,7 @@ end
 
 config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
 
-promex_disabled? =
-  config_dir
-  |> get_var_from_path_or_env("PROMEX_DISABLED", "true")
-  |> String.to_existing_atom()
+promex_disabled? = get_bool_from_path_or_env(config_dir, "PROMEX_DISABLED", true)
 
 config :plausible, Plausible.PromEx,
   disabled: promex_disabled?,
@@ -927,10 +899,7 @@ if not is_selfhost do
   config :plausible, Plausible.Site, default_ingest_threshold: site_default_ingest_threshold
 end
 
-s3_disabled? =
-  config_dir
-  |> get_var_from_path_or_env("S3_DISABLED", "true")
-  |> String.to_existing_atom()
+s3_disabled? = get_bool_from_path_or_env(config_dir, "S3_DISABLED", true)
 
 unless s3_disabled? do
   s3_env = [

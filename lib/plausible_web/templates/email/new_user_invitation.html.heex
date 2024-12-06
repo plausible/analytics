@@ -1,12 +1,10 @@
-<%= @invitation.inviter.email %> has invited you to join the <%= @invitation.site.domain %> site on <%= Plausible.product_name() %>.
-<.unstyled_link href={
+<%= @inviter.email %> has invited you to join the <%= @site.domain %> site on <%= Plausible.product_name() %>.
+<a href={
   Routes.auth_url(
     PlausibleWeb.Endpoint,
     :register_from_invitation_form,
-    @invitation.invitation_id
+    @invitation_id
   )
-}>
-  Click here
-</.unstyled_link>
-to create your account. The link is valid for 48 hours after this email is sent. <br /><br />
+}>Click here</a> to create your account. The link is valid for 48 hours after this email is sent.
+<br /><br />
 Plausible is a lightweight and open-source website analytics tool. We hope you like our simple and ethical approach to tracking website visitors.

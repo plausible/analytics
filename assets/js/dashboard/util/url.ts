@@ -151,3 +151,7 @@ export function parseSearch(searchString: string): Record<string, unknown> {
   urlSearchParams.forEach((v, k) => (searchRecord[k] = parseSearchFragment(v)))
   return searchRecord
 }
+
+export function maybeEncodeRouteParam(param: string) {
+  return param.includes('/') ? encodeURIComponent(param) : param
+}

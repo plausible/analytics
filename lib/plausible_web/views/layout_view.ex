@@ -71,7 +71,7 @@ defmodule PlausibleWeb.LayoutView do
         ]
       },
       %{key: "Email Reports", value: "email-reports", icon: :envelope},
-      if conn.assigns[:current_user_role] == :owner do
+      if conn.assigns[:site_role] == :owner do
         %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]
@@ -107,7 +107,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def grace_period_end(%{grace_period: %{end_date: %Date{} = date}}) do
-    case Timex.diff(date, Date.utc_today(), :days) do
+    case Date.diff(date, Date.utc_today()) do
       0 -> "today"
       1 -> "tomorrow"
       n -> "within #{n} days"

@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   # :not_mounted_at_router ensures we have already done auth checks in the controller
   # if this liveview becomes available from the router, please make sure
-  # to check that current_user_role is allowed to manage site exports
+  # to check that site_role is allowed to manage site exports
   @impl true
   def mount(:not_mounted_at_router, session, socket) do
     %{

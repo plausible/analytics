@@ -86,6 +86,6 @@ defmodule Plausible.Auth.EmailVerification do
   @spec expired?(EmailActivationCode.t()) :: boolean()
   def expired?(verification) do
     expiration_time = NaiveDateTime.shift(NaiveDateTime.utc_now(), hour: -1 * @expiration_hours)
-    Timex.before?(verification.issued_at, expiration_time)
+    NaiveDateTime.before?(verification.issued_at, expiration_time)
   end
 end

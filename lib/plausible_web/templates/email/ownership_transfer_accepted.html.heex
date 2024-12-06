@@ -1,8 +1,3 @@
-<%= @invitation.email %> has accepted the ownership transfer of <%= @invitation.site.domain %>. They will be responsible for billing of it going
+<%= @new_owner_email %> has accepted the ownership transfer of <%= @site.domain %>. They will be responsible for billing of it going
 forward and your role has been changed to <b>admin</b>.
-<.unstyled_link href={
-  Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @invitation.site.domain)
-}>
-  Click here
-</.unstyled_link>
-to view site settings.
+<a href={Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @site.domain)}>Click here</a> to view site settings.

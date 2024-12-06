@@ -18,8 +18,6 @@ defmodule Plausible.DataMigration.NumericIDs do
     end
   end
 
-  @table_settings "SETTINGS index_granularity = 8192"
-
   def run(opts \\ []) do
     interactive? = Keyword.get(opts, :interactive?, true)
 
@@ -34,7 +32,7 @@ defmodule Plausible.DataMigration.NumericIDs do
 
     table_settings =
       Keyword.get(opts, :table_settings) || System.get_env("NUMERIC_IDS_TABLE_SETTINGS") ||
-        @table_settings
+        Plausible.MigrationUtils.table_settings_expr()
 
     start_from =
       Keyword.get(opts, :start_from) || System.get_env("NUMERIC_IDS_PARTITION_START_FROM")
@@ -70,9 +68,9 @@ defmodule Plausible.DataMigration.NumericIDs do
 
     run_sql_fn =
       if interactive? do
-        &run_sql_confirm/2
+        &run_sql_confirm/3
       else
-        &run_sql/2
+        &run_sql/3
       end
 
     confirm_fn =
@@ -101,24 +99,25 @@ defmodule Plausible.DataMigration.NumericIDs do
     end
 
     {:ok, _} =
-      run_sql_fn.("drop-events-v2", [cluster?: cluster?] ++ drop_v2_extra_opts.("events_v2"))
+      run_sql_fn.("drop-events-v2", [cluster?: cluster?], drop_v2_extra_opts.("events_v2"))
 
     {:ok, _} =
-      run_sql_fn.("drop-sessions-v2", [cluster?: cluster?] ++ drop_v2_extra_opts.("sessions_v2"))
+      run_sql_fn.("drop-sessions-v2", [cluster?: cluster?], drop_v2_extra_opts.("sessions_v2"))
 
-    {:ok, _} = run_sql_fn.("drop-tmp-events-v2", [])
-    {:ok, _} = run_sql_fn.("drop-tmp-sessions-v2", [])
-    {:ok, _} = run_sql_fn.("drop-domains-lookup", [])
-
-    {:ok, _} = run_sql_fn.("create-events-v2", table_settings: table_settings, cluster?: cluster?)
+    {:ok, _} = run_sql_fn.("drop-tmp-events-v2", [], [])
+    {:ok, _} = run_sql_fn.("drop-tmp-sessions-v2", [], [])
+    {:ok, _} = run_sql_fn.("drop-domains-lookup", [], [])
 
     {:ok, _} =
-      run_sql_fn.("create-sessions-v2", table_settings: table_settings, cluster?: cluster?)
+      run_sql_fn.("create-events-v2", [table_settings: table_settings, cluster?: cluster?], [])
 
-    {:ok, _} = run_sql_fn.("create-tmp-events-v2", table_settings: table_settings)
-    {:ok, _} = run_sql_fn.("create-tmp-sessions-v2", table_settings: table_settings)
+    {:ok, _} =
+      run_sql_fn.("create-sessions-v2", [table_settings: table_settings, cluster?: cluster?], [])
 
-    case run_sql_fn.("create-domains-lookup", table_settings: table_settings) do
+    {:ok, _} = run_sql_fn.("create-tmp-events-v2", [table_settings: table_settings], [])
+    {:ok, _} = run_sql_fn.("create-tmp-sessions-v2", [table_settings: table_settings], [])
+
+    case run_sql_fn.("create-domains-lookup", [table_settings: table_settings], []) do
       {:ok, _} ->
         confirm_fn.("Populate domains-lookup with postgres sites", fn ->
           mappings =

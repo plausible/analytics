@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   import Plug.Conn
   import Phoenix.Controller, only: [get_format: 1]
 
-  @all_roles [:public, :viewer, :admin, :super_admin, :owner]
+  @all_roles [:public, :viewer, :admin, :editor, :super_admin, :owner]
 
   def init([]), do: {@all_roles, nil}
 
@@ -107,9 +107,21 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
         Sentry.Context.set_extra_context(%{site_id: site.id, domain: site.domain})
         Plausible.OpenTelemetry.add_site_attributes(site)
 
-        site = Plausible.Imported.load_import_data(site)
+        site =
+          site
+          |> Plausible.Imported.load_import_data()
+          |> Repo.preload(
+            team: [subscription: Plausible.Teams.last_subscription_query()],
+            owner: [subscription: Plausible.Users.last_subscription_query()]
+          )
 
-        merge_assigns(conn, site: site, current_user_role: role)
+        conn = merge_assigns(conn, site: site, site_role: role)
+
+        if not is_nil(current_user) and role not in [:public, nil] do
+          assign(conn, :site_team, site.team)
+        else
+          conn
+        end
       else
         error_not_found(conn)
       end
@@ -135,29 +147,18 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   end
 
   defp get_site_with_role(conn, current_user, domain) do
-    site_query =
-      from(
-        s in Plausible.Site,
-        where: s.domain == ^domain,
-        select: %{site: s}
-      )
+    site = Repo.get_by(Plausible.Site, domain: domain)
 
-    full_query =
-      if current_user do
-        from(s in site_query,
-          left_join: sm in Plausible.Site.Membership,
-          on: sm.site_id == s.id and sm.user_id == ^current_user.id,
-          select_merge: %{role: sm.role}
-        )
-      else
-        from(s in site_query,
-          select_merge: %{role: nil}
-        )
-      end
+    if site do
+      site_role =
+        case Plausible.Teams.Memberships.site_role(site, current_user) do
+          {:ok, role} -> role
+          _ -> nil
+        end
 
-    case Repo.one(full_query) do
-      %{site: _site} = result -> {:ok, result}
-      _ -> error_not_found(conn)
+      {:ok, %{site: site, role: site_role}}
+    else
+      error_not_found(conn)
     end
   end
 

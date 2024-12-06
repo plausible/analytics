@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.BillingControllerTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
   import Plausible.Test.Support.HTML
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
@@ -12,7 +13,8 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     test "redirects to enterprise upgrade page if user has an enterprise plan configured",
          %{conn: conn, user: user} do
-      insert(:enterprise_plan, user: user, paddle_plan_id: "123")
+      subscribe_to_enterprise_plan(user, paddle_plan_id: "123")
+
       conn = get(conn, Routes.billing_path(conn, :choose_plan))
       assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
@@ -22,17 +24,13 @@ defmodule PlausibleWeb.BillingControllerTest do
     setup [:create_user, :log_in]
 
     test "errors if usage exceeds team member limit on the new plan", %{conn: conn, user: user} do
-      insert(:subscription, user: user, paddle_plan_id: "123123")
+      subscribe_to_plan(user, "123123")
 
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
+      site = new_site(owner: user)
+
+      for _ <- 1..4 do
+        add_guest(site, role: :viewer)
+      end
 
       conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
@@ -44,15 +42,16 @@ defmodule PlausibleWeb.BillingControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, user: user, paddle_plan_id: "123123")
+      subscribe_to_plan(user, "123123")
+      team = team_of(user)
 
-      for _ <- 1..11, do: insert(:site, members: [user])
+      for _ <- 1..11, do: new_site(owner: user)
 
       Plausible.Users.allow_next_upgrade_override(user)
 
       conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
-      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "are exceeded: site limit"
       assert subscription.paddle_plan_id == "123123"
@@ -62,8 +61,9 @@ defmodule PlausibleWeb.BillingControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, user: user, paddle_plan_id: "123123")
-      site = insert(:site, members: [user])
+      subscribe_to_plan(user, "123123")
+      team = team_of(user)
+      site = new_site(owner: user)
       now = NaiveDateTime.utc_now()
 
       generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       conn1 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
-      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
 
       assert Phoenix.Flash.get(conn1.assigns.flash, :error) =~
                "are exceeded: monthly pageview limit"
@@ -89,11 +89,12 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
 
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
-      insert(:subscription, user: user)
+      subscribe_to_plan(user, "321321")
+      team = team_of(user)
 
       post(conn, Routes.billing_path(conn, :change_plan, "123123"))
 
-      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, team_id: team.id)
       assert subscription.paddle_plan_id == "123123"
       assert subscription.next_bill_date == ~D[2019-07-10]
       assert subscription.next_bill_amount == "6.00"
@@ -145,6 +146,8 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     test "data-product attribute on the checkout link is the paddle_plan_id of the enterprise plan",
          %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+
       doc =
         conn
         |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
@@ -153,7 +156,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => user.id,
+               "passthrough" => "user:#{user.id};team:#{team.id}",
                "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -214,7 +217,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     setup [:create_user, :log_in]
 
     test "renders preview information about the plan change", %{conn: conn, user: user} do
-      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan)
+      subscribe_to_plan(user, @v4_growth_plan)
 
       html_response =
         conn
@@ -316,6 +319,8 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     test "renders paddle button with the correct checkout params",
          %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+
       doc =
         conn
         |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
@@ -324,7 +329,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => user.id,
+               "passthrough" => "user:#{user.id};team:#{team.id}",
                "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -333,29 +338,30 @@ defmodule PlausibleWeb.BillingControllerTest do
   end
 
   defp configure_enterprise_plan(%{user: user}) do
-    insert(:enterprise_plan,
-      user_id: user.id,
+    subscribe_to_enterprise_plan(user,
       paddle_plan_id: "123",
       billing_interval: :yearly,
       monthly_pageview_limit: 50_000_000,
       site_limit: 20_000,
       hourly_api_request_limit: 5000,
-      inserted_at: Timex.now() |> Timex.shift(hours: 1)
+      inserted_at: NaiveDateTime.utc_now() |> NaiveDateTime.shift(hour: 1),
+      subscription?: false
     )
 
     :ok
   end
 
   defp subscribe_enterprise(%{user: user}, opts \\ []) do
+    {paddle_plan_id, opts} = Keyword.pop(opts, :paddle_plan_id, "321")
+
     opts =
       opts
       |> Keyword.put(:user, user)
-      |> Keyword.put_new(:paddle_plan_id, "321")
       |> Keyword.put_new(:status, Subscription.Status.active())
 
-    insert(:subscription, opts)
+    user = subscribe_to_plan(user, paddle_plan_id, opts)
 
-    {:ok, user: Plausible.Users.with_subscription(user)}
+    {:ok, user: user}
   end
 
   defp get_paddle_checkout_params(element) do

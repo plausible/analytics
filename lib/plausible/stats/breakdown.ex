@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer}
+  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer, Comparisons}
 
   def breakdown(
         site,
@@ -31,7 +31,6 @@ defmodule Plausible.Stats.Breakdown do
         dimensions: transform_dimensions(dimension),
         filters: query.filters ++ dimension_filters(dimension),
         pagination: %{limit: limit, offset: (page - 1) * limit},
-        v2: true,
         # Allow pageview and event metrics to be queried off of sessions table
         legacy_breakdown: true,
         remove_unavailable_revenue_metrics: true
@@ -42,16 +41,51 @@ defmodule Plausible.Stats.Breakdown do
     |> build_breakdown_result(query_with_metrics, metrics)
   end
 
+  def formatted_date_ranges(query) do
+    formatted = %{
+      date_range_label: format_date_range(query)
+    }
+
+    if query.include.comparisons do
+      comparison_date_range_label =
+        query
+        |> Comparisons.get_comparison_query(query.include.comparisons)
+        |> format_date_range()
+
+      Map.put(
+        formatted,
+        :comparison_date_range_label,
+        comparison_date_range_label
+      )
+    else
+      formatted
+    end
+  end
+
   defp build_breakdown_result(query_result, query, metrics) do
+    dimension_keys = query.dimensions |> Enum.map(&result_key/1)
+
     query_result.results
-    |> Enum.map(fn %{dimensions: dimensions, metrics: entry_metrics} ->
-      dimension_map =
-        query.dimensions |> Enum.map(&result_key/1) |> Enum.zip(dimensions) |> Enum.into(%{})
+    |> Enum.map(fn entry ->
+      comparison_map =
+        if entry[:comparison] do
+          comparison =
+            build_map(metrics, entry.comparison.metrics)
+            |> Map.put(:change, build_map(metrics, entry.comparison.change))
 
-      metrics_map = Enum.zip(metrics, entry_metrics) |> Enum.into(%{})
+          %{comparison: comparison}
+        else
+          %{}
+        end
 
-      Map.merge(dimension_map, metrics_map)
+      build_map(dimension_keys, entry.dimensions)
+      |> Map.merge(build_map(metrics, entry.metrics))
+      |> Map.merge(comparison_map)
     end)
+  end
+
+  defp build_map(keys, values) do
+    Enum.zip(keys, values) |> Map.new()
   end
 
   defp result_key("event:props:" <> custom_property), do: custom_property
@@ -121,4 +155,28 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp dimension_filters(_), do: []
+
+  defp format_date_range(%Query{} = query) do
+    year = query.now.year
+    %Date.Range{first: first, last: last} = Query.date_range(query, trim_trailing: true)
+
+    cond do
+      first == last ->
+        strfdate(first, first.year != year)
+
+      first.year == last.year ->
+        "#{strfdate(first, false)} - #{strfdate(last, year != last.year)}"
+
+      true ->
+        "#{strfdate(first, true)} - #{strfdate(last, true)}"
+    end
+  end
+
+  defp strfdate(date, true = _include_year) do
+    Calendar.strftime(date, "%-d %b %Y")
+  end
+
+  defp strfdate(date, false = _include_year) do
+    Calendar.strftime(date, "%-d %b")
+  end
 end

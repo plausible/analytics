@@ -8,6 +8,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   alias Plausible.Imported
   alias Plausible.Repo
 
+  @recoverable_errors [:rate_limit_exceeded, :socket_failed, :server_failed]
   @missing_values ["(none)", "(not set)", "(not provided)", "(other)"]
 
   @impl true
@@ -86,16 +87,18 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
     end
 
     resume_opts = Keyword.take(opts, [:dataset, :offset])
+    fetch_opts = Keyword.get(opts, :fetch_opts, [])
 
     try do
       result =
         Plausible.Google.GA4.API.import_analytics(date_range, property, auth,
           persist_fn: persist_fn,
+          fetch_opts: fetch_opts,
           resume_opts: resume_opts
         )
 
       case result do
-        {:error, {:rate_limit_exceeded, details}} ->
+        {:error, {error, details}} when error in @recoverable_errors ->
           site_import = Repo.preload(site_import, [:site, :imported_by])
           dataset = Keyword.fetch!(details, :dataset)
           offset = Keyword.fetch!(details, :offset)
@@ -121,7 +124,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
             resume_import_opts
           )
 
-          {:error, :rate_limit_exceeded, skip_purge?: true, skip_mark_failed?: true}
+          {:error, error, skip_purge?: true, skip_mark_failed?: true}
 
         other ->
           other
@@ -171,7 +174,9 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       site_id: site_id,
       import_id: import_id,
       date: get_date(row),
-      source: row.dimensions |> Map.fetch!("sessionSource") |> parse_referrer(),
+      source: row.dimensions |> Map.fetch!("sessionSource") |> parse_source(),
+      # GA4 channels map 1-1 to Plausible channels
+      channel: row.dimensions |> Map.fetch!("sessionDefaultChannelGroup"),
       referrer: nil,
       # Only `source` exists in GA4 API
       utm_source: nil,
@@ -340,14 +345,13 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   defp default_if_missing(value, default) when value in @missing_values, do: default
   defp default_if_missing(value, _default), do: value
 
-  defp parse_referrer(nil), do: nil
-  defp parse_referrer("(direct)"), do: nil
-  defp parse_referrer("google"), do: "Google"
-  defp parse_referrer("bing"), do: "Bing"
-  defp parse_referrer("duckduckgo"), do: "DuckDuckGo"
+  defp parse_source(nil), do: nil
+  defp parse_source("(direct)"), do: nil
+  defp parse_source("google"), do: "Google"
+  defp parse_source("bing"), do: "Bing"
+  defp parse_source("duckduckgo"), do: "DuckDuckGo"
 
-  defp parse_referrer(ref) do
-    RefInspector.parse("https://" <> ref)
-    |> PlausibleWeb.RefInspector.parse()
+  defp parse_source(ref) do
+    Plausible.Ingestion.Source.parse("https://" <> ref)
   end
 end

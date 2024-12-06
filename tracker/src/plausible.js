@@ -48,6 +48,49 @@
   // flag prevents sending multiple pageleaves in those cases.
   var pageLeaveSending = false
 
+  function getDocumentHeight() {
+    return Math.max(
+      document.body.scrollHeight || 0,
+      document.body.offsetHeight || 0,
+      document.body.clientHeight || 0,
+      document.documentElement.scrollHeight || 0,
+      document.documentElement.offsetHeight || 0,
+      document.documentElement.clientHeight || 0
+    )
+  }
+
+  function getCurrentScrollDepthPx() {
+    var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
+    var scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+
+    return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
+  }
+
+  var currentDocumentHeight = getDocumentHeight()
+  var maxScrollDepthPx = getCurrentScrollDepthPx()
+
+  window.addEventListener('load', function () {
+    currentDocumentHeight = getDocumentHeight()
+
+    // Update the document height again after every 200ms during the
+    // next 3 seconds. This makes sure dynamically loaded content is
+    // also accounted for.
+    var count = 0
+    var interval = setInterval(function () {
+      currentDocumentHeight = getDocumentHeight()
+      if (++count === 15) {clearInterval(interval)}
+    }, 200)
+  })
+
+  document.addEventListener('scroll', function() {
+    currentDocumentHeight = getDocumentHeight()
+    var currentScrollDepthPx = getCurrentScrollDepthPx()
+
+    if (currentScrollDepthPx > maxScrollDepthPx) {
+      maxScrollDepthPx = currentScrollDepthPx
+    }
+  })
+
   function triggerPageLeave() {
     if (pageLeaveSending) {return}
     pageLeaveSending = true
@@ -55,6 +98,7 @@
 
     var payload = {
       n: 'pageleave',
+      sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
       d: dataDomain,
       u: currentPageLeaveURL,
     }
@@ -202,6 +246,8 @@
       if (isSPANavigation && listeningPageLeave) {
         triggerPageLeave();
         currentPageLeaveURL = location.href;
+        currentDocumentHeight = getDocumentHeight()
+        maxScrollDepthPx = getCurrentScrollDepthPx()
       }
       {{/if}}
 

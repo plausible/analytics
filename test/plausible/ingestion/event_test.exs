@@ -1,5 +1,6 @@
 defmodule Plausible.Ingestion.EventTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
 
   import Phoenix.ConnTest
 
@@ -7,7 +8,7 @@ defmodule Plausible.Ingestion.EventTest do
   alias Plausible.Ingestion.Event
 
   test "processes a request into an event" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -27,7 +28,7 @@ defmodule Plausible.Ingestion.EventTest do
 
   for {user_agent, idx} <- Enum.with_index(@regressive_user_agents) do
     test "processes user agents known to cause problems parsing in the past (case #{idx})" do
-      site = insert(:site)
+      site = new_site()
 
       payload = %{
         name: "pageview",
@@ -45,7 +46,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "drops verification agent" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -76,7 +77,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "drops a request when referrer is spam" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -93,7 +94,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "drops a request when referrer is spam for multiple domains" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -110,7 +111,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "selectively drops an event for multiple domains" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -126,7 +127,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "selectively drops an event when rate-limited" do
-    site = insert(:site, ingest_rate_limit_threshold: 1)
+    site = new_site(ingest_rate_limit_threshold: 1)
 
     payload = %{
       name: "pageview",
@@ -143,7 +144,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "drops a request when header x-plausible-ip-type is dc_ip" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -160,7 +161,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "drops a request when ip is on blocklist" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -180,7 +181,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "drops a request when country is on blocklist" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -201,7 +202,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "drops a request when page is on blocklist" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -220,7 +221,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "drops a request when hostname allowlist is defined and hostname is not on the list" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -239,7 +240,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "passes a request when hostname allowlist is defined and hostname is on the list" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageview",
@@ -259,11 +260,8 @@ defmodule Plausible.Ingestion.EventTest do
   test "drops events for site with accept_trafic_until in the past" do
     yesterday = Date.add(Date.utc_today(), -1)
 
-    site =
-      insert(:site,
-        ingest_rate_limit_threshold: 1,
-        members: [build(:user, accept_traffic_until: yesterday)]
-      )
+    owner = new_user(team: [accept_traffic_until: yesterday])
+    site = new_site(ingest_rate_limit_threshold: 1, owner: owner)
 
     payload = %{
       name: "pageview",
@@ -280,7 +278,7 @@ defmodule Plausible.Ingestion.EventTest do
 
   @tag :slow
   test "drops events on session lock timeout" do
-    site = insert(:site)
+    site = new_site()
 
     very_slow_buffer = fn sessions ->
       Process.sleep(1000)
@@ -312,14 +310,14 @@ defmodule Plausible.Ingestion.EventTest do
                )
     end)
 
-    Process.sleep(100)
+    Process.sleep(200)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(second_request)
     assert dropped.drop_reason == :lock_timeout
   end
 
   test "drops pageleave event when no session found from cache" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "pageleave",
@@ -336,7 +334,7 @@ defmodule Plausible.Ingestion.EventTest do
 
   @tag :ee_only
   test "saves revenue amount" do
-    site = insert(:site)
+    site = new_site()
     _goal = insert(:goal, event_name: "checkout", currency: "USD", site: site)
 
     payload = %{
@@ -353,7 +351,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "does not save revenue amount when there is no revenue goal" do
-    site = insert(:site)
+    site = new_site()
 
     payload = %{
       name: "checkout",
@@ -369,7 +367,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "IPv4 hostname is stored without public suffix processing" do
-    _site = insert(:site, domain: "192.168.0.1")
+    _site = new_site(domain: "192.168.0.1")
 
     payload = %{
       name: "checkout",
@@ -384,7 +382,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "Hostname is stored with public suffix processing" do
-    _site = insert(:site, domain: "foo.netlify.app")
+    _site = new_site(domain: "foo.netlify.app")
 
     payload = %{
       name: "checkout",
@@ -399,7 +397,7 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "hostname is (none) when no hostname can be derived from the url" do
-    site = insert(:site, domain: "foo.example.com")
+    site = new_site(domain: "foo.example.com")
 
     payload = %{
       domain: site.domain,
