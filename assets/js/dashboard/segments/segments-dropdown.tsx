@@ -6,7 +6,7 @@ import {
   DropdownMenuWrapper,
   DropdownNavigationLink,
   DropdownSubtitle,
-  ToggleDropdownButton
+  SplitButton,
 } from '../components/dropdown'
 import { useQueryContext } from '../query-context'
 import { useSiteContext } from '../site-context'
@@ -33,10 +33,10 @@ import {
   TrashIcon,
   XMarkIcon,
   ChevronRightIcon,
-  ChevronDownIcon
 } from '@heroicons/react/24/outline'
 import { useOnClickOutside } from '../util/use-on-click-outside'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
+import { primaryNeutralButtonClass } from './segment-modals'
 
 export const useSegmentsListQuery = () => {
   const site = useSiteContext()
@@ -340,32 +340,24 @@ export const EditSegmentMenu = () => {
     return null
   }
   return (
-    <ToggleDropdownButton
+    <SplitButton
       ref={dropdownRef}
-      variant="ghost"
-      padded={false}
       className="ml-auto md:relative shrink-0"
       dropdownContainerProps={{
         ['aria-controls']: 'edit-segment-menu',
         ['aria-expanded']: opened
       }}
       onClick={() => setOpened((v) => !v)}
-      currentOption={
-        <div className="flex items-center">
-          <button
-            className="h-full w-full p-2"
-            onClick={(e) => {
-              e.stopPropagation()
-              setExpandedSegmentState({ expandedSegment, modal: 'update' })
-            }}
-          >
-            Update segment
-          </button>
-          <div className="bg-current w-[1px] self-stretch"></div>
-          <button className="h-full p-2">
-            <ChevronDownIcon className="block w-4 h-4" />
-          </button>
-        </div>
+      leftOption={
+        <button
+          className={classNames(primaryNeutralButtonClass, '!px-2 !py-2', 'rounded-r-none')}
+          onClick={(e) => {
+            e.stopPropagation()
+            setExpandedSegmentState({ expandedSegment, modal: 'update' })
+          }}
+        >
+          Update segment
+        </button>
       }
     >
       {opened && (
@@ -453,6 +445,6 @@ export const EditSegmentMenu = () => {
           />
         </DropdownMenuWrapper>
       )}
-    </ToggleDropdownButton>
+    </SplitButton>
   )
 }

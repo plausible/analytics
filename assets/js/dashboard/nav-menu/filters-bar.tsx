@@ -239,7 +239,7 @@ export const FiltersBar = () => {
   )
 }
 
-const chillButtonClass =
+export const chillButtonClass =
   '!flex !self-start !text-sm !px-3 !py-2 whitespace-nowrap'
 
 const SaveSelectionAsSegment = ({ closeMenu }: { closeMenu: () => void }) => {
