@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom'
 import {
   isModifierPressed,
   isTyping,
-  Keybind,
   useKeybind
 } from '../../keybinding'
 import { rootRoute } from '../../router'

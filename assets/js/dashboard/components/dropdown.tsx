@@ -36,6 +36,7 @@ export const ToggleDropdownButton = forwardRef<
   HTMLDivElement,
   {
     variant?: 'ghost' | 'button'
+    padded?: boolean
     withDropdownIndicator?: boolean
     className?: string
     currentOption: ReactNode
@@ -59,9 +60,9 @@ export const ToggleDropdownButton = forwardRef<
     },
     ref
   ) => {
-    const { variant } = { variant: 'button', ...props }
+    const { variant, padded } = { variant: 'button', padded: true, ...props }
     const sharedButtonClass =
-      'flex items-center rounded text-sm leading-tight px-2 py-2 h-9'
+      'flex items-center rounded text-sm leading-tight h-9'
 
     const buttonClass = {
       ghost:
@@ -74,7 +75,11 @@ export const ToggleDropdownButton = forwardRef<
       <div className={className} ref={ref}>
         <button
           onClick={onClick}
-          className={classNames(sharedButtonClass, buttonClass)}
+          className={classNames(
+            sharedButtonClass,
+            buttonClass,
+            padded && 'p-2'
+          )}
           tabIndex={0}
           aria-haspopup="true"
           {...dropdownContainerProps}

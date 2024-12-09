@@ -32,7 +32,8 @@ import {
   Square2StackIcon,
   TrashIcon,
   XMarkIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline'
 import { useOnClickOutside } from '../util/use-on-click-outside'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
@@ -342,6 +343,7 @@ export const EditSegmentMenu = () => {
     <ToggleDropdownButton
       ref={dropdownRef}
       variant="ghost"
+      padded={false}
       className="ml-auto md:relative shrink-0"
       dropdownContainerProps={{
         ['aria-controls']: 'edit-segment-menu',
@@ -349,8 +351,20 @@ export const EditSegmentMenu = () => {
       }}
       onClick={() => setOpened((v) => !v)}
       currentOption={
-        <div>
-          <EditSegmentIcon className="w-4 h-4 block fill-current" />
+        <div className="flex items-center">
+          <button
+            className="h-full w-full p-2"
+            onClick={(e) => {
+              e.stopPropagation()
+              setExpandedSegmentState({ expandedSegment, modal: 'update' })
+            }}
+          >
+            Update segment
+          </button>
+          <div className="bg-current w-[1px] self-stretch"></div>
+          <button className="h-full p-2">
+            <ChevronDownIcon className="block w-4 h-4" />
+          </button>
         </div>
       }
     >
