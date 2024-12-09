@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
@@ -324,12 +325,10 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       site: site,
       user: user
     } do
-      user =
-        user
-        |> Plausible.Auth.User.end_trial()
-        |> Plausible.Repo.update!()
-
-      Plausible.Teams.sync_team(user)
+      user
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
+      |> Plausible.Repo.update!()
 
       populate_stats(site, [
         build(:event,

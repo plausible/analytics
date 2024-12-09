@@ -50,7 +50,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: 1)}
 
       user =
-        new_user(grace_period: grace_period, team: [grace_period: grace_period])
+        new_user(team: [grace_period: grace_period])
         |> subscribe_to_growth_plan()
 
       site = new_site(owner: user)
@@ -79,7 +79,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "locks all sites if user has active subscription but grace period has ended" do
       grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
-      user = new_user(grace_period: grace_period, team: [grace_period: grace_period])
+      user = new_user(team: [grace_period: grace_period])
       subscribe_to_plan(user, "123")
       site = new_site(owner: user)
       team = team_of(user)
@@ -91,7 +91,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "sends email if grace period has ended" do
       grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
-      user = new_user(grace_period: grace_period, team: [grace_period: grace_period])
+      user = new_user(team: [grace_period: grace_period])
       subscribe_to_plan(user, "123")
       new_site(owner: user)
       team = team_of(user)
@@ -110,7 +110,7 @@ defmodule Plausible.Billing.SiteLockerTest do
         is_over: false
       }
 
-      user = new_user(grace_period: grace_period, team: [grace_period: grace_period])
+      user = new_user(team: [grace_period: grace_period])
 
       subscribe_to_plan(user, "123")
       new_site(owner: user)
@@ -140,16 +140,9 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "locks sites for user with empty trial - shouldn't happen under normal circumstances" do
-      user = insert(:user, trial_expiry_date: nil)
-
-      site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, user: user, role: :owner)
-          ]
-        )
-
-      team = team_of(user)
+      user = new_user()
+      site = new_site(owner: user)
+      team = user |> team_of() |> Ecto.Changeset.change(trial_expiry_date: nil) |> Repo.update!()
 
       assert SiteLocker.update_sites_for(team) == {:locked, :no_trial}
 

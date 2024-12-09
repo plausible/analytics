@@ -336,7 +336,7 @@ defmodule PlausibleWeb.Email do
     )
     |> render("site_member_removed.html",
       user: guest_membership.team_membership.user,
-      membership: guest_membership
+      guest_membership: guest_membership
     )
   end
 

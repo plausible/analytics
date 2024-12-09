@@ -5,7 +5,7 @@ defmodule Plausible.Billing.EnterprisePlan do
   @type t() :: %__MODULE__{}
 
   @required_fields [
-    :user_id,
+    :team_id,
     :paddle_plan_id,
     :billing_interval,
     :monthly_pageview_limit,
@@ -13,10 +13,6 @@ defmodule Plausible.Billing.EnterprisePlan do
     :site_limit,
     :features,
     :team_member_limit
-  ]
-
-  @optional_fields [
-    :team_id
   ]
 
   schema "enterprise_plans" do
@@ -36,7 +32,7 @@ defmodule Plausible.Billing.EnterprisePlan do
 
   def changeset(model, attrs \\ %{}) do
     model
-    |> cast(attrs, @required_fields ++ @optional_fields)
+    |> cast(attrs, @required_fields)
     |> validate_required(@required_fields)
     |> unique_constraint(:user_id)
   end
