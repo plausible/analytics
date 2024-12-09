@@ -1,12 +1,6 @@
 /** @format */
 
-import React, {
-  createRef,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState
-} from 'react'
+import React, { ReactNode, useCallback, useEffect, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
   formatSegmentIdAsLabelKey,
@@ -150,7 +144,9 @@ export const DeleteSegmentModal = ({
       </FormTitle>
       {segment?.segment_data && (
         <>
-          <h2 className="mt-4 font-medium">Filters in segment</h2>
+          <h2 className="mt-4 font-medium dark:text-gray-100">
+            Filters in segment
+          </h2>
           <FilterPillsList
             className="flex-wrap mt-4"
             direction="horizontal"
@@ -335,7 +331,7 @@ const SegmentRow = ({
   const { prefetchSegment, data, fetchSegment } = useSegmentPrefetch({
     id
   })
-  const { setExpandedSegmentState } = useSegmentExpandedContext()
+  const _s = useSegmentExpandedContext()
   useEffect(() => {
     if (segmentDataVisible) {
       fetchSegment()
@@ -399,7 +395,6 @@ const SegmentRow = ({
                 className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
                 onClick={async () => {
                   const d = data ?? (await fetchSegment())
-                  setExpandedSegmentState({ expandedSegment: d, modal: null })
 
                   navigate({
                     path: rootRoute.path,
@@ -407,7 +402,8 @@ const SegmentRow = ({
                       ...s,
                       filters: d.segment_data.filters,
                       labels: d.segment_data.labels
-                    })
+                    }),
+                    state: { expandedSegment: d, modal: null }
                   })
                 }}
               >

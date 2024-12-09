@@ -20,8 +20,8 @@ import {
 import { isSegmentFilter } from '../segments/segments'
 
 const LEFT_ACTIONS_GAP_PX = 8
-const SEE_MORE_GAP_PX = 12
-const SEE_MORE_WIDTH_PX = 36
+const SEE_MORE_GAP_PX = 0
+const SEE_MORE_WIDTH_PX = 40
 
 export const handleVisibility = ({
   setVisibility,
@@ -63,17 +63,17 @@ export const handleVisibility = ({
   const fits = fitToWidth(leftoverWidth - actionsWidth)
 
   // Check if possible to fit one more if "See more" is removed
-  if (seeMorePresent && fits.visibleCount === pillWidths.length - 1) {
-    const maybeFitsMore = fitToWidth(
-      leftoverWidth - actionsWidth + seeMoreWidth
-    )
-    if (maybeFitsMore.visibleCount === pillWidths.length) {
-      return setVisibility({
-        width: maybeFitsMore.lastValidWidth,
-        visibleCount: maybeFitsMore.visibleCount
-      })
-    }
-  }
+  // if (seeMorePresent && fits.visibleCount === pillWidths.length - 1) {
+  //   const maybeFitsMore = fitToWidth(
+  //     leftoverWidth - actionsWidth + seeMoreWidth
+  //   )
+  //   if (maybeFitsMore.visibleCount === pillWidths.length) {
+  //     return setVisibility({
+  //       width: maybeFitsMore.lastValidWidth,
+  //       visibleCount: maybeFitsMore.visibleCount
+  //     })
+  //   }
+  // }
 
   // Check if the appearance of "See more" would cause overflow
   if (!seeMorePresent && fits.visibleCount < pillWidths.length) {
@@ -131,7 +131,7 @@ export const FiltersBar = () => {
     const datepicker = topBar?.children[1] as HTMLElement | undefined
     const sitepicker = topLeftActions?.children[0] as HTMLElement | undefined
     const filterButton = topLeftActions?.children[2] as HTMLElement | undefined
-
+    console.log(filterButton?.offsetWidth)
     const resizeObserver = new ResizeObserver((_entries) => {
       const pillWidths = pillsRef.current
         ? Array.from(pillsRef.current.children).map((el) =>
@@ -163,7 +163,7 @@ export const FiltersBar = () => {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [query.filters])
+  }, [query.filters, expandedSegment])
 
   if (!query.filters.length) {
     return null
@@ -217,6 +217,7 @@ export const FiltersBar = () => {
                 >
                   {query.filters.length !== visibility.visibleCount && (
                     <AppliedFilterPillsList
+                      className="-m-1"
                       direction="vertical"
                       slice={{
                         type: 'no-render-outside',
@@ -243,7 +244,7 @@ export const chillButtonClass =
   '!flex !self-start !text-sm !px-3 !py-2 whitespace-nowrap'
 
 const SaveSelectionAsSegment = ({ closeMenu }: { closeMenu: () => void }) => {
-  const { setExpandedSegmentState } = useSegmentExpandedContext()
+  const _s = useSegmentExpandedContext()
   return (
     <AppNavigationLink
       // title="Save as segment"
@@ -253,8 +254,8 @@ const SaveSelectionAsSegment = ({ closeMenu }: { closeMenu: () => void }) => {
         chillButtonClass
       )}
       search={(s) => s}
+      state={{ modal: 'create', expandedSegment: null }}
       onClick={() => {
-        setExpandedSegmentState({ modal: 'create', expandedSegment: null })
         closeMenu()
       }}
     >
@@ -266,7 +267,12 @@ const SaveSelectionAsSegment = ({ closeMenu }: { closeMenu: () => void }) => {
 const ClearAction = () => (
   <AppNavigationLink
     title="Clear all filters"
-    className={classNames(buttonClass, secondaryButtonClass, chillButtonClass, '!border-0')}
+    className={classNames(
+      buttonClass,
+      secondaryButtonClass,
+      chillButtonClass,
+      '!border-0'
+    )}
     search={(search) => ({
       ...search,
       filters: null,

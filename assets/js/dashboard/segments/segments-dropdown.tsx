@@ -6,7 +6,7 @@ import {
   DropdownMenuWrapper,
   DropdownNavigationLink,
   DropdownSubtitle,
-  SplitButton,
+  SplitButton
 } from '../components/dropdown'
 import { useQueryContext } from '../query-context'
 import { useSiteContext } from '../site-context'
@@ -20,7 +20,10 @@ import {
 } from './segments'
 import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanLabels } from '../util/filters'
-import { useAppNavigate } from '../navigation/use-app-navigate'
+import {
+  AppNavigationLink,
+  useAppNavigate
+} from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { Tooltip } from '../util/tooltip'
 import { useUserContext } from '../user-context'
@@ -32,7 +35,7 @@ import {
   Square2StackIcon,
   TrashIcon,
   XMarkIcon,
-  ChevronRightIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline'
 import { useOnClickOutside } from '../util/use-on-click-outside'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
@@ -218,7 +221,7 @@ const SegmentLink = ({
   //       ['admin', 'owner', 'super_admin'].includes(user.role)))
   const navigate = useAppNavigate()
   const { query } = useQueryContext()
-  const { setExpandedSegmentState } = useSegmentExpandedContext()
+  const _s = useSegmentExpandedContext()
 
   const { prefetchSegment, data, fetchSegment } = useSegmentPrefetch({ id })
 
@@ -262,7 +265,6 @@ const SegmentLink = ({
               className={classNames(iconButtonClass, 'ml-2 shrink-0')}
               onClick={async () => {
                 const d = data ?? (await fetchSegment())
-                setExpandedSegmentState({ expandedSegment: d, modal: null })
 
                 navigate({
                   path: rootRoute.path,
@@ -270,7 +272,11 @@ const SegmentLink = ({
                     ...s,
                     filters: d.segment_data.filters,
                     labels: d.segment_data.labels
-                  })
+                  }),
+                  state: {
+                    expandedSegment: d,
+                    modal: null
+                  }
                 })
 
                 closeList()
@@ -328,8 +334,7 @@ export const EditSegmentIcon = ({ className }: { className?: string }) => (
 
 export const EditSegmentMenu = () => {
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const { expandedSegment, modal, setExpandedSegmentState } =
-    useSegmentExpandedContext()
+  const { expandedSegment, modal } = useSegmentExpandedContext()
   const [opened, setOpened] = useState(false)
   useOnClickOutside({
     ref: dropdownRef,
@@ -349,15 +354,18 @@ export const EditSegmentMenu = () => {
       }}
       onClick={() => setOpened((v) => !v)}
       leftOption={
-        <button
-          className={classNames(primaryNeutralButtonClass, '!px-2 !py-2', 'rounded-r-none')}
-          onClick={(e) => {
-            e.stopPropagation()
-            setExpandedSegmentState({ expandedSegment, modal: 'update' })
-          }}
+        <AppNavigationLink
+          className={classNames(
+            primaryNeutralButtonClass,
+            '!px-2 !py-2',
+            'rounded-r-none'
+          )}
+          search={(s) => s}
+          state={{ expandedSegment, modal: 'update' }}
+          onClick={() => setOpened(false)}
         >
           Update segment
-        </button>
+        </AppNavigationLink>
       }
     >
       {opened && (
@@ -373,9 +381,9 @@ export const EditSegmentMenu = () => {
             <DropdownNavigationLink
               className={linkClass}
               search={(s) => s}
+              navigateOptions={{ state: { expandedSegment, modal: 'update' } }}
               onLinkClick={() => {
                 setOpened(false)
-                setExpandedSegmentState({ expandedSegment, modal: 'update' })
               }}
             >
               <div className="flex items-center gap-x-2">
@@ -386,9 +394,9 @@ export const EditSegmentMenu = () => {
             <DropdownNavigationLink
               className={linkClass}
               search={(s) => s}
+              navigateOptions={{ state: { expandedSegment, modal: 'create' } }}
               onLinkClick={() => {
                 setOpened(false)
-                setExpandedSegmentState({ expandedSegment, modal: 'create' })
               }}
             >
               <div className="flex items-center gap-x-2">
@@ -400,9 +408,9 @@ export const EditSegmentMenu = () => {
             <DropdownNavigationLink
               className={linkClass}
               search={(s) => s}
+              navigateOptions={{ state: { expandedSegment, modal: 'delete' } }}
               onLinkClick={() => {
                 setOpened(false)
-                setExpandedSegmentState({ expandedSegment, modal: 'delete' })
               }}
             >
               <div className="flex items-center gap-x-2">
@@ -422,9 +430,11 @@ export const EditSegmentMenu = () => {
                 //     expandedSegment.name
                 // }
               })}
+              navigateOptions={{
+                state: { expandedSegment: null, modal: null }
+              }}
               onLinkClick={() => {
                 setOpened(false)
-                setExpandedSegmentState({ expandedSegment: null, modal: null })
               }}
             >
               <div className="flex items-center gap-x-2">

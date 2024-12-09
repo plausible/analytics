@@ -82,8 +82,7 @@ export const FilterMenu = () => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
   const { query } = useQueryContext()
-  const { expandedSegment, modal, setExpandedSegmentState } =
-    useSegmentExpandedContext()
+  const { expandedSegment, modal } = useSegmentExpandedContext()
   const queryClient = useQueryClient()
   const navigate = useAppNavigate()
   const [search, setSearch] = useState<string>()
@@ -142,13 +141,14 @@ export const FilterMenu = () => {
             filters,
             labels
           }
-        }
+        },
+        state: {
+          expandedSegment: null,
+          modal: null
+        },
+        replace: true
       })
       setOpened(false)
-      setExpandedSegmentState({
-        expandedSegment: null,
-        modal: null
-      })
     }
   })
 
@@ -199,13 +199,14 @@ export const FilterMenu = () => {
             filters,
             labels
           }
-        }
+        },
+        state: {
+          expandedSegment: null,
+          modal: null
+        },
+        replace: true
       })
       setOpened(false)
-      setExpandedSegmentState({
-        expandedSegment: null,
-        modal: null
-      })
     }
   })
   const deleteSegment = useMutation({
@@ -231,13 +232,14 @@ export const FilterMenu = () => {
             filters: null,
             labels: null
           }
-        }
+        },
+        state: {
+          expandedSegment: null,
+          modal: null
+        },
+        replace: true
       })
       setOpened(false)
-      setExpandedSegmentState({
-        expandedSegment: null,
-        modal: null
-      })
     }
   })
 
@@ -246,6 +248,8 @@ export const FilterMenu = () => {
     active: opened && modal === null,
     handler: () => setOpened(false)
   })
+
+  console.log(modal)
 
   return (
     <>
@@ -257,7 +261,11 @@ export const FilterMenu = () => {
           segment={expandedSegment}
           namePlaceholder={getSegmentNamePlaceholder(query)}
           onClose={() =>
-            setExpandedSegmentState({ expandedSegment, modal: null })
+            navigate({
+              search: (s) => s,
+              state: { expandedSegment, modal: null },
+              replace: true
+            })
           }
           onSave={({ id, name, type }) =>
             patchSegment.mutate({
@@ -280,7 +288,11 @@ export const FilterMenu = () => {
           segment={expandedSegment!}
           namePlaceholder={getSegmentNamePlaceholder(query)}
           onClose={() =>
-            setExpandedSegmentState({ expandedSegment, modal: null })
+            navigate({
+              search: (s) => s,
+              state: { expandedSegment, modal: null },
+              replace: true
+            })
           }
           onSave={({ name, type }) =>
             createSegment.mutate({
@@ -298,7 +310,11 @@ export const FilterMenu = () => {
         <DeleteSegmentModal
           segment={expandedSegment}
           onClose={() =>
-            setExpandedSegmentState({ expandedSegment, modal: null })
+            navigate({
+              search: (s) => s,
+              state: { expandedSegment, modal: null },
+              replace: true
+            })
           }
           onSave={({ id }) => deleteSegment.mutate({ id })}
         />
