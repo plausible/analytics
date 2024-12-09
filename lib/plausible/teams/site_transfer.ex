@@ -7,6 +7,8 @@ defmodule Plausible.Teams.SiteTransfer do
 
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   schema "team_site_transfers" do
     field :transfer_id, :string
     field :email, :string

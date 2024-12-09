@@ -77,16 +77,6 @@ defmodule Plausible.Factory do
     # The é exercises unicode support in domain names
     domain = sequence(:domain, &"é-#{&1}.example.com")
 
-    defined_memberships? =
-      Map.has_key?(attrs, :memberships) ||
-        Map.has_key?(attrs, :members) ||
-        Map.has_key?(attrs, :owner)
-
-    attrs =
-      if defined_memberships?,
-        do: attrs,
-        else: Map.put_new(attrs, :members, [build(:user)])
-
     site = %Plausible.Site{
       native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,

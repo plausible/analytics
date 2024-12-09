@@ -267,14 +267,14 @@ defmodule Plausible.Teams.Sites do
             ),
           pinned_at: selected_as(up.pinned_at, :pinned_at),
           memberships: [
-            %Plausible.Site.Membership{
+            %{
               role: type(u.role, ^@role_type),
               site_id: s.id,
               site: s
             }
           ],
           invitations: [
-            %Plausible.Auth.Invitation{
+            %{
               invitation_id: coalesce(gi.invitation_id, st.transfer_id),
               email: coalesce(ti.email, st.email),
               role: type(u.role, ^@role_type),

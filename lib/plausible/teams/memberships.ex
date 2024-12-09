@@ -83,44 +83,74 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
-  def update_role_sync(site_membership) do
-    site_id = site_membership.site_id
-    user_id = site_membership.user_id
-    role = site_membership.role
+  def has_admin_access?(site, user) do
+    case site_role(site, user) do
+      {:ok, role} when role in [:editor, :admin, :owner] ->
+        true
 
-    new_role =
-      case role do
-        :viewer -> :viewer
-        _ -> :editor
-      end
-
-    case get_guest_membership(site_id, user_id) do
-      {:ok, guest_membership} ->
-        guest_membership
-        |> Ecto.Changeset.change(role: new_role)
-        |> Ecto.Changeset.put_change(:updated_at, site_membership.updated_at)
-        |> Repo.update!()
-
-      {:error, _} ->
-        :pass
+      _ ->
+        false
     end
-
-    :ok
   end
 
-  def remove_sync(site_membership) do
-    site_id = site_membership.site_id
-    user_id = site_membership.user_id
+  def update_role(site, user_id, new_role_str, current_user, current_user_role) do
+    new_role = String.to_existing_atom(new_role_str)
 
-    case get_guest_membership(site_id, user_id) do
+    case get_guest_membership(site.id, user_id) do
       {:ok, guest_membership} ->
-        guest_membership = Repo.preload(guest_membership, team_membership: :team)
+        can_grant_role? =
+          if guest_membership.user.id == current_user.id do
+            can_grant_role_to_self?(current_user_role, new_role)
+          else
+            can_grant_role_to_other?(current_user_role, new_role)
+          end
+
+        if can_grant_role? do
+          guest_membership =
+            guest_membership
+            |> Ecto.Changeset.change(role: new_role)
+            |> Repo.update!()
+            |> Repo.preload(team_membership: :user)
+
+          {:ok, guest_membership}
+        else
+          {:error, :not_allowed}
+        end
+
+      {:error, _} ->
+        {:error, :no_guest}
+    end
+  end
+
+  def remove(site, user) do
+    case get_guest_membership(site.id, user.id) do
+      {:ok, guest_membership} ->
+        guest_membership =
+          Repo.preload(guest_membership, [:site, team_membership: [:team, :user]])
+
         Repo.delete!(guest_membership)
         prune_guests(guest_membership.team_membership.team)
+        send_site_member_removed_email(guest_membership)
 
       {:error, _} ->
         :pass
     end
+  end
+
+  defp can_grant_role_to_self?(:editor, :viewer), do: true
+  defp can_grant_role_to_self?(_, _), do: false
+
+  defp can_grant_role_to_other?(:owner, :editor), do: true
+  defp can_grant_role_to_other?(:owner, :admin), do: true
+  defp can_grant_role_to_other?(:owner, :viewer), do: true
+  defp can_grant_role_to_other?(:editor, :editor), do: true
+  defp can_grant_role_to_other?(:editor, :viewer), do: true
+  defp can_grant_role_to_other?(_, _), do: false
+
+  defp send_site_member_removed_email(guest_membership) do
+    guest_membership
+    |> PlausibleWeb.Email.site_member_removed()
+    |> Plausible.Mailer.send()
   end
 
   def prune_guests(team) do

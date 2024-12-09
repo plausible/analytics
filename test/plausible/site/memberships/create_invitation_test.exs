@@ -13,7 +13,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       invitee = new_user()
       site = new_site(owner: inviter)
 
-      assert {:ok, %Plausible.Auth.Invitation{}} =
+      assert {:ok, %Plausible.Teams.GuestInvitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
     end
 
@@ -42,7 +42,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       [inviter, invitee] = for _ <- 1..2, do: new_user()
       site = new_site(owner: inviter)
 
-      assert {:ok, %Plausible.Auth.Invitation{}} =
+      assert {:ok, %Plausible.Teams.GuestInvitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
       assert_email_delivered_with(
@@ -55,7 +55,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       inviter = new_user()
       site = new_site(owner: inviter)
 
-      assert {:ok, %Plausible.Auth.Invitation{invitation_id: invitation_id}} =
+      assert {:ok, %Plausible.Teams.GuestInvitation{invitation_id: invitation_id}} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
 
       assert_email_delivered_with(
@@ -96,8 +96,6 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       assert {:ok, _} = invite.(site2, "i3@example.com")
     end
 
-    import Ecto.Query
-
     @tag :ee_only
     test "allows inviting users who are already members of other sites, within the limit" do
       [u1, u2, u3, u4] = for _ <- 1..4, do: new_user()
@@ -123,7 +121,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       inviter = new_user()
       site = new_site(owner: inviter)
 
-      assert {:ok, %Plausible.Auth.Invitation{}} =
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
 
       assert_email_delivered_with(
@@ -148,7 +146,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = new_site(owner: inviter)
       add_guest(site, user: invitee, role: :viewer)
 
-      assert {:ok, %Plausible.Auth.Invitation{}} =
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :owner)
     end
 
@@ -189,8 +187,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = new_site()
       add_guest(site, user: inviter, role: :editor)
 
-      assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :admin)
+      assert {:ok, %Plausible.Teams.GuestInvitation{}} =
+               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :editor)
     end
   end
 
@@ -215,21 +213,14 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         subject: @subject_prefix <> "Request to transfer ownership of #{site1.domain}"
       )
 
-      assert Repo.exists?(
-               from(i in Plausible.Auth.Invitation,
-                 where:
-                   i.site_id == ^site1.id and i.email == ^new_owner.email and i.role == :owner
-               )
-             )
-
-      assert_invitation_exists(site1, new_owner.email, :owner)
+      assert_site_transfer(site1, new_owner)
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
         subject: @subject_prefix <> "Request to transfer ownership of #{site2.domain}"
       )
 
-      assert_invitation_exists(site2, new_owner.email, :owner)
+      assert_site_transfer(site2, new_owner)
     end
 
     test "initiates ownership transfer for multiple sites in one action skipping permission checks" do
@@ -253,29 +244,14 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         subject: @subject_prefix <> "Request to transfer ownership of #{site1.domain}"
       )
 
-      assert Repo.exists?(
-               from(i in Plausible.Auth.Invitation,
-                 where:
-                   i.site_id == ^site1.id and i.email == ^new_owner.email and i.role == :owner
-               )
-             )
-
-      assert_invitation_exists(site1, new_owner.email, :owner)
+      assert_site_transfer(site1, new_owner)
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
         subject: @subject_prefix <> "Request to transfer ownership of #{site2.domain}"
       )
 
-      assert_invitation_exists(site2, new_owner.email, :owner)
+      assert_site_transfer(site2, new_owner)
     end
-  end
-
-  defp assert_invitation_exists(site, email, role) do
-    assert Repo.exists?(
-             from(i in Plausible.Auth.Invitation,
-               where: i.site_id == ^site.id and i.email == ^email and i.role == ^role
-             )
-           )
   end
 end

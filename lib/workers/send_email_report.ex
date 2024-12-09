@@ -47,7 +47,7 @@ defmodule Plausible.Workers.SendEmailReport do
         "/sites/#{URI.encode_www_form(assigns.site.domain)}/#{assigns.type}-report/unsubscribe?email=#{email}"
 
     user = Plausible.Auth.find_user_by(email: email)
-    login_link = user && Plausible.Sites.is_member?(user.id, assigns.site)
+    login_link = user && Plausible.Teams.Memberships.site_member?(assigns.site, user)
 
     template_assigns =
       assigns

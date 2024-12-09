@@ -34,7 +34,6 @@ defmodule Plausible.Teams.Test do
 
     :site
     |> insert(args)
-    |> Repo.preload(:memberships)
   end
 
   def new_team() do
@@ -96,7 +95,7 @@ defmodule Plausible.Teams.Test do
 
     insert(:guest_membership, site: site, team_membership: team_membership, role: role)
 
-    user |> Repo.preload([:site_memberships, :team_memberships])
+    user |> Repo.preload(:team_memberships)
   end
 
   def invite_guest(site, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do
@@ -271,6 +270,13 @@ defmodule Plausible.Teams.Test do
              team_invitation_id: team_invitation.id,
              site_id: site.id,
              role: role
+           )
+  end
+
+  def assert_site_transfer(site, user) do
+    assert Repo.get_by(Plausible.Teams.SiteTransfer,
+             site_id: site.id,
+             email: user.email
            )
   end
 
