@@ -266,7 +266,7 @@ const SaveSelectionAsSegment = ({ closeMenu }: { closeMenu: () => void }) => {
 const ClearAction = () => (
   <AppNavigationLink
     title="Clear all filters"
-    className={classNames(buttonClass, secondaryButtonClass, chillButtonClass)}
+    className={classNames(buttonClass, secondaryButtonClass, chillButtonClass, '!border-0')}
     search={(search) => ({
       ...search,
       filters: null,
