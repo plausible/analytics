@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Filters do
   """
 
   alias Plausible.Stats.Filters.QueryParser
-  alias Plausible.Stats.Filters.{LegacyDashboardFilterParser, StatsAPIFilterParser}
+  alias Plausible.Stats.Filters.StatsAPIFilterParser
 
   @visit_props [
     :source,
@@ -52,16 +52,12 @@ defmodule Plausible.Stats.Filters do
 
   Depending on the format and type of the `filters` argument, returns:
 
-    * a decoded list, when `filters` is encoded JSON
     * a parsed filter list, when `filters` is a filter expression string
     * the same list, when `filters` is a map
 
   Returns an empty list when argument type is unexpected (e.g. `nil`).
 
   ### Examples:
-
-      iex> Filters.parse("{\\"page\\":\\"/blog/**\\"}")
-      [[:matches_wildcard, "event:page", ["/blog/**"]]]
 
       iex> Filters.parse("visit:browser!=Chrome")
       [[:is_not, "visit:browser", ["Chrome"]]]
@@ -71,14 +67,11 @@ defmodule Plausible.Stats.Filters do
   """
   def parse(filters) when is_binary(filters) do
     case Jason.decode(filters) do
-      {:ok, filters} when is_map(filters) or is_list(filters) -> parse(filters)
+      {:ok, filters} when is_list(filters) -> parse(filters)
       {:ok, _} -> []
       {:error, err} -> StatsAPIFilterParser.parse_filter_expression(err.data)
     end
   end
-
-  def parse(filters) when is_map(filters),
-    do: LegacyDashboardFilterParser.parse_and_prefix(filters)
 
   def parse(filters) when is_list(filters) do
     {:ok, parsed_filters} = QueryParser.parse_filters(filters)

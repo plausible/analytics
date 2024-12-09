@@ -628,7 +628,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
 
-      filters = Jason.encode!(%{page: "/some-other-page"})
+      filters = Jason.encode!([[:is, "event:page", ["/some-other-page"]]])
       conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
       assert_zip(conn, "30d-filter-path")
     end
@@ -649,7 +649,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
       ])
 
-      filters = Jason.encode!(%{props: %{author: "marko"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["marko"]]])
       conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
 
       {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
@@ -768,7 +768,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
       conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
       assert_zip(conn, "30d-filter-goal")
     end
@@ -787,7 +787,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       ])
 
       insert(:goal, site: site, event_name: "Newsletter Signup")
-      filters = Jason.encode!(%{goal: "Newsletter Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Newsletter Signup"]]])
       conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
 
       {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
@@ -843,7 +843,8 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       insert(:goal, site: site, event_name: "Signup")
 
-      conn = get(conn, "/#{site.domain}/export?filters=#{Jason.encode!(%{goal: "Signup"})}")
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
+      conn = get(conn, "/#{site.domain}/export?filters=#{filters}")
 
       assert response = response(conn, 200)
       {:ok, zip} = :zip.unzip(response, [:memory])

@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
                %{"name" => "Desktop", "visitors" => 1, "percentage" => 50}
              ]
 
-      filters = Jason.encode!(%{screen: "(not set)"})
+      filters = Jason.encode!([[:is, "visit:screen", ["(not set)"]]])
       conn2 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
       assert json_response(conn2, 200)["results"] == [
@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -179,7 +179,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!([["is_not", "event:props:author", ["John Doe"]]])
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -225,7 +225,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:imported_visitors, visitors: 2)
       ])
 
-      filters = Jason.encode!(%{screen: "Desktop"})
+      filters = Jason.encode!([[:is, "visit:screen", ["Desktop"]]])
 
       conn =
         get(
@@ -281,7 +281,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:event, user_id: 1, name: "Signup")
       ])
 
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
@@ -307,7 +307,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      filters = Jason.encode!(%{"source" => "!Bad source|Second bad source"})
+      filters = Jason.encode!([["is_not", "visit:source", ["Bad source", "Second bad source"]]])
 
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 

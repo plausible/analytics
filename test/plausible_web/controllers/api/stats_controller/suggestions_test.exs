@@ -211,7 +211,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for browser versions", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{browser: "Chrome"})
+      filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
 
       populate_stats(site, [
         build(:pageview,
@@ -241,7 +241,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for OS versions", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{os: "Mac"})
+      filters = Jason.encode!([[:is, "visit:os", ["Mac"]]])
 
       populate_stats(site, [
         build(:pageview,
@@ -261,7 +261,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for OS versions with search", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{os: "Mac"})
+      filters = Jason.encode!([[:is, "visit:os", ["Mac"]]])
 
       conn =
         get(
@@ -512,7 +512,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "Uku"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["Uku"]]])
 
       conn =
         get(
@@ -613,7 +613,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -651,7 +651,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -687,7 +687,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -724,7 +724,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:pageview, timestamp: ~N[2022-01-01 00:00:00])
       ])
 
-      filters = Jason.encode!(%{props: %{browser_language: "!(none)", author: "Uku Taht"}})
+      filters =
+        Jason.encode!([
+          [:is_not, "event:props:browser_language", ["(none)"]],
+          [:is, "event:props:author", ["Uku Taht"]]
+        ])
 
       conn =
         get(
@@ -757,7 +761,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -811,7 +815,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, country: "GB")
       ])
 
-      filters = Jason.encode!(%{source: "Bing"})
+      filters = Jason.encode!([[:is, "visit:source", ["Bing"]]])
 
       conn =
         get(
@@ -831,7 +835,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, date: ~D[2019-01-01], country: "EE")
       ])
 
-      filters = Jason.encode!(%{country: "EE"})
+      filters = Jason.encode!([[:is, "visit:country", ["EE"]]])
 
       conn =
         get(
@@ -939,7 +943,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, country: "EE", region: "EE-37")
       ])
 
-      filters = Jason.encode!(%{source: "Bing"})
+      filters = Jason.encode!([[:is, "visit:source", ["Bing"]]])
 
       conn =
         get(
@@ -959,7 +963,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, date: ~D[2019-01-01], region: "EE-39")
       ])
 
-      filters = Jason.encode!(%{region: "EE-39"})
+      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
 
       conn =
         get(
@@ -1041,7 +1045,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, country: "EE", region: "EE-37", city: 588_409)
       ])
 
-      filters = Jason.encode!(%{source: "Bing"})
+      filters = Jason.encode!([[:is, "visit:source", ["Bing"]]])
 
       conn =
         get(
@@ -1061,7 +1065,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, date: ~D[2019-01-01], city: 591_632)
       ])
 
-      filters = Jason.encode!(%{city: "591632"})
+      filters = Jason.encode!([[:is, "visit:city", ["591632"]]])
 
       conn =
         get(
@@ -1121,7 +1125,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(key_conn, 200) == [%{"label" => "url", "value" => "url"}]
 
-      filters = Jason.encode!(%{props: %{url: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:url", ["(none)"]]])
 
       value_conn =
         get(
@@ -1366,7 +1370,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Windows")
       ])
 
-      filters = Jason.encode!(%{page: "/blog"})
+      filters = Jason.encode!([[:is, "event:page", ["/blog"]]])
 
       conn =
         get(
@@ -1392,7 +1396,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Linux")
       ])
 
-      filters = Jason.encode!(%{os: "!Linux"})
+      filters = Jason.encode!([[:is_not, "visit:os", ["Linux"]]])
 
       conn =
         get(

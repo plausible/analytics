@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment"})
 
-      filters = Jason.encode!(%{props: %{"logged_in" => "true"}})
+      filters = Jason.encode!([[:is, "event:props:logged_in", ["true"]]])
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -116,7 +116,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment"})
 
-      filters = Jason.encode!(%{props: %{"logged_in" => "!true"}})
+      filters = Jason.encode!([[:is_not, "event:props:logged_in", ["true"]]])
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -154,7 +154,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment"})
 
-      filters = Jason.encode!(%{props: %{"logged_in" => "(none)"}})
+      filters = Jason.encode!([[:is, "event:props:logged_in", ["(none)"]]])
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -194,7 +194,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment"})
 
-      filters = Jason.encode!(%{props: %{"logged_in" => "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:logged_in", ["(none)"]]])
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -248,7 +248,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, event_name: "Payment"})
       insert(:goal, %{site: site, page_path: "/register"})
 
-      filters = Jason.encode!(%{browser: "Firefox"})
+      filters = Jason.encode!([[:is, "visit:browser", ["Firefox"]]])
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -475,13 +475,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       ]
 
       # {:is, {:event, event}} filter type
-      assert get_with_filter.(%{goal: "Signup"}) == expected
+      assert get_with_filter.([[:is, "event:goal", ["Signup"]]]) == expected
 
       # {:member, clauses} filter type
-      assert get_with_filter.(%{goal: "Signup|Whatever"}) == expected
+      assert get_with_filter.([[:is, "event:goal", ["Signup", "Whatever"]]]) == expected
 
       # {:matches_member, clauses} filter type
-      assert get_with_filter.(%{goal: "Signup|Visit /whatever*"}) == expected
+      assert get_with_filter.([[:is, "event:goal", ["Signup", "Visit /whatever*"]]]) == expected
     end
 
     test "does not return custom events with the filtered pageview goal pathname", %{
@@ -497,12 +497,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      filters = %{goal: "Visit+/register"}
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /register"]]])
 
       results =
         get(
           conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{Jason.encode!(filters)}"
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
         |> json_response(200)
         |> Map.get("results")
@@ -530,7 +530,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      filters = Jason.encode!(%{goal: "Signup|Visit /register"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup", "Visit /register"]]])
 
       conn =
         get(
@@ -564,7 +564,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/blog/**"})
       insert(:goal, %{site: site, page_path: "/billing/upgrade"})
 
-      filters = Jason.encode!(%{goal: "Visit /blog/**|Visit /billing/upgrade"})
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog/**", "Visit /billing/upgrade"]]])
 
       conn =
         get(
@@ -602,7 +602,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, event_name: "CTA"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      filters = Jason.encode!(%{goal: "Signup|Visit /blog**"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup", "Visit /blog**"]]])
 
       conn =
         get(
@@ -640,7 +640,11 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      filters = Jason.encode!(%{goal: "Signup", props: %{variant: "(none)"}})
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Signup"]],
+          [:is, "event:props:variant", ["(none)"]]
+        ])
 
       conn =
         get(
@@ -841,7 +845,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{goal: "Purchase"})
+      filters = Jason.encode!([[:is, "event:goal", ["Purchase"]]])
       url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
       conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
@@ -903,7 +907,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{goal: "Purchase|Activation"})
+      filters = Jason.encode!([[:is, "event:goal", ["Purchase", "Activation"]]])
       url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
       conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
@@ -961,7 +965,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{goal: "Visit /test"})
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /test"]]])
       url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
       conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
@@ -1024,7 +1028,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{goal: "Visit /test|Visit /blog"})
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /test", "Visit /blog"]]])
       url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
       conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
 
@@ -1067,7 +1071,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 10, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{page: "/blog/one|/blog/two"})
+      filters = Jason.encode!([[:is, "event:page", ["/blog/one", "/blog/two"]]])
       q = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
       conn = get(conn, "/api/stats/#{site.domain}/conversions#{q}")
 
@@ -1152,7 +1156,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:imported_visitors, visitors: 4)
       ])
 
-      filters = Jason.encode!(%{goal: "~Onboarding"})
+      filters = Jason.encode!([[:contains, "event:goal", ["Onboarding"]]])
 
       conn =
         get(

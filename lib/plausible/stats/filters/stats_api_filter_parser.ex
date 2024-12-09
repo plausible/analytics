@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
   @moduledoc false
 
-  import Plausible.Stats.Filters.Utils
+  @non_escaped_pipe_regex ~r/(?<!\\)\|/
 
   @doc """
   This function parses the filter expression given as a string.
@@ -69,5 +69,23 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
       end
 
     [:is, key, List.wrap(value)]
+  end
+
+  defp list_expression?(expression) do
+    Regex.match?(@non_escaped_pipe_regex, expression)
+  end
+
+  defp wildcard_expression?(expression) do
+    String.contains?(expression, "*")
+  end
+
+  defp parse_member_list(raw_value) do
+    raw_value
+    |> String.split(@non_escaped_pipe_regex)
+    |> Enum.map(&remove_escape_chars/1)
+  end
+
+  defp remove_escape_chars(value) do
+    String.replace(value, "\\|", "|")
   end
 end

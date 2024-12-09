@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
 
       insert(:goal, site: site, event_name: "Signup")
 
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
 
@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
 
       insert(:goal, site: site, event_name: "Signup")
 
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -231,7 +231,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -266,7 +266,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "(none)"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["(none)"]]])
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -306,7 +306,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -328,7 +328,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         build(:pageview, country_code: "GB")
       ])
 
-      filters = Jason.encode!(%{country: "GB"})
+      filters = Jason.encode!([[:is, "visit:country", ["GB"]]])
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [

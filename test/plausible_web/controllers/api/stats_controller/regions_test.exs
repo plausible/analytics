@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
     end
 
     test "when list is filtered returns one city only", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{region: "EE-39"})
+      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
       conn = get(conn, "/api/stats/#{site.domain}/regions?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
     end
 
     test "malicious input - date", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{region: "EE-39"})
+      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
       garbage = "2020-07-30'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(98)||CHR(98)||CHR(98),15)||'"
 
       conn =
@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
     end
 
     test "malicious input - from", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{region: "EE-39"})
+      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
       garbage = "2020-07-30'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(98)||CHR(98)||CHR(98),15)||'"
 
       conn =
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
     end
 
     test "malicious input - to", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{region: "EE-39"})
+      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
       garbage = "2020-07-30'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(98)||CHR(98)||CHR(98),15)||'"
 
       conn =
