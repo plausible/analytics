@@ -622,17 +622,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2020-01-01&detailed=true")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2020-01-01&detailed=true&order_by=#{Jason.encode!([["scroll_depth", "asc"]])}"
+        )
 
       assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "/blog",
-                 "visitors" => 3,
-                 "pageviews" => 4,
-                 "bounce_rate" => 33,
-                 "time_on_page" => 60,
-                 "scroll_depth" => 60
-               },
                %{
                  "name" => "/another",
                  "visitors" => 2,
@@ -640,6 +636,14 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
                  "scroll_depth" => 25
+               },
+               %{
+                 "name" => "/blog",
+                 "visitors" => 3,
+                 "pageviews" => 4,
+                 "bounce_rate" => 33,
+                 "time_on_page" => 60,
+                 "scroll_depth" => 60
                }
              ]
     end
