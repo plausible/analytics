@@ -193,7 +193,6 @@ Plausible.Stats.CustomProps.html
 Plausible.Stats.DateTimeRange.html
 Plausible.Stats.EmailReport.html
 Plausible.Stats.FilterSuggestions.html
-Plausible.Stats.Filters.Utils.html
 Plausible.Stats.Filters.html
 Plausible.Stats.Funnel.html
 Plausible.Stats.Goal.Revenue.html
@@ -459,8 +458,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-ED718304.js
-dist/sidebar_items-FE59B3DD.js
+dist/search_data-86270E05.js
+dist/sidebar_items-458E8D61.js
 index.html
 readme.html
 search.html
