@@ -60,17 +60,21 @@ type KeyboardEventType = keyof Pick<
   'keyup' | 'keydown' | 'keypress'
 >
 
-export function Keybind({
-  keyboardKey,
-  type,
-  handler,
-  shouldIgnoreWhen = []
-}: {
+type KeybindOptions = {
   keyboardKey: string
   type: KeyboardEventType
   handler: (event: KeyboardEvent) => void
   shouldIgnoreWhen?: Array<(event: KeyboardEvent) => boolean>
-}) {
+  target?: Document | HTMLElement | null
+}
+
+export function useKeybind({
+  keyboardKey,
+  type,
+  handler,
+  shouldIgnoreWhen = [],
+  target
+}: KeybindOptions) {
   const wrappedHandler = useCallback(
     (event: KeyboardEvent) => {
       if (isKeyPressed(event, { keyboardKey, shouldIgnoreWhen })) {
@@ -78,19 +82,29 @@ export function Keybind({
       }
     },
     [keyboardKey, handler, shouldIgnoreWhen]
-  )
+  ) as EventListener
 
   useEffect(() => {
-    const registerKeybind = () =>
-      document.addEventListener(type, wrappedHandler)
+    const registerKeybind = (t: HTMLElement | Document) =>
+      t.addEventListener(type, wrappedHandler)
 
-    const deregisterKeybind = () =>
-      document.removeEventListener(type, wrappedHandler)
+    const deregisterKeybind = (t: HTMLElement | Document) =>
+      t.removeEventListener(type, wrappedHandler)
 
-    registerKeybind()
+    if (target) {
+      registerKeybind(target)
+    }
 
-    return deregisterKeybind
-  }, [type, wrappedHandler])
+    return () => {
+      if (target) {
+        deregisterKeybind(target)
+      }
+    }
+  }, [target, type, wrappedHandler])
+}
+
+export function Keybind(opts: KeybindOptions) {
+  useKeybind(opts)
 
   return null
 }
@@ -115,6 +129,7 @@ export function NavigateKeybind({
       type={type}
       handler={handler}
       shouldIgnoreWhen={[isModifierPressed, isTyping]}
+      target={document}
     />
   )
 }

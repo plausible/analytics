@@ -12,7 +12,6 @@ import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import {
-  SegmentExpandedLocationState,
   useSegmentExpandedContext
 } from '../segments/segment-expanded-context'
 import {
@@ -245,26 +244,26 @@ export const FiltersBar = () => {
 const chillButtonClass =
   '!flex !self-start !text-sm !px-3 !py-2 whitespace-nowrap'
 
-const SaveSelectionAsSegment = ({ closeMenu }: { closeMenu: () => void }) => (
-  <AppNavigationLink
-    // title="Save as segment"
-    className={classNames(
-      buttonClass,
-      primaryNeutralButtonClass,
-      chillButtonClass
-    )}
-    search={(s) => s}
-    state={
-      {
-        modal: 'create',
-        expandedSegment: null
-      } as SegmentExpandedLocationState
-    }
-    onClick={closeMenu}
-  >
-    Save as segment
-  </AppNavigationLink>
-)
+const SaveSelectionAsSegment = ({ closeMenu }: { closeMenu: () => void }) => {
+  const { setExpandedSegmentState } = useSegmentExpandedContext()
+  return (
+    <AppNavigationLink
+      // title="Save as segment"
+      className={classNames(
+        buttonClass,
+        primaryNeutralButtonClass,
+        chillButtonClass
+      )}
+      search={(s) => s}
+      onClick={() => {
+        setExpandedSegmentState({ modal: 'create', expandedSegment: null })
+        closeMenu()
+      }}
+    >
+      Save as segment
+    </AppNavigationLink>
+  )
+}
 
 const ClearAction = () => (
   <AppNavigationLink

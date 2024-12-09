@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { Keybind } from '../../keybinding'
+import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import classNames from 'classnames'
@@ -82,6 +82,18 @@ class Modal extends React.Component {
             )}
             style={this.getStyle()}
           >
+            <Keybind
+              keyboardKey="Escape"
+              type="keyup"
+              handler={(e) => {
+                console.log('Escape modal')
+                e.stopPropagation()
+                this.props.onClose()
+              }}
+              target={this.node.current}
+              shouldIgnoreWhen={[isModifierPressed]}
+            />
+
             {this.props.children}
           </div>
         </div>
@@ -93,18 +105,8 @@ class Modal extends React.Component {
 
 export default function ModalWithRouting(props) {
   const navigate = useAppNavigate()
-  const defaultCloseHandler = () =>
-    navigate({ path: rootRoute.path, search: (s) => s })
-  const closeHandler = props.onClose ?? defaultCloseHandler
-  return (
-    <>
-      <Keybind keyboardKey="Escape" type="keyup" handler={closeHandler} />
-      <Modal
-        onClose={() =>
-          navigate({ path: rootRoute.path, search: (search) => search })
-        }
-        {...props}
-      />
-    </>
-  )
+  const onClose = props.onClose
+    ? props.onClose
+    : () => navigate({ path: rootRoute.path, search: (s) => s })
+  return <Modal onClose={onClose} {...props} />
 }

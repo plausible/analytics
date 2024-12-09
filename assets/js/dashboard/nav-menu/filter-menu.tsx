@@ -8,7 +8,6 @@ import {
   DropdownSubtitle,
   ToggleDropdownButton
 } from '../components/dropdown'
-// import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import {
   cleanLabels,
   FILTER_MODAL_TO_FILTER_GROUP,
@@ -20,10 +19,7 @@ import { filterRoute } from '../router'
 import { useOnClickOutside } from '../util/use-on-click-outside'
 import { EditSegmentMenu, SegmentsList } from '../segments/segments-dropdown'
 import { useQueryContext } from '../query-context'
-import {
-  SegmentExpandedLocationState,
-  useSegmentExpandedContext
-} from '../segments/segment-expanded-context'
+import { useSegmentExpandedContext } from '../segments/segment-expanded-context'
 import {
   CreateSegmentModal,
   DeleteSegmentModal,
@@ -45,6 +41,7 @@ import { PlusIcon } from '@heroicons/react/20/solid'
 // } from '@heroicons/react/24/outline'
 import { SearchInput } from '../components/search-input'
 import classNames from 'classnames'
+import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 
 export function getFilterListItems({
   propsAvailable
@@ -85,7 +82,8 @@ export const FilterMenu = () => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
   const { query } = useQueryContext()
-  const { expandedSegment, modal } = useSegmentExpandedContext()
+  const { expandedSegment, modal, setExpandedSegmentState } =
+    useSegmentExpandedContext()
   const queryClient = useQueryClient()
   const navigate = useAppNavigate()
   const [search, setSearch] = useState<string>()
@@ -142,13 +140,13 @@ export const FilterMenu = () => {
             filters,
             labels
           }
-        },
-        state: {
-          expandedSegment: null,
-          modal: null
-        } as SegmentExpandedLocationState
+        }
       })
       setOpened(false)
+      setExpandedSegmentState({
+        expandedSegment: null,
+        modal: null
+      })
     }
   })
 
@@ -199,13 +197,13 @@ export const FilterMenu = () => {
             filters,
             labels
           }
-        },
-        state: {
-          expandedSegment: null,
-          modal: null
-        } as SegmentExpandedLocationState
+        }
       })
       setOpened(false)
+      setExpandedSegmentState({
+        expandedSegment: null,
+        modal: null
+      })
     }
   })
   const deleteSegment = useMutation({
@@ -231,13 +229,13 @@ export const FilterMenu = () => {
             filters: null,
             labels: null
           }
-        },
-        state: {
-          expandedSegment: null,
-          modal: null
-        } as SegmentExpandedLocationState
+        }
       })
       setOpened(false)
+      setExpandedSegmentState({
+        expandedSegment: null,
+        modal: null
+      })
     }
   })
 
@@ -256,11 +254,8 @@ export const FilterMenu = () => {
           )}
           segment={expandedSegment}
           namePlaceholder={getSegmentNamePlaceholder(query)}
-          close={() =>
-            navigate({
-              search: (s) => s,
-              state: { expandedSegment: expandedSegment, modal: null }
-            })
+          onClose={() =>
+            setExpandedSegmentState({ expandedSegment, modal: null })
           }
           onSave={({ id, name, type }) =>
             patchSegment.mutate({
@@ -283,10 +278,7 @@ export const FilterMenu = () => {
           segment={expandedSegment!}
           namePlaceholder={getSegmentNamePlaceholder(query)}
           onClose={() =>
-            navigate({
-              search: (s) => s,
-              state: { expandedSegment: expandedSegment, modal: null }
-            })
+            setExpandedSegmentState({ expandedSegment, modal: null })
           }
           onSave={({ name, type }) =>
             createSegment.mutate({
@@ -304,10 +296,7 @@ export const FilterMenu = () => {
         <DeleteSegmentModal
           segment={expandedSegment}
           onClose={() =>
-            navigate({
-              search: (s) => s,
-              state: { expandedSegment: expandedSegment, modal: null }
-            })
+            setExpandedSegmentState({ expandedSegment, modal: null })
           }
           onSave={({ id }) => deleteSegment.mutate({ id })}
         />
@@ -334,6 +323,16 @@ export const FilterMenu = () => {
               id="filter-menu"
               className="md:left-auto md:w-80"
             >
+              <Keybind
+                keyboardKey="Escape"
+                shouldIgnoreWhen={[isModifierPressed, isTyping]}
+                type="keyup"
+                handler={(event) => {
+                  event.stopPropagation()
+                  setOpened(false)
+                }}
+                target={dropdownRef.current}
+              />
               <div className="px-4 pb-1 pt-4">
                 <SearchInput
                   placeholderUnfocused="Press / to search"
@@ -394,4 +393,3 @@ export const FilterMenu = () => {
     </>
   )
 }
-

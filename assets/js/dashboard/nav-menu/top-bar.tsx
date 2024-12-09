@@ -10,7 +10,6 @@ import Filters from '../filters'
 import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
 import { FilterMenu } from './filter-menu'
-import SegmentExpandedContextProvider from '../segments/segment-expanded-context'
 
 interface TopBarProps {
   showCurrentVisitors: boolean
@@ -51,10 +50,10 @@ export function TopBar({ showCurrentVisitors, extraBar }: TopBarProps) {
               )}
             </div>
             {saved_segments ? (
-              <SegmentExpandedContextProvider>
+              <>
                 {!!extraBar && extraBar}
                 <FilterMenu />
-              </SegmentExpandedContextProvider>
+              </>
             ) : (
               <Filters />
             )}

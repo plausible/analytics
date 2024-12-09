@@ -1,7 +1,7 @@
 /** @format */
 
 import React, { ChangeEventHandler, useCallback, useState, useRef } from 'react'
-import { isModifierPressed, Keybind } from '../keybinding'
+import { isModifierPressed, useKeybind } from '../keybinding'
 import { useDebounce } from '../custom-hooks'
 import classNames from 'classnames'
 
@@ -49,20 +49,24 @@ export const SearchInput = ({
     [isFocused]
   )
 
+  useKeybind({
+    target: searchBoxRef.current,
+    keyboardKey: 'Escape',
+    type: 'keyup',
+    handler: blurSearchBox,
+    shouldIgnoreWhen: [isModifierPressed]
+  })
+
+  useKeybind({
+    target: searchBoxRef.current,
+    keyboardKey: '/',
+    type: 'keyup',
+    handler: focusSearchBox,
+    shouldIgnoreWhen: [isModifierPressed]
+  })
+
   return (
     <>
-      <Keybind
-        keyboardKey="Escape"
-        type="keyup"
-        handler={blurSearchBox}
-        shouldIgnoreWhen={[isModifierPressed]}
-      />
-      <Keybind
-        keyboardKey="/"
-        type="keyup"
-        handler={focusSearchBox}
-        shouldIgnoreWhen={[isModifierPressed]}
-      />
       <input
         onBlur={() => setIsFocused(false)}
         onFocus={() => setIsFocused(true)}

@@ -449,6 +449,7 @@ export default function QueryPeriodPicker() {
                       type="keydown"
                       handler={onClick || closeMenu}
                       shouldIgnoreWhen={[isModifierPressed, isTyping]}
+                      target={document}
                     />
                   ) : (
                     <NavigateKeybind

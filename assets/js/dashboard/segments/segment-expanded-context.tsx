@@ -6,18 +6,20 @@ import React, {
   useLayoutEffect,
   useState
 } from 'react'
-import { useLocation } from 'react-router-dom'
-import { SavedSegment } from './segments'
+import { SavedSegment, SegmentData } from './segments'
 import { useQueryContext } from '../query-context'
 
-export type SegmentExpandedLocationState = {
-  expandedSegment: SavedSegment | null
+export type SegmentExpandedState = {
+  expandedSegment: (SavedSegment & { segment_data: SegmentData }) | null
   modal: 'create' | 'update' | 'delete' | null
 }
 
-const segmentExpandedContextDefaultValue: SegmentExpandedLocationState = {
+const segmentExpandedContextDefaultValue: SegmentExpandedState & {
+  setExpandedSegmentState: (s: SegmentExpandedState) => void
+} = {
   expandedSegment: null,
-  modal: null
+  modal: null,
+  setExpandedSegmentState: () => {}
 }
 
 const SegmentExpandedContext = createContext<
@@ -33,34 +35,25 @@ export default function SegmentExpandedContextProvider({
 }: {
   children: ReactNode
 }) {
+  console.log('seg rerendering')
   const { query } = useQueryContext()
-
-  const { state: locationState } = useLocation() as {
-    state?: SegmentExpandedLocationState
-  }
-  
-  const [expandedSegment, setExpandedSegment] = useState<SavedSegment | null>(
-    null
-  )
-
-  useLayoutEffect(() => {
-    if (locationState?.expandedSegment) {
-      setExpandedSegment(locationState?.expandedSegment)
-    }
-    if (locationState?.expandedSegment === null) {
-      setExpandedSegment(null)
-    }
-  }, [locationState?.expandedSegment])
+  console.log(query.filters)
+  const [expandedSegmentState, setExpandedSegmentState] =
+    useState<SegmentExpandedState>({ modal: null, expandedSegment: null })
+  console.log(expandedSegmentState)
 
   useLayoutEffect(() => {
     if (!query.filters.length) {
-      setExpandedSegment(null)
+      setExpandedSegmentState({ modal: null, expandedSegment: null })
     }
   }, [query.filters.length])
 
   return (
     <SegmentExpandedContext.Provider
-      value={{ expandedSegment: expandedSegment, modal: locationState?.modal ?? null }}
+      value={{
+        ...expandedSegmentState,
+        setExpandedSegmentState
+      }}
     >
       {children}
     </SegmentExpandedContext.Provider>

@@ -1,6 +1,12 @@
 /** @format */
 
-import React, { ReactNode, useCallback, useEffect, useState } from 'react'
+import React, {
+  createRef,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState
+} from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
   formatSegmentIdAsLabelKey,
@@ -17,17 +23,18 @@ import {
 } from './segments-dropdown'
 import { SearchInput } from '../components/search-input'
 import { useQueryContext } from '../query-context'
-import { AppNavigationLink } from '../navigation/use-app-navigate'
+import {
+  AppNavigationLink,
+  useAppNavigate
+} from '../navigation/use-app-navigate'
 import { cleanLabels, plainFilterText, styledFilterText } from '../util/filters'
 import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
-import {
-  ChevronUpIcon,
-  ChevronDownIcon,
-} from '@heroicons/react/24/outline'
+import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { Filter } from '../query'
 import { SegmentAuthorship } from './segment-authorship'
+import { useSegmentExpandedContext } from './segment-expanded-context'
 
 export const buttonClass =
   'transition border text-md font-medium py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
@@ -54,15 +61,17 @@ const SegmentActionModal = ({
 }: {
   children: ReactNode
   onClose: () => void
-}) => (
-  <ModalWithRouting
-    maxWidth="460px"
-    className="p-6 min-h-fit"
-    onClose={onClose}
-  >
-    {children}
-  </ModalWithRouting>
-)
+}) => {
+  return (
+    <ModalWithRouting
+      maxWidth="460px"
+      className="p-6 min-h-fit"
+      onClose={onClose}
+    >
+      {children}
+    </ModalWithRouting>
+  )
+}
 
 export const CreateSegmentModal = ({
   segment,
@@ -256,13 +265,13 @@ const SegmentTypeInput = ({
 )
 
 export const UpdateSegmentModal = ({
-  close,
+  onClose,
   onSave,
   segment,
   canTogglePersonal,
   namePlaceholder
 }: {
-  close: () => void
+  onClose: () => void
   onSave: (input: Pick<SavedSegment, 'id' | 'name' | 'type'>) => void
   segment: SavedSegment
   canTogglePersonal: boolean
@@ -272,7 +281,7 @@ export const UpdateSegmentModal = ({
   const [type, setType] = useState<SegmentType>(segment.type)
 
   return (
-    <ModalWithRouting maxWidth="460px" className="p-6 min-h-fit" close={close}>
+    <SegmentActionModal onClose={onClose}>
       <FormTitle>Update segment</FormTitle>
       <SegmentNameInput
         value={name}
@@ -285,7 +294,7 @@ export const UpdateSegmentModal = ({
         disabled={!canTogglePersonal}
       />
       <ButtonsRow>
-        <button className={secondaryButtonClass} onClick={close}>
+        <button className={secondaryButtonClass} onClick={onClose}>
           Cancel
         </button>
         <button
@@ -301,7 +310,7 @@ export const UpdateSegmentModal = ({
           Save
         </button>
       </ButtonsRow>
-    </ModalWithRouting>
+    </SegmentActionModal>
   )
 }
 
@@ -319,20 +328,11 @@ const SegmentRow = ({
   segmentDataVisible: boolean
   toggleSegmentDataVisible: () => void
 }) => {
-  const { prefetchSegment, data, expandSegment, fetchSegment } =
-    useSegmentPrefetch({
-      id
-    })
-  // const [segmentDataVisible, setSegmentDataVisible] = useState(false)
-  // const toggleSegmentDataVisible = useCallback(async () => {
-  //   setSegmentDataVisible((currentVisible) => {
-  //     if (currentVisible) {
-  //       return false
-  //     }
-  //     fetchSegment()
-  //     return true
-  //   })
-  // }, [fetchSegment])
+  const navigate = useAppNavigate()
+  const { prefetchSegment, data, fetchSegment } = useSegmentPrefetch({
+    id
+  })
+  const { setExpandedSegmentState } = useSegmentExpandedContext()
   useEffect(() => {
     if (segmentDataVisible) {
       fetchSegment()
@@ -340,7 +340,7 @@ const SegmentRow = ({
   }, [segmentDataVisible, fetchSegment])
   return (
     <div
-      className="grid grid-cols-[1fr_20px] gap-x-2 shadow rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm py-3 px-3 transition-all"
+      className="grid grid-cols-[1fr_20px] gap-x-2 shadow rounded bg-white dark:bg-gray-850 text-gray-700 dark:text-gray-300 text-sm py-3 px-3 transition-all"
       onMouseEnter={prefetchSegment}
     >
       <div className="flex gap-x-2 text-left">
@@ -395,29 +395,22 @@ const SegmentRow = ({
               <button
                 className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
                 onClick={async () => {
-                  expandSegment(data ?? (await fetchSegment()))
+                  const d = data ?? (await fetchSegment())
+                  setExpandedSegmentState({ expandedSegment: d, modal: null })
+
+                  navigate({
+                    path: rootRoute.path,
+                    search: (s) => ({
+                      ...s,
+                      filters: d.segment_data.filters,
+                      labels: d.segment_data.labels
+                    })
+                  })
                 }}
               >
                 <EditSegmentIcon className="block h-4 w-4" />
                 Edit
               </button>
-              {/* <AppNavigationLink
-                className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
-                path={rootRoute.path}
-                search={(s) => s}
-                state={
-                  {
-                    expandedSegment: data,
-                    modal: 'delete'
-                  } as SegmentExpandedLocationState
-                }
-                // onClick={async () => {
-                //   expandSegment(data ?? (await fetchSegment()))
-                // }}
-              >
-                <TrashIcon className="block h-4 w-4" />
-                Delete
-              </AppNavigationLink> */}
             </div>
           )}
         </div>
