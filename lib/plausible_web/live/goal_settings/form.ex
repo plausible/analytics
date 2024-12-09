@@ -9,12 +9,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   alias Plausible.Repo
 
   def update(assigns, socket) do
-    site = Repo.preload(assigns.site, :owner)
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = %{site | owner: owner}
+    site = Repo.preload(assigns.site, [:team, :owner])
 
     has_access_to_revenue_goals? =
-      Plausible.Billing.Feature.RevenueGoals.check_availability(owner) == :ok
+      Plausible.Billing.Feature.RevenueGoals.check_availability(site.team) == :ok
 
     form =
       (assigns.goal || %Plausible.Goal{})

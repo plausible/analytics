@@ -1,9 +1,11 @@
 defmodule Plausible.Billing.EnterprisePlanTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
   alias Plausible.Billing.EnterprisePlan
 
   test "changeset/2 loads and dumps the list of features" do
-    plan = build(:enterprise_plan, user_id: insert(:user).id)
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    plan = build(:enterprise_plan, team_id: team.id)
     attrs = %{features: ["props", "stats_api"]}
 
     assert {:ok, enterprise_plan} =
@@ -21,7 +23,8 @@ defmodule Plausible.Billing.EnterprisePlanTest do
   end
 
   test "changeset/2 fails when feature does not exist" do
-    plan = build(:enterprise_plan, user_id: insert(:user).id)
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    plan = build(:enterprise_plan, team_id: team.id)
     attrs = %{features: ["ga4_import"]}
 
     assert {:error, changeset} =
@@ -34,7 +37,8 @@ defmodule Plausible.Billing.EnterprisePlanTest do
   end
 
   test "changeset/2 loads and dumps limits" do
-    plan = build(:enterprise_plan, user_id: insert(:user).id)
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    plan = build(:enterprise_plan, team_id: team.id)
     attrs = %{team_member_limit: :unlimited, monthly_pageview_limit: 10_000}
 
     assert {:ok, enterprise_plan} =

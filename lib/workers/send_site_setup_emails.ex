@@ -38,11 +38,11 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         on: se.site_id == s.id,
         where: is_nil(se.id),
         where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
-        preload: [:owner]
+        preload: [:owner, :team]
       )
 
     for site <- Repo.all(q) do
-      owner = Plausible.Users.with_subscription(site.owner)
+      owner = site.owner
       setup_completed = Plausible.Sites.has_stats?(site)
       hours_passed = NaiveDateTime.diff(DateTime.utc_now(), site.inserted_at, :hour)
 
@@ -63,7 +63,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
       )
 
     for site <- Repo.all(q) do
-      owner = Plausible.Users.with_subscription(site.owner)
+      owner = site.owner
 
       if Plausible.Sites.has_stats?(site) do
         send_setup_success_email(owner, site)

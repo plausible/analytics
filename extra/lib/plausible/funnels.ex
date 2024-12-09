@@ -18,9 +18,9 @@ defmodule Plausible.Funnels do
           | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
   def create(site, name, steps)
       when is_list(steps) and length(steps) in Funnel.min_steps()..Funnel.max_steps() do
-    site = Plausible.Repo.preload(site, :owner)
+    site = Plausible.Repo.preload(site, :team)
 
-    case Plausible.Billing.Feature.Funnels.check_availability(site.owner) do
+    case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
       {:error, _} = error ->
         error
 
@@ -39,9 +39,9 @@ defmodule Plausible.Funnels do
           {:ok, Funnel.t()}
           | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
   def update(funnel, name, steps) do
-    site = Plausible.Repo.preload(funnel, site: :owner).site
+    site = Plausible.Repo.preload(funnel, site: :team).site
 
-    case Plausible.Billing.Feature.Funnels.check_availability(site.owner) do
+    case Plausible.Billing.Feature.Funnels.check_availability(site.team) do
       {:error, _} = error ->
         error
 

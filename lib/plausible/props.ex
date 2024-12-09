@@ -57,9 +57,9 @@ defmodule Plausible.Props do
   """
   @spec allowed_for(Plausible.Site.t()) :: [prop()] | :all
   def allowed_for(site, opts \\ []) do
-    site = Plausible.Repo.preload(site, :owner)
+    site = Plausible.Repo.preload(site, :team)
     internal_keys = Plausible.Props.internal_keys()
-    props_enabled? = Plausible.Billing.Feature.Props.check_availability(site.owner) == :ok
+    props_enabled? = Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
     bypass_setup? = Keyword.get(opts, :bypass_setup?)
 
     cond do
@@ -78,8 +78,8 @@ defmodule Plausible.Props do
   data to be dropped or lost.
   """
   def allow(site, prop_or_props) do
-    with site <- Plausible.Repo.preload(site, :owner),
-         :ok <- Plausible.Billing.Feature.Props.check_availability(site.owner) do
+    with site <- Plausible.Repo.preload(site, :team),
+         :ok <- Plausible.Billing.Feature.Props.check_availability(site.team) do
       site
       |> allow_changeset(prop_or_props)
       |> Plausible.Repo.update()

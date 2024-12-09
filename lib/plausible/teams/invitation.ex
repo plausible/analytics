@@ -7,6 +7,8 @@ defmodule Plausible.Teams.Invitation do
 
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   schema "team_invitations" do
     field :invitation_id, :string
     field :email, :string

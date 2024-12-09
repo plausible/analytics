@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
     assigns =
       assigns
       |> assign(:current_setting, assigns.feature_mod.enabled?(assigns.site))
-      |> assign(:disabled?, assigns.feature_mod.check_availability(assigns.site.owner) !== :ok)
+      |> assign(:disabled?, assigns.feature_mod.check_availability(assigns.site.team) !== :ok)
 
     ~H"""
     <div>

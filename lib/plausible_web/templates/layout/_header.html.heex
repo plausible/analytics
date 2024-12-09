@@ -44,14 +44,14 @@
                 </.styled_link>
               </li>
               <li
-                :if={ee?() and Plausible.Users.on_trial?(@conn.assigns[:current_user])}
+                :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:my_team])}
                 class="hidden mr-6 sm:block"
               >
                 <.styled_link
                   class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
                   href={Routes.settings_path(@conn, :subscription)}
                 >
-                  <%= trial_notificaton(@conn.assigns[:current_user]) %>
+                  <%= trial_notification(@conn.assigns[:my_team]) %>
                 </.styled_link>
               </li>
               <li class="w-full sm:w-auto">

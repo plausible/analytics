@@ -53,7 +53,6 @@ defmodule Plausible.Factory do
       name: "Jane Smith",
       email: sequence(:email, &"email-#{&1}@example.com"),
       password_hash: Plausible.Auth.Password.hash(pw),
-      trial_expiry_date: Timex.today() |> Timex.shift(days: 30),
       email_verified: true
     }
 
@@ -78,16 +77,6 @@ defmodule Plausible.Factory do
     # The é exercises unicode support in domain names
     domain = sequence(:domain, &"é-#{&1}.example.com")
 
-    defined_memberships? =
-      Map.has_key?(attrs, :memberships) ||
-        Map.has_key?(attrs, :members) ||
-        Map.has_key?(attrs, :owner)
-
-    attrs =
-      if defined_memberships?,
-        do: attrs,
-        else: Map.put_new(attrs, :members, [build(:user)])
-
     site = %Plausible.Site{
       native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,
@@ -95,13 +84,6 @@ defmodule Plausible.Factory do
     }
 
     merge_attributes(site, attrs)
-  end
-
-  def site_membership_factory do
-    %Plausible.Site.Membership{
-      user: build(:user),
-      role: :viewer
-    }
   end
 
   def site_import_factory do
@@ -247,14 +229,6 @@ defmodule Plausible.Factory do
     %Plausible.Site.SharedLink{
       name: "Link name",
       slug: Nanoid.generate()
-    }
-  end
-
-  def invitation_factory do
-    %Plausible.Auth.Invitation{
-      invitation_id: Nanoid.generate(),
-      email: sequence(:email, &"email-#{&1}@example.com"),
-      role: :admin
     }
   end
 
