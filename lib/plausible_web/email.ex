@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Your Plausible trial has ended")
     |> render("trial_over_email.html",
       user: user,
-      extra_offset: Plausible.Auth.User.trial_accept_traffic_until_offset_days()
+      extra_offset: Plausible.Teams.Team.trial_accept_traffic_until_offset_days()
     )
   end
 
