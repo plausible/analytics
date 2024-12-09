@@ -180,7 +180,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "/pageA"})
+      filters = Jason.encode!([[:is, "event:page", ["/pageA"]]])
 
       conn =
         get(
@@ -221,7 +221,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "/pageA|/pageB"})
+      filters = Jason.encode!([[:is, "event:page", ["/pageA", "/pageB"]]])
 
       conn =
         get(
@@ -262,7 +262,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "!/pageA|/pageC"})
+      filters = Jason.encode!([["is_not", "event:page", ["/pageA", "/pageC"]]])
 
       conn =
         get(
@@ -277,7 +277,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    test "calculates time on page when filtered for multiple wildcard pages", %{
+    test "calculates time on page when filtered for multiple contains pages", %{
       conn: conn,
       site: site
     } do
@@ -304,7 +304,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "/blog/**|/articles/**"})
+      filters = Jason.encode!([[:contains, "event:page", ["/blog/", "/articles/"]]])
 
       conn =
         get(
@@ -319,7 +319,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    test "calculates time on page when filtered for multiple negated wildcard pages", %{
+    test "calculates time on page when filtered for multiple negated contains pages", %{
       conn: conn,
       site: site
     } do
@@ -348,7 +348,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "!/blog/**|/articles/**"})
+      filters = Jason.encode!([["contains_not", "event:page", ["/blog/", "/articles/"]]])
 
       conn =
         get(
@@ -369,7 +369,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
       assert %{"name" => "Time on page", "value" => 0, "graph_metric" => "time_on_page"} ==
@@ -389,7 +389,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
       assert %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"} ==
@@ -405,7 +405,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/")
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
       path = "/api/stats/#{site.domain}/top-stats?&filters=#{filters}"
 
       assert %{"name" => "Time on page", "value" => 0, "graph_metric" => "time_on_page"} ==
@@ -424,7 +424,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:03:00], pathname: "/exit")
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
       assert %{
@@ -445,7 +445,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     } do
       # ┌─p──┬─p2─┬─minus(t2, t)─┬──s─┐
       # │ /a │ /b │          100 │ s1 │
-      # │ /a │ /d │          100 │ s2 │ <- these two get treated
+      # │ /a │ /d │          100 │ s2 ��� <- these two get treated
       # │ /a │ /d │            0 │ s2 │ <- as single page transition
       # └────┴────┴──────────────┴────┘
       # so that time_on_page(a)=(100+100)/uniq(transition)=200/2=100
@@ -465,7 +465,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d")
       ])
 
-      filters = Jason.encode!(%{page: "/a"})
+      filters = Jason.encode!([[:is, "event:page", ["/a"]]])
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
       assert %{"name" => "Time on page", "value" => 100, "graph_metric" => "time_on_page"} ==
@@ -582,7 +582,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:imported_locations, country: "US", date: ~D[2021-01-01], visitors: 999)
       ])
 
-      filters = Jason.encode!(%{country: "EE|FR"})
+      filters = Jason.encode!([[:is, "visit:country", ["EE", "FR"]]])
       q = "?period=day&date=2021-01-01&with_imported=true&filters=#{filters}"
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
@@ -628,7 +628,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:imported_pages, page: "/ignored", date: ~D[2021-01-01], visitors: 999)
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
       q = "?period=day&date=2021-01-01&with_imported=true&filters=#{filters}"
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
@@ -734,7 +734,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       site: site
     } do
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup", page: "/register"})
+
+      filters =
+        Jason.encode!([[:is, "event:goal", ["Signup"]], [:is, "event:page", ["/register"]]])
+
       q = "?period=day&date=2021-03-15&with_imported=true&filters=#{filters}"
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
@@ -839,7 +842,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup", timestamp: relative_time(minutes: -1))
       ])
 
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
 
@@ -863,7 +866,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
 
@@ -890,7 +893,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn: conn,
       site: site
     } do
-      filters = Jason.encode!(%{page: "/A"})
+      filters = Jason.encode!([[:is, "event:page", ["/A"]]])
 
       [visitors, visits, pageviews, bounce_rate, time_on_page, scroll_depth] =
         conn
@@ -910,7 +913,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn: conn,
       site: site
     } do
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       [unique_visitors, unique_conversions, total_conversions, cr] =
         conn
@@ -926,7 +929,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "returns graph_metric key for top stats with a goal filter in realtime mode",
          %{conn: conn, site: site} do
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       [current_visitors, unique_conversions, total_conversions] =
         conn
@@ -946,7 +949,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, country_code: "EE")
       ])
 
-      filters = Jason.encode!(%{country: "US"})
+      filters = Jason.encode!([[:is, "visit:country", ["US"]]])
 
       conn =
         get(
@@ -971,7 +974,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
 
       conn =
         get(
@@ -986,36 +989,14 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    test "page glob filter", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/index"),
-        build(:pageview, pathname: "/blog/post1"),
-        build(:pageview, pathname: "/blog/post2")
-      ])
-
-      filters = Jason.encode!(%{page: "/blog/**"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
-        )
-
-      res = json_response(conn, 200)
-
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
-               "top_stats"
-             ]
-    end
-
-    test "contains (~) filter", %{conn: conn, site: site} do
+    test "contains filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/some-blog-post"),
         build(:pageview, pathname: "/blog/post1"),
         build(:pageview, pathname: "/another/post")
       ])
 
-      filters = Jason.encode!(%{page: "~blog"})
+      filters = Jason.encode!([[:contains, "event:page", ["blog"]]])
 
       conn =
         get(
@@ -1037,7 +1018,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, screen_size: "Mobile")
       ])
 
-      filters = Jason.encode!(%{screen: "Desktop"})
+      filters = Jason.encode!([[:is, "visit:screen", ["Desktop"]]])
 
       conn =
         get(
@@ -1069,7 +1050,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, screen_size: "Mobile", hostname: "blog.example.com")
       ])
 
-      filters = Jason.encode!(%{screen: "Desktop", hostname: "blog.example.com"})
+      filters =
+        Jason.encode!([
+          [:is, "visit:screen", ["Desktop"]],
+          [:is, "event:hostname", ["blog.example.com"]]
+        ])
 
       conn =
         get(
@@ -1096,7 +1081,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, browser: "Safari")
       ])
 
-      filters = Jason.encode!(%{browser: "Chrome"})
+      filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
 
       conn =
         get(
@@ -1118,7 +1103,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, operating_system: "Windows")
       ])
 
-      filters = Jason.encode!(%{os: "Mac"})
+      filters = Jason.encode!([[:is, "visit:os", ["Mac"]]])
 
       conn =
         get(
@@ -1153,7 +1138,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:10:00])
       ])
 
-      filters = Jason.encode!(%{source: "Google"})
+      filters = Jason.encode!([[:is, "visit:source", ["Google"]]])
 
       conn =
         get(
@@ -1176,7 +1161,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/")
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
 
       conn =
         get(
@@ -1200,7 +1185,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com")
       ])
 
-      filters = Jason.encode!(%{hostname: "example.com"})
+      filters = Jason.encode!([[:is, "event:hostname", ["example.com"]]])
 
       conn =
         get(
@@ -1219,7 +1204,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    test "hostname glob filter", %{conn: conn, site: site} do
+    test "hostname contains filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/index", hostname: "example.com"),
         build(:pageview, pathname: "/index", hostname: "example.com", user_id: @user_id),
@@ -1229,7 +1214,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, pathname: "/blog/post2", hostname: "about.example.com")
       ])
 
-      filters = Jason.encode!(%{hostname: "*example.com"})
+      filters = Jason.encode!([[:contains, "event:hostname", ["example.com"]]])
 
       conn =
         get(
@@ -1249,7 +1234,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    test "hostname glob subdomain filter", %{conn: conn, site: site} do
+    test "hostname contains subdomain filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/index", hostname: "example.com"),
         build(:pageview, pathname: "/index", hostname: "example.com", user_id: @user_id),
@@ -1263,7 +1248,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{hostname: "*.example.com"})
+      filters = Jason.encode!([[:contains, "event:hostname", [".example.com"]]])
 
       conn =
         get(
@@ -1294,7 +1279,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup")
       ])
 
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1318,7 +1303,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1342,7 +1327,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1369,7 +1354,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1423,7 +1408,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "PaymentUSD"})
+      filters = Jason.encode!([[:is, "event:goal", ["PaymentUSD"]]])
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
 
@@ -1482,7 +1467,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "Payment|Payment2"})
+      filters = Jason.encode!([[:is, "event:goal", ["Payment", "Payment2"]]])
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
 
@@ -1528,7 +1513,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "Payment|AddToCart"})
+      filters = Jason.encode!([[:is, "event:goal", ["Payment", "AddToCart"]]])
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
 
@@ -1558,7 +1543,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup")
       ])
 
-      filters = Jason.encode!(%{goal: "Payment|Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Payment", "Signup"]]])
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
 
@@ -1580,7 +1565,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
          %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
 
-      filters = Jason.encode!(%{goal: "Payment|Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Payment", "Signup"]]])
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
 
@@ -1615,7 +1600,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "PaymentWithoutCurrency"})
+      filters = Jason.encode!([[:is, "event:goal", ["PaymentWithoutCurrency"]]])
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
 
@@ -1637,7 +1622,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "Payment"})
+      filters = Jason.encode!([[:is, "event:goal", ["Payment"]]])
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
 
@@ -1792,7 +1777,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(

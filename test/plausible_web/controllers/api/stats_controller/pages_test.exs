@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:pageview, pathname: "/contact", hostname: "e.example.com")
       ])
 
-      filters = Jason.encode!(%{"hostname" => "*.example.com"})
+      filters = Jason.encode!([[:contains, "event:hostname", [".example.com"]]])
       conn = get(conn1, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"visitors" => 1, "name" => "/landing"}
              ]
 
-      filters = Jason.encode!(%{"hostname" => "d.example.com"})
+      filters = Jason.encode!([[:is, "event:hostname", ["d.example.com"]]])
       conn = get(conn1, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:pageview, user_id: 123, pathname: "/")
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:pageview, pathname: "/")
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:pageview, pathname: "/5")
       ])
 
-      filters = Jason.encode!(%{props: %{"prop" => "~bar"}})
+      filters = Jason.encode!([[:contains, "event:props:prop", ["bar"]]])
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"prop" => "~bar|nea"}})
+      filters = Jason.encode!([[:contains, "event:props:prop", ["bar", "nea"]]])
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -214,7 +214,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:pageview, pathname: "/5")
       ])
 
-      filters = Jason.encode!(%{props: %{"prop" => "bar", "number" => "1"}})
+      filters =
+        Jason.encode!([
+          [:is, "event:props:prop", ["bar"]],
+          [:is, "event:props:number", ["1"]]
+        ])
+
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -258,7 +263,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
 
       conn =
         get(
@@ -322,7 +327,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
 
       conn =
         get(
@@ -376,7 +381,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "(none)"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -434,7 +439,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -497,7 +502,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"browser" => "!Chrome|Safari"}})
+      filters = Jason.encode!([[:is_not, "event:props:browser", ["Chrome", "Safari"]]])
 
       conn =
         get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}")
@@ -537,7 +542,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"browser" => "!Chrome|(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:browser", ["Chrome", "(none)"]]])
 
       conn =
         get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}")
@@ -578,7 +583,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
 
       conn =
         get(
@@ -671,7 +676,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "/about|/"})
+      filters = Jason.encode!([[:is, "event:page", ["/", "/about"]]])
 
       conn =
         get(
@@ -727,7 +732,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "!/irrelevant|/about"})
+      filters = Jason.encode!([[:is_not, "event:page", ["/irrelevant", "/about"]]])
 
       conn =
         get(
@@ -774,7 +779,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "/blog/**|/articles/**"})
+      filters = Jason.encode!([[:contains, "event:page", ["/blog/", "/articles/"]]])
 
       conn =
         get(
@@ -829,7 +834,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "/blog/(/**|/blog/)/**"})
+      filters = Jason.encode!([[:contains, "event:page", ["/blog/(/", "/blog/)/"]]])
 
       conn =
         get(
@@ -884,7 +889,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{page: "!/blog/**|/articles/**"})
+      filters = Jason.encode!([[:contains_not, "event:page", ["/blog/", "/articles/"]]])
 
       conn =
         get(
@@ -951,7 +956,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:imported_visitors, visitors: 4)
       ])
 
-      filters = Jason.encode!(%{goal: "Visit /blog**"})
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog**"]]])
       q = "?period=day&filters=#{filters}&with_imported=true"
       conn = get(conn, "/api/stats/#{site.domain}/pages#{q}")
 
@@ -1036,7 +1041,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{"hostname" => "blog.example.com"})
+      filters = Jason.encode!([[:is, "event:hostname", ["blog.example.com"]]])
 
       conn =
         get(
@@ -1116,7 +1121,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{"hostname" => "blog.example.com"})
+      filters = Jason.encode!([[:is, "event:hostname", ["blog.example.com"]]])
 
       conn =
         get(
@@ -1294,7 +1299,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
@@ -1325,7 +1330,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:imported_pages, page: "/ignored", visitors: 10, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{"page" => "/"})
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
       q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
 
       conn = get(conn, "/api/stats/#{site.domain}/pages#{q}")
@@ -1374,7 +1379,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:imported_pages, page: "/ignored", visitors: 10, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{"page" => "/|/a"})
+      filters = Jason.encode!([[:is, "event:page", ["/", "/a"]]])
       q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
 
       conn = get(conn, "/api/stats/#{site.domain}/pages#{q}")
@@ -1430,7 +1435,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:imported_pages, page: "/ignored", visitors: 10, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{"page" => "/a**"})
+      filters = Jason.encode!([[:contains, "event:page", ["/a"]]])
       q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
 
       conn = get(conn, "/api/stats/#{site.domain}/pages#{q}")
@@ -1611,7 +1616,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
 
       conn =
         get(
@@ -1749,7 +1754,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{"hostname" => "es.example.com"})
+      filters = Jason.encode!([[:is, "event:hostname", ["es.example.com"]]])
 
       conn =
         get(
@@ -1782,7 +1787,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       request = fn conn, opts ->
         page = Keyword.fetch!(opts, :page)
         limit = Keyword.fetch!(opts, :limit)
-        filters = Jason.encode!(%{"goal" => "Signup"})
+        filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
         conn
         |> get(
@@ -1842,7 +1847,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1907,7 +1912,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{"entry_page" => "/a**|/b**"})
+      filters = Jason.encode!([[:contains, "visit:entry_page", ["/a", "/b"]]])
       q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
 
       conn = get(conn, "/api/stats/#{site.domain}/entry-pages#{q}")
@@ -2035,7 +2040,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{hostname: "es.example.com"})
+      filters = Jason.encode!([[:is, "event:hostname", ["es.example.com"]]])
 
       conn =
         get(
@@ -2074,7 +2079,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
 
       conn =
         get(
@@ -2181,7 +2186,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -2234,7 +2239,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      filters = Jason.encode!(%{"page" => "/exit1"})
+      filters = Jason.encode!([[:is, "event:page", ["/exit1"]]])
 
       conn =
         get(
@@ -2291,7 +2296,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:imported_pages, page: "/bbb", pageviews: 2, date: ~D[2021-01-01])
       ])
 
-      filters = Jason.encode!(%{"exit_page" => "!/ignored"})
+      filters = Jason.encode!([[:is_not, "visit:exit_page", ["/ignored"]]])
       q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
 
       conn = get(conn, "/api/stats/#{site.domain}/exit-pages#{q}")
