@@ -271,6 +271,7 @@ defmodule Plausible.Stats.QueryRunner do
          do: nil
   end
 
+  defp empty_metric_value(:scroll_depth), do: nil
   defp empty_metric_value(_), do: 0
 
   defp total_rows([]), do: 0

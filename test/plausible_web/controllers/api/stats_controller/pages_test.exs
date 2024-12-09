@@ -1492,20 +1492,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                    "pageviews" => 0,
                    "time_on_page" => 0,
                    "visitors" => 0,
-                   "scroll_depth" => 0,
+                   "scroll_depth" => nil,
                    "change" => %{
                      "bounce_rate" => nil,
                      "pageviews" => 100,
                      "time_on_page" => nil,
                      "visitors" => 100,
-                     "scroll_depth" => 0
+                     "scroll_depth" => nil
                    }
                  },
                  "name" => "/page2",
                  "pageviews" => 2,
                  "time_on_page" => nil,
                  "visitors" => 2,
-                 "scroll_depth" => 0
+                 "scroll_depth" => nil
                },
                %{
                  "bounce_rate" => 100,
@@ -1513,19 +1513,19 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "time_on_page" => nil,
                  "visitors" => 1,
-                 "scroll_depth" => 0,
+                 "scroll_depth" => nil,
                  "comparison" => %{
                    "bounce_rate" => 100,
                    "pageviews" => 1,
                    "time_on_page" => nil,
                    "visitors" => 1,
-                   "scroll_depth" => 0,
+                   "scroll_depth" => nil,
                    "change" => %{
                      "bounce_rate" => 0,
                      "pageviews" => 0,
                      "time_on_page" => nil,
                      "visitors" => 0,
-                     "scroll_depth" => 0
+                     "scroll_depth" => nil
                    }
                  }
                }
