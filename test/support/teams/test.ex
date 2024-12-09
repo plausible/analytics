@@ -47,10 +47,18 @@ defmodule Plausible.Teams.Test do
     {trial_expiry_date, args} = Keyword.pop(args, :trial_expiry_date)
     user = insert(:user, args)
 
+    trial_expiry_date =
+      if team_args != [] && !trial_expiry_date do
+        Date.add(Date.utc_today(), 30)
+      else
+        trial_expiry_date
+      end
+
     if trial_expiry_date do
       {:ok, team} = Teams.get_or_create(user)
 
-      team_args = Keyword.merge(team_args, trial_expiry_date: trial_expiry_date)
+      team_args =
+        Keyword.merge(team_args, trial_expiry_date: trial_expiry_date)
 
       team
       |> Ecto.Changeset.change(team_args)
@@ -293,5 +301,17 @@ defmodule Plausible.Teams.Test do
              site_id: site.id,
              role: role
            )
+  end
+
+  def subscription_of(%Plausible.Auth.User{} = user) do
+    user
+    |> team_of()
+    |> subscription_of()
+  end
+
+  def subscription_of(team) do
+    team
+    |> Plausible.Teams.with_subscription()
+    |> Map.fetch!(:subscription)
   end
 end

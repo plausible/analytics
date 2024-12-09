@@ -11,6 +11,7 @@ defmodule Plausible.Teams.Team do
   @type t() :: %__MODULE__{}
 
   @trial_accept_traffic_until_offset_days 14
+  @subscription_accept_traffic_until_offset_days 30
 
   schema "teams" do
     field :name, :string
@@ -83,6 +84,9 @@ defmodule Plausible.Teams.Team do
   end
 
   def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
+
+  def subscription_accept_traffic_until_offset_days(),
+    do: @subscription_accept_traffic_until_offset_days
 
   defp embed_params(nil), do: nil
 

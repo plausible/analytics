@@ -19,9 +19,6 @@ defmodule Plausible.Auth.User do
 
   @required [:email, :name, :password]
 
-  @trial_accept_traffic_until_offset_days 14
-  @susbscription_accept_traffic_until_offset_days 30
-
   schema "users" do
     field :email, :string
     field :password_hash
@@ -195,11 +192,6 @@ defmodule Plausible.Auth.User do
 
     Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
   end
-
-  def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
-
-  def subscription_accept_traffic_until_offset_days(),
-    do: @susbscription_accept_traffic_until_offset_days
 
   defp validate_email_changed(changeset) do
     if !get_change(changeset, :email) && !changeset.errors[:email] do
