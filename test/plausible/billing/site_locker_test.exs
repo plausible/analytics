@@ -114,7 +114,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       subscribe_to_plan(user, "123")
       new_site(owner: user)
-      user = team_of(user)
+      team = team_of(user)
 
       assert SiteLocker.update_sites_for(team) == {:locked, :grace_period_ended_now}
 

@@ -174,6 +174,24 @@ defmodule Plausible.Teams do
     |> Repo.update!()
   end
 
+  def start_trial(%Teams.Team{} = team) do
+    team
+    |> Teams.Team.start_trial()
+    |> Repo.update!()
+  end
+
+  def start_grace_period(team) do
+    team
+    |> GracePeriod.start_changeset()
+    |> Repo.update!()
+  end
+
+  def start_manual_lock_grace_period(team) do
+    team
+    |> GracePeriod.start_manual_lock_changeset()
+    |> Repo.update!()
+  end
+
   def end_grace_period(team) do
     team
     |> GracePeriod.end_changeset()

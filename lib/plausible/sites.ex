@@ -193,24 +193,15 @@ defmodule Plausible.Sites do
     |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
       Site.Membership.new(site, user)
     end)
-    |> maybe_start_trial(user)
-    |> Ecto.Multi.run(:sync_team, fn _repo, %{user: user} ->
-      Plausible.Teams.sync_team(user)
-      {:ok, nil}
+    |> Ecto.Multi.run(:trial, fn _repo, %{create_team: team} ->
+      if is_nil(team.trial_expiry_date) do
+        Teams.start_trial(team)
+        {:ok, :trial_started}
+      else
+        {:ok, :trial_already_started}
+      end
     end)
     |> Repo.transaction()
-  end
-
-  defp maybe_start_trial(multi, user) do
-    case user.trial_expiry_date do
-      nil ->
-        Ecto.Multi.run(multi, :user, fn _, _ ->
-          {:ok, Plausible.Users.start_trial(user)}
-        end)
-
-      _ ->
-        Ecto.Multi.put(multi, :user, user)
-    end
   end
 
   @spec clear_stats_start_date!(Site.t()) :: Site.t()

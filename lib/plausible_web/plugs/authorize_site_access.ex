@@ -110,10 +110,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
         site =
           site
           |> Plausible.Imported.load_import_data()
-          |> Repo.preload(
-            team: [subscription: Plausible.Teams.last_subscription_query()],
-            owner: [subscription: Plausible.Users.last_subscription_query()]
-          )
+          |> Repo.preload(team: [subscription: Plausible.Teams.last_subscription_query()])
 
         conn = merge_assigns(conn, site: site, site_role: role)
 

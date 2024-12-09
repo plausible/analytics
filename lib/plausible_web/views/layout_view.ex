@@ -94,7 +94,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def trial_notification(team) do
-    case Plausible.Users.trial_days_left(team) do
+    case Plausible.Teams.trial_days_left(team) do
       days when days > 1 ->
         "#{days} trial days left"
 
