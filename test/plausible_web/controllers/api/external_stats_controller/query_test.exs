@@ -3773,7 +3773,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [1, 0], "dimensions" => []}
+               %{"metrics" => [1, nil], "dimensions" => []}
              ]
     end
 
@@ -3787,7 +3787,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [0], "dimensions" => []}
+               %{"metrics" => [nil], "dimensions" => []}
              ]
     end
 

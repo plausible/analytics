@@ -255,7 +255,7 @@ defmodule Plausible.Ingestion.Request do
         case request_body["sd"] do
           sd when is_integer(sd) and sd >= 0 and sd <= 100 -> sd
           sd when is_integer(sd) and sd > 100 -> 100
-          _ -> 0
+          _ -> 255
         end
 
       Changeset.put_change(changeset, :scroll_depth, scroll_depth)

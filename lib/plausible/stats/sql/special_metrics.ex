@@ -131,7 +131,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     if :scroll_depth in query.metrics do
       max_per_visitor_q =
         Base.base_event_query(site, query)
-        |> where([e], e.name == "pageleave")
+        |> where([e], e.name == "pageleave" and e.scroll_depth <= 100)
         |> select([e], %{
           user_id: e.user_id,
           max_scroll_depth: max(e.scroll_depth)
@@ -153,7 +153,12 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       scroll_depth_q =
         subquery(max_per_visitor_q)
         |> select([p], %{
-          scroll_depth: fragment("toUInt8(round(ifNotFinite(avg(?), 0)))", p.max_scroll_depth)
+          scroll_depth:
+            fragment(
+              "if(isFinite(avg(?)), toUInt8(round(avg(?))), NULL)",
+              p.max_scroll_depth,
+              p.max_scroll_depth
+            )
         })
         |> select_merge(^dim_select)
         |> group_by(^dim_group_by)
