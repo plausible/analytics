@@ -287,7 +287,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   end
 
   test "allows user based on website visibility (anonymous request)" do
-    site = insert(:site, members: [build(:user)], public: true)
+    site = new_site(public: true)
 
     opts = AuthorizeSiteAccess.init([:public])
 
@@ -318,7 +318,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   end
 
   test "allows user based on shared link auth (anonymous request)" do
-    site = insert(:site, members: [build(:user)])
+    site = new_site()
     shared_link = insert(:shared_link, site: site)
 
     opts = AuthorizeSiteAccess.init([:public])

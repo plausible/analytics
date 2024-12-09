@@ -99,7 +99,7 @@ defmodule Plausible.Teams.Memberships do
     case get_guest_membership(site.id, user_id) do
       {:ok, guest_membership} ->
         can_grant_role? =
-          if guest_membership.user.id == current_user.id do
+          if guest_membership.team_membership.user_id == current_user.id do
             can_grant_role_to_self?(current_user_role, new_role)
           else
             can_grant_role_to_other?(current_user_role, new_role)
@@ -178,7 +178,8 @@ defmodule Plausible.Teams.Memberships do
       from(
         gm in Teams.GuestMembership,
         inner_join: tm in assoc(gm, :team_membership),
-        where: gm.site_id == ^site_id and tm.user_id == ^user_id
+        where: gm.site_id == ^site_id and tm.user_id == ^user_id,
+        preload: [team_membership: tm]
       )
 
     case Repo.one(query) do

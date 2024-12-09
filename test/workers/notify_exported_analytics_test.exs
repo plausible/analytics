@@ -1,12 +1,13 @@
 defmodule Plausible.Workers.NotifyExportedAnalyticsTest do
   use Plausible
   use Plausible.DataCase
+  use Plausible.Teams.Test
   use Bamboo.Test
 
   describe "perform/1" do
     setup do
-      user = insert(:user)
-      site = insert(:site, members: [user])
+      user = new_user()
+      site = new_site(owner: user)
       {:ok, user: user, site: site}
     end
 

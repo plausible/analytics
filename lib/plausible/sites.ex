@@ -78,10 +78,11 @@ defmodule Plausible.Sites do
     owner_membership =
       from(
         tm in Teams.Membership,
+        inner_join: u in assoc(tm, :user),
         where: tm.team_id == ^site.team_id,
         where: tm.role == :owner,
-        select: %Plausible.Site.Membership{
-          user_id: tm.user_id,
+        select: %{
+          user: u,
           role: tm.role
         }
       )
@@ -91,9 +92,10 @@ defmodule Plausible.Sites do
       from(
         gm in Teams.GuestMembership,
         inner_join: tm in assoc(gm, :team_membership),
+        inner_join: u in assoc(tm, :user),
         where: gm.site_id == ^site.id,
-        select: %Plausible.Site.Membership{
-          user_id: tm.user_id,
+        select: %{
+          user: u,
           role:
             fragment(
               """
@@ -109,14 +111,14 @@ defmodule Plausible.Sites do
       )
       |> Repo.all()
 
-    memberships = Repo.preload([owner_membership | memberships], :user)
+    memberships = [owner_membership | memberships]
 
     invitations =
       from(
         gi in Teams.GuestInvitation,
         inner_join: ti in assoc(gi, :team_invitation),
         where: gi.site_id == ^site.id,
-        select: %Plausible.Auth.Invitation{
+        select: %{
           invitation_id: gi.invitation_id,
           email: ti.email,
           role:
@@ -138,7 +140,7 @@ defmodule Plausible.Sites do
       from(
         st in Teams.SiteTransfer,
         where: st.site_id == ^site.id,
-        select: %Plausible.Auth.Invitation{
+        select: %{
           invitation_id: st.transfer_id,
           email: st.email,
           role: :owner

@@ -107,8 +107,9 @@ defmodule Plausible.Teams.Test do
   end
 
   def invite_guest(site, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do
-    role = Keyword.fetch!(args, :role)
-    inviter = Keyword.fetch!(args, :inviter)
+    {role, args} = Keyword.pop!(args, :role)
+    {inviter, args} = Keyword.pop!(args, :inviter)
+    {team_invitation_args, args} = Keyword.pop(args, :team_invitation, [])
     team = Repo.preload(site, :team).team
 
     email =
@@ -118,22 +119,34 @@ defmodule Plausible.Teams.Test do
       end
 
     team_invitation =
-      insert(:team_invitation,
-        team: team,
-        email: email,
-        inviter: inviter,
-        role: :guest
+      insert(
+        :team_invitation,
+        Keyword.merge(
+          [
+            team: team,
+            email: email,
+            inviter: inviter,
+            role: :guest
+          ],
+          team_invitation_args
+        )
       )
 
-    insert(:guest_invitation,
-      team_invitation: team_invitation,
-      site: site,
-      role: role
+    insert(
+      :guest_invitation,
+      Keyword.merge(
+        [
+          team_invitation: team_invitation,
+          site: site,
+          role: role
+        ],
+        args
+      )
     )
   end
 
   def invite_transfer(site, invitee_or_email, args \\ []) do
-    inviter = Keyword.fetch!(args, :inviter)
+    {inviter, args} = Keyword.pop!(args, :inviter)
 
     email =
       case invitee_or_email do
@@ -141,10 +154,16 @@ defmodule Plausible.Teams.Test do
         email when is_binary(email) -> email
       end
 
-    insert(:site_transfer,
-      email: email,
-      site: site,
-      initiator: inviter
+    insert(
+      :site_transfer,
+      Keyword.merge(
+        [
+          email: email,
+          site: site,
+          initiator: inviter
+        ],
+        args
+      )
     )
   end
 
@@ -281,10 +300,14 @@ defmodule Plausible.Teams.Test do
            )
   end
 
-  def assert_site_transfer(site, user) do
+  def assert_site_transfer(site, %Plausible.Auth.User{} = user) do
+    assert_site_transfer(site, user.email)
+  end
+
+  def assert_site_transfer(site, email) when is_binary(email) do
     assert Repo.get_by(Plausible.Teams.SiteTransfer,
              site_id: site.id,
-             email: user.email
+             email: email
            )
   end
 

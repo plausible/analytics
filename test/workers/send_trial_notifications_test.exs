@@ -17,8 +17,9 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   end
 
   test "does not send a notification if user does not have a trial" do
-    user = new_user(trial_expiry_date: nil)
-    new_site(members: user)
+    user = new_user()
+    new_site(owner: user)
+    user |> team_of() |> Ecto.Changeset.change(trial_expiry_date: nil) |> Plausible.Repo.update!()
 
     perform_job(SendTrialNotifications, %{})
 
