@@ -190,9 +190,6 @@ defmodule Plausible.Sites do
     |> Ecto.Multi.insert(:site, fn %{site_changeset: site, create_team: team} ->
       Ecto.Changeset.put_assoc(site, :team, team)
     end)
-    |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
-      Site.Membership.new(site, user)
-    end)
     |> Ecto.Multi.run(:trial, fn _repo, %{create_team: team} ->
       if is_nil(team.trial_expiry_date) do
         Teams.start_trial(team)
@@ -290,14 +287,6 @@ defmodule Plausible.Sites do
     )
   end
 
-  def is_member?(user_id, site) do
-    role(user_id, site) !== nil
-  end
-
-  def has_admin_access?(user_id, site) do
-    role(user_id, site) in [:admin, :owner]
-  end
-
   def locked?(%Site{locked: locked}) do
     locked
   end
@@ -348,15 +337,6 @@ defmodule Plausible.Sites do
       where: s.domain == ^domain or s.domain_changed_from == ^domain,
       where: is_nil(gm.id) or gm.site_id == s.id,
       select: s
-    )
-  end
-
-  def role(user_id, site) do
-    Repo.one(
-      from(sm in Site.Membership,
-        where: sm.user_id == ^user_id and sm.site_id == ^site.id,
-        select: sm.role
-      )
     )
   end
 

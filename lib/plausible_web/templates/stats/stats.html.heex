@@ -22,10 +22,10 @@
     data-funnels-opted-out={to_string(Plausible.Billing.Feature.Funnels.opted_out?(@site))}
     data-props-opted-out={to_string(Plausible.Billing.Feature.Props.opted_out?(@site))}
     data-funnels-available={
-      to_string(Plausible.Billing.Feature.Funnels.check_availability(@site.owner) == :ok)
+      to_string(Plausible.Billing.Feature.Funnels.check_availability(@site.team) == :ok)
     }
     data-props-available={
-      to_string(Plausible.Billing.Feature.Props.check_availability(@site.owner) == :ok)
+      to_string(Plausible.Billing.Feature.Props.check_availability(@site.team) == :ok)
     }
     data-revenue-goals={Jason.encode!(@revenue_goals)}
     data-funnels={Jason.encode!(@funnels)}

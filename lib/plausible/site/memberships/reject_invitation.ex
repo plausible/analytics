@@ -4,32 +4,38 @@ defmodule Plausible.Site.Memberships.RejectInvitation do
   """
 
   alias Plausible.Auth
-  alias Plausible.Repo
-  alias Plausible.Site.Memberships.Invitations
   alias Plausible.Teams
 
   @spec reject_invitation(String.t(), Auth.User.t()) ::
-          {:ok, Auth.Invitation.t()} | {:error, :invitation_not_found}
-  def reject_invitation(invitation_id, user) do
-    with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
-      Repo.transaction(fn ->
-        Invitations.delete_invitation(invitation)
-        Teams.Invitations.remove_invitation_sync(invitation)
-      end)
-
-      notify_invitation_rejected(invitation)
-
-      {:ok, invitation}
+          {:ok, Teams.GuestInvitation.t() | Teams.SiteTransfer.t()}
+          | {:error, :invitation_not_found}
+  def reject_invitation(invitation_or_transfer_id, user) do
+    with {:ok, invitation_or_transfer} <-
+           Teams.Invitations.find_for_user(invitation_or_transfer_id, user) do
+      do_reject(invitation_or_transfer)
+      {:ok, invitation_or_transfer}
     end
   end
 
-  defp notify_invitation_rejected(%{role: :owner} = invitation) do
-    PlausibleWeb.Email.ownership_transfer_rejected(invitation)
+  defp do_reject(%Teams.GuestInvitation{} = guest_invitation) do
+    Teams.Invitations.remove_guest_invitation(guest_invitation)
+
+    notify_guest_invitation_rejected(guest_invitation)
+  end
+
+  defp do_reject(%Teams.SiteTransfer{} = site_transfer) do
+    Teams.Invitations.remove_site_transfer(site_transfer)
+
+    notify_site_transfer_rejected(site_transfer)
+  end
+
+  defp notify_site_transfer_rejected(site_transfer) do
+    PlausibleWeb.Email.ownership_transfer_rejected(site_transfer)
     |> Plausible.Mailer.send()
   end
 
-  defp notify_invitation_rejected(invitation) do
-    PlausibleWeb.Email.invitation_rejected(invitation)
+  defp notify_guest_invitation_rejected(guest_invitation) do
+    PlausibleWeb.Email.invitation_rejected(guest_invitation)
     |> Plausible.Mailer.send()
   end
 end

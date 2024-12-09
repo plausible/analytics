@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Site.MembershipController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use Plausible
-  alias Plausible.Site.{Membership, Memberships}
+  alias Plausible.Site.Memberships
 
   @only_owner_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
 
@@ -149,37 +149,47 @@ defmodule PlausibleWeb.Site.MembershipController do
     Owner - Can update anyone's role except for themselves. If they want to change their own role, they have to use the 'transfer ownership' feature.
     Admin - Can update anyone's role except for owners. Can downgrade their own access to 'viewer'. Can promote a viewer to admin.
   """
-  @role_mappings Plausible.Teams.Membership
-                 |> Ecto.Enum.mappings(:role)
-                 |> Enum.map(fn {k, v} -> {v, k} end)
-                 |> Enum.into(%{})
-
   def update_role_by_user(conn, %{"id" => user_id, "new_role" => new_role_str}) do
     %{site: site, current_user: current_user, site_role: site_role} = conn.assigns
 
-    membership =
-      Membership |> Repo.get_by!(user_id: user_id, site_id: site.id) |> Repo.preload(:user)
+    case Plausible.Teams.Memberships.update_role(
+           site,
+           user_id,
+           new_role_str,
+           current_user,
+           site_role
+         ) do
+      {:ok, guest_membership} ->
+        redirect_target =
+          if guest_membership.team_membership.user_id == current_user.id and
+               guest_membership.role == :viewer do
+            "/#{URI.encode_www_form(site.domain)}"
+          else
+            Routes.site_path(conn, :settings_people, site.domain)
+          end
 
-    new_role = Map.fetch!(@role_mappings, new_role_str)
+        conn
+        |> put_flash(
+          :success,
+          "#{guest_membership.team_membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(to_string(guest_membership.role))}"
+        )
+        |> redirect(external: redirect_target)
 
-    can_grant_role? =
-      if membership.user.id == current_user.id do
-        can_grant_role_to_self?(site_role, new_role)
-      else
-        can_grant_role_to_other?(site_role, new_role)
-      end
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "You are not allowed to grant the #{new_role_str} role")
+        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+    end
+  end
 
-    if can_grant_role? do
-      membership =
-        membership
-        |> Ecto.Changeset.change()
-        |> Membership.set_role(new_role)
-        |> Repo.update!()
+  def remove_member_by_user(conn, %{"id" => user_id} = _params) do
+    site = conn.assigns.site
 
-      Plausible.Teams.Memberships.update_role_sync(membership)
+    if user = Repo.get(Plausible.Auth.User, user_id) do
+      Plausible.Teams.Memberships.remove(site, user)
 
       redirect_target =
-        if membership.user.id == current_user.id and new_role == :viewer do
+        if user_id == conn.assigns[:current_user].id do
           "/#{URI.encode_www_form(site.domain)}"
         else
           Routes.site_path(conn, :settings_people, site.domain)
@@ -188,70 +198,14 @@ defmodule PlausibleWeb.Site.MembershipController do
       conn
       |> put_flash(
         :success,
-        "#{membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(new_role_str)}"
+        "#{user.name} has been removed from #{site.domain}"
       )
       |> redirect(external: redirect_target)
     else
-      conn
-      |> put_flash(:error, "You are not allowed to grant the #{new_role} role")
-      |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
-    end
-  end
-
-  defp can_grant_role_to_self?(:editor, :viewer), do: true
-  defp can_grant_role_to_self?(:admin, :viewer), do: true
-  defp can_grant_role_to_self?(_, _), do: false
-
-  defp can_grant_role_to_other?(:owner, :editor), do: true
-  defp can_grant_role_to_other?(:owner, :admin), do: true
-  defp can_grant_role_to_other?(:owner, :viewer), do: true
-  defp can_grant_role_to_other?(:editor, :editor), do: true
-  defp can_grant_role_to_other?(:admin, :admin), do: true
-  defp can_grant_role_to_other?(:editor, :viewer), do: true
-  defp can_grant_role_to_other?(:admin, :viewer), do: true
-  defp can_grant_role_to_other?(_, _), do: false
-
-  def remove_member_by_user(conn, %{"id" => user_id} = _params) do
-    site = conn.assigns.site
-    site_id = site.id
-
-    membership_q =
-      from m in Membership,
-        where: m.user_id == ^user_id,
-        where: m.site_id == ^site_id,
-        inner_join: user in assoc(m, :user),
-        inner_join: site in assoc(m, :site),
-        preload: [user: user, site: site]
-
-    membership = Repo.one(membership_q)
-
-    if membership do
-      Repo.delete!(membership)
-
-      Plausible.Teams.Memberships.remove_sync(membership)
-
-      membership
-      |> PlausibleWeb.Email.site_member_removed()
-      |> Plausible.Mailer.send()
-
-      redirect_target =
-        if membership.user.id == conn.assigns[:current_user].id do
-          "/#{URI.encode_www_form(membership.site.domain)}"
-        else
-          Routes.site_path(conn, :settings_people, site.domain)
-        end
-
       conn
       |> put_flash(
         :success,
-        "#{membership.user.name} has been removed from #{site.domain}"
-      )
-      |> redirect(external: redirect_target)
-    else
-      conn
-      |> put_flash(
-        :error,
-        "Failed to find membership to remove"
+        "User has been removed from #{site.domain}"
       )
       |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
     end

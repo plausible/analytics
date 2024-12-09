@@ -125,20 +125,17 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
     @tag :teams
     test "does not create redundant guest membership when owner team membership exists" do
+      user = new_user()
+      site = new_site(owner: user)
+
       user = insert(:user)
       {:ok, team} = Plausible.Teams.get_or_create(user)
       site = insert(:site, team: team, members: [user])
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: insert(:user),
-          email: user.email,
-          role: :admin
-        )
+      another_user = add_guest(site, role: :editor)
+      guest_invitation = invite_guest(site, user, role: :viewer, inviter: another_user)
 
       {:ok, team_membership} =
-        Plausible.Teams.Invitations.accept_invitation_sync(invitation, user)
+        Plausible.Teams.Invitations.accept_guest_invitation(guest_invitation, user)
 
       team_membership = team_membership |> Repo.reload!() |> Repo.preload(:guest_memberships)
 
