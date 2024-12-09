@@ -212,7 +212,7 @@ defmodule Plausible.Teams do
 
         team.subscription && team.subscription.next_bill_date ->
           Date.shift(team.subscription.next_bill_date,
-            day: Teams.Team.subscription_accept_traffic_until_offset_days()
+            day: Teams.Team.trial_accept_traffic_until_offset_days()
           )
 
         true ->
