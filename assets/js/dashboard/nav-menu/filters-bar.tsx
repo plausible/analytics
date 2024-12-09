@@ -11,9 +11,7 @@ import {
 import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import {
-  useSegmentExpandedContext
-} from '../segments/segment-expanded-context'
+import { useSegmentExpandedContext } from '../segments/segment-expanded-context'
 import {
   buttonClass,
   primaryNeutralButtonClass,
@@ -21,8 +19,8 @@ import {
 } from '../segments/segment-modals'
 import { isSegmentFilter } from '../segments/segments'
 
-const LEFT_ACTIONS_GAP_PX = 16
-const SEE_MORE_GAP_PX = 16
+const LEFT_ACTIONS_GAP_PX = 8
+const SEE_MORE_GAP_PX = 12
 const SEE_MORE_WIDTH_PX = 36
 
 export const handleVisibility = ({
@@ -190,10 +188,10 @@ export const FiltersBar = () => {
           start: 0,
           end: visibility?.visibleCount
         }}
-        className="p-1 overflow-hidden"
+        className="overflow-hidden"
         style={{ width: visibility?.width ?? '100%' }}
       />
-      <div className="flex items-center gap-x-4 py-1" ref={actionsRef}>
+      <div className="flex items-center gap-x-4 pl-1" ref={actionsRef}>
         {visibility !== null &&
           (query.filters.length !== visibility.visibleCount ||
             canSave ||

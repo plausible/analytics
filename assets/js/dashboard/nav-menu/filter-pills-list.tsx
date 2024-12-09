@@ -14,8 +14,8 @@ import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { filterRoute } from '../router'
 
-export const PILL_X_GAP = 16
-export const PILL_Y_GAP = 8
+export const PILL_X_GAP = 8
+export const PILL_Y_GAP = 0
 
 type SliceStartEnd = {
   /** The beginning index of the specified portion of the array. If start is undefined, then the slice begins at index 0. */

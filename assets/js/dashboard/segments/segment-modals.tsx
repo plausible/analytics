@@ -149,16 +149,19 @@ export const DeleteSegmentModal = ({
         <span className="break-all">{` "${segment.name}"?`}</span>
       </FormTitle>
       {segment?.segment_data && (
-        <FilterPillsList
-          className="flex-wrap"
-          direction="horizontal"
-          pills={segment.segment_data.filters.map((filter) => ({
-            // className: 'dark:!bg-gray-700',
-            plainText: plainFilterText(segment.segment_data!.labels, filter),
-            children: styledFilterText(segment.segment_data!.labels, filter),
-            interactive: false
-          }))}
-        />
+        <>
+          <h2 className="mt-4 font-medium">Filters in segment</h2>
+          <FilterPillsList
+            className="flex-wrap mt-4"
+            direction="horizontal"
+            pills={segment.segment_data.filters.map((filter) => ({
+              // className: 'dark:!bg-gray-700',
+              plainText: plainFilterText(segment.segment_data!.labels, filter),
+              children: styledFilterText(segment.segment_data!.labels, filter),
+              interactive: false
+            }))}
+          />
+        </>
       )}
 
       <ButtonsRow>

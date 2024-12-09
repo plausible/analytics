@@ -35,12 +35,9 @@ export default function SegmentExpandedContextProvider({
 }: {
   children: ReactNode
 }) {
-  console.log('seg rerendering')
   const { query } = useQueryContext()
-  console.log(query.filters)
   const [expandedSegmentState, setExpandedSegmentState] =
     useState<SegmentExpandedState>({ modal: null, expandedSegment: null })
-  console.log(expandedSegmentState)
 
   useLayoutEffect(() => {
     if (!query.filters.length) {

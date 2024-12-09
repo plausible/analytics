@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   DropdownLinkGroup,
   DropdownMenuWrapper,
@@ -87,7 +87,9 @@ export const FilterMenu = () => {
   const queryClient = useQueryClient()
   const navigate = useAppNavigate()
   const [search, setSearch] = useState<string>()
-
+  useEffect(() => {
+    setSearch(undefined)
+  }, [opened])
   const patchSegment = useMutation({
     mutationFn: ({
       id,
