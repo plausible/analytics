@@ -72,21 +72,6 @@ defmodule Plausible.Users do
     user
   end
 
-  def maybe_reset_next_upgrade_override(%Auth.User{} = user) do
-    if user.allow_next_upgrade_override do
-      user =
-        user
-        |> Auth.User.changeset(%{allow_next_upgrade_override: false})
-        |> Repo.update!()
-
-      Plausible.Teams.sync_team(user)
-
-      user
-    else
-      user
-    end
-  end
-
   def last_subscription_join_query() do
     from(subscription in last_subscription_query(),
       where: subscription.user_id == parent_as(:user).id
