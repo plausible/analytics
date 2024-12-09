@@ -3,21 +3,20 @@ defmodule Plausible.Site.Memberships.Invitations do
 
   use Plausible
 
-  import Ecto.Query, only: [from: 2]
-
   alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Billing.Feature
+  alias Plausible.Teams
 
   @type missing_features_error() :: {:missing_features, [Feature.t()]}
 
   @spec find_for_user(String.t(), Auth.User.t()) ::
           {:ok, Auth.Invitation.t()} | {:error, :invitation_not_found}
-  def find_for_user(invitation_id, user) do
+  def find_for_user(guest_invitation_id, user) do
     invitation =
-      Auth.Invitation
-      |> Repo.get_by(invitation_id: invitation_id, email: user.email)
-      |> Repo.preload([:site, :inviter])
+      Teams.GuestInvitation
+      |> Repo.get_by(invitation_id: guest_invitation_id, email: user.email)
+      |> Repo.preload([:site, team_invitation: :inviter])
 
     if invitation do
       {:ok, invitation}
@@ -28,11 +27,11 @@ defmodule Plausible.Site.Memberships.Invitations do
 
   @spec find_for_site(String.t(), Plausible.Site.t()) ::
           {:ok, Auth.Invitation.t()} | {:error, :invitation_not_found}
-  def find_for_site(invitation_id, site) do
+  def find_for_site(guest_invitation_id, site) do
     invitation =
-      Auth.Invitation
-      |> Repo.get_by(invitation_id: invitation_id, site_id: site.id)
-      |> Repo.preload([:site, :inviter])
+      Teams.GuestInvitation
+      |> Repo.get_by(invitation_id: guest_invitation_id, site_id: site.id)
+      |> Repo.preload([:site, team_invitation: :inviter])
 
     if invitation do
       {:ok, invitation}
@@ -41,10 +40,12 @@ defmodule Plausible.Site.Memberships.Invitations do
     end
   end
 
-  @spec delete_invitation(Auth.Invitation.t()) :: :ok
-  def delete_invitation(invitation) do
-    Repo.delete_all(from(i in Auth.Invitation, where: i.id == ^invitation.id))
+  @spec delete_invitation(Teams.GuestInvitation.t() | Plausible.Teams.SiteTransfer.t()) :: :ok
+  def delete_invitation(%Teams.GuestInvitation{} = invitation) do
+    Plausible.Teams.Invitations.remove_invitation_sync(invitation)
+  end
 
-    :ok
+  def delete_invitation(_) do
+    raise "implement me"
   end
 end

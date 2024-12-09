@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr :site, Plausible.Site, required: true
-  attr :invitation, Plausible.Auth.Invitation, required: true
+  attr :invitation, :map, required: true
   attr :hourly_stats, :map, required: true
 
   def invitation(assigns) do

@@ -12,7 +12,7 @@ defmodule Plausible.Teams.Memberships do
     |> pending_site_transfers_query()
     |> Repo.all()
     |> Enum.map(fn transfer ->
-      %Plausible.Auth.Invitation{
+      %{
         site_id: transfer.site_id,
         email: transfer.email,
         invitation_id: transfer.transfer_id,
