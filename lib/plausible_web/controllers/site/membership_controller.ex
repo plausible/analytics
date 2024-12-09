@@ -149,7 +149,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     Owner - Can update anyone's role except for themselves. If they want to change their own role, they have to use the 'transfer ownership' feature.
     Admin - Can update anyone's role except for owners. Can downgrade their own access to 'viewer'. Can promote a viewer to admin.
   """
-  @role_mappings Membership
+  @role_mappings Plausible.Teams.Membership
                  |> Ecto.Enum.mappings(:role)
                  |> Enum.map(fn {k, v} -> {v, k} end)
                  |> Enum.into(%{})

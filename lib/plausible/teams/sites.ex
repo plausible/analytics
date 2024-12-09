@@ -103,7 +103,7 @@ defmodule Plausible.Teams.Sites do
     |> Repo.paginate(pagination_params)
   end
 
-  @role_type Plausible.Auth.Invitation.__schema__(:type, :role)
+  @role_type Plausible.Teams.Invitation.__schema__(:type, :role)
 
   @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list_with_invitations(user, pagination_params, opts \\ []) do

@@ -48,6 +48,7 @@ defmodule Plausible.Teams.Team do
     |> cast(%{name: name}, [:name])
     |> validate_required(:name)
     |> start_trial(today)
+    |> maybe_bump_accept_traffic_until()
   end
 
   def start_trial(team, today \\ Date.utc_today()) do
@@ -58,6 +59,29 @@ defmodule Plausible.Teams.Team do
       accept_traffic_until: Date.add(trial_expiry, @trial_accept_traffic_until_offset_days)
     )
   end
+
+  def remove_trial_expiry(team) do
+    change(team, trial_expiry_date: nil)
+  end
+
+  def end_trial(team) do
+    change(team, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
+  end
+
+  defp maybe_bump_accept_traffic_until(changeset) do
+    expiry_change = get_change(changeset, :trial_expiry_date)
+
+    if expiry_change do
+      put_change(
+        changeset,
+        :accept_traffic_until,
+        Date.add(expiry_change, @trial_accept_traffic_until_offset_days)
+      )
+    else
+      changeset
+    end
+  end
+
 
   def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
 

@@ -222,7 +222,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp notify_invitation_accepted(%Auth.Invitation{role: :owner} = invitation) do
+  defp notify_invitation_accepted(%{role: :owner} = invitation) do
     PlausibleWeb.Email.ownership_transfer_accepted(
       invitation.email,
       invitation.inviter.email,

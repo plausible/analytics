@@ -283,13 +283,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
         |> Map.put("email", invitation.email)
         |> Auth.User.new()
 
-      user =
-        case invitation.role do
-          :owner -> user
-          _ -> Plausible.Auth.User.remove_trial_expiry(user)
-        end
+      with_team? = invitation.role == :owner
 
-      add_user(socket, user)
+      add_user(socket, user, with_team?: with_team?)
     else
       {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
     end
@@ -310,15 +306,15 @@ defmodule PlausibleWeb.Live.RegisterForm do
     {:noreply, assign(socket, trigger_submit: true)}
   end
 
-  defp add_user(socket, user) do
+  defp add_user(socket, user, opts \\ []) do
     result =
       Repo.transaction(fn ->
         case Repo.insert(user) do
-          {:ok, user} when not is_nil(user.trial_expiry_date) ->
-            Plausible.Teams.get_or_create(user)
-            user
-
           {:ok, user} ->
+            if opts[:with_team?] do
+              {:ok, _} = Plausible.Teams.get_or_create(user)
+            end
+
             user
 
           {:error, reason} ->

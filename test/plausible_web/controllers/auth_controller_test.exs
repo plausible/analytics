@@ -298,9 +298,12 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to /sites if user has invitation", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:invitation, inviter: build(:user), site: site, email: user.email)
+      owner = new_user()
+      site = new_site(owner: owner)
+      invite_guest(site, user, role: :viewer, inviter: owner)
+
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+
       post(conn, "/activate/request-code")
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)

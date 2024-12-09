@@ -96,13 +96,6 @@ defmodule Plausible.Factory do
     merge_attributes(site, attrs)
   end
 
-  def site_membership_factory do
-    %Plausible.Site.Membership{
-      user: build(:user),
-      role: :viewer
-    }
-  end
-
   def site_import_factory do
     today = Date.utc_today()
 
@@ -246,14 +239,6 @@ defmodule Plausible.Factory do
     %Plausible.Site.SharedLink{
       name: "Link name",
       slug: Nanoid.generate()
-    }
-  end
-
-  def invitation_factory do
-    %Plausible.Auth.Invitation{
-      invitation_id: Nanoid.generate(),
-      email: sequence(:email, &"email-#{&1}@example.com"),
-      role: :admin
     }
   end
 

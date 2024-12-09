@@ -23,7 +23,7 @@ defmodule Plausible.Site.Memberships.RejectInvitation do
     end
   end
 
-  defp notify_invitation_rejected(%Auth.Invitation{role: :owner} = invitation) do
+  defp notify_invitation_rejected(%{role: :owner} = invitation) do
     PlausibleWeb.Email.ownership_transfer_rejected(invitation)
     |> Plausible.Mailer.send()
   end
