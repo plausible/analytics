@@ -1260,12 +1260,13 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       {:ok, site: site}
     end
 
-    test "ingests scroll_depth as 0 when sd not in params", %{conn: conn, site: site} do
+    test "ingests scroll_depth as 255 when sd not in params", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "custom", u: "https://test.com", d: site.domain})
 
-      assert [%{scroll_depth: 0}, %{scroll_depth: 0}, %{scroll_depth: 0}] = get_events(site)
+      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+
+      assert pageleave.scroll_depth == 255
     end
 
     test "sd field is ignored if name is not pageleave", %{conn: conn, site: site} do
@@ -1293,22 +1294,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageleave.scroll_depth == 100
     end
 
-    test "ingests scroll_depth as 0 when sd is a string", %{conn: conn, site: site} do
+    test "ingests scroll_depth as 255 when sd is a string", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: "1"})
 
       pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
 
-      assert pageleave.scroll_depth == 0
+      assert pageleave.scroll_depth == 255
     end
 
-    test "ingests scroll_depth as 0 when sd is a negative integer", %{conn: conn, site: site} do
+    test "ingests scroll_depth as 255 when sd is a negative integer", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: -1})
 
       pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
 
-      assert pageleave.scroll_depth == 0
+      assert pageleave.scroll_depth == 255
     end
   end
 
