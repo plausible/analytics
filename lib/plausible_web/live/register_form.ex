@@ -7,12 +7,16 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   alias Plausible.Auth
   alias Plausible.Repo
+  alias Plausible.Teams
 
   def mount(params, _session, socket) do
     socket =
       assign_new(socket, :invitation, fn ->
         if invitation_id = params["invitation_id"] do
-          Repo.get_by(Auth.Invitation, invitation_id: invitation_id)
+          case find_by_id_unified(invitation_id) do
+            {:error, :invitation_not_found} -> nil
+            {:ok, unified} -> unified
+          end
         end
       end)
 
@@ -338,6 +342,51 @@ defmodule PlausibleWeb.Live.RegisterForm do
          assign(socket,
            form: to_form(Map.put(changeset, :action, :validate))
          )}
+    end
+  end
+
+  defp find_by_id_unified(invitation_or_transfer_id) do
+    with {:error, :invitation_not_found} <-
+           find_invitation_by_id_unified(invitation_or_transfer_id) do
+      find_transfer_by_id_unified(invitation_or_transfer_id)
+    end
+  end
+
+  defp find_invitation_by_id_unified(id) do
+    invitation =
+      Teams.GuestInvitation
+      |> Repo.get_by(invitation_id: id)
+      |> Repo.preload([:site, team_invitation: :inviter])
+
+    case invitation do
+      nil ->
+        {:error, :invitation_not_found}
+
+      guest_invitation ->
+        {:ok,
+         %{
+           role: guest_invitation.role,
+           email: guest_invitation.team_invitation.email
+         }}
+    end
+  end
+
+  defp find_transfer_by_id_unified(id) do
+    transfer =
+      Teams.SiteTransfer
+      |> Repo.get_by(transfer_id: id)
+      |> Repo.preload([:site, :initiator])
+
+    case transfer do
+      nil ->
+        {:error, :invitation_not_found}
+
+      transfer ->
+        {:ok,
+         %{
+           role: :owner,
+           email: transfer.email
+         }}
     end
   end
 end
