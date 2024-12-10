@@ -189,10 +189,13 @@ defmodule Plausible.Teams.Invitations do
         :site_transfer_changeset,
         Teams.SiteTransfer.changeset(site, initiator: initiator, email: invitee_email)
       )
-      |> Ecto.Multi.run(:check_if_already_sent, fn _repo, %{site_transfer_changeset: changeset} ->
+      |> Ecto.Multi.run(:ensure_no_invitations, fn _repo, %{site_transfer_changeset: changeset} ->
         q =
           from ti in Teams.Invitation,
-            where: ti.email == ^invitee_email
+            inner_join: gi in assoc(ti, :guest_invitations),
+            where: ti.email == ^invitee_email,
+            where: ti.team_id == ^site.team_id,
+            where: gi.site_id == ^site.id
 
         if Repo.exists?(q) do
           {:error, Ecto.Changeset.add_error(changeset, :invitation, "already sent")}
@@ -436,7 +439,10 @@ defmodule Plausible.Teams.Invitations do
 
   defp create_invitation(site, invitee_email, role, inviter) do
     Repo.transaction(fn ->
-      with {:ok, team_invitation} <- create_team_invitation(site.team, invitee_email, inviter),
+      with {:ok, team_invitation} <-
+             create_team_invitation(site.team, invitee_email, inviter,
+               ensure_no_site_transfers_for: site.id
+             ),
            {:ok, guest_invitation} <- create_guest_invitation(team_invitation, site, role) do
         guest_invitation
       else
@@ -445,16 +451,47 @@ defmodule Plausible.Teams.Invitations do
     end)
   end
 
-  defp create_team_invitation(team, invitee_email, inviter) do
+  defp create_team_invitation(team, invitee_email, inviter, opts \\ []) do
     now = NaiveDateTime.utc_now(:second)
 
-    team
-    |> Teams.Invitation.changeset(email: invitee_email, role: :guest, inviter: inviter)
-    |> Repo.insert(
-      on_conflict: [set: [updated_at: now]],
-      conflict_target: [:team_id, :email],
-      returning: true
-    )
+    result =
+      Ecto.Multi.new()
+      |> Ecto.Multi.put(
+        :changeset,
+        Teams.Invitation.changeset(team, email: invitee_email, role: :guest, inviter: inviter)
+      )
+      |> Ecto.Multi.run(:ensure_no_site_transfers, fn _repo, %{changeset: changeset} ->
+        if site_id = opts[:ensure_no_site_transfers_for] do
+          q =
+            from st in Teams.SiteTransfer,
+              where: st.email == ^invitee_email,
+              where: st.site_id == ^site_id
+
+          if Repo.exists?(q) do
+            {:error, Ecto.Changeset.add_error(changeset, :invitation, "already sent")}
+          else
+            {:ok, :pass}
+          end
+        else
+          {:ok, :skip}
+        end
+      end)
+      |> Ecto.Multi.insert(
+        :team_invitation,
+        & &1.changeset,
+        on_conflict: [set: [updated_at: now]],
+        conflict_target: [:team_id, :email],
+        returning: true
+      )
+      |> Repo.transaction()
+
+    case result do
+      {:ok, success} ->
+        {:ok, success.team_invitation}
+
+      {:error, _, changeset, _} ->
+        {:error, changeset}
+    end
   end
 
   defp create_guest_invitation(team_invitation, site, role) do

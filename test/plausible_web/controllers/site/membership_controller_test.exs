@@ -88,6 +88,27 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert conn.status == 404
     end
 
+    test "fails to create invitation if site transfer already exists", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+
+      new_owner = new_user()
+
+      post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: new_owner.email})
+      assert_site_transfer(site, new_owner.email)
+
+      conn =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: new_owner.email,
+          role: "editor"
+        })
+
+      conn = get(recycle(conn), redirected_to(conn, 302))
+      html = html_response(conn, 200)
+      assert html =~ "Error"
+      # FIXME: text below is not very true
+      assert html =~ "This invitation has been already sent"
+    end
+
     test "fails to create invitation for a foreign site", %{conn: my_conn, user: me} do
       _my_site = new_site(owner: me)
 
