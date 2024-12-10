@@ -26,11 +26,12 @@ defmodule Plausible.Teams.Invitations do
   defp find_invitation_for_user(guest_invitation_id, user) do
     invitation_query =
       from gi in Teams.GuestInvitation,
+        inner_join: s in assoc(gi, :site),
         inner_join: ti in assoc(gi, :team_invitation),
         inner_join: inviter in assoc(ti, :inviter),
         where: gi.invitation_id == ^guest_invitation_id,
         where: ti.email == ^user.email,
-        preload: [team_invitation: {ti, inviter: inviter}]
+        preload: [site: s, team_invitation: {ti, inviter: inviter}]
 
     case Repo.one(invitation_query) do
       nil ->
@@ -74,7 +75,7 @@ defmodule Plausible.Teams.Invitations do
   defp find_transfer_for_site(transfer_id, site) do
     transfer =
       Teams.SiteTransfer
-      |> Repo.get_by(transfer_id: transfer_id, site: site.id)
+      |> Repo.get_by(transfer_id: transfer_id, site_id: site.id)
       |> Repo.preload([:site, :initiator])
 
     case transfer do
@@ -246,7 +247,7 @@ defmodule Plausible.Teams.Invitations do
     Repo.transaction(fn ->
       with {:ok, team_membership} <-
              create_team_membership(team_invitation.team, team_invitation.role, user, now),
-           {:ok, _guest_memberships} <-
+           {:ok, guest_memberships} <-
              create_guest_memberships(team_membership, guest_invitations, now) do
         # Clean up guest invitations after accepting
         guest_invitation_ids = Enum.map(guest_invitations, & &1.id)
@@ -257,7 +258,7 @@ defmodule Plausible.Teams.Invitations do
           send_invitation_accepted_email(team_invitation, guest_invitations)
         end
 
-        team_membership
+        %{team_membership: team_membership, guest_memberships: guest_memberships}
       else
         {:error, changeset} -> Repo.rollback(changeset)
       end

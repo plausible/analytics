@@ -21,22 +21,15 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}"
 
-      refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
+      refute Repo.exists?(from(i in Plausible.Teams.Invitation, where: i.email == ^user.email))
 
-      membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id, site_id: site.id)
-      assert membership.role == :admin
+      assert_guest_membership(site.team, site, user, :editor)
     end
 
     test "does not crash if clicked for the 2nd time in another tab", %{conn: conn, user: user} do
-      site = new_site()
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: build(:user),
-          email: user.email,
-          role: :admin
-        )
+      owner = new_user()
+      site = new_site(owner: owner)
+      invitation = invite_guest(site, user.email, role: :editor, inviter: owner)
 
       c1 = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
       assert redirected_to(c1) == "/#{URI.encode_www_form(site.domain)}"
@@ -60,16 +53,16 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       subscribe_to_growth_plan(user)
       new_team = team_of(user)
 
-      invitation = invite_transfer(site, user, inviter: old_owner)
+      transfer = invite_transfer(site, user, inviter: old_owner)
 
-      conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+      conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
       assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "You now have access to"
 
-      refute Repo.reload(invitation)
+      refute Repo.reload(transfer)
 
       assert_guest_membership(new_team, site, old_owner, :editor)
 
@@ -81,9 +74,9 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       old_owner = new_user()
       site = new_site(owner: old_owner)
 
-      invitation = invite_transfer(site, user, inviter: old_owner)
+      transfer = invite_transfer(site, user, inviter: old_owner)
 
-      conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+      conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
@@ -101,9 +94,9 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       # fill site limit quota
       for _ <- 1..10, do: new_site(owner: user)
 
-      invitation = invite_transfer(site, user, inviter: old_owner)
+      transfer = invite_transfer(site, user, inviter: old_owner)
 
-      conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+      conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
@@ -158,17 +151,17 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       owner = new_user()
       site = new_site(owner: owner)
       add_guest(site, user: user, role: :editor)
-      invitation = invite_transfer(site, "jane@example.com", inviter: owner)
+      transfer = invite_transfer(site, "jane@example.com", inviter: owner)
 
       conn =
         delete(
           conn,
-          Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
+          Routes.invitation_path(conn, :remove_invitation, site.domain, transfer.transfer_id)
         )
 
       assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
 
-      refute Repo.reload(invitation)
+      refute Repo.reload(transfer)
     end
 
     test "fails to remove an invitation with insufficient permission", %{conn: conn, user: user} do

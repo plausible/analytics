@@ -98,16 +98,10 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "GET /register/invitations/:invitation_id" do
     test "shows the register form", %{conn: conn} do
-      inviter = insert(:user)
-      site = insert(:site, members: [inviter])
+      inviter = new_user()
+      site = new_site(owner: inviter)
 
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: inviter,
-          email: "user@email.co",
-          role: :admin
-        )
+      invitation = invite_guest(site, "user@email.co", role: :editor, inviter: inviter)
 
       conn = get(conn, "/register/invitation/#{invitation.invitation_id}")
 
@@ -117,16 +111,10 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "POST /login (register_action = register_from_invitation_form)" do
     setup do
-      inviter = insert(:user)
-      site = insert(:site, members: [inviter])
+      inviter = new_user()
+      site = new_site(owner: inviter)
 
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: inviter,
-          email: "user@email.co",
-          role: :admin
-        )
+      invitation = invite_guest(site, "user@email.co", role: :editor, inviter: inviter)
 
       user =
         Repo.insert!(
@@ -598,13 +586,12 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Repo.reload(user) == nil
       assert Repo.all(Plausible.Billing.Subscription) == []
       assert Repo.all(Plausible.Billing.EnterprisePlan) == []
-      assert Repo.all(Plausible.Site.Membership) == []
       assert Repo.all(Plausible.Teams.Team) == []
     end
 
     test "deletes sites that the user owns", %{conn: conn, user: user, site: owner_site} do
-      viewer_site = insert(:site)
-      insert(:site_membership, site: viewer_site, user: user, role: "viewer")
+      viewer_site = new_site()
+      add_guest(viewer_site, user: user, role: :viewer)
 
       delete(conn, "/me")
 

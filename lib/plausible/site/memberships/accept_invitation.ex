@@ -97,7 +97,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
       site = site |> Repo.reload!() |> Repo.preload(ownership: :user)
 
-      {:ok, site.ownership}
+      {:ok, %{team_membership: site.ownership, site: site}}
     end
   end
 
