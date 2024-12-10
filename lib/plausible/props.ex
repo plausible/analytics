@@ -139,11 +139,11 @@ defmodule Plausible.Props do
     allow(site, props_to_allow)
   end
 
-  def ensure_prop_key_accessible(prop_key, user) do
+  def ensure_prop_key_accessible(prop_key, team) do
     if prop_key in @internal_keys do
       :ok
     else
-      Plausible.Billing.Feature.Props.check_availability(user)
+      Plausible.Billing.Feature.Props.check_availability(team)
     end
   end
 

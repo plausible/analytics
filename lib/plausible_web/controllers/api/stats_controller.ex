@@ -1320,10 +1320,10 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def custom_prop_values(conn, params) do
-    site = Plausible.Repo.preload(conn.assigns.site, :owner)
+    site = Plausible.Repo.preload(conn.assigns.site, :team)
     prop_key = Map.fetch!(params, "prop_key")
 
-    case Plausible.Props.ensure_prop_key_accessible(prop_key, site.owner) do
+    case Plausible.Props.ensure_prop_key_accessible(prop_key, site.team) do
       :ok ->
         json(conn, breakdown_custom_prop_values(conn, site, params))
 
