@@ -40,13 +40,13 @@ defmodule PlausibleWeb.Live.SitesTest do
       inviter = new_user()
       site = new_site(owner: inviter)
 
-      invitation = invite_transfer(site, user, inviter: inviter)
+      transfer = invite_transfer(site, user, inviter: inviter)
 
       {:ok, _lv, html} = live(conn, "/sites")
 
       invitation_data = get_invitation_data(html)
 
-      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "no_plan"])
+      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "no_plan"])
     end
 
     @tag :ee_only
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       inviter = new_user()
       site = new_site(owner: inviter)
 
-      invitation = invite_transfer(site, user, inviter: inviter)
+      transfer = invite_transfer(site, user, inviter: inviter)
 
       # fill site quota
       subscribe_to_growth_plan(user)
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       invitation_data = get_invitation_data(html)
 
-      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "exceeded_limits"]) ==
+      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "exceeded_limits"]) ==
                "site limit"
     end
 
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       inviter = new_user()
       site = new_site(owner: inviter, allowed_event_props: ["dummy"])
 
-      invitation = invite_transfer(site, user, inviter: inviter)
+      transfer = invite_transfer(site, user, inviter: inviter)
 
       subscribe_to_growth_plan(user)
 
@@ -87,7 +87,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       invitation_data = get_invitation_data(html)
 
-      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "missing_features"]) ==
+      assert get_in(invitation_data, ["invitations", transfer.transfer_id, "missing_features"]) ==
                "Custom Properties"
     end
 
