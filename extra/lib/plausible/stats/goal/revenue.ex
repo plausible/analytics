@@ -10,7 +10,10 @@ defmodule Plausible.Stats.Goal.Revenue do
   end
 
   @doc """
-  Preloads revenue currencies for a query.
+  Preloads revenue currencies for a query. Used when parsing the query.
+
+  Returns tuple containing revenue warning (if set, no revenue metrics should be calculated) and
+  revenue currencies map.
 
   Assumptions and business logic:
   1. Goals are already filtered according to query filters and dimensions
@@ -21,25 +24,32 @@ defmodule Plausible.Stats.Goal.Revenue do
 
   The resulting data structure is attached to a `Query` and used below in `format_revenue_metric/3`.
   """
-  def preload_revenue_currencies(site, goals, metrics, dimensions) do
-    if requested?(metrics) and length(goals) > 0 and available?(site) do
-      goal_currency_map =
-        goals
-        |> Map.new(fn goal -> {Plausible.Goal.display_name(goal), goal.currency} end)
-        |> Map.reject(fn {_goal, currency} -> is_nil(currency) end)
-
-      currencies = goal_currency_map |> Map.values() |> Enum.uniq()
-      goal_dimension? = "event:goal" in dimensions
-
-      case {currencies, goal_dimension?} do
-        {[currency], false} -> %{default: currency}
-        {_, true} -> goal_currency_map
-        _ -> %{}
-      end
-    else
-      %{}
+  def preload(site, goals, metrics, dimensions) do
+    cond do
+      not requested?(metrics) -> {nil, %{}}
+      not available?(site) -> {:revenue_goals_unavailable, %{}}
+      true -> preload(goals, dimensions)
     end
   end
+
+  defp preload(goals, dimensions) do
+    goal_currency_map =
+      goals
+      |> Map.new(fn goal -> {Plausible.Goal.display_name(goal), goal.currency} end)
+      |> Map.reject(fn {_goal, currency} -> is_nil(currency) end)
+
+    currencies = goal_currency_map |> Map.values() |> Enum.uniq()
+    goal_dimension? = "event:goal" in dimensions
+
+    case {currencies, goal_dimension?} do
+      {[currency], false} -> {nil, %{default: currency}}
+      {[], _} -> {:no_revenue_goals_matching, %{}}
+      {_, true} -> {nil, goal_currency_map}
+      _ -> {:no_single_revenue_currency, %{}}
+    end
+  end
+
+  def format_revenue_metric(_, query, _) when not is_nil(query.revenue_warning), do: nil
 
   def format_revenue_metric(value, query, dimension_values) do
     currency =

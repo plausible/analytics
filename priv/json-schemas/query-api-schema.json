@@ -264,11 +264,13 @@
         },
         {
           "const": "total_revenue",
-          "$comment": "only :internal"
+          "markdownDescription": "Total revenue",
+          "$comment": "only :ee"
         },
         {
           "const": "average_revenue",
-          "$comment": "only :internal"
+          "markdownDescription": "Average revenue",
+          "$comment": "only :ee"
         },
         {
           "const": "scroll_depth",
