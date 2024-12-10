@@ -154,8 +154,11 @@ defmodule Plausible.Sites do
   @spec for_user_query(Auth.User.t()) :: Ecto.Query.t()
   def for_user_query(user) do
     from(s in Site,
-      inner_join: sm in assoc(s, :memberships),
-      on: sm.user_id == ^user.id,
+      inner_join: t in assoc(s, :team),
+      inner_join: tm in assoc(t, :team_memberships),
+      left_join: gm in assoc(tm, :guest_memberships),
+      where: tm.user_id == ^user.id,
+      where: tm.role != :guest or gm.site_id == s.id,
       order_by: [desc: s.id]
     )
   end
