@@ -24,12 +24,15 @@ defmodule Plausible.Teams.Invitations do
   end
 
   defp find_invitation_for_user(guest_invitation_id, user) do
-    invitation =
-      Teams.GuestInvitation
-      |> Repo.get_by(invitation_id: guest_invitation_id, email: user.email)
-      |> Repo.preload([:site, team_invitation: :inviter])
+    invitation_query =
+      from gi in Teams.GuestInvitation,
+        inner_join: ti in assoc(gi, :team_invitation),
+        inner_join: inviter in assoc(ti, :inviter),
+        where: gi.invitation_id == ^guest_invitation_id,
+        where: ti.email == ^user.email,
+        preload: [team_invitation: {ti, inviter: inviter}]
 
-    case invitation do
+    case Repo.one(invitation_query) do
       nil ->
         {:error, :invitation_not_found}
 
@@ -333,6 +336,10 @@ defmodule Plausible.Teams.Invitations do
           conflict_target: [:team_membership_id, :site_id],
           returning: true
         )
+    end
+
+    on_ee do
+      :unlocked = Billing.SiteLocker.update_sites_for(team, send_email?: false)
     end
 
     :ok

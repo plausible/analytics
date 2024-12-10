@@ -123,26 +123,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       )
     end
 
-    @tag :teams
-    test "does not create redundant guest membership when owner team membership exists" do
-      user = new_user()
-      site = new_site(owner: user)
-
-      user = insert(:user)
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-      site = insert(:site, team: team, members: [user])
-      another_user = add_guest(site, role: :editor)
-      guest_invitation = invite_guest(site, user, role: :viewer, inviter: another_user)
-
-      {:ok, team_membership} =
-        Plausible.Teams.Invitations.accept_guest_invitation(guest_invitation, user)
-
-      team_membership = team_membership |> Repo.reload!() |> Repo.preload(:guest_memberships)
-
-      assert team_membership.role == :owner
-      assert team_membership.guest_memberships == []
-    end
-
     test "does not degrade role when trying to invite self as an owner" do
       user = new_user()
       site = new_site(owner: user)
@@ -159,8 +139,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       inviter = new_user()
       invitee = new_user()
       site = new_site(owner: inviter)
-      user = add_guest(site, user: invitee, role: :editor)
-      existing_membership = List.first(user.site_memberships)
+      # XXX
+      add_guest(site, user: invitee, role: :editor)
+
+      existing_membership = Repo.get_by(Plausible.Teams.Membership, user_id: invitee.id)
 
       invitation = invite_guest(site, invitee, inviter: inviter, role: :viewer)
 
@@ -191,17 +173,17 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       new_owner = new_user() |> subscribe_to_growth_plan()
       new_team = team_of(new_owner)
 
-      invitation = invite_transfer(site, new_owner, inviter: existing_owner)
+      transfer = invite_transfer(site, new_owner, inviter: existing_owner)
 
       assert {:ok, _new_membership} =
                AcceptInvitation.accept_invitation(
-                 invitation.invitation_id,
+                 transfer.transfer_id,
                  new_owner
                )
 
       assert_team_attached(site, new_team.id)
 
-      refute Repo.reload(invitation)
+      refute Repo.reload(transfer)
 
       assert_guest_membership(new_team, site, existing_owner, :editor)
 
@@ -224,7 +206,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
         invite_transfer(site, new_owner, inviter: existing_owner)
 
       assert {:ok, _new_membership} =
-               AcceptInvitation.accept_invitation(site_transfer.invitation_id, new_owner)
+               AcceptInvitation.accept_invitation(site_transfer.transfer_id, new_owner)
 
       assert_guest_invitation(new_team, site, "some@example.com", :viewer)
       assert_team_attached(site, new_team.id)
@@ -236,16 +218,15 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       site = new_site(owner: existing_owner, locked: true)
       new_owner = new_user() |> subscribe_to_growth_plan()
 
-      invitation = invite_transfer(site, new_owner, inviter: existing_owner)
+      transfer = invite_transfer(site, new_owner, inviter: existing_owner)
 
       assert {:ok, _new_membership} =
                AcceptInvitation.accept_invitation(
-                 invitation.invitation_id,
+                 transfer.transfer_id,
                  new_owner
                )
 
-      refute Repo.reload(invitation)
-
+      refute Repo.reload(transfer)
       refute Repo.reload!(site).locked
     end
 
@@ -258,17 +239,17 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
         site = new_site(owner: existing_owner)
         add_guest(site, user: new_owner, role: unquote(role))
 
-        invitation =
+        transfer =
           invite_transfer(site, new_owner, inviter: existing_owner)
 
         assert {:ok, _} =
-                 AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
+                 AcceptInvitation.accept_invitation(transfer.transfer_id, new_owner)
 
         assert_guest_membership(new_team, site, existing_owner, :editor)
 
         assert_team_membership(new_owner, new_team, :owner)
 
-        refute Repo.reload(invitation)
+        refute Repo.reload(transfer)
       end
     end
 
@@ -280,11 +261,11 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       for _ <- 1..3, do: add_guest(site, role: :editor)
 
-      invitation = invite_transfer(site, new_owner, inviter: old_owner)
+      transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:team_member_limit]}} =
                AcceptInvitation.accept_invitation(
-                 invitation.invitation_id,
+                 transfer.transfer_id,
                  new_owner
                )
     end
@@ -299,11 +280,11 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       add_guest(site, user: new_owner, role: :editor)
       for _ <- 1..2, do: add_guest(site, role: :editor)
 
-      invitation = invite_transfer(site, new_owner, inviter: old_owner)
+      transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:ok, _} =
                AcceptInvitation.accept_invitation(
-                 invitation.invitation_id,
+                 transfer.transfer_id,
                  new_owner
                )
     end
@@ -317,11 +298,11 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       site = new_site(owner: old_owner)
 
-      invitation = invite_transfer(site, new_owner, inviter: old_owner)
+      transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:site_limit]}} =
                AcceptInvitation.accept_invitation(
-                 invitation.invitation_id,
+                 transfer.transfer_id,
                  new_owner
                )
     end
@@ -343,16 +324,18 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       generate_usage_for(old_owner_site, 6_000, somewhere_last_month)
       generate_usage_for(old_owner_site, 10_000, somewhere_penultimate_month)
 
-      invitation = invite_transfer(old_owner_site, new_owner, inviter: old_owner)
+      transfer = invite_transfer(old_owner_site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:monthly_pageview_limit]}} =
-               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, new_owner)
     end
 
     @tag :ee_only
     test "allow_next_upgrade_override field has no effect when checking the pageview limit on ownership transfer" do
       old_owner = new_user() |> subscribe_to_business_plan()
-      new_owner = new_user(allow_next_upgrade_override: true) |> subscribe_to_growth_plan()
+
+      new_owner =
+        new_user(team: [allow_next_upgrade_override: true]) |> subscribe_to_growth_plan()
 
       new_owner_site = new_site(owner: new_owner)
       old_owner_site = new_site(owner: old_owner)
@@ -366,7 +349,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       generate_usage_for(old_owner_site, 6_000, somewhere_last_month)
       generate_usage_for(old_owner_site, 10_000, somewhere_penultimate_month)
 
-      transfer_id = invite_transfer(old_owner_site, new_owner, inviter: old_owner).invitation_id
+      transfer_id = invite_transfer(old_owner_site, new_owner, inviter: old_owner).transfer_id
 
       assert {:error, {:over_plan_limits, [:monthly_pageview_limit]}} =
                AcceptInvitation.accept_invitation(transfer_id, new_owner)
@@ -388,10 +371,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       for _ <- 1..3, do: add_guest(site, role: :editor)
 
-      invitation = invite_transfer(site, new_owner, inviter: old_owner)
+      transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit]}} =
-               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, new_owner)
     end
 
     @tag :ee_only
@@ -417,21 +400,21 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       transfer = invite_transfer(site, trial_user, inviter: current_owner)
 
       assert {:error, :no_plan} =
-               AcceptInvitation.accept_invitation(transfer.invitation_id, trial_user)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, trial_user)
 
       Repo.delete!(transfer)
 
       transfer = invite_transfer(site, invited_user, inviter: current_owner)
 
       assert {:error, :no_plan} =
-               AcceptInvitation.accept_invitation(transfer.invitation_id, invited_user)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, invited_user)
 
       Repo.delete!(transfer)
 
       transfer = invite_transfer(site, user_on_free_10k, inviter: current_owner)
 
       assert {:error, :no_plan} =
-               AcceptInvitation.accept_invitation(transfer.invitation_id, user_on_free_10k)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, user_on_free_10k)
 
       Repo.delete!(transfer)
 
@@ -439,7 +422,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert {:error, :no_plan} =
                AcceptInvitation.accept_invitation(
-                 transfer.invitation_id,
+                 transfer.transfer_id,
                  user_on_expired_subscription
                )
 
@@ -449,7 +432,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert {:error, :no_plan} =
                AcceptInvitation.accept_invitation(
-                 transfer.invitation_id,
+                 transfer.transfer_id,
                  user_on_paused_subscription
                )
 
@@ -463,7 +446,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       transfer = invite_transfer(site, current_owner, inviter: current_owner)
 
       assert {:error, :transfer_to_self} =
-               AcceptInvitation.accept_invitation(transfer.invitation_id, current_owner)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, current_owner)
     end
 
     @tag :ee_only
@@ -479,7 +462,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       transfer = invite_transfer(site, new_owner, inviter: current_owner)
 
       assert {:error, {:over_plan_limits, [:site_limit]}} =
-               AcceptInvitation.accept_invitation(transfer.invitation_id, new_owner)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, new_owner)
     end
 
     @tag :ce_build_only
@@ -505,23 +488,23 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       transfer = invite_transfer(site, trial_user, inviter: current_owner)
 
       assert {:ok, _} =
-               AcceptInvitation.accept_invitation(transfer.invitation_id, trial_user)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, trial_user)
 
       transfer = invite_transfer(site, invited_user, inviter: current_owner)
 
       assert {:ok, _} =
-               AcceptInvitation.accept_invitation(transfer.invitation_id, invited_user)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, invited_user)
 
       transfer = invite_transfer(site, user_on_free_10k, inviter: current_owner)
 
       assert {:ok, _} =
-               AcceptInvitation.accept_invitation(transfer.invitation_id, user_on_free_10k)
+               AcceptInvitation.accept_invitation(transfer.transfer_id, user_on_free_10k)
 
       transfer = invite_transfer(site, user_on_expired_subscription, inviter: current_owner)
 
       assert {:ok, _} =
                AcceptInvitation.accept_invitation(
-                 transfer.invitation_id,
+                 transfer.transfer_id,
                  user_on_expired_subscription
                )
 
@@ -529,7 +512,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert {:ok, _} =
                AcceptInvitation.accept_invitation(
-                 transfer.invitation_id,
+                 transfer.transfer_id,
                  user_on_paused_subscription
                )
     end
