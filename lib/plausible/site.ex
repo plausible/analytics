@@ -62,6 +62,8 @@ defmodule Plausible.Site do
     # user's membership state. Currently it can be either "invitation",
     # "pinned_site" or "site", where invitations are first.
     field :entry_type, :string, virtual: true
+    field :memberships, {:array, :map}, virtual: true
+    field :invitations, {:array, :map}, virtual: true
     field :pinned_at, :naive_datetime, virtual: true
 
     # Used for caching imports data for the duration of the whole request
