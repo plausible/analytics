@@ -22,7 +22,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                  new_owner
                )
 
-      team = assert_team_exists(new_owner)
+      team = assert_team_exists(Repo.reload!(new_owner))
       assert_team_membership(new_owner, team, :owner)
       assert_team_membership(new_owner, team, :owner)
       assert_guest_membership(team, site1, current_owner, :editor)
@@ -87,7 +87,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       old_owner = new_user() |> subscribe_to_business_plan()
       new_owner = new_user() |> subscribe_to_growth_plan()
 
-      insert_list(10, :site, members: [new_owner])
       for _ <- 1..10, do: new_site(owner: new_owner)
 
       site =
@@ -142,18 +141,27 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       # XXX
       add_guest(site, user: invitee, role: :editor)
 
-      existing_membership = Repo.get_by(Plausible.Teams.Membership, user_id: invitee.id)
+      existing_team_membership =
+        %{guest_memberships: [existing_guest_membership]} =
+        Plausible.Teams.Membership
+        |> Repo.get_by(user_id: invitee.id)
+        |> Repo.preload(:guest_memberships)
 
       invitation = invite_guest(site, invitee, inviter: inviter, role: :viewer)
 
       assert {:ok, new_membership} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
 
-      assert existing_membership.id == new_membership.id
-      assert existing_membership.user_id == new_membership.user_id
-      assert existing_membership.site_id == new_membership.site_id
-      assert existing_membership.role == new_membership.role
-      assert new_membership.role == :admin
+      new_team_membership =
+        %{guest_memberships: [new_guest_membership]} =
+        Repo.preload(new_membership, :guest_memberships)
+
+      assert existing_team_membership.id == new_team_membership.id
+      assert existing_team_membership.user_id == new_team_membership.user_id
+      assert existing_guest_membership.id == new_guest_membership.id
+      assert existing_guest_membership.site_id == new_guest_membership.site_id
+      assert existing_guest_membership.role == new_guest_membership.role
+      assert new_guest_membership.role == :editor
       refute Repo.reload(invitation)
     end
 
@@ -457,7 +465,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       # fill site quota
       for _ <- 1..10, do: new_site(owner: new_owner)
-      insert_list(10, :site, members: [new_owner])
 
       transfer = invite_transfer(site, new_owner, inviter: current_owner)
 

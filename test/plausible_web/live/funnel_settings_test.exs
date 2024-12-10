@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Live.FunnelSettingsTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
   use Plausible
   @moduletag :ee_only
 
@@ -13,9 +14,9 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       @tag :ee_only
       test "premium feature notice renders", %{conn: conn, site: site, user: user} do
         user
-        |> Plausible.Auth.User.end_trial()
+        |> team_of()
+        |> Plausible.Teams.Team.end_trial()
         |> Plausible.Repo.update!()
-        |> Plausible.Teams.sync_team()
 
         conn = get(conn, "/#{site.domain}/settings/funnels")
         resp = conn |> html_response(200) |> text()

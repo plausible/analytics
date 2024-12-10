@@ -55,7 +55,7 @@ defmodule Plausible.Billing.Subscription do
       currency_code: "EUR"
     }
     |> cast(attrs, @required_fields ++ @optional_fields)
-    |> validate_required([:user_id])
+    |> validate_required([:team_id])
     |> unique_constraint(:paddle_subscription_id)
   end
 end

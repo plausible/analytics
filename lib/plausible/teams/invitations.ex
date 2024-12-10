@@ -145,6 +145,8 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def accept_guest_invitation(guest_invitation, user) do
+    guest_invitation = Repo.preload(guest_invitation, :site)
+
     team_invitation =
       guest_invitation.team_invitation
       |> Repo.preload([
