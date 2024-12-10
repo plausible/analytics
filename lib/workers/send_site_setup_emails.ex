@@ -14,20 +14,26 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
 
   defp send_create_site_emails() do
     q =
-      from(s in Plausible.Auth.User,
-        left_join: se in "create_site_emails",
-        on: se.user_id == s.id,
-        where: is_nil(se.id),
+      from u in Plausible.Auth.User,
+        as: :user,
         where:
-          s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval") and
-            s.inserted_at < fragment("(now() at time zone 'utc') - '48 hours'::interval"),
-        preload: :sites
-      )
+          not exists(
+            from tm in Plausible.Teams.Membership,
+              where: tm.user_id == parent_as(:user).id,
+              select: true
+          ),
+        where:
+          not exists(
+            from se in "create_site_emails",
+              where: se.user_id == parent_as(:user).id,
+              select: true
+          ),
+        where:
+          u.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval") and
+            u.inserted_at < fragment("(now() at time zone 'utc') - '48 hours'::interval")
 
     for user <- Repo.all(q) do
-      if Enum.empty?(user.sites) do
-        send_create_site_email(user)
-      end
+      send_create_site_email(user)
     end
   end
 
