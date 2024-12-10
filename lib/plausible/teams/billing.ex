@@ -183,7 +183,8 @@ defmodule Plausible.Teams.Billing do
   end
 
   def site_limit(team) do
-    if Timex.before?(team.inserted_at, @limit_sites_since) do
+    {:ok, user} = Teams.get_owner(team)
+    if Timex.before?(user.inserted_at, @limit_sites_since) do
       :unlimited
     else
       get_site_limit_from_plan(team)

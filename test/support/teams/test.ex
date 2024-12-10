@@ -79,12 +79,16 @@ defmodule Plausible.Teams.Test do
   end
 
   def team_of(user, opts) do
-    {:ok, team} = Plausible.Teams.get_by_owner(user)
+    case Plausible.Teams.get_by_owner(user) do
+      {:ok, team} ->
+        if opts[:with_subscription?] do
+          Plausible.Teams.with_subscription(team)
+        else
+          team
+        end
 
-    if opts[:with_subscription?] do
-      Plausible.Teams.with_subscription(team)
-    else
-      team
+      _ ->
+        nil
     end
   end
 

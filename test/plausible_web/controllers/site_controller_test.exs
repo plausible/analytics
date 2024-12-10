@@ -31,7 +31,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html_response(conn, 200) =~ "Add site info"
 
-      insert(:site, members: [user], domain: "test-site.com")
+      new_site(owner: user, domain: "test-site.com")
 
       conn = get(conn1, "/sites/new")
 
@@ -155,9 +155,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute resp =~ nag_message
 
       user
-      |> Plausible.Auth.User.end_trial()
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
       |> Repo.update!()
-      |> Plausible.Teams.sync_team()
 
       conn = get(initial_conn, "/sites")
       resp = html_response(conn, 200)
@@ -256,7 +256,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
-      Plausible.Auth.User.remove_trial_expiry(user) |> Repo.update!()
+      refute team_of(user)
 
       post(conn, "/sites", %{
         "site" => %{
@@ -265,7 +265,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         }
       })
 
-      assert Repo.reload!(user).trial_expiry_date
+      assert Repo.reload!(team_of(user)).trial_expiry_date
     end
 
     test "sends welcome email if this is the user's first site", %{conn: conn} do
@@ -319,8 +319,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, paddle_plan_id: @v4_business_plan_id, user: user)
-      insert_list(51, :site, members: [user])
+      subscribe_to_plan(user, @v4_business_plan_id)
+
+      for _ <- 1..51, do: new_site(owner: user)
 
       Ecto.Changeset.change(user, %{inserted_at: ~N[2021-05-04 00:00:00]})
       |> Repo.update()
@@ -562,7 +563,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{st.invitation_id}") ==
+      assert text_of_element(resp, "#invitation-#{st.transfer_id}") ==
                "#{new_owner.email} Owner"
     end
   end
