@@ -59,7 +59,6 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
 
       perform_job(SendSiteSetupEmails, %{})
 
-      # FIXME: team must be passed explicitly to site_setup_success_email template
       assert_email_delivered_with(
         to: [{user.name, user.email}],
         subject: "Your Plausible setup: Waiting for the first page views"

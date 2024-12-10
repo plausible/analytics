@@ -42,14 +42,15 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def site_setup_success(user, site) do
+  def site_setup_success(user, team, site) do
     base_email()
     |> to(user)
     |> tag("setup-success-email")
     |> subject("Plausible is now tracking your website stats")
     |> render("site_setup_success_email.html",
       user: user,
-      site: site
+      site: site,
+      site_team: team
     )
   end
 

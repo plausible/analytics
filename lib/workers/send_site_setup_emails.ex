@@ -58,15 +58,14 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         left_join: se in "setup_success_emails",
         on: se.site_id == s.id,
         where: is_nil(se.id),
+        inner_join: t in assoc(s, :team),
         where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
-        preload: :owner
+        preload: [:owner, team: t]
       )
 
     for site <- Repo.all(q) do
-      owner = site.owner
-
       if Plausible.Sites.has_stats?(site) do
-        send_setup_success_email(owner, site)
+        send_setup_success_email(site)
       end
     end
   end
@@ -83,8 +82,8 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
     ])
   end
 
-  defp send_setup_success_email(user, site) do
-    PlausibleWeb.Email.site_setup_success(user, site)
+  defp send_setup_success_email(site) do
+    PlausibleWeb.Email.site_setup_success(site.owner, site.team, site)
     |> Plausible.Mailer.send()
 
     Repo.insert_all("setup_success_emails", [
