@@ -37,6 +37,10 @@ defmodule Plausible.Teams do
   end
 
   @spec trial_days_left(Teams.Team.t()) :: integer()
+  def trial_days_left(nil) do
+    nil
+  end
+
   def trial_days_left(team) do
     Date.diff(team.trial_expiry_date, Date.utc_today())
   end
