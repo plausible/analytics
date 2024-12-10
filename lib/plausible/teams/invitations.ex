@@ -183,13 +183,39 @@ defmodule Plausible.Teams.Invitations do
   def ensure_transfer_valid(_team, _new_owner, _role), do: :ok
 
   defp create_site_transfer(site, initiator, invitee_email, now \\ NaiveDateTime.utc_now(:second)) do
-    site
-    |> Teams.SiteTransfer.changeset(initiator: initiator, email: invitee_email)
-    |> Repo.insert(
-      on_conflict: [set: [updated_at: now]],
-      conflict_target: [:email, :site_id],
-      returning: true
-    )
+    result =
+      Ecto.Multi.new()
+      |> Ecto.Multi.put(
+        :site_transfer_changeset,
+        Teams.SiteTransfer.changeset(site, initiator: initiator, email: invitee_email)
+      )
+      |> Ecto.Multi.run(:check_if_already_sent, fn _repo, %{site_transfer_changeset: changeset} ->
+        q =
+          from ti in Teams.Invitation,
+            where: ti.email == ^invitee_email
+
+        if Repo.exists?(q) do
+          {:error, Ecto.Changeset.add_error(changeset, :invitation, "already sent")}
+        else
+          {:ok, :pass}
+        end
+      end)
+      |> Ecto.Multi.insert(
+        :site_transfer,
+        fn %{site_transfer_changeset: changeset} -> changeset end,
+        on_conflict: [set: [updated_at: now]],
+        conflict_target: [:email, :site_id],
+        returning: true
+      )
+      |> Repo.transaction()
+
+    case result do
+      {:ok, success} ->
+        {:ok, success.site_transfer}
+
+      {:error, _, changeset, _} ->
+        {:error, changeset}
+    end
   end
 
   def send_transfer_init_email(site_transfer, new_owner) do

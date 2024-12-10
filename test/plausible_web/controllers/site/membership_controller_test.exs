@@ -274,8 +274,6 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
                "#{invited} has been invited to #{site.domain} as an editor"
 
       # transferring ownership to that domain now fails
-      # FIXME: introduce cross-checks for existence of invitation on transfer creation
-      # and the other way around.
 
       conn = post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: invited})
       conn = get(recycle(conn), redirected_to(conn, 302))
