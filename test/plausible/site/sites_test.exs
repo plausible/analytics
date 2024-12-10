@@ -5,42 +5,13 @@ defmodule Plausible.SitesTest do
   alias Plausible.Sites
 
   describe "create a site" do
-    @tag :teams
     test "creates a site" do
-      user = insert(:user)
-
-      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
-
-      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"} = site}} =
-               Sites.create(user, params)
-
-      assert_team_attached(site)
-    end
-
-    @tag :teams
-    test "creates a site and syncs the team properties" do
-      user = insert(:user, trial_expiry_date: nil)
-
-      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
-
-      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"} = site}} =
-               Sites.create(user, params)
-
-      team = assert_team_attached(site)
-      user = Repo.reload!(user)
-      assert not is_nil(user.trial_expiry_date)
-      assert user.trial_expiry_date == team.trial_expiry_date
-    end
-
-    @tag :teams
-    test "creates a site (TEAM)" do
-      user = insert(:user)
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      user = new_user()
 
       params = %{"domain" => "example.com", "timezone" => "Europe/London"}
 
       assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
-               Plausible.Teams.Sites.create(team, params)
+               Sites.create(user, params)
     end
 
     test "fails on invalid timezone" do
@@ -540,8 +511,8 @@ defmodule Plausible.SitesTest do
     end
 
     test "raises on invalid option" do
-      user = insert(:user)
-      site = insert(:site, members: [user])
+      user = new_user()
+      site = new_site(owner: user)
 
       assert_raise FunctionClauseError, fn ->
         Sites.set_option(user, site, :invalid, false)
@@ -610,7 +581,7 @@ defmodule Plausible.SitesTest do
         assert {:ok, _} = Sites.toggle_pin(user, site)
       end
 
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       assert {:error, :too_many_pins} = Sites.toggle_pin(user, site)
     end

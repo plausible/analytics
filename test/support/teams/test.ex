@@ -173,7 +173,7 @@ defmodule Plausible.Teams.Test do
         where: tm.user_id == ^user.id and tm.team_id == ^site.team.id
     )
 
-    user |> Repo.preload([:site_memberships, :team_memberships])
+    user |> Repo.preload(:team_memberships)
   end
 
   def subscribe_to_growth_plan(user, attrs \\ []) do
