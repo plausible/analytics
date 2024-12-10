@@ -46,7 +46,7 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "growth_plans_for/1 shows v4 plans for everyone else" do
-      new_user()
+      new_user(trial_expiry_date: Date.utc_today())
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
@@ -54,7 +54,7 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "growth_plans_for/1 does not return business plans" do
-      new_user()
+      new_user(trial_expiry_date: Date.utc_today())
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
@@ -93,9 +93,7 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "business_plans_for/1 returns v4 plans for invited users with trial_expiry = nil" do
-      new_user(trial_expiry_date: nil)
-      |> Repo.preload(:subscription)
-      |> Map.fetch!(:subscription)
+      nil
       |> Plans.business_plans_for()
       |> assert_generation(4)
     end
@@ -113,7 +111,7 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "business_plans_for/1 returns v4 business plans for everyone else" do
-      user = new_user()
+      user = new_user(trial_expiry_date: Date.utc_today())
 
       subscription =
         user
@@ -156,7 +154,7 @@ defmodule Plausible.Billing.PlansTest do
 
     test "latest_enterprise_plan_with_price/1" do
       now = NaiveDateTime.utc_now()
-      user = new_user()
+      user = new_user(trial_expiry_date: Date.utc_today())
       team = team_of(user)
 
       subscribe_to_enterprise_plan(user,

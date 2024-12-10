@@ -72,8 +72,8 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
     setup [:create_user, :log_in]
 
     test "when the logged-in user is an admin of the site", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:site_membership, user: user, site: site, role: :admin)
+      site = new_site()
+      add_guest(site, user: user, role: :editor)
 
       conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
 
@@ -85,8 +85,8 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       conn: conn,
       user: user
     } do
-      site = insert(:site)
-      insert(:site_membership, user: user, site: site, role: :admin)
+      site = new_site()
+      add_guest(site, user: user, role: :editor)
 
       put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
       put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "funnels"})
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
     end
 
     test "when the logged-in user is an owner of the site", %{conn: conn, user: user} do
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+      site = new_site(owner: user)
       conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
 
       assert json_response(conn, 200) == "ok"
@@ -105,8 +105,8 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
     end
 
     test "returns 401 when the logged-in user is a viewer of the site", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:site_membership, user: user, site: site, role: :viewer)
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
 
       conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
 
@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
     end
 
     test "returns 401 when the logged-in user doesn't have site access at all", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
 
       conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
 

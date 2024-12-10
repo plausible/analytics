@@ -77,22 +77,6 @@ defmodule Plausible.Auth do
     end
   end
 
-  def has_active_sites?(user, roles \\ [:owner, :admin, :viewer]) do
-    sites =
-      Repo.all(
-        from u in Plausible.Auth.User,
-          where: u.id == ^user.id,
-          join: sm in Plausible.Site.Membership,
-          on: sm.user_id == u.id,
-          where: sm.role in ^roles,
-          join: s in Plausible.Site,
-          on: s.id == sm.site_id,
-          select: s
-      )
-
-    Enum.any?(sites, &Plausible.Sites.has_stats?/1)
-  end
-
   def delete_user(user) do
     Repo.transaction(fn ->
       case Plausible.Teams.get_by_owner(user) do

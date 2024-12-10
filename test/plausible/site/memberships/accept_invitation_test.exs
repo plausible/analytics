@@ -149,13 +149,12 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       invitation = invite_guest(site, invitee, inviter: inviter, role: :viewer)
 
-      assert {:ok, new_membership} =
+      assert {:ok,
+              %{team_membership: new_team_membership, guest_memberships: [new_guest_membership]}} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
 
-      new_team_membership =
-        %{guest_memberships: [new_guest_membership]} =
-        Repo.preload(new_membership, :guest_memberships)
-
+      new_team_membership = Repo.reload!(new_team_membership)
+      new_guest_membership = Repo.reload!(new_guest_membership)
       assert existing_team_membership.id == new_team_membership.id
       assert existing_team_membership.user_id == new_team_membership.user_id
       assert existing_guest_membership.id == new_guest_membership.id

@@ -49,7 +49,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   @spec accept_invitation(String.t(), Auth.User.t()) ::
-          {:ok, Teams.Membership.t()} | {:error, accept_error()}
+          {:ok, map()} | {:error, accept_error()}
   def accept_invitation(invitation_or_transfer_id, user) do
     with {:ok, invitation_or_transfer} <-
            Teams.Invitations.find_for_user(invitation_or_transfer_id, user) do

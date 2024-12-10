@@ -1,6 +1,7 @@
 defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
+  use Plausible.Teams.Test
   require Plausible.Billing.Subscription.Status
   alias Plausible.Workers.NotifyAnnualRenewal
   alias Plausible.Billing.Subscription
@@ -17,11 +18,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   end
 
   test "ignores user with monthly subscription", %{user: user} do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @monthly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 7)
-    )
+    subscribe_to_plan(user, @monthly_plan, next_bill_date: Date.shift(Date.utc_today(), day: 7))
 
     NotifyAnnualRenewal.perform(nil)
 
@@ -29,11 +26,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   end
 
   test "ignores user with yearly subscription that's not due for renewal in 7 days", %{user: user} do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 10)
-    )
+    subscribe_to_plan(user, @yearly_plan, next_bill_date: Date.shift(Date.utc_today(), day: 10))
 
     NotifyAnnualRenewal.perform(nil)
 
@@ -43,18 +36,18 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   test "ignores user with old yearly subscription that's been superseded by a newer one", %{
     user: user
   } do
-    insert(:subscription,
-      inserted_at: Timex.shift(Timex.now(), days: -1),
-      user: user,
-      paddle_plan_id: @yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 5)
+    subscribe_to_plan(
+      user,
+      @yearly_plan,
+      next_bill_date: Date.shift(Date.utc_today(), day: 5),
+      inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
     )
 
-    insert(:subscription,
-      inserted_at: Timex.now(),
-      user: user,
-      paddle_plan_id: @yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 30)
+    subscribe_to_plan(
+      user,
+      @yearly_plan,
+      next_bill_date: Date.shift(Date.utc_today(), day: 30),
+      inserted_at: NaiveDateTime.utc_now()
     )
 
     NotifyAnnualRenewal.perform(nil)
@@ -65,10 +58,10 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   test "sends renewal notification to user whose subscription is due for renewal in 7 days", %{
     user: user
   } do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 7)
+    subscribe_to_plan(
+      user,
+      @yearly_plan,
+      next_bill_date: Date.shift(Date.utc_today(), day: 7)
     )
 
     NotifyAnnualRenewal.perform(nil)
@@ -82,10 +75,10 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   test "sends renewal notification to user whose subscription is due for renewal in 2 days", %{
     user: user
   } do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 2)
+    subscribe_to_plan(
+      user,
+      @yearly_plan,
+      next_bill_date: Date.shift(Date.utc_today(), day: 2)
     )
 
     NotifyAnnualRenewal.perform(nil)
@@ -97,11 +90,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   end
 
   test "does not send renewal notification multiple times", %{user: user} do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 7)
-    )
+    subscribe_to_plan(user, @yearly_plan, next_bill_date: Date.shift(Date.utc_today(), day: 7))
 
     NotifyAnnualRenewal.perform(nil)
 
@@ -116,16 +105,12 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   end
 
   test "sends a renewal notification again a year after the previous one", %{user: user} do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 7)
-    )
+    subscribe_to_plan(user, @yearly_plan, next_bill_date: Date.shift(Date.utc_today(), day: 7))
 
     Repo.insert_all("sent_renewal_notifications", [
       %{
         user_id: user.id,
-        timestamp: Timex.shift(Timex.today(), years: -1) |> Timex.to_naive_datetime()
+        timestamp: Date.shift(Date.utc_today(), year: -1) |> NaiveDateTime.new!(~T[00:00:00])
       }
     ])
 
@@ -138,11 +123,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   end
 
   test "does not send multiple notifications on second year", %{user: user} do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 7)
-    )
+    subscribe_to_plan(user, @yearly_plan, next_bill_date: Date.shift(Date.utc_today(), day: 7))
 
     Repo.insert_all("sent_renewal_notifications", [
       %{
@@ -166,10 +147,8 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   test "sends renewal notification to user on v2 yearly pricing plans", %{
     user: user
   } do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @v2_pricing_yearly_plan,
-      next_bill_date: Timex.shift(Timex.today(), days: 7)
+    subscribe_to_plan(user, @v2_pricing_yearly_plan,
+      next_bill_date: Date.shift(Date.utc_today(), day: 7)
     )
 
     NotifyAnnualRenewal.perform(nil)
@@ -182,10 +161,8 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
 
   describe "expiration" do
     test "if user subscription is 'deleted', notify them about expiration instead", %{user: user} do
-      insert(:subscription,
-        user: user,
-        paddle_plan_id: @yearly_plan,
-        next_bill_date: Timex.shift(Timex.today(), days: 7),
+      subscribe_to_plan(user, @yearly_plan,
+        next_bill_date: Date.shift(Date.utc_today(), day: 7),
         status: Subscription.Status.deleted()
       )
 

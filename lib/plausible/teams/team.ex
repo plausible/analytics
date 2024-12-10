@@ -94,7 +94,8 @@ defmodule Plausible.Teams.Team do
     Map.from_struct(grace_period)
   end
 
-  defp trial_expiry(today) do
+  @doc false
+  def trial_expiry(today \\ Date.utc_today()) do
     on_ee do
       Date.shift(today, day: 30)
     else

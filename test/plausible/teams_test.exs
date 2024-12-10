@@ -1,6 +1,6 @@
 defmodule Plausible.TeamsTest do
   use Plausible.DataCase, async: true
-
+  use Plausible
   use Plausible.Teams.Test
 
   alias Plausible.Teams
@@ -8,9 +8,13 @@ defmodule Plausible.TeamsTest do
 
   describe "trial_days_left" do
     test "is 30 days for new signup" do
-      site = new_site()
+      user = new_user(trial_expiry_date: Teams.Team.trial_expiry())
 
-      assert Teams.trial_days_left(site.team) == 30
+      on_ee do
+        assert Teams.trial_days_left(team_of(user)) == 30
+      else
+        assert Teams.trial_days_left(team_of(user)) > 1000
+      end
     end
 
     test "is based on trial_expiry_date" do
