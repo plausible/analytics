@@ -52,7 +52,8 @@ defmodule Plausible.Stats.Goal.Revenue do
       %{
         short: Money.to_string!(money, format: :short, fractional_digits: 1),
         long: Money.to_string!(money),
-        value: Decimal.to_float(money.amount)
+        value: Decimal.to_float(money.amount),
+        currency: currency
       }
     else
       value
