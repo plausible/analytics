@@ -98,8 +98,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   test "halts with error when site ID is invalid", %{conn: conn} do
-    user = insert(:user)
-    _site = insert(:site, members: [user])
+    user = new_user(trial_expiry_date: Date.utc_today())
+    _site = new_site(owner: user)
     api_key = insert(:api_key, user: user)
 
     conn =
@@ -116,7 +116,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   test "halts with error when API key owner does not have access to the requested site", %{
     conn: conn
   } do
-    user = new_user()
+    user = new_user(trial_expiry_date: Date.utc_today())
     site = new_site()
     api_key = insert(:api_key, user: user)
 

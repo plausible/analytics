@@ -41,7 +41,7 @@ defmodule Plausible.Billing.FeatureTest do
   end
 
   test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on trial" do
-    team = new_user() |> team_of()
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
     assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(team)
   end
 

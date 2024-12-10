@@ -55,7 +55,7 @@ defmodule Plausible.HelpScoutTest do
 
     describe "get_details_for_customer/2" do
       test "returns details for user on trial" do
-        %{id: user_id, email: email} = new_user()
+        %{id: user_id, email: email} = new_user(trial_expiry_date: Date.utc_today())
         stub_help_scout_requests(email)
 
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
@@ -405,7 +405,7 @@ defmodule Plausible.HelpScoutTest do
 
     describe "get_details_for_emails/2" do
       test "returns details for user and persists mapping" do
-        %{id: user_id, email: email} = new_user()
+        %{id: user_id, email: email} = new_user(trial_expiry_date: Date.utc_today())
 
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
 

@@ -18,17 +18,12 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     notifications =
       Repo.all(
         from sn in TrafficChangeNotification,
-          where: is_nil(sn.last_sent),
-          or_where: sn.last_sent < fragment("now() - INTERVAL ?", @at_most_every),
-          join: s in Plausible.Site,
-          on: sn.site_id == s.id,
+          where:
+            is_nil(sn.last_sent) or sn.last_sent < fragment("now() - INTERVAL ?", @at_most_every),
+          inner_join: s in assoc(sn, :site),
+          inner_join: t in assoc(s, :team),
           where: not s.locked,
-          join: sm in Plausible.Site.Membership,
-          on: sm.site_id == s.id,
-          where: sm.role == :owner,
-          join: u in Plausible.Auth.User,
-          on: u.id == sm.user_id,
-          where: is_nil(u.accept_traffic_until) or u.accept_traffic_until > ^today,
+          where: is_nil(t.accept_traffic_until) or t.accept_traffic_until > ^today,
           preload: [site: s]
       )
 
@@ -77,10 +72,8 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp send_spike_notification(recipient, site, current_visitors, sources) do
-    site = Repo.preload(site, :members)
-
     dashboard_link =
-      if Enum.any?(site.members, &(&1.email == recipient)) do
+      if Repo.exists?(email_match_query(site, recipient)) do
         Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, [])
       end
 
@@ -97,10 +90,8 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   end
 
   defp send_drop_notification(recipient, site, current_visitors) do
-    site = Repo.preload(site, :members)
-
     {dashboard_link, installation_link} =
-      if Enum.any?(site.members, &(&1.email == recipient)) do
+      if Repo.exists?(email_match_query(site, recipient)) do
         {
           Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []),
           Routes.site_url(PlausibleWeb.Endpoint, :installation, site.domain,
@@ -121,5 +112,14 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
       )
 
     Plausible.Mailer.send(template)
+  end
+
+  defp email_match_query(site, recipient) do
+    from tm in Plausible.Teams.Membership,
+      inner_join: u in assoc(tm, :user),
+      left_join: gm in assoc(tm, :guest_memberships),
+      where: tm.team_id == ^site.team_id,
+      where: tm.role != :guest or gm.site_id == ^site.id,
+      where: u.email == ^recipient
   end
 end
