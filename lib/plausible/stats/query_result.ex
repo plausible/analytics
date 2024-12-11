@@ -7,6 +7,7 @@ defmodule Plausible.Stats.QueryResult do
   produced by Jason.encode(query_result) is ordered.
   """
 
+  use Plausible
   alias Plausible.Stats.DateTimeRange
 
   defstruct results: [],
@@ -48,14 +49,6 @@ defmodule Plausible.Stats.QueryResult do
       "Imported stats are not included because the time dimension (i.e. the interval) is too short."
   }
 
-  @revenue_metrics_warnings %{
-    revenue_goals_unavailable:
-      "The owner of this site does not have access to the revenue metrics feature.",
-    no_single_revenue_currency:
-      "Revenue metrics are null as there are multiple currencies for the selected event:goals.",
-    no_revenue_goals_matching: "Revenue metrics are null as there are no matching revenue goals."
-  }
-
   defp meta(query, meta_extra) do
     %{
       imports_included: if(query.include.imports, do: query.include_imported, else: nil),
@@ -87,21 +80,34 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp metric_warnings(query) do
-    if query.revenue_warning do
-      query.metrics
-      |> Enum.filter(&(&1 in Plausible.Stats.Goal.Revenue.revenue_metrics()))
-      |> Enum.map(
-        &{&1,
-         %{
-           code: query.revenue_warning,
-           warning: @revenue_metrics_warnings[query.revenue_warning]
-         }}
-      )
-      |> Map.new()
-    else
-      nil
+  on_ee do
+    @revenue_metrics_warnings %{
+      revenue_goals_unavailable:
+        "The owner of this site does not have access to the revenue metrics feature.",
+      no_single_revenue_currency:
+        "Revenue metrics are null as there are multiple currencies for the selected event:goals.",
+      no_revenue_goals_matching:
+        "Revenue metrics are null as there are no matching revenue goals."
+    }
+
+    defp metric_warnings(query) do
+      if query.revenue_warning do
+        query.metrics
+        |> Enum.filter(&(&1 in Plausible.Stats.Goal.Revenue.revenue_metrics()))
+        |> Enum.map(
+          &{&1,
+           %{
+             code: query.revenue_warning,
+             warning: @revenue_metrics_warnings[query.revenue_warning]
+           }}
+        )
+        |> Map.new()
+      else
+        nil
+      end
     end
+  else
+    defp metric_warnings(_query), do: nil
   end
 
   defp to_iso8601(datetime, timezone) do
