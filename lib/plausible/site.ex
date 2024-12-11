@@ -41,16 +41,12 @@ defmodule Plausible.Site do
       on_replace: :update,
       defaults_to_struct: true
 
-    ## many_to_many :members, User, join_through: Plausible.Site.Membership
-    ## has_many :memberships, Plausible.Site.Membership
-    ## has_many :invitations, Plausible.Auth.Invitation
     has_many :goals, Plausible.Goal, preload_order: [desc: :id]
     has_many :revenue_goals, Plausible.Goal, where: [currency: {:not, nil}]
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
     has_one :ownership, through: [:team, :ownership]
-    ## has_one :legacy_owner, through: [:ownership, :user]
     has_one :owner, through: [:team, :owner]
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Cache`.
