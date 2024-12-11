@@ -13,26 +13,6 @@ defmodule Plausible.Teams.Memberships do
     |> Repo.all()
   end
 
-  def any_pending_site_transfers?(email) do
-    email
-    |> pending_site_transfers_query()
-    |> Repo.exists?()
-  end
-
-  def get(team, user) do
-    result =
-      from(tm in Teams.Membership,
-        left_join: gm in assoc(tm, :guest_memberships),
-        where: tm.team_id == ^team.id and tm.user_id == ^user.id
-      )
-      |> Repo.one()
-
-    case result do
-      nil -> {:error, :not_a_member}
-      team_membership -> {:ok, team_membership}
-    end
-  end
-
   def team_role(team, user) do
     result =
       from(u in Auth.User,

@@ -165,17 +165,6 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def check_transfer_permissions(_team, _initiator, false = _check_permissions?) do
-    :ok
-  end
-
-  def check_transfer_permissions(team, initiator, _) do
-    case Teams.Memberships.team_role(team, initiator) do
-      {:ok, :owner} -> :ok
-      _ -> {:error, :forbidden}
-    end
-  end
-
   @doc false
   def ensure_transfer_valid(_team, nil, :owner), do: :ok
 
@@ -225,19 +214,6 @@ defmodule Plausible.Teams.Invitations do
       {:error, _, changeset, _} ->
         {:error, changeset}
     end
-  end
-
-  def send_transfer_init_email(site_transfer, new_owner) do
-    email =
-      PlausibleWeb.Email.ownership_transfer_request(
-        site_transfer.email,
-        site_transfer.transfer_id,
-        site_transfer.site,
-        site_transfer.initiator,
-        new_owner
-      )
-
-    Plausible.Mailer.send(email)
   end
 
   defp do_accept(team_invitation, user, now, opts) do

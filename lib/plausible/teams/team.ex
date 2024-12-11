@@ -55,10 +55,6 @@ defmodule Plausible.Teams.Team do
     )
   end
 
-  def remove_trial_expiry(team) do
-    change(team, trial_expiry_date: nil)
-  end
-
   def end_trial(team) do
     change(team, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
   end
