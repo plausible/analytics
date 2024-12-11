@@ -45,7 +45,7 @@ describe(`${isSearchEntryDefined.name}`, () => {
   })
 })
 
-describe(`${serializeLabelsEntry.name} and decodeURIComponent(${parseLabelsEntry.name}(...)) are opposite of each other`, () => {
+describe(`${serializeLabelsEntry.name} and ${parseLabelsEntry.name}(...) are opposite of each other`, () => {
   test.each<[[string, string], string]>([
     [['US', 'United States'], 'US,United%20States'],
     [['FR-IDF', 'Île-de-France'], 'FR-IDF,%C3%8Ele-de-France'],
@@ -55,23 +55,27 @@ describe(`${serializeLabelsEntry.name} and decodeURIComponent(${parseLabelsEntry
     (entry, expected) => {
       const serialized = serializeLabelsEntry(entry)
       expect(serialized).toEqual(expected)
-      expect(parseLabelsEntry(decodeURIComponent(serialized))).toEqual(entry)
+      expect(parseLabelsEntry(serialized)).toEqual(entry)
     }
   )
 })
 
-describe(`${serializeFilter.name} and decodeURIComponent(${parseFilter.name}(...)) are opposite of each other`, () => {
+describe(`${serializeFilter.name} and ${parseFilter.name}(...) are opposite of each other`, () => {
   test.each<[Filter, string]>([
     [
-      ['contains', 'entry_page', ['/forecast/:city', 'ü']],
-      'contains,entry_page,/forecast/:city,%C3%BC'
+      ['contains', 'entry_page', ['/forecast/:city', ',"\'']],
+      "contains,entry_page,/forecast/:city,%2C%22'"
+    ],
+    [
+      ['is', 'props:complex/prop-with-comma-etc,$#%', ['(none)']],
+      'is,props:complex/prop-with-comma-etc%2C%24%23%25,(none)'
     ]
   ])(
     'filter %p serializes to %p, parses back to original',
     (filter, expected) => {
       const serialized = serializeFilter(filter)
       expect(serialized).toEqual(expected)
-      expect(parseFilter(decodeURIComponent(serialized))).toEqual(filter)
+      expect(parseFilter(serialized)).toEqual(filter)
     }
   )
 })

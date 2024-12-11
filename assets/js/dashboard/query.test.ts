@@ -12,7 +12,7 @@ describe(`${maybeGetRedirectTargetFromLegacySearchParams.name}`, () => {
   ])('for modern search %p returns null', (search) => {
     expect(
       maybeGetRedirectTargetFromLegacySearchParams({
-        pathname: '/example.com%2Fdeeper',
+        pathname: '/example.com%2Fdeep%2Fpath',
         search
       } as Location)
     ).toBeNull()
