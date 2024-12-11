@@ -69,7 +69,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
     attrs = Map.put(attrs, "team_id", team_id)
 
-    Plausible.Billing.EnterprisePlan.changeset(schema, attrs)
+    Plausible.Billing.EnterprisePlan.changeset(struct(schema, %{}), attrs)
   end
 
   def update_changeset(enterprise_plan, attrs) do
