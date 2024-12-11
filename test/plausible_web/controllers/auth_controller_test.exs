@@ -578,7 +578,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       subscribe_to_growth_plan(user, status: Subscription.Status.active())
       subscribe_to_enterprise_plan(user, site_limit: 1, subscription?: false)
 
-      {:ok, _team} = Plausible.Teams.get_or_create(user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
@@ -586,7 +586,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Repo.reload(user) == nil
       assert Repo.all(Plausible.Billing.Subscription) == []
       assert Repo.all(Plausible.Billing.EnterprisePlan) == []
-      assert Repo.all(Plausible.Teams.Team) == []
+      refute Repo.get(Plausible.Teams.Team, team.id)
     end
 
     test "deletes sites that the user owns", %{conn: conn, user: user, site: owner_site} do

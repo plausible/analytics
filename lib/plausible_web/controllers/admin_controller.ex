@@ -89,7 +89,7 @@ defmodule PlausibleWeb.AdminController do
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Usage - team:#{team.id}</title>
+        <title>Usage - team:#{team && team.id}</title>
         <style>
           ul, li {margin-top: 10px;}
           body {padding-top: 10px;}
