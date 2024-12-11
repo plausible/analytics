@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
                "#{second_member.email} is already a member of #{site.domain}"
     end
 
-    test "redirects with an error flash when the invitation already exists", %{
+    test "handles repeat invitation gracefully", %{
       conn: conn,
       user: user
     } do
@@ -194,27 +194,13 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
           role: "editor"
         })
 
-      # FIXME: reconsider if we should make an extra effort to prevent
-      # sending repeat emails despite invite action being otherwise idempotent.
-      # refute_email_delivered_with(
-      #   to: [nil: "joe@example.com"],
-      #   subject: @subject_prefix <> "You've been invited to #{site.domain}"
-      # )
-
-      # assert people_settings = redirected_to(req2, 302)
-
-      # assert ^people_settings =
-      #          PlausibleWeb.Router.Helpers.site_path(
-      #            PlausibleWeb.Endpoint,
-      #            :settings_people,
-      #            site.domain
-      #          )
+      assert_email_delivered_with(
+        to: [nil: "joe@example.com"],
+        subject: @subject_prefix <> "You've been invited to #{site.domain}"
+      )
 
       assert Phoenix.Flash.get(req2.assigns.flash, :success) =~
                "has been invited to"
-
-      # assert Phoenix.Flash.get(req2.assigns.flash, :error) =~
-      #          "This invitation has been already sent."
     end
   end
 
