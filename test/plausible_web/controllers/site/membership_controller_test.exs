@@ -105,7 +105,6 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn = get(recycle(conn), redirected_to(conn, 302))
       html = html_response(conn, 200)
       assert html =~ "Error"
-      # FIXME: text below is not very true
       assert html =~ "This invitation has been already sent"
     end
 

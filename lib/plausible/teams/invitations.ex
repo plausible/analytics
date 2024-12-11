@@ -471,20 +471,7 @@ defmodule Plausible.Teams.Invitations do
         Teams.Invitation.changeset(team, email: invitee_email, role: :guest, inviter: inviter)
       )
       |> Ecto.Multi.run(:ensure_no_site_transfers, fn _repo, %{changeset: changeset} ->
-        if site_id = opts[:ensure_no_site_transfers_for] do
-          q =
-            from st in Teams.SiteTransfer,
-              where: st.email == ^invitee_email,
-              where: st.site_id == ^site_id
-
-          if Repo.exists?(q) do
-            {:error, Ecto.Changeset.add_error(changeset, :invitation, "already sent")}
-          else
-            {:ok, :pass}
-          end
-        else
-          {:ok, :skip}
-        end
+        ensure_no_site_transfers(changeset, opts[:ensure_no_site_transfers_for], invitee_email)
       end)
       |> Ecto.Multi.insert(
         :team_invitation,
@@ -597,5 +584,23 @@ defmodule Plausible.Teams.Invitations do
     team_invitation.inviter.email
     |> PlausibleWeb.Email.invitation_accepted(team_invitation.email, guest_invitation.site)
     |> Plausible.Mailer.send()
+  end
+
+  defp ensure_no_site_transfers(_, nil, _) do
+    {:ok, :skip}
+  end
+
+  defp ensure_no_site_transfers(changeset, site_id, invitee_email)
+       when is_integer(site_id) and is_binary(invitee_email) do
+    q =
+      from st in Teams.SiteTransfer,
+        where: st.email == ^invitee_email,
+        where: st.site_id == ^site_id
+
+    if Repo.exists?(q) do
+      {:error, Ecto.Changeset.add_error(changeset, :invitation, "already sent")}
+    else
+      {:ok, :pass}
+    end
   end
 end

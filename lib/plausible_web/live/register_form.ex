@@ -13,10 +13,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     socket =
       assign_new(socket, :invitation, fn ->
         if invitation_id = params["invitation_id"] do
-          case find_by_id_unified(invitation_id) do
-            {:error, :invitation_not_found} -> nil
-            {:ok, unified} -> unified
-          end
+          find_by_id_unified(invitation_id)
         end
       end)
 
@@ -313,17 +310,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   defp add_user(socket, user, opts \\ []) do
     result =
       Repo.transaction(fn ->
-        case Repo.insert(user) do
-          {:ok, user} ->
-            if opts[:with_team?] do
-              {:ok, _} = Plausible.Teams.get_or_create(user)
-            end
-
-            user
-
-          {:error, reason} ->
-            Repo.rollback(reason)
-        end
+        do_add_user(user, opts)
       end)
 
     case result do
@@ -345,10 +332,30 @@ defmodule PlausibleWeb.Live.RegisterForm do
     end
   end
 
+  defp do_add_user(user, opts) do
+    case Repo.insert(user) do
+      {:ok, user} ->
+        if opts[:with_team?] do
+          {:ok, _} = Plausible.Teams.get_or_create(user)
+        end
+
+        user
+
+      {:error, reason} ->
+        Repo.rollback(reason)
+    end
+  end
+
   defp find_by_id_unified(invitation_or_transfer_id) do
-    with {:error, :invitation_not_found} <-
-           find_invitation_by_id_unified(invitation_or_transfer_id) do
-      find_transfer_by_id_unified(invitation_or_transfer_id)
+    result =
+      with {:error, :invitation_not_found} <-
+             find_invitation_by_id_unified(invitation_or_transfer_id) do
+        find_transfer_by_id_unified(invitation_or_transfer_id)
+      end
+
+    case result do
+      {:error, :invitation_not_found} -> nil
+      {:ok, unified} -> unified
     end
   end
 
