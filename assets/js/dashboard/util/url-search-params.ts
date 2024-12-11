@@ -32,34 +32,38 @@ export function stringifySearch(
 }
 
 export function parseSearch(searchString: string): Record<string, unknown> {
-  const urlSearchParams = new URLSearchParams(searchString)
   const searchRecord: Record<string, string | boolean> = {}
   const filters: Filter[] = []
   const labels: FilterClauseLabels = {}
-  urlSearchParams.forEach((value, key) => {
+
+  for (const param of searchString.startsWith('?')
+    ? searchString.slice(1).split('&')
+    : searchString.split('&')) {
+    const [key, rawValue] = param.split('=')
     switch (key) {
       case FILTER_URL_PARAM_NAME: {
-        const filter = parseFilter(value)
+        const filter = parseFilter(rawValue)
         if (filter.length === 3 && filter[2].length) {
           filters.push(filter)
         }
         break
       }
       case LABEL_URL_PARAM_NAME: {
-        const [labelKey, labelValue] = parseLabelsEntry(value)
+        const [labelKey, labelValue] = parseLabelsEntry(rawValue)
         if (labelKey.length && labelValue.length) {
           labels[labelKey] = labelValue
         }
         break
       }
       default: {
-        const parsedValue = parseSimpleSearchEntry(value)
+        const parsedValue = parseSimpleSearchEntry(rawValue)
         if (parsedValue !== null) {
-          searchRecord[key] = parsedValue
+          searchRecord[decodeURIComponent(key)] = parsedValue
         }
       }
     }
-  })
+  }
+
   return {
     ...searchRecord,
     ...(filters.length && { filters }),
@@ -79,14 +83,13 @@ export function serializeLabelsEntry([labelKey, labelValue]: [string, string]) {
 }
 
 /**
- * Parses the output of @see serializeLabelsEntry back to labels object entry,
- * once it has gone through URL decoding via new URLSearchParams(location.search).
+ * Parses the output of @see serializeLabelsEntry back to labels object entry.
  */
 export function parseLabelsEntry(
   labelKeyValueString: string
 ): [string, string] {
   const [key, value] = labelKeyValueString.split(',')
-  return [key, value]
+  return [decodeURIComponent(key), decodeURIComponent(value)]
 }
 
 /**
@@ -96,8 +99,8 @@ export function parseLabelsEntry(
  */
 export function serializeFilter([operator, dimension, clauses]: Filter) {
   const serializedFilter = [
-    operator,
-    dimension,
+    encodeURIComponentPermissive(operator, ':/'),
+    encodeURIComponentPermissive(dimension, ':/'),
     ...clauses.map((clause) =>
       encodeURIComponentPermissive(clause.toString(), ':/')
     )
@@ -106,17 +109,23 @@ export function serializeFilter([operator, dimension, clauses]: Filter) {
 }
 
 /**
- * Parses the output of @see serializeFilter back to filters array item,
- * once it has gone through URL decoding via new URLSearchParams(location.search).
+ * Parses the output of @see serializeFilter back to filters array item.
  */
 export function parseFilter(filterString: string): Filter {
   const [operator, dimension, ...unparsedClauses] = filterString.split(',')
-  return [operator, dimension, unparsedClauses]
+  return [
+    decodeURIComponent(operator),
+    decodeURIComponent(dimension),
+    unparsedClauses.map(decodeURIComponent)
+  ]
 }
 
 /**
  * Encodes for URL simple search param values.
+ * Encodes numbers and number-like strings as indistinguishable strings. Parse treats them as strings.
+ * Encodes booleans and strings "true" and "false" as indistinguishable strings. Parse treats these as booleans.
  * Unifies unhandleable complex search entries like undefined, null, objects and arrays as undefined.
+ * Complex URL params must be handled separately.
  */
 export function serializeSimpleSearchEntry([key, value]: [string, unknown]): [
   string,
@@ -132,8 +141,7 @@ export function serializeSimpleSearchEntry([key, value]: [string, unknown]): [
 }
 
 /**
- * Parses output of @see serializeSimpleSearchEntry,
- * once it has gone through URL decoding via new URLSearchParams(location.search)
+ * Parses output of @see serializeSimpleSearchEntry.
  */
 export function parseSimpleSearchEntry(
   searchParamValue: string
@@ -144,7 +152,7 @@ export function parseSimpleSearchEntry(
   if (searchParamValue === 'false') {
     return false
   }
-  return searchParamValue
+  return decodeURIComponent(searchParamValue)
 }
 
 export function encodeURIComponentPermissive(
