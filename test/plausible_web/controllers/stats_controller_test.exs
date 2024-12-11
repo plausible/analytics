@@ -231,14 +231,13 @@ defmodule PlausibleWeb.StatsControllerTest do
         build(:event, name: "File Download", "meta.key": ["url"], "meta.value": ["b"])
       ])
 
-      conn = get(conn, "/" <> site.domain <> "/export?period=day")
-      assert response = response(conn, 200)
-      {:ok, zip} = :zip.unzip(response, [:memory])
+      result =
+        conn
+        |> get("/" <> site.domain <> "/export?period=day")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      {_filename, result} =
-        Enum.find(zip, fn {filename, _data} -> filename == ~c"custom_props.csv" end)
-
-      assert parse_csv(result) == [
+      assert result == [
                ["property", "value", "visitors", "events", "percentage"],
                ["url", "(none)", "1", "1", "50.0"],
                ["url", "b", "1", "1", "50.0"],
@@ -298,14 +297,13 @@ defmodule PlausibleWeb.StatsControllerTest do
         build(:pageview)
       ])
 
-      conn = get(conn, "/" <> site.domain <> "/export?period=day")
-      assert response = response(conn, 200)
-      {:ok, zip} = :zip.unzip(response, [:memory])
+      result =
+        conn
+        |> get("/" <> site.domain <> "/export?period=day")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      {_filename, result} =
-        Enum.find(zip, fn {filename, _data} -> filename == ~c"custom_props.csv" end)
-
-      assert parse_csv(result) == [
+      assert result == [
                ["property", "value", "visitors", "events", "percentage"],
                ["author", "(none)", "3", "4", "50.0"],
                ["author", "uku", "2", "2", "33.3"],
@@ -318,15 +316,14 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "exports data grouped by interval", %{conn: conn, site: site} do
       populate_exported_stats(site)
-      conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20&period=30d&interval=week")
 
-      assert response = response(conn, 200)
-      {:ok, zip} = :zip.unzip(response, [:memory])
+      visitors =
+        conn
+        |> get("/" <> site.domain <> "/export?date=2021-10-20&period=30d&interval=week")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"visitors.csv")
 
-      {_filename, visitors} =
-        Enum.find(zip, fn {filename, _data} -> filename == ~c"visitors.csv" end)
-
-      assert parse_csv(visitors) == [
+      assert visitors == [
                [
                  "date",
                  "visitors",
@@ -361,15 +358,13 @@ defmodule PlausibleWeb.StatsControllerTest do
         build(:pageview, operating_system: "Mac", operating_system_version: "13")
       ])
 
-      conn = get(conn, "/#{site.domain}/export")
+      os_versions =
+        conn
+        |> get("/#{site.domain}/export")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"operating_system_versions.csv")
 
-      assert response = response(conn, 200)
-      {:ok, zip} = :zip.unzip(response, [:memory])
-
-      {_filename, os_versions} =
-        Enum.find(zip, fn {filename, _data} -> filename == ~c"operating_system_versions.csv" end)
-
-      assert parse_csv(os_versions) == [
+      assert os_versions == [
                ["name", "version", "visitors"],
                ["Mac", "14", "3"],
                ["Ubuntu", "20.04", "2"],
@@ -650,19 +645,25 @@ defmodule PlausibleWeb.StatsControllerTest do
       ])
 
       filters = Jason.encode!([[:is, "event:props:author", ["marko"]]])
-      conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
 
-      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+      result =
+        conn
+        |> get("/" <> site.domain <> "/export?period=day&filters=#{filters}")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      {_filename, result} =
-        Enum.find(zip, fn {filename, _data} -> filename == ~c"custom_props.csv" end)
-
-      assert parse_csv(result) == [
+      assert result == [
                ["property", "value", "visitors", "events", "percentage"],
                ["author", "marko", "1", "1", "100.0"],
                [""]
              ]
     end
+  end
+
+  defp unzip_and_parse_csv(archive, filename) do
+    {:ok, zip} = :zip.unzip(archive, [:memory])
+    {_filename, data} = Enum.find(zip, &(elem(&1, 0) == filename))
+    parse_csv(data)
   end
 
   defp assert_zip(conn, folder) do
@@ -675,10 +676,10 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     folder = Path.expand(folder, "test/plausible_web/controllers/CSVs")
 
-    Enum.map(zip, &assert_csv(&1, folder))
+    Enum.map(zip, &assert_csv_by_fixture(&1, folder))
   end
 
-  defp assert_csv({file, downloaded}, folder) do
+  defp assert_csv_by_fixture({file, downloaded}, folder) do
     file = Path.expand(file, folder)
 
     {:ok, content} = File.read(file)
@@ -788,14 +789,14 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       insert(:goal, site: site, event_name: "Newsletter Signup")
       filters = Jason.encode!([[:is, "event:goal", ["Newsletter Signup"]]])
-      conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
 
-      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+      result =
+        conn
+        |> get("/" <> site.domain <> "/export?period=day&filters=#{filters}")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"custom_props.csv")
 
-      {_filename, result} =
-        Enum.find(zip, fn {filename, _data} -> filename == ~c"custom_props.csv" end)
-
-      assert parse_csv(result) == [
+      assert result == [
                ["property", "value", "visitors", "events", "conversion_rate"],
                ["author", "marko", "2", "2", "50.0"],
                ["author", "uku", "1", "1", "25.0"],
@@ -844,15 +845,14 @@ defmodule PlausibleWeb.StatsControllerTest do
       insert(:goal, site: site, event_name: "Signup")
 
       filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-      conn = get(conn, "/#{site.domain}/export?filters=#{filters}")
 
-      assert response = response(conn, 200)
-      {:ok, zip} = :zip.unzip(response, [:memory])
+      os_versions =
+        conn
+        |> get("/#{site.domain}/export?filters=#{filters}")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"operating_system_versions.csv")
 
-      {_filename, os_versions} =
-        Enum.find(zip, fn {filename, _data} -> filename == ~c"operating_system_versions.csv" end)
-
-      assert parse_csv(os_versions) == [
+      assert os_versions == [
                ["name", "version", "conversions", "conversion_rate"],
                ["Mac", "14", "3", "75.0"],
                ["Ubuntu", "20.04", "2", "100.0"],
