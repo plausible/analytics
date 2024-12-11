@@ -138,7 +138,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       inviter = new_user()
       invitee = new_user()
       site = new_site(owner: inviter)
-      # XXX
       add_guest(site, user: invitee, role: :editor)
 
       existing_team_membership =
