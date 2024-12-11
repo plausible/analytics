@@ -34,16 +34,16 @@ defmodule Plausible.Auth.User do
     # Field for purely informational purposes in CRM context
     field :notes, :string
 
-    # A field only used as a manual override - allow subscribing
-    # to any plan, even when exceeding its pageview limit
+    # Fields used only by CRM for mapping to the ones in the owned team
+    field :trial_expiry_date, :date, virtual: true
+    field :allow_next_upgrade_override, :boolean, virtual: true
+    field :accept_traffic_until, :date, virtual: true
 
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
     field :totp_enabled, :boolean, default: false
     field :totp_secret, Plausible.Auth.TOTP.EncryptedBinary
     field :totp_token, :string
     field :totp_last_used_at, :naive_datetime
-
-    ## embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
     has_many :sessions, Plausible.Auth.UserSession
     has_many :team_memberships, Plausible.Teams.Membership
@@ -118,7 +118,10 @@ defmodule Plausible.Auth.User do
       :name,
       :email_verified,
       :theme,
-      :notes
+      :notes,
+      :trial_expiry_date,
+      :allow_next_upgrade_override,
+      :accept_traffic_until
     ])
     |> validate_required([:email, :name, :email_verified])
     |> unique_constraint(:email)

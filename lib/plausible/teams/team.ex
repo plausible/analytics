@@ -33,15 +33,9 @@ defmodule Plausible.Teams.Team do
     timestamps()
   end
 
-  def sync_changeset(team, user) do
+  def crm_sync_changeset(team, params) do
     team
-    |> change()
-    |> put_change(:trial_expiry_date, user.trial_expiry_date)
-    |> put_change(:accept_traffic_until, user.accept_traffic_until)
-    |> put_change(:allow_next_upgrade_override, user.allow_next_upgrade_override)
-    |> put_embed(:grace_period, embed_params(user.grace_period))
-    |> put_change(:inserted_at, user.inserted_at)
-    |> put_change(:updated_at, user.updated_at)
+    |> cast(params, [:trial_expiry_date, :allow_next_upgrade_override, :accept_traffic_until])
   end
 
   def changeset(name, today \\ Date.utc_today()) do
@@ -87,12 +81,6 @@ defmodule Plausible.Teams.Team do
 
   def subscription_accept_traffic_until_offset_days(),
     do: @subscription_accept_traffic_until_offset_days
-
-  defp embed_params(nil), do: nil
-
-  defp embed_params(grace_period) do
-    Map.from_struct(grace_period)
-  end
 
   @doc false
   def trial_expiry(today \\ Date.utc_today()) do

@@ -6,7 +6,19 @@ defmodule Plausible.Auth.UserAdmin do
 
   def custom_index_query(_conn, _schema, query) do
     subscripton_q = from(s in Plausible.Billing.Subscription, order_by: [desc: s.inserted_at])
-    from(r in query, preload: [:my_team, subscription: ^subscripton_q])
+    from(r in query, preload: [my_team: [subscription: ^subscripton_q]])
+  end
+
+  def custom_show_query(_conn, _schema, query) do
+    from(u in query,
+      left_join: t in assoc(u, :my_team),
+      select: %{
+        u
+        | trial_expiry_date: t.trial_expiry_date,
+          allow_next_upgrade_override: t.allow_next_upgrade_override,
+          accept_traffic_until: t.accept_traffic_until
+      }
+    )
   end
 
   def form_fields(_) do
@@ -23,6 +35,37 @@ defmodule Plausible.Auth.UserAdmin do
       },
       notes: %{type: :textarea, rows: 6}
     ]
+  end
+
+  def update(_conn, changeset) do
+    my_team = Repo.preload(changeset.data, :my_team).my_team
+
+    team_changed_params =
+      [:trial_expiry_date, :allow_next_upgrade_override, :accept_traffic_until]
+      |> Enum.map(&{&1, Ecto.Changeset.get_change(changeset, &1, :no_change)})
+      |> Enum.reject(fn {_, val} -> val == :no_change end)
+      |> Map.new()
+
+    with {:ok, user} <- Repo.update(changeset) do
+      cond do
+        my_team && map_size(team_changed_params) > 0 ->
+          my_team
+          |> Plausible.Teams.Team.crm_sync_changeset(team_changed_params)
+          |> Repo.update!()
+
+        team_changed_params[:trial_expiry_date] ->
+          {:ok, team} = Plausible.Teams.get_or_create(user)
+
+          team
+          |> Plausible.Teams.Team.crm_sync_changeset(team_changed_params)
+          |> Repo.update!()
+
+        true ->
+          :ignore
+      end
+
+      {:ok, user}
+    end
   end
 
   def delete(_conn, %{data: user}) do
@@ -62,14 +105,8 @@ defmodule Plausible.Auth.UserAdmin do
     ]
   end
 
-  def after_update(_conn, user) do
-    Plausible.Teams.sync_team(user)
-
-    {:ok, user}
-  end
-
   defp lock(user) do
-    if user.my_team.grace_period do
+    if user.my_team && user.my_team.grace_period do
       Plausible.Billing.SiteLocker.set_lock_status_for(user.my_team, true)
       Plausible.Teams.end_grace_period(user.my_team)
       {:ok, user}
@@ -79,7 +116,7 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp unlock(user) do
-    if user.my_team.grace_period do
+    if user.my_team && user.my_team.grace_period do
       Plausible.Teams.remove_grace_period(user.my_team)
       Plausible.Billing.SiteLocker.set_lock_status_for(user.my_team, false)
       {:ok, user}
@@ -92,7 +129,9 @@ defmodule Plausible.Auth.UserAdmin do
     Plausible.Auth.TOTP.force_disable(user)
   end
 
-  defp grace_period_status(%{grace_period: grace_period}) do
+  defp grace_period_status(user) do
+    grace_period = user.my_team && user.my_team.grace_period
+
     case grace_period do
       nil ->
         "--"
@@ -113,25 +152,20 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp subscription_plan(user) do
-    if Subscription.Status.active?(user.subscription) && user.subscription.paddle_subscription_id do
-      quota = PlausibleWeb.AuthView.subscription_quota(user.subscription)
-      interval = PlausibleWeb.AuthView.subscription_interval(user.subscription)
+    subscription = user.my_team && user.my_team.subscription
 
-      {:safe, ~s(<a href="#{manage_url(user.subscription)}">#{quota} \(#{interval}\)</a>)}
+    if Subscription.Status.active?(subscription) && subscription.paddle_subscription_id do
+      quota = PlausibleWeb.AuthView.subscription_quota(subscription)
+      interval = PlausibleWeb.AuthView.subscription_interval(subscription)
+
+      {:safe, ~s(<a href="#{manage_url(subscription)}">#{quota} \(#{interval}\)</a>)}
     else
       "--"
     end
   end
 
   defp subscription_status(user) do
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} ->
-          Plausible.Teams.with_subscription(team)
-
-        {:error, :no_team} ->
-          nil
-      end
+    team = user.my_team
 
     cond do
       team && team.subscription ->

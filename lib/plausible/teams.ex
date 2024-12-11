@@ -140,14 +140,6 @@ defmodule Plausible.Teams do
     end
   end
 
-  def sync_team(user) do
-    {:ok, team} = get_or_create(user)
-
-    team
-    |> Teams.Team.sync_changeset(user)
-    |> Repo.update!()
-  end
-
   def get_by_owner(user_id) when is_integer(user_id) do
     result =
       from(tm in Teams.Membership,
