@@ -11,14 +11,6 @@ defmodule Plausible.Teams.Memberships do
     email
     |> pending_site_transfers_query()
     |> Repo.all()
-    |> Enum.map(fn transfer ->
-      %{
-        site_id: transfer.site_id,
-        email: transfer.email,
-        invitation_id: transfer.transfer_id,
-        role: :owner
-      }
-    end)
   end
 
   def any_pending_site_transfers?(email) do
@@ -189,6 +181,6 @@ defmodule Plausible.Teams.Memberships do
   end
 
   defp pending_site_transfers_query(email) do
-    from st in Teams.SiteTransfer, where: st.email == ^email
+    from st in Teams.SiteTransfer, where: st.email == ^email, select: st.site_id
   end
 end
