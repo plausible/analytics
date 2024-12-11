@@ -92,11 +92,11 @@ defmodule Plausible.Auth.UserAdmin do
     [
       unlock: %{
         name: "Unlock",
-        action: fn _, user -> unlock(user.my_team) end
+        action: fn _, user -> unlock(user) end
       },
       lock: %{
         name: "Lock",
-        action: fn _, user -> lock(user.my_team) end
+        action: fn _, user -> lock(user) end
       },
       reset_2fa: %{
         name: "Reset 2FA",
@@ -106,6 +106,8 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp lock(user) do
+    user = Repo.preload(user, :my_team)
+
     if user.my_team && user.my_team.grace_period do
       Plausible.Billing.SiteLocker.set_lock_status_for(user.my_team, true)
       Plausible.Teams.end_grace_period(user.my_team)
@@ -116,6 +118,8 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp unlock(user) do
+    user = Repo.preload(user, :my_team)
+
     if user.my_team && user.my_team.grace_period do
       Plausible.Teams.remove_grace_period(user.my_team)
       Plausible.Billing.SiteLocker.set_lock_status_for(user.my_team, false)
