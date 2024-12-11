@@ -1,5 +1,6 @@
 defmodule Plausible.Billing.EnterprisePlanAdminTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
 
   alias Plausible.Billing.EnterprisePlan
   alias Plausible.Billing.EnterprisePlanAdmin
@@ -7,7 +8,7 @@ defmodule Plausible.Billing.EnterprisePlanAdminTest do
   @moduletag :ee_only
 
   test "sanitizes number inputs and whitespace" do
-    user = insert(:user)
+    user = new_user()
 
     changeset =
       EnterprisePlanAdmin.create_changeset(%EnterprisePlan{}, %{
@@ -22,7 +23,7 @@ defmodule Plausible.Billing.EnterprisePlanAdminTest do
       })
 
     assert changeset.valid?
-    assert changeset.changes.user_id == user.id
+    assert changeset.changes.team_id == team_of(user).id
     assert changeset.changes.paddle_plan_id == "123456"
     assert changeset.changes.billing_interval == :monthly
     assert changeset.changes.monthly_pageview_limit == 100_000_000
@@ -32,7 +33,7 @@ defmodule Plausible.Billing.EnterprisePlanAdminTest do
   end
 
   test "scrubs empty attrs" do
-    user = insert(:user)
+    user = new_user()
 
     changeset =
       EnterprisePlanAdmin.create_changeset(%EnterprisePlan{}, %{
