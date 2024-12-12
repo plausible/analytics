@@ -20,6 +20,23 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   ]
 
   @doc """
+    This function Plug halts connection with 404 error if user or site do not have the expected feature flag.
+  """
+  def segments_feature_gate_plug(conn, _opts) do
+    flag = :saved_segments
+
+    enabled =
+      FunWithFlags.enabled?(flag, for: conn.assigns[:current_user]) ||
+        FunWithFlags.enabled?(flag, for: conn.assigns[:site])
+
+    if !enabled do
+      H.not_found(conn, "Oops! There's nothing here")
+    else
+      conn
+    end
+  end
+
+  @doc """
     This function Plug sets conn.assigns[:capabilities] to a map like %{can_list_site_segments: true, ...}.
     Allowed capabilities depend on the user role and the subscription level of the team that owns the site.
   """
@@ -330,6 +347,15 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         :can_edit_site_segments,
         :can_delete_site_segments
       ]
+
+      iex> get_capabilities(:admin) == get_capabilities(:editor)
+      true
+
+      iex> get_capabilities(:owner) == get_capabilities(:editor)
+      true
+
+      iex> get_capabilities(:super_admin) == get_capabilities(:editor)
+      true
   """
   def get_capabilities(role) do
     case role do
