@@ -167,7 +167,9 @@ defmodule Plausible.Sites do
     Ecto.Multi.new()
     |> Ecto.Multi.put(:site_changeset, Site.new(params))
     |> Ecto.Multi.run(:create_team, fn _repo, _context ->
-      Plausible.Teams.get_or_create(user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      {:ok, Plausible.Teams.with_subscription(team)}
     end)
     |> Ecto.Multi.run(:ensure_can_add_new_site, fn _repo, %{create_team: team} ->
       case Plausible.Teams.Billing.ensure_can_add_new_site(team) do
@@ -196,7 +198,7 @@ defmodule Plausible.Sites do
       Ecto.Changeset.put_assoc(site, :team, team)
     end)
     |> Ecto.Multi.run(:trial, fn _repo, %{create_team: team} ->
-      if is_nil(team.trial_expiry_date) do
+      if is_nil(team.trial_expiry_date) and is_nil(team.subscription) do
         Teams.start_trial(team)
         {:ok, :trial_started}
       else

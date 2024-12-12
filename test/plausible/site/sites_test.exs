@@ -14,6 +14,32 @@ defmodule Plausible.SitesTest do
                Sites.create(user, params)
     end
 
+    test "does not start a trial for pre-teams guest users without trial expiry date" do
+      user = new_user() |> subscribe_to_growth_plan()
+      new_site(owner: user)
+
+      three_hundred_days_from_now = Date.shift(Date.utc_today(), day: 300)
+
+      user
+      |> team_of()
+      |> Ecto.Changeset.change(
+        trial_expiry_date: nil,
+        accept_traffic_until: three_hundred_days_from_now
+      )
+      |> Plausible.Repo.update!()
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      user = Plausible.Repo.reload!(user)
+
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+               Sites.create(user, params)
+
+      team = user |> team_of() |> Repo.reload!()
+      refute team.trial_expiry_date
+      assert Date.compare(team.accept_traffic_until, three_hundred_days_from_now) == :eq
+    end
+
     test "fails on invalid timezone" do
       user = insert(:user)
 
