@@ -6,7 +6,14 @@
     %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
     %{key: "API Keys", value: "api-keys", icon: :key},
     %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
-  ] %>
+  ]
+
+  options =
+    if Plausible.ee?() do
+      options
+    else
+      Enum.reject(options, fn option -> String.contains?(option.value, "billing") end)
+    end %>
 
   <div class="container pt-6">
     <.styled_link class="text-indigo-600 font-bold text-sm" href="/sites">
