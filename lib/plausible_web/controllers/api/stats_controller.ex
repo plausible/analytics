@@ -859,6 +859,8 @@ defmodule PlausibleWeb.Api.StatsController do
         |> to_csv([:name, :conversions, :conversion_rate])
       else
         cols = [:name, :visitors, :pageviews, :bounce_rate, :time_on_page]
+
+        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
         cols = if include_scroll_depth?, do: cols ++ [:scroll_depth], else: cols
 
         pages |> to_csv(cols)
