@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
   use Plausible.Repo
   use Plausible.Teams.Test
 
+  doctest PlausibleWeb.Api.Internal.SegmentsController, import: true
+
   describe "GET /internal-api/:domain/segments" do
     setup [:create_user, :log_in, :create_site]
 
@@ -38,17 +40,19 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       conn = get(conn, "/internal-api/#{site.domain}/segments")
 
       assert json_response(conn, 200) ==
-               Enum.reverse(Enum.map(site_segments, fn s ->
-                 %{
-                   "id" => s.id,
-                   "name" => s.name,
-                   "type" => Atom.to_string(s.type),
-                   "owner_id" => nil,
-                   "inserted_at" => inserted_at,
-                   "updated_at" => inserted_at,
-                   "segment_data" => nil
-                 }
-               end))
+               Enum.reverse(
+                 Enum.map(site_segments, fn s ->
+                   %{
+                     "id" => s.id,
+                     "name" => s.name,
+                     "type" => Atom.to_string(s.type),
+                     "owner_id" => nil,
+                     "inserted_at" => inserted_at,
+                     "updated_at" => inserted_at,
+                     "segment_data" => nil
+                   }
+                 end)
+               )
     end
 
     for role <- [:viewer, :owner] do
@@ -184,7 +188,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         get(conn, "/internal-api/#{site.domain}/segments/#{segment_id}")
 
       assert json_response(conn, 403) == %{
-               "error" => "Not enough permissions to query segment data"
+               "error" => "Not enough permissions to get segment data"
              }
     end
 
@@ -303,7 +307,26 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         })
 
       assert json_response(conn, 403) == %{
-               "error" => "Not enough permissions to create site segments"
+               "error" => "Not enough permissions to create segment"
+             }
+    end
+
+    test "forbids owners on growth plan from creating site segments", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      user |> subscribe_to_growth_plan()
+
+      conn =
+        post(conn, "/internal-api/#{site.domain}/segments", %{
+          "type" => "site",
+          "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
+          "name" => "any name"
+        })
+
+      assert json_response(conn, 403) == %{
+               "error" => "Not enough permissions to create segment"
              }
     end
 
@@ -383,11 +406,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         conn =
           patch(conn, "/internal-api/#{site.domain}/segments/#{segment_id}", %{
             "name" => "updated name",
-            "type" => unquote(patch_type)
+            "type" => Atom.to_string(unquote(patch_type))
           })
 
         assert json_response(conn, 403) == %{
-                 "error" => "Not enough permissions to change segment visibility"
+                 "error" => "Not enough permissions to edit segment"
                }
       end
     end
@@ -452,7 +475,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         delete(conn, "/internal-api/#{site.domain}/segments/#{segment_id}")
 
       assert json_response(conn, 403) == %{
-               "error" => "Not enough permissions to delete site segments"
+               "error" => "Not enough permissions to delete segment"
              }
     end
 
