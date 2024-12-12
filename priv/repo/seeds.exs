@@ -23,12 +23,6 @@ native_stats_range =
     Date.utc_today()
   )
 
-legacy_imported_stats_range =
-  Date.range(
-    Date.add(native_stats_range.first, -360),
-    Date.add(native_stats_range.first, -180)
-  )
-
 imported_stats_range =
   Date.range(
     Date.add(native_stats_range.first, -180),
@@ -56,7 +50,7 @@ site =
     domain: "dummy.site",
     team: [
       native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
-      stats_start_date: NaiveDateTime.new!(legacy_imported_stats_range.first, ~T[00:00:00])
+      stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00])
     ],
     owner: user
   )
