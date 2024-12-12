@@ -180,10 +180,6 @@ utm_medium = %{
   "Twitter" => ["social"]
 }
 
-random_path = fn ->
-  Enum.random(long_random_paths)
-end
-
 random_event_data = fn date, index ->
   geolocation = Enum.random(geolocations)
   referrer_source = Enum.random(sources)
@@ -201,7 +197,7 @@ random_event_data = fn date, index ->
     utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
     utm_source: String.downcase(referrer_source),
     utm_campaign: Enum.random(["", "Referral", "Advertisement", "Email"]),
-    pathname: random_path.(),
+    pathname: Enum.random(long_random_paths),
     user_id: Enum.random(1..1200),
     "meta.key": ["url", "logged_in", "is_customer", "amount"],
     "meta.value": [
@@ -228,44 +224,8 @@ native_stats_range
 |> Enum.with_index()
 |> Enum.flat_map(fn {date, index} ->
   Enum.map(0..Enum.random(1..50), fn _ ->
-    geolocation = Enum.random(geolocations)
-    referrer_source = Enum.random(sources)
-
-    [
-      name: goal4.event_name,
-      site_id: site.id,
-      hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
-      timestamp: put_random_time.(date, index),
-      referrer_source: referrer_source,
-      browser: Enum.random(["Microsoft Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
-      browser_version: to_string(Enum.random(0..50)),
-      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-      operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
-      operating_system_version: to_string(Enum.random(0..15)),
-      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
-      utm_source: String.downcase(referrer_source),
-      pathname:
-        Enum.random([
-          "/",
-          "/login",
-          "/settings",
-          "/register",
-          "/docs",
-          "/docs/1",
-          "/docs/2" | long_random_paths
-        ]),
-      user_id: Enum.random(1..1200),
-      revenue_reporting_amount: Decimal.new(Enum.random(100..10000)),
-      revenue_reporting_currency: "USD",
-      "meta.key": ["url", "logged_in", "is_customer", "amount"],
-      "meta.value": [
-        Enum.random(long_random_urls),
-        Enum.random(["true", "false"]),
-        Enum.random(["true", "false"]),
-        to_string(Enum.random(1..9000))
-      ]
-    ]
-    |> Keyword.merge(geolocation)
+    random_event_data.(date, index)
+    |> Keyword.merge(name: goal4.event_name)
     |> then(&Plausible.Factory.build(:event, &1))
   end)
 end)
@@ -275,32 +235,8 @@ native_stats_range
 |> Enum.with_index()
 |> Enum.flat_map(fn {date, index} ->
   Enum.map(0..Enum.random(1..50), fn _ ->
-    geolocation = Enum.random(geolocations)
-    referrer_source = Enum.random(sources)
-
-    [
-      name: outbound.event_name,
-      site_id: site.id,
-      hostname: site.domain,
-      timestamp: put_random_time.(date, index),
-      referrer_source: referrer_source,
-      browser: Enum.random(["Microsoft Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
-      browser_version: to_string(Enum.random(0..50)),
-      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-      operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
-      operating_system_version: to_string(Enum.random(0..15)),
-      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
-      utm_source: String.downcase(referrer_source),
-      user_id: Enum.random(1..1200),
-      "meta.key": ["url", "logged_in", "is_customer", "amount"],
-      "meta.value": [
-        Enum.random(long_random_urls),
-        Enum.random(["true", "false"]),
-        Enum.random(["true", "false"]),
-        to_string(Enum.random(1..9000))
-      ]
-    ]
-    |> Keyword.merge(geolocation)
+    random_event_data.(date, index)
+    |> Keyword.merge(name: outbound.event_name)
     |> then(&Plausible.Factory.build(:event, &1))
   end)
 end)
@@ -340,7 +276,7 @@ imported_stats_range
       ),
       Plausible.Factory.build(:imported_pages,
         date: date,
-        page: random_path.(),
+        page: Enum.random(long_random_paths),
         visitors: Enum.random(1..10),
         visits: Enum.random(1..15),
         pageviews: Enum.random(1..50),
