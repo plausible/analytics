@@ -1619,7 +1619,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp realtime_period_to_30m(params), do: params
 
-  defp scroll_depth_enabled?(site, user) do
+  def scroll_depth_enabled?(site, user) do
     FunWithFlags.enabled?(:scroll_depth, for: user) ||
       FunWithFlags.enabled?(:scroll_depth, for: site)
   end

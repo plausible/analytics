@@ -660,6 +660,61 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
       assert_zip(conn, "30d-filter-path")
     end
+
+    test "exports scroll depth in visitors.csv", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-05 00:00:00]),
+        build(:pageleave,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-05 00:01:00],
+          scroll_depth: 40
+        ),
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-05 10:00:00]),
+        build(:pageleave,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-05 10:01:00],
+          scroll_depth: 17
+        ),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-07 00:00:00]),
+        build(:pageleave,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-07 00:01:00],
+          scroll_depth: 90
+        )
+      ])
+
+      filters = Jason.encode!([[:is, "event:page", ["/blog"]]])
+
+      pages =
+        conn
+        |> get("/#{site.domain}/export?date=2020-01-07&period=7d&filters=#{filters}")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"visitors.csv")
+
+      assert pages == [
+               [
+                 "date",
+                 "visitors",
+                 "pageviews",
+                 "visits",
+                 "views_per_visit",
+                 "bounce_rate",
+                 "visit_duration",
+                 "scroll_depth"
+               ],
+               ["2020-01-01", "0", "0", "0", "0.0", "0.0", "", ""],
+               ["2020-01-02", "0", "0", "0", "0.0", "0.0", "", ""],
+               ["2020-01-03", "0", "0", "0", "0.0", "0.0", "", ""],
+               ["2020-01-04", "0", "0", "0", "0.0", "0.0", "", ""],
+               ["2020-01-05", "1", "2", "2", "1.0", "100", "0", "40"],
+               ["2020-01-06", "0", "0", "0", "0.0", "0.0", "", ""],
+               ["2020-01-07", "1", "1", "1", "1.0", "100", "0", "90"],
+               [""]
+             ]
+    end
   end
 
   describe "GET /:domain/export - with a custom prop filter" do

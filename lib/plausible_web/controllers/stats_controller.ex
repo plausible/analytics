@@ -119,7 +119,7 @@ defmodule PlausibleWeb.StatsController do
       limited_params = Map.merge(params, %{"limit" => "100"})
 
       csvs = %{
-        ~c"visitors.csv" => fn -> main_graph_csv(site, query) end,
+        ~c"visitors.csv" => fn -> main_graph_csv(site, query, conn.assigns[:current_user]) end,
         ~c"sources.csv" => fn -> Api.StatsController.sources(conn, params) end,
         ~c"utm_mediums.csv" => fn -> Api.StatsController.utm_mediums(conn, params) end,
         ~c"utm_sources.csv" => fn -> Api.StatsController.utm_sources(conn, params) end,
@@ -177,8 +177,8 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  defp main_graph_csv(site, query) do
-    {metrics, column_headers} = csv_graph_metrics(query)
+  defp main_graph_csv(site, query, current_user) do
+    {metrics, column_headers} = csv_graph_metrics(query, site, current_user)
 
     map_bucket_to_row = fn bucket -> Enum.map([:date | metrics], &bucket[&1]) end
     prepend_column_headers = fn data -> [column_headers | data] end
@@ -190,7 +190,12 @@ defmodule PlausibleWeb.StatsController do
     |> NimbleCSV.RFC4180.dump_to_iodata()
   end
 
-  defp csv_graph_metrics(query) do
+  defp csv_graph_metrics(query, site, current_user) do
+    include_scroll_depth? =
+      !query.include_imported &&
+        PlausibleWeb.Api.StatsController.scroll_depth_enabled?(site, current_user) &&
+        Filters.filtering_on_dimension?(query, "event:page")
+
     {metrics, column_headers} =
       if Filters.filtering_on_dimension?(query, "event:goal") do
         {
@@ -206,6 +211,8 @@ defmodule PlausibleWeb.StatsController do
           :bounce_rate,
           :visit_duration
         ]
+
+        metrics = if include_scroll_depth?, do: metrics ++ [:scroll_depth], else: metrics
 
         {
           metrics,
