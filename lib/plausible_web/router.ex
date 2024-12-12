@@ -34,6 +34,7 @@ defmodule PlausibleWeb.Router do
   end
 
   pipeline :segments do
+    plug :segments_feature_gate_plug
     plug :segments_capabilities_plug
   end
 
