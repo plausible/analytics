@@ -217,6 +217,39 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert ~c"utm_terms.csv" in zip
     end
 
+    test "exports scroll depth metric in pages.csv", %{conn: conn, site: site} do
+      t0 = ~N[2020-01-01 00:00:00]
+      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
+        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
+        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
+        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
+        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
+        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
+        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+      ])
+
+      pages =
+        conn
+        |> get("/#{site.domain}/export?date=2020-01-01")
+        |> response(200)
+        |> unzip_and_parse_csv(~c"pages.csv")
+
+      assert pages == [
+               ["name", "visitors", "pageviews", "bounce_rate", "time_on_page", "scroll_depth"],
+               ["/blog", "3", "4", "33", "60.0", "60"],
+               ["/another", "2", "2", "0", "60.0", "25"],
+               [""]
+             ]
+    end
+
     test "exports only internally used props in custom_props.csv for a growth plan", %{
       conn: conn,
       site: site

@@ -1,2 +1,2 @@
-name,visitors,pageviews,bounce_rate,time_on_page
-/some-other-page,1,1,0,60.0
+name,visitors,pageviews,bounce_rate,time_on_page,scroll_depth
+/some-other-page,1,1,0,60.0,

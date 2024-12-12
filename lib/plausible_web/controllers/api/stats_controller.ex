@@ -831,9 +831,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
+    include_scroll_depth? = !query.include_imported && scroll_depth_enabled?(site, current_user)
+
     extra_metrics =
       cond do
-        params["detailed"] && !query.include_imported && scroll_depth_enabled?(site, current_user) ->
+        params["detailed"] && include_scroll_depth? ->
           [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
 
         params["detailed"] ->
@@ -856,7 +858,10 @@ defmodule PlausibleWeb.Api.StatsController do
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
       else
-        pages |> to_csv([:name, :visitors, :pageviews, :bounce_rate, :time_on_page])
+        cols = [:name, :visitors, :pageviews, :bounce_rate, :time_on_page]
+        cols = if include_scroll_depth?, do: cols ++ [:scroll_depth], else: cols
+
+        pages |> to_csv(cols)
       end
     else
       json(conn, %{
