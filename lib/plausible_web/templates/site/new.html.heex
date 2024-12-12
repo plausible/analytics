@@ -15,7 +15,7 @@
       resource="sites"
     />
 
-    <%= if is_nil(@my_team) do %>
+    <%= if is_nil(@my_team) or is_nil(@my_team.trial_expiry_date) do %>
       <div class="rounded-md bg-blue-50 dark:bg-transparent dark:border border-blue-200 p-4">
         <div class="flex">
           <div class="flex-shrink-0">
