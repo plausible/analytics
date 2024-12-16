@@ -524,7 +524,8 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # export archive to s3
       on_ee do
-        assert {:ok, _job} = Plausible.Exports.schedule_s3_export(exported_site.id, user.email)
+        assert {:ok, _job} =
+                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
       else
         assert {:ok, %{args: %{"local_path" => local_path}}} =
                  Plausible.Exports.schedule_local_export(exported_site.id, user.email)
@@ -1012,6 +1013,99 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["events"] == imported["events"]
         assert exported["conversion_rate"] == imported["conversion_rate"]
       end)
+    end
+
+    @tag :tmp_dir
+    test "scroll_depth", %{user: user, tmp_dir: tmp_dir} do
+      exported_site = new_site(owner: user)
+      imported_site = new_site(owner: user)
+
+      t0 = ~N[2020-01-01 00:00:00]
+      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
+
+      stats =
+        [
+          build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
+          build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+          build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
+          build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+          build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
+          build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+          build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
+          build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+          build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
+          build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+          build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
+          build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100),
+          build(:pageview, pathname: "/blog", timestamp: NaiveDateTime.add(t0, 1, :day))
+        ]
+        |> Enum.map(fn event -> Map.put(event, :hostname, "csv.test") end)
+
+      populate_stats(exported_site, stats)
+
+      # export archive to s3
+      on_ee do
+        assert {:ok, _job} =
+                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
+      else
+        assert {:ok, %{args: %{"local_path" => local_path}}} =
+                 Plausible.Exports.schedule_local_export(exported_site.id, user.email)
+      end
+
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
+
+      # download archive
+      on_ee do
+        ExAws.request!(
+          ExAws.S3.download_file(
+            Plausible.S3.exports_bucket(),
+            to_string(exported_site.id),
+            Path.join(tmp_dir, "plausible-export.zip")
+          )
+        )
+      else
+        File.rename!(local_path, Path.join(tmp_dir, "plausible-export.zip"))
+      end
+
+      # unzip archive
+      {:ok, files} =
+        :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
+
+      # upload csvs
+      uploads =
+        Enum.map(files, fn file ->
+          on_ee do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(imported_site.id, file)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            content = File.read!(file)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, content))
+            %{"filename" => Path.basename(file), "s3_url" => s3_url, "content" => content}
+          else
+            %{
+              "filename" => Path.basename(file),
+              "local_path" => file,
+              "content" => File.read!(file)
+            }
+          end
+        end)
+
+      # assert the intermediary imported_pages.csv file
+      pages =
+        uploads
+        |> Enum.find(&String.contains?(&1["filename"], "imported_pages"))
+        |> Map.get("content")
+        |> NimbleCSV.RFC4180.parse_string(skip_headers: false)
+
+      assert pages == [
+               ["date", "hostname", "page", "visits", "visitors", "pageviews", "scroll_depth"],
+               ["2020-01-01", "csv.test", "/another", "2", "2", "2", "50"],
+               ["2020-01-01", "csv.test", "/blog", "3", "3", "4", "180"],
+               ["2020-01-02", "csv.test", "/blog", "1", "1", "1", "\\N"]
+             ]
+
+      # TODO: Import from these CSV files and compare scroll depth
+      # between imported_site and exported_site
+      _imported_site = imported_site
     end
   end
 
