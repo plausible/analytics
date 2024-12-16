@@ -5,10 +5,10 @@ defmodule Plausible.CrmExtensions do
 
   use Plausible
 
-  # Kaffy uses String.to_existing_atom when listing params
-  @custom_search :custom_search
-
   on_ee do
+    # Kaffy uses String.to_existing_atom when listing params
+    @custom_search :custom_search
+
     def javascripts(%{assigns: %{context: "auth", resource: "user", entry: %{} = user}}) do
       [
         Phoenix.HTML.raw("""
