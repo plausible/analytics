@@ -45,6 +45,38 @@ defmodule Plausible.CrmExtensions do
       ]
     end
 
+    def javascripts(%{assigns: %{context: "sites"}}) do
+      # Kaffy uses String.to_existing_atom when listing params
+      :custom_search
+
+      [
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
+          (() => {
+            const publicField = document.querySelector("#kaffy-search-field")
+            const searchForm = document.querySelector("#kaffy-filters-form")
+            const searchField = document.querySelector("#kaffy-filter-search")
+
+            if (publicField && searchForm && searchField) {
+              publicField.name = "custom_search"
+              searchField.name = "custom_search"
+
+              const params = new URLSearchParams(window.location.search)
+              publicField.value = params.get("custom_search")
+
+              const searchInput = document.createElement("input")
+              searchInput.name = "search"
+              searchInput.type = "hidden"
+              searchInput.value = ""
+
+              searchForm.appendChild(searchInput)
+            }
+          })()
+        </script>
+        """)
+      ]
+    end
+
     def javascripts(%{assigns: %{context: "billing", resource: "enterprise_plan", changeset: %{}}}) do
       [
         Phoenix.HTML.raw("""
