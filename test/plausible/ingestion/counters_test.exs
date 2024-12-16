@@ -23,13 +23,16 @@ defmodule Plausible.Ingestion.CountersTest do
       start_counters(
         buffer_name: test,
         interval: 100,
-        aggregate_bucket_fn: fn _now ->
+        aggregate_bucket_fn: fn _real_now ->
           now
           |> DateTime.from_naive!("Etc/UTC")
           |> DateTime.to_unix()
         end,
-        flush_boundary_fn: fn _now ->
-          System.os_time(:second) + 1000
+        flush_boundary_fn: fn _real_now ->
+          now
+          |> DateTime.from_naive!("Etc/UTC")
+          |> DateTime.shift(second: 1)
+          |> DateTime.to_unix()
         end
       )
 
@@ -61,7 +64,9 @@ defmodule Plausible.Ingestion.CountersTest do
           |> DateTime.to_unix()
         end,
         flush_boundary_fn: fn _now ->
-          System.os_time(:second) + 1000
+          ~N[2023-02-14 01:00:56]
+          |> DateTime.from_naive!("Etc/UTC")
+          |> DateTime.to_unix()
         end
       )
 
