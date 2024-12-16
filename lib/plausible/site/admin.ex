@@ -10,14 +10,12 @@ defmodule Plausible.SiteAdmin do
   def search_fields(_schema) do
     [
       :domain,
-      members: [:name, :email]
     ]
   end
 
   def custom_index_query(_conn, _schema, query) do
     from(r in query,
       inner_join: o in assoc(r, :owner),
-      as: :owner,
       preload: [owner: o, team: [team_memberships: :user]]
     )
   end

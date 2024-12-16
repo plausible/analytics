@@ -12,8 +12,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
   def search_fields(_schema) do
     [
-      :paddle_plan_id,
-      team: [owner: [:name, :email]]
+      :paddle_plan_id
     ]
   end
 
