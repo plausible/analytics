@@ -5,7 +5,7 @@
 <% else %>
   <a
     phx-no-format
-    href={Routes.auth_url(PlausibleWeb.Endpoint, :register_form, invitation: @invitation_id)}
+    href={Routes.auth_url(PlausibleWeb.Endpoint, :register_from_invitation_form, @invitation_id)}
   >Click here</a> to create your account. <br /><br />
   Plausible is a lightweight and open-source website analytics tool. We hope you like our simple and ethical approach to tracking website visitors.
 <% end %>

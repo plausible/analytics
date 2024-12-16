@@ -12,8 +12,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
   def search_fields(_schema) do
     [
-      :paddle_plan_id,
-      user: [:name, :email]
+      :paddle_plan_id
     ]
   end
 
@@ -31,7 +30,15 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
   end
 
   def custom_index_query(_conn, _schema, query) do
-    from(r in query, preload: :user)
+    from(r in query, preload: [team: :owner])
+  end
+
+  def custom_show_query(_conn, _schema, query) do
+    from(ep in query,
+      inner_join: t in assoc(ep, :team),
+      inner_join: o in assoc(t, :owner),
+      select: %{ep | user_id: o.id}
+    )
   end
 
   def index(_) do
@@ -47,7 +54,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
     ]
   end
 
-  defp get_user_email(plan), do: plan.user.email
+  defp get_user_email(plan), do: plan.team.owner.email
 
   def create_changeset(schema, attrs) do
     attrs = sanitize_attrs(attrs)
@@ -61,7 +68,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
     attrs = Map.put(attrs, "team_id", team_id)
 
-    Plausible.Billing.EnterprisePlan.changeset(schema, attrs)
+    Plausible.Billing.EnterprisePlan.changeset(struct(schema, %{}), attrs)
   end
 
   def update_changeset(enterprise_plan, attrs) do

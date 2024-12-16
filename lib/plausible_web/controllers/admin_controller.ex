@@ -69,6 +69,20 @@ defmodule PlausibleWeb.AdminController do
   end
 
   defp usage_and_limits_html(team, usage, limits, embed?) do
+    sites =
+      if team do
+        Plausible.Repo.preload(team, :sites).sites
+      else
+        []
+      end
+
+    sites_list =
+      Enum.map_join(sites, "\n", fn site ->
+        """
+        <li><a href="/crm/sites/site/#{site.id}">#{site.domain}</a></li>
+        """
+      end)
+
     content = """
       <ul>
         <li>Team: <b>#{team && team.name}</b></li>
@@ -76,6 +90,13 @@ defmodule PlausibleWeb.AdminController do
         <li>Team members: <b>#{usage.team_members}</b> / #{limits.team_members}</li>
         <li>Features: #{features_usage(usage.features)}</li>
         <li>Monthly pageviews: #{monthly_pageviews_usage(usage.monthly_pageviews, limits.monthly_pageviews)}</li>
+        <li>
+          Owned sites:
+
+          <ul>
+            #{sites_list}
+          </ul>
+        </li>
       </ul>
     """
 
@@ -89,7 +110,7 @@ defmodule PlausibleWeb.AdminController do
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Usage - team:#{team.id}</title>
+        <title>Usage - team:#{team && team.id}</title>
         <style>
           ul, li {margin-top: 10px;}
           body {padding-top: 10px;}

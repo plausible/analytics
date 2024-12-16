@@ -43,11 +43,14 @@ defmodule PlausibleWeb.BillingControllerTest do
       user: user
     } do
       subscribe_to_plan(user, "123123")
-      team = team_of(user)
+
+      team =
+        user
+        |> team_of()
+        |> Ecto.Changeset.change(allow_next_upgrade_override: true)
+        |> Plausible.Repo.update!()
 
       for _ <- 1..11, do: new_site(owner: user)
-
-      Plausible.Users.allow_next_upgrade_override(user)
 
       conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
@@ -78,7 +81,10 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       assert subscription.paddle_plan_id == "123123"
 
-      Plausible.Users.allow_next_upgrade_override(user)
+      user
+      |> team_of()
+      |> Ecto.Changeset.change(allow_next_upgrade_override: true)
+      |> Plausible.Repo.update!()
 
       conn2 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
@@ -232,7 +238,9 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert html_response =~ ~s[<a href="/billing/choose-plan"]
     end
 
-    test "flashes error and redirects to choose-plan page", %{conn: conn} do
+    test "flashes error and redirects to choose-plan page", %{conn: conn, user: user} do
+      # choose-plan enforces at least 1 site, which implies team created, before allowing the user to upgrade
+      new_site(owner: user)
       conn = get(conn, Routes.billing_path(conn, :change_plan_preview, @v4_business_plan))
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
@@ -354,10 +362,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   defp subscribe_enterprise(%{user: user}, opts \\ []) do
     {paddle_plan_id, opts} = Keyword.pop(opts, :paddle_plan_id, "321")
 
-    opts =
-      opts
-      |> Keyword.put(:user, user)
-      |> Keyword.put_new(:status, Subscription.Status.active())
+    opts = Keyword.put_new(opts, :status, Subscription.Status.active())
 
     user = subscribe_to_plan(user, paddle_plan_id, opts)
 

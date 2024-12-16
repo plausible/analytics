@@ -57,7 +57,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "public site - redirect to /login when no stats because verification requires it", %{
       conn: conn
     } do
-      insert(:site, domain: "some-other-public-site.io", public: true)
+      new_site(domain: "some-other-public-site.io", public: true)
 
       conn = get(conn, conn |> get("/some-other-public-site.io") |> redirected_to())
       assert redirected_to(conn) == "/login"

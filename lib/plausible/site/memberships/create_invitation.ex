@@ -48,8 +48,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   end
 
   defp do_invite(site, inviter, invitee_email, role, opts \\ []) do
-    attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
-
     with site <- Repo.preload(site, [:owner, :team]),
          :ok <-
            Teams.Invitations.check_invitation_permissions(
@@ -77,29 +75,25 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
              invitee,
              role
            ),
-         %Ecto.Changeset{} = changeset <- Invitation.new(attrs),
-         {:ok, invitation} <- Repo.insert(changeset) do
-      Teams.Invitations.invite_sync(site, invitation)
+         {:ok, invitation_or_transfer} <-
+           Teams.Invitations.invite(site, invitee_email, role, inviter) do
+      send_invitation_email(invitation_or_transfer, invitee)
 
-      send_invitation_email(inviter, invitation, invitee)
-
-      invitation
+      invitation_or_transfer
     else
       {:error, cause} -> Repo.rollback(cause)
     end
   end
 
-  defp send_invitation_email(inviter, invitation, invitee) do
-    if invitation.role == :owner do
-      Teams.SiteTransfer
-      |> Repo.get_by!(transfer_id: invitation.invitation_id, initiator_id: inviter.id)
-      |> Repo.preload([:site, :initiator])
-      |> Teams.Invitations.send_invitation_email(invitee)
-    else
-      Teams.GuestInvitation
-      |> Repo.get_by!(invitation_id: invitation.invitation_id)
-      |> Repo.preload([:site, team_invitation: :inviter])
-      |> Teams.Invitations.send_invitation_email(invitee)
-    end
+  defp send_invitation_email(%Teams.GuestInvitation{} = guest_invitation, invitee) do
+    guest_invitation
+    |> Repo.preload([:site, team_invitation: :inviter])
+    |> Teams.Invitations.send_invitation_email(invitee)
+  end
+
+  defp send_invitation_email(%Teams.SiteTransfer{} = site_transfer, invitee) do
+    site_transfer
+    |> Repo.preload([:site, :initiator])
+    |> Teams.Invitations.send_invitation_email(invitee)
   end
 end

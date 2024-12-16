@@ -52,7 +52,8 @@ defmodule Plausible.Ingestion.Counters.Buffer do
         domain,
         timestamp
       ) do
-    bucket = bucket_fn.(timestamp)
+    bucket =
+      bucket_fn.(timestamp)
 
     :ets.update_counter(
       buffer_name,

@@ -5,7 +5,7 @@ Do check out your <a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domai
 <br /><br />
 Something looks off? Take a look at our <a href="https://plausible.io/docs/troubleshoot-integration">installation troubleshooting guide</a>.
 <br /><br />
-<%= if not Plausible.ce?() and Plausible.Users.on_trial?(@user) do %>
+<%= if not Plausible.ce?() and Plausible.Teams.on_trial?(@site_team) do %>
   You're on a 30-day free trial with no obligations so do take your time to explore Plausible.
   Here's how to get <a href="https://plausible.io/docs/your-plausible-experience">the most out of your Plausible experience</a>.
   <br /><br />

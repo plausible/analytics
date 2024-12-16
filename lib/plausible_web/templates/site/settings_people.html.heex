@@ -15,7 +15,7 @@
     <div class="flow-root">
       <ul class="divide-y divide-gray-200 dark:divide-gray-400">
         <%= for membership <- @memberships do %>
-          <li class="py-4" id={"membership-#{membership.user_id}"}>
+          <li class="py-4" id={"membership-#{membership.user.id}"}>
             <div class="flex items-center space-x-4">
               <div class="flex-shrink-0">
                 <img

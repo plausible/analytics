@@ -1,9 +1,10 @@
 defmodule Plausible.PurgeTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
 
   setup do
-    user = insert(:user)
-    site = insert(:site, members: [user], stats_start_date: ~D[2005-01-01])
+    user = new_user()
+    site = new_site(owner: user, stats_start_date: ~D[2005-01-01])
 
     import_params = %{
       source: :universal_analytics,

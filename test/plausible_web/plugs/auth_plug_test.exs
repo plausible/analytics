@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.AuthPlugTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
 
   alias PlausibleWeb.AuthPlug
 
@@ -15,7 +16,7 @@ defmodule PlausibleWeb.AuthPlugTest do
   end
 
   test "looks up current user if they are logged in", %{conn: conn, user: user} do
-    subscription = insert(:subscription, user: user, inserted_at: Timex.now())
+    subscribe_to_plan(user, "123", inserted_at: NaiveDateTime.utc_now())
 
     conn =
       conn
@@ -23,14 +24,22 @@ defmodule PlausibleWeb.AuthPlugTest do
       |> AuthPlug.call(%{})
 
     assert conn.assigns[:current_user].id == user.id
-    assert conn.assigns[:current_user].subscription.id == subscription.id
+    assert conn.assigns[:my_team].subscription.paddle_plan_id == "123"
   end
 
   test "looks up the latest subscription", %{conn: conn, user: user} do
-    _old_subscription =
-      insert(:subscription, user: user, inserted_at: Timex.now() |> Timex.shift(days: -1))
+    # old subscription
+    subscribe_to_plan(
+      user,
+      "123",
+      inserted_at: NaiveDateTime.shift(NaiveDateTime.utc_now(), day: -1)
+    )
 
-    subscription = insert(:subscription, user: user, inserted_at: Timex.now())
+    subscribe_to_plan(
+      user,
+      "456",
+      inserted_at: NaiveDateTime.utc_now()
+    )
 
     conn =
       conn
@@ -38,6 +47,6 @@ defmodule PlausibleWeb.AuthPlugTest do
       |> AuthPlug.call(%{})
 
     assert conn.assigns[:current_user].id == user.id
-    assert conn.assigns[:current_user].subscription.id == subscription.id
+    assert conn.assigns[:my_team].subscription.paddle_plan_id == "456"
   end
 end

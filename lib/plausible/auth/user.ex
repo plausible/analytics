@@ -19,9 +19,6 @@ defmodule Plausible.Auth.User do
 
   @required [:email, :name, :password]
 
-  @trial_accept_traffic_until_offset_days 14
-  @susbscription_accept_traffic_until_offset_days 30
-
   schema "users" do
     field :email, :string
     field :password_hash
@@ -30,18 +27,17 @@ defmodule Plausible.Auth.User do
     field :password_confirmation, :string, virtual: true
     field :name, :string
     field :last_seen, :naive_datetime
-    field :trial_expiry_date, :date
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
-    field :accept_traffic_until, :date
 
     # Field for purely informational purposes in CRM context
     field :notes, :string
 
-    # A field only used as a manual override - allow subscribing
-    # to any plan, even when exceeding its pageview limit
-    field :allow_next_upgrade_override, :boolean, default: false
+    # Fields used only by CRM for mapping to the ones in the owned team
+    field :trial_expiry_date, :date, virtual: true
+    field :allow_next_upgrade_override, :boolean, virtual: true
+    field :accept_traffic_until, :date, virtual: true
 
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
     field :totp_enabled, :boolean, default: false
@@ -49,16 +45,12 @@ defmodule Plausible.Auth.User do
     field :totp_token, :string
     field :totp_last_used_at, :naive_datetime
 
-    embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
-
     has_many :sessions, Plausible.Auth.UserSession
-    has_many :site_memberships, Plausible.Site.Membership
     has_many :team_memberships, Plausible.Teams.Membership
-    has_many :sites, through: [:site_memberships, :site]
     has_many :api_keys, Plausible.Auth.ApiKey
     has_one :google_auth, Plausible.Site.GoogleAuth
-    has_one :subscription, Plausible.Billing.Subscription
-    has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
+    has_one :owner_membership, Plausible.Teams.Membership, where: [role: :owner]
+    has_one :my_team, through: [:owner_membership, :team]
 
     timestamps()
   end
@@ -71,7 +63,6 @@ defmodule Plausible.Auth.User do
     |> validate_confirmation(:password, required: true)
     |> validate_password_strength()
     |> hash_password()
-    |> start_trial()
     |> set_email_verification_status()
     |> unique_constraint(:email)
   end
@@ -127,28 +118,13 @@ defmodule Plausible.Auth.User do
       :name,
       :email_verified,
       :theme,
+      :notes,
       :trial_expiry_date,
       :allow_next_upgrade_override,
-      :accept_traffic_until,
-      :notes
+      :accept_traffic_until
     ])
     |> validate_required([:email, :name, :email_verified])
-    |> maybe_bump_accept_traffic_until()
     |> unique_constraint(:email)
-  end
-
-  defp maybe_bump_accept_traffic_until(changeset) do
-    expiry_change = get_change(changeset, :trial_expiry_date)
-
-    if expiry_change do
-      put_change(
-        changeset,
-        :accept_traffic_until,
-        Date.add(expiry_change, @trial_accept_traffic_until_offset_days)
-      )
-    else
-      changeset
-    end
   end
 
   def set_password(user, password) do
@@ -178,23 +154,6 @@ defmodule Plausible.Auth.User do
   end
 
   def hash_password(changeset), do: changeset
-
-  def remove_trial_expiry(user) do
-    change(user, trial_expiry_date: nil)
-  end
-
-  def start_trial(user) do
-    trial_expiry = trial_expiry()
-
-    change(user,
-      trial_expiry_date: trial_expiry,
-      accept_traffic_until: Date.add(trial_expiry, @trial_accept_traffic_until_offset_days)
-    )
-  end
-
-  def end_trial(user) do
-    change(user, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
-  end
 
   def password_strength(changeset) do
     case get_field(changeset, :password) do
@@ -236,11 +195,6 @@ defmodule Plausible.Auth.User do
 
     Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
   end
-
-  def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
-
-  def subscription_accept_traffic_until_offset_days(),
-    do: @susbscription_accept_traffic_until_offset_days
 
   defp validate_email_changed(changeset) do
     if !get_change(changeset, :email) && !changeset.errors[:email] do
@@ -295,14 +249,6 @@ defmodule Plausible.Auth.User do
     [phrase, parts]
     |> List.flatten(phrases)
     |> Enum.uniq()
-  end
-
-  defp trial_expiry() do
-    on_ee do
-      Date.utc_today() |> Date.shift(day: 30)
-    else
-      Date.utc_today() |> Date.shift(year: 100)
-    end
   end
 
   defp set_email_verification_status(user) do
