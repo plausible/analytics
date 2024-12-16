@@ -145,20 +145,14 @@ defmodule Plausible.Ingestion.CountersTest do
             r.value == ^value
       )
 
-    count =
+    query =
       if site_id do
-        query
-        |> where([r], r.site_id == ^site_id)
-        |> await_clickhouse_count(1)
+        query |> where([r], r.site_id == ^site_id)
       else
-        # As null site_id entries might be added by parallel tests,
-        # we make the check more permissive in that case.
-        query
-        |> where([r], is_nil(r.site_id))
-        |> await_clickhouse_count(fn count -> count > 0 end)
+        query |> where([r], is_nil(r.site_id))
       end
 
-    assert count
+    assert await_clickhouse_count(query, 1)
   end
 
   defp random_domain() do

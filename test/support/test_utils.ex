@@ -220,18 +220,11 @@ defmodule Plausible.TestUtils do
   end
 
   def await_clickhouse_count(query, expected) do
-    expect_fn =
-      if is_function(expected, 1) do
-        expected
-      else
-        fn count -> count == expected end
-      end
-
     eventually(
       fn ->
         count = Plausible.ClickhouseRepo.aggregate(query, :count)
 
-        {expect_fn.(count), count}
+        {count == expected, count}
       end,
       500,
       10
