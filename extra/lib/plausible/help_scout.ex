@@ -106,7 +106,7 @@ defmodule Plausible.HelpScout do
          sites_count: Plausible.Teams.owned_sites_count(team),
          sites_link:
            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-             search: user.email
+             custom_search: user.email
            )
        }}
     end

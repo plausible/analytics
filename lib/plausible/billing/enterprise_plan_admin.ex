@@ -29,8 +29,22 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
     ]
   end
 
-  def custom_index_query(_conn, _schema, query) do
-    from(r in query, preload: [team: :owner])
+  def custom_index_query(conn, _schema, query) do
+    search =
+      (conn.params["custom_search"] || "")
+      |> String.trim()
+      |> String.replace("%", "\%")
+      |> String.replace("_", "\_")
+
+    search_term = "%#{search}%"
+
+    from(r in query,
+      inner_join: t in assoc(r, :team),
+      inner_join: o in assoc(t, :owner),
+      or_where: ilike(r.paddle_plan_id, ^search_term),
+      or_where: ilike(o.email, ^search_term) or ilike(o.name, ^search_term),
+      preload: [team: {t, owner: o}]
+    )
   end
 
   def custom_show_query(_conn, _schema, query) do

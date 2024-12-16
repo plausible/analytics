@@ -6,6 +6,9 @@ defmodule Plausible.CrmExtensions do
   use Plausible
 
   on_ee do
+    # Kaffy uses String.to_existing_atom when listing params
+    @custom_search :custom_search
+
     def javascripts(%{assigns: %{context: "auth", resource: "user", entry: %{} = user}}) do
       [
         Phoenix.HTML.raw("""
@@ -38,6 +41,36 @@ defmodule Plausible.CrmExtensions do
               buttonDOM.className = "mb-3 w-full text-right"
               buttonDOM.innerHTML = '<div><a class="btn btn-outline-primary" href="#{base_url <> "/" <> URI.encode_www_form(domain)}" target="_blank">Open Dashboard</a></div>'
               cardBody.prepend(buttonDOM)
+            }
+          })()
+        </script>
+        """)
+      ]
+    end
+
+    def javascripts(%{assigns: %{context: context}})
+        when context in ["sites", "billing"] do
+      [
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
+          (() => {
+            const publicField = document.querySelector("#kaffy-search-field")
+            const searchForm = document.querySelector("#kaffy-filters-form")
+            const searchField = document.querySelector("#kaffy-filter-search")
+
+            if (publicField && searchForm && searchField) {
+              publicField.name = "#{@custom_search}"
+              searchField.name = "#{@custom_search}"
+
+              const params = new URLSearchParams(window.location.search)
+              publicField.value = params.get("#{@custom_search}")
+
+              const searchInput = document.createElement("input")
+              searchInput.name = "search"
+              searchInput.type = "hidden"
+              searchInput.value = ""
+
+              searchForm.appendChild(searchInput)
             }
           })()
         </script>
