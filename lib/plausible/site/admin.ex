@@ -9,7 +9,7 @@ defmodule Plausible.SiteAdmin do
 
   def search_fields(_schema) do
     [
-      :domain,
+      :domain
     ]
   end
 
