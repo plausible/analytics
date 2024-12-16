@@ -1,17 +1,21 @@
 defmodule Plausible.IngestRepo.Migrations.AddScrollDepthToImportedPages do
   use Ecto.Migration
 
-  def up do
-    on_cluster = Plausible.MigrationUtils.on_cluster_statement("imported_pages")
+  @on_cluster Plausible.MigrationUtils.on_cluster_statement("imported_pages")
 
+  def up do
     execute """
     ALTER TABLE imported_pages
-    #{on_cluster}
+    #{@on_cluster}
     ADD COLUMN scroll_depth UInt8 DEFAULT 255
     """
   end
 
   def down do
-    raise "Irreversible"
+    execute """
+    ALTER TABLE imported_pages
+    #{@on_cluster}
+    DROP COLUMN scroll_depth
+    """
   end
 end
