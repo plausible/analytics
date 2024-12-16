@@ -5,6 +5,9 @@ defmodule Plausible.CrmExtensions do
 
   use Plausible
 
+  # Kaffy uses String.to_existing_atom when listing params
+  @custom_search :custom_search
+
   on_ee do
     def javascripts(%{assigns: %{context: "auth", resource: "user", entry: %{} = user}}) do
       [
@@ -47,8 +50,6 @@ defmodule Plausible.CrmExtensions do
 
     def javascripts(%{assigns: %{context: context}})
         when context in ["sites", "billing"] do
-      # Kaffy uses String.to_existing_atom when listing params
-      :custom_search
 
       [
         Phoenix.HTML.raw("""
@@ -59,11 +60,11 @@ defmodule Plausible.CrmExtensions do
             const searchField = document.querySelector("#kaffy-filter-search")
 
             if (publicField && searchForm && searchField) {
-              publicField.name = "custom_search"
-              searchField.name = "custom_search"
+              publicField.name = "#{@custom_search}"
+              searchField.name = "#{@custom_search}"
 
               const params = new URLSearchParams(window.location.search)
-              publicField.value = params.get("custom_search")
+              publicField.value = params.get("#{@custom_search}")
 
               const searchInput = document.createElement("input")
               searchInput.name = "search"
