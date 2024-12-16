@@ -50,7 +50,6 @@ defmodule Plausible.CrmExtensions do
 
     def javascripts(%{assigns: %{context: context}})
         when context in ["sites", "billing"] do
-
       [
         Phoenix.HTML.raw("""
         <script type="text/javascript">
