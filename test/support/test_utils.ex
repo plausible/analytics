@@ -226,7 +226,7 @@ defmodule Plausible.TestUtils do
 
         {count == expected, count}
       end,
-      500,
+      100,
       10
     )
   end

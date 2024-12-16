@@ -10,26 +10,32 @@ defmodule Plausible.Ingestion.CountersTest do
 
   import Phoenix.ConnTest
 
+  @ts ~N[2023-02-14 01:00:03]
+
   describe "integration" do
     test "periodically flushes buffer aggregates to the database", %{test: test} do
       on_exit(:detach, fn ->
         :telemetry.detach("ingest-counters-#{test}")
       end)
 
+      now = NaiveDateTime.utc_now()
+
       start_counters(
         buffer_name: test,
         interval: 100,
         aggregate_bucket_fn: fn _now ->
-          System.os_time(:second)
+          now
+          |> DateTime.from_naive!("Etc/UTC")
+          |> DateTime.to_unix()
         end,
         flush_boundary_fn: fn _now ->
           System.os_time(:second) + 1000
         end
       )
 
-      {:ok, dropped} = emit_dropped_request()
-      {:ok, _dropped} = emit_dropped_request(domain: dropped.domain)
-      {:ok, buffered} = emit_buffered_request()
+      {:ok, dropped} = emit_dropped_request(at: now)
+      {:ok, _dropped} = emit_dropped_request(domain: dropped.domain, at: now)
+      {:ok, buffered} = emit_buffered_request(at: now)
 
       verify_record_written(dropped.domain, "dropped_not_found", 2)
 
@@ -50,7 +56,9 @@ defmodule Plausible.Ingestion.CountersTest do
         buffer_name: test,
         interval: 100,
         aggregate_bucket_fn: fn _now ->
-          System.os_time(:second)
+          ~N[2023-02-14 01:00:03]
+          |> DateTime.from_naive!("Etc/UTC")
+          |> DateTime.to_unix()
         end,
         flush_boundary_fn: fn _now ->
           System.os_time(:second) + 1000
@@ -95,9 +103,9 @@ defmodule Plausible.Ingestion.CountersTest do
     end
   end
 
-  defp emit_dropped_request(opts \\ []) do
+  defp emit_dropped_request(opts) do
     domain = Keyword.get(opts, :domain, random_domain())
-    at = Keyword.get(opts, :at, NaiveDateTime.utc_now())
+    at = Keyword.get(opts, :at, @ts)
 
     site = build(:site, domain: domain)
 
@@ -112,9 +120,9 @@ defmodule Plausible.Ingestion.CountersTest do
     {:ok, dropped}
   end
 
-  defp emit_buffered_request(opts \\ []) do
+  defp emit_buffered_request(opts) do
     domain = Keyword.get(opts, :domain, random_domain())
-    at = Keyword.get(opts, :at, NaiveDateTime.utc_now())
+    at = Keyword.get(opts, :at, @ts)
 
     site = new_site(domain: domain)
 
@@ -141,8 +149,7 @@ defmodule Plausible.Ingestion.CountersTest do
       from(r in Record,
         where:
           r.domain == ^domain and
-            r.metric == ^metric and
-            r.value == ^value
+            r.metric == ^metric and r.value == ^value
       )
 
     query =

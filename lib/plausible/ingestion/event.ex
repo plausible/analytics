@@ -100,11 +100,15 @@ defmodule Plausible.Ingestion.Event do
 
   @spec emit_telemetry_dropped(t(), drop_reason()) :: :ok
   def emit_telemetry_dropped(event, reason) do
-    :telemetry.execute(telemetry_event_dropped(), %{}, %{
-      domain: event.domain,
-      reason: reason,
-      request_timestamp: event.request.timestamp
-    })
+    :telemetry.execute(
+      telemetry_event_dropped(),
+      %{},
+      %{
+        domain: event.domain,
+        reason: reason,
+        request_timestamp: event.request.timestamp
+      }
+    )
   end
 
   defp pipeline() do
