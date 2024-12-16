@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-F90252DF.js"></script>
+    <script src="dist/sidebar_items-1C289631.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -179,7 +179,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#send_grace_period_end_email/1" translate="no">send_grace_period_end_email(user)</a>
+        <a href="#set_lock_status_for/2" translate="no">set_lock_status_for(team, status)</a>
 
       </div>
 
@@ -187,15 +187,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#set_lock_status_for/2" translate="no">set_lock_status_for(user, status)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#update_sites_for/2" translate="no">update_sites_for(user, opts \\ [])</a>
+        <a href="#update_sites_for/2" translate="no">update_sites_for(team, opts \\ [])</a>
 
       </div>
 
@@ -223,7 +215,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">lock_reason()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L6" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L8" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -255,7 +247,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">update_opt()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L6" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -286,35 +278,6 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="send_grace_period_end_email/1">
-
-  <div class="detail-header">
-    <a href="#send_grace_period_end_email/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">send_grace_period_end_email(user)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L74" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> send_grace_period_end_email(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
-  <a href="Plausible.Mailer.html#t:result/0">Plausible.Mailer.result</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="set_lock_status_for/2">
 
   <div class="detail-header">
@@ -322,9 +285,9 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">set_lock_status_for(user, status)</h1>
+    <h1 class="signature" translate="no">set_lock_status_for(team, status)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L52" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L49" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -336,7 +299,7 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> set_lock_status_for(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> set_lock_status_for(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) ::
   {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}</pre>
 
       </div>
@@ -353,9 +316,9 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">update_sites_for(user, opts \\ [])</h1>
+    <h1 class="signature" translate="no">update_sites_for(team, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L14" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -367,7 +330,7 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> update_sites_for(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), [<a href="#t:update_opt/0">update_opt</a>()]) ::
+          <pre translate="no"><span class="attribute">@spec</span> update_sites_for(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(), [<a href="#t:update_opt/0">update_opt</a>()]) ::
   {:locked, <a href="#t:lock_reason/0">lock_reason</a>()} | :unlocked</pre>
 
       </div>

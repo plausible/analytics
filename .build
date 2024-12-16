@@ -13,7 +13,6 @@ Plausible.Auth.ApiKeyAdmin.html
 Plausible.Auth.EmailActivationCode.html
 Plausible.Auth.EmailVerification.html
 Plausible.Auth.GracePeriod.html
-Plausible.Auth.Invitation.html
 Plausible.Auth.Password.html
 Plausible.Auth.TOTP.EncryptedBinary.html
 Plausible.Auth.TOTP.RecoveryCode.html
@@ -67,7 +66,6 @@ Plausible.ConfigHelpers.html
 Plausible.CrmExtensions.html
 Plausible.DataCase.html
 Plausible.DataMigration.AcquisitionChannel.html
-Plausible.DataMigration.BackfillTeams.html
 Plausible.DataMigration.CleanUpDemoSiteReferrerSource.html
 Plausible.DataMigration.ClickhouseRepo.html
 Plausible.DataMigration.LocationsSync.html
@@ -76,7 +74,6 @@ Plausible.DataMigration.NumericIDs.html
 Plausible.DataMigration.PopulateEventSessionColumns.html
 Plausible.DataMigration.PostgresRepo.html
 Plausible.DataMigration.SiteImports.html
-Plausible.DataMigration.TeamsConsitencyCheck.html
 Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
 Plausible.Ecto.EventName.html
@@ -168,7 +165,6 @@ Plausible.Site.GateKeeper.html
 Plausible.Site.GoogleAuth.html
 Plausible.Site.ImportedData.html
 Plausible.Site.InstallationMeta.html
-Plausible.Site.Membership.html
 Plausible.Site.Memberships.AcceptInvitation.html
 Plausible.Site.Memberships.CreateInvitation.html
 Plausible.Site.Memberships.RejectInvitation.html
@@ -459,8 +455,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-9B4721DD.js
-dist/sidebar_items-F90252DF.js
+dist/search_data-ADC1C71E.js
+dist/sidebar_items-1C289631.js
 index.html
 readme.html
 search.html

@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-F90252DF.js"></script>
+    <script src="dist/sidebar_items-1C289631.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -180,7 +180,7 @@ useful for enterprise subscriptions.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#active?/1" translate="no">active?(user_or_team)</a>
+        <a href="#active?/1" translate="no">active?(team)</a>
 
       </div>
 
@@ -191,7 +191,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#end_changeset/1" translate="no">end_changeset(user)</a>
+        <a href="#end_changeset/1" translate="no">end_changeset(team)</a>
 
       </div>
 
@@ -202,7 +202,7 @@ This means the grace period has expired.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#expired?/1" translate="no">expired?(user_or_team)</a>
+        <a href="#expired?/1" translate="no">expired?(team)</a>
 
       </div>
 
@@ -213,7 +213,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove_changeset/1" translate="no">remove_changeset(user)</a>
+        <a href="#remove_changeset/1" translate="no">remove_changeset(team)</a>
 
       </div>
 
@@ -223,7 +223,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_changeset/1" translate="no">start_changeset(user)</a>
+        <a href="#start_changeset/1" translate="no">start_changeset(team)</a>
 
       </div>
 
@@ -233,7 +233,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_manual_lock_changeset/1" translate="no">start_manual_lock_changeset(user)</a>
+        <a href="#start_manual_lock_changeset/1" translate="no">start_manual_lock_changeset(team)</a>
 
       </div>
 
@@ -308,7 +308,7 @@ CRM.</p></div>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">active?(user_or_team)</h1>
+    <h1 class="signature" translate="no">active?(team)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L82" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -322,7 +322,7 @@ CRM.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> active?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> active?(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
@@ -337,7 +337,7 @@ false if the user is nil or there is no grace period.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">end_changeset(user)</h1>
+    <h1 class="signature" translate="no">end_changeset(team)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L65" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -351,7 +351,7 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> end_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> end_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
@@ -366,7 +366,7 @@ This means the grace period has expired.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">expired?(user_or_team)</h1>
+    <h1 class="signature" translate="no">expired?(team)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L99" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -380,7 +380,7 @@ This means the grace period has expired.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> expired?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> expired?(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
@@ -395,7 +395,7 @@ false if the user is nil or there is no grace period.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">remove_changeset(user)</h1>
+    <h1 class="signature" translate="no">remove_changeset(team)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L73" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -409,7 +409,7 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> remove_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> remove_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
@@ -423,7 +423,7 @@ false if the user is nil or there is no grace period.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_changeset(user)</h1>
+    <h1 class="signature" translate="no">start_changeset(team)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L34" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -437,7 +437,7 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
@@ -451,7 +451,7 @@ false if the user is nil or there is no grace period.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_manual_lock_changeset(user)</h1>
+    <h1 class="signature" translate="no">start_manual_lock_changeset(team)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L50" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -465,7 +465,7 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_manual_lock_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start_manual_lock_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
