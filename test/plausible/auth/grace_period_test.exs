@@ -1,12 +1,16 @@
 defmodule Plausible.Auth.GracePeriodTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
 
   test "active?/1 returns false when grace period cannot be telled" do
-    without_grace_period = build(:user, grace_period: nil)
+    without_grace_period =
+      new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: nil])
+      |> team_of()
+
     refute Plausible.Auth.GracePeriod.active?(without_grace_period)
 
-    without_user = nil
-    refute Plausible.Auth.GracePeriod.active?(without_user)
+    without_team = nil
+    refute Plausible.Auth.GracePeriod.active?(without_team)
   end
 
   test "active?/1 returns false when grace period is expired" do
@@ -17,9 +21,11 @@ defmodule Plausible.Auth.GracePeriodTest do
       is_over: false
     }
 
-    user = build(:user, grace_period: grace_period)
+    team =
+      new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+      |> team_of()
 
-    refute Plausible.Auth.GracePeriod.active?(user)
+    refute Plausible.Auth.GracePeriod.active?(team)
   end
 
   test "active?/1 returns true when grace period is still active" do
@@ -30,17 +36,22 @@ defmodule Plausible.Auth.GracePeriodTest do
       is_over: false
     }
 
-    user = build(:user, grace_period: grace_period)
+    team =
+      new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+      |> team_of()
 
-    assert Plausible.Auth.GracePeriod.active?(user)
+    assert Plausible.Auth.GracePeriod.active?(team)
   end
 
   test "expired?/1 returns false when grace period cannot be telled" do
-    without_grace_period = build(:user, grace_period: nil)
+    without_grace_period =
+      new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: nil])
+      |> team_of()
+
     refute Plausible.Auth.GracePeriod.expired?(without_grace_period)
 
-    without_user = nil
-    refute Plausible.Auth.GracePeriod.expired?(without_user)
+    without_team = nil
+    refute Plausible.Auth.GracePeriod.expired?(without_team)
   end
 
   test "expired?/1 returns true when grace period is expired" do
@@ -51,9 +62,11 @@ defmodule Plausible.Auth.GracePeriodTest do
       is_over: true
     }
 
-    user = build(:user, grace_period: grace_period)
+    team =
+      new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+      |> team_of()
 
-    assert Plausible.Auth.GracePeriod.expired?(user)
+    assert Plausible.Auth.GracePeriod.expired?(team)
   end
 
   test "expired?/1 returns false when grace period is still active" do
@@ -64,38 +77,40 @@ defmodule Plausible.Auth.GracePeriodTest do
       is_over: false
     }
 
-    user = build(:user, grace_period: grace_period)
+    team =
+      new_user(trial_expiry_date: Date.utc_today(), team: [grace_period: grace_period])
+      |> team_of()
 
-    refute Plausible.Auth.GracePeriod.expired?(user)
+    refute Plausible.Auth.GracePeriod.expired?(team)
   end
 
   test "start_manual_lock_changeset/1 creates an active grace period" do
-    user = build(:user)
-    changeset = Plausible.Auth.GracePeriod.start_manual_lock_changeset(user)
-    user = Ecto.Changeset.apply_changes(changeset)
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    changeset = Plausible.Auth.GracePeriod.start_manual_lock_changeset(team)
+    team = Ecto.Changeset.apply_changes(changeset)
 
-    assert Plausible.Auth.GracePeriod.active?(user)
-    refute Plausible.Auth.GracePeriod.expired?(user)
+    assert Plausible.Auth.GracePeriod.active?(team)
+    refute Plausible.Auth.GracePeriod.expired?(team)
   end
 
   test "start_changeset/1 creates an active grace period" do
-    user = build(:user)
-    changeset = Plausible.Auth.GracePeriod.start_changeset(user)
-    user = Ecto.Changeset.apply_changes(changeset)
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    changeset = Plausible.Auth.GracePeriod.start_changeset(team)
+    team = Ecto.Changeset.apply_changes(changeset)
 
-    assert Plausible.Auth.GracePeriod.active?(user)
-    refute Plausible.Auth.GracePeriod.expired?(user)
+    assert Plausible.Auth.GracePeriod.active?(team)
+    refute Plausible.Auth.GracePeriod.expired?(team)
   end
 
   test "remove_changeset/1 removes the active grace period" do
-    user = build(:user)
-    start_changeset = Plausible.Auth.GracePeriod.start_changeset(user)
-    user = Ecto.Changeset.apply_changes(start_changeset)
+    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+    start_changeset = Plausible.Auth.GracePeriod.start_changeset(team)
+    team = Ecto.Changeset.apply_changes(start_changeset)
 
-    remove_changeset = Plausible.Auth.GracePeriod.remove_changeset(user)
-    user = Ecto.Changeset.apply_changes(remove_changeset)
+    remove_changeset = Plausible.Auth.GracePeriod.remove_changeset(team)
+    team = Ecto.Changeset.apply_changes(remove_changeset)
 
-    refute Plausible.Auth.GracePeriod.active?(user)
-    refute Plausible.Auth.GracePeriod.expired?(user)
+    refute Plausible.Auth.GracePeriod.active?(team)
+    refute Plausible.Auth.GracePeriod.expired?(team)
   end
 end

@@ -18,7 +18,7 @@ defmodule Plausible.SiteAdmin do
     from(r in query,
       inner_join: o in assoc(r, :owner),
       as: :owner,
-      preload: [owner: o, memberships: :user]
+      preload: [owner: o, team: [team_memberships: :user]]
     )
   end
 
@@ -68,15 +68,13 @@ defmodule Plausible.SiteAdmin do
               n -> "⏱ #{n}/#{site.ingest_rate_limit_scale_seconds}s (per server)"
             end
 
-          owner = site.owner
-
-          owner_limits =
-            if owner.accept_traffic_until &&
-                 Date.after?(Date.utc_today(), owner.accept_traffic_until) do
+          team_limits =
+            if site.team.accept_traffic_until &&
+                 Date.after?(Date.utc_today(), site.team.accept_traffic_until) do
               "💸 Rejecting traffic"
             end
 
-          {:safe, Enum.join([rate_limiting_status, owner_limits], "<br/><br/>")}
+          {:safe, Enum.join([rate_limiting_status, team_limits], "<br/><br/>")}
         end
       }
     ]
@@ -175,7 +173,7 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp get_other_members(site) do
-    Enum.filter(site.memberships, &(&1.role != :owner))
+    site.team.team_memberships
     |> Enum.map(fn m -> m.user.email <> "(#{to_string(m.role)})" end)
     |> Enum.join(", ")
   end

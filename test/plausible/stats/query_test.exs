@@ -1,5 +1,6 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
   alias Plausible.Stats.Query
   alias Plausible.Stats.Legacy.QueryBuilder
   alias Plausible.Stats.DateTimeRange
@@ -7,11 +8,11 @@ defmodule Plausible.Stats.QueryTest do
   doctest Plausible.Stats.Legacy.QueryBuilder
 
   setup do
-    user = insert(:user)
+    user = new_user()
 
     site =
-      insert(:site,
-        members: [user],
+      new_site(
+        owner: user,
         inserted_at: ~N[2020-01-01T00:00:00],
         stats_start_date: ~D[2020-01-01],
         timezone: "US/Eastern"

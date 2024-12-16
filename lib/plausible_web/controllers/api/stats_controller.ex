@@ -523,9 +523,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
   on_ee do
     def funnel(conn, %{"id" => funnel_id} = params) do
-      site = Plausible.Repo.preload(conn.assigns.site, :owner)
+      site = Plausible.Repo.preload(conn.assigns.site, :team)
 
-      with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.owner),
+      with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.team),
            query <- Query.from(site, params, debug_metadata(conn)),
            :ok <- validate_funnel_query(query),
            {funnel_id, ""} <- Integer.parse(funnel_id),
@@ -750,7 +750,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     is_admin =
       if current_user = conn.assigns[:current_user] do
-        Plausible.Sites.has_admin_access?(current_user.id, site)
+        Plausible.Teams.Memberships.has_admin_access?(site, current_user)
       else
         false
       end
@@ -1320,10 +1320,10 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def custom_prop_values(conn, params) do
-    site = Plausible.Repo.preload(conn.assigns.site, :owner)
+    site = Plausible.Repo.preload(conn.assigns.site, :team)
     prop_key = Map.fetch!(params, "prop_key")
 
-    case Plausible.Props.ensure_prop_key_accessible(prop_key, site.owner) do
+    case Plausible.Props.ensure_prop_key_accessible(prop_key, site.team) do
       :ok ->
         json(conn, breakdown_custom_prop_values(conn, site, params))
 

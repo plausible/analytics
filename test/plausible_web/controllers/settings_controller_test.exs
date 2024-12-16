@@ -477,7 +477,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a free_10k subscription (without a `last_bill_date`)
       Repo.delete!(subscription)
 
-      Plausible.Billing.Subscription.free(%{user_id: user.id})
+      Plausible.Billing.Subscription.free(%{team_id: team_of(user).id})
       |> Repo.insert!()
 
       conn
@@ -502,7 +502,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     @tag :ee_only
     test "renders team members usage and limit", %{conn: conn, user: user} do
-      insert(:subscription, paddle_plan_id: @v4_plan_id, user: user)
+      subscribe_to_plan(user, @v4_plan_id)
 
       team_member_usage_row_text =
         conn
@@ -531,7 +531,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
     setup [:create_user, :log_in]
 
     test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
-      Plausible.Billing.Subscription.free(%{user_id: user.id, currency_code: "EUR"})
+      new_site(owner: user)
+
+      Plausible.Billing.Subscription.free(%{team_id: team_of(user).id, currency_code: "EUR"})
       |> Repo.insert!()
 
       html =
@@ -1007,11 +1009,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
   describe "GET /settings/api-keys" do
     setup [:create_user, :log_in]
 
-    test "handles user without a team gracefully", %{conn: conn, user: user} do
-      user
-      |> team_of()
-      |> Repo.delete!()
-
+    test "handles user without a team gracefully", %{conn: conn} do
       conn = get(conn, Routes.settings_path(conn, :api_keys))
 
       assert html_response(conn, 200)
@@ -1022,7 +1020,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     setup [:create_user, :log_in]
 
     test "can create an API key", %{conn: conn, user: user} do
-      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
+      new_site(owner: user)
 
       conn =
         post(conn, Routes.settings_path(conn, :api_keys), %{
@@ -1039,7 +1037,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "cannot create a duplicate API key", %{conn: conn, user: user} do
-      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
+      new_site(owner: user)
 
       conn =
         post(conn, Routes.settings_path(conn, :api_keys), %{
@@ -1087,8 +1085,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
     alias Plausible.Auth.ApiKey
 
     test "can't delete api key that doesn't belong to me", %{conn: conn} do
-      other_user = insert(:user)
-      insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
+      other_user = new_user()
+      new_site(owner: other_user)
 
       assert {:ok, %ApiKey{} = api_key} =
                %ApiKey{user_id: other_user.id}

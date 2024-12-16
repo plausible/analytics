@@ -10,43 +10,6 @@ defmodule Plausible.Teams.Sites do
 
   @type list_opt() :: {:filter_by_domain, String.t()}
 
-  @spec create(Teams.Team.t(), map()) :: {:ok, map()}
-  def create(team, params) do
-    with :ok <- Teams.Billing.ensure_can_add_new_site(team) do
-      Ecto.Multi.new()
-      |> Ecto.Multi.put(:site_changeset, Site.new_for_team(team, params))
-      |> Ecto.Multi.run(:clear_changed_from, fn
-        _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
-          if site_to_clear = Repo.get_by(Site, team_id: team.id, domain_changed_from: domain) do
-            site_to_clear
-            |> Ecto.Changeset.change()
-            |> Ecto.Changeset.put_change(:domain_changed_from, nil)
-            |> Ecto.Changeset.put_change(:domain_changed_at, nil)
-            |> Repo.update()
-          else
-            {:ok, :ignore}
-          end
-
-        _repo, _context ->
-          {:ok, :ignore}
-      end)
-      |> Ecto.Multi.insert(:site, fn %{site_changeset: site} -> site end)
-      |> maybe_start_trial(team)
-      |> Repo.transaction()
-    end
-  end
-
-  defp maybe_start_trial(multi, team) do
-    case team.trial_expiry_date do
-      nil ->
-        changeset = Teams.Team.start_trial(team)
-        Ecto.Multi.update(multi, :team, changeset)
-
-      _ ->
-        multi
-    end
-  end
-
   @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
@@ -103,7 +66,7 @@ defmodule Plausible.Teams.Sites do
     |> Repo.paginate(pagination_params)
   end
 
-  @role_type Plausible.Auth.Invitation.__schema__(:type, :role)
+  @role_type Plausible.Teams.Invitation.__schema__(:type, :role)
 
   @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list_with_invitations(user, pagination_params, opts \\ []) do
@@ -267,14 +230,14 @@ defmodule Plausible.Teams.Sites do
             ),
           pinned_at: selected_as(up.pinned_at, :pinned_at),
           memberships: [
-            %Plausible.Site.Membership{
+            %{
               role: type(u.role, ^@role_type),
               site_id: s.id,
               site: s
             }
           ],
           invitations: [
-            %Plausible.Auth.Invitation{
+            %{
               invitation_id: coalesce(gi.invitation_id, st.transfer_id),
               email: coalesce(ti.email, st.email),
               role: type(u.role, ^@role_type),

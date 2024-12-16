@@ -29,8 +29,8 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
     end
 
     test "does not send an email more than 72 hours after signup" do
-      user = insert(:user)
-      insert(:site, members: [user], inserted_at: hours_ago(73))
+      user = new_user()
+      new_site(owner: user, inserted_at: hours_ago(73))
 
       perform_job(SendSiteSetupEmails, %{})
 

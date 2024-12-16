@@ -32,7 +32,7 @@ defmodule PlausibleWeb.TwoFactor.Session do
     session_2fa = conn.cookies[@session_2fa_cookie]
 
     with id when is_integer(id) <- session_2fa[:current_2fa_user_id],
-         %Auth.User{} = user <- Plausible.Users.with_subscription(id) do
+         %Auth.User{} = user <- Plausible.Repo.get(Auth.User, id) do
       {:ok, user}
     else
       _ -> {:error, :not_found}

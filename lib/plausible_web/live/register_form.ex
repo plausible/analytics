@@ -7,12 +7,13 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   alias Plausible.Auth
   alias Plausible.Repo
+  alias Plausible.Teams
 
   def mount(params, _session, socket) do
     socket =
       assign_new(socket, :invitation, fn ->
         if invitation_id = params["invitation_id"] do
-          Repo.get_by(Auth.Invitation, invitation_id: invitation_id)
+          find_by_id_unified(invitation_id)
         end
       end)
 
@@ -283,13 +284,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
         |> Map.put("email", invitation.email)
         |> Auth.User.new()
 
-      user =
-        case invitation.role do
-          :owner -> user
-          _ -> Plausible.Auth.User.remove_trial_expiry(user)
-        end
+      with_team? = invitation.role == :owner
 
-      add_user(socket, user)
+      add_user(socket, user, with_team?: with_team?)
     else
       {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
     end
@@ -310,20 +307,10 @@ defmodule PlausibleWeb.Live.RegisterForm do
     {:noreply, assign(socket, trigger_submit: true)}
   end
 
-  defp add_user(socket, user) do
+  defp add_user(socket, user, opts \\ []) do
     result =
       Repo.transaction(fn ->
-        case Repo.insert(user) do
-          {:ok, user} when not is_nil(user.trial_expiry_date) ->
-            Plausible.Teams.get_or_create(user)
-            user
-
-          {:ok, user} ->
-            user
-
-          {:error, reason} ->
-            Repo.rollback(reason)
-        end
+        do_add_user(user, opts)
       end)
 
     case result do
@@ -342,6 +329,71 @@ defmodule PlausibleWeb.Live.RegisterForm do
          assign(socket,
            form: to_form(Map.put(changeset, :action, :validate))
          )}
+    end
+  end
+
+  defp do_add_user(user, opts) do
+    case Repo.insert(user) do
+      {:ok, user} ->
+        if opts[:with_team?] do
+          {:ok, _} = Plausible.Teams.get_or_create(user)
+        end
+
+        user
+
+      {:error, reason} ->
+        Repo.rollback(reason)
+    end
+  end
+
+  defp find_by_id_unified(invitation_or_transfer_id) do
+    result =
+      with {:error, :invitation_not_found} <-
+             find_invitation_by_id_unified(invitation_or_transfer_id) do
+        find_transfer_by_id_unified(invitation_or_transfer_id)
+      end
+
+    case result do
+      {:error, :invitation_not_found} -> nil
+      {:ok, unified} -> unified
+    end
+  end
+
+  defp find_invitation_by_id_unified(id) do
+    invitation =
+      Teams.GuestInvitation
+      |> Repo.get_by(invitation_id: id)
+      |> Repo.preload([:site, team_invitation: :inviter])
+
+    case invitation do
+      nil ->
+        {:error, :invitation_not_found}
+
+      guest_invitation ->
+        {:ok,
+         %{
+           role: guest_invitation.role,
+           email: guest_invitation.team_invitation.email
+         }}
+    end
+  end
+
+  defp find_transfer_by_id_unified(id) do
+    transfer =
+      Teams.SiteTransfer
+      |> Repo.get_by(transfer_id: id)
+      |> Repo.preload([:site, :initiator])
+
+    case transfer do
+      nil ->
+        {:error, :invitation_not_found}
+
+      transfer ->
+        {:ok,
+         %{
+           role: :owner,
+           email: transfer.email
+         }}
     end
   end
 end

@@ -78,10 +78,11 @@ defmodule Plausible.Sites do
     owner_membership =
       from(
         tm in Teams.Membership,
+        inner_join: u in assoc(tm, :user),
         where: tm.team_id == ^site.team_id,
         where: tm.role == :owner,
-        select: %Plausible.Site.Membership{
-          user_id: tm.user_id,
+        select: %{
+          user: u,
           role: tm.role
         }
       )
@@ -91,9 +92,10 @@ defmodule Plausible.Sites do
       from(
         gm in Teams.GuestMembership,
         inner_join: tm in assoc(gm, :team_membership),
+        inner_join: u in assoc(tm, :user),
         where: gm.site_id == ^site.id,
-        select: %Plausible.Site.Membership{
-          user_id: tm.user_id,
+        select: %{
+          user: u,
           role:
             fragment(
               """
@@ -109,14 +111,14 @@ defmodule Plausible.Sites do
       )
       |> Repo.all()
 
-    memberships = Repo.preload([owner_membership | memberships], :user)
+    memberships = [owner_membership | memberships]
 
     invitations =
       from(
         gi in Teams.GuestInvitation,
         inner_join: ti in assoc(gi, :team_invitation),
         where: gi.site_id == ^site.id,
-        select: %Plausible.Auth.Invitation{
+        select: %{
           invitation_id: gi.invitation_id,
           email: ti.email,
           role:
@@ -138,7 +140,7 @@ defmodule Plausible.Sites do
       from(
         st in Teams.SiteTransfer,
         where: st.site_id == ^site.id,
-        select: %Plausible.Auth.Invitation{
+        select: %{
           invitation_id: st.transfer_id,
           email: st.email,
           role: :owner
@@ -152,8 +154,11 @@ defmodule Plausible.Sites do
   @spec for_user_query(Auth.User.t()) :: Ecto.Query.t()
   def for_user_query(user) do
     from(s in Site,
-      inner_join: sm in assoc(s, :memberships),
-      on: sm.user_id == ^user.id,
+      inner_join: t in assoc(s, :team),
+      inner_join: tm in assoc(t, :team_memberships),
+      left_join: gm in assoc(tm, :guest_memberships),
+      where: tm.user_id == ^user.id,
+      where: tm.role != :guest or gm.site_id == s.id,
       order_by: [desc: s.id]
     )
   end
@@ -162,7 +167,9 @@ defmodule Plausible.Sites do
     Ecto.Multi.new()
     |> Ecto.Multi.put(:site_changeset, Site.new(params))
     |> Ecto.Multi.run(:create_team, fn _repo, _context ->
-      Plausible.Teams.get_or_create(user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      {:ok, Plausible.Teams.with_subscription(team)}
     end)
     |> Ecto.Multi.run(:ensure_can_add_new_site, fn _repo, %{create_team: team} ->
       case Plausible.Teams.Billing.ensure_can_add_new_site(team) do
@@ -190,27 +197,15 @@ defmodule Plausible.Sites do
     |> Ecto.Multi.insert(:site, fn %{site_changeset: site, create_team: team} ->
       Ecto.Changeset.put_assoc(site, :team, team)
     end)
-    |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
-      Site.Membership.new(site, user)
-    end)
-    |> maybe_start_trial(user)
-    |> Ecto.Multi.run(:sync_team, fn _repo, %{user: user} ->
-      Plausible.Teams.sync_team(user)
-      {:ok, nil}
+    |> Ecto.Multi.run(:trial, fn _repo, %{create_team: team} ->
+      if is_nil(team.trial_expiry_date) and is_nil(team.subscription) do
+        Teams.start_trial(team)
+        {:ok, :trial_started}
+      else
+        {:ok, :trial_already_started}
+      end
     end)
     |> Repo.transaction()
-  end
-
-  defp maybe_start_trial(multi, user) do
-    case user.trial_expiry_date do
-      nil ->
-        Ecto.Multi.run(multi, :user, fn _, _ ->
-          {:ok, Plausible.Users.start_trial(user)}
-        end)
-
-      _ ->
-        Ecto.Multi.put(multi, :user, user)
-    end
   end
 
   @spec clear_stats_start_date!(Site.t()) :: Site.t()
@@ -299,14 +294,6 @@ defmodule Plausible.Sites do
     )
   end
 
-  def is_member?(user_id, site) do
-    role(user_id, site) !== nil
-  end
-
-  def has_admin_access?(user_id, site) do
-    role(user_id, site) in [:admin, :owner]
-  end
-
   def locked?(%Site{locked: locked}) do
     locked
   end
@@ -357,15 +344,6 @@ defmodule Plausible.Sites do
       where: s.domain == ^domain or s.domain_changed_from == ^domain,
       where: is_nil(gm.id) or gm.site_id == s.id,
       select: s
-    )
-  end
-
-  def role(user_id, site) do
-    Repo.one(
-      from(sm in Site.Membership,
-        where: sm.user_id == ^user_id and sm.site_id == ^site.id,
-        select: sm.role
-      )
     )
   end
 
