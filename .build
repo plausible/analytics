@@ -69,7 +69,6 @@ Plausible.DataMigration.AcquisitionChannel.html
 Plausible.DataMigration.CleanUpDemoSiteReferrerSource.html
 Plausible.DataMigration.ClickhouseRepo.html
 Plausible.DataMigration.LocationsSync.html
-Plausible.DataMigration.MissingScrollDepth.html
 Plausible.DataMigration.NumericIDs.html
 Plausible.DataMigration.PopulateEventSessionColumns.html
 Plausible.DataMigration.PostgresRepo.html
@@ -455,8 +454,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-ADC1C71E.js
-dist/sidebar_items-1C289631.js
+dist/search_data-D863F742.js
+dist/sidebar_items-2B71022A.js
 index.html
 readme.html
 search.html
