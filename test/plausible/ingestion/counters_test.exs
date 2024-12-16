@@ -152,9 +152,9 @@ defmodule Plausible.Ingestion.CountersTest do
   defp verify_record_written(domain, metric, value, site_id \\ nil) do
     query =
       from(r in Record,
-        where:
-          r.domain == ^domain and
-            r.metric == ^metric and r.value == ^value
+        group_by: [:site_id, :domain, :metric, :event_timebucket],
+        where: r.domain == ^domain and r.metric == ^metric,
+        select: sum(r.value)
       )
 
     query =
@@ -164,7 +164,17 @@ defmodule Plausible.Ingestion.CountersTest do
         query |> where([r], is_nil(r.site_id))
       end
 
-    assert await_clickhouse_count(query, 1)
+    assert eventually(
+             fn ->
+               sums =
+                 query
+                 |> Plausible.ClickhouseRepo.all()
+
+               {sums == [value], sums}
+             end,
+             100,
+             10
+           )
   end
 
   defp random_domain() do
