@@ -45,7 +45,8 @@ defmodule Plausible.CrmExtensions do
       ]
     end
 
-    def javascripts(%{assigns: %{context: "sites"}}) do
+    def javascripts(%{assigns: %{context: context}})
+        when context in ["sites", "billing"] do
       # Kaffy uses String.to_existing_atom when listing params
       :custom_search
 
