@@ -13,10 +13,32 @@ defmodule Plausible.SiteAdmin do
     ]
   end
 
-  def custom_index_query(_conn, _schema, query) do
+  def custom_index_query(conn, _schema, query) do
+    search =
+      (conn.params["custom_search"] || "")
+      |> String.trim()
+      |> String.replace("%", "\%")
+      |> String.replace("_", "\_")
+
+    search_term = "%#{search}%"
+
+    member_query =
+      from s in Plausible.Site,
+        left_join: gm in assoc(s, :guest_memberships),
+        left_join: tm in assoc(gm, :team_membership),
+        left_join: u in assoc(tm, :user),
+        where: s.id == parent_as(:site).id,
+        where: ilike(u.email, ^search_term) or ilike(u.name, ^search_term),
+        select: 1
+
     from(r in query,
+      as: :site,
       inner_join: o in assoc(r, :owner),
-      preload: [owner: o, team: [team_memberships: :user]]
+      preload: [owner: o, team: [team_memberships: :user]],
+      or_where: ilike(r.domain, ^search_term),
+      or_where: ilike(o.email, ^search_term),
+      or_where: ilike(o.name, ^search_term),
+      or_where: exists(member_query)
     )
   end
 
