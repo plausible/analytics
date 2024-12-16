@@ -49,14 +49,17 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         @common_segment_capabilities ++ @personal_segment_capabilities
       end
 
-    conn
-    |> assign(
-      :capabilities,
+    capabilities =
       get_capabilities(conn.assigns.site_role)
       |> Enum.filter(fn capability -> capability in capabilities_whitelist end)
       |> Enum.into(%{}, fn capability ->
         {capability, true}
       end)
+
+    conn
+    |> assign(
+      :capabilities,
+      capabilities
     )
   end
 
@@ -70,7 +73,21 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         } = conn,
         _params
       ) do
-    result = Repo.all(get_index_query(user_id, site_id))
+    result = Repo.all(get_mixed_segments_query(user_id, site_id))
+    json(conn, result)
+  end
+
+  def get_all_segments(
+        %{
+          assigns: %{
+            site: %{id: site_id},
+            current_user: %{id: user_id},
+            capabilities: %{can_list_personal_segments: true}
+          }
+        } = conn,
+        _params
+      ) do
+    result = Repo.all(get_personal_segments_only_query(user_id, site_id))
     json(conn, result)
   end
 
@@ -80,7 +97,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         } = conn,
         _params
       ) do
-    result = Repo.all(get_site_segments_only_index_query(site_id))
+    result = Repo.all(get_site_segments_only_query(site_id))
     json(conn, result)
   end
 
@@ -207,7 +224,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     end
   end
 
-  defp get_site_segments_only_index_query(site_id) do
+  defp get_site_segments_only_query(site_id) do
     fields = [
       :id,
       :name,
@@ -224,7 +241,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     )
   end
 
-  defp get_index_query(user_id, site_id) do
+  defp get_personal_segments_only_query(user_id, site_id) do
     fields = [
       :id,
       :name,
@@ -237,7 +254,26 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     from(segment in Plausible.Segment,
       select: ^fields,
       where: segment.site_id == ^site_id,
-      where: segment.type == :site or segment.owner_id == ^user_id,
+      where: segment.type == :personal and segment.owner_id == ^user_id,
+      order_by: [desc: segment.updated_at, desc: segment.id]
+    )
+  end
+
+  defp get_mixed_segments_query(user_id, site_id) do
+    fields = [
+      :id,
+      :name,
+      :type,
+      :inserted_at,
+      :updated_at,
+      :owner_id
+    ]
+
+    from(segment in Plausible.Segment,
+      select: ^fields,
+      where: segment.site_id == ^site_id,
+      where:
+        segment.type == :site or (segment.type == :personal and segment.owner_id == ^user_id),
       order_by: [desc: segment.updated_at, desc: segment.id]
     )
   end

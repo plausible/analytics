@@ -55,6 +55,26 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                )
     end
 
+    test "forbids owners on growth plan from seeing site segments", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      user |> subscribe_to_growth_plan()
+
+      insert_list(2, :segment,
+        site: site,
+        owner: user,
+        type: :site,
+        name: "site segment"
+      )
+
+      conn =
+        get(conn, "/internal-api/#{site.domain}/segments")
+
+      assert json_response(conn, 200) == []
+    end
+
     for role <- [:viewer, :owner] do
       test "returns list with personal and site segments for #{role}, avoiding segments from other site",
            %{conn: conn, user: user, site: site} do
