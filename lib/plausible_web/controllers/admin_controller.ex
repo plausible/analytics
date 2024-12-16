@@ -77,13 +77,11 @@ defmodule PlausibleWeb.AdminController do
       end
 
     sites_list =
-      sites
-      |> Enum.map(fn site ->
+      Enum.map_join(sites, "\n", fn site ->
         """
         <li><a href="/crm/sites/site/#{site.id}">#{site.domain}</a></li>
         """
       end)
-      |> Enum.join("\n")
 
     content = """
       <ul>
