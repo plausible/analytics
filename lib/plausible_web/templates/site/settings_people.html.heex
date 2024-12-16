@@ -127,7 +127,7 @@
                           :update_role_by_user,
                           @site.domain,
                           membership.user.id,
-                          "admin"
+                          "editor"
                         )
                       }
                       method="put"
@@ -142,7 +142,7 @@
                         </p>
                       </div>
 
-                      <%= if membership.role == :admin do %>
+                      <%= if membership.role == "admin" do %>
                         <span class="text-indigo-500 group-hover:text-white">
                           <svg
                             class="h-5 w-5"
@@ -182,7 +182,7 @@
                         </p>
                       </div>
 
-                      <%= if membership.role == :viewer do %>
+                      <%= if membership.role == "viewer" do %>
                         <span class="text-indigo-500 group-hover:text-white">
                           <svg
                             class="h-5 w-5"

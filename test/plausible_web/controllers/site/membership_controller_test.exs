@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
           email: "john.doe@example.com",
-          role: "admin"
+          role: "editor"
         })
 
       assert html_response(conn, 200) =~
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
           email: "john.doe@example.com",
-          role: "admin"
+          role: "editor"
         })
 
       assert conn.status == 404
@@ -164,7 +164,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
           email: second_member.email,
-          role: "admin"
+          role: "editor"
         })
 
       assert html_response(conn, 200) =~
