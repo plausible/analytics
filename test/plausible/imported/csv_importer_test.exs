@@ -363,6 +363,71 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
+    test "imports scroll_depth as null when the column does not exist in pages CSV",
+         %{site: site, user: user} = ctx do
+      _ = ctx
+
+      pages_csv =
+        %{
+          name: "imported_pages_20211230_20220101.csv",
+          body: """
+          "date","visitors","pageviews","hostname","page"
+          "2021-12-30",1,1,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",1,1,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",6,6,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",1,1,"lucky.numbers.com","/9102354072466236765"
+          "2021-12-30",1,1,"lucky.numbers.com","/7478911940502018071"
+          "2021-12-30",1,1,"lucky.numbers.com","/6402607186523575652"
+          "2021-12-30",2,2,"lucky.numbers.com","/9962503789684934900"
+          "2021-12-30",8,10,"lucky.numbers.com","/13595620304963848161"
+          "2021-12-30",2,2,"lucky.numbers.com","/17019199732013993436"
+          "2021-12-30",32,33,"lucky.numbers.com","/9874837495456455794"
+          "2021-12-31",4,4,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-31",1,1,"lucky.numbers.com","/8738789417178304429"
+          "2021-12-31",1,1,"lucky.numbers.com","/7445073500314667742"
+          "2021-12-31",1,1,"lucky.numbers.com","/4897404798407749335"
+          "2021-12-31",1,2,"lucky.numbers.com","/11263893625781431659"
+          "2022-01-01",2,2,"lucky.numbers.com","/5878724061840196349"
+          """
+        }
+
+      uploads =
+        on_ee do
+          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, pages_csv.name)
+          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+          ExAws.request!(ExAws.S3.put_object(bucket, key, pages_csv.body))
+          %{"filename" => pages_csv.name, "s3_url" => s3_url}
+        else
+          local_path = Path.join(ctx.tmp_dir, pages_csv.name)
+          File.write!(local_path, pages_csv.body)
+          %{"filename" => pages_csv.name, "local_path" => local_path}
+        end
+        |> List.wrap()
+
+      date_range = CSVImporter.date_range(uploads)
+
+      {:ok, _job} =
+        CSVImporter.new_import(site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
+          uploads: uploads,
+          storage: on_ee(do: "s3", else: "local")
+        )
+
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
+
+      assert %SiteImport{
+               start_date: ~D[2021-12-30],
+               end_date: ~D[2022-01-01],
+               source: :csv,
+               status: :completed
+             } = Repo.get_by!(SiteImport, site_id: site.id)
+
+      q = from(i in "imported_pages", where: i.site_id == ^site.id, select: i.scroll_depth)
+
+      assert List.duplicate(nil, 16) == Plausible.IngestRepo.all(q)
+    end
+
     test "accepts cells without quotes", %{site: site, user: user} = ctx do
       _ = ctx
 
@@ -1103,9 +1168,45 @@ defmodule Plausible.Imported.CSVImporterTest do
                ["2020-01-02", "csv.test", "/blog", "1", "1", "1", "\\N"]
              ]
 
-      # TODO: Import from these CSV files and compare scroll depth
-      # between imported_site and exported_site
-      _imported_site = imported_site
+      # run importer
+      date_range = CSVImporter.date_range(uploads)
+
+      {:ok, _job} =
+        CSVImporter.new_import(imported_site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
+          uploads: uploads,
+          storage: on_ee(do: "s3", else: "local")
+        )
+
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
+
+      # validate import
+      assert %SiteImport{
+               start_date: ~D[2020-01-01],
+               end_date: ~D[2020-01-02],
+               source: :csv,
+               status: :completed
+             } = Repo.get_by!(SiteImport, site_id: imported_site.id)
+
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 7
+
+      # assert on the actual rows that got imported into the imported_pages table
+      imported_data =
+        from(i in "imported_pages",
+          where: i.site_id == ^imported_site.id,
+          select: %{
+            date: i.date,
+            page: i.page,
+            scroll_depth: i.scroll_depth
+          }
+        )
+        |> Plausible.IngestRepo.all()
+
+      assert %{date: ~D[2020-01-01], page: "/another", scroll_depth: 50} in imported_data
+      assert %{date: ~D[2020-01-01], page: "/blog", scroll_depth: 180} in imported_data
+      assert %{date: ~D[2020-01-02], page: "/blog", scroll_depth: nil} in imported_data
     end
   end
 
