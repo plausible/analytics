@@ -176,8 +176,8 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
-  def login_form(conn, _params) do
-    render(conn, "login_form.html")
+  def login_form(conn, params) do
+    render(conn, "login_form.html", return_to: params["return_to"])
   end
 
   def login(conn, %{"user" => params}) do
@@ -210,6 +210,9 @@ defmodule PlausibleWeb.AuthController do
           params["register_action"] == "register_form" ->
             Routes.site_path(conn, :new)
 
+          is_binary(params["return_to"]) ->
+            params["return_to"]
+
           true ->
             nil
         end
@@ -219,13 +222,19 @@ defmodule PlausibleWeb.AuthController do
       {:error, :wrong_password} ->
         maybe_log_failed_login_attempts("wrong password for #{email}")
 
-        render(conn, "login_form.html", error: "Wrong email or password. Please try again.")
+        render(conn, "login_form.html",
+          return_to: params["return_to"],
+          error: "Wrong email or password. Please try again."
+        )
 
       {:error, :user_not_found} ->
         maybe_log_failed_login_attempts("user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
-        render(conn, "login_form.html", error: "Wrong email or password. Please try again.")
+        render(conn, "login_form.html",
+          return_to: params["return_to"],
+          error: "Wrong email or password. Please try again."
+        )
 
       {:error, {:rate_limit, _}} ->
         maybe_log_failed_login_attempts("too many login attempts for #{email}")

@@ -71,6 +71,28 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == "/activate?flow=register"
     end
 
+    test "user is redirected to `return_to` query param if present", %{conn: conn} do
+      Repo.insert!(
+        User.new(%{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      )
+
+      conn =
+        post(conn, "/login",
+          user: %{
+            email: "user@example.com",
+            password: "very-secret-and-very-long-123",
+            return_to: "/dummy.site"
+          }
+        )
+
+      assert redirected_to(conn, 302) == "/dummy.site"
+    end
+
     test "logs the user in", %{conn: conn} do
       user =
         Repo.insert!(
@@ -317,6 +339,18 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "shows the login form", %{conn: conn} do
       conn = get(conn, "/login")
       assert html_response(conn, 200) =~ "Enter your account credentials"
+    end
+
+    test "renders `return_to` query param as hidden input", %{conn: conn} do
+      conn = get(conn, "/login?return_to=/dummy.site")
+
+      [input_value] =
+        conn
+        |> html_response(200)
+        |> Floki.parse_document!()
+        |> Floki.attribute("input[name=return_to]", "value")
+
+      assert input_value == "/dummy.site"
     end
   end
 
