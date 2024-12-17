@@ -4,20 +4,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
   alias PlausibleWeb.Api.Helpers, as: H
-
-  @common_segment_capabilities [:can_see_segment_data]
-  @personal_segment_capabilities [
-    :can_create_personal_segments,
-    :can_list_personal_segments,
-    :can_edit_personal_segments,
-    :can_delete_personal_segments
-  ]
-  @site_segment_capabilities [
-    :can_create_site_segments,
-    :can_list_site_segments,
-    :can_edit_site_segments,
-    :can_delete_site_segments
-  ]
+  import Plausible.Stats.Segments, only: [has_permission: 2]
 
   @fields_in_index_query [
     :id,
@@ -46,29 +33,24 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   @doc """
-    This function Plug sets conn.assigns[:capabilities] to a map like %{can_list_site_segments: true, ...}.
-    Allowed capabilities depend on the user role and the subscription level of the team that owns the site.
+    This function Plug sets conn.assigns[:permissions] to a list like [:can_list_site_segments, ...].
+    Allowed permissions depend on the user role and the subscription level of the team that owns the site.
   """
-  def segments_capabilities_plug(conn, _opts) do
-    capabilities_whitelist =
-      if Plausible.Billing.Feature.Props.check_availability(conn.assigns.site.team) == :ok do
-        @common_segment_capabilities ++
-          @personal_segment_capabilities ++ @site_segment_capabilities
-      else
-        @common_segment_capabilities ++ @personal_segment_capabilities
-      end
+  @type map_with_permissions() :: %{
+          permissions: %{required(Plausible.Stats.Segments.permission()) => boolean()}
+        }
+  def segments_permissions_plug(conn, _opts) do
+    permissions_whitelist = Plausible.Stats.Segments.get_permissions_whitelist(conn.assigns.site)
 
-    capabilities =
-      get_capabilities(conn.assigns.site_role)
-      |> Enum.filter(fn capability -> capability in capabilities_whitelist end)
-      |> Enum.into(%{}, fn capability ->
-        {capability, true}
-      end)
+    permissions =
+      Plausible.Stats.Segments.get_role_permissions(conn.assigns.site_role)
+      |> Enum.filter(fn permission -> permission in permissions_whitelist end)
+      |> Enum.into(%{}, fn permission -> {permission, true} end)
 
     conn
     |> assign(
-      :capabilities,
-      capabilities
+      :permissions,
+      permissions
     )
   end
 
@@ -77,11 +59,13 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
           assigns: %{
             site: %{id: site_id},
             current_user: %{id: user_id},
-            capabilities: %{can_list_site_segments: true, can_list_personal_segments: true}
+            permissions: permissions
           }
         } = conn,
         _params
-      ) do
+      )
+      when has_permission(permissions, :can_list_personal_segments) and
+             has_permission(permissions, :can_list_site_segments) do
     result = Repo.all(get_mixed_segments_query(user_id, site_id, @fields_in_index_query))
     json(conn, result)
   end
@@ -91,21 +75,23 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
           assigns: %{
             site: %{id: site_id},
             current_user: %{id: user_id},
-            capabilities: %{can_list_personal_segments: true}
+            permissions: permissions
           }
         } = conn,
         _params
-      ) do
+      )
+      when has_permission(permissions, :can_list_personal_segments) do
     result = Repo.all(get_personal_segments_only_query(user_id, site_id, @fields_in_index_query))
     json(conn, result)
   end
 
   def get_all_segments(
         %{
-          assigns: %{site: %{id: site_id}, capabilities: %{can_list_site_segments: true}}
+          assigns: %{site: %{id: site_id}, permissions: permissions}
         } = conn,
         _params
-      ) do
+      )
+      when has_permission(permissions, :can_list_site_segments) do
     publicly_visible_fields = @fields_in_index_query -- [:owner_id]
 
     result =
@@ -123,11 +109,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
           assigns: %{
             site: %{id: site_id},
             current_user: %{id: user_id},
-            capabilities: %{can_see_segment_data: true}
+            permissions: permissions
           }
         } = conn,
         params
-      ) do
+      )
+      when has_permission(permissions, :can_see_segment_data) do
     segment_id = normalize_segment_id_param(params["segment_id"])
 
     result = get_one_segment(user_id, site_id, segment_id)
@@ -147,11 +134,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
           assigns: %{
             site: %{id: _site_id},
             current_user: %{id: _user_id},
-            capabilities: %{can_create_site_segments: true}
+            permissions: permissions
           }
         } = conn,
         %{"type" => "site"} = params
-      ),
+      )
+      when has_permission(permissions, :can_create_site_segments),
       do: do_insert_segment(conn, params)
 
   def create_segment(
@@ -161,11 +149,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
               id: _site_id
             },
             current_user: %{id: _user_id},
-            capabilities: %{can_create_personal_segments: true}
+            permissions: permissions
           }
         } = conn,
         %{"type" => "personal"} = params
-      ),
+      )
+      when has_permission(permissions, :can_create_personal_segments),
       do: do_insert_segment(conn, params)
 
   def create_segment(conn, _params) do
@@ -179,7 +168,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
               id: site_id
             },
             current_user: %{id: user_id},
-            capabilities: capabilities
+            permissions: permissions
           }
         } =
           conn,
@@ -193,11 +182,13 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       is_nil(existing_segment) ->
         H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
 
-      existing_segment.type == :personal and capabilities[:can_edit_personal_segments] == true and
+      existing_segment.type == :personal and
+        has_permission(permissions, :can_edit_personal_segments) and
           params["type"] !== "site" ->
         do_update_segment(conn, params, existing_segment, user_id)
 
-      existing_segment.type == :site and capabilities[:can_edit_site_segments] == true ->
+      existing_segment.type == :site and
+          has_permission(permissions, :can_edit_site_segments) == true ->
         do_update_segment(conn, params, existing_segment, user_id)
 
       true ->
@@ -212,7 +203,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
               id: site_id
             },
             current_user: %{id: user_id},
-            capabilities: capabilities
+            permissions: permissions
           }
         } =
           conn,
@@ -226,10 +217,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       is_nil(existing_segment) ->
         H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
 
-      existing_segment.type == :personal and capabilities[:can_delete_personal_segments] == true ->
+      existing_segment.type == :personal and
+          has_permission(permissions, :can_delete_personal_segments) == true ->
         do_delete_segment(existing_segment, conn)
 
-      existing_segment.type == :site and capabilities[:can_delete_site_segments] == true ->
+      existing_segment.type == :site and
+          has_permission(permissions, :can_delete_site_segments) == true ->
         do_delete_segment(existing_segment, conn)
 
       true ->
@@ -273,7 +266,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   @spec normalize_segment_id_param(any()) :: nil | pos_integer()
   defp normalize_segment_id_param(input) do
     case Integer.parse(input) do
-      {int_value, ""} and int_value > 0 -> int_value
+      {int_value, ""} when int_value > 0 -> int_value
       _ -> nil
     end
   end
@@ -319,10 +312,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       %{valid?: false, errors: errors} ->
         conn |> put_status(400) |> json(%{errors: errors})
 
-      {:error, message} ->
-        conn
-        |> put_status(400)
-        |> json(%{error: message})
+      {:error, error_messages} when is_list(error_messages) ->
+        conn |> put_status(400) |> json(%{errors: error_messages})
 
       _unknown_error ->
         conn |> put_status(400) |> json(%{error: "Failed to update segment"})
@@ -355,8 +346,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       %{valid?: false, errors: errors} ->
         conn |> put_status(400) |> json(%{errors: errors})
 
-      {:error, message} ->
-        conn |> put_status(400) |> json(%{error: message})
+      {:error, error_messages} when is_list(error_messages) ->
+        conn |> put_status(400) |> json(%{errors: error_messages})
 
       _unknown_error ->
         conn |> put_status(400) |> json(%{error: "Failed to update segment"})
@@ -371,84 +362,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     json(conn, existing_segment)
   end
 
-  @doc """
-  This function maps segment capabilities to user roles.
-
-  ## Examples:
-      iex> get_capabilities(:public)
-      [:can_list_site_segments]
-
-      iex> get_capabilities(:viewer)
-      [
-        :can_list_site_segments,
-        :can_see_segment_data,
-        :can_create_personal_segments,
-        :can_list_personal_segments,
-        :can_edit_personal_segments,
-        :can_delete_personal_segments
-      ]
-
-      iex> get_capabilities(:editor)
-      [
-        :can_list_site_segments,
-        :can_see_segment_data,
-        :can_create_personal_segments,
-        :can_list_personal_segments,
-        :can_edit_personal_segments,
-        :can_delete_personal_segments,
-        :can_create_site_segments,
-        :can_edit_site_segments,
-        :can_delete_site_segments
-      ]
-
-      iex> get_capabilities(:admin) == get_capabilities(:editor)
-      true
-
-      iex> get_capabilities(:owner) == get_capabilities(:editor)
-      true
-
-      iex> get_capabilities(:super_admin) == get_capabilities(:editor)
-      true
-  """
-  def get_capabilities(role) do
-    case role do
-      :public ->
-        [
-          :can_list_site_segments
-        ]
-
-      :viewer ->
-        get_capabilities(:public) ++
-          [
-            :can_see_segment_data,
-            :can_create_personal_segments,
-            :can_list_personal_segments,
-            :can_edit_personal_segments,
-            :can_delete_personal_segments
-          ]
-
-      :editor ->
-        get_capabilities(:viewer) ++
-          [
-            :can_create_site_segments,
-            :can_edit_site_segments,
-            :can_delete_site_segments
-          ]
-
-      :admin ->
-        get_capabilities(:editor)
-
-      :owner ->
-        get_capabilities(:editor)
-
-      :super_admin ->
-        get_capabilities(:editor)
-
-      _ ->
-        []
-    end
-  end
-
   def validate_segment_data_if_exists(_conn, nil = _segment_data), do: :ok
 
   def validate_segment_data_if_exists(conn, segment_data),
@@ -459,15 +372,25 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         %{"filters" => filters}
       ) do
     case build_naive_query_from_segment_data(conn.assigns.site, filters) do
-      {:ok, %Plausible.Stats.Query{filters: _filters}} -> :ok
-      {:error, message} -> {:error, message}
+      {:ok, %Plausible.Stats.Query{filters: _filters}} ->
+        :ok
+
+      {:error, message} ->
+        lines = String.split(message, "\n")
+
+        if Enum.all?(lines, fn m -> String.starts_with?(m, "#/filters/") end) do
+          {:error, lines}
+        else
+          {:error, message}
+        end
     end
   end
 
   @doc """
     This function builds a simple query using the filters from Plausibe.Segment.segment_data
     to test whether the filters used in the segment stand as legitimate query filters.
-    If they don't, it indicates a problem with the filters that must be passed to the client.
+    If they don't, it indicates an error with the filters that must be passed to the client,
+    so they could reconfigure the filters.
   """
   def build_naive_query_from_segment_data(site, filters),
     do:
