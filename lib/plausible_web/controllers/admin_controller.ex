@@ -3,13 +3,17 @@ defmodule PlausibleWeb.AdminController do
 
   alias Plausible.Teams
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
+
   def usage(conn, params) do
     user_id = String.to_integer(params["user_id"])
 
     team =
       case Teams.get_by_owner(user_id) do
         {:ok, team} ->
-          Teams.with_subscription(team)
+          team
+          |> Teams.with_subscription()
+          |> Plausible.Repo.preload(:owner)
 
         {:error, :no_team} ->
           nil
@@ -69,19 +73,26 @@ defmodule PlausibleWeb.AdminController do
   end
 
   defp usage_and_limits_html(team, usage, limits, embed?) do
-    sites =
+    sites_row =
       if team do
-        Plausible.Repo.preload(team, :sites).sites
-      else
-        []
-      end
+        sites_count =
+          team
+          |> Ecto.assoc(:sites)
+          |> Plausible.Repo.aggregate(:count)
 
-    sites_list =
-      Enum.map_join(sites, "\n", fn site ->
+        sites_link =
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+            custom_search: team.owner.email
+          )
+
         """
-        <li><a href="/crm/sites/site/#{site.id}">#{site.domain}</a></li>
+        <li>Owner of <a href="#{sites_link}">#{sites_count} site#{if sites_count != 1, do: "s", else: ""}</a></li>
         """
-      end)
+      else
+        """
+        <li>Owner of 0 sites</li>
+        """
+      end
 
     content = """
       <ul>
@@ -90,13 +101,7 @@ defmodule PlausibleWeb.AdminController do
         <li>Team members: <b>#{usage.team_members}</b> / #{limits.team_members}</li>
         <li>Features: #{features_usage(usage.features)}</li>
         <li>Monthly pageviews: #{monthly_pageviews_usage(usage.monthly_pageviews, limits.monthly_pageviews)}</li>
-        <li>
-          Owned sites:
-
-          <ul>
-            #{sites_list}
-          </ul>
-        </li>
+        #{sites_row}
       </ul>
     """
 
