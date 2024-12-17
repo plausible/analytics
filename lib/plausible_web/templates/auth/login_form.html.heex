@@ -36,7 +36,7 @@
     <.input
       type="hidden"
       field={f[:return_to]}
-      value={@conn.assigns[:return_to]}
+      value={@conn.query_params["return_to"]}
     />
 
     <.button class="w-full" type="submit">Log in</.button>

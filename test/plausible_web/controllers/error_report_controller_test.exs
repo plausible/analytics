@@ -127,7 +127,8 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
           "error" => %{"trace_id" => "some-trace-id", "user_feedback" => "Guiz pls fix"}
         })
 
-      assert redirected_to(conn) == "/login"
+      assert html = html_response(conn, 200)
+      assert html =~ "Your report has been submitted"
     end
 
     for error <- ["500", "502", "503", "504"] do

@@ -16,7 +16,11 @@ defmodule PlausibleWeb.UserAuth do
   @spec log_in_user(Plug.Conn.t(), Auth.User.t(), String.t() | nil) :: Plug.Conn.t()
   def log_in_user(conn, user, redirect_path \\ nil) do
     redirect_to =
-      redirect_path || Routes.site_path(conn, :index)
+      if redirect_path in [nil, ""] do
+        Routes.site_path(conn, :index)
+      else
+        redirect_path
+      end
 
     conn
     |> set_user_session(user)
