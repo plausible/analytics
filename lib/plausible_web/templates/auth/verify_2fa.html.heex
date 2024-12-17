@@ -46,7 +46,7 @@
       <.input
         type="hidden"
         field={f[:return_to]}
-        value={@conn.query_params["return_to"]}
+        value={@conn.assigns[:return_to]}
       />
     </div>
   </.form>

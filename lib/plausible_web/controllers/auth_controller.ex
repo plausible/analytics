@@ -176,8 +176,8 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
-  def login_form(conn, _params) do
-    render(conn, "login_form.html")
+  def login_form(conn, params) do
+    render(conn, "login_form.html", return_to: params["return_to"])
   end
 
   def login(conn, %{"user" => params}) do
@@ -330,12 +330,13 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def verify_2fa_form(conn, _) do
+  def verify_2fa_form(conn, params) do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
           render(conn, "verify_2fa.html",
-            remember_2fa_days: TwoFactor.Session.remember_2fa_days()
+            remember_2fa_days: TwoFactor.Session.remember_2fa_days(),
+            return_to: params["return_to"]
           )
         else
           redirect_to_login(conn)
