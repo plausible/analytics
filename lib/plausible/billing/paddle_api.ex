@@ -112,7 +112,7 @@ defmodule Plausible.Billing.PaddleApi do
     else
       error ->
         Sentry.capture_message("Failed to retrieve invoices from Paddle",
-          extra: %{extra: inspect(error), params: params, invoices_url: invoices_url()}
+          extra: %{extra: error, params: params, invoices_url: invoices_url()}
         )
 
         {:error, :request_failed}

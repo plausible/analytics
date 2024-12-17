@@ -288,7 +288,7 @@ defmodule Plausible.HelpScout do
 
       error ->
         Sentry.capture_message("Failed to obtain customer data from HelpScout API",
-          extra: %{error: inspect(error), customer_id: customer_id}
+          extra: %{error: error, customer_id: customer_id}
         )
 
         {:error, :unknown}

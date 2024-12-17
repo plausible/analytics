@@ -37,7 +37,7 @@ defmodule Plausible.Workers.ImportAnalytics do
           extra: %{
             import_id: site_import.id,
             site: site_import.site.domain,
-            error: inspect(error)
+            error: error
           }
         )
 

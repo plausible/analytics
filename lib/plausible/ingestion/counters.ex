@@ -88,7 +88,7 @@ defmodule Plausible.Ingestion.Counters do
               "Caught an error when trying to flush ingest counters.",
               extra: %{
                 number_of_records: Enum.count(records),
-                error: inspect(thrown)
+                error: thrown
               }
             )
         end

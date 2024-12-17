@@ -217,7 +217,7 @@ defmodule Plausible.Billing do
 
     if subscription.id != team.subscription.id do
       Sentry.capture_message("Susbscription ID mismatch",
-        extra: %{subscription: inspect(subscription), team_id: team.id}
+        extra: %{subscription: subscription, team_id: team.id}
       )
     end
 

@@ -16,7 +16,7 @@ defmodule PlausibleWeb.EmailView do
     Calendar.strftime(date, "%-d %b %Y")
   end
 
-  def sentry_link(trace_id, dsn \\ Sentry.Config.dsn()) do
+  def sentry_link(trace_id, dsn \\ Sentry.get_dsn()) do
     search_query = URI.encode_query(%{query: trace_id})
     path = "/organizations/sentry/issues/"
 

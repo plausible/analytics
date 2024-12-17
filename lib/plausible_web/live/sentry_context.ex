@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Live.SentryContext do
 
   defmacro __using__(_) do
     quote do
+      # TODO on_mount Sentry.LiveViewHook?
       on_mount PlausibleWeb.Live.SentryContext
     end
   end

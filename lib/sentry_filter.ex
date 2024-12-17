@@ -11,17 +11,6 @@ defmodule Plausible.SentryFilter do
   def before_send(%{original_exception: %Plug.Static.InvalidPathError{}}), do: false
 
   def before_send(
-        %{exception: [%{type: "Clickhousex.Error"}], original_exception: %{code: code}} = event
-      )
-      when is_atom(code) do
-    %{event | fingerprint: ["clickhouse", "db_connection", to_string(code)]}
-  end
-
-  def before_send(%{event_source: :logger, message: "Clickhousex.Protocol " <> _} = event) do
-    %{event | fingerprint: ["clickhouse", "db_connection", "protocol_error"]}
-  end
-
-  def before_send(
         %{
           exception: [%{type: "DBConnection.ConnectionError"}],
           original_exception: %{reason: reason}

@@ -98,7 +98,7 @@ defmodule Plausible.Google.GA4.HTTP do
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset}: #{inspect(reason)}"
         )
 
-        Sentry.Context.set_extra_context(%{ga_response: %{body: inspect(reason), status: 0}})
+        Sentry.Context.set_extra_context(%{ga_response: %{body: reason, status: 0}})
 
         {:error, {:socket_failed, dataset: report_request.dataset, offset: report_request.offset}}
     end

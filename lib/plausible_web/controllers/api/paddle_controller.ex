@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Api.PaddleController do
 
           error ->
             Sentry.capture_message("Failed to fetch currency reference plan",
-              extra: %{error: inspect(error)}
+              extra: %{error: error}
             )
 
             {:error, :fetch_prices_failed}

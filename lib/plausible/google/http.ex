@@ -93,7 +93,7 @@ defmodule Plausible.Google.HTTP do
         {:error, error}
 
       {:error, %{reason: _} = e} ->
-        Sentry.capture_message("Error fetching Google queries", extra: %{error: inspect(e)})
+        Sentry.capture_message("Error fetching Google queries", extra: %{error: e})
         {:error, :unknown_error}
     end
   end

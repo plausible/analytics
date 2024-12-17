@@ -41,7 +41,7 @@ defmodule Plausible.Timezones do
 
       error ->
         Sentry.capture_message("Failed to fetch timezone",
-          extra: %{code: timezone_code, error: inspect(error)}
+          extra: %{code: timezone_code, error: error}
         )
 
         acc

@@ -8,6 +8,7 @@ defmodule PlausibleWeb do
       use PlausibleWeb.Live.AuthContext
 
       unless :no_sentry_context in unquote(opts) do
+        # TODO: on_mount Sentry.LiveViewHook?
         use PlausibleWeb.Live.SentryContext
       end
 

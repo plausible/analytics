@@ -130,7 +130,7 @@ defmodule PlausibleWeb.BillingController do
 
         Sentry.capture_message("Error changing plans",
           extra: %{
-            errors: inspect(e),
+            errors: e,
             message: msg,
             new_plan_id: new_plan_id,
             team_id: my_team.id,
