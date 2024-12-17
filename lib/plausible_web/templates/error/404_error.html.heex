@@ -8,7 +8,7 @@
   <% end %>
   <div class="mt-4 flex">
     <%= if !@conn.assigns[:current_user] do %>
-      <.button_link href={Routes.auth_path(@conn, :login_form, return_to: @conn.request_path)} class="mr-4">Log in</.button_link>
+      <.button_link href={Routes.auth_path(@conn, :login_form, return_to: @conn.request_path <> "?" <> @conn.query_string)} class="mr-4">Log in</.button_link>
     <% end %>
     <.button_link theme="bright" href={PlausibleWeb.LayoutView.home_dest(@conn)}>
       Go to homepage
