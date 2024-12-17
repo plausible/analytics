@@ -879,7 +879,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert conn.resp_cookies["remember_2fa"].max_age == 0
     end
 
-    test "redirects to login_dest when set", %{conn: conn} do
+    test "redirects to return_to when set", %{conn: conn} do
       user = insert(:user)
 
       # enable 2FA
