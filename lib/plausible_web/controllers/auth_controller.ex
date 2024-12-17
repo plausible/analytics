@@ -176,7 +176,7 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
-  def login_form(conn, _) do
+  def login_form(conn, _params) do
     render(conn, "login_form.html")
   end
 
