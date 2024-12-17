@@ -19,6 +19,15 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     :can_delete_site_segments
   ]
 
+  @fields_in_index_query [
+    :id,
+    :name,
+    :type,
+    :inserted_at,
+    :updated_at,
+    :owner_id
+  ]
+
   @doc """
     This function Plug halts connection with 404 error if user or site do not have the expected feature flag.
   """
@@ -73,7 +82,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         } = conn,
         _params
       ) do
-    result = Repo.all(get_mixed_segments_query(user_id, site_id))
+    result = Repo.all(get_mixed_segments_query(user_id, site_id, @fields_in_index_query))
     json(conn, result)
   end
 
@@ -87,7 +96,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         } = conn,
         _params
       ) do
-    result = Repo.all(get_personal_segments_only_query(user_id, site_id))
+    result = Repo.all(get_personal_segments_only_query(user_id, site_id, @fields_in_index_query))
     json(conn, result)
   end
 
@@ -97,7 +106,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         } = conn,
         _params
       ) do
-    result = Repo.all(get_site_segments_only_query(site_id))
+    publicly_visible_fields = @fields_in_index_query -- [:owner_id]
+
+    result =
+      Repo.all(get_site_segments_only_query(site_id, publicly_visible_fields))
+
     json(conn, result)
   end
 
@@ -139,7 +152,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         } = conn,
         %{"type" => "site"} = params
       ),
-      do: insert_segment(conn, params)
+      do: do_insert_segment(conn, params)
 
   def create_segment(
         %{
@@ -153,7 +166,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         } = conn,
         %{"type" => "personal"} = params
       ),
-      do: insert_segment(conn, params)
+      do: do_insert_segment(conn, params)
 
   def create_segment(conn, _params) do
     H.not_enough_permissions(conn, "Not enough permissions to create segment")
@@ -224,15 +237,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     end
   end
 
-  defp get_site_segments_only_query(site_id) do
-    fields = [
-      :id,
-      :name,
-      :type,
-      :inserted_at,
-      :updated_at
-    ]
-
+  @spec get_site_segments_only_query(pos_integer(), list(atom())) :: Ecto.Query.t()
+  defp get_site_segments_only_query(site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
       where: segment.site_id == ^site_id,
@@ -241,16 +247,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     )
   end
 
-  defp get_personal_segments_only_query(user_id, site_id) do
-    fields = [
-      :id,
-      :name,
-      :type,
-      :inserted_at,
-      :updated_at,
-      :owner_id
-    ]
-
+  @spec get_personal_segments_only_query(pos_integer(), pos_integer(), list(atom())) ::
+          Ecto.Query.t()
+  defp get_personal_segments_only_query(user_id, site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
       where: segment.site_id == ^site_id,
@@ -259,16 +258,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     )
   end
 
-  defp get_mixed_segments_query(user_id, site_id) do
-    fields = [
-      :id,
-      :name,
-      :type,
-      :inserted_at,
-      :updated_at,
-      :owner_id
-    ]
-
+  @spec get_personal_segments_only_query(pos_integer(), pos_integer(), list(atom())) ::
+          Ecto.Query.t()
+  defp get_mixed_segments_query(user_id, site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
       where: segment.site_id == ^site_id,
@@ -278,9 +270,10 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     )
   end
 
+  @spec normalize_segment_id_param(any()) :: nil | pos_integer()
   defp normalize_segment_id_param(input) do
     case Integer.parse(input) do
-      {int_value, ""} -> int_value
+      {int_value, ""} and int_value > 0 -> int_value
       _ -> nil
     end
   end
@@ -300,7 +293,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     Repo.one(query)
   end
 
-  defp insert_segment(
+  defp do_insert_segment(
          %{
            assigns: %{
              site: %{
@@ -312,19 +305,27 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
            conn,
          params
        ) do
-    segment_definition =
-      Map.merge(params, %{"site_id" => site_id, "owner_id" => user_id})
+    segment_definition = Map.merge(params, %{"site_id" => site_id, "owner_id" => user_id})
 
-    changeset = Plausible.Segment.changeset(%Plausible.Segment{}, segment_definition)
+    with %{valid?: true} = changeset <-
+           Plausible.Segment.changeset(
+             %Plausible.Segment{},
+             segment_definition
+           ),
+         :ok <- validate_segment_data(conn, params["segment_data"]) do
+      segment = Repo.insert!(changeset)
+      json(conn, segment)
+    else
+      %{valid?: false, errors: errors} ->
+        conn |> put_status(400) |> json(%{errors: errors})
 
-    result = Repo.insert(changeset)
+      {:error, message} ->
+        conn
+        |> put_status(400)
+        |> json(%{error: message})
 
-    case result do
-      {:ok, segment} ->
-        json(conn, segment)
-
-      {:error, _} ->
-        H.bad_request(conn, "Failed to create segment")
+      _unknown_error ->
+        conn |> put_status(400) |> json(%{error: "Failed to update segment"})
     end
   end
 
@@ -334,16 +335,32 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
          existing_segment,
          owner_override
        ) do
-    updated_segment =
-      Repo.update!(
-        Plausible.Segment.changeset(
-          existing_segment,
-          Map.merge(params, %{"owner_id" => owner_override})
-        ),
-        returning: true
-      )
+    partial_segment_definition = Map.merge(params, %{"owner_id" => owner_override})
 
-    json(conn, updated_segment)
+    with %{valid?: true} = changeset <-
+           Plausible.Segment.changeset(
+             existing_segment,
+             partial_segment_definition
+           ),
+         :ok <-
+           validate_segment_data_if_exists(conn, params["segment_data"]) do
+      json(
+        conn,
+        Repo.update!(
+          changeset,
+          returning: true
+        )
+      )
+    else
+      %{valid?: false, errors: errors} ->
+        conn |> put_status(400) |> json(%{errors: errors})
+
+      {:error, message} ->
+        conn |> put_status(400) |> json(%{error: message})
+
+      _unknown_error ->
+        conn |> put_status(400) |> json(%{error: "Failed to update segment"})
+    end
   end
 
   defp do_delete_segment(
@@ -355,9 +372,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   @doc """
-  Maps segment capabilities to user roles.
+  This function maps segment capabilities to user roles.
 
-  Examples:
+  ## Examples:
       iex> get_capabilities(:public)
       [:can_list_site_segments]
 
@@ -431,4 +448,38 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         []
     end
   end
+
+  def validate_segment_data_if_exists(_conn, nil = _segment_data), do: :ok
+
+  def validate_segment_data_if_exists(conn, segment_data),
+    do: validate_segment_data(conn, segment_data)
+
+  def validate_segment_data(
+        conn,
+        %{"filters" => filters}
+      ) do
+    case build_naive_query_from_segment_data(conn.assigns.site, filters) do
+      {:ok, %Plausible.Stats.Query{filters: _filters}} -> :ok
+      {:error, message} -> {:error, message}
+    end
+  end
+
+  @doc """
+    This function builds a simple query using the filters from Plausibe.Segment.segment_data
+    to test whether the filters used in the segment stand as legitimate query filters.
+    If they don't, it indicates a problem with the filters that must be passed to the client.
+  """
+  def build_naive_query_from_segment_data(site, filters),
+    do:
+      Plausible.Stats.Query.build(
+        site,
+        :internal,
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "7d",
+          "filters" => filters
+        },
+        %{}
+      )
 end
