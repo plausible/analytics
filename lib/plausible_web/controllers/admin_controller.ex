@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.AdminController do
   use PlausibleWeb, :controller
+  use Plausible
 
   alias Plausible.Teams
 
@@ -9,7 +10,9 @@ defmodule PlausibleWeb.AdminController do
     team =
       case Teams.get_by_owner(user_id) do
         {:ok, team} ->
-          Teams.with_subscription(team)
+          team
+          |> Teams.with_subscription()
+          |> Plausible.Repo.preload(:owner)
 
         {:error, :no_team} ->
           nil
@@ -69,20 +72,6 @@ defmodule PlausibleWeb.AdminController do
   end
 
   defp usage_and_limits_html(team, usage, limits, embed?) do
-    sites =
-      if team do
-        Plausible.Repo.preload(team, :sites).sites
-      else
-        []
-      end
-
-    sites_list =
-      Enum.map_join(sites, "\n", fn site ->
-        """
-        <li><a href="/crm/sites/site/#{site.id}">#{site.domain}</a></li>
-        """
-      end)
-
     content = """
       <ul>
         <li>Team: <b>#{team && team.name}</b></li>
@@ -90,13 +79,7 @@ defmodule PlausibleWeb.AdminController do
         <li>Team members: <b>#{usage.team_members}</b> / #{limits.team_members}</li>
         <li>Features: #{features_usage(usage.features)}</li>
         <li>Monthly pageviews: #{monthly_pageviews_usage(usage.monthly_pageviews, limits.monthly_pageviews)}</li>
-        <li>
-          Owned sites:
-
-          <ul>
-            #{sites_list}
-          </ul>
-        </li>
+        #{sites_count_row(team)}
       </ul>
     """
 
@@ -124,6 +107,32 @@ defmodule PlausibleWeb.AdminController do
       </html>
       """
     end
+  end
+
+  on_ee do
+    alias PlausibleWeb.Router.Helpers, as: Routes
+
+    defp sites_count_row(%Plausible.Teams.Team{} = team) do
+      sites_count =
+        team
+        |> Ecto.assoc(:sites)
+        |> Plausible.Repo.aggregate(:count)
+
+      sites_link =
+        Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+          custom_search: team.owner.email
+        )
+
+      """
+      <li>Owner of <a href="#{sites_link}">#{sites_count} site#{if sites_count != 1, do: "s", else: ""}</a></li>
+      """
+    end
+  end
+
+  defp sites_count_row(_) do
+    """
+    <li>Owner of 0 sites</li>
+    """
   end
 
   defp features_usage(features_module_list) do
