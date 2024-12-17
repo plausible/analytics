@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
   use Plausible.Repo
   use Plausible.Teams.Test
 
-  doctest PlausibleWeb.Api.Internal.SegmentsController, import: true
+  doctest Plausible.Stats.Segments, import: true
 
   describe "GET /internal-api/:domain/segments" do
     setup [:create_user, :log_in, :create_site]
@@ -358,12 +358,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       conn =
         post(conn, "/internal-api/#{site.domain}/segments", %{
           "type" => "site",
-          "segment_data" => %{"filters" => [["is", "entry_page", ["/blog"]]]},
+          "segment_data" => %{
+            "filters" => [["is", "entry_page", ["/blog"]]]
+          },
           "name" => "any name"
         })
 
       assert json_response(conn, 400) == %{
-               "error" => "#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"
+               "errors" => ["#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"]
              }
     end
 
@@ -452,8 +454,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       end
     end
 
-    for {filters, expected_error} <- [
-          {[["foo", "bar"]], "#/filters/0: Invalid filter [\"foo\", \"bar\"]"}
+    for {filters, expected_errors} <- [
+          {[["foo", "bar"]], ["#/filters/0: Invalid filter [\"foo\", \"bar\"]"]}
           # {[["not", ["is", "visit:entry_page", ["/campaigns/:campaign_name"]]]], "..."}
         ] do
       test "prevents owners from updating segments to invalid filters #{inspect(filters)} with error 400",
@@ -481,7 +483,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           })
 
         assert json_response(conn, 400) == %{
-                 "error" => unquote(expected_error)
+                 "errors" => unquote(expected_errors)
                }
       end
     end
