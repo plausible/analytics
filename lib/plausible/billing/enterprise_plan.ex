@@ -36,6 +36,5 @@ defmodule Plausible.Billing.EnterprisePlan do
     model
     |> cast(attrs, @required_fields)
     |> validate_required(@required_fields)
-    |> unique_constraint(:user_id)
   end
 end
