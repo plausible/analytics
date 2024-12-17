@@ -42,6 +42,12 @@
           class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
         />
       </div>
+
+      <.input
+        type="hidden"
+        field={f[:return_to]}
+        value={@conn.assigns[:return_to]}
+      />
     </div>
   </.form>
 </.focus_box>

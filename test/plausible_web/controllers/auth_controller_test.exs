@@ -71,28 +71,6 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == "/activate?flow=register"
     end
 
-    test "user is redirected to `return_to` query param if present", %{conn: conn} do
-      Repo.insert!(
-        User.new(%{
-          name: "Jane Doe",
-          email: "user@example.com",
-          password: "very-secret-and-very-long-123",
-          password_confirmation: "very-secret-and-very-long-123"
-        })
-      )
-
-      conn =
-        post(conn, "/login",
-          user: %{
-            email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            return_to: "/dummy.site"
-          }
-        )
-
-      assert redirected_to(conn, 302) == "/dummy.site"
-    end
-
     test "logs the user in", %{conn: conn} do
       user =
         Repo.insert!(
@@ -365,15 +343,15 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn) == "/sites"
     end
 
-    test "valid email and password with login_dest set - redirects properly", %{conn: conn} do
+    test "valid email and password with return_to set - redirects properly", %{conn: conn} do
       user = insert(:user, password: "password")
 
       conn =
-        conn
-        |> init_session()
-        |> put_session(:login_dest, Routes.settings_path(conn, :index))
-
-      conn = post(conn, "/login", email: user.email, password: "password")
+        post(conn, "/login",
+          email: user.email,
+          password: "password",
+          return_to: Routes.settings_path(conn, :index)
+        )
 
       assert redirected_to(conn, 302) == Routes.settings_path(conn, :index)
     end
@@ -825,7 +803,11 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = login_with_cookie(conn, user.email, "password")
 
-      conn = get(conn, Routes.auth_path(conn, :verify_2fa_form))
+      conn =
+        get(
+          conn,
+          Routes.auth_path(conn, :verify_2fa_form, return_to: Routes.settings_path(conn, :index))
+        )
 
       assert html = html_response(conn, 200)
 
@@ -834,6 +816,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert element_exists?(html, "input[name=code]")
 
       assert element_exists?(html, "input[name=remember_2fa]")
+
+      assert text_of_attr(html, "input[name=return_to]", "value") ==
+               Routes.settings_path(conn, :index)
 
       assert element_exists?(
                html,
@@ -901,18 +886,14 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn =
-        conn
-        |> init_session()
-        |> put_session(:login_dest, Routes.settings_path(conn, :index))
-
       conn = login_with_cookie(conn, user.email, "password")
 
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+      conn =
+        post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code, return_to: "/dummy.site"})
 
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :index)
+      assert redirected_to(conn, 302) == "/dummy.site"
     end
 
     test "sets remember cookie when device trusted", %{conn: conn} do

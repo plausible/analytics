@@ -248,7 +248,7 @@ defmodule PlausibleWeb.AuthController do
       {:error, {:unverified_2fa, user}} ->
         conn
         |> TwoFactor.Session.set_2fa_user(user)
-        |> redirect(to: Routes.auth_path(conn, :verify_2fa))
+        |> redirect(to: Routes.auth_path(conn, :verify_2fa, Map.take(params, ["return_to"])))
     end
   end
 
@@ -333,12 +333,13 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def verify_2fa_form(conn, _) do
+  def verify_2fa_form(conn, params) do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
           render(conn, "verify_2fa.html",
-            remember_2fa_days: TwoFactor.Session.remember_2fa_days()
+            remember_2fa_days: TwoFactor.Session.remember_2fa_days(),
+            return_to: params["return_to"]
           )
         else
           redirect_to_login(conn)
@@ -355,7 +356,7 @@ defmodule PlausibleWeb.AuthController do
         {:ok, user} ->
           conn
           |> TwoFactor.Session.maybe_set_remember_2fa(user, params["remember_2fa"])
-          |> UserAuth.log_in_user(user)
+          |> UserAuth.log_in_user(user, params["return_to"])
 
         {:error, :invalid_code} ->
           maybe_log_failed_login_attempts(
@@ -369,7 +370,7 @@ defmodule PlausibleWeb.AuthController do
           )
 
         {:error, :not_enabled} ->
-          UserAuth.log_in_user(conn, user)
+          UserAuth.log_in_user(conn, user, params["return_to"])
       end
     end
   end
