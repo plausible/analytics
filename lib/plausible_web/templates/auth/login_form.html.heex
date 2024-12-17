@@ -33,11 +33,7 @@
       <div class="text-red-500 mt-4"><%= @conn.assigns[:error] %></div>
     <% end %>
 
-    <.input
-      type="hidden"
-      field={f[:return_to]}
-      value={@conn.assigns[:return_to]}
-    />
+    <.input type="hidden" field={f[:return_to]} value={@conn.assigns[:return_to]} />
 
     <.button class="w-full" type="submit">Log in</.button>
   </.form>
