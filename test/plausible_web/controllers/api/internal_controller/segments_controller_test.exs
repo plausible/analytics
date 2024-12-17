@@ -350,6 +350,23 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
              }
     end
 
+    test "forbids users from creating segments with invalid filters",
+         %{
+           conn: conn,
+           site: site
+         } do
+      conn =
+        post(conn, "/internal-api/#{site.domain}/segments", %{
+          "type" => "site",
+          "segment_data" => %{"filters" => [["is", "entry_page", ["/blog"]]]},
+          "name" => "any name"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"
+             }
+    end
+
     for %{role: role, type: type} <- [
           %{role: :viewer, type: :personal},
           %{role: :editor, type: :personal},
@@ -431,6 +448,40 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
 
         assert json_response(conn, 403) == %{
                  "error" => "Not enough permissions to edit segment"
+               }
+      end
+    end
+
+    for {filters, expected_error} <- [
+          {[["foo", "bar"]], "#/filters/0: Invalid filter [\"foo\", \"bar\"]"}
+          # {[["not", ["is", "visit:entry_page", ["/campaigns/:campaign_name"]]]], "..."}
+        ] do
+      test "prevents owners from updating segments to invalid filters #{inspect(filters)} with error 400",
+           %{
+             conn: conn,
+             user: user,
+             site: site
+           } do
+        inserted_at = "2024-09-01T10:00:00"
+        updated_at = inserted_at
+
+        %{id: segment_id} =
+          insert(:segment,
+            site: site,
+            name: "any name",
+            type: :personal,
+            owner_id: user.id,
+            inserted_at: inserted_at,
+            updated_at: updated_at
+          )
+
+        conn =
+          patch(conn, "/internal-api/#{site.domain}/segments/#{segment_id}", %{
+            "segment_data" => %{"filters" => unquote(filters)}
+          })
+
+        assert json_response(conn, 400) == %{
+                 "error" => unquote(expected_error)
                }
       end
     end
