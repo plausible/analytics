@@ -13,7 +13,7 @@ defmodule Plausible.IngestRepo.Migrations.DropAndAddScrollDepthToImportedPages d
     execute """
     ALTER TABLE imported_pages
     #{@on_cluster}
-    ADD COLUMN scroll_depth Int64 DEFAULT -1
+    ADD COLUMN scroll_depth Nullable(UInt64)
     """
   end
 
