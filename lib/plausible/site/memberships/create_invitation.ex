@@ -18,7 +18,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           | {:over_limit, non_neg_integer()}
           | :forbidden
 
-          @type invitation :: %Teams.GuestInvitation{} | %Teams.SiteTransfer{}
+  @type invitation :: %Teams.GuestInvitation{} | %Teams.SiteTransfer{}
 
   @spec create_invitation(Site.t(), User.t(), String.t(), atom()) ::
           {:ok, invitation} | {:error, invite_error()}
