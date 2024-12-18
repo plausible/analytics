@@ -401,7 +401,6 @@ defmodule Plausible.DataMigration.BackfillTeams do
           site: s,
           inviter: inv
         }
-        # preload: [inviter: inv, site: s]
       )
       |> @repo.all(timeout: :infinity)
 
