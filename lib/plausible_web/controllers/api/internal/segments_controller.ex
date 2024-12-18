@@ -42,10 +42,15 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   def segments_permissions_plug(conn, _opts) do
     permissions_whitelist = Plausible.Stats.Segments.get_permissions_whitelist(conn.assigns.site)
 
-    permissions =
-      Plausible.Stats.Segments.get_role_permissions(conn.assigns.site_role)
-      |> Enum.filter(fn permission -> permission in permissions_whitelist end)
-      |> Enum.into(%{}, fn permission -> {permission, true} end)
+    permissions_list =
+      if Mix.env() in [:test, :ce_test] && conn.private[:test_override_permissions] do
+        conn.private[:test_override_permissions]
+      else
+        Plausible.Stats.Segments.get_role_permissions(conn.assigns.site_role)
+        |> Enum.filter(fn permission -> permission in permissions_whitelist end)
+      end
+
+    permissions = permissions_list |> Enum.into(%{}, fn permission -> {permission, true} end)
 
     conn
     |> assign(
