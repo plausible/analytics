@@ -19,17 +19,17 @@ defmodule Plausible.Mailer do
         {:error, :hard_bounce}
 
       {:ok, response} ->
-        Logger.error("Failed to send e-mail", sentry: %{extra: %{response: response}})
+        Logger.error("Failed to send e-mail", sentry: %{extra: %{response: inspect(response)}})
         {:error, :unknown_error}
 
       {:error, _any} ->
-        Logger.error("Failed to send e-mail", sentry: %{extra: %{response: response}})
+        Logger.error("Failed to send e-mail", sentry: %{extra: %{response: inspect(response)}})
         {:error, :unknown_error}
     end
   end
 
   defp handle_error(error) do
-    Logger.error("Failed to send e-mail", sentry: %{extra: %{response: error}})
+    Logger.error("Failed to send e-mail", sentry: %{extra: %{response: inspect(error)}})
     {:error, :unknown_error}
   end
 end
