@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-970515BB.js"></script>
+    <script src="dist/sidebar_items-8324CD4B.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -162,6 +162,14 @@ transfers.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#t:invitation/0" translate="no">invitation()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#t:invite_error/0" translate="no">invite_error()</a>
 
       </div>
@@ -188,9 +196,9 @@ transfers.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Invites a new team member to the given site. Returns a
-%Plausible.Auth.Invitation{} struct and sends the invitee an email to accept
-this invitation.</p></div>
+        <div class="summary-synopsis"><p>Invites a new team member to the given site. Returns either
+<code class="inline">%Teams.GuestInvitation{}</code> or <code class="inline">%Teams.SiteTransfer{}</code> struct
+and sends the invitee an email to accept this invitation.</p></div>
 
     </div>
 
@@ -207,6 +215,61 @@ this invitation.</p></div>
       <span class="text">Types</span>
     </h1>
     <div class="types-list">
+<section class="detail" id="t:invitation/0">
+
+  <div class="detail-header">
+    <a href="#t:invitation/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">invitation()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L21" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> invitation() ::
+  %Plausible.Teams.GuestInvitation{
+    __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    invitation_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    role: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    site: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    team_invitation: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    team_invitation_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+  }
+  | %Plausible.Teams.SiteTransfer{
+      __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      destination_team: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      destination_team_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      email: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      initiator: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      initiator_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      site: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      transfer_guests: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      transfer_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+    }</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="t:invite_error/0">
 
   <div class="detail-header">
@@ -264,7 +327,7 @@ this invitation.</p></div>
     </a>
     <h1 class="signature" translate="no">bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L42" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L44" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -282,7 +345,7 @@ this invitation.</p></div>
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
   <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()
-) :: {:ok, [Plausible.Auth.Invitation.t()]} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
+) :: {:ok, [<a href="#t:invitation/0">invitation</a>()]} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
 
       </div>
 
@@ -298,7 +361,7 @@ this invitation.</p></div>
     </a>
     <h1 class="signature" translate="no">create_invitation(site, inviter, invitee_email, role)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L36" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -316,13 +379,13 @@ this invitation.</p></div>
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()
 ) ::
-  {:ok, Plausible.Auth.Invitation.t()} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
+  {:ok, <a href="#t:invitation/0">invitation</a>()} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
 
       </div>
 
-<p>Invites a new team member to the given site. Returns a
-%Plausible.Auth.Invitation{} struct and sends the invitee an email to accept
-this invitation.</p><p>The inviter must have enough permissions to invite the new team member,
+<p>Invites a new team member to the given site. Returns either
+<code class="inline">%Teams.GuestInvitation{}</code> or <code class="inline">%Teams.SiteTransfer{}</code> struct
+and sends the invitee an email to accept this invitation.</p><p>The inviter must have enough permissions to invite the new team member,
 otherwise this function returns <code class="inline">{:error, :forbidden}</code>.</p><p>If the new team member role is <code class="inline">:owner</code>, this function handles the invitation
 as an ownership transfer and requires the inviter to be the owner of the site.</p>
   </section>
