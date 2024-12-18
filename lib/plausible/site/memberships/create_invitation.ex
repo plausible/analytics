@@ -23,7 +23,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   @spec create_invitation(Site.t(), User.t(), String.t(), atom()) ::
           {:ok, invitation} | {:error, invite_error()}
   @doc """
-  Invites a new team member to the given site. Returns a
+  Invites a new team member to the given site. Returns either
   `%Teams.GuestInvitation{}` or `%Teams.SiteTransfer{}` struct
   and sends the invitee an email to accept this invitation.
 
