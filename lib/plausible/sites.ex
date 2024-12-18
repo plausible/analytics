@@ -376,6 +376,7 @@ defmodule Plausible.Sites do
 
   defp owned_sites_query(user) do
     from(s in Site,
+      # TODO that schema doesn't exist
       join: sm in Site.Membership,
       on: sm.site_id == s.id,
       where: sm.role == :owner,
