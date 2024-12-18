@@ -4,7 +4,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   transfers.
   """
 
-  alias Plausible.Auth.{User, Invitation}
+  alias Plausible.Auth.User
   alias Plausible.Site
   alias Plausible.Repo
   alias Plausible.Teams
@@ -18,12 +18,14 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           | {:over_limit, non_neg_integer()}
           | :forbidden
 
+          @type invitation :: %Teams.GuestInvitation{} | %Teams.SiteTransfer{}
+
   @spec create_invitation(Site.t(), User.t(), String.t(), atom()) ::
-          {:ok, Invitation.t()} | {:error, invite_error()}
+          {:ok, invitation} | {:error, invite_error()}
   @doc """
   Invites a new team member to the given site. Returns a
-  %Plausible.Auth.Invitation{} struct and sends the invitee an email to accept
-  this invitation.
+  `%Teams.GuestInvitation{}` or `%Teams.SiteTransfer{}` struct
+  and sends the invitee an email to accept this invitation.
 
   The inviter must have enough permissions to invite the new team member,
   otherwise this function returns `{:error, :forbidden}`.
@@ -38,7 +40,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   end
 
   @spec bulk_create_invitation([Site.t()], User.t(), String.t(), atom(), Keyword.t()) ::
-          {:ok, [Invitation.t()]} | {:error, invite_error()}
+          {:ok, [invitation]} | {:error, invite_error()}
   def bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ []) do
     Repo.transaction(fn ->
       for site <- sites do
