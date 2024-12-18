@@ -535,7 +535,7 @@ defmodule PlausibleWeb.Live.Sites do
             name="filter_text"
             id="filter-text"
             phx-debounce={200}
-            class="pl-8 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+            class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md"
             placeholder="Press / to search sites"
             autocomplete="off"
             value={@filter_text}
