@@ -517,7 +517,9 @@ defmodule PlausibleWeb.Email do
 
   defp traverse_and_textify(other), do: other
 
-  # this is slow but easy to understand
+  # this is slow but easy to understand:
+  # - replace all consecutive spaces with a single space
+  # - remove spaces at the beginning and end of each line
   defp collapse_whitespace(<<?\s, ?\s, rest::bytes>>) do
     collapse_whitespace(<<?\s, rest::bytes>>)
   end
