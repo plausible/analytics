@@ -26,7 +26,7 @@
 
   <.form
     :let={f}
-    action={Routes.auth_path(@conn, :verify_2fa)}
+    action={Routes.auth_path(@conn, :verify_2fa, Map.take(@conn.query_params, ["return_to"]))}
     for={@conn.params}
     onsubmit="document.getElementById('verify-button').disabled = true"
   >
@@ -43,7 +43,7 @@
         />
       </div>
 
-      <.input type="hidden" field={f[:return_to]} value={@conn.assigns[:return_to]} />
+      <.input type="hidden" field={f[:return_to]} />
     </div>
   </.form>
 </.focus_box>
