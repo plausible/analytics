@@ -459,11 +459,9 @@ defmodule PlausibleWeb.Email do
   def base_email(), do: base_email(%{layout: "base_email.html"})
 
   def base_email(%{layout: layout}) do
-    mailer_from = Application.get_env(:plausible, :mailer_email)
-
     new_email()
     |> put_param("TrackOpens", false)
-    |> from(mailer_from)
+    |> from(mailer_email_from())
     |> maybe_put_layout(layout)
   end
 
@@ -481,10 +479,10 @@ defmodule PlausibleWeb.Email do
   end
 
   defp textify(html) do
-    html
-    |> Floki.parse_fragment!()
+    Floki.parse_fragment!(html)
     |> traverse_and_textify()
     |> Floki.text()
+    |> collapse_whitespace()
   end
 
   defp traverse_and_textify([head | tail]) do
@@ -492,45 +490,49 @@ defmodule PlausibleWeb.Email do
   end
 
   defp traverse_and_textify(text) when is_binary(text) do
-    IO.inspect(text, label: "before")
-    trimmed = String.replace_leading(text, "\n", "")
-    trimmed = String.replace_trailing(trimmed, "\n", "\s")
-    IO.inspect(trimmed, label: "after")
-
-    # if String.ends_with?(text, ["\n", "\s"]) do
-    #   trimmed <> "\s"
-    # else
-    #   trimmed
-    # end
+    String.replace(text, "\n", "\s")
   end
 
-  defp traverse_and_textify(node) when is_tuple(node) do
-    with {elem, attrs, children} <- maybe_textify_link(node) do
-      {elem, attrs, traverse_and_textify(children)}
+  defp traverse_and_textify({"a" = tag, attrs, children}) do
+    href = with {"href", href} <- List.keyfind(attrs, "href", 0), do: href
+    children = traverse_and_textify(children)
+
+    if href do
+      text = Floki.text(children)
+
+      if text == href do
+        # avoids rendering "http://localhost:8000 (http://localhost:8000)" in base_email footer
+        text
+      else
+        IO.iodata_to_binary([text, " (", href, ?)])
+      end
+    else
+      {tag, attrs, children}
     end
   end
 
-  defp traverse_and_textify([] = empty), do: empty
-
-  defp maybe_textify_link(node) do
-    case node do
-      {"a", attrs, children} ->
-        {"href", href} = List.keyfind!(attrs, "href", 0)
-        text = Floki.text(children)
-
-        text_and_link =
-          if text == href do
-            # avoids rendering "http://localhost:8000 (http://localhost:8000)"
-            # e.g. in base_email footer
-            text
-          else
-            IO.iodata_to_binary([text, " (", href, ?)])
-          end
-
-        {"p", attrs, [text_and_link]}
-
-      _ ->
-        node
-    end
+  defp traverse_and_textify({tag, attrs, children}) do
+    {tag, attrs, traverse_and_textify(children)}
   end
+
+  defp traverse_and_textify(other), do: other
+
+  # this is slow but easy to understand
+  defp collapse_whitespace(<<?\s, ?\s, rest::bytes>>) do
+    collapse_whitespace(<<?\s, rest::bytes>>)
+  end
+
+  defp collapse_whitespace(<<?\s, ?\n, rest::bytes>>) do
+    collapse_whitespace(<<?\n, rest::bytes>>)
+  end
+
+  defp collapse_whitespace(<<?\n, ?\s, rest::bytes>>) do
+    collapse_whitespace(<<?\n, rest::bytes>>)
+  end
+
+  defp collapse_whitespace(<<c::1-bytes, rest::bytes>>) do
+    c <> collapse_whitespace(rest)
+  end
+
+  defp collapse_whitespace(<<>> = empty), do: empty
 end
