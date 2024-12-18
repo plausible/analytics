@@ -4,7 +4,17 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
   alias PlausibleWeb.Api.Helpers, as: H
-  import Plausible.Stats.Segments, only: [has_permission: 2]
+
+  import Plausible.Stats.Segments,
+    only: [
+      has_permission: 2,
+      get_permissions_whitelist: 1,
+      get_role_permissions: 1,
+      validate_segment_data_if_exists: 2,
+      validate_segment_data: 2
+    ]
+
+  @type permission() :: Plausible.Stats.Segments.permission()
 
   @fields_in_index_query [
     :id,
@@ -18,7 +28,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   @doc """
     This function Plug halts connection with 404 error if user or site do not have the expected feature flag.
   """
-  def segments_feature_gate_plug(conn, _opts) do
+  def segments_feature_gate_plug(%Plug.Conn{} = conn, _opts) do
     flag = :saved_segments
 
     enabled =
@@ -36,17 +46,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     This function Plug sets conn.assigns[:permissions] to a list like [:can_list_site_segments, ...].
     Allowed permissions depend on the user role and the subscription level of the team that owns the site.
   """
-  @type map_with_permissions() :: %{
-          permissions: %{required(Plausible.Stats.Segments.permission()) => boolean()}
-        }
-  def segments_permissions_plug(conn, _opts) do
-    permissions_whitelist = Plausible.Stats.Segments.get_permissions_whitelist(conn.assigns.site)
+  def segments_permissions_plug(%Plug.Conn{} = conn, _opts) do
+    permissions_whitelist = get_permissions_whitelist(conn.assigns.site)
 
     permissions_list =
       if Mix.env() in [:test, :ce_test] && conn.private[:test_override_permissions] do
         conn.private[:test_override_permissions]
       else
-        Plausible.Stats.Segments.get_role_permissions(conn.assigns.site_role)
+        get_role_permissions(conn.assigns.site_role)
         |> Enum.filter(fn permission -> permission in permissions_whitelist end)
       end
 
@@ -60,14 +67,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   def get_all_segments(
-        %{
+        %Plug.Conn{
           assigns: %{
             site: %{id: site_id},
             current_user: %{id: user_id},
             permissions: permissions
           }
         } = conn,
-        _params
+        %{} = _params
       )
       when has_permission(permissions, :can_list_personal_segments) and
              has_permission(permissions, :can_list_site_segments) do
@@ -76,14 +83,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   def get_all_segments(
-        %{
+        %Plug.Conn{
           assigns: %{
             site: %{id: site_id},
             current_user: %{id: user_id},
             permissions: permissions
           }
         } = conn,
-        _params
+        %{} = _params
       )
       when has_permission(permissions, :can_list_personal_segments) do
     result = Repo.all(get_personal_segments_only_query(user_id, site_id, @fields_in_index_query))
@@ -91,10 +98,10 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   def get_all_segments(
-        %{
+        %Plug.Conn{
           assigns: %{site: %{id: site_id}, permissions: permissions}
         } = conn,
-        _params
+        %{} = _params
       )
       when has_permission(permissions, :can_list_site_segments) do
     publicly_visible_fields = @fields_in_index_query -- [:owner_id]
@@ -105,19 +112,19 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     json(conn, result)
   end
 
-  def get_all_segments(conn, _params) do
+  def get_all_segments(%Plug.Conn{} = conn, %{} = _params) do
     H.not_enough_permissions(conn, "Not enough permissions to get segments")
   end
 
   def get_segment(
-        %{
+        %Plug.Conn{
           assigns: %{
             site: %{id: site_id},
             current_user: %{id: user_id},
             permissions: permissions
           }
         } = conn,
-        params
+        %{} = params
       )
       when has_permission(permissions, :can_see_segment_data) do
     segment_id = normalize_segment_id_param(params["segment_id"])
@@ -130,12 +137,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     end
   end
 
-  def get_segment(conn, _params) do
+  def get_segment(%Plug.Conn{} = conn, %{} = _params) do
     H.not_enough_permissions(conn, "Not enough permissions to get segment data")
   end
 
   def create_segment(
-        %{
+        %Plug.Conn{
           assigns: %{
             site: %{id: _site_id},
             current_user: %{id: _user_id},
@@ -148,7 +155,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       do: do_insert_segment(conn, params)
 
   def create_segment(
-        %{
+        %Plug.Conn{
           assigns: %{
             site: %{
               id: _site_id
@@ -167,7 +174,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   def update_segment(
-        %{
+        %Plug.Conn{
           assigns: %{
             site: %{
               id: site_id
@@ -177,7 +184,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
           }
         } =
           conn,
-        params
+        %{} = params
       ) do
     segment_id = normalize_segment_id_param(params["segment_id"])
 
@@ -202,7 +209,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   def delete_segment(
-        %{
+        %Plug.Conn{
           assigns: %{
             site: %{
               id: site_id
@@ -212,7 +219,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
           }
         } =
           conn,
-        params
+        %{} = params
       ) do
     segment_id = normalize_segment_id_param(params["segment_id"])
 
@@ -224,11 +231,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
       existing_segment.type == :personal and
           has_permission(permissions, :can_delete_personal_segments) == true ->
-        do_delete_segment(existing_segment, conn)
+        do_delete_segment(conn, existing_segment)
 
       existing_segment.type == :site and
           has_permission(permissions, :can_delete_site_segments) == true ->
-        do_delete_segment(existing_segment, conn)
+        do_delete_segment(conn, existing_segment)
 
       true ->
         H.not_enough_permissions(conn, "Not enough permissions to delete segment")
@@ -236,6 +243,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   @spec get_site_segments_only_query(pos_integer(), list(atom())) :: Ecto.Query.t()
+
   defp get_site_segments_only_query(site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
@@ -247,6 +255,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   @spec get_personal_segments_only_query(pos_integer(), pos_integer(), list(atom())) ::
           Ecto.Query.t()
+
   defp get_personal_segments_only_query(user_id, site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
@@ -258,6 +267,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   @spec get_personal_segments_only_query(pos_integer(), pos_integer(), list(atom())) ::
           Ecto.Query.t()
+
   defp get_mixed_segments_query(user_id, site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
@@ -269,6 +279,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   @spec normalize_segment_id_param(any()) :: nil | pos_integer()
+
   defp normalize_segment_id_param(input) do
     case Integer.parse(input) do
       {int_value, ""} when int_value > 0 -> int_value
@@ -292,16 +303,17 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   defp do_insert_segment(
-         %{
+         %Plug.Conn{
            assigns: %{
-             site: %{
-               id: site_id
-             },
+             site:
+               %{
+                 id: site_id
+               } = site,
              current_user: %{id: user_id}
            }
          } =
            conn,
-         params
+         %{} = params
        ) do
     segment_definition = Map.merge(params, %{"site_id" => site_id, "owner_id" => user_id})
 
@@ -310,7 +322,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
              %Plausible.Segment{},
              segment_definition
            ),
-         :ok <- validate_segment_data(conn, params["segment_data"]) do
+         :ok <- validate_segment_data(site, params["segment_data"]) do
       segment = Repo.insert!(changeset)
       json(conn, segment)
     else
@@ -326,9 +338,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   defp do_update_segment(
-         conn,
-         params,
-         existing_segment,
+         %Plug.Conn{} = conn,
+         %{} = params,
+         %Plausible.Segment{} = existing_segment,
          owner_override
        ) do
     partial_segment_definition = Map.merge(params, %{"owner_id" => owner_override})
@@ -339,7 +351,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
              partial_segment_definition
            ),
          :ok <-
-           validate_segment_data_if_exists(conn, params["segment_data"]) do
+           validate_segment_data_if_exists(conn.assigns.site, params["segment_data"]) do
       json(
         conn,
         Repo.update!(
@@ -360,54 +372,10 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   defp do_delete_segment(
-         existing_segment,
-         conn
+         %Plug.Conn{} = conn,
+         %Plausible.Segment{} = existing_segment
        ) do
     Repo.delete!(existing_segment)
     json(conn, existing_segment)
   end
-
-  def validate_segment_data_if_exists(_conn, nil = _segment_data), do: :ok
-
-  def validate_segment_data_if_exists(conn, segment_data),
-    do: validate_segment_data(conn, segment_data)
-
-  def validate_segment_data(
-        conn,
-        %{"filters" => filters}
-      ) do
-    case build_naive_query_from_segment_data(conn.assigns.site, filters) do
-      {:ok, %Plausible.Stats.Query{filters: _filters}} ->
-        :ok
-
-      {:error, message} ->
-        lines = String.split(message, "\n")
-
-        if Enum.all?(lines, fn m -> String.starts_with?(m, "#/filters/") end) do
-          {:error, lines}
-        else
-          {:error, message}
-        end
-    end
-  end
-
-  @doc """
-    This function builds a simple query using the filters from Plausibe.Segment.segment_data
-    to test whether the filters used in the segment stand as legitimate query filters.
-    If they don't, it indicates an error with the filters that must be passed to the client,
-    so they could reconfigure the filters.
-  """
-  def build_naive_query_from_segment_data(site, filters),
-    do:
-      Plausible.Stats.Query.build(
-        site,
-        :internal,
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors"],
-          "date_range" => "7d",
-          "filters" => filters
-        },
-        %{}
-      )
 end

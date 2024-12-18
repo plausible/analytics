@@ -3,8 +3,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
   use Plausible.Repo
   use Plausible.Teams.Test
 
-  doctest Plausible.Stats.Segments, import: true
-
   describe "GET /internal-api/:domain/segments with permissions overrides" do
     setup [:create_user, :log_in, :create_site]
 
