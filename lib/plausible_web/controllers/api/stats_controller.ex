@@ -831,7 +831,7 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
-    include_scroll_depth? = !query.include_imported && scroll_depth_enabled?(site, current_user)
+    include_scroll_depth? = scroll_depth_enabled?(site, current_user)
 
     extra_metrics =
       cond do

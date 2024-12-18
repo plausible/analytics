@@ -115,6 +115,10 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     wrap_alias([i], %{pageviews: sum(i.pageviews), __internal_visits: sum(i.visits)})
   end
 
+  defp select_metric(:scroll_depth, "imported_pages") do
+    wrap_alias([i], %{scroll_depth_sum: sum(i.scroll_depth), total_visitors: sum(i.visitors)})
+  end
+
   defp select_metric(_metric, _table), do: %{}
 
   def group_imported_by(q, query) do
@@ -347,6 +351,19 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
           s.__internal_visits,
           i.__internal_visits
         )
+    })
+    |> select_joined_metrics(rest)
+  end
+
+  # The final `scroll_depth` gets selected at a later querybuilding step
+  # (in `Plausible.Stats.SQL.SpecialMetrics.add/3`). But in order to avoid
+  # having to join with imported data there again, we select the required
+  # information from imported data here already.
+  def select_joined_metrics(q, [:scroll_depth | rest]) do
+    q
+    |> select_merge_as([s, i], %{
+      __internal_scroll_depth_sum: i.scroll_depth_sum,
+      __internal_total_visitors: i.total_visitors
     })
     |> select_joined_metrics(rest)
   end

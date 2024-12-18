@@ -150,15 +150,11 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         dim_shortnames
         |> Enum.map(fn dim -> dynamic([p], field(p, ^dim)) end)
 
-      scroll_depth_q =
+      scroll_depth_sum_q =
         subquery(max_per_visitor_q)
         |> select([p], %{
-          scroll_depth:
-            fragment(
-              "if(isFinite(avg(?)), toUInt8(round(avg(?))), NULL)",
-              p.max_scroll_depth,
-              p.max_scroll_depth
-            )
+          scroll_depth_sum: fragment("sum(?)", p.max_scroll_depth),
+          total_visitors: fragment("count(?)", p.user_id)
         })
         |> select_merge(^dim_select)
         |> group_by(^dim_group_by)
@@ -173,9 +169,45 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
         end
 
-      q
-      |> join(:left, [e], s in subquery(scroll_depth_q), on: ^join_on_dim_condition)
-      |> select_merge_as([_e, ..., s], %{scroll_depth: fragment("any(?)", s.scroll_depth)})
+      joined_q =
+        join(q, :left, [e], s in subquery(scroll_depth_sum_q), on: ^join_on_dim_condition)
+
+      if query.include_imported do
+        joined_q
+        |> select_merge_as([..., s], %{
+          scroll_depth:
+            fragment(
+              """
+              if(
+                ? > 0 or ? > 0,
+                toUInt8(
+                  round(
+                    (? + ?) / (? + ?)
+                  )
+                ),
+                NULL
+              )
+              """,
+              s.total_visitors,
+              selected_as(:__internal_total_visitors),
+              s.scroll_depth_sum,
+              selected_as(:__internal_scroll_depth_sum),
+              s.total_visitors,
+              selected_as(:__internal_total_visitors)
+            )
+        })
+      else
+        joined_q
+        |> select_merge_as([..., s], %{
+          scroll_depth:
+            fragment(
+              "if(any(?) > 0, toUInt8(round(any(?) / any(?))), NULL)",
+              s.total_visitors,
+              s.scroll_depth_sum,
+              s.total_visitors
+            )
+        })
+      end
     else
       q
     end

@@ -648,6 +648,46 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "calculates scroll_depth from native and imported data combined", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: @user_id,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:00:00],
+          scroll_depth: 80
+        ),
+        build(:imported_pages,
+          date: ~D[2020-01-01],
+          visitors: 3,
+          pageviews: 3,
+          time_on_page: 90,
+          page: "/blog",
+          scroll_depth: 120
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2020-01-01&detailed=true&with_imported=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "/blog",
+                 "visitors" => 4,
+                 "pageviews" => 4,
+                 "bounce_rate" => 100,
+                 "time_on_page" => 30.0,
+                 "scroll_depth" => 50
+               }
+             ]
+    end
+
     test "can filter using the | (OR) filter",
          %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1263,6 +1303,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "time_on_page" => 800.0,
                  "visitors" => 3,
                  "pageviews" => 3,
+                 "scroll_depth" => nil,
                  "name" => "/"
                },
                %{
@@ -1270,6 +1311,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "time_on_page" => 60,
                  "visitors" => 2,
                  "pageviews" => 2,
+                 "scroll_depth" => nil,
                  "name" => "/some-other-page"
                }
              ]
@@ -1341,7 +1383,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/",
                  "pageviews" => 4,
                  "time_on_page" => 90.0,
-                 "visitors" => 4
+                 "visitors" => 4,
+                 "scroll_depth" => nil
                }
              ]
     end
@@ -1390,14 +1433,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/",
                  "pageviews" => 4,
                  "time_on_page" => 90.0,
-                 "visitors" => 4
+                 "visitors" => 4,
+                 "scroll_depth" => nil
                },
                %{
                  "bounce_rate" => 100,
                  "name" => "/a",
                  "pageviews" => 1,
                  "time_on_page" => 10.0,
-                 "visitors" => 1
+                 "visitors" => 1,
+                 "scroll_depth" => nil
                }
              ]
     end
@@ -1446,14 +1491,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/aaa",
                  "pageviews" => 4,
                  "time_on_page" => 90.0,
-                 "visitors" => 4
+                 "visitors" => 4,
+                 "scroll_depth" => nil
                },
                %{
                  "bounce_rate" => 100,
                  "name" => "/a",
                  "pageviews" => 1,
                  "time_on_page" => 10.0,
-                 "visitors" => 1
+                 "visitors" => 1,
+                 "scroll_depth" => nil
                }
              ]
     end
