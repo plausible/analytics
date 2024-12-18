@@ -42,182 +42,117 @@
                 </p>
               </div>
 
-              <div x-data="{open: false}" @click.away="open = false" x-cloak class="relative">
-                <button
-                  @click="open = !open"
-                  class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
+              <.dropdown class="relative">
+                <:button class="inline-flex items-center justify-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
                   <%= membership.role |> to_string() |> String.capitalize() %>
-                  <svg
-                    class="w-4 h-4 pt-px ml-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clip-rule="evenodd"
-                    >
-                    </path>
-                  </svg>
-                </button>
-                <ul
-                  x-show="open"
-                  x-transition:leave="transition ease-in duration-100"
-                  x-transition:leave-start="opacity-100"
-                  x-transition:leave-end="opacity-0"
-                  class="origin-top-right absolute z-50 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-400 ring-1 ring-black ring-opacity-5 focus:outline-none"
-                  tabindex="-1"
-                  role="listbox"
-                  aria-labelledby="listbox-label"
-                  aria-activedescendant="listbox-option-0"
-                >
-                  <%= if membership.role == :owner do %>
-                    <li class="p-4 cursor-default group flex justify-between" role="option">
-                      <div>
-                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          Owner
-                        </p>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          Site owner cannot be assigned to any other role
-                        </p>
-                      </div>
+                  <Heroicons.chevron_down mini class="size-4 mt-0.5 ml-1" />
+                </:button>
+                <:panel class="origin-top-right absolute z-50 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <ul class="divide-y divide-gray-200 dark:divide-gray-400 ">
+                    <%= if membership.role == :owner do %>
+                      <li class="p-4 cursor-default group flex justify-between" role="option">
+                        <div>
+                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            Owner
+                          </p>
+                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Site owner cannot be assigned to any other role
+                          </p>
+                        </div>
 
-                      <span class="text-indigo-500">
-                        <svg
-                          class="h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clip-rule="evenodd"
-                          />
-                        </svg>
-                      </span>
-                    </li>
-                    <%= if @conn.assigns[:site_role] == :owner do %>
-                      <li
-                        class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
-                        role="option"
-                      >
-                        <.unstyled_link
-                          class="inline-block w-full text-sm p-4 text-red-600 font-medium"
-                          href={
-                            Routes.membership_path(
-                              @conn,
-                              :transfer_ownership_form,
-                              @site.domain
-                            )
-                          }
-                        >
-                          Transfer ownership
-                        </.unstyled_link>
+                        <Heroicons.check_circle solid class="size-8 text-indigo-500 -mt-1.5" />
                       </li>
+                      <%= if @conn.assigns[:site_role] == :owner do %>
+                        <li
+                          class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
+                          role="option"
+                        >
+                          <.unstyled_link
+                            class="inline-block w-full text-sm p-4 text-red-600 font-medium"
+                            href={
+                              Routes.membership_path(
+                                @conn,
+                                :transfer_ownership_form,
+                                @site.domain
+                              )
+                            }
+                          >
+                            Transfer ownership
+                          </.unstyled_link>
+                        </li>
+                      <% end %>
+                    <% else %>
+                      <.unstyled_link
+                        href={
+                          Routes.membership_path(
+                            @conn,
+                            :update_role_by_user,
+                            @site.domain,
+                            membership.user.id,
+                            "editor"
+                          )
+                        }
+                        method="put"
+                        class="p-4 flex justify-between group hover:bg-indigo-500"
+                      >
+                        <div>
+                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
+                            Admin
+                          </p>
+                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
+                            View stats and edit site settings
+                          </p>
+                        </div>
+
+                        <%= if membership.role == "admin" do %>
+                          <Heroicons.check_circle solid class="size-8 text-indigo-500 group-hover:text-white" />
+                        <% end %>
+                      </.unstyled_link>
+                      <.unstyled_link
+                        href={
+                          Routes.membership_path(
+                            @conn,
+                            :update_role_by_user,
+                            @site.domain,
+                            membership.user.id,
+                            "viewer"
+                          )
+                        }
+                        method="put"
+                        class="p-4 flex justify-between group hover:bg-indigo-500"
+                      >
+                        <div>
+                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
+                            Viewer
+                          </p>
+                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
+                            View stats only
+                          </p>
+                        </div>
+
+                        <%= if membership.role == "viewer" do %>
+                          <Heroicons.check_circle solid class="size-6 text-indigo-500 group-hover:text-white" />
+                        <% end %>
+                      </.unstyled_link>
+
+                      <.unstyled_link
+                        href={
+                          Routes.membership_path(
+                            @conn,
+                            :remove_member_by_user,
+                            @site.domain,
+                            membership.user.id
+                          )
+                        }
+                        method="delete"
+                        class="p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
+                      >
+                        <p class="text-red-600 font-medium text-sm">Remove member</p>
+                      </.unstyled_link>
                     <% end %>
-                  <% else %>
-                    <.unstyled_link
-                      href={
-                        Routes.membership_path(
-                          @conn,
-                          :update_role_by_user,
-                          @site.domain,
-                          membership.user.id,
-                          "editor"
-                        )
-                      }
-                      method="put"
-                      class="p-4 flex justify-between group hover:bg-indigo-500"
-                    >
-                      <div>
-                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
-                          Admin
-                        </p>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
-                          View stats and edit site settings
-                        </p>
-                      </div>
-
-                      <%= if membership.role == "admin" do %>
-                        <span class="text-indigo-500 group-hover:text-white">
-                          <svg
-                            class="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fill-rule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clip-rule="evenodd"
-                            />
-                          </svg>
-                        </span>
-                      <% end %>
-                    </.unstyled_link>
-                    <.unstyled_link
-                      href={
-                        Routes.membership_path(
-                          @conn,
-                          :update_role_by_user,
-                          @site.domain,
-                          membership.user.id,
-                          "viewer"
-                        )
-                      }
-                      method="put"
-                      class="p-4 flex justify-between group hover:bg-indigo-500"
-                    >
-                      <div>
-                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
-                          Viewer
-                        </p>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
-                          View stats only
-                        </p>
-                      </div>
-
-                      <%= if membership.role == "viewer" do %>
-                        <span class="text-indigo-500 group-hover:text-white">
-                          <svg
-                            class="h-5 w-5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fill-rule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clip-rule="evenodd"
-                            />
-                          </svg>
-                        </span>
-                      <% end %>
-                    </.unstyled_link>
-
-                    <.unstyled_link
-                      href={
-                        Routes.membership_path(
-                          @conn,
-                          :remove_member_by_user,
-                          @site.domain,
-                          membership.user.id
-                        )
-                      }
-                      method="delete"
-                      class="p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
-                    >
-                      <p class="text-red-600 font-medium text-sm">Remove member</p>
-                    </.unstyled_link>
-                  <% end %>
-                </ul>
-              </div>
+                  </ul>
+                </:panel>
+              </.dropdown>
             </div>
           </li>
         <% end %>

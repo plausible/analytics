@@ -221,6 +221,8 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr :class, :string, default: ""
+
   slot :button, required: true do
     attr(:class, :string)
   end
@@ -235,6 +237,7 @@ defmodule PlausibleWeb.Components.Generic do
       x-data="dropdown"
       x-on:keydown.escape.prevent.stop="close($refs.button)"
       x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
+      class={@class}
     >
       <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
         <%= render_slot(List.first(@button)) %>
