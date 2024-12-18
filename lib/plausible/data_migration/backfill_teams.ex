@@ -5,7 +5,6 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
   import Ecto.Query
 
-  alias Plausible.Auth
   alias Plausible.Teams
 
   @repo Plausible.DataMigration.PostgresRepo
@@ -40,8 +39,6 @@ defmodule Plausible.DataMigration.BackfillTeams do
         t in Plausible.Teams.Team,
         left_join: tm in assoc(t, :team_memberships),
         where: is_nil(tm.id),
-        left_join: sub in assoc(t, :subscription),
-        where: is_nil(sub.id),
         left_join: s in assoc(t, :sites),
         where: is_nil(s.id)
       )
@@ -60,11 +57,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
     sites_without_teams =
       from(
         s in Plausible.Site,
-        inner_join: m in assoc(s, :memberships),
-        inner_join: o in assoc(m, :user),
-        where: m.role == :owner,
+        inner_join: m in "site_memberships",
+        on: m.site_id == s.id,
+        inner_join: o in Plausible.Auth.User,
+        on: o.id == m.user_id,
+        where: m.role == "owner",
         where: is_nil(s.team_id),
-        preload: [memberships: {m, user: o}]
+        select: %{s | memberships: [%{user: o, role: :owner}]}
       )
       |> @repo.all(timeout: :infinity)
 
@@ -74,38 +73,6 @@ defmodule Plausible.DataMigration.BackfillTeams do
       teams_count = backfill_teams(sites_without_teams)
 
       log("Backfilled #{teams_count} teams.")
-    end
-
-    owner_site_memberships_query =
-      from(
-        tm in Plausible.Site.Membership,
-        where: tm.user_id == parent_as(:user).id,
-        where: tm.role == :owner,
-        select: 1
-      )
-
-    # Users with subscriptions without sites
-
-    users_with_subscriptions_without_sites =
-      from(
-        s in Plausible.Billing.Subscription,
-        inner_join: u in assoc(s, :user),
-        as: :user,
-        where: not exists(owner_site_memberships_query),
-        where: is_nil(s.team_id),
-        select: u,
-        distinct: true
-      )
-      |> @repo.all(timeout: :infinity)
-
-    log(
-      "Found #{length(users_with_subscriptions_without_sites)} users with subscriptions without sites..."
-    )
-
-    if not dry_run? do
-      teams_count = backfill_teams_for_users(users_with_subscriptions_without_sites)
-
-      log("Backfilled #{teams_count} teams from users with subscriptions without sites.")
     end
 
     # Users on trial without team
@@ -132,85 +99,6 @@ defmodule Plausible.DataMigration.BackfillTeams do
       end)
 
       log("Created teams for all users on trial without a team.")
-    end
-
-    # Stale teams sync
-
-    stale_teams =
-      from(
-        t in Teams.Team,
-        inner_join: tm in assoc(t, :team_memberships),
-        inner_join: o in assoc(tm, :user),
-        where: tm.role == :owner,
-        where:
-          is_distinct(o.trial_expiry_date, t.trial_expiry_date) or
-            is_distinct(o.accept_traffic_until, t.accept_traffic_until) or
-            is_distinct(o.allow_next_upgrade_override, t.allow_next_upgrade_override) or
-            (is_distinct(o.grace_period, t.grace_period) and
-               (is_distinct(o.grace_period["id"], t.grace_period["id"]) or
-                  (is_nil(o.grace_period["is_over"]) and t.grace_period["is_over"] == true) or
-                  (o.grace_period["is_over"] == true and t.grace_period["is_over"] == false) or
-                  (o.grace_period["is_over"] == false and t.grace_period["is_over"] == true) or
-                  is_distinct(o.grace_period["end_date"], t.grace_period["end_date"]) or
-                  (is_nil(o.grace_period["manual_lock"]) and t.grace_period["manual_lock"] == true) or
-                  (o.grace_period["manual_lock"] == true and
-                     t.grace_period["manual_lock"] == false) or
-                  (o.grace_period["manual_lock"] == false and
-                     t.grace_period["manual_lock"] == true))),
-        preload: [team_memberships: {tm, user: o}]
-      )
-      |> @repo.all(timeout: :infinity)
-
-    log("Found #{length(stale_teams)} teams which have fields out of sync...")
-
-    if not dry_run? do
-      sync_teams(stale_teams)
-
-      log("Brought out of sync teams up to date.")
-    end
-
-    # Subsciprtions backfill
-
-    subscriptions_without_teams =
-      from(
-        s in Plausible.Billing.Subscription,
-        inner_join: u in assoc(s, :user),
-        inner_join: tm in assoc(u, :team_memberships),
-        inner_join: t in assoc(tm, :team),
-        where: tm.role == :owner,
-        where: is_nil(s.team_id),
-        preload: [user: {u, team_memberships: {tm, team: t}}]
-      )
-      |> @repo.all(timeout: :infinity)
-
-    log("Found #{length(subscriptions_without_teams)} subscriptions without team...")
-
-    if not dry_run? do
-      backfill_subscriptions(subscriptions_without_teams)
-
-      log("All subscriptions are linked to a team now.")
-    end
-
-    # Enterprise plans backfill
-
-    enterprise_plans_without_teams =
-      from(
-        ep in Plausible.Billing.EnterprisePlan,
-        inner_join: u in assoc(ep, :user),
-        inner_join: tm in assoc(u, :team_memberships),
-        inner_join: t in assoc(tm, :team),
-        where: tm.role == :owner,
-        where: is_nil(ep.team_id),
-        preload: [user: {u, team_memberships: {tm, team: t}}]
-      )
-      |> @repo.all(timeout: :infinity)
-
-    log("Found #{length(enterprise_plans_without_teams)} enterprise plans without team...")
-
-    if not dry_run? do
-      backfill_enterprise_plans(enterprise_plans_without_teams)
-
-      log("All enterprise plans are linked to a team now.")
     end
 
     # Guest memberships with mismatched team site
@@ -246,10 +134,10 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_memberships_query =
       from(
-        sm in Plausible.Site.Membership,
+        sm in "site_memberships",
         where: sm.site_id == parent_as(:guest_membership).site_id,
         where: sm.user_id == parent_as(:team_membership).user_id,
-        where: sm.role != :owner,
+        where: sm.role != "owner",
         select: 1
       )
 
@@ -292,14 +180,23 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_memberships_to_backfill =
       from(
-        sm in Plausible.Site.Membership,
+        sm in "site_memberships",
         as: :site_membership,
-        inner_join: s in assoc(sm, :site),
-        inner_join: t in assoc(s, :team),
-        inner_join: u in assoc(sm, :user),
-        where: sm.role != :owner,
+        inner_join: s in Plausible.Site,
+        on: s.id == sm.site_id,
+        inner_join: t in Plausible.Teams.Team,
+        on: t.id == s.team_id,
+        inner_join: u in Plausible.Auth.User,
+        on: u.id == sm.user_id,
+        where: sm.role != "owner",
         where: not exists(guest_memberships_query),
-        preload: [user: u, site: {s, team: t}]
+        select: %{
+          user: u,
+          site: %{s | team: t},
+          inserted_at: sm.inserted_at,
+          updated_at: sm.updated_at,
+          role: sm.role
+        }
       )
       |> @repo.all(timeout: :infinity)
 
@@ -317,15 +214,15 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     stale_guest_memberships =
       from(
-        sm in Plausible.Site.Membership,
+        sm in "site_memberships",
         inner_join: tm in Teams.Membership,
         on: tm.user_id == sm.user_id,
-        inner_join: gm in assoc(tm, :guest_memberships),
+        inner_join: gm in Teams.GuestMembership,
         on: gm.site_id == sm.site_id,
         where: tm.role == :guest,
         where:
-          (gm.role == :viewer and sm.role == :admin) or
-            (gm.role == :editor and sm.role == :viewer),
+          (gm.role == :viewer and sm.role == "admin") or
+            (gm.role == :editor and sm.role == "viewer"),
         select: {gm, sm.role}
       )
       |> @repo.all(timeout: :infinity)
@@ -342,12 +239,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_invitations_query =
       from(
-        i in Auth.Invitation,
+        i in "invitations",
         where: i.site_id == parent_as(:guest_invitation).site_id,
         where: i.email == parent_as(:team_invitation).email,
         where:
-          (i.role == :viewer and parent_as(:guest_invitation).role == :viewer) or
-            (i.role == :admin and parent_as(:guest_invitation).role == :editor)
+          (i.role == "viewer" and parent_as(:guest_invitation).role == :viewer) or
+            (i.role == "admin" and parent_as(:guest_invitation).role == :editor),
+        select: true
       )
 
     guest_invitations_to_remove =
@@ -389,14 +287,25 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_invitations_to_backfill =
       from(
-        si in Auth.Invitation,
+        si in "invitations",
         as: :site_invitation,
-        inner_join: s in assoc(si, :site),
-        inner_join: t in assoc(s, :team),
-        inner_join: inv in assoc(si, :inviter),
-        where: si.role != :owner,
+        inner_join: s in Plausible.Site,
+        on: si.site_id == s.id,
+        inner_join: t in Teams.Team,
+        on: t.id == s.team_id,
+        inner_join: inv in Plausible.Auth.User,
+        on: inv.id == si.inviter_id,
+        where: si.role != "owner",
         where: not exists(guest_invitations_query),
-        preload: [site: {s, team: t}, inviter: inv]
+        select: %{
+          inserted_at: si.inserted_at,
+          updated_at: si.updated_at,
+          role: si.role,
+          invitation_id: si.invitation_id,
+          email: si.email,
+          site: %{s | team: t},
+          inviter: inv
+        }
       )
       |> @repo.all(timeout: :infinity)
 
@@ -414,17 +323,17 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     stale_guest_invitations =
       from(
-        si in Auth.Invitation,
+        si in "invitations",
         inner_join: ti in Teams.Invitation,
         on: ti.email == si.email,
         inner_join: gi in assoc(ti, :guest_invitations),
         on: gi.site_id == si.site_id,
         where: ti.role == :guest,
         where:
-          (gi.role == :viewer and si.role == :admin) or
-            (gi.role == :editor and si.role == :viewer) or
+          (gi.role == :viewer and si.role == "admin") or
+            (gi.role == :editor and si.role == "viewer") or
             is_distinct(gi.invitation_id, si.invitation_id),
-        select: {gi, si}
+        select: {gi, %{role: si.role, invitation_id: si.invitation_id}}
       )
       |> @repo.all(timeout: :infinity)
 
@@ -440,10 +349,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_invitations_query =
       from(
-        i in Auth.Invitation,
+        i in "invitations",
         where: i.site_id == parent_as(:site_transfer).site_id,
         where: i.email == parent_as(:site_transfer).email,
-        where: i.role == :owner
+        where: i.role == "owner",
+        select: true
       )
 
     site_transfers_to_remove =
@@ -474,13 +384,24 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_invitations_to_backfill =
       from(
-        si in Auth.Invitation,
+        si in "invitations",
         as: :site_invitation,
-        inner_join: s in assoc(si, :site),
-        inner_join: inv in assoc(si, :inviter),
-        where: si.role == :owner,
+        inner_join: s in Plausible.Site,
+        on: s.id == si.site_id,
+        inner_join: inv in Plausible.Auth.User,
+        on: inv.id == si.inviter_id,
+        where: si.role == "owner",
         where: not exists(site_transfers_query),
-        preload: [inviter: inv, site: s]
+        select: %{
+          email: si.email,
+          role: si.role,
+          invitation_id: si.invitation_id,
+          inserted_at: si.inserted_at,
+          updated_at: si.updated_at,
+          site: s,
+          inviter: inv
+        }
+        # preload: [inviter: inv, site: s]
       )
       |> @repo.all(timeout: :infinity)
 
@@ -529,12 +450,6 @@ defmodule Plausible.DataMigration.BackfillTeams do
               team
               |> Ecto.Changeset.change()
               |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
-              |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
-              |> Ecto.Changeset.put_change(
-                :allow_next_upgrade_override,
-                owner.allow_next_upgrade_override
-              )
-              |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
               |> Ecto.Changeset.force_change(:updated_at, owner.updated_at)
               |> @repo.update!()
 
@@ -554,108 +469,6 @@ defmodule Plausible.DataMigration.BackfillTeams do
     )
     |> Enum.to_list()
     |> length()
-  end
-
-  defp backfill_teams_for_users(users) do
-    users
-    |> Enum.with_index()
-    |> Task.async_stream(
-      fn {owner, idx} ->
-        @repo.transaction(
-          fn ->
-            {:ok, team} = Teams.get_or_create(owner)
-
-            team
-            |> Ecto.Changeset.change()
-            |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
-            |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
-            |> Ecto.Changeset.put_change(
-              :allow_next_upgrade_override,
-              owner.allow_next_upgrade_override
-            )
-            |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
-            |> Ecto.Changeset.force_change(:updated_at, owner.updated_at)
-            |> @repo.update!()
-          end,
-          timeout: :infinity,
-          max_concurrency: @max_concurrency
-        )
-
-        if rem(idx, 10) == 0 do
-          IO.write(".")
-        end
-      end,
-      timeout: :infinity
-    )
-    |> Enum.to_list()
-    |> length()
-  end
-
-  defp sync_teams(stale_teams) do
-    Enum.each(stale_teams, fn team ->
-      [%{user: owner}] = team.team_memberships
-
-      team
-      |> Ecto.Changeset.change()
-      |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
-      |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
-      |> Ecto.Changeset.put_change(
-        :allow_next_upgrade_override,
-        owner.allow_next_upgrade_override
-      )
-      |> Ecto.Changeset.put_embed(:grace_period, embed_params(owner.grace_period))
-      |> @repo.update!()
-    end)
-  end
-
-  defp embed_params(nil), do: nil
-
-  defp embed_params(grace_period) do
-    Map.from_struct(grace_period)
-  end
-
-  defp backfill_subscriptions(subscriptions) do
-    subscriptions
-    |> Enum.with_index()
-    |> Task.async_stream(
-      fn {subscription, idx} ->
-        [%{team: team, role: :owner}] = subscription.user.team_memberships
-
-        subscription
-        |> Ecto.Changeset.change(team_id: team.id)
-        |> Ecto.Changeset.put_change(:updated_at, subscription.updated_at)
-        |> @repo.update!()
-
-        if rem(idx, 1000) == 0 do
-          IO.write(".")
-        end
-      end,
-      timeout: :infinity,
-      max_concurrency: @max_concurrency
-    )
-    |> Stream.run()
-  end
-
-  defp backfill_enterprise_plans(enterprise_plans) do
-    enterprise_plans
-    |> Enum.with_index()
-    |> Task.async_stream(
-      fn {enterprise_plan, idx} ->
-        [%{team: team, role: :owner}] = enterprise_plan.user.team_memberships
-
-        enterprise_plan
-        |> Ecto.Changeset.change(team_id: team.id)
-        |> Ecto.Changeset.put_change(:updated_at, enterprise_plan.updated_at)
-        |> @repo.update!()
-
-        if rem(idx, 1000) == 0 do
-          IO.write(".")
-        end
-      end,
-      timeout: :infinity,
-      max_concurrency: @max_concurrency
-    )
-    |> Stream.run()
   end
 
   defp remove_guest_memberships(guest_memberships) do
@@ -839,8 +652,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
     end)
   end
 
-  defp translate_role(:admin), do: :editor
-  defp translate_role(:viewer), do: :viewer
+  defp translate_role("admin"), do: :editor
+  defp translate_role("viewer"), do: :viewer
 
   defp log(msg) do
     IO.puts("[#{NaiveDateTime.utc_now(:second)}] #{msg}")
