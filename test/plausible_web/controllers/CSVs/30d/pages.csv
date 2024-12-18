@@ -1,4 +1,4 @@
-name,visitors,pageviews,bounce_rate,time_on_page
-/,4,3,67,
-/signup,1,1,0,60.0
-/some-other-page,1,1,0,60.0
+name,visitors,pageviews,bounce_rate,time_on_page,scroll_depth
+/,4,3,67,,
+/signup,1,1,0,60.0,
+/some-other-page,1,1,0,60.0,

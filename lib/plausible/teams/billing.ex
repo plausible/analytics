@@ -183,7 +183,9 @@ defmodule Plausible.Teams.Billing do
   end
 
   def site_limit(team) do
-    if Timex.before?(team.inserted_at, @limit_sites_since) do
+    {:ok, user} = Teams.get_owner(team)
+
+    if Timex.before?(user.inserted_at, @limit_sites_since) do
       :unlimited
     else
       get_site_limit_from_plan(team)
@@ -200,10 +202,6 @@ defmodule Plausible.Teams.Billing do
     team
     |> Teams.owned_sites()
     |> length()
-  end
-
-  defp get_site_limit_from_plan(nil) do
-    @site_limit_for_trials
   end
 
   defp get_site_limit_from_plan(team) do
@@ -239,7 +237,7 @@ defmodule Plausible.Teams.Billing do
   * `pending_ownership_site_ids` - a list of site IDs from which to count
   additional usage. This allows us to look at the total usage from pending
   ownerships and owned sites at the same time, which is useful, for example,
-  when deciding whether to let the team owner upgrade to a plan, or accept a 
+  when deciding whether to let the team owner upgrade to a plan, or accept a
   site ownership.
 
   * `with_features` - when `true`, the returned map will contain features

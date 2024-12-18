@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 - Support for `case_sensitive: false` modifiers in Stats API V2 filters for case-insensitive searches.
 
 ### Removed
+
+- Internal stats API routes no longer support legacy dashboard filter format.
+
 ### Changed
 
 - Details modal search inputs are now case-insensitive.

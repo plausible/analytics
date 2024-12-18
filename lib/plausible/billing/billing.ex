@@ -4,6 +4,7 @@ defmodule Plausible.Billing do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
   alias Plausible.Auth.User
+  alias Plausible.Teams
 
   def subscription_created(params) do
     Repo.transaction(fn ->
@@ -101,7 +102,7 @@ defmodule Plausible.Billing do
     subscription =
       Subscription
       |> Repo.get_by(paddle_subscription_id: params["subscription_id"])
-      |> Repo.preload(:user)
+      |> Repo.preload(team: :owner)
 
     if subscription do
       changeset =
@@ -111,8 +112,7 @@ defmodule Plausible.Billing do
 
       updated = Repo.update!(changeset)
 
-      subscription
-      |> Map.fetch!(:user)
+      subscription.team.owner
       |> PlausibleWeb.Email.cancellation_email()
       |> Plausible.Mailer.send()
 
@@ -137,9 +137,9 @@ defmodule Plausible.Billing do
           last_bill_date: api_subscription["last_payment"]["date"]
         })
         |> Repo.update!()
-        |> Repo.preload(:user)
+        |> Repo.preload(:team)
 
-      Plausible.Users.update_accept_traffic_until(subscription.user)
+      Plausible.Teams.update_accept_traffic_until(subscription.team)
 
       subscription
     end
@@ -209,38 +209,38 @@ defmodule Plausible.Billing do
   end
 
   defp after_subscription_update(subscription) do
-    user =
-      User
-      |> Repo.get!(subscription.user_id)
-      |> Plausible.Users.with_subscription()
+    team =
+      Teams.Team
+      |> Repo.get!(subscription.team_id)
+      |> Teams.with_subscription()
+      |> Repo.preload(:owner)
 
-    if subscription.id != user.subscription.id do
+    if subscription.id != team.subscription.id do
       Sentry.capture_message("Susbscription ID mismatch",
-        extra: %{subscription: inspect(subscription), user_id: user.id}
+        extra: %{subscription: inspect(subscription), team_id: team.id}
       )
     end
 
-    user
-    |> Plausible.Users.update_accept_traffic_until()
-    |> Plausible.Users.remove_grace_period()
-    |> Plausible.Users.maybe_reset_next_upgrade_override()
+    team
+    |> Plausible.Teams.update_accept_traffic_until()
+    |> Plausible.Teams.remove_grace_period()
+    |> Plausible.Teams.maybe_reset_next_upgrade_override()
     |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)
     |> maybe_adjust_api_key_limits()
   end
 
-  defp maybe_adjust_api_key_limits(user) do
+  defp maybe_adjust_api_key_limits(team) do
     plan =
       Repo.get_by(Plausible.Billing.EnterprisePlan,
-        user_id: user.id,
-        paddle_plan_id: user.subscription.paddle_plan_id
+        team_id: team.id,
+        paddle_plan_id: team.subscription.paddle_plan_id
       )
 
     if plan do
-      user_id = user.id
-      api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id == ^user_id)
+      api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id == ^team.owner.id)
       Repo.update_all(api_keys, set: [hourly_request_limit: plan.hourly_api_request_limit])
     end
 
-    user
+    team
   end
 end

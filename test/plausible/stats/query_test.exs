@@ -1,5 +1,6 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
   alias Plausible.Stats.Query
   alias Plausible.Stats.Legacy.QueryBuilder
   alias Plausible.Stats.DateTimeRange
@@ -7,11 +8,11 @@ defmodule Plausible.Stats.QueryTest do
   doctest Plausible.Stats.Legacy.QueryBuilder
 
   setup do
-    user = insert(:user)
+    user = new_user()
 
     site =
-      insert(:site,
-        members: [user],
+      new_site(
+        owner: user,
         inserted_at: ~N[2020-01-01T00:00:00],
         stats_start_date: ~D[2020-01-01],
         timezone: "US/Eastern"
@@ -194,22 +195,6 @@ defmodule Plausible.Stats.QueryTest do
     assert q.sample_threshold == 30_000_000
   end
 
-  describe "filters" do
-    test "parses goal filter", %{site: site} do
-      filters = Jason.encode!(%{"goal" => "Signup"})
-      q = Query.from(site, %{"period" => "6mo", "filters" => filters})
-
-      assert q.filters == [[:is, "event:goal", ["Signup"]]]
-    end
-
-    test "parses source filter", %{site: site} do
-      filters = Jason.encode!(%{"source" => "Twitter"})
-      q = Query.from(site, %{"period" => "6mo", "filters" => filters})
-
-      assert q.filters == [[:is, "visit:source", ["Twitter"]]]
-    end
-  end
-
   describe "&date_range/2" do
     defp date_range({first, last}, timezone, now \\ nil, opts \\ []) do
       %Query{
@@ -317,7 +302,7 @@ defmodule Plausible.Stats.QueryTest do
                  "period" => "day",
                  "with_imported" => "true",
                  "property" => "event:props:url",
-                 "filters" => Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
+                 "filters" => Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
                })
     end
 
@@ -334,7 +319,7 @@ defmodule Plausible.Stats.QueryTest do
                    "period" => "day",
                    "with_imported" => "true",
                    "property" => "event:props:url",
-                   "filters" => Jason.encode!(%{"goal" => goal_name})
+                   "filters" => Jason.encode!([[:is, "event:goal", [goal_name]]])
                  })
       end)
     end
@@ -363,7 +348,7 @@ defmodule Plausible.Stats.QueryTest do
                  "period" => "day",
                  "with_imported" => "true",
                  "property" => "event:props:url",
-                 "filters" => Jason.encode!(%{"goal" => "404"})
+                 "filters" => Jason.encode!([[:is, "event:goal", ["404"]]])
                })
     end
 
@@ -379,7 +364,10 @@ defmodule Plausible.Stats.QueryTest do
                  "with_imported" => "true",
                  "property" => "event:props:url",
                  "filters" =>
-                   Jason.encode!(%{"goal" => "Outbound Link: Click", "page" => "/example"})
+                   Jason.encode!([
+                     [:is, "event:goal", ["Outbound Link: Click"]],
+                     [:is, "event:page", ["/example"]]
+                   ])
                })
     end
 
@@ -396,10 +384,10 @@ defmodule Plausible.Stats.QueryTest do
                    "with_imported" => "true",
                    "property" => unquote(property),
                    "filters" =>
-                     Jason.encode!(%{
-                       "goal" => "Outbound Link: Click",
-                       "props" => %{"url" => "https://example.com"}
-                     })
+                     Jason.encode!([
+                       [:is, "event:goal", ["Outbound Link: Click"]],
+                       [:is, "event:props:url", ["https://example.com"]]
+                     ])
                  })
       end
     end
@@ -417,10 +405,14 @@ defmodule Plausible.Stats.QueryTest do
                  "with_imported" => "true",
                  "property" => nil,
                  "filters" =>
-                   Jason.encode!(%{
-                     "goal" => "Outbound Link: Click",
-                     "props" => %{"url" => "https://example.com|https://another.example.com"}
-                   })
+                   Jason.encode!([
+                     [:is, "event:goal", ["Outbound Link: Click"]],
+                     [
+                       :is,
+                       "event:props:url",
+                       ["https://example.com", "https://another.example.com"]
+                     ]
+                   ])
                })
     end
 
@@ -437,10 +429,11 @@ defmodule Plausible.Stats.QueryTest do
                  "with_imported" => "true",
                  "property" => nil,
                  "filters" =>
-                   Jason.encode!(%{
-                     "goal" => "Outbound Link: Click",
-                     "props" => %{"url" => "https://example.com", "path" => "/whatever"}
-                   })
+                   Jason.encode!([
+                     [:is, "event:goal", ["Outbound Link: Click"]],
+                     [:is, "event:props:url", ["https://example.com"]],
+                     [:is, "event:props:path", ["/whatever"]]
+                   ])
                })
     end
 
@@ -456,7 +449,10 @@ defmodule Plausible.Stats.QueryTest do
                  "with_imported" => "true",
                  "property" => nil,
                  "filters" =>
-                   Jason.encode!(%{"goal" => "404", "props" => %{"url" => "https://example.com"}})
+                   Jason.encode!([
+                     [:is, "event:goal", ["404"]],
+                     [:is, "event:props:url", ["https://example.com"]]
+                   ])
                })
     end
 
@@ -472,11 +468,11 @@ defmodule Plausible.Stats.QueryTest do
                  "with_imported" => "true",
                  "property" => nil,
                  "filters" =>
-                   Jason.encode!(%{
-                     "goal" => "Outbound Link: Click",
-                     "page" => "/example",
-                     "props" => %{"url" => "https://example.com"}
-                   })
+                   Jason.encode!([
+                     [:is, "event:goal", ["Outbound Link: Click"]],
+                     [:is, "event:page", ["/example"]],
+                     [:is, "event:props:url", ["https://example.com"]]
+                   ])
                })
     end
 
@@ -491,10 +487,10 @@ defmodule Plausible.Stats.QueryTest do
                  "with_imported" => "true",
                  "property" => "visit:source",
                  "filters" =>
-                   Jason.encode!(%{
-                     "goal" => "Outbound Link: Click",
-                     "props" => %{"url" => "https://example.com"}
-                   })
+                   Jason.encode!([
+                     [:is, "event:goal", ["Outbound Link: Click"]],
+                     [:is, "event:props:url", ["https://example.com"]]
+                   ])
                })
     end
   end

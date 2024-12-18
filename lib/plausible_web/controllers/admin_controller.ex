@@ -1,6 +1,10 @@
 defmodule PlausibleWeb.AdminController do
   use PlausibleWeb, :controller
+  use Plausible
 
+  import Ecto.Query
+
+  alias Plausible.Repo
   alias Plausible.Teams
 
   def usage(conn, params) do
@@ -9,7 +13,9 @@ defmodule PlausibleWeb.AdminController do
     team =
       case Teams.get_by_owner(user_id) do
         {:ok, team} ->
-          Teams.with_subscription(team)
+          team
+          |> Teams.with_subscription()
+          |> Plausible.Repo.preload(:owner)
 
         {:error, :no_team} ->
           nil
@@ -68,6 +74,60 @@ defmodule PlausibleWeb.AdminController do
     |> send_resp(200, json_response)
   end
 
+  def user_by_id(conn, params) do
+    id = params["user_id"]
+
+    entry =
+      Repo.one(
+        from u in Plausible.Auth.User,
+          where: u.id == ^id,
+          select: fragment("concat(?, ?, ?, ?)", u.name, " (", u.email, ")")
+      ) || ""
+
+    conn
+    |> send_resp(200, entry)
+  end
+
+  def user_search(conn, params) do
+    search =
+      (params["search"] || "")
+      |> String.trim()
+
+    choices =
+      if search != "" do
+        term =
+          search
+          |> String.replace("%", "\%")
+          |> String.replace("_", "\_")
+
+        term = "%#{term}%"
+
+        user_id =
+          case Integer.parse(search) do
+            {id, ""} -> id
+            _ -> 0
+          end
+
+        if user_id != 0 do
+          []
+        else
+          Repo.all(
+            from u in Plausible.Auth.User,
+              where: u.id == ^user_id or ilike(u.name, ^term) or ilike(u.email, ^term),
+              order_by: [u.name, u.id],
+              select: [fragment("concat(?, ?, ?, ?)", u.name, " (", u.email, ")"), u.id],
+              limit: 20
+          )
+        end
+      else
+        []
+      end
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, Jason.encode!(choices))
+  end
+
   defp usage_and_limits_html(team, usage, limits, embed?) do
     content = """
       <ul>
@@ -76,6 +136,7 @@ defmodule PlausibleWeb.AdminController do
         <li>Team members: <b>#{usage.team_members}</b> / #{limits.team_members}</li>
         <li>Features: #{features_usage(usage.features)}</li>
         <li>Monthly pageviews: #{monthly_pageviews_usage(usage.monthly_pageviews, limits.monthly_pageviews)}</li>
+        #{sites_count_row(team)}
       </ul>
     """
 
@@ -89,7 +150,7 @@ defmodule PlausibleWeb.AdminController do
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Usage - team:#{team.id}</title>
+        <title>Usage - team:#{team && team.id}</title>
         <style>
           ul, li {margin-top: 10px;}
           body {padding-top: 10px;}
@@ -103,6 +164,32 @@ defmodule PlausibleWeb.AdminController do
       </html>
       """
     end
+  end
+
+  on_ee do
+    alias PlausibleWeb.Router.Helpers, as: Routes
+
+    defp sites_count_row(%Plausible.Teams.Team{} = team) do
+      sites_count =
+        team
+        |> Ecto.assoc(:sites)
+        |> Plausible.Repo.aggregate(:count)
+
+      sites_link =
+        Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+          custom_search: team.owner.email
+        )
+
+      """
+      <li>Owner of <a href="#{sites_link}">#{sites_count} site#{if sites_count != 1, do: "s", else: ""}</a></li>
+      """
+    end
+  end
+
+  defp sites_count_row(_) do
+    """
+    <li>Owner of 0 sites</li>
+    """
   end
 
   defp features_usage(features_module_list) do

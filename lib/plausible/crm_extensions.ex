@@ -6,6 +6,9 @@ defmodule Plausible.CrmExtensions do
   use Plausible
 
   on_ee do
+    # Kaffy uses String.to_existing_atom when listing params
+    @custom_search :custom_search
+
     def javascripts(%{assigns: %{context: "auth", resource: "user", entry: %{} = user}}) do
       [
         Phoenix.HTML.raw("""
@@ -47,6 +50,69 @@ defmodule Plausible.CrmExtensions do
 
     def javascripts(%{assigns: %{context: "billing", resource: "enterprise_plan", changeset: %{}}}) do
       [
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
+          (async () => {
+            const CHECK_INTERVAL = 300
+            const userIdField = document.querySelector("#enterprise_plan_user_id")
+            const userIdLabel = document.querySelector("label[for=enterprise_plan_user_id]")
+            const dataList = document.createElement("datalist")
+            dataList.id = "user-choices"
+            userIdField.after(dataList)
+            userIdField.setAttribute("list", "user-choices")
+            userIdField.setAttribute("type", "text")
+            const labelSpan = document.createElement("span")
+            userIdLabel.appendChild(labelSpan)
+
+            let updateAction;
+
+            const updateLabel = async (id) => {
+              id = Number(id)
+
+              if (!isNaN(id) && id > 0) {
+                const response = await fetch(`/crm/billing/search/user-by-id/${id}`)
+                labelSpan.innerHTML = ` <i>(${await response.text()})</i>`
+              }
+            }
+
+            const updateSearch = async () => {
+              const search = userIdField.value
+
+              updateLabel(search)
+
+              const response = await fetch("/crm/billing/search/user", {
+                headers: { "Content-Type": "application/json" },
+                method: "POST",
+                body: JSON.stringify({ search: search })
+              })
+
+              const list = await response.json()
+
+              const options =
+                list.map(([label, value]) => {
+                  const option = document.createElement("option")
+                  option.setAttribute("label", label)
+                  option.textContent = value
+
+                  return option
+                })
+
+              dataList.replaceChildren(...options)
+            }
+
+            updateLabel(userIdField.value)
+
+            userIdField.addEventListener("input", async (e) => {
+              if (updateAction) {
+                clearTimeout(updateAction)
+                updateAction = null
+              }
+
+              updateAction = setTimeout(() => updateSearch(), CHECK_INTERVAL)
+            })
+          })()
+        </script>
+        """),
         Phoenix.HTML.raw("""
         <script type="text/javascript">
           (() => {
@@ -114,6 +180,36 @@ defmodule Plausible.CrmExtensions do
                 const checked = result.features.includes(feature)
                 document.getElementById('enterprise_plan_features_' + feature).checked = checked
               });
+            }
+          })()
+        </script>
+        """)
+      ]
+    end
+
+    def javascripts(%{assigns: %{context: context}})
+        when context in ["sites", "billing"] do
+      [
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
+          (() => {
+            const publicField = document.querySelector("#kaffy-search-field")
+            const searchForm = document.querySelector("#kaffy-filters-form")
+            const searchField = document.querySelector("#kaffy-filter-search")
+
+            if (publicField && searchForm && searchField) {
+              publicField.name = "#{@custom_search}"
+              searchField.name = "#{@custom_search}"
+
+              const params = new URLSearchParams(window.location.search)
+              publicField.value = params.get("#{@custom_search}")
+
+              const searchInput = document.createElement("input")
+              searchInput.name = "search"
+              searchInput.type = "hidden"
+              searchInput.value = ""
+
+              searchForm.appendChild(searchInput)
             }
           })()
         </script>

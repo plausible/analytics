@@ -7,6 +7,8 @@ defmodule Plausible.Teams.Membership do
 
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   schema "team_memberships" do
     field :role, Ecto.Enum, values: [:guest, :viewer, :editor, :admin, :owner]
 

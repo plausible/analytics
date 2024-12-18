@@ -220,6 +220,6 @@ export const createScrollDepth = (props) => {
     ...props,
     key: 'scroll_depth',
     renderLabel,
-    sortable: false
+    sortable: true
   })
 }

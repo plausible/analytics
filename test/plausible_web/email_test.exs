@@ -1,8 +1,11 @@
 defmodule PlausibleWeb.EmailTest do
-  alias PlausibleWeb.Email
-  use ExUnit.Case, async: true
+  use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
+
   import Plausible.Factory
   import Plausible.Test.Support.HTML
+
+  alias PlausibleWeb.Email
 
   describe "base_email layout" do
     test "greets user by first name if user in template assigns" do
@@ -282,15 +285,9 @@ defmodule PlausibleWeb.EmailTest do
 
   describe "site_setup_success" do
     setup do
-      trial_user =
-        build(:user,
-          id: -1,
-          subscription: nil,
-          trial_expiry_date: Date.add(Date.utc_today(), 100)
-        )
-
-      site = build(:site, members: [trial_user])
-      email = PlausibleWeb.Email.site_setup_success(trial_user, site)
+      trial_user = new_user(trial_expiry_date: Date.add(Date.utc_today(), 100))
+      site = new_site(owner: trial_user)
+      email = PlausibleWeb.Email.site_setup_success(trial_user, team_of(trial_user), site)
       {:ok, email: email}
     end
 

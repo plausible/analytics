@@ -3773,7 +3773,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [1, 0], "dimensions" => []}
+               %{"metrics" => [1, nil], "dimensions" => []}
              ]
     end
 
@@ -3787,7 +3787,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [0], "dimensions" => []}
+               %{"metrics" => [nil], "dimensions" => []}
              ]
     end
 
@@ -3855,6 +3855,40 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["/blog"], "metrics" => [60]},
                %{"dimensions" => ["/another"], "metrics" => [25]}
+             ]
+    end
+
+    test "can sort by scroll_depth in event:page breakdown", %{conn: conn, site: site} do
+      t0 = ~N[2020-01-01 00:00:00]
+      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
+        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
+        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
+        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
+        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
+        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
+        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["scroll_depth"],
+          "date_range" => "all",
+          "order_by" => [["scroll_depth", "asc"]],
+          "dimensions" => ["event:page"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["/another"], "metrics" => [25]},
+               %{"dimensions" => ["/blog"], "metrics" => [60]}
              ]
     end
 
@@ -3934,14 +3968,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
+          "order_by" => [["scroll_depth", "asc"]],
           "date_range" => "all",
           "dimensions" => ["event:page", "visit:source"]
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/blog", "Google"], "metrics" => [40]},
+               %{"dimensions" => ["/blog", "Twitter"], "metrics" => [20]},
                %{"dimensions" => ["/another", "Twitter"], "metrics" => [24]},
-               %{"dimensions" => ["/blog", "Twitter"], "metrics" => [20]}
+               %{"dimensions" => ["/blog", "Google"], "metrics" => [40]}
              ]
     end
 

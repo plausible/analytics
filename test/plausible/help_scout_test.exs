@@ -55,13 +55,13 @@ defmodule Plausible.HelpScoutTest do
 
     describe "get_details_for_customer/2" do
       test "returns details for user on trial" do
-        %{id: user_id, email: email} = new_user()
+        %{id: user_id, email: email} = new_user(trial_expiry_date: Date.utc_today())
         stub_help_scout_requests(email)
 
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?search=#{URI.encode_www_form(email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(email)}"
 
         assert {:ok,
                 %{
@@ -405,12 +405,12 @@ defmodule Plausible.HelpScoutTest do
 
     describe "get_details_for_emails/2" do
       test "returns details for user and persists mapping" do
-        %{id: user_id, email: email} = new_user()
+        %{id: user_id, email: email} = new_user(trial_expiry_date: Date.utc_today())
 
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?search=#{URI.encode_www_form(email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(email)}"
 
         assert {:ok,
                 %{
@@ -448,7 +448,7 @@ defmodule Plausible.HelpScoutTest do
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user2.id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?search=#{URI.encode_www_form(user2.email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(user2.email)}"
 
         assert {:ok,
                 %{

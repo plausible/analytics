@@ -6,11 +6,12 @@ defmodule Plausible.Workers.LockSitesTest do
   alias Plausible.Billing.Subscription
 
   test "does not lock enterprise site on grace period" do
-    user =
-      new_user()
-      |> Plausible.Users.start_manual_lock_grace_period()
-
+    user = new_user()
     site = new_site(owner: user)
+
+    user
+    |> team_of()
+    |> Plausible.Teams.start_manual_lock_grace_period()
 
     LockSites.perform(nil)
 
@@ -96,21 +97,11 @@ defmodule Plausible.Workers.LockSitesTest do
 
   describe "locking" do
     test "only locks sites that the user owns" do
-      user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
 
-      owner_site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, user: user, role: :owner)
-          ]
-        )
-
-      viewer_site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, user: user, role: :viewer)
-          ]
-        )
+      owner_site = new_site(owner: user)
+      viewer_site = new_site()
+      add_guest(viewer_site, user: user, role: :viewer)
 
       LockSites.perform(nil)
 

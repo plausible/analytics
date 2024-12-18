@@ -280,7 +280,10 @@ defmodule Plausible.Ingestion.EventTest do
   test "drops events on session lock timeout" do
     site = new_site()
 
+    test = self()
+
     very_slow_buffer = fn sessions ->
+      send(test, :slow_buffer_insert_started)
       Process.sleep(1000)
       Plausible.Session.WriteBuffer.insert(sessions)
     end
@@ -310,10 +313,11 @@ defmodule Plausible.Ingestion.EventTest do
                )
     end)
 
-    Process.sleep(200)
-
-    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(second_request)
-    assert dropped.drop_reason == :lock_timeout
+    receive do
+      :slow_buffer_insert_started ->
+        assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(second_request)
+        assert dropped.drop_reason == :lock_timeout
+    end
   end
 
   test "drops pageleave event when no session found from cache" do

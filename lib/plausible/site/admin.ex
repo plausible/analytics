@@ -9,16 +9,36 @@ defmodule Plausible.SiteAdmin do
 
   def search_fields(_schema) do
     [
-      :domain,
-      members: [:name, :email]
+      :domain
     ]
   end
 
-  def custom_index_query(_conn, _schema, query) do
+  def custom_index_query(conn, _schema, query) do
+    search =
+      (conn.params["custom_search"] || "")
+      |> String.trim()
+      |> String.replace("%", "\%")
+      |> String.replace("_", "\_")
+
+    search_term = "%#{search}%"
+
+    member_query =
+      from s in Plausible.Site,
+        left_join: gm in assoc(s, :guest_memberships),
+        left_join: tm in assoc(gm, :team_membership),
+        left_join: u in assoc(tm, :user),
+        where: s.id == parent_as(:site).id,
+        where: ilike(u.email, ^search_term) or ilike(u.name, ^search_term),
+        select: 1
+
     from(r in query,
+      as: :site,
       inner_join: o in assoc(r, :owner),
-      as: :owner,
-      preload: [owner: o, memberships: :user]
+      preload: [owner: o, team: [team_memberships: :user]],
+      or_where: ilike(r.domain, ^search_term),
+      or_where: ilike(o.email, ^search_term),
+      or_where: ilike(o.name, ^search_term),
+      or_where: exists(member_query)
     )
   end
 
@@ -68,15 +88,13 @@ defmodule Plausible.SiteAdmin do
               n -> "⏱ #{n}/#{site.ingest_rate_limit_scale_seconds}s (per server)"
             end
 
-          owner = site.owner
-
-          owner_limits =
-            if owner.accept_traffic_until &&
-                 Date.after?(Date.utc_today(), owner.accept_traffic_until) do
+          team_limits =
+            if site.team.accept_traffic_until &&
+                 Date.after?(Date.utc_today(), site.team.accept_traffic_until) do
               "💸 Rejecting traffic"
             end
 
-          {:safe, Enum.join([rate_limiting_status, owner_limits], "<br/><br/>")}
+          {:safe, Enum.join([rate_limiting_status, team_limits], "<br/><br/>")}
         end
       }
     ]
@@ -175,7 +193,7 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp get_other_members(site) do
-    Enum.filter(site.memberships, &(&1.role != :owner))
+    site.team.team_memberships
     |> Enum.map(fn m -> m.user.email <> "(#{to_string(m.role)})" end)
     |> Enum.join(", ")
   end

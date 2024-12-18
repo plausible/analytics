@@ -1,4 +1,5 @@
 defmodule Plausible.Billing.QuotaTest do
+  alias Plausible.Billing.EnterprisePlan
   use Plausible.DataCase, async: true
   use Plausible
   alias Plausible.Billing.{Quota, Plans}
@@ -181,7 +182,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "returns error with exceeded limits for enterprise plans" do
-      user = insert(:user)
+      user = new_user()
 
       usage = %{
         monthly_pageviews: %{penultimate_cycle: %{total: 1}, last_cycle: %{total: 1}},
@@ -189,12 +190,13 @@ defmodule Plausible.Billing.QuotaTest do
         sites: 2
       }
 
-      enterprise_plan =
-        insert(:enterprise_plan,
-          user: user,
-          paddle_plan_id: "whatever",
-          site_limit: 1
-        )
+      subscribe_to_enterprise_plan(user,
+        subscription?: false,
+        paddle_plan_id: "whatever",
+        site_limit: 1
+      )
+
+      enterprise_plan = Repo.get_by!(EnterprisePlan, paddle_plan_id: "whatever")
 
       assert Quota.ensure_within_plan_limits(usage, enterprise_plan) ==
                {:error, {:over_plan_limits, [:site_limit]}}
@@ -319,7 +321,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "counts team members from pending ownerships when specified" do
-      me = new_user()
+      me = new_user(trial_expiry_date: Date.utc_today())
       my_team = team_of(me)
 
       user_1 = new_user()
@@ -336,7 +338,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "counts invitations towards team members from pending ownership sites" do
-      me = new_user()
+      me = new_user(trial_expiry_date: Date.utc_today())
       user_1 = new_user()
       user_2 = new_user()
       pending_ownership_site = new_site(owner: user_1)
@@ -386,11 +388,13 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Plausible.Teams.Billing.team_member_usage(team, exclude_emails: [member.email]) == 3
 
-      assert Plausible.Teams.Billing.team_member_usage(team, exclude_emails: [invitation.email]) ==
+      assert Plausible.Teams.Billing.team_member_usage(team,
+               exclude_emails: [invitation.team_invitation.email]
+             ) ==
                3
 
       assert Plausible.Teams.Billing.team_member_usage(team,
-               exclude_emails: [member.email, invitation.email]
+               exclude_emails: [member.email, invitation.team_invitation.email]
              ) == 2
     end
   end
@@ -398,9 +402,9 @@ defmodule Plausible.Billing.QuotaTest do
   describe "team_member_limit/1" do
     @describetag :ee_only
     test "returns unlimited when user is on an old plan" do
-      team_on_v1 = new_user() |> subscribe_to_plan(@v1_plan_id)
-      team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id)
-      team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id)
+      team_on_v1 = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
+      team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
+      team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id) |> team_of()
 
       assert :unlimited == Plausible.Teams.Billing.team_member_limit(team_on_v1)
       assert :unlimited == Plausible.Teams.Billing.team_member_limit(team_on_v2)
@@ -473,7 +477,7 @@ defmodule Plausible.Billing.QuotaTest do
       end
 
       test "returns [RevenueGoals] when user/site uses revenue goals" do
-        user = new_user()
+        user = new_user(trial_expiry_date: Date.utc_today())
         team = team_of(user)
         site = new_site(owner: user)
         insert(:goal, currency: :USD, site: site, event_name: "Purchase")
@@ -484,7 +488,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "returns [StatsAPI] when user has a stats api key" do
-      user = new_user()
+      user = new_user(trial_expiry_date: Date.utc_today())
       team = team_of(user)
       insert(:api_key, user: user)
 
@@ -492,7 +496,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "returns feature usage based on a user and a custom list of site_ids" do
-      user = new_user()
+      user = new_user(trial_expiry_date: Date.utc_today())
       team = team_of(user)
       insert(:api_key, user: user)
       site_using_props = new_site(allowed_event_props: ["dummy"])
@@ -573,7 +577,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "returns all features when user in on trial" do
-      team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7))
+      team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
 
       assert Plausible.Billing.Feature.list() ==
                Plausible.Teams.Billing.allowed_features_for(team)

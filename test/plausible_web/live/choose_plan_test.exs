@@ -321,9 +321,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "allows upgrade to a 10k plan with a pageview allowance margin of 0.3 when trial ended 10 days ago",
          %{conn: conn, site: site, user: user} do
       user
-      |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -10)})
+      |> team_of()
+      |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
       |> Repo.update!()
-      |> Plausible.Teams.sync_team()
 
       generate_usage_for(site, 13_000)
 
@@ -348,9 +348,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user: user
     } do
       user
-      |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -11)})
+      |> team_of()
+      |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -11))
       |> Repo.update!()
-      |> Plausible.Teams.sync_team()
 
       generate_usage_for(site, 11_000)
 
@@ -712,7 +712,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
       generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
 
-      Plausible.Users.allow_next_upgrade_override(user)
+      user
+      |> team_of()
+      |> Ecto.Changeset.change(allow_next_upgrade_override: true)
+      |> Plausible.Repo.update!()
 
       {:ok, lv, _doc} = get_liveview(conn)
 

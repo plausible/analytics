@@ -5,42 +5,39 @@ defmodule Plausible.SitesTest do
   alias Plausible.Sites
 
   describe "create a site" do
-    @tag :teams
     test "creates a site" do
-      user = insert(:user)
-
-      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
-
-      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"} = site}} =
-               Sites.create(user, params)
-
-      assert_team_attached(site)
-    end
-
-    @tag :teams
-    test "creates a site and syncs the team properties" do
-      user = insert(:user, trial_expiry_date: nil)
-
-      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
-
-      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"} = site}} =
-               Sites.create(user, params)
-
-      team = assert_team_attached(site)
-      user = Repo.reload!(user)
-      assert not is_nil(user.trial_expiry_date)
-      assert user.trial_expiry_date == team.trial_expiry_date
-    end
-
-    @tag :teams
-    test "creates a site (TEAM)" do
-      user = insert(:user)
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      user = new_user()
 
       params = %{"domain" => "example.com", "timezone" => "Europe/London"}
 
       assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
-               Plausible.Teams.Sites.create(team, params)
+               Sites.create(user, params)
+    end
+
+    test "does not start a trial for pre-teams guest users without trial expiry date" do
+      user = new_user() |> subscribe_to_growth_plan()
+      new_site(owner: user)
+
+      three_hundred_days_from_now = Date.shift(Date.utc_today(), day: 300)
+
+      user
+      |> team_of()
+      |> Ecto.Changeset.change(
+        trial_expiry_date: nil,
+        accept_traffic_until: three_hundred_days_from_now
+      )
+      |> Plausible.Repo.update!()
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      user = Plausible.Repo.reload!(user)
+
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+               Sites.create(user, params)
+
+      team = user |> team_of() |> Repo.reload!()
+      refute team.trial_expiry_date
+      assert Date.compare(team.accept_traffic_until, three_hundred_days_from_now) == :eq
     end
 
     test "fails on invalid timezone" do
@@ -50,33 +47,6 @@ defmodule Plausible.SitesTest do
 
       assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
                Sites.create(user, params)
-    end
-
-    @tag :teams
-    test "fails on invalid timezone (TEAM)" do
-      user = insert(:user)
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-
-      params = %{"domain" => "example.com", "timezone" => "blah"}
-
-      assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
-               Plausible.Teams.Sites.create(team, params)
-    end
-  end
-
-  describe "is_member?" do
-    test "is true if user is a member of the site" do
-      user = insert(:user)
-      site = insert(:site, members: [user])
-
-      assert Sites.is_member?(user.id, site)
-    end
-
-    test "is false if user is not a member" do
-      user = insert(:user)
-      site = insert(:site)
-
-      refute Sites.is_member?(user.id, site)
     end
   end
 
@@ -556,8 +526,8 @@ defmodule Plausible.SitesTest do
     end
 
     test "raises on invalid option" do
-      user = insert(:user)
-      site = insert(:site, members: [user])
+      user = new_user()
+      site = new_site(owner: user)
 
       assert_raise FunctionClauseError, fn ->
         Sites.set_option(user, site, :invalid, false)
@@ -626,7 +596,7 @@ defmodule Plausible.SitesTest do
         assert {:ok, _} = Sites.toggle_pin(user, site)
       end
 
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       assert {:error, :too_many_pins} = Sites.toggle_pin(user, site)
     end

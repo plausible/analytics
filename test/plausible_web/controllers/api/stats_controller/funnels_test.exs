@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           build(:event, name: "Purchase", user_id: @user_id)
         ])
 
-        filters = Jason.encode!(%{utm_medium: "social"})
+        filters = Jason.encode!([[:is, "visit:utm_medium", ["social"]]])
 
         resp =
           conn
@@ -250,7 +250,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       test "event:page", %{conn: conn, site: site} do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
 
-        filters = Jason.encode!(%{page: "/pageA"})
+        filters = Jason.encode!([[:is, "event:page", ["/pageA"]]])
 
         resp =
           conn
@@ -267,7 +267,8 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       test "event:goal", %{conn: conn, site: site} do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
 
-        filters = Jason.encode!(%{goal: "Signup", page: "/pageA"})
+        filters =
+          Jason.encode!([[:is, "event:goal", ["Signup"]], [:is, "event:page", ["/pageA"]]])
 
         resp =
           conn

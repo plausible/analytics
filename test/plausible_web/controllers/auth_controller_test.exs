@@ -98,16 +98,10 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "GET /register/invitations/:invitation_id" do
     test "shows the register form", %{conn: conn} do
-      inviter = insert(:user)
-      site = insert(:site, members: [inviter])
+      inviter = new_user()
+      site = new_site(owner: inviter)
 
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: inviter,
-          email: "user@email.co",
-          role: :admin
-        )
+      invitation = invite_guest(site, "user@email.co", role: :editor, inviter: inviter)
 
       conn = get(conn, "/register/invitation/#{invitation.invitation_id}")
 
@@ -117,16 +111,10 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "POST /login (register_action = register_from_invitation_form)" do
     setup do
-      inviter = insert(:user)
-      site = insert(:site, members: [inviter])
+      inviter = new_user()
+      site = new_site(owner: inviter)
 
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: inviter,
-          email: "user@email.co",
-          role: :admin
-        )
+      invitation = invite_guest(site, "user@email.co", role: :editor, inviter: inviter)
 
       user =
         Repo.insert!(
@@ -298,9 +286,12 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "redirects to /sites if user has invitation", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:invitation, inviter: build(:user), site: site, email: user.email)
+      owner = new_user()
+      site = new_site(owner: owner)
+      invite_guest(site, user, role: :viewer, inviter: owner)
+
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
+
       post(conn, "/activate/request-code")
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
@@ -587,7 +578,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       subscribe_to_growth_plan(user, status: Subscription.Status.active())
       subscribe_to_enterprise_plan(user, site_limit: 1, subscription?: false)
 
-      {:ok, _team} = Plausible.Teams.get_or_create(user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
@@ -595,13 +586,12 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Repo.reload(user) == nil
       assert Repo.all(Plausible.Billing.Subscription) == []
       assert Repo.all(Plausible.Billing.EnterprisePlan) == []
-      assert Repo.all(Plausible.Site.Membership) == []
-      assert Repo.all(Plausible.Teams.Team) == []
+      refute Repo.get(Plausible.Teams.Team, team.id)
     end
 
     test "deletes sites that the user owns", %{conn: conn, user: user, site: owner_site} do
-      viewer_site = insert(:site)
-      insert(:site_membership, site: viewer_site, user: user, role: "viewer")
+      viewer_site = new_site()
+      add_guest(viewer_site, user: user, role: :viewer)
 
       delete(conn, "/me")
 

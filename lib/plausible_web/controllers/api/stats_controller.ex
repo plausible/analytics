@@ -6,7 +6,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider}
-  alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -524,9 +523,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
   on_ee do
     def funnel(conn, %{"id" => funnel_id} = params) do
-      site = Plausible.Repo.preload(conn.assigns.site, :owner)
+      site = Plausible.Repo.preload(conn.assigns.site, :team)
 
-      with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.owner),
+      with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.team),
            query <- Query.from(site, params, debug_metadata(conn)),
            :ok <- validate_funnel_query(query),
            {funnel_id, ""} <- Integer.parse(funnel_id),
@@ -751,7 +750,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     is_admin =
       if current_user = conn.assigns[:current_user] do
-        Plausible.Sites.has_admin_access?(current_user.id, site)
+        Plausible.Teams.Memberships.has_admin_access?(site, current_user)
       else
         false
       end
@@ -803,11 +802,9 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:referrer")
 
-    referrer_filter = LegacyDashboardFilterParser.filter_value("visit:source", referrer)
-
     query =
       Query.from(site, params, debug_metadata(conn))
-      |> Query.add_filter(referrer_filter)
+      |> Query.add_filter([:is, "visit:source", [referrer]])
 
     pagination = parse_pagination(params)
 
@@ -834,9 +831,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
+    include_scroll_depth? = !query.include_imported && scroll_depth_enabled?(site, current_user)
+
     extra_metrics =
       cond do
-        params["detailed"] && !query.include_imported && scroll_depth_enabled?(site, current_user) ->
+        params["detailed"] && include_scroll_depth? ->
           [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
 
         params["detailed"] ->
@@ -859,7 +858,12 @@ defmodule PlausibleWeb.Api.StatsController do
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
       else
-        pages |> to_csv([:name, :visitors, :pageviews, :bounce_rate, :time_on_page])
+        cols = [:name, :visitors, :pageviews, :bounce_rate, :time_on_page]
+
+        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+        cols = if include_scroll_depth?, do: cols ++ [:scroll_depth], else: cols
+
+        pages |> to_csv(cols)
       end
     else
       json(conn, %{
@@ -1323,10 +1327,10 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def custom_prop_values(conn, params) do
-    site = Plausible.Repo.preload(conn.assigns.site, :owner)
+    site = Plausible.Repo.preload(conn.assigns.site, :team)
     prop_key = Map.fetch!(params, "prop_key")
 
-    case Plausible.Props.ensure_prop_key_accessible(prop_key, site.owner) do
+    case Plausible.Props.ensure_prop_key_accessible(prop_key, site.team) do
       :ok ->
         json(conn, breakdown_custom_prop_values(conn, site, params))
 
@@ -1617,7 +1621,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp realtime_period_to_30m(params), do: params
 
-  defp scroll_depth_enabled?(site, user) do
+  def scroll_depth_enabled?(site, user) do
     FunWithFlags.enabled?(:scroll_depth, for: user) ||
       FunWithFlags.enabled?(:scroll_depth, for: site)
   end

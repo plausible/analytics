@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
+  use Plausible.Teams.Test
+
   alias Plausible.Auth.User
   alias Plausible.Repo
 
@@ -138,16 +140,11 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
   describe "/register/invitation/:invitation_id" do
     setup do
-      inviter = insert(:user)
-      site = insert(:site, members: [inviter])
+      inviter = new_user()
+      site = new_site(owner: inviter)
 
       invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: inviter,
-          email: "user@email.co",
-          role: :admin
-        )
+        invite_guest(site, "user@email.co", role: :editor, inviter: inviter)
 
       {:ok, %{site: site, invitation: invitation, inviter: inviter}}
     end
@@ -183,13 +180,14 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert text_of_attr(password_input, "value") == "very-long-and-very-secret-123"
       assert text_of_attr(password_confirmation_input, "value") == "very-long-and-very-secret-123"
 
-      assert %{
-               name: "Mary Sue",
-               email: "user@email.co",
-               password_hash: password_hash,
-               # leaves trial_expiry_date null when invitation role is not :owner
-               trial_expiry_date: nil
-             } = Repo.get_by(User, email: "user@email.co")
+      assert user =
+               %{
+                 name: "Mary Sue",
+                 email: "user@email.co",
+                 password_hash: password_hash
+               } = Repo.get_by(User, email: "user@email.co")
+
+      assert team_of(user) == nil
 
       assert String.length(password_hash) > 0
     end
@@ -201,15 +199,9 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     } do
       mock_captcha_success()
 
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: inviter,
-          email: "owner_user@email.co",
-          role: :owner
-        )
+      invitation = invite_transfer(site, "owner_user@email.co", inviter: inviter)
 
-      lv = get_liveview(conn, "/register/invitation/#{invitation.invitation_id}")
+      lv = get_liveview(conn, "/register/invitation/#{invitation.transfer_id}")
 
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
@@ -217,12 +209,9 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       _html = lv |> element("form") |> render_submit()
 
-      assert %{
-               email: "owner_user@email.co",
-               trial_expiry_date: trial_expiry_date
-             } = Repo.get_by(User, email: "owner_user@email.co")
+      assert user = Repo.get_by(User, email: "owner_user@email.co")
 
-      assert trial_expiry_date != nil
+      assert team_of(user).trial_expiry_date != nil
     end
 
     test "always uses original email from the invitation", %{conn: conn, invitation: invitation} do

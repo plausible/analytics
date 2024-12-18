@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr :site, Plausible.Site, required: true
-  attr :invitation, Plausible.Auth.Invitation, required: true
+  attr :invitation, :map, required: true
   attr :hourly_stats, :map, required: true
 
   def invitation(assigns) do
@@ -535,7 +535,7 @@ defmodule PlausibleWeb.Live.Sites do
             name="filter_text"
             id="filter-text"
             phx-debounce={200}
-            class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+            class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md"
             placeholder="Press / to search sites"
             autocomplete="off"
             value={@filter_text}
@@ -686,7 +686,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     case ensure_can_take_ownership(site, team) do
       :ok ->
-        check_features(invitation, user)
+        check_features(invitation, team)
 
       {:error, :no_plan} ->
         %{invitation: invitation, no_plan: true}
@@ -701,8 +701,8 @@ defmodule PlausibleWeb.Live.Sites do
 
   defdelegate ensure_can_take_ownership(site, team), to: Plausible.Teams.Invitations
 
-  def check_features(%{role: :owner, site: site} = invitation, user) do
-    case check_feature_access(site, user) do
+  def check_features(%{role: :owner, site: site} = invitation, team) do
+    case check_feature_access(site, team) do
       :ok ->
         %{invitation: invitation}
 
@@ -717,10 +717,10 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   on_ee do
-    defp check_feature_access(site, new_owner) do
+    defp check_feature_access(site, new_team) do
       missing_features =
         Plausible.Teams.Billing.features_usage(nil, [site.id])
-        |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
+        |> Enum.filter(&(&1.check_availability(new_team) != :ok))
 
       if missing_features == [] do
         :ok
@@ -729,7 +729,7 @@ defmodule PlausibleWeb.Live.Sites do
       end
     end
   else
-    defp check_feature_access(_site, _new_owner) do
+    defp check_feature_access(_site, _new_team) do
       :ok
     end
   end

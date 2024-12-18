@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   alias PlausibleWeb.Components.Billing.Notice
 
   test "premium_feature/1 does not render a notice when user is on trial" do
-    me = new_user()
+    me = new_user(trial_expiry_date: Date.utc_today())
 
     assert render_component(&Notice.premium_feature/1,
              billable_user: me,
@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
   @tag :ee_only
   test "limit_exceeded/1 when billable user is on trial displays upgrade link" do
-    me = new_user()
+    me = new_user(trial_expiry_date: Date.utc_today())
 
     rendered =
       render_component(&Notice.limit_exceeded/1,

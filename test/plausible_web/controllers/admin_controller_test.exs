@@ -69,7 +69,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       patch_env(:super_admin_user_ids, [user.id])
 
       site =
-        insert(:site,
+        new_site(
           public: false,
           stats_start_date: ~D[2022-03-14],
           native_stats_start_at: ~N[2024-01-22 14:28:00]

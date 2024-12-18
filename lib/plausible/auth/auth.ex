@@ -35,9 +35,6 @@ defmodule Plausible.Auth do
 
   @type rate_limit_type() :: unquote(Enum.reduce(@rate_limit_types, &{:|, [], [&1, &2]}))
 
-  @spec rate_limits() :: map()
-  def rate_limits(), do: @rate_limits
-
   @spec rate_limit(rate_limit_type(), Auth.User.t() | Plug.Conn.t()) ::
           :ok | {:error, {:rate_limit, rate_limit_type()}}
   def rate_limit(limit_type, key) when limit_type in @rate_limit_types do
@@ -48,11 +45,6 @@ defmodule Plausible.Auth do
       {:allow, _} -> :ok
       {:deny, _} -> {:error, {:rate_limit, limit_type}}
     end
-  end
-
-  def create_user(name, email, pwd) do
-    Auth.User.new(%{name: name, email: email, password: pwd, password_confirmation: pwd})
-    |> Repo.insert()
   end
 
   @spec find_user_by(Keyword.t()) :: Auth.User.t() | nil
@@ -75,22 +67,6 @@ defmodule Plausible.Auth do
     else
       {:error, :wrong_password}
     end
-  end
-
-  def has_active_sites?(user, roles \\ [:owner, :admin, :viewer]) do
-    sites =
-      Repo.all(
-        from u in Plausible.Auth.User,
-          where: u.id == ^user.id,
-          join: sm in Plausible.Site.Membership,
-          on: sm.user_id == u.id,
-          where: sm.role in ^roles,
-          join: s in Plausible.Site,
-          on: s.id == sm.site_id,
-          select: s
-      )
-
-    Enum.any?(sites, &Plausible.Sites.has_stats?/1)
   end
 
   def delete_user(user) do
