@@ -32,8 +32,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           | Ecto.Changeset.t()
           | :no_plan
 
+  @type membership :: %Plausible.Teams.Membership{}
+
   @spec bulk_transfer_ownership_direct([Site.t()], Auth.User.t()) ::
-          {:ok, [Site.Membership.t()]} | {:error, transfer_error()}
+          {:ok, [membership]} | {:error, transfer_error()}
   def bulk_transfer_ownership_direct(sites, new_owner) do
     Repo.transaction(fn ->
       for site <- sites do
