@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         conn
         |> put_flash(
           :success,
-          "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{invitation.role}")}"
+          "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{temp_reword_role_name(invitation.role)}")}"
         )
         |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
 
@@ -142,6 +142,10 @@ defmodule PlausibleWeb.Site.MembershipController do
     end
   end
 
+  defp temp_reword_role_name(:editor), do: "admin"
+  defp temp_reword_role_name("editor"), do: "admin"
+  defp temp_reword_role_name(name), do: name
+
   @doc """
     Updates the role of a user. The user being updated could be the same or different from the user taking
     the action. When updating the role, it's important to enforce permissions:
@@ -171,13 +175,16 @@ defmodule PlausibleWeb.Site.MembershipController do
         conn
         |> put_flash(
           :success,
-          "#{guest_membership.team_membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(to_string(guest_membership.role))}"
+          "#{guest_membership.team_membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(temp_reword_role_name(to_string(guest_membership.role)))}"
         )
         |> redirect(external: redirect_target)
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "You are not allowed to grant the #{new_role_str} role")
+        |> put_flash(
+          :error,
+          "You are not allowed to grant the #{temp_reword_role_name(new_role_str)} role"
+        )
         |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
