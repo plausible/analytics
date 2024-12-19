@@ -1,6 +1,5 @@
 /** @format */
 
-import { parseSearch, stringifySearch } from './util/url'
 import {
   nowForSite,
   formatISO,
@@ -20,6 +19,11 @@ import { PlausibleSite } from './site-context'
 import { ComparisonMode, QueryPeriod } from './query-time-periods'
 import { AppNavigationTarget } from './navigation/use-app-navigate'
 import { Dayjs } from 'dayjs'
+import { legacyParseSearch } from './util/legacy-jsonurl-url-search-params'
+import {
+  FILTER_URL_PARAM_NAME,
+  stringifySearch
+} from './util/url-search-params'
 
 export type FilterClause = string | number
 
@@ -37,7 +41,7 @@ export type Filter = [FilterOperator, FilterKey, FilterClause[]]
  *  for filters `[["is", "city", [2761369]], ["is", "country", ["AT"]]]`,
  *  labels would be `{"2761369": "Vienna", "AT": "Austria"}`
  * */
-export type FilterClauseLabels = Record<string, unknown>
+export type FilterClauseLabels = Record<string, string>
 
 export const queryDefaultValue = {
   period: '30d' as QueryPeriod,
@@ -100,33 +104,46 @@ export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
   })
 }
 
-// Called once when dashboard is loaded load. Checks whether old filter style is used and if so,
-// updates the filters and updates location
-export function filtersBackwardsCompatibilityRedirect(
-  windowLocation: Location,
-  windowHistory: History
-) {
-  const searchRecord = parseSearch(windowLocation.search)
-  const getValue = (k: string) => searchRecord[k]
+export function maybeGetRedirectTargetFromLegacySearchParams(
+  windowLocation: Location
+): null | string {
+  const searchParams = new URLSearchParams(windowLocation.search)
+  const isCurrentVersion = searchParams.get(FILTER_URL_PARAM_NAME)
+  if (isCurrentVersion) {
+    return null
+  }
 
-  // New filters are used - no need to do anything
-  if (getValue('filters')) {
-    return
+  const isJsonURLVersion = searchParams.get('filters')
+  if (isJsonURLVersion) {
+    return `${windowLocation.pathname}${stringifySearch(legacyParseSearch(windowLocation.search))}`
+  }
+
+  const searchRecord = legacyParseSearch(windowLocation.search)
+  const searchRecordEntries = Object.entries(
+    legacyParseSearch(windowLocation.search)
+  )
+
+  const isBeforeJsonURLVersion = searchRecordEntries.some(
+    ([k]) => k === 'props' || LEGACY_URL_PARAMETERS.hasOwnProperty(k)
+  )
+
+  if (!isBeforeJsonURLVersion) {
+    return null
   }
 
   const changedSearchRecordEntries = []
   const filters: DashboardQuery['filters'] = []
   let labels: DashboardQuery['labels'] = {}
 
-  for (const [key, value] of Object.entries(searchRecord)) {
+  for (const [key, value] of searchRecordEntries) {
     if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {
       const filter = parseLegacyFilter(key, value) as Filter
       filters.push(filter)
       const labelsKey: string | null | undefined =
         LEGACY_URL_PARAMETERS[key as keyof typeof LEGACY_URL_PARAMETERS]
-      if (labelsKey && getValue(labelsKey)) {
+      if (labelsKey && searchRecord[labelsKey]) {
         const clauses = filter[2]
-        const labelsValues = (getValue(labelsKey) as string)
+        const labelsValues = (searchRecord[labelsKey] as string)
           .split('|')
           .filter((label) => !!label)
         const newLabels = Object.fromEntries(
@@ -140,18 +157,24 @@ export function filtersBackwardsCompatibilityRedirect(
     }
   }
 
-  if (getValue('props')) {
-    filters.push(...(parseLegacyPropsFilter(getValue('props')) as Filter[]))
+  if (searchRecord['props']) {
+    filters.push(...(parseLegacyPropsFilter(searchRecord['props']) as Filter[]))
   }
+  changedSearchRecordEntries.push(['filters', filters], ['labels', labels])
+  return `${windowLocation.pathname}${stringifySearch(Object.fromEntries(changedSearchRecordEntries))}`
+}
 
-  if (filters.length > 0) {
-    changedSearchRecordEntries.push(['filters', filters], ['labels', labels])
-    windowHistory.pushState(
-      {},
-      '',
-      `${windowLocation.pathname}${stringifySearch(Object.fromEntries(changedSearchRecordEntries))}`
-    )
+/** Called once before React app mounts. If legacy url search params are present, does a redirect to new format. */
+export function filtersBackwardsCompatibilityRedirect(
+  windowLocation: Location,
+  windowHistory: History
+) {
+  const redirectTargetURL =
+    maybeGetRedirectTargetFromLegacySearchParams(windowLocation)
+  if (redirectTargetURL === null) {
+    return
   }
+  windowHistory.pushState({}, '', redirectTargetURL)
 }
 
 // Returns a boolean indicating whether the given query includes a
