@@ -29,11 +29,9 @@ defmodule PlausibleWeb.Plugs.UserSessionTouchTest do
     conn =
       build_conn()
       |> init_session()
-      |> put_session(:login_dest, "/")
       |> UserSessionTouch.call([])
 
     refute conn.halted
-    assert get_session(conn, :login_dest) == "/"
     refute get_session(conn, :user_token)
   end
 end

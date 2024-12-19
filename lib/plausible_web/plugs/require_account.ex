@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.RequireAccountPlug do
+  alias PlausibleWeb.Router.Helpers, as: Routes
   import Plug.Conn
 
   @unverified_email_exceptions [
@@ -17,8 +18,8 @@ defmodule PlausibleWeb.RequireAccountPlug do
 
     cond do
       is_nil(user) ->
-        Plug.Conn.put_session(conn, :login_dest, conn.request_path)
-        |> Phoenix.Controller.redirect(to: "/login")
+        conn
+        |> Phoenix.Controller.redirect(to: redirect_to(conn))
         |> halt
 
       not user.email_verified and
@@ -31,4 +32,10 @@ defmodule PlausibleWeb.RequireAccountPlug do
         conn
     end
   end
+
+  defp redirect_to(%Plug.Conn{method: :get} = conn) do
+    Routes.auth_path(conn, :login_form, return_to: conn.request_path)
+  end
+
+  defp redirect_to(conn), do: Routes.auth_path(conn, :login_form)
 end
