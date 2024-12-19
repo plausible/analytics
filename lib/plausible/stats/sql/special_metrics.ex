@@ -154,7 +154,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         subquery(max_per_visitor_q)
         |> select([p], %{
           scroll_depth_sum:
-            fragment("if(isNull(sum(?)), NULL, sum(?))", p.max_scroll_depth, p.max_scroll_depth),
+            fragment("if(count(?) = 0, NULL, sum(?))", p.user_id, p.max_scroll_depth),
           total_visitors: fragment("count(?)", p.user_id)
         })
         |> select_merge(^dim_select)

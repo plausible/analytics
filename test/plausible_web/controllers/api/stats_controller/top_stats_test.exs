@@ -603,7 +603,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    test ":is filter on page returns only visitors, visits and pageviews", %{
+    test ":is filter on page returns only visitors, visits, pageviews and scroll_depth", %{
       conn: conn,
       site: site
     } do
@@ -638,7 +638,8 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert res["top_stats"] == [
                %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"},
                %{"name" => "Total visits", "value" => 4, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"}
+               %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"},
+               %{"name" => "Scroll depth", "value" => nil, "graph_metric" => "scroll_depth"}
              ]
     end
   end
