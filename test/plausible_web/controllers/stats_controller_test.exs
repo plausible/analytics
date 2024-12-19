@@ -547,8 +547,15 @@ defmodule PlausibleWeb.StatsControllerTest do
 
         {~c"pages.csv", data} ->
           assert parse_csv(data) == [
-                   ["name", "visitors", "pageviews", "bounce_rate", "time_on_page"],
-                   ["/test", "1", "1", "0.0", "10.0"],
+                   [
+                     "name",
+                     "visitors",
+                     "pageviews",
+                     "bounce_rate",
+                     "time_on_page",
+                     "scroll_depth"
+                   ],
+                   ["/test", "1", "1", "0.0", "10.0", ""],
                    [""]
                  ]
 

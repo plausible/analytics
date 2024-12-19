@@ -15,5 +15,6 @@ defmodule Plausible.Imported.Page do
     field :pageviews, Ch, type: "UInt64"
     field :exits, Ch, type: "UInt64"
     field :time_on_page, Ch, type: "UInt64"
+    field :scroll_depth, Ch, type: "Nullable(UInt64)"
   end
 end

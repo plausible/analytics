@@ -633,6 +633,39 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert plot == [40, 20, 0, 0, 0, 0, 0]
     end
+
+    test "returns scroll depth per day with imported data", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        # 2020-01-01 - only native data
+        build(:pageview, user_id: 12, timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageleave, user_id: 12, timestamp: ~N[2020-01-01 00:01:00], scroll_depth: 20),
+        build(:pageview, user_id: 34, timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageleave, user_id: 34, timestamp: ~N[2020-01-01 00:01:00], scroll_depth: 17),
+        build(:pageview, user_id: 34, timestamp: ~N[2020-01-01 00:02:00]),
+        build(:pageleave, user_id: 34, timestamp: ~N[2020-01-01 00:03:00], scroll_depth: 60),
+        # 2020-01-02 - both imported and native data
+        build(:pageview, user_id: 56, timestamp: ~N[2020-01-02 00:00:00]),
+        build(:pageleave, user_id: 56, timestamp: ~N[2020-01-02 00:01:00], scroll_depth: 20),
+        build(:imported_pages, date: ~D[2020-01-02], page: "/", visitors: 1, scroll_depth: 40),
+        # 2020-01-03 - only imported data
+        build(:imported_pages, date: ~D[2020-01-03], page: "/", visitors: 1, scroll_depth: 90),
+        build(:imported_pages, date: ~D[2020-01-03], page: "/", visitors: 100, scroll_depth: nil)
+      ])
+
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2020-01-07&metric=scroll_depth&filters=#{filters}&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [40, 30, 90, 0, 0, 0, 0]
+    end
   end
 
   describe "GET /api/stats/main-graph - conversion_rate plot" do

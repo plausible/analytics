@@ -882,6 +882,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                    "time_on_page" => 40,
                    "visitors" => 3,
                    "pageviews" => 4,
+                   "scroll_depth" => nil,
                    "name" => "/some-other-page"
                  },
                  %{
@@ -889,6 +890,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                    "time_on_page" => 800.0,
                    "visitors" => 2,
                    "pageviews" => 2,
+                   "scroll_depth" => nil,
                    "name" => "/"
                  }
                ]
