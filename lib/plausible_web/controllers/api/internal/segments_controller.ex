@@ -17,140 +17,130 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   def get_all_segments(
         %Plug.Conn{
           assigns: %{
-            site: %{id: site_id},
-            current_user: %{id: user_id},
-            permissions: %{
-              Plausible.Permissions.Segments.Site.List => true,
-              Plausible.Permissions.Segments.Personal.List => true
-            }
+            site: site,
+            site_role: site_role,
+            current_user: current_user
           }
         } = conn,
         %{} = _params
       ) do
-    result = Repo.all(get_mixed_segments_query(user_id, site_id, @fields_in_index_query))
-    json(conn, result)
-  end
+    site_segments_available? =
+      site_segments_available?(site)
 
-  def get_all_segments(
-        %Plug.Conn{
-          assigns: %{
-            site: %{id: site_id},
-            current_user: %{id: user_id},
-            permissions: %{Plausible.Permissions.Segments.Personal.List => true}
-          }
-        } = conn,
-        %{} = _params
-      ) do
-    result = Repo.all(get_personal_segments_only_query(user_id, site_id, @fields_in_index_query))
-    json(conn, result)
-  end
+    cond do
+      site_role in roles_with_personal_segments() and
+          site_segments_available? ->
+        result =
+          Repo.all(get_mixed_segments_query(current_user.id, site.id, @fields_in_index_query))
 
-  def get_all_segments(
-        %Plug.Conn{
-          assigns: %{
-            site: %{id: site_id},
-            permissions: %{Plausible.Permissions.Segments.Site.List => true}
-          }
-        } = conn,
-        %{} = _params
-      ) do
-    publicly_visible_fields = @fields_in_index_query -- [:owner_id]
+        json(conn, result)
 
-    result =
-      Repo.all(get_site_segments_only_query(site_id, publicly_visible_fields))
+      site_role in roles_with_personal_segments() ->
+        result =
+          Repo.all(
+            get_personal_segments_only_query(current_user.id, site.id, @fields_in_index_query)
+          )
 
-    json(conn, result)
-  end
+        json(conn, result)
 
-  def get_all_segments(%Plug.Conn{} = conn, %{} = _params) do
-    H.not_enough_permissions(conn, "Not enough permissions to get segments")
+      site_role in [:public] and site_segments_available? ->
+        result =
+          Repo.all(
+            get_site_segments_only_query(
+              site.id,
+              @fields_in_index_query -- [:owner_id]
+            )
+          )
+
+        json(conn, result)
+
+      true ->
+        H.not_enough_permissions(conn, "Not enough permissions to get segments")
+    end
   end
 
   def get_segment(
         %Plug.Conn{
           assigns: %{
-            site: %{id: site_id},
-            current_user: %{id: user_id},
-            permissions: %{Plausible.Permissions.Segments.ViewSegmentData => true}
+            site: site,
+            current_user: current_user,
+            site_role: site_role
           }
         } = conn,
         %{} = params
       ) do
     segment_id = normalize_segment_id_param(params["segment_id"])
 
-    result = get_one_segment(user_id, site_id, segment_id)
+    if site_role in roles_with_personal_segments() do
+      result = get_one_segment(current_user.id, site.id, segment_id)
 
-    case result do
-      nil -> H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
-      %{} -> json(conn, result)
+      case result do
+        nil -> H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
+        %{} -> json(conn, result)
+      end
+    else
+      H.not_enough_permissions(conn, "Not enough permissions to get segment data")
     end
   end
 
-  def get_segment(%Plug.Conn{} = conn, %{} = _params) do
-    H.not_enough_permissions(conn, "Not enough permissions to get segment data")
-  end
-
   def create_segment(
         %Plug.Conn{
           assigns: %{
-            site: %{id: _site_id},
-            current_user: %{id: _user_id},
-            permissions: %{Plausible.Permissions.Segments.Site.Create => true}
+            site: site,
+            site_role: site_role
           }
         } = conn,
-        %{"type" => "site"} = params
-      ),
-      do: do_insert_segment(conn, params)
+        %{} = params
+      ) do
+    site_segments_available? = site_segments_available?(site)
 
-  def create_segment(
-        %Plug.Conn{
-          assigns: %{
-            site: %{
-              id: _site_id
-            },
-            current_user: %{id: _user_id},
-            permissions: %{Plausible.Permissions.Segments.Personal.Create => true}
-          }
-        } = conn,
-        %{"type" => "personal"} = params
-      ),
-      do: do_insert_segment(conn, params)
+    cond do
+      params["type"] == "personal" and
+          site_role in roles_with_personal_segments() ->
+        do_insert_segment(conn, params)
 
-  def create_segment(conn, _params) do
-    H.not_enough_permissions(conn, "Not enough permissions to create segment")
+      params["type"] == "site" and site_segments_available? and
+          site_role in roles_with_maybe_site_segments() ->
+        do_insert_segment(conn, params)
+
+      true ->
+        H.not_enough_permissions(conn, "Not enough permissions to create segment")
+    end
   end
+
+  def create_segment(%Plug.Conn{} = conn, _params), do: H.bad_request(conn, "Invalid request")
 
   def update_segment(
         %Plug.Conn{
           assigns: %{
-            site: %{
-              id: site_id
-            },
+            site: site,
             current_user: %{id: user_id},
-            permissions: permissions
+            site_role: site_role
           }
         } =
           conn,
         %{} = params
       ) do
+    site_segments_available? = site_segments_available?(site)
+
     segment_id = normalize_segment_id_param(params["segment_id"])
 
-    existing_segment = get_one_segment(user_id, site_id, segment_id)
+    existing_segment = get_one_segment(user_id, site.id, segment_id)
 
     cond do
       is_nil(existing_segment) ->
         H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
 
-      existing_segment.type == :personal && params["type"] !== "site" &&
-          permissions[Plausible.Permissions.Segments.Personal.Update] ->
+      existing_segment.type == :personal and params["type"] !== "site" and
+          site_role in roles_with_personal_segments() ->
         do_update_segment(conn, params, existing_segment, user_id)
 
-      existing_segment.type == :personal && params["type"] == "site" &&
-          permissions[Plausible.Permissions.Segments.Site.Update] ->
+      existing_segment.type == :personal and params["type"] == "site" and site_segments_available? and
+          site_role in roles_with_maybe_site_segments() ->
         do_update_segment(conn, params, existing_segment, user_id)
 
-      existing_segment.type == :site &&
-          permissions[Plausible.Permissions.Segments.Site.Update] ->
+      existing_segment.type == :site and site_segments_available? and
+          site_role in roles_with_maybe_site_segments() ->
         do_update_segment(conn, params, existing_segment, user_id)
 
       true ->
@@ -158,39 +148,44 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     end
   end
 
+  def update_segment(%Plug.Conn{} = conn, _params), do: H.bad_request(conn, "Invalid request")
+
   def delete_segment(
         %Plug.Conn{
           assigns: %{
-            site: %{
-              id: site_id
-            },
+            site: site,
             current_user: %{id: user_id},
-            permissions: permissions
+            site_role: site_role
           }
         } =
           conn,
         %{} = params
       ) do
+    site_segments_available? = site_segments_available?(site)
+
     segment_id = normalize_segment_id_param(params["segment_id"])
 
-    existing_segment = get_one_segment(user_id, site_id, segment_id)
+    existing_segment = get_one_segment(user_id, site.id, segment_id)
 
     cond do
       is_nil(existing_segment) ->
         H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
 
-      existing_segment.type == :personal &&
-          permissions[Plausible.Permissions.Segments.Personal.Delete] ->
+      existing_segment.type == :personal and
+          site_role in roles_with_personal_segments() ->
         do_delete_segment(conn, existing_segment)
 
-      existing_segment.type == :site &&
-          permissions[Plausible.Permissions.Segments.Site.Delete] == true ->
+      existing_segment.type == :site and
+        site_segments_available? and
+          site_role in roles_with_maybe_site_segments() ->
         do_delete_segment(conn, existing_segment)
 
       true ->
         H.not_enough_permissions(conn, "Not enough permissions to delete segment")
     end
   end
+
+  def delete_segment(%Plug.Conn{} = conn, _params), do: H.bad_request(conn, "Invalid request")
 
   @spec get_site_segments_only_query(pos_integer(), list(atom())) :: Ecto.Query.t()
 
@@ -255,17 +250,13 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   defp do_insert_segment(
          %Plug.Conn{
            assigns: %{
-             site:
-               %{
-                 id: site_id
-               } = site,
+             site: site,
              current_user: %{id: user_id}
            }
-         } =
-           conn,
+         } = conn,
          %{} = params
        ) do
-    segment_definition = Map.merge(params, %{"site_id" => site_id, "owner_id" => user_id})
+    segment_definition = Map.merge(params, %{"site_id" => site.id, "owner_id" => user_id})
 
     with %{valid?: true} = changeset <-
            Plausible.Segment.changeset(
@@ -331,4 +322,10 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     Repo.delete!(existing_segment)
     json(conn, existing_segment)
   end
+
+  defp roles_with_personal_segments(), do: [:viewer, :editor, :admin, :owner, :super_admin]
+  defp roles_with_maybe_site_segments(), do: [:editor, :admin, :owner, :super_admin]
+
+  defp site_segments_available?(site),
+    do: Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
 end
