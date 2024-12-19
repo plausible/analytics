@@ -203,12 +203,20 @@ defmodule PlausibleWeb.Live.Sites do
       }
       phx-mounted={JS.show()}
     >
-      <div class="grid grid-cols-10 gap-y-2 items-center w-full bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
-        <.favicon domain={@site.domain} />
-        <div class="col-span-8">
-          <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100">
-            <%= @site.domain %>
-          </h3>
+      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
+        <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
+          <div class="w-full flex items-center justify-between space-x-4">
+            <.favicon domain={@site.domain} />
+            <div class="flex-1 -mt-px w-full">
+              <h3
+                class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
+                style="width: calc(100% - 4rem)"
+              >
+                <%= @site.domain %>
+              </h3>
+            </div>
+          </div>
+          <.site_stats hourly_stats={@hourly_stats} />
         </div>
       </.unstyled_link>
 
@@ -285,7 +293,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div class="md:h-[59px] sm:h-[50px] h-[70px]">
+    <div class="md:h-[68px] sm:h-[58px] h-20 pl-8 pr-8 pt-2">
       <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
         <div class="md:h-[34px] sm:h-[30px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
         <div class="md:h-[26px] sm:h-[18px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
@@ -559,7 +567,7 @@ defmodule PlausibleWeb.Live.Sites do
     assigns = assign(assigns, :src, src)
 
     ~H"""
-    <img src={@src} class="size-4" />
+    <img src={@src} class="w-4 h-4 flex-shrink-0 mt-px" />
     """
   end
 
