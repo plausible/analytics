@@ -688,6 +688,125 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "handles missing scroll_depth data from native and imported sources", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: @user_id,
+          pathname: "/native-and-imported",
+          timestamp: ~N[2020-01-01 00:00:00]
+        ),
+        build(:pageleave,
+          user_id: @user_id,
+          pathname: "/native-and-imported",
+          timestamp: ~N[2020-01-01 00:01:00],
+          scroll_depth: 80
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          pathname: "/native-only",
+          timestamp: ~N[2020-01-01 00:01:00]
+        ),
+        build(:pageleave,
+          user_id: @user_id,
+          pathname: "/native-only",
+          timestamp: ~N[2020-01-01 00:02:00],
+          scroll_depth: 40
+        ),
+        build(:imported_pages,
+          date: ~D[2020-01-01],
+          visitors: 3,
+          pageviews: 3,
+          time_on_page: 180,
+          page: "/native-and-imported",
+          scroll_depth: 120
+        ),
+        build(:imported_pages,
+          date: ~D[2020-01-01],
+          visitors: 10,
+          pageviews: 10,
+          time_on_page: 300,
+          page: "/imported-only",
+          scroll_depth: 100
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2020-01-01&detailed=true&with_imported=true&order_by=#{Jason.encode!([["scroll_depth", "desc"]])}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "/native-and-imported",
+                 "visitors" => 4,
+                 "pageviews" => 4,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 60,
+                 "scroll_depth" => 50
+               },
+               %{
+                 "name" => "/native-only",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 0,
+                 "time_on_page" => nil,
+                 "scroll_depth" => 40
+               },
+               %{
+                 "name" => "/imported-only",
+                 "visitors" => 10,
+                 "pageviews" => 10,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 30.0,
+                 "scroll_depth" => 10
+               }
+             ]
+    end
+
+    test "can query scroll depth only from imported data, ignoring rows where scroll depth doesn't exist",
+         %{
+           conn: conn,
+           site: site
+         } do
+      populate_stats(site, [
+        build(:imported_pages,
+          date: ~D[2020-01-01],
+          visitors: 10,
+          pageviews: 10,
+          page: "/blog",
+          scroll_depth: 100
+        ),
+        build(:imported_pages,
+          date: ~D[2020-01-01],
+          visitors: 100,
+          pageviews: 150,
+          page: "/blog",
+          scroll_depth: nil
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=7d&date=2020-01-02&detailed=true&with_imported=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "/blog",
+                 "visitors" => 110,
+                 "pageviews" => 160,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 0.125,
+                 "scroll_depth" => 10
+               }
+             ]
+    end
+
     test "can filter using the | (OR) filter",
          %{conn: conn, site: site} do
       populate_stats(site, [

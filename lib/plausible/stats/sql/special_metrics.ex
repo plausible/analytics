@@ -153,7 +153,8 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       scroll_depth_sum_q =
         subquery(max_per_visitor_q)
         |> select([p], %{
-          scroll_depth_sum: fragment("sum(?)", p.max_scroll_depth),
+          scroll_depth_sum:
+            fragment("if(isNull(sum(?)), NULL, sum(?))", p.max_scroll_depth, p.max_scroll_depth),
           total_visitors: fragment("count(?)", p.user_id)
         })
         |> select_merge(^dim_select)
@@ -178,22 +179,32 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           scroll_depth:
             fragment(
               """
-              if(
-                ? > 0 or ? > 0,
-                toUInt8(
-                  round(
-                    (? + ?) / (? + ?)
-                  )
-                ),
-                NULL
-              )
+              case
+                when isNotNull(?) AND isNotNull(?) then
+                  toUInt8(round((? + ?) / (? + ?)))
+                when isNotNull(?) then
+                  toUInt8(round(? / ?))
+                when isNotNull(?) then
+                  toUInt8(round(? / ?))
+                else
+                  NULL
+              end
               """,
-              s.total_visitors,
-              selected_as(:__internal_total_visitors),
+              # Case 1: Both imported and native scroll depth sums are present
+              selected_as(:__internal_scroll_depth_sum),
               s.scroll_depth_sum,
               selected_as(:__internal_scroll_depth_sum),
+              s.scroll_depth_sum,
+              selected_as(:__internal_total_visitors),
               s.total_visitors,
-              selected_as(:__internal_total_visitors)
+              # Case 2: Only imported scroll depth sum is present
+              selected_as(:__internal_scroll_depth_sum),
+              selected_as(:__internal_scroll_depth_sum),
+              selected_as(:__internal_total_visitors),
+              # Case 3: Only native scroll depth sum is present
+              s.scroll_depth_sum,
+              s.scroll_depth_sum,
+              s.total_visitors
             )
         })
       else

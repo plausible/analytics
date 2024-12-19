@@ -116,7 +116,10 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_metric(:scroll_depth, "imported_pages") do
-    wrap_alias([i], %{scroll_depth_sum: sum(i.scroll_depth), total_visitors: sum(i.visitors)})
+    wrap_alias([i], %{
+      scroll_depth_sum: sum(i.scroll_depth),
+      total_visitors: fragment("sumIf(?, isNotNull(?))", i.visitors, i.scroll_depth)
+    })
   end
 
   defp select_metric(_metric, _table), do: %{}
