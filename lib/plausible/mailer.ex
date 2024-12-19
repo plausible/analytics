@@ -1,5 +1,6 @@
 defmodule Plausible.Mailer do
   use Bamboo.Mailer, otp_app: :plausible
+  use Plausible
   require Logger
 
   @type result() :: :ok | {:error, :hard_bounce} | {:error, :unknown_error}
@@ -28,8 +29,22 @@ defmodule Plausible.Mailer do
     end
   end
 
-  defp handle_error(error) do
-    Logger.error("Failed to send e-mail", sentry: %{extra: %{response: inspect(error)}})
-    {:error, :unknown_error}
+  on_ee do
+    defp handle_error(error) do
+      Logger.error("Failed to send e-mail", sentry: %{extra: %{response: inspect(error)}})
+      {:error, :unknown_error}
+    end
+  else
+    defp handle_error(error) do
+      message =
+        if is_exception(error) do
+          Exception.format(:error, error)
+        else
+          inspect(error)
+        end
+
+      Logger.error("Failed to send e-mail:\n\n " <> message)
+      {:error, :unknown_error}
+    end
   end
 end
