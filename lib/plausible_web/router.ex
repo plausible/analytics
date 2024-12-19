@@ -33,11 +33,6 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
   end
 
-  pipeline :segments do
-    plug :segments_feature_gate_plug
-    plug :segments_permissions_plug
-  end
-
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
@@ -190,8 +185,6 @@ defmodule PlausibleWeb.Router do
     pipe_through :internal_stats_api
 
     scope "/:domain/segments" do
-      pipe_through :segments
-
       get "/", SegmentsController, :get_all_segments
       post "/", SegmentsController, :create_segment
       get "/:segment_id", SegmentsController, :get_segment
