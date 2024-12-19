@@ -345,6 +345,7 @@ defmodule Plausible.Stats.Imported do
 
   defp can_order_by?(query) do
     Enum.all?(query.order_by, fn
+      {:scroll_depth, _} -> false
       {metric, _direction} when is_atom(metric) -> metric in query.metrics
       _ -> true
     end)

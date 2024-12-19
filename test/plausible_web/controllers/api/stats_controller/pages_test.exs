@@ -673,7 +673,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/pages?period=day&date=2020-01-01&detailed=true&with_imported=true"
+          "/api/stats/#{site.domain}/pages?period=day&date=2020-01-01&detailed=true&with_imported=true&order_by=#{Jason.encode!([["scroll_depth", "desc"]])}"
         )
 
       assert json_response(conn, 200)["results"] == [
