@@ -393,15 +393,16 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_other_top_stats(site, query, current_user) do
     page_filter? = Filters.filtering_on_dimension?(query, "event:page")
+    scroll_depth_enabled? = scroll_depth_enabled?(site, current_user)
 
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
       cond do
-        page_filter? && query.include_imported ->
-          metrics
+        page_filter? && scroll_depth_enabled? && query.include_imported ->
+          metrics ++ [:scroll_depth]
 
-        page_filter? && scroll_depth_enabled?(site, current_user) ->
+        page_filter? && scroll_depth_enabled? ->
           metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
 
         page_filter? ->
