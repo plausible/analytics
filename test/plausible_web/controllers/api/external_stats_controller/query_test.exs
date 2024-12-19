@@ -4077,4 +4077,398 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
            ]
   end
+
+  describe "revenue metrics" do
+    @describetag :ee_only
+
+    setup %{user: user} do
+      subscribe_to_enterprise_plan(user,
+        features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.RevenueGoals]
+      )
+
+      :ok
+    end
+
+    test "not requested leads to no metric_warnings", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews"]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [0]}]
+      assert "metric_warnings" not in json_response(conn, 200)["meta"]
+    end
+
+    test "no revenue goals configured", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["average_revenue", "total_revenue"],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Signup"], "metrics" => [nil, nil]}
+             ]
+
+      assert json_response(conn, 200)["meta"]["metric_warnings"] == %{
+               "average_revenue" => %{
+                 "code" => "no_revenue_goals_matching",
+                 "warning" => "Revenue metrics are null as there are no matching revenue goals."
+               },
+               "total_revenue" => %{
+                 "code" => "no_revenue_goals_matching",
+                 "warning" => "Revenue metrics are null as there are no matching revenue goals."
+               }
+             }
+    end
+
+    test "not filtering or grouping by goals leads to warnings", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["average_revenue", "total_revenue"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [nil, nil]}
+             ]
+
+      assert json_response(conn, 200)["meta"]["metric_warnings"] == %{
+               "average_revenue" => %{
+                 "code" => "no_revenue_goals_matching",
+                 "warning" => "Revenue metrics are null as there are no matching revenue goals."
+               },
+               "total_revenue" => %{
+                 "code" => "no_revenue_goals_matching",
+                 "warning" => "Revenue metrics are null as there are no matching revenue goals."
+               }
+             }
+    end
+
+    test "filtering by revenue goals with same currency", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("100.3"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("40.3"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("60.6"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Subscription",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("100"),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["events", "average_revenue", "total_revenue"],
+          "filters" => [
+            ["is", "event:goal", ["Signup", "Purchase", "Payment"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [
+                   4,
+                   %{
+                     "currency" => "USD",
+                     "long" => "$67.07",
+                     "short" => "$67.1",
+                     "value" => 67.066
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$201.20",
+                     "short" => "$201.2",
+                     "value" => 201.2
+                   }
+                 ]
+               }
+             ]
+
+      assert "metric_warnings" not in json_response(conn, 200)["meta"]
+    end
+
+    test "filtering by revenue goals with different currencies", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("100.3"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("40.3"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("60.6"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Subscription",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("100"),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["average_revenue", "total_revenue"],
+          "filters" => [
+            ["is", "event:goal", ["Subscription", "Payment"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [nil, nil]
+               }
+             ]
+
+      assert json_response(conn, 200)["meta"]["metric_warnings"] == %{
+               "average_revenue" => %{
+                 "code" => "no_single_revenue_currency",
+                 "warning" =>
+                   "Revenue metrics are null as there are multiple currencies for the selected event:goals."
+               },
+               "total_revenue" => %{
+                 "code" => "no_single_revenue_currency",
+                 "warning" =>
+                   "Revenue metrics are null as there are multiple currencies for the selected event:goals."
+               }
+             }
+    end
+
+    test "breakdown by revenue goals", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("100.3"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("40.3"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("60.6"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Subscription",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("100"),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["average_revenue", "total_revenue"],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "dimensions" => ["Purchase"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$100.30",
+                     "short" => "$100.3",
+                     "value" => 100.3
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$100.30",
+                     "short" => "$100.3",
+                     "value" => 100.3
+                   }
+                 ]
+               },
+               %{
+                 "dimensions" => ["Subscription"],
+                 "metrics" => [
+                   %{
+                     "currency" => "EUR",
+                     "long" => "€100.00",
+                     "short" => "€100.0",
+                     "value" => 100.0
+                   },
+                   %{
+                     "currency" => "EUR",
+                     "long" => "€100.00",
+                     "short" => "€100.0",
+                     "value" => 100.0
+                   }
+                 ]
+               },
+               %{
+                 "dimensions" => ["Payment"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$50.45",
+                     "short" => "$50.4",
+                     "value" => 50.45
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$100.90",
+                     "short" => "$100.9",
+                     "value" => 100.9
+                   }
+                 ]
+               },
+               %{"dimensions" => ["Signup"], "metrics" => [nil, nil]}
+             ]
+
+      assert "metric_warnings" not in json_response(conn, 200)["meta"]
+    end
+
+    test "breakdown by revenue goals + filtering", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("100.3"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("40.3"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("60.6"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Subscription",
+          timestamp: ~N[2021-01-01 00:00:00],
+          revenue_reporting_amount: Decimal.new("100"),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["average_revenue", "total_revenue"],
+          "filters" => [["is", "event:goal", ["Signup", "Purchase"]]],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "dimensions" => ["Purchase"],
+                 "metrics" => [
+                   %{
+                     "currency" => "USD",
+                     "long" => "$100.30",
+                     "short" => "$100.3",
+                     "value" => 100.3
+                   },
+                   %{
+                     "currency" => "USD",
+                     "long" => "$100.30",
+                     "short" => "$100.3",
+                     "value" => 100.3
+                   }
+                 ]
+               },
+               %{"dimensions" => ["Signup"], "metrics" => [nil, nil]}
+             ]
+
+      assert "metric_warnings" not in json_response(conn, 200)["meta"]
+    end
+  end
 end

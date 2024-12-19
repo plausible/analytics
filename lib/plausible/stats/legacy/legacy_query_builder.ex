@@ -19,7 +19,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
-      |> put_preloaded_goals(site)
+      |> preload_goals_and_revenue(site)
       |> put_order_by(params)
       |> put_include_comparisons(site, params)
       |> Query.put_imported_opts(site, params)
@@ -31,16 +31,20 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     query
   end
 
-  defp put_preloaded_goals(query, site) do
-    {preloaded_goals, revenue_currencies} =
-      Plausible.Stats.Filters.QueryParser.preload_needed_goals(
+  defp preload_goals_and_revenue(query, site) do
+    {preloaded_goals, revenue_warning, revenue_currencies} =
+      Plausible.Stats.Filters.QueryParser.preload_goals_and_revenue(
         site,
         query.metrics,
         query.filters,
         query.dimensions
       )
 
-    struct!(query, preloaded_goals: preloaded_goals, revenue_currencies: revenue_currencies)
+    struct!(query,
+      preloaded_goals: preloaded_goals,
+      revenue_warning: revenue_warning,
+      revenue_currencies: revenue_currencies
+    )
   end
 
   defp put_period(%Query{now: now} = query, _site, %{"period" => period})

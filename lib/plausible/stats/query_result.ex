@@ -7,6 +7,7 @@ defmodule Plausible.Stats.QueryResult do
   produced by Jason.encode(query_result) is ordered.
   """
 
+  use Plausible
   alias Plausible.Stats.DateTimeRange
 
   defstruct results: [],
@@ -40,10 +41,13 @@ defmodule Plausible.Stats.QueryResult do
     )
   end
 
-  @imports_unsupported_query_warning "Imported stats are not included in the results because query parameters are not supported. " <>
-                                       "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
-
-  @imports_unsupported_interval_warning "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+  @imports_warnings %{
+    unsupported_query:
+      "Imported stats are not included in the results because query parameters are not supported. " <>
+        "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats",
+    unsupported_interval:
+      "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+  }
 
   defp meta(query, meta_extra) do
     %{
@@ -52,18 +56,14 @@ defmodule Plausible.Stats.QueryResult do
         if(query.include.imports and query.skip_imported_reason,
           do: to_string(query.skip_imported_reason)
         ),
-      imports_warning:
-        case query.skip_imported_reason do
-          :unsupported_query -> @imports_unsupported_query_warning
-          :unsupported_interval -> @imports_unsupported_interval_warning
-          _ -> nil
-        end,
+      imports_warning: @imports_warnings[query.skip_imported_reason],
+      metric_warnings: metric_warnings(query),
       time_labels:
         if(query.include.time_labels, do: Plausible.Stats.Time.time_labels(query), else: nil),
       total_rows: if(query.include.total_rows, do: meta_extra.total_rows, else: nil)
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
-    |> Enum.into(%{})
+    |> Map.new()
   end
 
   defp include(query) do
@@ -78,6 +78,36 @@ defmodule Plausible.Stats.QueryResult do
       nil ->
         query.include
     end
+  end
+
+  on_ee do
+    @revenue_metrics_warnings %{
+      revenue_goals_unavailable:
+        "The owner of this site does not have access to the revenue metrics feature.",
+      no_single_revenue_currency:
+        "Revenue metrics are null as there are multiple currencies for the selected event:goals.",
+      no_revenue_goals_matching:
+        "Revenue metrics are null as there are no matching revenue goals."
+    }
+
+    defp metric_warnings(query) do
+      if query.revenue_warning do
+        query.metrics
+        |> Enum.filter(&(&1 in Plausible.Stats.Goal.Revenue.revenue_metrics()))
+        |> Enum.map(
+          &{&1,
+           %{
+             code: query.revenue_warning,
+             warning: @revenue_metrics_warnings[query.revenue_warning]
+           }}
+        )
+        |> Map.new()
+      else
+        nil
+      end
+    end
+  else
+    defp metric_warnings(_query), do: nil
   end
 
   defp to_iso8601(datetime, timezone) do
