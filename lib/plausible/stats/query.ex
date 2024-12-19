@@ -15,12 +15,14 @@ defmodule Plausible.Stats.Query do
             order_by: nil,
             timezone: nil,
             legacy_breakdown: false,
-            remove_unavailable_revenue_metrics: false,
             preloaded_goals: [],
-            revenue_currencies: %{},
             include: Plausible.Stats.Filters.QueryParser.default_include(),
             debug_metadata: %{},
-            pagination: nil
+            pagination: nil,
+            # Revenue metric specific metadata
+            revenue_currencies: %{},
+            revenue_warning: nil,
+            remove_unavailable_revenue_metrics: false
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy}
