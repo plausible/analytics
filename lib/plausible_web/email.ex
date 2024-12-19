@@ -517,15 +517,13 @@ defmodule PlausibleWeb.Email do
 
   defp traverse_and_textify(other), do: other
 
-  # - replace all consecutive spaces with a single space
-  # - remove spaces at the beginning and end of each line
   defp collapse_whitespace(text) do
-    String.split(text, "\n")
-    |> Enum.map(fn line ->
+    text
+    |> String.split("\n")
+    |> Enum.map_join("\n", fn line ->
       line
       |> String.split(" ", trim: true)
       |> Enum.join(" ")
     end)
-    |> Enum.join("\n")
   end
 end
