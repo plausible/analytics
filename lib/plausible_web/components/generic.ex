@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
-  @base_class "grid rounded-lg text-sm/6 text-gray-700 dark:text-gray-300 px-3.5 py-1.5"
+  @base_class "block rounded-lg text-sm/6 text-gray-700 dark:text-gray-300 px-3.5 py-1.5"
   @clickable_class "hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
   def dropdown_item(assigns) do
     if assigns[:href] do
@@ -296,10 +296,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def dropdown_divider(assigns) do
     ~H"""
-    <div
-      class="col-span-full mx-3.5 my-1 h-px border-0 bg-gray-950/5 sm:mx-3 dark:bg-white/10"
-      role="separator"
-    >
+    <div class="mx-3.5 my-1 h-px border-0 bg-gray-950/5 sm:mx-3 dark:bg-white/10" role="separator">
     </div>
     """
   end
