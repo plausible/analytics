@@ -173,6 +173,10 @@ defmodule PlausibleWeb.Router do
     pipe_through :internal_stats_api
 
     scope "/:domain/segments" do
+      pipeline :segments_endpoints,
+        do: plug(PlausibleWeb.Plugs.FeatureFlagCheckPlug, [:saved_segments])
+
+      pipe_through :segments_endpoints
       get "/", SegmentsController, :get_all_segments
       post "/", SegmentsController, :create_segment
       get "/:segment_id", SegmentsController, :get_segment
