@@ -232,12 +232,14 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   def dropdown(assigns) do
+    assigns = assign(assigns, :panel_class, assigns.panel |> List.first() |> Map.get(:class, ""))
+
     ~H"""
     <div
       x-data="dropdown"
       x-on:keydown.escape.prevent.stop="close($refs.button)"
-      x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
-      class={@class}
+      x-on:focusin.window="!$refs.panel.contains($event.target) && close()"
+      class="relative inline-block text-left"
     >
       <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
         <%= render_slot(List.first(@button)) %>
@@ -253,7 +255,10 @@ defmodule PlausibleWeb.Components.Generic do
         x-transition:leave-end="opacity-0 scale-95"
         x-on:click.outside="close($refs.button)"
         style="display: none;"
-        class={List.first(@panel).class}
+        class={[
+          "origin-top-right absolute z-50 right-0 mt-2 p-1 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none",
+          @panel_class
+        ]}
       >
         <%= render_slot(List.first(@panel)) %>
       </div>
@@ -261,28 +266,41 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr(:href, :string, required: true)
+  attr(:href, :string)
+  attr(:class, :string, default: "")
   attr(:new_tab, :boolean, default: false)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
-  def dropdown_link(assigns) do
-    class =
-      "w-full inline-flex text-gray-700 dark:text-gray-300 px-3.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+  @base_class "grid rounded-lg text-sm/6 text-gray-700 dark:text-gray-300 px-3.5 py-1.5"
+  @clickable_class "hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+  def dropdown_item(assigns) do
+    if assigns[:href] do
+      assigns = assign(assigns, :class, [assigns[:class], @base_class, @clickable_class])
 
-    class =
-      if assigns.new_tab do
-        "#{class} justify-between"
-      else
-        class
-      end
+      ~H"""
+      <.unstyled_link class={@class} new_tab={@new_tab} href={@href} x-on:click="close()" {@rest}>
+        <%= render_slot(@inner_block) %>
+      </.unstyled_link>
+      """
+    else
+      assigns = assign(assigns, :class, [assigns[:class], @base_class])
 
-    assigns = assign(assigns, :class, class)
+      ~H"""
+      <div class={@class}>
+        <%= render_slot(@inner_block) %>
+      </div>
+      """
+    end
+  end
 
+  def dropdown_divider(assigns) do
     ~H"""
-    <.unstyled_link new_tab={@new_tab} href={@href} x-on:click="close()" class={@class} {@rest}>
-      <%= render_slot(@inner_block) %>
-    </.unstyled_link>
+    <div
+      class="col-span-full mx-3.5 my-1 h-px border-0 bg-gray-950/5 sm:mx-3 dark:bg-white/10"
+      role="separator"
+    >
+    </div>
     """
   end
 
@@ -456,8 +474,10 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:id, :string, default: "shuttle")
 
   defp icon_class(link_assigns) do
-    if String.contains?(link_assigns[:class], "text-sm") or
-         String.contains?(link_assigns[:class], "text-xs") do
+    classes = List.wrap(link_assigns[:class]) |> Enum.join(" ")
+
+    if String.contains?(classes, "text-sm") or
+         String.contains?(classes, "text-xs") do
       ["w-3 h-3"]
     else
       ["w-4 h-4"]

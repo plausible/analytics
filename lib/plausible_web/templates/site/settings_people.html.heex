@@ -43,112 +43,79 @@
               </div>
 
               <.dropdown class="relative">
-                <:button class="bg-white dark:bg-gray-300 text-gray-800 hover:bg-gray-50 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 font-medium rounded-md px-2.5 py-1.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
+                <:button class="bg-white dark:bg-gray-300 text-gray-800 hover:bg-gray-50 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
                   <%= membership.role |> to_string() |> String.capitalize() %>
-                  <Heroicons.chevron_down mini class="size-4 mt-0.5 ml-1" />
+                  <Heroicons.chevron_down mini class="size-4 mt-0.5" />
                 </:button>
-                <:panel class="origin-top-right absolute z-50 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
-                  <ul class="divide-y divide-gray-200 dark:divide-gray-400 ">
-                    <%= if membership.role == :owner do %>
-                      <li class="p-4 cursor-default group flex justify-between" role="option">
-                        <div>
-                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            Owner
-                          </p>
-                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Site owner cannot be assigned to any other role
-                          </p>
-                        </div>
-
-                        <Heroicons.check_circle solid class="size-8 text-indigo-500 -mt-1.5" />
-                      </li>
-                      <li :if={@conn.assigns[:site_role] == :owner}
-                        class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
-                        role="option"
-                      >
-                        <.unstyled_link
-                          class="inline-block w-full text-sm p-4 text-red-600 font-medium"
-                          href={
-                            Routes.membership_path(
-                              @conn,
-                              :transfer_ownership_form,
-                              @site.domain
-                            )
-                          }
-                        >
-                          Transfer ownership
-                        </.unstyled_link>
-                      </li>
-                    <% else %>
-                      <.unstyled_link
-                        href={
-                          Routes.membership_path(
-                            @conn,
-                            :update_role_by_user,
-                            @site.domain,
-                            membership.user.id,
-                            "editor"
-                          )
-                        }
-                        method="put"
-                        class="p-4 flex justify-between group hover:bg-indigo-500"
-                      >
-                        <div>
-                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
-                            Admin
-                          </p>
-                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
-                            View stats and edit site settings
-                          </p>
-                        </div>
-
-                        <%= if membership.role == "admin" do %>
-                          <Heroicons.check_circle solid class="size-6 text-indigo-500 -mt-1 group-hover:text-white" />
-                        <% end %>
-                      </.unstyled_link>
-                      <.unstyled_link
-                        href={
-                          Routes.membership_path(
-                            @conn,
-                            :update_role_by_user,
-                            @site.domain,
-                            membership.user.id,
-                            "viewer"
-                          )
-                        }
-                        method="put"
-                        class="p-4 flex justify-between group hover:bg-indigo-500"
-                      >
-                        <div>
-                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
-                            Viewer
-                          </p>
-                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
-                            View stats only
-                          </p>
-                        </div>
-
-                        <%= if membership.role == "viewer" do %>
-                          <Heroicons.check_circle solid class="size-6 text-indigo-500 -mt-1 group-hover:text-white" />
-                        <% end %>
-                      </.unstyled_link>
-
-                      <.unstyled_link
-                        href={
-                          Routes.membership_path(
-                            @conn,
-                            :remove_member_by_user,
-                            @site.domain,
-                            membership.user.id
-                          )
-                        }
-                        method="delete"
-                        class="p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
-                      >
-                        <p class="text-red-600 font-medium text-sm">Remove member</p>
-                      </.unstyled_link>
-                    <% end %>
-                  </ul>
+                <:panel class="max-w-60">
+                  <%= if membership.role == :owner do %>
+                    <.dropdown_item>
+                      <div>Owner</div>
+                      <div class="text-gray-500 text-xs/5">
+                        Site owner cannot be assigned to any other role
+                      </div>
+                    </.dropdown_item>
+                    <.dropdown_divider />
+                    <.dropdown_item
+                      :if={@conn.assigns[:site_role] == :owner}
+                      class="text-red-600 hover:text-red-600"
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :transfer_ownership_form,
+                          @site.domain
+                        )
+                      }
+                    >
+                      Transfer ownership
+                    </.dropdown_item>
+                  <% else %>
+                    <.dropdown_item
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :update_role_by_user,
+                          @site.domain,
+                          membership.user.id,
+                          "editor"
+                        )
+                      }
+                      method="put"
+                    >
+                      <div>Admin</div>
+                      <div class="text-gray-500 text-xs/5">View stats and edit site settings</div>
+                    </.dropdown_item>
+                    <.dropdown_item
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :update_role_by_user,
+                          @site.domain,
+                          membership.user.id,
+                          "viewer"
+                        )
+                      }
+                      method="put"
+                    >
+                      <div>Viewer</div>
+                      <div class="text-gray-500 text-xs/5">View stats only</div>
+                    </.dropdown_item>
+                    <.dropdown_divider />
+                    <.dropdown_item
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :remove_member_by_user,
+                          @site.domain,
+                          membership.user.id
+                        )
+                      }
+                      class="text-red-600 hover:text-red-600"
+                      method="delete"
+                    >
+                      Remove member
+                    </.dropdown_item>
+                  <% end %>
                 </:panel>
               </.dropdown>
             </div>
