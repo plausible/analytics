@@ -43,7 +43,7 @@
               </div>
 
               <.dropdown class="relative">
-                <:button class="inline-flex items-center justify-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                <:button class="bg-white dark:bg-gray-300 text-gray-800 hover:bg-gray-50 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 font-medium rounded-md px-2.5 py-1.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
                   <%= membership.role |> to_string() |> String.capitalize() %>
                   <Heroicons.chevron_down mini class="size-4 mt-0.5 ml-1" />
                 </:button>
@@ -62,25 +62,23 @@
 
                         <Heroicons.check_circle solid class="size-8 text-indigo-500 -mt-1.5" />
                       </li>
-                      <%= if @conn.assigns[:site_role] == :owner do %>
-                        <li
-                          class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
-                          role="option"
+                      <li :if={@conn.assigns[:site_role] == :owner}
+                        class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
+                        role="option"
+                      >
+                        <.unstyled_link
+                          class="inline-block w-full text-sm p-4 text-red-600 font-medium"
+                          href={
+                            Routes.membership_path(
+                              @conn,
+                              :transfer_ownership_form,
+                              @site.domain
+                            )
+                          }
                         >
-                          <.unstyled_link
-                            class="inline-block w-full text-sm p-4 text-red-600 font-medium"
-                            href={
-                              Routes.membership_path(
-                                @conn,
-                                :transfer_ownership_form,
-                                @site.domain
-                              )
-                            }
-                          >
-                            Transfer ownership
-                          </.unstyled_link>
-                        </li>
-                      <% end %>
+                          Transfer ownership
+                        </.unstyled_link>
+                      </li>
                     <% else %>
                       <.unstyled_link
                         href={
@@ -105,7 +103,7 @@
                         </div>
 
                         <%= if membership.role == "admin" do %>
-                          <Heroicons.check_circle solid class="size-8 text-indigo-500 group-hover:text-white" />
+                          <Heroicons.check_circle solid class="size-6 text-indigo-500 -mt-1 group-hover:text-white" />
                         <% end %>
                       </.unstyled_link>
                       <.unstyled_link
@@ -131,7 +129,7 @@
                         </div>
 
                         <%= if membership.role == "viewer" do %>
-                          <Heroicons.check_circle solid class="size-6 text-indigo-500 group-hover:text-white" />
+                          <Heroicons.check_circle solid class="size-6 text-indigo-500 -mt-1 group-hover:text-white" />
                         <% end %>
                       </.unstyled_link>
 
