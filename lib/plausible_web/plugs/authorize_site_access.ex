@@ -39,7 +39,6 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   import Phoenix.Controller, only: [get_format: 1]
 
   @all_roles [:public, :viewer, :admin, :editor, :super_admin, :owner]
-  @type site_role() :: :public | :viewer | :admin | :editor | :super_admin | :owner
 
   def init([]), do: {@all_roles, nil}
 
@@ -116,7 +115,22 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
             owner: [subscription: Plausible.Users.last_subscription_query()]
           )
 
-        conn = merge_assigns(conn, site: site, site_role: role)
+        feature_flags = Plausible.FeatureFlags.get_flags(current_user, site)
+
+        billing_features_map =
+          Plausible.Billing.Feature.list()
+          |> Enum.into(%{}, fn mod -> {mod, mod.check_availability(site.team) === :ok} end)
+
+        role_permissions =
+          if not is_nil(role), do: Plausible.Permissions.get_filtered_for_role(role), else: []
+
+        permissions =
+          role_permissions
+          |> Plausible.Permissions.filter_permissions_by_feature_flags(feature_flags)
+          |> Plausible.Permissions.filter_permissions_by_billing_features(billing_features_map)
+          |> Enum.into(%{}, fn permission -> {permission, true} end)
+
+        conn = merge_assigns(conn, site: site, site_role: role, permissions: permissions)
 
         if not is_nil(current_user) and role not in [:public, nil] do
           assign(conn, :site_team, site.team)

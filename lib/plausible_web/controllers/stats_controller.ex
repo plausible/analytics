@@ -72,7 +72,7 @@ defmodule PlausibleWeb.StatsController do
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
           demo: demo,
-          flags: get_flags(conn.assigns[:current_user], site),
+          flags: Plausible.FeatureFlags.get_flags(conn.assigns[:current_user], site),
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           load_dashboard_js: true
@@ -355,7 +355,7 @@ defmodule PlausibleWeb.StatsController do
           embedded: conn.params["embed"] == "true",
           background: conn.params["background"],
           theme: conn.params["theme"],
-          flags: get_flags(conn.assigns[:current_user], shared_link.site),
+          flags: Plausible.FeatureFlags.get_flags(conn.assigns[:current_user], shared_link.site),
           is_dbip: is_dbip(),
           load_dashboard_js: true
         )
@@ -372,14 +372,6 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
-
-  defp get_flags(user, site),
-    do:
-      [:channels, :saved_segments, :scroll_depth]
-      |> Enum.map(fn flag ->
-        {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
-      end)
-      |> Map.new()
 
   defp is_dbip() do
     on_ee do

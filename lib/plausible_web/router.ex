@@ -3,9 +3,6 @@ defmodule PlausibleWeb.Router do
   use Plausible
   import Phoenix.LiveView.Router
 
-  import PlausibleWeb.Api.Internal.SegmentsController,
-    only: [segments_feature_gate_plug: 2, segments_permissions_plug: 2]
-
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -33,11 +30,6 @@ defmodule PlausibleWeb.Router do
 
   pipeline :external_api do
     plug :accepts, ["json"]
-  end
-
-  pipeline :segments do
-    plug :segments_feature_gate_plug
-    plug :segments_permissions_plug
   end
 
   pipeline :api do
@@ -181,8 +173,6 @@ defmodule PlausibleWeb.Router do
     pipe_through :internal_stats_api
 
     scope "/:domain/segments" do
-      pipe_through :segments
-
       get "/", SegmentsController, :get_all_segments
       post "/", SegmentsController, :create_segment
       get "/:segment_id", SegmentsController, :get_segment
