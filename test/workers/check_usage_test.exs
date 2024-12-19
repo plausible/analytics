@@ -372,6 +372,38 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
       end
 
+      test "will only check usage if enterprise plan matches subscription's paddle plan id",
+           %{
+             user: user
+           } do
+        usage_stub =
+          Plausible.Teams.Billing
+          |> stub(:monthly_pageview_usage, fn _user ->
+            %{
+              penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
+              last_cycle: %{date_range: @date_range, total: 1_100_000}
+            }
+          end)
+
+        subscribe_to_enterprise_plan(
+          user,
+          monthly_pageview_limit: 1_000_000,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status),
+            # non-matching ID
+            paddle_plan_id: @paddle_id_10k
+          ]
+        )
+
+        CheckUsage.perform(nil, usage_stub)
+
+        refute_email_delivered_with(
+          to: [{nil, "enterprise@plausible.io"}],
+          subject: "#{user.email} has outgrown their enterprise plan"
+        )
+      end
+
       test "checks site limit for enterprise customer, sends usage information to enterprise@plausible.io",
            %{
              user: user
