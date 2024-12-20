@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:href, :string)
   attr(:class, :string, default: "")
   attr(:new_tab, :boolean, default: false)
-  attr(:rest, :global)
+  attr(:rest, :global, include: ~w(method))
   slot(:inner_block, required: true)
 
   @base_class "block rounded-lg text-sm/6 text-gray-700 dark:text-gray-300 px-3.5 py-1.5"
