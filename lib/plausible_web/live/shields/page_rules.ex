@@ -9,8 +9,6 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
   alias Plausible.Shields
   alias Plausible.Shield
 
-  import PlausibleWeb.ErrorHelpers
-
   def update(assigns, socket) do
     socket =
       socket
@@ -132,7 +130,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 creatable
               />
 
-              <%= error_tag(f, :page_path) %>
+              <.error :for={msg <- f[:page_path].errors}><%= translate_error(msg) %></.error>
 
               <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 You can use a wildcard (<code>*</code>) to match multiple pages. For example,
