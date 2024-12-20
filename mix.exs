@@ -106,7 +106,7 @@ defmodule Plausible.MixProject do
       {:phoenix, "~> 1.7.0"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:phoenix_html, "~> 3.3", override: true},
+      {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.2", only: [:dev, :ce_dev]},
       {:phoenix_pubsub, "~> 2.0"},
       {:phoenix_live_view, "~> 0.18"},
@@ -147,7 +147,8 @@ defmodule Plausible.MixProject do
       {:ex_json_schema, "~> 0.10.2"},
       {:odgn_json_pointer, "~> 3.0.1"},
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
-      {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]}
+      {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]},
+      {:phoenix_storybook, "~> 0.7.2"}
     ]
   end
 

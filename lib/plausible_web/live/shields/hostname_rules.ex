@@ -9,8 +9,6 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
   alias Plausible.Shields
   alias Plausible.Shield
 
-  import PlausibleWeb.ErrorHelpers
-
   def update(assigns, socket) do
     socket =
       socket
@@ -136,8 +134,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                 id={"#{f[:hostname].id}-#{modal_unique_id}"}
                 creatable
               />
-
-              <%= error_tag(f, :hostname) %>
+              <.error :for={msg <- f[:hostname].errors}><%= translate_error(msg) %></.error>
 
               <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,

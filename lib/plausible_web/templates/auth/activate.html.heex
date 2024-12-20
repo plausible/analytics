@@ -46,7 +46,7 @@
     </.form>
   </div>
 
-  <%= error_tag(assigns, :error) %>
+  <.error><%= @error %></.error>
 
   <div :if={!@has_email_code?}>
     <.button_link method="post" class="w-full" href="/activate/request-code">
