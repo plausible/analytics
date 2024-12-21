@@ -26,7 +26,9 @@ defmodule PlausibleWeb.Api.ExternalController do
             conn
             |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")
             |> put_status(400)
-            |> json(%{errors: Plausible.ChangesetHelpers.traverse_errors(first_invalid_changeset)})
+            |> json(%{
+              errors: Plausible.ChangesetHelpers.traverse_errors(first_invalid_changeset)
+            })
           else
             conn
             |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")

@@ -40,12 +40,15 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def logo_path(filename) do
+  logo_path =
     if ee?() do
-      Path.join("/images/ee/", filename)
+      "/images/ee/"
     else
-      Path.join("/images/ce/", filename)
+      "/images/ce/"
     end
+
+  def logo_path(filename) do
+    Path.join(unquote(logo_path), filename)
   end
 
   def settings_tabs(conn) do
