@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
             source: :google_analytics_4,
             start_date: ~D[2005-01-01],
             end_date: Timex.today(),
-            legacy: unquote(import_type) == :new_and_legacy
+            legacy: unquote(import_type == :new_and_legacy)
           }
 
         site_import =

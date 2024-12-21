@@ -48,7 +48,9 @@ defmodule Plausible.CrmExtensions do
       ]
     end
 
-    def javascripts(%{assigns: %{context: "billing", resource: "enterprise_plan", changeset: %{}}}) do
+    def javascripts(%{
+          assigns: %{context: "billing", resource: "enterprise_plan", changeset: %{}}
+        }) do
       [
         Phoenix.HTML.raw("""
         <script type="text/javascript">

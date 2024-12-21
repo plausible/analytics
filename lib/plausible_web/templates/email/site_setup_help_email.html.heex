@@ -1,6 +1,8 @@
-<%= if Plausible.ee?() and Plausible.Teams.on_trial?(@site.team) do %>
-  You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
-  <br /><br />
+<%= if Plausible.ee?() do %>
+  <%= if Plausible.Teams.on_trial?(@site.team) do %>
+    You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
+    <br /><br />
+  <% end %>
 <% end %>
 To finish your setup for <%= @site.domain %>, review
 <a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}/installation"}>your installation</a> and start collecting visitor statistics.

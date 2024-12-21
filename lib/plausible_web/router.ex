@@ -140,7 +140,8 @@ defmodule PlausibleWeb.Router do
       get("/swagger-ui", OpenApiSpex.Plug.SwaggerUI, path: "/api/plugins/spec/openapi")
     end
 
-    scope "/v1/capabilities", PlausibleWeb.Plugins.API.Controllers, assigns: %{plugins_api: true} do
+    scope "/v1/capabilities", PlausibleWeb.Plugins.API.Controllers,
+      assigns: %{plugins_api: true} do
       pipe_through([:plugins_api])
       get("/", Capabilities, :index)
     end
@@ -217,7 +218,8 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*", schema_type: :public} do
+  scope "/api/v2", PlausibleWeb.Api,
+    assigns: %{api_scope: "stats:read:*", schema_type: :public} do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
@@ -289,20 +291,15 @@ defmodule PlausibleWeb.Router do
     pipe_through [:browser, :csrf]
 
     scope alias: Live, assigns: %{connect_live_socket: true} do
-      pipe_through [PlausibleWeb.RequireLoggedOutPlug, :app_layout]
+      pipe_through [
+        PlausibleWeb.RequireLoggedOutPlug,
+        :app_layout,
+        PlausibleWeb.Plugs.MaybeDisableRegistration
+      ]
 
-      scope assigns: %{disable_registration_for: [:invite_only, true]} do
-        pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
+      live "/register", RegisterForm, :register_form, as: :auth
 
-        live "/register", RegisterForm, :register_form, as: :auth
-      end
-
-      scope assigns: %{
-              disable_registration_for: true,
-              dogfood_page_path: "/register/invitation/:invitation_id"
-            } do
-        pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
-
+      scope assigns: %{dogfood_page_path: "/register/invitation/:invitation_id"} do
         live "/register/invitation/:invitation_id", RegisterForm, :register_from_invitation_form,
           as: :auth
       end

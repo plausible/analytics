@@ -14,19 +14,26 @@ defmodule PlausibleWeb.Plugs.MaybeDisableRegistration do
   end
 
   def call(conn, _opts) do
-    disabled_for = List.wrap(conn.assigns.disable_registration_for)
+    cond do
+      Release.should_be_first_launch?() ->
+        conn
 
-    selfhost_config = Application.get_env(:plausible, :selfhost)
-    disable_registration = Keyword.fetch!(selfhost_config, :disable_registration)
-    first_launch? = Release.should_be_first_launch?()
+      disable_registration?() ->
+        conn
+        |> put_flash(:error, "Registration is disabled on this instance")
+        |> redirect(to: Routes.auth_path(conn, :login_form))
+        |> halt()
 
-    if not first_launch? and disable_registration in disabled_for do
-      conn
-      |> put_flash(:error, "Registration is disabled on this instance")
-      |> redirect(to: Routes.auth_path(conn, :login_form))
-      |> halt()
-    else
-      conn
+      true ->
+        conn
+    end
+  end
+
+  defp disable_registration? do
+    if Plausible.ce?() do
+      config = Application.get_env(:plausible, :selfhost)
+      disable_registration = Keyword.fetch!(config, :disable_registration)
+      disable_registration in [:invite_only, true]
     end
   end
 end

@@ -31,29 +31,33 @@
         <%= cond do %>
           <% @conn.assigns[:current_user] -> %>
             <ul class="flex items-center w-full sm:w-auto">
-              <li :if={
-                ee?() && @conn.assigns[:site] &&
-                  Plausible.Auth.is_super_admin?(@conn.assigns[:current_user])
-              }>
-                <.styled_link
-                  class="text-sm mr-6"
-                  href={PlausibleWeb.Endpoint.url() <> "/crm/sites/site/#{@conn.assigns[:site].id}"}
-                  new_tab={true}
+              <%= if ee?() do %>
+                <li :if={
+                  @conn.assigns[:site] &&
+                    Plausible.Auth.is_super_admin?(@conn.assigns[:current_user])
+                }>
+                  <.styled_link
+                    class="text-sm mr-6"
+                    href={PlausibleWeb.Endpoint.url() <> "/crm/sites/site/#{@conn.assigns[:site].id}"}
+                    new_tab={true}
+                  >
+                    CRM
+                  </.styled_link>
+                </li>
+              <% end %>
+              <%= if ee?() do %>
+                <li
+                  :if={Plausible.Teams.on_trial?(@conn.assigns[:my_team])}
+                  class="hidden mr-6 sm:block"
                 >
-                  CRM
-                </.styled_link>
-              </li>
-              <li
-                :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:my_team])}
-                class="hidden mr-6 sm:block"
-              >
-                <.styled_link
-                  class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
-                  href={Routes.settings_path(@conn, :subscription)}
-                >
-                  <%= trial_notification(@conn.assigns[:my_team]) %>
-                </.styled_link>
-              </li>
+                  <.styled_link
+                    class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
+                    href={Routes.settings_path(@conn, :subscription)}
+                  >
+                    <%= trial_notification(@conn.assigns[:my_team]) %>
+                  </.styled_link>
+                </li>
+              <% end %>
               <li class="w-full sm:w-auto">
                 <.dropdown>
                   <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">

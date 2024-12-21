@@ -134,30 +134,30 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp verify_site_access(api_key, site) do
-    team =
-      case Plausible.Teams.get_by_owner(api_key.user) do
-        {:ok, team} -> team
-        _ -> nil
+    if Auth.is_super_admin?(api_key.user_id) do
+      :ok
+    else
+      team =
+        case Plausible.Teams.get_by_owner(api_key.user) do
+          {:ok, team} -> team
+          _ -> nil
+        end
+
+      is_member? = Plausible.Teams.Memberships.site_member?(site, api_key.user)
+
+      cond do
+        Sites.locked?(site) ->
+          {:error, :site_locked}
+
+        Plausible.Billing.Feature.StatsAPI.check_availability(team) !== :ok ->
+          {:error, :upgrade_required}
+
+        is_member? ->
+          :ok
+
+        true ->
+          {:error, :invalid_api_key}
       end
-
-    is_member? = Plausible.Teams.Memberships.site_member?(site, api_key.user)
-    is_super_admin? = Auth.is_super_admin?(api_key.user_id)
-
-    cond do
-      is_super_admin? ->
-        :ok
-
-      Sites.locked?(site) ->
-        {:error, :site_locked}
-
-      Plausible.Billing.Feature.StatsAPI.check_availability(team) !== :ok ->
-        {:error, :upgrade_required}
-
-      is_member? ->
-        :ok
-
-      true ->
-        {:error, :invalid_api_key}
     end
   end
 

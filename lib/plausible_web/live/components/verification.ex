@@ -27,6 +27,8 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr(:awaiting_first_pageview?, :boolean, default: false)
 
   def render(assigns) do
+    assigns = assign(assigns, :ee?, Plausible.ee?())
+
     ~H"""
     <div id="progress-indicator">
       <.focus_box>
@@ -102,7 +104,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
         <:footer :if={@finished? and not @success?}>
           <.focus_list>
-            <:item :if={ee?() and @attempts >= 3}>
+            <:item :if={@ee? and @attempts >= 3}>
               <b>Need further help with your installation?</b>
               <.styled_link href="https://plausible.io/contact">
                 Contact us
