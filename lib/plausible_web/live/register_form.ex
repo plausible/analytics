@@ -4,18 +4,16 @@ defmodule PlausibleWeb.Live.RegisterForm do
   """
 
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
-  import PlausibleWeb.Live.Components.Form
-  import PlausibleWeb.Components.Generic
 
   alias Plausible.Auth
   alias Plausible.Repo
+  alias Plausible.Teams
 
   def mount(params, _session, socket) do
     socket =
       assign_new(socket, :invitation, fn ->
         if invitation_id = params["invitation_id"] do
-          Repo.get_by(Auth.Invitation, invitation_id: invitation_id)
+          find_by_id_unified(invitation_id)
         end
       end)
 
@@ -52,11 +50,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
       <h2 class="text-xl font-black dark:text-gray-100">Invitation expired</h2>
 
       <p class="mt-4">
-        Your invitation has expired or been revoked. Please request fresh one or you can <%= link(
-          "sign up",
-          class: "text-indigo-600 hover:text-indigo-900",
-          to: Routes.auth_path(@socket, :register_form)
-        ) %> for a 30-day unlimited free trial without an invitation.
+        Your invitation has expired or been revoked. Please request fresh one or you can
+        <.styled_link href={Routes.auth_path(@socket, :register_form)}>sign up</.styled_link>
+        for a 30-day unlimited free trial without an invitation.
       </p>
     </div>
     """
@@ -88,7 +84,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       current_step="Register"
     />
 
-    <PlausibleWeb.Components.Generic.focus_box>
+    <.focus_box>
       <:title>
         Enter your details
       </:title>
@@ -179,14 +175,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
           else
             "Start my free trial"
           end %>
-        <PlausibleWeb.Components.Generic.button
-          id="register"
-          disabled={@disable_submit}
-          type="submit"
-          class="mt-4 w-full"
-        >
+        <.button id="register" disabled={@disable_submit} type="submit" class="mt-4 w-full">
           <%= submit_text %>
-        </PlausibleWeb.Components.Generic.button>
+        </.button>
 
         <p class="text-center text-gray-600 dark:text-gray-500  mt-4">
           Already have an account?
@@ -195,7 +186,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
           </.styled_link>
         </p>
       </.form>
-    </PlausibleWeb.Components.Generic.focus_box>
+    </.focus_box>
     """
   end
 
@@ -293,13 +284,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
         |> Map.put("email", invitation.email)
         |> Auth.User.new()
 
-      user =
-        case invitation.role do
-          :owner -> user
-          _ -> Plausible.Auth.User.remove_trial_expiry(user)
-        end
+      with_team? = invitation.role == :owner
 
-      add_user(socket, user)
+      add_user(socket, user, with_team?: with_team?)
     else
       {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
     end
@@ -320,8 +307,13 @@ defmodule PlausibleWeb.Live.RegisterForm do
     {:noreply, assign(socket, trigger_submit: true)}
   end
 
-  defp add_user(socket, user) do
-    case Repo.insert(user) do
+  defp add_user(socket, user, opts \\ []) do
+    result =
+      Repo.transaction(fn ->
+        do_add_user(user, opts)
+      end)
+
+    case result do
       {:ok, _user} ->
         socket = assign(socket, disable_submit: true)
 
@@ -337,6 +329,71 @@ defmodule PlausibleWeb.Live.RegisterForm do
          assign(socket,
            form: to_form(Map.put(changeset, :action, :validate))
          )}
+    end
+  end
+
+  defp do_add_user(user, opts) do
+    case Repo.insert(user) do
+      {:ok, user} ->
+        if opts[:with_team?] do
+          {:ok, _} = Plausible.Teams.get_or_create(user)
+        end
+
+        user
+
+      {:error, reason} ->
+        Repo.rollback(reason)
+    end
+  end
+
+  defp find_by_id_unified(invitation_or_transfer_id) do
+    result =
+      with {:error, :invitation_not_found} <-
+             find_invitation_by_id_unified(invitation_or_transfer_id) do
+        find_transfer_by_id_unified(invitation_or_transfer_id)
+      end
+
+    case result do
+      {:error, :invitation_not_found} -> nil
+      {:ok, unified} -> unified
+    end
+  end
+
+  defp find_invitation_by_id_unified(id) do
+    invitation =
+      Teams.GuestInvitation
+      |> Repo.get_by(invitation_id: id)
+      |> Repo.preload([:site, team_invitation: :inviter])
+
+    case invitation do
+      nil ->
+        {:error, :invitation_not_found}
+
+      guest_invitation ->
+        {:ok,
+         %{
+           role: guest_invitation.role,
+           email: guest_invitation.team_invitation.email
+         }}
+    end
+  end
+
+  defp find_transfer_by_id_unified(id) do
+    transfer =
+      Teams.SiteTransfer
+      |> Repo.get_by(transfer_id: id)
+      |> Repo.preload([:site, :initiator])
+
+    case transfer do
+      nil ->
+        {:error, :invitation_not_found}
+
+      transfer ->
+        {:ok,
+         %{
+           role: :owner,
+           email: transfer.email
+         }}
     end
   end
 end

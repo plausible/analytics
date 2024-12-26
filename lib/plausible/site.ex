@@ -3,8 +3,8 @@ defmodule Plausible.Site do
   Site schema
   """
   use Ecto.Schema
+  use Plausible
   import Ecto.Changeset
-  alias Plausible.Auth.User
   alias Plausible.Site.GoogleAuth
 
   @type t() :: %__MODULE__{}
@@ -32,20 +32,22 @@ defmodule Plausible.Site do
     # NOTE: needed by `SiteImports` data migration script
     embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
+    # NOTE: new teams relations
+    belongs_to :team, Plausible.Teams.Team
+    has_many :guest_memberships, Plausible.Teams.GuestMembership
+    has_many :guest_invitations, Plausible.Teams.GuestInvitation
+
     embeds_one :installation_meta, Plausible.Site.InstallationMeta,
       on_replace: :update,
       defaults_to_struct: true
 
-    many_to_many :members, User, join_through: Plausible.Site.Membership
-    has_many :memberships, Plausible.Site.Membership
-    has_many :invitations, Plausible.Auth.Invitation
     has_many :goals, Plausible.Goal, preload_order: [desc: :id]
     has_many :revenue_goals, Plausible.Goal, where: [currency: {:not, nil}]
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
-    has_one :ownership, Plausible.Site.Membership, where: [role: :owner]
-    has_one :owner, through: [:ownership, :user]
+    has_one :ownership, through: [:team, :ownership]
+    has_one :owner, through: [:team, :owner]
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Cache`.
     # Use `Plausible.Repo.reload!(cached_site)` to pre-fill missing fields if
@@ -56,6 +58,8 @@ defmodule Plausible.Site do
     # user's membership state. Currently it can be either "invitation",
     # "pinned_site" or "site", where invitations are first.
     field :entry_type, :string, virtual: true
+    field :memberships, {:array, :map}, virtual: true
+    field :invitations, {:array, :map}, virtual: true
     field :pinned_at, :naive_datetime, virtual: true
 
     # Used for caching imports data for the duration of the whole request
@@ -69,11 +73,23 @@ defmodule Plausible.Site do
     timestamps()
   end
 
+  def new_for_team(team, params) do
+    params
+    |> new()
+    |> put_assoc(:team, team)
+  end
+
   def new(params), do: changeset(%__MODULE__{}, params)
 
-  @domain_unique_error """
-  This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
-  """
+  on_ee do
+    @domain_unique_error """
+    This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
+    """
+  else
+    @domain_unique_error """
+    This domain cannot be registered. Perhaps one of your colleagues registered it?
+    """
+  end
 
   def changeset(site, attrs \\ %{}) do
     site

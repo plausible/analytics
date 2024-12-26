@@ -18,7 +18,11 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
+        Plausible.Sites.get_for_user!(current_user, domain, [
+          :owner,
+          :admin,
+          :super_admin
+        ])
       end)
       |> assign_new(:form, fn %{site: site} ->
         new_form(site)
@@ -91,9 +95,9 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
             </.error>
           </div>
 
-          <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+          <.button type="submit" class="w-full">
             Add Property →
-          </PlausibleWeb.Components.Generic.button>
+          </.button>
 
           <button
             :if={@prop_key_options_count > 0}

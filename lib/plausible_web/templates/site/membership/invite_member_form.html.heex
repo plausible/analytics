@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     Invite member to <%= @site.domain %>
   </:title>
@@ -8,39 +8,24 @@
     The invitation will expire in 48 hours
   </:subtitle>
 
-  <%= form_for @conn, Routes.membership_path(@conn, :invite_member, @site.domain), fn f -> %>
+  <.form :let={f} for={@conn} action={Routes.membership_path(@conn, :invite_member, @site.domain)}>
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={Map.get(assigns, :is_at_limit, false)}
       current_user={@current_user}
       billable_user={@site.owner}
+      current_team={@site_team}
       limit={Map.get(assigns, :team_member_limit, 0)}
       resource="team members"
     />
 
     <div class="my-6">
-      <%= label(f, :email, "Email address",
-        class: "block font-medium text-gray-700 dark:text-gray-300"
-      ) %>
-      <div class="mt-1 relative rounded-md shadow-sm">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg
-            class="h-5 w-5 text-gray-500 dark:text-gray-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-          </svg>
-        </div>
-        <%= email_input(f, :email,
-          class:
-            "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-full rounded-md pl-10 border-gray-300 dark:border-gray-500",
-          placeholder: "john.doe@example.com",
-          required: "true"
-        ) %>
-      </div>
-      <%= error_tag(f, :email) %>
+      <.input
+        type="email"
+        field={f[:email]}
+        label="Email address"
+        placeholder="joe@example.com"
+        required="true"
+      />
 
       <%= if @conn.assigns[:error] do %>
         <div class="text-red-500 mb-4"><%= @conn.assigns[:error] %></div>
@@ -48,18 +33,24 @@
     </div>
 
     <fieldset x-data="{selectedOption: null}">
-      <%= label(f, :role, class: "block font-medium text-gray-700 dark:text-gray-300") %>
+      <.label for={f[:role].id}>
+        Role
+      </.label>
       <div class="mt-1 bg-white rounded-md -space-y-px dark:bg-gray-800">
         <label
           class="border-gray-200 dark:border-gray-500 rounded-tl-md rounded-tr-md relative border p-4 flex cursor-pointer"
           x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'admin', 'border-gray-200': selectedOption !== 'admin'}"
         >
-          <%= radio_button(f, :role, "admin",
-            class:
-              "dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500",
-            "x-model": "selectedOption",
-            required: "true"
-          ) %>
+          <.input
+            type="radio"
+            field={f[:role]}
+            id="role_admin"
+            value="editor"
+            x-model="selectedOption"
+            required="true"
+            width="w-4"
+            class="block dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
+          />
           <div class="ml-3 flex flex-col">
             <span
               class="text-gray-900 dark:text-gray-100 block text-sm font-medium"
@@ -80,12 +71,16 @@
           class="border-gray-200 dark:border-gray-500 rounded-bl-md rounded-br-md relative border p-4 flex cursor-pointer"
           x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'viewer', 'border-gray-200': selectedOption !== 'viewer'}"
         >
-          <%= radio_button(f, :role, "viewer",
-            class:
-              "dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500",
-            "x-model": "selectedOption",
-            required: "true"
-          ) %>
+          <.input
+            type="radio"
+            field={f[:role]}
+            id="role_viewer"
+            value="viewer"
+            x-model="selectedOption"
+            required="true"
+            width="w-4"
+            class="block dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
+          />
           <div class="ml-3 flex flex-col">
             <span
               class="text-gray-900 dark:text-gray-100 text-sm block font-medium"
@@ -105,9 +100,9 @@
     </fieldset>
 
     <div class="mt-6">
-      <%= submit(class: "button w-full") do %>
-        <span>Invite</span>
-      <% end %>
+      <.button type="submit" class="w-full">
+        Invite
+      </.button>
     </div>
-  <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+  </.form>
+</.focus_box>

@@ -1,26 +1,43 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { AppNavigationLink } from '../../navigation/use-app-navigate';
-import FlipMove from 'react-flip-move';
+/** @format */
 
-import FadeIn from '../../fade-in';
-import MoreLink from '../more-link';
-import Bar from '../bar';
-import LazyLoader from '../../components/lazy-loader';
-import classNames from 'classnames';
-import { trimURL } from '../../util/url';
-import { cleanLabels, replaceFilterByPrefix, isRealTimeDashboard, hasGoalFilter, plainFilterText } from '../../util/filters';
-import { useQueryContext } from '../../query-context';
+import React, { useState, useEffect, useCallback } from 'react'
+import { AppNavigationLink } from '../../navigation/use-app-navigate'
+import FlipMove from 'react-flip-move'
+
+import FadeIn from '../../fade-in'
+import MoreLink from '../more-link'
+import Bar from '../bar'
+import LazyLoader from '../../components/lazy-loader'
+import classNames from 'classnames'
+import { trimURL } from '../../util/url'
+import {
+  cleanLabels,
+  replaceFilterByPrefix,
+  isRealTimeDashboard,
+  hasGoalFilter,
+  plainFilterText
+} from '../../util/filters'
+import { useQueryContext } from '../../query-context'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
-const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
+const DATA_CONTAINER_HEIGHT =
+  (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
-export function FilterLink({ path, filterInfo, onClick, children, extraClass }) {
-  const { query } = useQueryContext();
-  const className = classNames(`${extraClass}`, { 'hover:underline': !!filterInfo })
+export function FilterLink({
+  path,
+  filterInfo,
+  onClick,
+  children,
+  extraClass
+}) {
+  const { query } = useQueryContext()
+  const className = classNames(`${extraClass}`, {
+    'hover:underline': !!filterInfo
+  })
 
   if (filterInfo) {
     const { prefix, filter, labels } = filterInfo
@@ -33,7 +50,11 @@ export function FilterLink({ path, filterInfo, onClick, children, extraClass }) 
         className={className}
         path={path}
         onClick={onClick}
-        search={(search) => ({...search, filters: newFilters, labels: newLabels})}
+        search={(search) => ({
+          ...search,
+          filters: newFilters,
+          labels: newLabels
+        })}
       >
         {children}
       </AppNavigationLink>
@@ -53,7 +74,14 @@ function ExternalLink({ item, externalLinkDest }) {
         href={dest}
         className="w-4 h-4 hidden group-hover:block"
       >
-        <svg className="inline w-full h-full ml-1 -mt-1 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+        <svg
+          className="inline w-full h-full ml-1 -mt-1 text-gray-600 dark:text-gray-400"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path>
+          <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path>
+        </svg>
       </a>
     )
   }
@@ -105,30 +133,44 @@ function ExternalLink({ item, externalLinkDest }) {
  * | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]    | LISTITEM_1[METRIC_2.key]    | ...
  * | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]    | LISTITEM_2[METRIC_2.key]    | ...
  */
-export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WIDTH, afterFetchData, detailsLinkProps, maybeHideDetails, onClick, color, getFilterFor, renderIcon, externalLinkDest, fetchData }) {
-  const { query } = useQueryContext();
+export default function ListReport({
+  keyLabel,
+  metrics,
+  colMinWidth = COL_MIN_WIDTH,
+  afterFetchData,
+  detailsLinkProps,
+  maybeHideDetails,
+  onClick,
+  color,
+  getFilterFor,
+  renderIcon,
+  externalLinkDest,
+  fetchData
+}) {
+  const { query } = useQueryContext()
   const [state, setState] = useState({ loading: true, list: null })
   const [visible, setVisible] = useState(false)
 
-  const isRealtime = isRealTimeDashboard(query);
-  const goalFilterApplied = hasGoalFilter(query);
+  const isRealtime = isRealTimeDashboard(query)
+  const goalFilterApplied = hasGoalFilter(query)
 
   const getData = useCallback(() => {
     if (!isRealtime) {
       setState({ loading: true, list: null })
     }
-    fetchData()
-      .then((response) => {
-        if (afterFetchData) {
-          afterFetchData(response)
-        }
+    fetchData().then((response) => {
+      if (afterFetchData) {
+        afterFetchData(response)
+      }
 
-        setState({ loading: false, list: response.results })
-      })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      setState({ loading: false, list: response.results, meta: response.meta })
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyLabel, query])
 
-  const onVisible = () => { setVisible(true) }
+  const onVisible = () => {
+    setVisible(true)
+  }
 
   useEffect(() => {
     if (isRealtime) {
@@ -137,18 +179,22 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
       // only read the new metrics once the new list is loaded.
       setState({ loading: true, list: null })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goalFilterApplied]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [goalFilterApplied])
 
   useEffect(() => {
     if (visible) {
-      if (isRealtime) { document.addEventListener('tick', getData) }
+      if (isRealtime) {
+        document.addEventListener('tick', getData)
+      }
       getData()
     }
 
-    return () => { document.removeEventListener('tick', getData) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyLabel, query, visible]);
+    return () => {
+      document.removeEventListener('tick', getData)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyLabel, query, visible])
 
   // returns a filtered `metrics` list. Since currently, the backend can return different
   // metrics based on filters and existing data, this function validates that the metrics
@@ -171,9 +217,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     if (state.list && state.list.length > 0) {
       return (
         <div className="h-full flex flex-col">
-          <div style={{ height: ROW_HEIGHT }}>
-            {renderReportHeader()}
-          </div>
+          <div style={{ height: ROW_HEIGHT }}>{renderReportHeader()}</div>
 
           <div style={{ minHeight: DATA_CONTAINER_HEIGHT }}>
             {renderReportBody()}
@@ -228,7 +272,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
 
   function renderBarFor(listItem) {
     const lightBackground = color || 'bg-green-50'
-    const metricToPlot = metrics.find(metric => metric.meta.plot).key
+    const metricToPlot = metrics.find((metric) => metric.meta.plot).key
 
     return (
       <div className="flex-grow w-full overflow-hidden">
@@ -272,7 +316,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
           style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
-            {metric.renderValue(listItem[metric.key])}
+            {metric.renderValue(listItem, state.meta)}
           </span>
         </div>
       )
@@ -281,16 +325,26 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
 
   function renderLoading() {
     return (
-      <div className="w-full flex flex-col justify-center" style={{ minHeight: `${MIN_HEIGHT}px` }}>
-        <div className="mx-auto loading"><div></div></div>
+      <div
+        className="w-full flex flex-col justify-center"
+        style={{ minHeight: `${MIN_HEIGHT}px` }}
+      >
+        <div className="mx-auto loading">
+          <div></div>
+        </div>
       </div>
     )
   }
 
   function renderNoDataYet() {
     return (
-      <div className="w-full h-full flex flex-col justify-center" style={{ minHeight: `${MIN_HEIGHT}px` }}>
-        <div className="mx-auto font-medium text-gray-500 dark:text-gray-400">No data yet</div>
+      <div
+        className="w-full h-full flex flex-col justify-center"
+        style={{ minHeight: `${MIN_HEIGHT}px` }}
+      >
+        <div className="mx-auto font-medium text-gray-500 dark:text-gray-400">
+          No data yet
+        </div>
       </div>
     )
   }
@@ -300,16 +354,26 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     const hideDetails = maybeHideDetails && !moreResultsAvailable
 
     const showDetails = !!detailsLinkProps && !state.loading && !hideDetails
-    return showDetails && <MoreLink className={'mt-2'} linkProps={detailsLinkProps} list={state.list} />
+    return (
+      showDetails && (
+        <MoreLink
+          className={'mt-2'}
+          linkProps={detailsLinkProps}
+          list={state.list}
+        />
+      )
+    )
   }
 
   return (
-    <LazyLoader onVisible={onVisible} >
+    <LazyLoader onVisible={onVisible}>
       <div className="w-full" style={{ minHeight: `${MIN_HEIGHT}px` }}>
         {state.loading && renderLoading()}
-        {!state.loading && <FadeIn show={!state.loading} className="h-full">
-          {renderReport()}
-        </FadeIn>}
+        {!state.loading && (
+          <FadeIn show={!state.loading} className="h-full">
+            {renderReport()}
+          </FadeIn>
+        )}
       </div>
     </LazyLoader>
   )

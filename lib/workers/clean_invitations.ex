@@ -11,8 +11,13 @@ defmodule Plausible.Workers.CleanInvitations do
       |> NaiveDateTime.shift(@cutoff)
 
     Repo.delete_all(
-      from i in Plausible.Auth.Invitation,
-        where: i.inserted_at < ^cutoff_time
+      from ti in Plausible.Teams.Invitation,
+        where: ti.inserted_at < ^cutoff_time
+    )
+
+    Repo.delete_all(
+      from ti in Plausible.Teams.SiteTransfer,
+        where: ti.inserted_at < ^cutoff_time
     )
 
     :ok

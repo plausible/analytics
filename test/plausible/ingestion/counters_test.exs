@@ -1,5 +1,6 @@
 defmodule Plausible.Ingestion.CountersTest do
   use Plausible.DataCase, async: false
+  use Plausible.Teams.Test
   import Ecto.Query
 
   alias Plausible.Ingestion.Counters
@@ -9,26 +10,35 @@ defmodule Plausible.Ingestion.CountersTest do
 
   import Phoenix.ConnTest
 
+  @ts ~N[2023-02-14 01:00:03]
+
   describe "integration" do
     test "periodically flushes buffer aggregates to the database", %{test: test} do
       on_exit(:detach, fn ->
         :telemetry.detach("ingest-counters-#{test}")
       end)
 
+      now = NaiveDateTime.utc_now()
+
       start_counters(
         buffer_name: test,
         interval: 100,
-        aggregate_bucket_fn: fn _now ->
-          System.os_time(:second)
+        aggregate_bucket_fn: fn _real_now ->
+          now
+          |> DateTime.from_naive!("Etc/UTC")
+          |> DateTime.to_unix()
         end,
-        flush_boundary_fn: fn _now ->
-          System.os_time(:second) + 1000
+        flush_boundary_fn: fn _real_now ->
+          now
+          |> DateTime.from_naive!("Etc/UTC")
+          |> DateTime.shift(second: 1)
+          |> DateTime.to_unix()
         end
       )
 
-      {:ok, dropped} = emit_dropped_request()
-      {:ok, _dropped} = emit_dropped_request(domain: dropped.domain)
-      {:ok, buffered} = emit_buffered_request()
+      {:ok, dropped} = emit_dropped_request(at: now)
+      {:ok, _dropped} = emit_dropped_request(domain: dropped.domain, at: now)
+      {:ok, buffered} = emit_buffered_request(at: now)
 
       verify_record_written(dropped.domain, "dropped_not_found", 2)
 
@@ -49,10 +59,14 @@ defmodule Plausible.Ingestion.CountersTest do
         buffer_name: test,
         interval: 100,
         aggregate_bucket_fn: fn _now ->
-          System.os_time(:second)
+          ~N[2023-02-14 01:00:03]
+          |> DateTime.from_naive!("Etc/UTC")
+          |> DateTime.to_unix()
         end,
         flush_boundary_fn: fn _now ->
-          System.os_time(:second) + 1000
+          ~N[2023-02-14 01:00:56]
+          |> DateTime.from_naive!("Etc/UTC")
+          |> DateTime.to_unix()
         end
       )
 
@@ -94,9 +108,9 @@ defmodule Plausible.Ingestion.CountersTest do
     end
   end
 
-  defp emit_dropped_request(opts \\ []) do
+  defp emit_dropped_request(opts) do
     domain = Keyword.get(opts, :domain, random_domain())
-    at = Keyword.get(opts, :at, NaiveDateTime.utc_now())
+    at = Keyword.get(opts, :at, @ts)
 
     site = build(:site, domain: domain)
 
@@ -111,11 +125,11 @@ defmodule Plausible.Ingestion.CountersTest do
     {:ok, dropped}
   end
 
-  defp emit_buffered_request(opts \\ []) do
+  defp emit_buffered_request(opts) do
     domain = Keyword.get(opts, :domain, random_domain())
-    at = Keyword.get(opts, :at, NaiveDateTime.utc_now())
+    at = Keyword.get(opts, :at, @ts)
 
-    site = insert(:site, domain: domain)
+    site = new_site(domain: domain)
 
     payload = %{
       name: "pageview",
@@ -138,10 +152,9 @@ defmodule Plausible.Ingestion.CountersTest do
   defp verify_record_written(domain, metric, value, site_id \\ nil) do
     query =
       from(r in Record,
-        where:
-          r.domain == ^domain and
-            r.metric == ^metric and
-            r.value == ^value
+        group_by: [:site_id, :domain, :metric, :event_timebucket],
+        where: r.domain == ^domain and r.metric == ^metric,
+        select: sum(r.value)
       )
 
     query =
@@ -151,7 +164,17 @@ defmodule Plausible.Ingestion.CountersTest do
         query |> where([r], is_nil(r.site_id))
       end
 
-    assert await_clickhouse_count(query, 1)
+    assert eventually(
+             fn ->
+               sums =
+                 query
+                 |> Plausible.ClickhouseRepo.all()
+
+               {sums == [value], sums}
+             end,
+             100,
+             10
+           )
   end
 
   defp random_domain() do

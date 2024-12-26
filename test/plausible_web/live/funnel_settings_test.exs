@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Live.FunnelSettingsTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
   use Plausible
   @moduletag :ee_only
 
@@ -10,6 +11,19 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
     describe "GET /:domain/settings/funnels" do
       setup [:create_user, :log_in, :create_site]
 
+      @tag :ee_only
+      test "premium feature notice renders", %{conn: conn, site: site, user: user} do
+        user
+        |> team_of()
+        |> Plausible.Teams.Team.end_trial()
+        |> Plausible.Repo.update!()
+
+        conn = get(conn, "/#{site.domain}/settings/funnels")
+        resp = conn |> html_response(200) |> text()
+
+        assert resp =~ "please upgrade your subscription"
+      end
+
       test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
         {:ok, _} = setup_funnels(site)
         conn = get(conn, "/#{site.domain}/settings/funnels")
@@ -18,6 +32,8 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert resp =~ "Compose Goals into Funnels"
         assert resp =~ "From blog to signup"
         assert resp =~ "From signup to blog"
+        refute resp =~ "Your account does not have access"
+        refute resp =~ "please upgrade your subscription"
         assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnel-analysis\"]")
       end
 

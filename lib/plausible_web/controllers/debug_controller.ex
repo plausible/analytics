@@ -65,7 +65,7 @@ defmodule PlausibleWeb.DebugController do
       where(
         q,
         [l],
-        fragment("JSONExtractInt(?, \'site_domain\') = ?", l.log_comment, ^site_domain)
+        fragment("JSONExtractString(?, \'site_domain\') = ?", l.log_comment, ^site_domain)
       )
 
   defp filter_by_params(q, conn, _),

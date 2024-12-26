@@ -3,14 +3,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
   LiveView allowing listing and deleting imports.
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
-  import PlausibleWeb.Components.Generic
   import PlausibleWeb.TextHelpers
 
   alias Plausible.Imported
   alias Plausible.Imported.SiteImport
-  alias Plausible.Sites
 
   require Plausible.Imported.SiteImport
 
@@ -18,7 +15,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
+        Plausible.Sites.get_for_user!(current_user, domain, [
+          :owner,
+          :admin,
+          :super_admin
+        ])
       end)
       |> assign_new(:site_imports, fn %{site: site} ->
         site

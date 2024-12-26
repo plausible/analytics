@@ -32,3 +32,4 @@ jobs:
     - run: npm run check-format --prefix ./assets
     - run: npm run test --prefix ./assets
     - run: npm run deploy --prefix ./tracker
+    - run: npm run report-sizes --prefix ./tracker

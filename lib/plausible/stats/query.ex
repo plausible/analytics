@@ -10,20 +10,20 @@ defmodule Plausible.Stats.Query do
             include_imported: false,
             skip_imported_reason: nil,
             now: nil,
-            experimental_reduced_joins?: false,
             latest_import_end_date: nil,
             metrics: [],
             order_by: nil,
             timezone: nil,
-            v2: false,
             legacy_breakdown: false,
+            remove_unavailable_revenue_metrics: false,
             preloaded_goals: [],
+            revenue_currencies: %{},
             include: Plausible.Stats.Filters.QueryParser.default_include(),
             debug_metadata: %{},
             pagination: nil
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{Filters, Imported, Legacy}
+  alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy}
 
   @type t :: %__MODULE__{}
 
@@ -32,8 +32,11 @@ defmodule Plausible.Stats.Query do
       query =
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
-        |> put_experimental_reduced_joins(site, params)
-        |> struct!(v2: true, now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
+        |> struct!(now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
+
+      on_ee do
+        query = Plausible.Stats.Sampling.put_threshold(query, site, params)
+      end
 
       {:ok, query}
     end
@@ -46,20 +49,27 @@ defmodule Plausible.Stats.Query do
     Legacy.QueryBuilder.from(site, params, debug_metadata, now)
   end
 
-  def put_experimental_reduced_joins(query, site, params) do
-    if Map.has_key?(params, "experimental_reduced_joins") do
-      struct!(query,
-        experimental_reduced_joins?: Map.get(params, "experimental_reduced_joins") == "true"
+  def date_range(query, options \\ []) do
+    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
+
+    if Keyword.get(options, :trim_trailing) do
+      today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+
+      Date.range(
+        date_range.first,
+        clamp(today, date_range)
       )
     else
-      struct!(query,
-        experimental_reduced_joins?: FunWithFlags.enabled?(:experimental_reduced_joins, for: site)
-      )
+      date_range
     end
   end
 
-  def date_range(query) do
-    Plausible.Stats.DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
+  defp clamp(date, date_range) do
+    cond do
+      date in date_range -> date
+      Date.before?(date, date_range.first) -> date_range.first
+      Date.after?(date, date_range.last) -> date_range.last
+    end
   end
 
   def set(query, keywords) do
@@ -91,7 +101,7 @@ defmodule Plausible.Stats.Query do
   def remove_top_level_filters(query, prefixes) do
     new_filters =
       Enum.reject(query.filters, fn [_, filter_key | _rest] ->
-        Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
+        is_binary(filter_key) and Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
       end)
 
     query

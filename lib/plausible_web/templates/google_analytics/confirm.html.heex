@@ -1,9 +1,15 @@
-<%= form_for @conn, Routes.google_analytics_path(@conn, :import, @site.domain), [onsubmit: "confirmButton.disabled = true; return true;", class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+<.form
+  :let={f}
+  for={@conn}
+  class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
+  onsubmit="confirmButton.disabled = true; return true;"
+  action={Routes.google_analytics_path(@conn, :import, @site.domain)}
+>
   <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
 
-  <%= hidden_input(f, :access_token, value: @access_token) %>
-  <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
-  <%= hidden_input(f, :expires_at, value: @expires_at) %>
+  <.input type="hidden" field={f[:access_token]} />
+  <.input type="hidden" field={f[:refresh_token]} />
+  <.input type="hidden" field={f[:expires_at]} />
 
   <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
     Stats from this property and time period will be imported from
@@ -11,34 +17,27 @@
   </div>
 
   <div class="mt-6">
-    <%= styled_label(
-      f,
-      :property,
-      "Google Analytics property"
-    ) %>
+    <.label for={f[:property].id}>Google Analytics property</.label>
     <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
       <%= @selected_property_name %>
     </span>
-    <%= hidden_input(f, :property,
-      readonly: "true",
-      value: @selected_property
-    ) %>
+    <.input type="hidden" value={@selected_property} field={f[:property]} readonly="true" />
   </div>
   <div class="flex justify-between mt-3">
     <div class="w-36">
-      <%= styled_label(f, :start_date, "From") %>
+      <.label for={f[:start_date].id}>From</.label>
       <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
         <%= PlausibleWeb.EmailView.date_format(@start_date) %>
       </span>
-      <%= hidden_input(f, :start_date, value: @start_date, readonly: "true") %>
+      <.input type="hidden" value={@start_date} field={f[:start_date]} readonly="true" />
     </div>
     <div class="align-middle pt-4 dark:text-gray-100">&rarr;</div>
     <div class="w-36">
-      <%= styled_label(f, :end_date, "To") %>
+      <.label for={f[:end_date].id}>To</.label>
       <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
         <%= PlausibleWeb.EmailView.date_format(@end_date) %>
       </span>
-      <%= hidden_input(f, :end_date, value: @end_date, readonly: "true") %>
+      <.input type="hidden" value={@end_date} field={f[:end_date]} readonly="true" />
     </div>
   </div>
 
@@ -59,15 +58,19 @@
       </a>
     </p>
 
-    <%= submit(name: "confirmButton", class: "button sm:w-auto w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block") do %>
+    <.button
+      type="submit"
+      name="confirmButton"
+      class="button sm:w-auto w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+    >
       <span class="label-enabled pointer-events-none">
         Confirm import
       </span>
 
       <span class="label-disabled">
-        <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
+        <.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
         Starting import...
       </span>
-    <% end %>
+    </.button>
   </div>
-<% end %>
+</.form>

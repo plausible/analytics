@@ -6,7 +6,6 @@ defmodule PlausibleWeb.Live.Verification do
   """
   use Plausible
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias Plausible.Verification.{Checks, State}
 
@@ -98,12 +97,12 @@ defmodule PlausibleWeb.Live.Verification do
   on_ce do
     defp awaiting_pageviews(assigns) do
       ~H"""
-      <PlausibleWeb.Components.Generic.focus_box>
+      <.focus_box>
         <div class="flex items-center">
           <div class="block pulsating-circle"></div>
           <p class="ml-8">Awaiting your first pageview …</p>
         </div>
-      </PlausibleWeb.Components.Generic.focus_box>
+      </.focus_box>
       """
     end
   end

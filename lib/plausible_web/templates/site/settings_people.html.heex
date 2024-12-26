@@ -1,5 +1,5 @@
 <.settings_tiles>
-  <.tile docs="user-roles">
+  <.tile docs="users-roles">
     <:title>People</:title>
     <:subtitle>Invite your friends or coworkers</:subtitle>
 
@@ -14,13 +14,14 @@
 
     <div class="flow-root">
       <ul class="divide-y divide-gray-200 dark:divide-gray-400">
-        <%= for membership <- @site.memberships do %>
-          <li class="py-4">
+        <%= for membership <- @memberships do %>
+          <li class="py-4" id={"membership-#{membership.user.id}"}>
             <div class="flex items-center space-x-4">
               <div class="flex-shrink-0">
-                <%= img_tag(Plausible.Auth.User.profile_img_url(membership.user),
-                  class: "h-8 w-8 rounded-full"
-                ) %>
+                <img
+                  src={Plausible.Auth.User.profile_img_url(membership.user)}
+                  class="h-8 w-8 rounded-full"
+                />
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm truncate">
@@ -46,7 +47,7 @@
                   @click="open = !open"
                   class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
-                  <%= membership.role |> Atom.to_string() |> String.capitalize() %>
+                  <%= membership.role |> to_string() |> String.capitalize() %>
                   <svg
                     class="w-4 h-4 pt-px ml-1"
                     fill="currentColor"
@@ -99,24 +100,39 @@
                         </svg>
                       </span>
                     </li>
-                    <%= if @conn.assigns[:current_user_role] == :owner do %>
+                    <%= if @conn.assigns[:site_role] == :owner do %>
                       <li
                         class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
                         role="option"
                       >
-                        <%= link("Transfer ownership →",
-                          to:
+                        <.unstyled_link
+                          class="inline-block w-full text-sm p-4 text-red-600 font-medium"
+                          href={
                             Routes.membership_path(
                               @conn,
                               :transfer_ownership_form,
                               @site.domain
-                            ),
-                          class: "inline-block w-full text-sm p-4 text-red-600 font-medium"
-                        ) %>
+                            )
+                          }
+                        >
+                          Transfer ownership
+                        </.unstyled_link>
                       </li>
                     <% end %>
                   <% else %>
-                    <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "admin"), method: :put, class: "p-4 flex justify-between group hover:bg-indigo-500") do %>
+                    <.unstyled_link
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :update_role_by_user,
+                          @site.domain,
+                          membership.user.id,
+                          "editor"
+                        )
+                      }
+                      method="put"
+                      class="p-4 flex justify-between group hover:bg-indigo-500"
+                    >
                       <div>
                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
                           Admin
@@ -126,7 +142,7 @@
                         </p>
                       </div>
 
-                      <%= if membership.role == :admin do %>
+                      <%= if membership.role == "admin" do %>
                         <span class="text-indigo-500 group-hover:text-white">
                           <svg
                             class="h-5 w-5"
@@ -143,8 +159,20 @@
                           </svg>
                         </span>
                       <% end %>
-                    <% end %>
-                    <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "viewer"), method: :put, class: "p-4 flex justify-between group hover:bg-indigo-500") do %>
+                    </.unstyled_link>
+                    <.unstyled_link
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :update_role_by_user,
+                          @site.domain,
+                          membership.user.id,
+                          "viewer"
+                        )
+                      }
+                      method="put"
+                      class="p-4 flex justify-between group hover:bg-indigo-500"
+                    >
                       <div>
                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
                           Viewer
@@ -154,7 +182,7 @@
                         </p>
                       </div>
 
-                      <%= if membership.role == :viewer do %>
+                      <%= if membership.role == "viewer" do %>
                         <span class="text-indigo-500 group-hover:text-white">
                           <svg
                             class="h-5 w-5"
@@ -171,11 +199,22 @@
                           </svg>
                         </span>
                       <% end %>
-                    <% end %>
+                    </.unstyled_link>
 
-                    <%= link(to: Routes.membership_path(@conn, :remove_member, @site.domain, membership.id), method: :delete, class: "p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600") do %>
+                    <.unstyled_link
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :remove_member_by_user,
+                          @site.domain,
+                          membership.user.id
+                        )
+                      }
+                      method="delete"
+                      class="p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
+                    >
                       <p class="text-red-600 font-medium text-sm">Remove member</p>
-                    <% end %>
+                    </.unstyled_link>
                   <% end %>
                 </ul>
               </div>
@@ -186,11 +225,14 @@
     </div>
   </.tile>
 
-  <.tile :if={Enum.count(@site.invitations) > 0}>
+  <.tile :if={Enum.count(@invitations) > 0}>
     <:title>Pending invitations</:title>
     <:subtitle>Waiting for new members to accept their invitations</:subtitle>
 
-    <.table rows={@site.invitations}>
+    <.table
+      rows={@invitations}
+      row_attrs={fn invitation -> %{id: "invitation-#{invitation.invitation_id}"} end}
+    >
       <:thead>
         <.th>Email</.th>
         <.th hide_on_mobile>Role</.th>

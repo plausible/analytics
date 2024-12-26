@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible
+  use Plausible.Teams.Test
   @moduletag :ee_only
 
   on_ee do
@@ -15,7 +16,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
     ]
 
     describe "GET /api/stats/funnel - default" do
-      setup [:create_user, :log_in, :create_new_site]
+      setup [:create_user, :log_in, :create_site]
 
       test "computes funnel for a day", %{conn: conn, site: site} do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
@@ -98,7 +99,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       end
 
       test "computes all-time funnel with filters", %{conn: conn, user: user} do
-        site = insert(:site, stats_start_date: ~D[2020-01-01], members: [user])
+        site = new_site(stats_start_date: ~D[2020-01-01], owner: user)
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
 
         populate_stats(site, [
@@ -120,7 +121,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           build(:event, name: "Purchase", user_id: @user_id)
         ])
 
-        filters = Jason.encode!(%{utm_medium: "social"})
+        filters = Jason.encode!([[:is, "visit:utm_medium", ["social"]]])
 
         resp =
           conn
@@ -229,7 +230,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
         site: site
       } do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
-        insert(:growth_subscription, user: user)
+        subscribe_to_growth_plan(user)
 
         resp =
           conn
@@ -244,12 +245,12 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
     end
 
     describe "GET /api/stats/funnel - disallowed filters" do
-      setup [:create_user, :log_in, :create_new_site]
+      setup [:create_user, :log_in, :create_site]
 
       test "event:page", %{conn: conn, site: site} do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
 
-        filters = Jason.encode!(%{page: "/pageA"})
+        filters = Jason.encode!([[:is, "event:page", ["/pageA"]]])
 
         resp =
           conn
@@ -266,7 +267,8 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       test "event:goal", %{conn: conn, site: site} do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
 
-        filters = Jason.encode!(%{goal: "Signup", page: "/pageA"})
+        filters =
+          Jason.encode!([[:is, "event:goal", ["Signup"]], [:is, "event:page", ["/pageA"]]])
 
         resp =
           conn

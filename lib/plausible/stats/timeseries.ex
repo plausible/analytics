@@ -5,9 +5,8 @@ defmodule Plausible.Stats.Timeseries do
   Avoid adding new logic here - update QueryBuilder etc instead.
   """
 
-  use Plausible
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Comparisons, Query, QueryRunner, Time}
+  alias Plausible.Stats.{Comparisons, Query, QueryRunner, QueryOptimizer, Time}
 
   @time_dimension %{
     "month" => "time:month",
@@ -18,21 +17,15 @@ defmodule Plausible.Stats.Timeseries do
   }
 
   def timeseries(site, query, metrics) do
-    {currency, metrics} =
-      on_ee do
-        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
-      else
-        {nil, metrics}
-      end
-
     query =
-      Query.set(
-        query,
+      query
+      |> Query.set(
         metrics: transform_metrics(metrics, %{conversion_rate: :group_conversion_rate}),
         dimensions: [time_dimension(query)],
         order_by: [{time_dimension(query), :asc}],
-        v2: true
+        remove_unavailable_revenue_metrics: true
       )
+      |> QueryOptimizer.optimize()
 
     comparison_query =
       if(query.include.comparisons,
@@ -43,8 +36,8 @@ defmodule Plausible.Stats.Timeseries do
     query_result = QueryRunner.run(site, query)
 
     {
-      build_result(query_result, query, currency, fn entry -> entry end),
-      build_result(query_result, comparison_query, currency, fn entry -> entry.comparison end),
+      build_result(query_result, query, fn entry -> entry end),
+      build_result(query_result, comparison_query, fn entry -> entry.comparison end),
       query_result.meta
     }
   end
@@ -53,7 +46,7 @@ defmodule Plausible.Stats.Timeseries do
 
   # Given a query result, build a legacy timeseries result
   # Format is %{ date => %{ date: date_string, [metric] => value } } with a bunch of special cases for the UI
-  defp build_result(query_result, %Query{} = query, currency, extract_entry) do
+  defp build_result(query_result, %Query{} = query, extract_entry) do
     query_result.results
     |> Enum.map(&extract_entry.(&1))
     |> Enum.map(fn %{dimensions: [time_dimension_value], metrics: metrics} ->
@@ -65,12 +58,12 @@ defmodule Plausible.Stats.Timeseries do
       }
     end)
     |> Map.new()
-    |> add_labels(query, currency)
+    |> add_labels(query)
   end
 
-  defp build_result(_, _, _, _), do: nil
+  defp build_result(_, _, _), do: nil
 
-  defp add_labels(results_map, query, currency) do
+  defp add_labels(results_map, query) do
     query
     |> Time.time_labels()
     |> Enum.map(fn key ->
@@ -79,7 +72,6 @@ defmodule Plausible.Stats.Timeseries do
         key,
         empty_row(key, query.metrics)
       )
-      |> cast_revenue_metrics_to_money(currency)
     end)
     |> transform_realtime_labels(query)
     |> transform_keys(%{group_conversion_rate: :conversion_rate})
@@ -95,6 +87,7 @@ defmodule Plausible.Stats.Timeseries do
         :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
         :conversion_rate -> Map.merge(row, %{conversion_rate: 0.0})
         :group_conversion_rate -> Map.merge(row, %{group_conversion_rate: 0.0})
+        :scroll_depth -> Map.merge(row, %{scroll_depth: nil})
         :bounce_rate -> Map.merge(row, %{bounce_rate: 0.0})
         :visit_duration -> Map.merge(row, %{visit_duration: nil})
         :average_revenue -> Map.merge(row, %{average_revenue: nil})
@@ -122,12 +115,4 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp transform_realtime_labels(results, _query), do: results
-
-  on_ee do
-    defp cast_revenue_metrics_to_money(results, revenue_goals) do
-      Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
-    end
-  else
-    defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
-  end
 end

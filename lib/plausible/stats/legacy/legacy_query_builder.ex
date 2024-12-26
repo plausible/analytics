@@ -21,25 +21,26 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_parsed_filters(params)
       |> put_preloaded_goals(site)
       |> put_order_by(params)
-      |> Query.put_experimental_reduced_joins(site, params)
+      |> put_include_comparisons(site, params)
       |> Query.put_imported_opts(site, params)
 
     on_ee do
-      query = Plausible.Stats.Sampling.put_threshold(query, params)
+      query = Plausible.Stats.Sampling.put_threshold(query, site, params)
     end
 
     query
   end
 
   defp put_preloaded_goals(query, site) do
-    goals =
-      Plausible.Stats.Filters.QueryParser.preload_goals_if_needed(
+    {preloaded_goals, revenue_currencies} =
+      Plausible.Stats.Filters.QueryParser.preload_needed_goals(
         site,
+        query.metrics,
         query.filters,
         query.dimensions
       )
 
-    struct!(query, preloaded_goals: goals)
+    struct!(query, preloaded_goals: preloaded_goals, revenue_currencies: revenue_currencies)
   end
 
   defp put_period(%Query{now: now} = query, _site, %{"period" => period})
@@ -195,6 +196,11 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
   end
 
+  defp put_include_comparisons(query, site, params) do
+    comparisons = parse_comparison_params(site, params)
+    struct!(query, include: Map.put(query.include, :comparisons, comparisons))
+  end
+
   @doc """
   ### Examples:
     iex> QueryBuilder.parse_order_by(nil)
@@ -275,4 +281,31 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       _ -> today(query)
     end
   end
+
+  def parse_comparison_params(_site, %{"period" => period}) when period in ~w(realtime all),
+    do: nil
+
+  def parse_comparison_params(_site, %{"comparison" => mode} = params)
+      when mode in ["previous_period", "year_over_year"] do
+    %{
+      mode: mode,
+      match_day_of_week: params["match_day_of_week"] == "true"
+    }
+  end
+
+  def parse_comparison_params(site, %{"comparison" => "custom"} = params) do
+    {:ok, date_range} =
+      Filters.QueryParser.parse_date_range_pair(site, [
+        params["compare_from"],
+        params["compare_to"]
+      ])
+
+    %{
+      mode: "custom",
+      date_range: date_range,
+      match_day_of_week: params["match_day_of_week"] == "true"
+    }
+  end
+
+  def parse_comparison_params(_site, _options), do: nil
 end

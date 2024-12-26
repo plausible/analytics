@@ -2,6 +2,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use Plausible
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
+  use Plausible.Teams.Test
 
   on_ee do
     setup :create_user
@@ -77,7 +78,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
 
       test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
-        insert_list(50, :site, members: [user])
+        for _ <- 1..10, do: new_site(owner: user)
 
         conn =
           post(conn, "/api/v1/sites", %{
@@ -107,7 +108,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     describe "DELETE /api/v1/sites/:site_id" do
-      setup :create_new_site
+      setup :create_site
 
       test "delete a site by its domain", %{conn: conn, site: site} do
         conn = delete(conn, "/api/v1/sites/" <> site.domain)
@@ -133,8 +134,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
 
       test "cannot delete a site that the user does not own", %{conn: conn, user: user} do
-        site = insert(:site, members: [])
-        insert(:site_membership, user: user, site: site, role: :admin)
+        site = new_site()
+        add_guest(site, user: user, role: :editor)
         conn = delete(conn, "/api/v1/sites/" <> site.domain)
 
         assert json_response(conn, 404) == %{"error" => "Site could not be found"}
@@ -231,15 +232,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       test "returns 404 when api key owner does not have permissions to create a shared link", %{
         conn: conn,
-        site: site,
         user: user
       } do
-        Repo.update_all(
-          from(sm in Plausible.Site.Membership,
-            where: sm.site_id == ^site.id and sm.user_id == ^user.id
-          ),
-          set: [role: :viewer]
-        )
+        site = new_site()
+
+        add_guest(site, user: user, role: :viewer)
 
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
@@ -382,15 +379,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       test "returns 404 when api key owner does not have permissions to create a goal", %{
         conn: conn,
-        site: site,
         user: user
       } do
-        Repo.update_all(
-          from(sm in Plausible.Site.Membership,
-            where: sm.site_id == ^site.id and sm.user_id == ^user.id
-          ),
-          set: [role: :viewer]
-        )
+        site = new_site()
+
+        add_guest(site, user: user, role: :viewer)
 
         conn =
           put(conn, "/api/v1/sites/goals", %{
@@ -438,7 +431,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     describe "DELETE /api/v1/sites/goals/:goal_id" do
-      setup :create_new_site
+      setup :create_site
 
       test "delete a goal by its id", %{conn: conn, site: site} do
         conn =
@@ -494,8 +487,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn: conn,
         user: user
       } do
-        site = insert(:site, members: [])
-        insert(:site_membership, user: user, site: site, role: :viewer)
+        site = new_site()
+        add_guest(site, user: user, role: :viewer)
 
         conn =
           delete(conn, "/api/v1/sites/goals/1", %{
@@ -539,8 +532,10 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
 
       test "returns sites when present", %{conn: conn, user: user} do
-        [site1, site2] = insert_list(2, :site, members: [user])
-        _unrelated_site = insert(:site)
+        site1 = new_site(owner: user)
+        site2 = new_site(owner: user)
+
+        _unrelated_site = new_site()
 
         conn = get(conn, "/api/v1/sites")
 
@@ -558,9 +553,9 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
 
       test "returns sites where user is only a viewer", %{conn: conn, user: user} do
-        %{domain: owned_site_domain} = insert(:site, members: [user])
-        other_site = %{domain: other_site_domain} = insert(:site)
-        insert(:site_membership, site: other_site, user: user, role: :viewer)
+        %{domain: owned_site_domain} = new_site(owner: user)
+        other_site = %{domain: other_site_domain} = new_site()
+        add_guest(other_site, user: user, role: :viewer)
 
         conn = get(conn, "/api/v1/sites")
 
@@ -577,7 +572,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           %{domain: site1_domain},
           %{domain: site2_domain},
           %{domain: site3_domain}
-        ] = insert_list(3, :site, members: [user])
+        ] = for _ <- 1..3, do: new_site(owner: user)
 
         conn1 = get(conn, "/api/v1/sites?limit=2")
 
@@ -610,7 +605,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
 
       test "lists sites for user with read-only scope", %{conn: conn, user: user} do
-        %{domain: site_domain} = insert(:site, members: [user])
+        %{domain: site_domain} = new_site(owner: user)
         api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 
         conn =
@@ -623,7 +618,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     describe "GET /api/v1/sites/:site_id" do
-      setup :create_new_site
+      setup :create_site
 
       test "get a site by its domain", %{conn: conn, site: site} do
         site =
@@ -686,7 +681,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     describe "GET /api/v1/goals" do
-      setup :create_new_site
+      setup :create_site
 
       test "returns empty when there are no goals for site", %{conn: conn, site: site} do
         conn = get(conn, "/api/v1/sites/goals?site_id=" <> site.domain)
@@ -740,15 +735,14 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                }
       end
 
-      test "returns goals for site where user is viewer", %{conn: conn, user: user, site: site} do
-        Repo.update_all(
-          from(sm in Plausible.Site.Membership,
-            where: sm.site_id == ^site.id and sm.user_id == ^user.id
-          ),
-          set: [role: :viewer]
-        )
+      test "returns goals for site where user is viewer", %{site: site} do
+        viewer = new_user()
+        add_guest(site, user: viewer, role: :viewer)
 
         %{id: goal_id} = insert(:goal, %{site: site, event_name: "Signup"})
+
+        api_key = insert(:api_key, user: viewer, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(build_conn(), "authorization", "Bearer #{api_key.key}")
 
         conn = get(conn, "/api/v1/sites/goals?site_id=" <> site.domain)
 
@@ -831,7 +825,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     describe "PUT /api/v1/sites/:site_id" do
-      setup :create_new_site
+      setup :create_site
 
       test "can change domain name", %{conn: conn, site: site} do
         old_domain = site.domain

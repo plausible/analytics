@@ -111,7 +111,7 @@ defmodule Plausible.Goals do
   def list_revenue_goals(site) do
     from(g in Plausible.Goal,
       where: g.site_id == ^site.id and not is_nil(g.currency),
-      select: %{event_name: g.event_name, currency: g.currency}
+      select: %{display_name: g.display_name, currency: g.currency}
     )
     |> Plausible.Repo.all()
   end
@@ -319,8 +319,8 @@ defmodule Plausible.Goals do
 
   defp maybe_check_feature_access(site, changeset) do
     if Ecto.Changeset.get_field(changeset, :currency) do
-      site = Plausible.Repo.preload(site, :owner)
-      Plausible.Billing.Feature.RevenueGoals.check_availability(site.owner)
+      site = Plausible.Repo.preload(site, :team)
+      Plausible.Billing.Feature.RevenueGoals.check_availability(site.team)
     else
       :ok
     end

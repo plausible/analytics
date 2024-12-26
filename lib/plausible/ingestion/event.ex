@@ -100,11 +100,15 @@ defmodule Plausible.Ingestion.Event do
 
   @spec emit_telemetry_dropped(t(), drop_reason()) :: :ok
   def emit_telemetry_dropped(event, reason) do
-    :telemetry.execute(telemetry_event_dropped(), %{}, %{
-      domain: event.domain,
-      reason: reason,
-      request_timestamp: event.request.timestamp
-    })
+    :telemetry.execute(
+      telemetry_event_dropped(),
+      %{},
+      %{
+        domain: event.domain,
+        reason: reason,
+        request_timestamp: event.request.timestamp
+      }
+    )
   end
 
   defp pipeline() do
@@ -118,8 +122,8 @@ defmodule Plausible.Ingestion.Event do
       drop_shield_rule_country: &drop_shield_rule_country/2,
       put_user_agent: &put_user_agent/2,
       put_basic_info: &put_basic_info/2,
-      put_referrer: &put_referrer/2,
-      put_utm_tags: &put_utm_tags/2,
+      put_source_info: &put_source_info/2,
+      maybe_infer_medium: &maybe_infer_medium/2,
       put_props: &put_props/2,
       put_revenue: &put_revenue/2,
       put_salts: &put_salts/2,
@@ -246,32 +250,41 @@ defmodule Plausible.Ingestion.Event do
       timestamp: event.request.timestamp,
       name: event.request.event_name,
       hostname: event.request.hostname,
-      pathname: event.request.pathname
+      pathname: event.request.pathname,
+      scroll_depth: event.request.scroll_depth
     })
   end
 
-  defp put_referrer(%__MODULE__{} = event, _context) do
-    ref = parse_referrer(event.request.uri, event.request.referrer)
-    source = get_referrer_source(event.request, ref)
-    channel = Plausible.Ingestion.Acquisition.get_channel(event.request, source)
-
-    update_session_attrs(event, %{
-      channel: channel,
-      referrer_source: source,
-      referrer: clean_referrer(ref)
-    })
-  end
-
-  defp put_utm_tags(%__MODULE__{} = event, _context) do
+  defp put_source_info(%__MODULE__{} = event, _context) do
     query_params = event.request.query_params
 
+    tagged_source =
+      query_params["utm_source"] ||
+        query_params["source"] ||
+        query_params["ref"]
+
     update_session_attrs(event, %{
+      referrer_source: Plausible.Ingestion.Source.resolve(event.request),
+      referrer: Plausible.Ingestion.Source.format_referrer(event.request.referrer),
+      click_id_param: get_click_id_param(event.request.query_params),
+      utm_source: tagged_source,
       utm_medium: query_params["utm_medium"],
-      utm_source: query_params["utm_source"],
       utm_campaign: query_params["utm_campaign"],
       utm_content: query_params["utm_content"],
       utm_term: query_params["utm_term"]
     })
+  end
+
+  defp maybe_infer_medium(%__MODULE__{} = event, _context) do
+    inferred_medium =
+      case event.clickhouse_session_attrs do
+        %{utm_medium: medium} when is_binary(medium) -> medium
+        %{utm_medium: nil, referrer_source: "Google", click_id_param: "gclid"} -> "(gclid)"
+        %{utm_medium: nil, referrer_source: "Bing", click_id_param: "msclkid"} -> "(msclkid)"
+        _ -> nil
+      end
+
+    update_session_attrs(event, %{utm_medium: inferred_medium})
   end
 
   defp put_geolocation(%__MODULE__{} = event, _context) do
@@ -392,38 +405,13 @@ defmodule Plausible.Ingestion.Event do
     event
   end
 
-  defp parse_referrer(_uri, _referrer_str = nil), do: nil
+  @click_id_params ["gclid", "gbraid", "wbraid", "msclkid", "fbclid", "twclid"]
 
-  defp parse_referrer(uri, referrer_str) do
-    referrer_uri = URI.parse(referrer_str)
+  defp get_click_id_param(nil), do: nil
 
-    if Request.sanitize_hostname(referrer_uri.host) !== Request.sanitize_hostname(uri.host) &&
-         referrer_uri.host !== "localhost" do
-      RefInspector.parse(referrer_str)
-    end
-  end
-
-  defp get_referrer_source(request, ref) do
-    tagged_source =
-      request.query_params["utm_source"] ||
-        request.query_params["source"] ||
-        request.query_params["ref"]
-
-    if tagged_source do
-      Plausible.Ingestion.Acquisition.find_mapping(tagged_source)
-    else
-      PlausibleWeb.RefInspector.parse(ref)
-    end
-  end
-
-  defp clean_referrer(nil), do: nil
-
-  defp clean_referrer(ref) do
-    uri = URI.parse(ref.referer)
-
-    if PlausibleWeb.RefInspector.right_uri?(uri) do
-      PlausibleWeb.RefInspector.format_referrer(uri)
-    end
+  defp get_click_id_param(query_params) do
+    @click_id_params
+    |> Enum.find(fn param_name -> Map.has_key?(query_params, param_name) end)
   end
 
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
@@ -541,7 +529,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp get_root_domain(nil), do: "(none)"
+  defp get_root_domain("(none)"), do: "(none)"
 
   defp get_root_domain(hostname) do
     case :inet.parse_ipv4_address(String.to_charlist(hostname)) do

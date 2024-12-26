@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/browsers" do
-    setup [:create_user, :log_in, :create_new_site, :create_site_import]
+    setup [:create_user, :log_in, :create_site, :create_site_import]
 
     test "returns top browsers by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:event, user_id: 1, name: "Signup")
       ])
 
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
 
@@ -191,10 +191,90 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                %{"name" => "(not set)", "visitors" => 2, "percentage" => 100.0}
              ]
     end
+
+    test "returns comparisons", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Safari", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/browsers?period=7d&date=2021-01-13&comparison=previous_period"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Chrome",
+                 "visitors" => 2,
+                 "percentage" => 66.7,
+                 "comparison" => %{
+                   "visitors" => 0,
+                   "percentage" => 0.0,
+                   "change" => %{"percentage" => 100, "visitors" => 100}
+                 }
+               },
+               %{
+                 "name" => "Firefox",
+                 "visitors" => 1,
+                 "percentage" => 33.3,
+                 "comparison" => %{
+                   "visitors" => 1,
+                   "percentage" => 50.0,
+                   "change" => %{"percentage" => -33, "visitors" => 0}
+                 }
+               }
+             ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "7 Jan - 13 Jan 2021",
+               "comparison_date_range_label" => "31 Dec 2020 - 6 Jan 2021"
+             }
+    end
+
+    test "returns comparisons with limit", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/browsers?period=7d&date=2021-01-13&comparison=previous_period&limit=1"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Chrome",
+                 "visitors" => 2,
+                 "percentage" => 66.7,
+                 "comparison" => %{
+                   "visitors" => 1,
+                   "percentage" => 25.0,
+                   "change" => %{"percentage" => 167, "visitors" => 100}
+                 }
+               }
+             ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "7 Jan - 13 Jan 2021",
+               "comparison_date_range_label" => "31 Dec 2020 - 6 Jan 2021"
+             }
+    end
   end
 
   describe "GET /api/stats/:domain/browser-versions" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns correct conversion_rate when browser_version clashes across browsers", %{
       conn: conn,
@@ -214,7 +294,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       json_response =
         get(
@@ -251,7 +331,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:pageview, browser: "Firefox", browser_version: "88.0")
       ])
 
-      filters = Jason.encode!(%{browser: "Chrome"})
+      filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
 
       conn =
         get(
@@ -284,7 +364,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
          } do
       populate_stats(site, [build(:pageview, browser: "Chrome", browser_version: "78.0")])
 
-      filters = Jason.encode!(%{browser: "Chrome"})
+      filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
 
       conn =
         get(conn, "/api/stats/#{site.domain}/browser-versions?filters=#{filters}&detailed=true")
@@ -306,7 +386,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:pageview, browser: "", browser_version: "")
       ])
 
-      filters = Jason.encode!(%{browser: "(not set)"})
+      filters = Jason.encode!([[:is, "visit:browser", ["(not set)"]]])
 
       conn =
         get(

@@ -1,5 +1,6 @@
 defmodule Plausible.Site.Memberships.RejectInvitationTest do
   use Plausible
+  use Plausible.Teams.Test
   use Plausible.DataCase, async: true
   use Bamboo.Test
 
@@ -8,17 +9,11 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
   alias Plausible.Site.Memberships.RejectInvitation
 
   test "rejects invitation and sends email to inviter" do
-    inviter = insert(:user)
-    invitee = insert(:user)
-    site = insert(:site, members: [inviter])
+    inviter = new_user()
+    invitee = new_user()
+    site = new_site(owner: inviter)
 
-    invitation =
-      insert(:invitation,
-        site_id: site.id,
-        inviter: inviter,
-        email: invitee.email,
-        role: :admin
-      )
+    invitation = invite_guest(site, invitee, inviter: inviter, role: :editor)
 
     assert {:ok, rejected_invitation} =
              RejectInvitation.reject_invitation(invitation.invitation_id, invitee)
@@ -33,25 +28,18 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
   end
 
   test "returns error for non-existent invitation" do
-    invitee = insert(:user)
+    invitee = new_user()
 
     assert {:error, :invitation_not_found} =
              RejectInvitation.reject_invitation("does_not_exist", invitee)
   end
 
   test "does not allow rejecting invitation by anyone other than invitee" do
-    inviter = insert(:user)
-    invitee = insert(:user)
-    other_user = insert(:user)
-    site = insert(:site, members: [inviter])
-
-    invitation =
-      insert(:invitation,
-        site_id: site.id,
-        inviter: inviter,
-        email: invitee.email,
-        role: :admin
-      )
+    inviter = new_user()
+    invitee = new_user()
+    other_user = new_user()
+    site = new_site(owner: inviter)
+    invitation = invite_guest(site, invitee, role: :editor, inviter: inviter)
 
     assert {:error, :invitation_not_found} =
              RejectInvitation.reject_invitation(invitation.invitation_id, other_user)

@@ -1,0 +1,26 @@
+<div class="w-full max-w-3xl mt-4 mx-auto flex">
+  <div class="max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-lg rounded px-8 pt-6 pb-8 mb-4 mt-8">
+    <h2 class="text-xl font-black dark:text-gray-100">Thank you!</h2>
+
+    <div class="rounded-md dark:bg-transparent mt-4">
+      <div class="flex">
+        <h3 class="text-sm font-medium dark:text-gray-100">
+          Your report has been submitted.
+        </h3>
+      </div>
+    </div>
+    <div class="mb-6 mt-12">
+      <div class="flex gap-x-5 text-sm justify-center">
+        <.styled_link href={PlausibleWeb.LayoutView.home_dest(@conn)}>
+          Home page
+        </.styled_link>
+        <.styled_link href="https://status.plausible.io">
+          Status page
+        </.styled_link>
+        <.styled_link href="https://plausible.io/contact">
+          Contact us
+        </.styled_link>
+      </div>
+    </div>
+  </div>
+</div>

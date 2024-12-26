@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     Setup Two-Factor Authentication
   </:title>
@@ -24,10 +24,13 @@
     </.focus_list>
   </:footer>
 
-  <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa_setup), [
-    id: "verify-2fa-form",
-    onsubmit: "document.getElementById('verify-button').disabled = true"
-  ], fn f -> %>
+  <.form
+    :let={f}
+    for={@conn.params}
+    action={Routes.auth_path(@conn, :verify_2fa_setup)}
+    id="verify-2fa-form"
+    onsubmit="document.getElementById('verify-button').disabled = true"
+  >
     <PlausibleWeb.Components.TwoFactor.verify_2fa_input form={f} field={:code} class="mt-6" />
-  <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+  </.form>
+</.focus_box>

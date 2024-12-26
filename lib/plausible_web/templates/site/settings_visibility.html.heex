@@ -16,10 +16,13 @@
       for={nil}
     >
       <.toggle_submit set_to={@site.public}>
-        Make stats publicly available on <%= link(PlausibleWeb.StatsView.pretty_stats_url(@site),
-          to: Routes.stats_path(@conn, :stats, @site.domain, []),
-          class: "text-indigo-500"
-        ) %>
+        Make stats publicly available on
+        <.unstyled_link
+          class="text-indigo-500"
+          href={Routes.stats_path(@conn, :stats, @site.domain, [])}
+        >
+          <%= PlausibleWeb.StatsView.pretty_stats_url(@site) %>
+        </.unstyled_link>
       </.toggle_submit>
     </.form>
   </.tile>
@@ -55,7 +58,7 @@
           <Heroicons.lock_open :if={!link.password_hash} class="w-6 h-6 feather ml-2" />
         </.td>
         <.td>
-          <PlausibleWeb.Live.Components.Form.input_with_clipboard
+          <.input_with_clipboard
             name={link.slug}
             id={link.slug}
             value={shared_link_dest(@site, link)}
@@ -85,7 +88,7 @@
       You can use shared links to embed your stats in any other webpage using an <code>iframe</code>. Copy & paste a shared link into the form below to generate the embed code.
     </:subtitle>
 
-    <PlausibleWeb.Live.Components.Form.input
+    <.input
       name="embed-link"
       id="embed-link"
       label="Enter Shared Link (only public shared links without password can be embedded)"
@@ -93,7 +96,7 @@
       width="w-1/2"
     />
 
-    <PlausibleWeb.Live.Components.Form.input
+    <.input
       type="select"
       name="theme"
       id="theme"
@@ -103,7 +106,7 @@
       width="w-1/2"
     />
 
-    <PlausibleWeb.Live.Components.Form.input
+    <.input
       name="background"
       id="background"
       label="Custom Background Colour (optional). Try using `transparent` background to blend the dashboard with your site."
@@ -112,19 +115,12 @@
       width="w-1/2"
     />
 
-    <PlausibleWeb.Live.Components.Form.input
-      name="base-url"
-      type="hidden"
-      id="base-url"
-      value={plausible_url()}
-    />
-    <PlausibleWeb.Components.Generic.button id="generate-embed" class="mt-4">
+    <.input name="base-url" type="hidden" id="base-url" value={plausible_url()} />
+    <.button id="generate-embed" class="mt-4">
       Generate Embed Code
-    </PlausibleWeb.Components.Generic.button>
+    </.button>
 
-    <%= label(nil, "embed-code", "Embed Code",
-      class: "mt-8 mb-2 block font-medium dark:text-gray-100"
-    ) %>
+    <.label for="embed-code">Embed Code</.label>
 
     <div class="relative mt-1">
       <textarea

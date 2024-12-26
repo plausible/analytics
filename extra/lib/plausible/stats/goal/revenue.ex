@@ -2,9 +2,6 @@ defmodule Plausible.Stats.Goal.Revenue do
   @moduledoc """
   Revenue specific functions for the stats scope
   """
-  import Ecto.Query
-
-  alias Plausible.Stats.Filters
 
   @revenue_metrics [:average_revenue, :total_revenue]
 
@@ -12,73 +9,71 @@ defmodule Plausible.Stats.Goal.Revenue do
     @revenue_metrics
   end
 
-  @spec get_revenue_tracking_currency(Plausible.Site.t(), Plausible.Stats.Query.t(), [atom()]) ::
-          {atom() | nil, [atom()]}
   @doc """
-  Returns the common currency for the goal filters in a query. If there are no
-  goal filters, multiple currencies or the site owner does not have access to
-  revenue goals, `nil` is returned and revenue metrics are dropped.
+  Preloads revenue currencies for a query.
 
-  Aggregating revenue data works only for same currency goals. If the query is
-  filtered by goals with different currencies, for example, one USD and other
-  EUR, revenue metrics are dropped.
+  Assumptions and business logic:
+  1. Goals are already filtered according to query filters and dimensions
+  2. If there's a single currency involved, return map containing the default
+  3. If there's a breakdown by event:goal we return all the relevant currencies as a map
+  4. If filtering by multiple different currencies without event:goal breakdown empty map is returned
+  5. If user has no access or preloading is not needed, empty map is returned
+
+  The resulting data structure is attached to a `Query` and used below in `format_revenue_metric/3`.
   """
-  def get_revenue_tracking_currency(site, query, metrics) do
-    goal_filters =
-      case Filters.get_toplevel_filter(query, "event:goal") do
-        [:is, "event:goal", list] -> list
-        _ -> []
+  def preload_revenue_currencies(site, goals, metrics, dimensions) do
+    if requested?(metrics) and length(goals) > 0 and available?(site) do
+      goal_currency_map =
+        goals
+        |> Map.new(fn goal -> {Plausible.Goal.display_name(goal), goal.currency} end)
+        |> Map.reject(fn {_goal, currency} -> is_nil(currency) end)
+
+      currencies = goal_currency_map |> Map.values() |> Enum.uniq()
+      goal_dimension? = "event:goal" in dimensions
+
+      case {currencies, goal_dimension?} do
+        {[currency], false} -> %{default: currency}
+        {_, true} -> goal_currency_map
+        _ -> %{}
       end
-
-    requested_revenue_metrics? = Enum.any?(metrics, &(&1 in @revenue_metrics))
-    filtering_by_goal? = Enum.any?(goal_filters)
-
-    revenue_goals_available? = fn ->
-      site = Plausible.Repo.preload(site, :owner)
-      Plausible.Billing.Feature.RevenueGoals.check_availability(site.owner) == :ok
-    end
-
-    if requested_revenue_metrics? && filtering_by_goal? && revenue_goals_available?.() do
-      revenue_goals_currencies =
-        Plausible.Repo.all(
-          from rg in Ecto.assoc(site, :revenue_goals),
-            where: rg.display_name in ^goal_filters,
-            select: rg.currency,
-            distinct: true
-        )
-
-      if length(revenue_goals_currencies) == 1,
-        do: {List.first(revenue_goals_currencies), metrics},
-        else: {nil, metrics -- @revenue_metrics}
     else
-      {nil, metrics -- @revenue_metrics}
+      %{}
     end
   end
 
-  def cast_revenue_metrics_to_money([%{goal: _goal} | _rest] = results, revenue_goals)
-      when is_list(revenue_goals) do
-    for result <- results do
-      if matching_goal = Enum.find(revenue_goals, &(&1.display_name == result.goal)) do
-        cast_revenue_metrics_to_money(result, matching_goal.currency)
-      else
-        result
-      end
-    end
-  end
+  def format_revenue_metric(value, query, dimension_values) do
+    currency =
+      query.revenue_currencies[:default] ||
+        get_goal_dimension_revenue_currency(query, dimension_values)
 
-  def cast_revenue_metrics_to_money(results, currency) when is_map(results) do
-    for {metric, value} <- results, into: %{} do
-      {metric, maybe_cast_metric_to_money(value, metric, currency)}
-    end
-  end
+    if currency do
+      money = Money.new!(value || 0, currency)
 
-  def cast_revenue_metrics_to_money(results, _), do: results
-
-  def maybe_cast_metric_to_money(value, metric, currency) do
-    if currency && metric in @revenue_metrics do
-      Money.new!(value || 0, currency)
+      %{
+        short: Money.to_string!(money, format: :short, fractional_digits: 1),
+        long: Money.to_string!(money),
+        value: Decimal.to_float(money.amount)
+      }
     else
       value
     end
+  end
+
+  def available?(site) do
+    site = Plausible.Repo.preload(site, :team)
+    Plausible.Billing.Feature.RevenueGoals.check_availability(site.team) == :ok
+  end
+
+  # :NOTE: Legacy queries don't have metrics associated with them so work around the issue by assuming
+  #   revenue metric was requested.
+  def requested?([]), do: true
+  def requested?(metrics), do: Enum.any?(metrics, &(&1 in @revenue_metrics))
+
+  defp get_goal_dimension_revenue_currency(query, dimension_values) do
+    Enum.zip(query.dimensions, dimension_values)
+    |> Enum.find_value(fn
+      {"event:goal", goal_label} -> Map.get(query.revenue_currencies, goal_label)
+      _ -> nil
+    end)
   end
 end

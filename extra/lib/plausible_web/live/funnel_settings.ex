@@ -3,11 +3,10 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   LiveView allowing listing, creating and deleting funnels.
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   use Plausible.Funnel
 
-  alias Plausible.{Sites, Goals, Funnels}
+  alias Plausible.{Goals, Funnels}
 
   def mount(
         _params,
@@ -17,7 +16,11 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
+        Plausible.Sites.get_for_user!(current_user, domain, [
+          :owner,
+          :admin,
+          :super_admin
+        ])
       end)
       |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
         Funnels.list(site)
@@ -28,6 +31,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
     {:ok,
      assign(socket,
+       site_team: socket.assigns.site.team,
        domain: domain,
        displayed_funnels: socket.assigns.all_funnels,
        setup_funnel?: false,
@@ -64,13 +68,15 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       </div>
 
       <div :if={@goal_count < Funnel.min_steps()}>
-        <PlausibleWeb.Components.Generic.notice class="mt-4" title="Not enough goals">
-          You need to define at least two goals to create a funnel. Go ahead and <%= link(
-            "add goals",
-            to: PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain),
-            class: "text-indigo-500 w-full text-center"
-          ) %> to proceed.
-        </PlausibleWeb.Components.Generic.notice>
+        <.notice class="mt-4" title="Not enough goals">
+          You need to define at least two goals to create a funnel. Go ahead and
+          <.styled_link href={
+            PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)
+          }>
+            add goals
+          </.styled_link>
+          to proceed.
+        </.notice>
       </div>
     </div>
     """
@@ -101,7 +107,11 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
     site =
-      Sites.get_for_user!(socket.assigns.current_user, socket.assigns.domain, [:owner, :admin])
+      Plausible.Sites.get_for_user!(
+        socket.assigns.current_user,
+        socket.assigns.domain,
+        [:owner, :admin]
+      )
 
     id = String.to_integer(id)
     :ok = Funnels.delete(site, id)

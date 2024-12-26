@@ -9,23 +9,18 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+import Plausible.Teams.Test
 
 words =
   for i <- 0..(:erlang.system_info(:atom_count) - 1),
       do: :erlang.binary_to_term(<<131, 75, i::24>>)
 
-user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
+user = new_user(email: "user@plausible.test", password: "plausible")
 
 native_stats_range =
   Date.range(
     Date.add(Date.utc_today(), -720),
     Date.utc_today()
-  )
-
-legacy_imported_stats_range =
-  Date.range(
-    Date.add(native_stats_range.first, -360),
-    Date.add(native_stats_range.first, -180)
   )
 
 imported_stats_range =
@@ -45,24 +40,24 @@ long_random_paths =
     "/#{path}.html"
   end
 
+long_random_paths = ["/", "/register", "/login", "/about"] ++ long_random_paths
+
 long_random_urls =
   for path <- long_random_paths do
     "https://dummy.site#{path}"
   end
 
 site =
-  Plausible.Factory.insert(:site,
+  new_site(
     domain: "dummy.site",
-    native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
-    stats_start_date: NaiveDateTime.new!(legacy_imported_stats_range.first, ~T[00:00:00]),
-    memberships: [
-      Plausible.Factory.build(:site_membership, user: user, role: :owner),
-      Plausible.Factory.build(:site_membership,
-        user: Plausible.Factory.build(:user, name: "Arnold Wallaby", password: "plausible"),
-        role: :viewer
-      )
-    ]
+    team: [
+      native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
+      stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00])
+    ],
+    owner: user
   )
+
+add_guest(site, user: new_user(name: "Arnold Wallaby", password: "plausible"), role: :viewer)
 
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
 Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")
@@ -81,13 +76,15 @@ seeded_token = Plausible.Plugins.API.Token.generate("seed-token")
 {:ok, _, _} =
   Plausible.Plugins.API.Tokens.create(site, "plausible-plugin-dev-seed-token", seeded_token)
 
+{:ok, site} = Plausible.Props.allow(site, ["logged_in"])
+
 {:ok, goal1} = Plausible.Goals.create(site, %{"page_path" => "/"})
 {:ok, goal2} = Plausible.Goals.create(site, %{"page_path" => "/register"})
 
 {:ok, goal3} =
   Plausible.Goals.create(site, %{"page_path" => "/login", "display_name" => "User logs in"})
 
-{:ok, goal4} =
+{:ok, revenue_goal} =
   Plausible.Goals.create(site, %{
     "event_name" => "Purchase",
     "currency" => "USD",
@@ -104,30 +101,6 @@ if Plausible.ee?() do
       %{"goal_id" => goal2.id},
       %{"goal_id" => goal3.id}
     ])
-end
-
-put_random_time = fn
-  date, 0 ->
-    current_hour = Time.utc_now().hour
-    current_minute = Time.utc_now().minute
-
-    random_time =
-      Time.new!(
-        Enum.random(0..current_hour),
-        Enum.random(0..current_minute),
-        0
-      )
-
-    date
-    |> NaiveDateTime.new!(random_time)
-    |> NaiveDateTime.truncate(:second)
-
-  date, _ ->
-    random_time = Time.new!(:rand.uniform(23), :rand.uniform(59), 0)
-
-    date
-    |> NaiveDateTime.new!(random_time)
-    |> NaiveDateTime.truncate(:second)
 end
 
 geolocations = [
@@ -170,140 +143,110 @@ geolocations = [
   []
 ]
 
-sources = ["", "Facebook", "Twitter", "DuckDuckGo", "Google"]
+sources = [
+  "",
+  "Facebook",
+  "Twitter",
+  "DuckDuckGo",
+  "Google",
+  "opensource.com",
+  "indiehackers.com"
+]
 
 utm_medium = %{
   "" => ["email", ""],
-  "Facebook" => ["social"],
+  "Google" => ["cpc", ""],
+  "Facebook" => ["social", "cpc"],
   "Twitter" => ["social"]
 }
 
-native_stats_range
-|> Enum.with_index()
-|> Enum.flat_map(fn {date, index} ->
-  Enum.map(0..Enum.random(1..500), fn _ ->
-    geolocation = Enum.random(geolocations)
+random_event_data = fn ->
+  referrer_source = Enum.random(sources)
 
-    referrer_source = Enum.random(sources)
-
-    [
-      site_id: site.id,
-      hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
-      timestamp: put_random_time.(date, index),
-      referrer_source: referrer_source,
-      browser: Enum.random(["Microsoft Edge", "Chrome", "curl", "Safari", "Firefox", "Vivaldi"]),
-      browser_version: to_string(Enum.random(0..50)),
-      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-      operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
-      operating_system_version: to_string(Enum.random(0..15)),
-      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
-      utm_source: String.downcase(referrer_source),
-      utm_campaign: Enum.random(["", "Referral", "Advertisement", "Email"]),
-      pathname:
-        Enum.random([
-          "/",
-          "/login",
-          "/settings",
-          "/register",
-          "/docs",
-          "/docs/1",
-          "/docs/2" | long_random_paths
-        ]),
-      user_id: Enum.random(1..1200),
-      "meta.key": ["url", "logged_in", "is_customer", "amount"],
-      "meta.value": [
-        Enum.random(long_random_urls),
-        Enum.random(["true", "false"]),
-        Enum.random(["true", "false"]),
-        to_string(Enum.random(1..9000))
-      ]
+  [
+    site_id: site.id,
+    hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
+    referrer_source: referrer_source,
+    browser: Enum.random(["Microsoft Edge", "Chrome", "curl", "Safari", "Firefox", "Vivaldi"]),
+    browser_version: to_string(Enum.random(0..50)),
+    screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
+    operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
+    operating_system_version: to_string(Enum.random(0..15)),
+    utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
+    utm_source: String.downcase(referrer_source),
+    utm_campaign: Enum.random(["", "Referral", "Advertisement", "Email"]),
+    pathname: Enum.random(long_random_paths),
+    "meta.key": ["url", "logged_in"],
+    "meta.value": [
+      Enum.random(long_random_urls),
+      Enum.random(["true", "false"])
     ]
-    |> Keyword.merge(geolocation)
-    |> then(&Plausible.Factory.build(:pageview, &1))
-  end)
-end)
-|> Plausible.TestUtils.populate_stats()
+  ]
+  |> Keyword.merge(Enum.random(geolocations))
+end
+
+clickhouse_max_uint64 = 18_446_744_073_709_551_615
+
+with_random_time = fn date ->
+  random_time = Time.new!(:rand.uniform(23), :rand.uniform(59), 0)
+
+  date
+  |> NaiveDateTime.new!(random_time)
+  |> NaiveDateTime.truncate(:second)
+end
+
+next_event_timestamp = fn timestamp ->
+  seconds_to_next_event = :rand.uniform(300)
+  NaiveDateTime.add(timestamp, seconds_to_next_event)
+end
 
 native_stats_range
-|> Enum.with_index()
-|> Enum.flat_map(fn {date, index} ->
-  Enum.map(0..Enum.random(1..50), fn _ ->
-    geolocation = Enum.random(geolocations)
+|> Enum.flat_map(fn date ->
+  n_visitors = 50 + :rand.uniform(150)
 
-    referrer_source = Enum.random(sources)
+  Enum.flat_map(0..n_visitors, fn _ ->
+    visit_start_timestamp = with_random_time.(date)
+    user_id = :rand.uniform(clickhouse_max_uint64)
 
-    [
-      name: goal4.event_name,
-      site_id: site.id,
-      hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
-      timestamp: put_random_time.(date, index),
-      referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-      browser: Enum.random(["Microsoft Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
-      browser_version: to_string(Enum.random(0..50)),
-      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-      operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
-      operating_system_version: to_string(Enum.random(0..15)),
-      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
-      utm_source: String.downcase(referrer_source),
-      pathname:
-        Enum.random([
-          "/",
-          "/login",
-          "/settings",
-          "/register",
-          "/docs",
-          "/docs/1",
-          "/docs/2" | long_random_paths
-        ]),
-      user_id: Enum.random(1..1200),
-      revenue_reporting_amount: Decimal.new(Enum.random(100..10000)),
-      revenue_reporting_currency: "USD",
-      "meta.key": ["url", "logged_in", "is_customer", "amount"],
-      "meta.value": [
-        Enum.random(long_random_urls),
-        Enum.random(["true", "false"]),
-        Enum.random(["true", "false"]),
-        to_string(Enum.random(1..9000))
-      ]
-    ]
-    |> Keyword.merge(geolocation)
-    |> then(&Plausible.Factory.build(:event, &1))
-  end)
-end)
-|> Plausible.TestUtils.populate_stats()
+    event =
+      random_event_data.()
+      |> Keyword.merge(user_id: user_id)
 
-native_stats_range
-|> Enum.with_index()
-|> Enum.flat_map(fn {date, index} ->
-  Enum.map(0..Enum.random(1..50), fn _ ->
-    geolocation = Enum.random(geolocations)
+    Enum.reduce(0..Enum.random(0..5), [], fn event_index, events ->
+      timestamp =
+        case events do
+          [] -> visit_start_timestamp
+          [event | _] -> next_event_timestamp.(event.timestamp)
+        end
 
-    referrer_source = Enum.random(sources)
+      event = Keyword.merge(event, timestamp: timestamp)
 
-    [
-      name: outbound.event_name,
-      site_id: site.id,
-      hostname: site.domain,
-      timestamp: put_random_time.(date, index),
-      referrer_source: referrer_source,
-      browser: Enum.random(["Microsoft Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
-      browser_version: to_string(Enum.random(0..50)),
-      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-      operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
-      operating_system_version: to_string(Enum.random(0..15)),
-      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
-      utm_source: String.downcase(referrer_source),
-      user_id: Enum.random(1..1200),
-      "meta.key": ["url", "logged_in", "is_customer", "amount"],
-      "meta.value": [
-        Enum.random(long_random_urls),
-        Enum.random(["true", "false"]),
-        Enum.random(["true", "false"]),
-        to_string(Enum.random(1..9000))
-      ]
-    ]
-    |> Keyword.merge(geolocation)
-    |> then(&Plausible.Factory.build(:event, &1))
+      event =
+        cond do
+          event_index > 0 && :rand.uniform() < 0.1 ->
+            event
+            |> Keyword.merge(name: outbound.event_name)
+            |> then(&Plausible.Factory.build(:event, &1))
+
+          event_index > 0 && :rand.uniform() < 0.05 ->
+            amount = Decimal.new(:rand.uniform(100))
+
+            event
+            |> Keyword.merge(name: revenue_goal.event_name)
+            |> Keyword.merge(revenue_source_currency: "USD")
+            |> Keyword.merge(revenue_source_amount: amount)
+            |> Keyword.merge(revenue_reporting_currency: "USD")
+            |> Keyword.merge(revenue_reporting_amount: amount)
+            |> then(&Plausible.Factory.build(:event, &1))
+
+          true ->
+            event
+            |> then(&Plausible.Factory.build(:pageview, &1))
+        end
+
+      [event | events]
+    end)
+    |> Enum.reverse()
   end)
 end)
 |> Plausible.TestUtils.populate_stats()
@@ -321,29 +264,32 @@ site_import =
 
 imported_stats_range
 |> Enum.flat_map(fn date ->
-  Enum.flat_map(0..Enum.random(1..500), fn _ ->
+  Enum.flat_map(0..Enum.random(1..50), fn _ ->
     [
       Plausible.Factory.build(:imported_visitors,
         date: date,
-        pageviews: Enum.random(1..20),
-        visitors: Enum.random(1..20),
-        bounces: Enum.random(1..20),
-        visits: Enum.random(1..200),
+        pageviews: Enum.random(1..50),
+        visitors: Enum.random(1..10),
+        bounces: Enum.random(1..6),
+        visits: Enum.random(1..15),
         visit_duration: Enum.random(1000..10000)
       ),
       Plausible.Factory.build(:imported_sources,
         date: date,
-        source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-        visitors: Enum.random(1..20),
-        visits: Enum.random(1..200),
-        bounces: Enum.random(1..20),
+        source: Enum.random(sources),
+        pageviews: Enum.random(1..50),
+        visitors: Enum.random(1..10),
+        bounces: Enum.random(1..6),
+        visits: Enum.random(1..15),
         visit_duration: Enum.random(1000..10000)
       ),
       Plausible.Factory.build(:imported_pages,
         date: date,
-        visitors: Enum.random(1..20),
-        pageviews: Enum.random(1..20),
-        exits: Enum.random(1..20),
+        page: Enum.random(long_random_paths),
+        visitors: Enum.random(1..10),
+        visits: Enum.random(1..15),
+        pageviews: Enum.random(1..50),
+        exits: Enum.random(1..10),
         time_on_page: Enum.random(1000..10000)
       )
     ]

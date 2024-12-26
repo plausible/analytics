@@ -3,6 +3,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   use Plausible.Repo
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
+  use Plausible.Teams.Test
 
   import ExUnit.CaptureLog
   import Mox
@@ -30,7 +31,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html_response(conn, 200) =~ "Add site info"
 
-      insert(:site, members: [user], domain: "test-site.com")
+      new_site(owner: user, domain: "test-site.com")
 
       conn = get(conn1, "/sites/new")
 
@@ -41,12 +42,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      ep = insert(:enterprise_plan, user: user)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user)
 
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      new_site(owner: user)
+      new_site(owner: user)
+      new_site(owner: user)
 
       conn = get(conn, "/sites/new")
       refute html_response(conn, 200) =~ "is limited to"
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       # will be skipped
       populate_stats(site, [build(:pageview)])
@@ -80,21 +80,18 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "shows invitations for user by email address", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:invitation, email: user.email, site_id: site.id, inviter: build(:user))
+      inviter = new_user()
+      site = new_site(owner: inviter)
+      invite_guest(site, user, inviter: inviter, role: :editor)
       conn = get(conn, "/sites")
 
       assert html_response(conn, 200) =~ site.domain
     end
 
     test "invitations are case insensitive", %{conn: conn, user: user} do
-      site = insert(:site)
-
-      insert(:invitation,
-        email: String.upcase(user.email),
-        site_id: site.id,
-        inviter: build(:user)
-      )
+      inviter = new_user()
+      site = new_site(owner: inviter)
+      invite_guest(site, String.upcase(user.email), inviter: inviter, role: :editor)
 
       conn = get(conn, "/sites")
 
@@ -103,8 +100,8 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "paginates sites", %{conn: initial_conn, user: user} do
       for i <- 1..25 do
-        insert(:site,
-          members: [user],
+        new_site(
+          owner: user,
           domain: "paginated-site#{String.pad_leading("#{i}", 2, "0")}.example.com"
         )
       end
@@ -147,7 +144,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: initial_conn,
       user: user
     } do
-      insert(:site, members: [user])
+      new_site(owner: user)
 
       conn = get(initial_conn, "/sites")
       resp = html_response(conn, 200)
@@ -158,7 +155,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute resp =~ nag_message
 
       user
-      |> Plausible.Auth.User.end_trial()
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
       |> Repo.update!()
 
       conn = get(initial_conn, "/sites")
@@ -168,17 +166,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "filters by domain", %{conn: conn, user: user} do
-      _site1 = insert(:site, domain: "first.example.com", members: [user])
-      _site2 = insert(:site, domain: "second.example.com", members: [user])
-      _rogue_site = insert(:site)
+      _site1 = new_site(domain: "first.example.com", owner: user)
+      _site2 = new_site(domain: "second.example.com", owner: user)
+      _rogue_site = new_site()
 
-      _site3 =
-        insert(:site,
-          domain: "first-another.example.com",
-          invitations: [
-            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
-          ]
-        )
+      inviter = new_user()
+
+      new_site(owner: inviter, domain: "first-another.example.com")
+      |> invite_guest(user, inviter: inviter, role: :viewer)
 
       conn = get(conn, "/sites", filter_text: "first")
       resp = html_response(conn, 200)
@@ -192,7 +187,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      _site1 = insert(:site, domain: "example.com", members: [user])
+      _site1 = new_site(domain: "example.com", owner: user)
 
       conn = get(conn, "/sites", filter_text: "none")
       resp = html_response(conn, 200)
@@ -206,7 +201,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      site = insert(:site, domain: "example.com", members: [user])
+      site = new_site(domain: "example.com", owner: user)
       conn = get(conn, "/sites")
       resp = html_response(conn, 200)
 
@@ -217,11 +212,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      site =
-        insert(:site,
-          domain: "example.com",
-          memberships: [build(:site_membership, user: user, role: :viewer)]
-        )
+      site = new_site(domain: "example.com")
+      add_guest(site, user: user, role: :viewer)
 
       conn = get(conn, "/sites")
       resp = html_response(conn, 200)
@@ -264,7 +256,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
-      Plausible.Auth.User.remove_trial_expiry(user) |> Repo.update!()
+      refute team_of(user)
 
       post(conn, "/sites", %{
         "site" => %{
@@ -273,7 +265,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         }
       })
 
-      assert Repo.reload!(user).trial_expiry_date
+      assert Repo.reload!(team_of(user)).trial_expiry_date
     end
 
     test "sends welcome email if this is the user's first site", %{conn: conn} do
@@ -291,7 +283,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:site, members: [user])
+      new_site(owner: user)
 
       post(conn, "/sites", %{
         "site" => %{
@@ -308,7 +300,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert_list(10, :site, members: [user])
+      for _ <- 1..10, do: new_site(owner: user)
 
       conn =
         post(conn, "/sites", %{
@@ -327,8 +319,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, paddle_plan_id: @v4_business_plan_id, user: user)
-      insert_list(51, :site, members: [user])
+      subscribe_to_plan(user, @v4_business_plan_id)
+
+      for _ <- 1..51, do: new_site(owner: user)
 
       Ecto.Changeset.change(user, %{inserted_at: ~N[2021-05-04 00:00:00]})
       |> Repo.update()
@@ -349,9 +342,10 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      ep = insert(:enterprise_plan, user: user, site_limit: 1)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
-      insert_list(2, :site, members: [user])
+      subscribe_to_enterprise_plan(user, site_limit: 1)
+      team = team_of(user)
+      new_site(owner: user)
+      new_site(owner: user)
 
       conn =
         post(conn, "/sites", %{
@@ -362,7 +356,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
-      assert Plausible.Billing.Quota.Usage.site_usage(user) == 3
+      assert Plausible.Teams.Billing.site_usage(team) == 3
     end
 
     for url <- ["https://Example.com/", "HTTPS://EXAMPLE.COM/", "/Example.com/", "//Example.com/"] do
@@ -416,6 +410,12 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+
+      if Plausible.ee?() do
+        assert html_response(conn, 200) =~ "support@plausible.io"
+      else
+        refute html_response(conn, 200) =~ "support@plausible.io"
+      end
     end
 
     test "renders form again when domain was changed from elsewhere", %{conn: conn} do
@@ -433,19 +433,19 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+
+      if Plausible.ee?() do
+        assert html_response(conn, 200) =~ "support@plausible.io"
+      else
+        refute html_response(conn, 200) =~ "support@plausible.io"
+      end
     end
 
     test "allows creating the site if domain was changed by the owner", %{
       conn: conn,
       user: user
     } do
-      :site
-      |> insert(
-        domain: "example.com",
-        memberships: [
-          build(:site_membership, user: user, role: :owner)
-        ]
-      )
+      new_site(domain: "example.com", owner: user)
       |> Plausible.Site.Domain.change("new.example.com")
 
       conn =
@@ -495,9 +495,9 @@ defmodule PlausibleWeb.SiteControllerTest do
     @tag :ee_only
     test "shows members page with links to CRM for super admin", %{
       conn: conn,
-      user: user,
-      site: site
+      user: user
     } do
+      site = new_site(owner: user)
       patch_env(:super_admin_user_ids, [user.id])
 
       conn = get(conn, "/#{site.domain}/settings/people")
@@ -506,11 +506,65 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "/crm/auth/user/#{user.id}"
     end
 
-    test "does not show CRM links to non-super admin user", %{conn: conn, user: user, site: site} do
+    test "does not show CRM links to non-super admin user", %{conn: conn, user: user} do
+      site = new_site(owner: user)
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
       refute resp =~ "/crm/auth/user/#{user.id}"
+    end
+
+    test "lists current members", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      editor = add_guest(site, role: :editor)
+      viewer = add_guest(site, role: :viewer)
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      owner_row =
+        text_of_element(resp, "#membership-#{user.id}")
+
+      editor_row = text_of_element(resp, "#membership-#{editor.id}")
+      editor_row_button = text_of_element(resp, "#membership-#{editor.id} button")
+      viewer_row = text_of_element(resp, "#membership-#{viewer.id}")
+      viewer_row_button = text_of_element(resp, "#membership-#{viewer.id} button")
+
+      assert owner_row =~ user.email
+      assert owner_row =~ "Owner"
+
+      assert editor_row =~ editor.email
+      assert editor_row_button == "Admin"
+      refute editor_row =~ "Owner"
+
+      assert viewer_row =~ viewer.email
+      assert viewer_row_button == "Viewer"
+      refute viewer_row =~ "Owner"
+    end
+
+    test "lists pending invitations", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      i1 = invite_guest(site, "admin@example.com", role: :editor, inviter: user)
+      i2 = invite_guest(site, "viewer@example.com", role: :viewer, inviter: user)
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") == "admin@example.com Admin"
+
+      assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
+               "viewer@example.com Viewer"
+    end
+
+    test "lists pending site transfer", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      new_owner = new_user()
+
+      st = invite_transfer(site, new_owner, inviter: user)
+
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      assert text_of_element(resp, "#invitation-#{st.transfer_id}") ==
+               "#{new_owner.email} Owner"
     end
   end
 
@@ -569,19 +623,17 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to make site public with insufficient permissions", %{conn: conn, user: user} do
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
       conn = post(conn, "/sites/#{site.domain}/make-public")
       assert conn.status == 404
       refute Repo.get(Plausible.Site, site.id).public
     end
 
     test "fails to make foreign site public", %{conn: my_conn, user: me} do
-      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
-
-      other_user = insert(:user)
-
-      other_site =
-        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
+      _my_site = new_site(owner: me)
+      other_user = new_user()
+      other_site = new_site(owner: other_user)
 
       my_conn = post(my_conn, "/sites/#{other_site.domain}/make-public")
       assert my_conn.status == 404
@@ -607,7 +659,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes the site", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
       insert(:google_auth, user: user, site: site)
       insert(:spike_notification, site: site)
       insert(:drop_notification, site: site)
@@ -618,7 +670,8 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to delete a site with insufficient permissions", %{conn: conn, user: user} do
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
       insert(:google_auth, user: user, site: site)
       insert(:spike_notification, site: site)
 
@@ -629,12 +682,9 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to delete a foreign site", %{conn: my_conn, user: me} do
-      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
-
-      other_user = insert(:user)
-
-      other_site =
-        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
+      _my_site = new_site(owner: me)
+      other_user = new_user()
+      other_site = new_site(owner: other_user)
 
       insert(:google_auth, user: other_user, site: other_site)
       insert(:spike_notification, site: other_site)
@@ -681,7 +731,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      other_site = insert(:site)
+      other_site = new_site()
       insert(:google_auth, user: user, site: other_site)
       conn = delete(conn, "/#{URI.encode_www_form(other_site.domain)}/settings/google-search")
 
@@ -854,16 +904,16 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "displays Continue with Google link", %{conn: conn, user: user} do
-      site = insert(:site, domain: "notconnectedyet.example.com", members: [user])
+      site = new_site(domain: "notconnectedyet.example.com", owner: user)
 
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
 
-      assert button = find(resp, "button#search-console-connect")
+      assert button = find(resp, "a#search-console-connect")
       assert text(button) == "Continue with Google"
-      assert text_of_attr(button, "data-to") =~ "https://accounts.google.com/o/oauth2/v2/auth?"
-      assert text_of_attr(button, "data-to") =~ "webmasters.readonly"
-      refute text_of_attr(button, "data-to") =~ "analytics.readonly"
+      assert text_of_attr(button, "href") =~ "https://accounts.google.com/o/oauth2/v2/auth?"
+      assert text_of_attr(button, "href") =~ "webmasters.readonly"
+      refute text_of_attr(button, "href") =~ "analytics.readonly"
     end
 
     test "displays appropriate error in case of google account `google_auth_error`", %{
@@ -973,13 +1023,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn: conn0,
         conn_with_url: conn_with_url
       } do
-        site =
-          insert(:site,
-            memberships: [
-              build(:site_membership, user: build(:user), role: :owner),
-              build(:site_membership, user: user, role: :admin)
-            ]
-          )
+        site = new_site()
+        add_guest(site, user: user, role: :editor)
 
         conn =
           put(
@@ -1029,8 +1074,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn: conn0,
         conn_with_url: conn_with_url
       } do
-        site = insert(:site)
-        insert(:site_membership, user: user, site: site, role: :viewer)
+        site = new_site()
+        add_guest(site, user: user, role: :viewer)
 
         conn =
           put(
@@ -1053,8 +1098,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn0,
       conn_with_url: conn_with_url
     } do
-      site = insert(:site)
-      insert(:site_membership, user: user, site: site, role: :admin)
+      site = new_site()
+      add_guest(site, user: user, role: :editor)
 
       setting = :funnels_enabled
 
@@ -1119,7 +1164,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to delete the weekly report record for a foreign site", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
       insert(:weekly_report, site: site)
 
       post(conn, "/sites/#{site.domain}/weekly-report/disable")
@@ -1154,7 +1199,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "fails to remove a recipient from the weekly report in a foreign website", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
 
       conn1 = delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient@email.com")
@@ -1237,7 +1282,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "fails to remove a recipient from the monthly report in a foreign website", %{
       conn: conn
     } do
-      site = insert(:site)
+      site = new_site()
       insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
 
       conn1 = delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient@email.com")
@@ -1366,7 +1411,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       test "fails to remove a recipient from the #{type} notification in a foreign website", %{
         conn: conn
       } do
-        site = insert(:site)
+        site = new_site()
         insert(:"#{unquote(type)}_notification", site: site, recipients: ["recipient@email.com"])
 
         conn =
@@ -1441,7 +1486,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       link = insert(:shared_link, site: site)
       conn = get(conn, "/sites/#{site.domain}/shared-links/#{link.slug}/edit")
 
-      assert html_response(conn, 200) =~ "Edit shared link"
+      assert html_response(conn, 200) =~ "Edit Shared Link"
     end
   end
 
@@ -1486,7 +1531,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "DELETE /:domain/settings/:forget_import/:import_id" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "removes site import, associated data and cancels oban job for a particular import", %{
       conn: conn,
@@ -1564,7 +1609,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "DELETE /:domain/settings/forget_imported" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "removes actual imported data from Clickhouse", %{conn: conn, user: user, site: site} do
       Plausible.Imported.NoopImporter.new_import(

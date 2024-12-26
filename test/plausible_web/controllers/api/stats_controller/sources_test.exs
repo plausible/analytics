@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/sources" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns top sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
 
       conn =
         get(
@@ -87,6 +87,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{"name" => "Google", "visitors" => 2},
                %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "1 Jan 2021"
+             }
     end
 
     test "returns top sources with :is_not filter on custom pageview props", %{
@@ -129,7 +133,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["John Doe"]]])
 
       conn =
         get(
@@ -179,7 +183,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "(none)"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -233,7 +237,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
@@ -490,7 +494,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{"page" => "/page1"})
+      filters = Jason.encode!([[:is, "event:page", ["/page1"]]])
       conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -515,7 +519,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!([["is", "event:page", ["/page1"]]])
+      filters = Jason.encode!([[:is, "event:page", ["/page1"]]])
       conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
@@ -606,10 +610,73 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0}
              ]
     end
+
+    test "can compare with previous period", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          timestamp: ~N[2021-01-02 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          timestamp: ~N[2021-01-02 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          timestamp: ~N[2021-01-02 00:00:00]
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-02&comparison=previous_period&detailed=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Google",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "comparison" => %{
+                   "visitors" => 0,
+                   "bounce_rate" => 0,
+                   "visit_duration" => 0,
+                   "change" => %{"visitors" => 100, "bounce_rate" => nil, "visit_duration" => 0}
+                 }
+               },
+               %{
+                 "name" => "DuckDuckGo",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "comparison" => %{
+                   "visitors" => 1,
+                   "bounce_rate" => 100,
+                   "visit_duration" => 0,
+                   "change" => %{"visitors" => 0, "bounce_rate" => 0, "visit_duration" => 0}
+                 }
+               }
+             ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "2 Jan 2021",
+               "comparison_date_range_label" => "1 Jan 2021"
+             }
+    end
   end
 
   describe "UTM parameters with hostname filter" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     for {resource, attr} <- [
           utm_campaigns: :utm_campaign,
@@ -640,7 +707,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           )
         ])
 
-        filters = Jason.encode!(%{hostname: "one.example.com"})
+        filters = Jason.encode!([[:is, "event:hostname", ["one.example.com"]]])
 
         conn =
           get(
@@ -655,26 +722,28 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/channels" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns top channels by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          channel: "Organic Search",
+          referrer_source: "Bing",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          channel: "Organic Search",
+          referrer_source: "Bing",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          channel: "Paid Social",
+          referrer_source: "Facebook",
+          utm_source: "fb-ads",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          channel: "Paid Social",
+          referrer_source: "Facebook",
+          utm_source: "fb-ads",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -703,7 +772,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_mediums" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns top utm_mediums by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -855,7 +924,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_campaigns" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns top utm_campaigns by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1015,7 +1084,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_sources" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns top utm_sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1063,7 +1132,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_terms" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns top utm_terms by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1223,7 +1292,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_contents" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns top utm_contents by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1383,7 +1452,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/sources - with goal filter" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns top referrers for a custom goal including conversion_rate", %{
       conn: conn,
@@ -1409,7 +1478,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1451,7 +1520,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "Signup", hostname: "app.example.com"})
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Signup"]],
+          [:is, "event:hostname", ["app.example.com"]]
+        ])
 
       conn =
         get(
@@ -1483,7 +1556,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup", hostname: "app.example.com"})
+
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Signup"]],
+          [:is, "event:hostname", ["app.example.com"]]
+        ])
 
       conn =
         get(
@@ -1534,7 +1612,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Download")
-      filters = Jason.encode!(%{goal: "Download", props: %{"logged_in" => "true"}})
+
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Download"]],
+          [:is, "event:props:logged_in", ["true"]]
+        ])
 
       conn =
         get(
@@ -1586,7 +1669,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Download")
-      filters = Jason.encode!(%{goal: "Download", props: %{"logged_in" => "!true"}})
+
+      filters =
+        Jason.encode!([
+          [:is, "event:goal", ["Download"]],
+          [:is_not, "event:props:logged_in", ["true"]]
+        ])
 
       conn =
         get(
@@ -1629,7 +1717,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, page_path: "/register")
-      filters = Jason.encode!(%{goal: "Visit /register"})
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /register"]]])
 
       conn =
         get(
@@ -1649,7 +1737,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/referrer-drilldown" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns top referrers for a particular source", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1715,7 +1803,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      filters = Jason.encode!(%{hostname: "one.example.com"})
+      filters = Jason.encode!([[:is, "event:hostname", ["one.example.com"]]])
 
       conn =
         get(
@@ -1792,38 +1880,6 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == %{"results" => terms}
     end
 
-    test "works when filter expression is provided for source", %{
-      conn: conn,
-      site: site
-    } do
-      populate_stats(site, [
-        build(:pageview,
-          referrer_source: "DuckDuckGo",
-          referrer: "duckduckgo.com"
-        ),
-        build(:pageview,
-          referrer_source: "Google",
-          referrer: "google.com"
-        ),
-        build(:pageview,
-          referrer_source: "Google",
-          referrer: "google.com"
-        )
-      ])
-
-      conn1 = get(conn, "/api/stats/#{site.domain}/referrers/!Google?period=day")
-
-      assert json_response(conn1, 200)["results"] == [
-               %{"name" => "duckduckgo.com", "visitors" => 1}
-             ]
-
-      conn2 = get(conn, "/api/stats/#{site.domain}/referrers/Google|DuckDuckGo?period=day")
-
-      assert [entry1, entry2] = json_response(conn2, 200)["results"]
-      assert %{"name" => "google.com", "visitors" => 2} in [entry1, entry2]
-      assert %{"name" => "duckduckgo.com", "visitors" => 1} in [entry1, entry2]
-    end
-
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1845,7 +1901,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       insert(:goal, site: site, event_name: "Signup")
-      filters = Jason.encode!(%{goal: "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(
@@ -1885,7 +1941,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       insert(:goal, site: site, page_path: "/register")
 
-      filters = Jason.encode!(%{goal: "Visit /register"})
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /register"]]])
 
       conn =
         get(

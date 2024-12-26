@@ -6,13 +6,19 @@
     %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
     %{key: "API Keys", value: "api-keys", icon: :key},
     %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
-  ] %>
+  ]
+
+  options =
+    if Plausible.ee?() do
+      options
+    else
+      Enum.reject(options, fn option -> String.contains?(option.value, "billing") end)
+    end %>
 
   <div class="container pt-6">
-    <%= link("← Back to Sites",
-      to: "/sites",
-      class: "text-indigo-600 font-bold text-sm"
-    ) %>
+    <.styled_link class="text-indigo-600 font-bold text-sm" href="/sites">
+      ← Back to Sites
+    </.styled_link>
     <div class="pb-5 border-b border-gray-200 dark:border-gray-500">
       <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
         Settings

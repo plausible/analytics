@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
     assigns =
       assigns
       |> assign(:current_setting, assigns.feature_mod.enabled?(assigns.site))
-      |> assign(:disabled?, assigns.feature_mod.check_availability(assigns.site.owner) !== :ok)
+      |> assign(:disabled?, assigns.feature_mod.check_availability(assigns.site.team) !== :ok)
 
     ~H"""
     <div>
@@ -25,12 +25,9 @@ defmodule PlausibleWeb.Components.Site.Feature do
         for={nil}
         class={@class}
       >
-        <PlausibleWeb.Components.Generic.toggle_submit
-          set_to={@current_setting}
-          disabled?={@disabled?}
-        >
+        <.toggle_submit set_to={@current_setting} disabled?={@disabled?}>
           Show <%= @feature_mod.display_name() %> in the Dashboard
-        </PlausibleWeb.Components.Generic.toggle_submit>
+        </.toggle_submit>
       </.form>
 
       <div :if={@current_setting}>

@@ -6,7 +6,6 @@
  */
 
 export type Metric =
-  | "time_on_page"
   | "visitors"
   | "visits"
   | "pageviews"
@@ -16,7 +15,11 @@ export type Metric =
   | "events"
   | "percentage"
   | "conversion_rate"
-  | "group_conversion_rate";
+  | "group_conversion_rate"
+  | "time_on_page"
+  | "total_revenue"
+  | "average_revenue"
+  | "scroll_depth";
 export type DateRangeShorthand = "30m" | "realtime" | "all" | "day" | "7d" | "30d" | "month" | "6mo" | "12mo" | "year";
 /**
  * @minItems 2
@@ -61,34 +64,57 @@ export type CustomPropertyFilterDimensions = string;
 export type GoalDimension = "event:goal";
 export type TimeDimensions = "time" | "time:month" | "time:week" | "time:day" | "time:hour";
 export type FilterTree = FilterEntry | FilterAndOr | FilterNot;
-export type FilterEntry = FilterWithoutGoals | FilterWithGoals;
+export type FilterEntry = FilterWithoutGoals | FilterWithGoals | FilterWithPattern;
+/**
+ * @minItems 3
+ * @maxItems 4
+ */
+export type FilterWithoutGoals =
+  | [FilterOperationWithoutGoals, SimpleFilterDimensions | CustomPropertyFilterDimensions, Clauses]
+  | [
+      FilterOperationWithoutGoals,
+      SimpleFilterDimensions | CustomPropertyFilterDimensions,
+      Clauses,
+      {
+        case_sensitive?: boolean;
+      }
+    ];
+/**
+ * filter operation
+ */
+export type FilterOperationWithoutGoals = "is_not" | "contains_not";
+export type Clauses = (string | number)[];
+/**
+ * @minItems 3
+ * @maxItems 4
+ */
+export type FilterWithGoals =
+  | [FilterOperationContains, GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions, Clauses]
+  | [
+      FilterOperationContains,
+      GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions,
+      Clauses,
+      {
+        case_sensitive?: boolean;
+      }
+    ];
+/**
+ * filter operation
+ */
+export type FilterOperationContains = "is" | "contains";
 /**
  * @minItems 3
  * @maxItems 3
  */
-export type FilterWithoutGoals = [
-  FilterOperationWithoutGoals | ("matches_wildcard" | "matches_wildcard_not"),
+export type FilterWithPattern = [
+  FilterOperationRegex | ("matches_wildcard" | "matches_wildcard_not"),
   SimpleFilterDimensions | CustomPropertyFilterDimensions,
   Clauses
 ];
 /**
  * filter operation
  */
-export type FilterOperationWithoutGoals = "is_not" | "contains_not" | "matches" | "matches_not";
-export type Clauses = (string | number)[];
-/**
- * @minItems 3
- * @maxItems 3
- */
-export type FilterWithGoals = [
-  FilterOperationWithGoals,
-  GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions,
-  Clauses
-];
-/**
- * filter operation
- */
-export type FilterOperationWithGoals = "is" | "contains";
+export type FilterOperationRegex = "matches" | "matches_not";
 /**
  * @minItems 2
  * @maxItems 2

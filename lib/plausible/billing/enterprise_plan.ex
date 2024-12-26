@@ -2,8 +2,10 @@ defmodule Plausible.Billing.EnterprisePlan do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @required_fields [
-    :user_id,
+    :team_id,
     :paddle_plan_id,
     :billing_interval,
     :monthly_pageview_limit,
@@ -22,7 +24,10 @@ defmodule Plausible.Billing.EnterprisePlan do
     field :features, Plausible.Billing.Ecto.FeatureList, default: []
     field :hourly_api_request_limit, :integer
 
-    belongs_to :user, Plausible.Auth.User
+    # Field used only by CRM for mapping to the ones in the owned team
+    field :user_id, :integer, virtual: true
+
+    belongs_to :team, Plausible.Teams.Team
 
     timestamps()
   end
@@ -31,6 +36,5 @@ defmodule Plausible.Billing.EnterprisePlan do
     model
     |> cast(attrs, @required_fields)
     |> validate_required(@required_fields)
-    |> unique_constraint(:user_id)
   end
 end

@@ -3,13 +3,12 @@ defmodule PlausibleWeb.Live.CSVExport do
   LiveView allowing scheduling, watching, downloading, and deleting S3 and local exports.
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias Plausible.Exports
 
   # :not_mounted_at_router ensures we have already done auth checks in the controller
   # if this liveview becomes available from the router, please make sure
-  # to check that current_user_role is allowed to manage site exports
+  # to check that site_role is allowed to manage site exports
   @impl true
   def mount(:not_mounted_at_router, session, socket) do
     %{

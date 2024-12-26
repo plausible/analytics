@@ -6,7 +6,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Base, Query, SQL}
+  alias Plausible.Stats.{Base, Query, SQL, Filters}
 
   import Ecto.Query
   import Plausible.Stats.Util
@@ -16,14 +16,18 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     |> maybe_add_percentage_metric(site, query)
     |> maybe_add_global_conversion_rate(site, query)
     |> maybe_add_group_conversion_rate(site, query)
+    |> maybe_add_scroll_depth(site, query)
   end
 
   defp maybe_add_percentage_metric(q, site, query) do
     if :percentage in query.metrics do
       total_query =
-        Query.set(query,
+        query
+        |> remove_filters_ignored_in_totals_query()
+        |> Query.set(
           dimensions: [],
-          include_imported: query.include_imported
+          include_imported: query.include_imported,
+          pagination: nil
         )
 
       q
@@ -50,9 +54,12 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       total_query =
         query
         |> Query.remove_top_level_filters(["event:goal", "event:props"])
+        |> remove_filters_ignored_in_totals_query()
         |> Query.set(
           dimensions: [],
-          include_imported: query.include_imported
+          include_imported: query.include_imported,
+          preloaded_goals: [],
+          pagination: nil
         )
 
       q
@@ -90,10 +97,13 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       group_totals_query =
         query
         |> Query.remove_top_level_filters(["event:goal", "event:props"])
+        |> remove_filters_ignored_in_totals_query()
         |> Query.set(
           metrics: [:visitors],
           order_by: [],
-          include_imported: query.include_imported
+          include_imported: query.include_imported,
+          preloaded_goals: [],
+          pagination: nil
         )
 
       from(e in subquery(q),
@@ -117,11 +127,58 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     end
   end
 
-  defp total_visitors(site, query) do
-    Base.base_event_query(site, query)
-    |> select([e],
-      total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
-    )
+  def maybe_add_scroll_depth(q, site, query) do
+    if :scroll_depth in query.metrics do
+      max_per_visitor_q =
+        Base.base_event_query(site, query)
+        |> where([e], e.name == "pageleave" and e.scroll_depth <= 100)
+        |> select([e], %{
+          user_id: e.user_id,
+          max_scroll_depth: max(e.scroll_depth)
+        })
+        |> SQL.QueryBuilder.build_group_by(:events, query)
+        |> group_by([e], e.user_id)
+
+      dim_shortnames = Enum.map(query.dimensions, fn dim -> shortname(query, dim) end)
+
+      dim_select =
+        dim_shortnames
+        |> Enum.map(fn dim -> {dim, dynamic([p], field(p, ^dim))} end)
+        |> Map.new()
+
+      dim_group_by =
+        dim_shortnames
+        |> Enum.map(fn dim -> dynamic([p], field(p, ^dim)) end)
+
+      scroll_depth_q =
+        subquery(max_per_visitor_q)
+        |> select([p], %{
+          scroll_depth:
+            fragment(
+              "if(isFinite(avg(?)), toUInt8(round(avg(?))), NULL)",
+              p.max_scroll_depth,
+              p.max_scroll_depth
+            )
+        })
+        |> select_merge(^dim_select)
+        |> group_by(^dim_group_by)
+
+      join_on_dim_condition =
+        if dim_shortnames == [] do
+          true
+        else
+          dim_shortnames
+          |> Enum.map(fn dim -> dynamic([_e, ..., s], selected_as(^dim) == field(s, ^dim)) end)
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+          |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+        end
+
+      q
+      |> join(:left, [e], s in subquery(scroll_depth_q), on: ^join_on_dim_condition)
+      |> select_merge_as([_e, ..., s], %{scroll_depth: fragment("any(?)", s.scroll_depth)})
+    else
+      q
+    end
   end
 
   # `total_visitors_subquery` returns a subquery which selects `total_visitors` -
@@ -148,5 +205,22 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     wrap_alias([], %{
       total_visitors: subquery(total_visitors(site, query))
     })
+  end
+
+  defp remove_filters_ignored_in_totals_query(query) do
+    totals_query_filters =
+      Filters.transform_filters(query.filters, fn
+        [:ignore_in_totals_query, _] -> []
+        filter -> [filter]
+      end)
+
+    Query.set(query, filters: totals_query_filters)
+  end
+
+  defp total_visitors(site, query) do
+    Base.base_event_query(site, query)
+    |> select([e],
+      total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+    )
   end
 end

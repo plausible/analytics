@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Live.GoalSettingsTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
@@ -31,7 +32,8 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       {:ok, [_, _, g3]} = setup_goals(site)
 
       user
-      |> Plausible.Auth.User.end_trial()
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
       |> Plausible.Repo.update!()
 
       conn = get(conn, "/#{site.domain}/settings/goals")

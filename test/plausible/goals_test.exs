@@ -1,10 +1,11 @@
 defmodule Plausible.GoalsTest do
   use Plausible.DataCase
   use Plausible
+  use Plausible.Teams.Test
   alias Plausible.Goals
 
   test "create/2 creates goals and trims input" do
-    site = insert(:site)
+    site = new_site()
     {:ok, goal} = Goals.create(site, %{"page_path" => "/foo bar "})
     assert goal.page_path == "/foo bar"
     assert goal.display_name == "Visit /foo bar"
@@ -20,33 +21,33 @@ defmodule Plausible.GoalsTest do
   end
 
   test "create/2 creates pageview goal and adds a leading slash if missing" do
-    site = insert(:site)
+    site = new_site()
     {:ok, goal} = Goals.create(site, %{"page_path" => "foo bar"})
     assert goal.page_path == "/foo bar"
   end
 
   test "create/2 validates goal name is at most 120 chars" do
-    site = insert(:site)
+    site = new_site()
     assert {:error, changeset} = Goals.create(site, %{"event_name" => String.duplicate("a", 130)})
     assert {"should be at most %{count} character(s)", _} = changeset.errors[:event_name]
   end
 
   test "create/2 fails to create the same pageview goal twice" do
-    site = insert(:site)
+    site = new_site()
     {:ok, _} = Goals.create(site, %{"page_path" => "foo bar"})
     assert {:error, changeset} = Goals.create(site, %{"page_path" => "foo bar"})
     assert {"has already been taken", _} = changeset.errors[:page_path]
   end
 
   test "create/2 fails to create the same custom event goal twice" do
-    site = insert(:site)
+    site = new_site()
     {:ok, _} = Goals.create(site, %{"event_name" => "foo bar"})
     assert {:error, changeset} = Goals.create(site, %{"event_name" => "foo bar"})
     assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
   test "create/2 fails to create the same currency goal twice" do
-    site = insert(:site)
+    site = new_site()
     {:ok, _} = Goals.create(site, %{"event_name" => "foo bar", "currency" => "EUR"})
 
     assert {:error, changeset} =
@@ -56,7 +57,7 @@ defmodule Plausible.GoalsTest do
   end
 
   test "create/2 fails to create a goal with 'pageleave' as event_name (reserved)" do
-    site = insert(:site)
+    site = new_site()
     assert {:error, changeset} = Goals.create(site, %{"event_name" => "pageleave"})
 
     assert {"The event name 'pageleave' is reserved and cannot be used as a goal", _} =
@@ -65,14 +66,14 @@ defmodule Plausible.GoalsTest do
 
   @tag :ee_only
   test "create/2 sets site.updated_at for revenue goal" do
-    site_1 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
+    site_1 = new_site(updated_at: DateTime.add(DateTime.utc_now(), -3600))
 
     {:ok, _goal_1} = Goals.create(site_1, %{"event_name" => "Checkout", "currency" => "BRL"})
 
     assert NaiveDateTime.compare(site_1.updated_at, Plausible.Repo.reload!(site_1).updated_at) ==
              :lt
 
-    site_2 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
+    site_2 = new_site(updated_at: DateTime.add(DateTime.utc_now(), -3600))
     {:ok, _goal_2} = Goals.create(site_2, %{"event_name" => "Read Article", "currency" => nil})
 
     assert NaiveDateTime.compare(site_2.updated_at, Plausible.Repo.reload!(site_2).updated_at) ==
@@ -81,7 +82,7 @@ defmodule Plausible.GoalsTest do
 
   @tag :ee_only
   test "create/2 creates revenue goal" do
-    site = insert(:site)
+    site = new_site()
     {:ok, goal} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
     assert goal.event_name == "Purchase"
     assert goal.page_path == nil
@@ -90,8 +91,8 @@ defmodule Plausible.GoalsTest do
 
   @tag :ee_only
   test "create/2 returns error when site does not have access to revenue goals" do
-    user = insert(:user, subscription: build(:growth_subscription))
-    site = insert(:site, members: [user])
+    user = new_user() |> subscribe_to_growth_plan()
+    site = new_site(owner: user)
 
     {:error, :upgrade_required} =
       Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
@@ -99,7 +100,7 @@ defmodule Plausible.GoalsTest do
 
   @tag :ee_only
   test "create/2 fails for unknown currency code" do
-    site = insert(:site)
+    site = new_site()
 
     assert {:error, changeset} =
              Goals.create(site, %{"event_name" => "Purchase", "currency" => "Euro"})
@@ -108,7 +109,7 @@ defmodule Plausible.GoalsTest do
   end
 
   test "update/2 updates a goal" do
-    site = insert(:site)
+    site = new_site()
     {:ok, goal1} = Goals.create(site, %{"page_path" => "/foo bar "})
     {:ok, goal2} = Goals.update(goal1, %{"page_path" => "/", "display_name" => "Homepage"})
     assert goal1.id == goal2.id
@@ -118,7 +119,7 @@ defmodule Plausible.GoalsTest do
 
   @tag :ee_only
   test "list_revenue_goals/1 lists event_names and currencies for each revenue goal" do
-    site = insert(:site)
+    site = new_site()
 
     Goals.create(site, %{"event_name" => "One", "currency" => "EUR"})
     Goals.create(site, %{"event_name" => "Two", "currency" => "EUR"})
@@ -129,13 +130,13 @@ defmodule Plausible.GoalsTest do
     revenue_goals = Goals.list_revenue_goals(site)
 
     assert length(revenue_goals) == 3
-    assert %{event_name: "One", currency: :EUR} in revenue_goals
-    assert %{event_name: "Two", currency: :EUR} in revenue_goals
-    assert %{event_name: "Three", currency: :USD} in revenue_goals
+    assert %{display_name: "One", currency: :EUR} in revenue_goals
+    assert %{display_name: "Two", currency: :EUR} in revenue_goals
+    assert %{display_name: "Three", currency: :USD} in revenue_goals
   end
 
   test "create/2 clears currency for pageview goals" do
-    site = insert(:site)
+    site = new_site()
     {:ok, goal} = Goals.create(site, %{"page_path" => "/purchase", "currency" => "EUR"})
     assert goal.event_name == nil
     assert goal.page_path == "/purchase"
@@ -143,7 +144,7 @@ defmodule Plausible.GoalsTest do
   end
 
   test "for_site/1 returns trimmed input even if it was saved with trailing whitespace" do
-    site = insert(:site)
+    site = new_site()
     insert(:goal, %{site: site, event_name: " Signup "})
     insert(:goal, %{site: site, page_path: " /Signup "})
 
@@ -153,7 +154,7 @@ defmodule Plausible.GoalsTest do
   end
 
   test "goals are present after domain change" do
-    site = insert(:site)
+    site = new_site()
     insert(:goal, %{site: site, event_name: " Signup "})
     insert(:goal, %{site: site, page_path: " /Signup "})
 
@@ -163,17 +164,17 @@ defmodule Plausible.GoalsTest do
   end
 
   test "goals are removed when site is deleted" do
-    site = insert(:site)
+    site = new_site()
     insert(:goal, %{site: site, event_name: " Signup "})
     insert(:goal, %{site: site, page_path: " /Signup "})
 
-    Plausible.Site.Removal.run(site.domain)
+    Plausible.Site.Removal.run(site)
 
     assert [] = Goals.for_site(site)
   end
 
   test "goals can be deleted" do
-    site = insert(:site)
+    site = new_site()
     goal = insert(:goal, %{site: site, event_name: " Signup "})
     :ok = Goals.delete(goal.id, site)
     assert [] = Goals.for_site(site)
@@ -181,7 +182,7 @@ defmodule Plausible.GoalsTest do
 
   on_ee do
     test "goals can be fetched with funnel count preloaded" do
-      site = insert(:site)
+      site = new_site()
 
       goals =
         Enum.map(1..4, fn i ->
@@ -218,7 +219,7 @@ defmodule Plausible.GoalsTest do
     end
 
     test "deleting goals with funnels triggers funnel reduction" do
-      site = insert(:site)
+      site = new_site()
       {:ok, g1} = Goals.create(site, %{"page_path" => "/1"})
       {:ok, g2} = Goals.create(site, %{"page_path" => "/2"})
       {:ok, g3} = Goals.create(site, %{"page_path" => "/3"})
@@ -257,7 +258,7 @@ defmodule Plausible.GoalsTest do
   end
 
   test "must be either page_path or event_name" do
-    site = insert(:site)
+    site = new_site()
 
     assert {:error, changeset} =
              Goals.create(site, %{"page_path" => "/foo", "event_name" => "/foo"})

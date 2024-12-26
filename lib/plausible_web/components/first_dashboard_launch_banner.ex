@@ -2,8 +2,8 @@ defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
   @moduledoc """
   A banner that appears on the first dashboard launch
   """
-  use Phoenix.Component
-  use Phoenix.HTML
+
+  use PlausibleWeb, :component
 
   attr(:site, Plausible.Site, required: true)
 
@@ -28,10 +28,9 @@ defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
       x-bind:class="! show ? 'hidden' : ''"
       x-init={x_init(@site)}
     >
-      <%= link("Team members, email reports and GA import. Explore more →",
-        to: "/#{URI.encode_www_form(@site.domain)}/settings/email-reports",
-        class: "py-2 block"
-      ) %>
+      <.styled_link href={"/#{URI.encode_www_form(@site.domain)}/settings/email-reports"}>
+        Team members, email reports and GA import. Explore more →
+      </.styled_link>
     </div>
     """
   end

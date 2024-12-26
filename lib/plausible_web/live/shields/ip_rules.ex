@@ -3,14 +3,11 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   LiveView allowing IP Rules management
   """
 
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
-  use Phoenix.HTML
+  use PlausibleWeb, :live_component
 
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
-  import PlausibleWeb.Live.Components.Form
-  import PlausibleWeb.Components.Generic
 
   def update(assigns, socket) do
     socket =
@@ -73,21 +70,20 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               <.td max_width="max-w-40">
                 <div class="flex items-center truncate">
                   <span
-                    id={"inet-#{rule.id}"}
-                    class="mr-4 cursor-help"
-                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
-                  >
-                    <%= rule.inet %>
-                  </span>
-
-                  <span
                     :if={to_string(rule.inet) == @remote_ip}
-                    class="inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-700 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700"
+                    class="inline-flex items-center gap-x-1.5 rounded-md px-2 mr-2 py-1 text-xs font-medium text-gray-700 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700"
                   >
                     <svg class="h-1.5 w-1.5 fill-green-400" viewBox="0 0 6 6" aria-hidden="true">
                       <circle cx="3" cy="3" r="3" />
                     </svg>
                     YOU
+                  </span>
+                  <span
+                    id={"inet-#{rule.id}"}
+                    class="cursor-help"
+                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                  >
+                    <%= rule.inet %>
                   </span>
                 </div>
               </.td>

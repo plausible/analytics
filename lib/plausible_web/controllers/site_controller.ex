@@ -4,31 +4,31 @@ defmodule PlausibleWeb.SiteController do
   use Plausible
 
   alias Plausible.Sites
-  alias Plausible.Billing.Quota
 
   plug(PlausibleWeb.RequireAccountPlug)
 
   plug(
     PlausibleWeb.Plugs.AuthorizeSiteAccess,
-    [:owner, :admin, :super_admin] when action not in [:new, :create_site]
+    [:owner, :admin, :editor, :super_admin] when action not in [:new, :create_site]
   )
 
   def new(conn, params) do
     flow = params["flow"] || PlausibleWeb.Flows.register()
-    current_user = conn.assigns[:current_user]
+    my_team = conn.assigns.my_team
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      site_limit: Quota.Limits.site_limit(current_user),
-      site_limit_exceeded?: Quota.ensure_can_add_new_site(current_user) != :ok,
+      site_limit: Plausible.Teams.Billing.site_limit(my_team),
+      site_limit_exceeded?: Plausible.Teams.Billing.ensure_can_add_new_site(my_team) != :ok,
       form_submit_url: "/sites?flow=#{flow}",
       flow: flow
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
-    user = conn.assigns[:current_user]
-    first_site? = Quota.Usage.site_usage(user) == 0
+    team = conn.assigns.my_team
+    user = conn.assigns.current_user
+    first_site? = Plausible.Teams.Billing.site_usage(team) == 0
     flow = conn.params["flow"]
 
     case Sites.create(user, site_params) do
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.SiteController do
             )
         )
 
-      {:error, {:over_limit, limit}} ->
+      {:error, _, {:over_limit, limit}, _} ->
         render(conn, "new.html",
           changeset: Plausible.Site.changeset(%Plausible.Site{}),
           first_site?: first_site?,
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.SiteController do
         render(conn, "new.html",
           changeset: changeset,
           first_site?: first_site?,
-          site_limit: Quota.Limits.site_limit(user),
+          site_limit: Plausible.Teams.Billing.site_limit(team),
           site_limit_exceeded?: false,
           flow: flow,
           form_submit_url: "/sites?flow=#{flow}"
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.SiteController do
     feature_mod =
       Enum.find(Plausible.Billing.Feature.list(), &(&1.toggle_field() == toggle_field))
 
-    case feature_mod.toggle(site, override: value == "true") do
+    case feature_mod.toggle(site, conn.assigns.current_user, override: value == "true") do
       {:ok, updated_site} ->
         message =
           if Map.fetch!(updated_site, toggle_field) do
@@ -122,13 +122,16 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_people(conn, _params) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload(memberships: :user, invitations: [])
+    site = conn.assigns.site
+
+    %{memberships: memberships, invitations: invitations} =
+      Sites.list_people(site)
 
     conn
     |> render("settings_people.html",
       site: site,
+      memberships: memberships,
+      invitations: invitations,
       dogfood_page_path: "/:dashboard/settings/people",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -148,13 +151,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_goals(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_goals.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/goals",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -162,13 +160,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_funnels.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/funnels",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -176,13 +169,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_props(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_props.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/properties",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"},
       connect_live_socket: true
@@ -325,7 +313,7 @@ defmodule PlausibleWeb.SiteController do
   def delete_site(conn, _params) do
     site = conn.assigns[:site]
 
-    Plausible.Site.Removal.run(site.domain)
+    Plausible.Site.Removal.run(site)
 
     conn
     |> put_flash(:success, "Your site and page views deletion process has started.")

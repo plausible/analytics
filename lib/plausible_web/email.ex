@@ -42,14 +42,15 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def site_setup_success(user, site) do
+  def site_setup_success(user, team, site) do
     base_email()
     |> to(user)
     |> tag("setup-success-email")
     |> subject("Plausible is now tracking your website stats")
     |> render("site_setup_success_email.html",
       user: user,
-      site: site
+      site: site,
+      site_team: team
     )
   end
 
@@ -94,7 +95,13 @@ defmodule PlausibleWeb.Email do
   end
 
   def trial_upgrade_email(user, day, usage) do
-    suggested_plan = Plausible.Billing.Plans.suggest(user, usage.total)
+    team =
+      case Plausible.Teams.get_by_owner(user) do
+        {:ok, team} -> team
+        _ -> nil
+      end
+
+    suggested_plan = Plausible.Billing.Plans.suggest(team, usage.total)
 
     base_email()
     |> to(user)
@@ -116,7 +123,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Your Plausible trial has ended")
     |> render("trial_over_email.html",
       user: user,
-      extra_offset: Plausible.Auth.User.trial_accept_traffic_until_offset_days()
+      extra_offset: Plausible.Teams.Team.trial_accept_traffic_until_offset_days()
     )
   end
 
@@ -191,35 +198,35 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def yearly_renewal_notification(user) do
-    date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
+  def yearly_renewal_notification(team) do
+    date = Calendar.strftime(team.subscription.next_bill_date, "%B %-d, %Y")
 
     priority_email()
-    |> to(user)
+    |> to(team.owner)
     |> tag("yearly-renewal")
     |> subject("Your Plausible subscription is up for renewal")
     |> render("yearly_renewal_notification.html", %{
-      user: user,
+      user: team.owner,
       date: date,
-      next_bill_amount: user.subscription.next_bill_amount,
-      currency: user.subscription.currency_code
+      next_bill_amount: team.subscription.next_bill_amount,
+      currency: team.subscription.currency_code
     })
   end
 
-  def yearly_expiration_notification(user) do
-    next_bill_date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
+  def yearly_expiration_notification(team) do
+    next_bill_date = Calendar.strftime(team.subscription.next_bill_date, "%B %-d, %Y")
 
     accept_traffic_until =
-      user
-      |> Plausible.Users.accept_traffic_until()
+      team
+      |> Plausible.Teams.accept_traffic_until()
       |> Calendar.strftime("%B %-d, %Y")
 
     priority_email()
-    |> to(user)
+    |> to(team.owner)
     |> tag("yearly-expiration")
     |> subject("Your Plausible subscription is about to expire")
     |> render("yearly_expiration_notification.html", %{
-      user: user,
+      user: team.owner,
       next_bill_date: next_bill_date,
       accept_traffic_until: accept_traffic_until
     })
@@ -233,101 +240,104 @@ defmodule PlausibleWeb.Email do
     |> render("cancellation_email.html", user: user)
   end
 
-  def new_user_invitation(invitation) do
+  def new_user_invitation(email, invitation_id, site, inviter) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("new-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
     |> render("new_user_invitation.html",
-      invitation: invitation
+      invitation_id: invitation_id,
+      site: site,
+      inviter: inviter
     )
   end
 
-  def existing_user_invitation(invitation) do
+  def existing_user_invitation(email, site, inviter) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("existing-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
     |> render("existing_user_invitation.html",
-      invitation: invitation
+      site: site,
+      inviter: inviter
     )
   end
 
-  def ownership_transfer_request(invitation, new_owner_account) do
+  def ownership_transfer_request(email, invitation_id, site, inviter, new_owner_account) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("ownership-transfer-request")
-    |> subject(
-      "[#{Plausible.product_name()}] Request to transfer ownership of #{invitation.site.domain}"
-    )
+    |> subject("[#{Plausible.product_name()}] Request to transfer ownership of #{site.domain}")
     |> render("ownership_transfer_request.html",
-      invitation: invitation,
+      invitation_id: invitation_id,
+      inviter: inviter,
+      site: site,
       new_owner_account: new_owner_account
     )
   end
 
-  def invitation_accepted(invitation) do
+  def invitation_accepted(inviter_email, invitee_email, site) do
     priority_email()
-    |> to(invitation.inviter.email)
+    |> to(inviter_email)
     |> tag("invitation-accepted")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to #{site.domain}"
     )
     |> render("invitation_accepted.html",
-      user: invitation.inviter,
-      invitation: invitation
+      invitee_email: invitee_email,
+      site: site
     )
   end
 
-  def invitation_rejected(invitation) do
+  def invitation_rejected(guest_invitation) do
     priority_email()
-    |> to(invitation.inviter.email)
+    |> to(guest_invitation.team_invitation.inviter.email)
     |> tag("invitation-rejected")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{guest_invitation.team_invitation.email} rejected your invitation to #{guest_invitation.site.domain}"
     )
     |> render("invitation_rejected.html",
-      user: invitation.inviter,
-      invitation: invitation
+      user: guest_invitation.team_invitation.inviter,
+      guest_invitation: guest_invitation
     )
   end
 
-  def ownership_transfer_accepted(invitation) do
+  def ownership_transfer_accepted(new_owner_email, inviter_email, site) do
     priority_email()
-    |> to(invitation.inviter.email)
+    |> to(inviter_email)
     |> tag("ownership-transfer-accepted")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{new_owner_email} accepted the ownership transfer of #{site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
-      user: invitation.inviter,
-      invitation: invitation
+      new_owner_email: new_owner_email,
+      site: site
     )
   end
 
-  def ownership_transfer_rejected(invitation) do
+  def ownership_transfer_rejected(site_transfer) do
     priority_email()
-    |> to(invitation.inviter.email)
+    |> to(site_transfer.initiator.email)
     |> tag("ownership-transfer-rejected")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{site_transfer.email} rejected the ownership transfer of #{site_transfer.site.domain}"
     )
     |> render("ownership_transfer_rejected.html",
-      user: invitation.inviter,
-      invitation: invitation
+      user: site_transfer.initiator,
+      site_transfer: site_transfer
     )
   end
 
-  def site_member_removed(membership) do
+  def site_member_removed(guest_membership) do
     priority_email()
-    |> to(membership.user.email)
+    |> to(guest_membership.team_membership.user.email)
     |> tag("site-member-removed")
     |> subject(
-      "[#{Plausible.product_name()}] Your access to #{membership.site.domain} has been revoked"
+      "[#{Plausible.product_name()}] Your access to #{guest_membership.site.domain} has been revoked"
     )
     |> render("site_member_removed.html",
-      user: membership.user,
-      membership: membership
+      user: guest_membership.team_membership.user,
+      guest_membership: guest_membership
     )
   end
 

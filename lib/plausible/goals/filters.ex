@@ -20,30 +20,65 @@ defmodule Plausible.Goals.Filters do
   * `imported?` - when `true`, builds conditions on the `page` db field rather than
     `pathname`, and also skips the `e.name == "pageview"` check.
   """
-  def add_filter(query, [operation, "event:goal", clauses], opts \\ [])
+  def add_filter(query, [operation, "event:goal", clauses | _] = filter, opts \\ [])
       when operation in [:is, :contains] do
     imported? = Keyword.get(opts, :imported?, false)
 
     Enum.reduce(clauses, false, fn clause, dynamic_statement ->
       condition =
         query.preloaded_goals
-        |> filter_preloaded(operation, clause)
+        |> filter_preloaded(filter, clause)
         |> build_condition(imported?)
 
       dynamic([e], ^condition or ^dynamic_statement)
     end)
   end
 
-  def filter_preloaded(preloaded_goals, operation, clause) when operation in [:is, :contains] do
-    Enum.filter(preloaded_goals, fn goal ->
-      case operation do
-        :is ->
-          Plausible.Goal.display_name(goal) == clause
+  def preload_needed_goals(site, filters) do
+    goals = Plausible.Goals.for_site(site)
 
-        :contains ->
-          String.contains?(Plausible.Goal.display_name(goal), clause)
-      end
+    Enum.reduce(filters, goals, fn
+      [_, "event:goal" | _] = filter, goals ->
+        goals_matching_any_clause(goals, filter)
+
+      _filter, goals ->
+        goals
     end)
+  end
+
+  defp filter_preloaded(preloaded_goals, filter, clause) do
+    Enum.filter(preloaded_goals, fn goal -> matches?(goal, filter, clause) end)
+  end
+
+  defp goals_matching_any_clause(goals, [_, _, clauses | _] = filter) do
+    goals
+    |> Enum.filter(fn goal ->
+      Enum.any?(clauses, fn clause -> matches?(goal, filter, clause) end)
+    end)
+  end
+
+  defp matches?(goal, [operation | _rest] = filter, clause) do
+    goal_name =
+      goal
+      |> Plausible.Goal.display_name()
+      |> mod(filter)
+
+    clause = mod(clause, filter)
+
+    case operation do
+      :is ->
+        goal_name == clause
+
+      :contains ->
+        String.contains?(goal_name, clause)
+    end
+  end
+
+  defp mod(str, filter) do
+    case filter do
+      [_, _, _, %{case_sensitive: false}] -> String.downcase(str)
+      _ -> str
+    end
   end
 
   defp build_condition(filtered_goals, imported?) do

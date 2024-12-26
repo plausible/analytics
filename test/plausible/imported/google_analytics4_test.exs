@@ -4,6 +4,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
   import Mox
   import Ecto.Query, only: [from: 2]
+  import ExUnit.CaptureLog
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Repo
@@ -32,7 +33,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
   setup :verify_on_exit!
 
   describe "parse_args/1 and import_data/2" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :create_site]
 
     test "imports data returned from GA4 Data API", %{conn: conn, user: user, site: site} do
       past = DateTime.add(DateTime.utc_now(), -3600, :second)
@@ -335,6 +336,130 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
         query = from(imported in table, where: imported.site_id == ^site.id)
         assert await_clickhouse_count(query, count)
       end)
+    end
+
+    @recoverable_errors [
+      {
+        Macro.escape(
+          Plausible.HTTPClient.Non200Error.new(%Finch.Response{
+            status: 500,
+            body: "Internal server error"
+          })
+        ),
+        :server_failed,
+        ~s|Request failed for imported_sources with code 500: "Internal server error"|
+      },
+      {
+        :timeout,
+        :socket_failed,
+        ~s|Request failed for imported_sources: :timeout|
+      }
+    ]
+
+    for {error_mock, error_returned, log_message} <- @recoverable_errors do
+      test "handles #{error_returned} gracefully", %{user: user, site: site} do
+        future = DateTime.add(DateTime.utc_now(), 3600, :second)
+
+        {:ok, job} =
+          Plausible.Imported.GoogleAnalytics4.new_import(
+            site,
+            user,
+            label: "properties/123456",
+            property: "properties/123456",
+            start_date: ~D[2024-01-01],
+            end_date: ~D[2024-01-31],
+            access_token: "redacted_access_token",
+            refresh_token: "redacted_refresh_token",
+            token_expires_at: DateTime.to_iso8601(future)
+          )
+
+        site_import = Plausible.Imported.get_import(site, job.args.import_id)
+
+        opts = job |> Repo.reload!() |> Map.get(:args) |> GoogleAnalytics4.parse_args()
+
+        opts =
+          opts
+          |> Keyword.put(:flush_interval_ms, 10)
+          |> Keyword.put(:fetch_opts, max_attempts: 2, sleep_time: 50)
+
+        expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+          assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+          {:ok, %Finch.Response{status: 200, body: List.first(@full_report_mock)}}
+        end)
+
+        expect(Plausible.HTTPClient.Mock, :post, 2, fn _url, headers, _body, _opts ->
+          assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+
+          {:error, unquote(error_mock)}
+        end)
+
+        assert capture_log(fn ->
+                 assert {:error, unquote(error_returned),
+                         skip_purge?: true, skip_mark_failed?: true} =
+                          GoogleAnalytics4.import_data(site_import, opts)
+               end) =~ unquote(log_message)
+
+        in_65_minutes = DateTime.add(DateTime.utc_now(), 3900, :second)
+
+        assert_enqueued(
+          worker: Plausible.Workers.ImportAnalytics,
+          args: %{resume_from_import_id: site_import.id},
+          scheduled_at: {in_65_minutes, delta: 10}
+        )
+
+        [%{args: resume_args}, _] = all_enqueued()
+
+        resume_opts = GoogleAnalytics4.parse_args(resume_args)
+        resume_opts = Keyword.put(resume_opts, :flush_interval_ms, 10)
+        site_import = Repo.reload!(site_import)
+
+        Enum.each(Plausible.Imported.tables(), fn table ->
+          count =
+            case table do
+              "imported_visitors" -> 31
+              "imported_sources" -> 0
+              "imported_pages" -> 0
+              "imported_entry_pages" -> 0
+              "imported_exit_pages" -> 0
+              "imported_locations" -> 0
+              "imported_devices" -> 0
+              "imported_browsers" -> 0
+              "imported_operating_systems" -> 0
+              "imported_custom_events" -> 0
+            end
+
+          query = from(imported in table, where: imported.site_id == ^site.id)
+          assert await_clickhouse_count(query, count)
+        end)
+
+        for report <- tl(@full_report_mock) do
+          expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+            assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+            {:ok, %Finch.Response{status: 200, body: report}}
+          end)
+        end
+
+        assert :ok = GoogleAnalytics4.import_data(site_import, resume_opts)
+
+        Enum.each(Plausible.Imported.tables(), fn table ->
+          count =
+            case table do
+              "imported_sources" -> 210
+              "imported_visitors" -> 31
+              "imported_pages" -> 3340
+              "imported_entry_pages" -> 2934
+              "imported_exit_pages" -> 0
+              "imported_locations" -> 2291
+              "imported_devices" -> 93
+              "imported_browsers" -> 233
+              "imported_operating_systems" -> 1068
+              "imported_custom_events" -> 56
+            end
+
+          query = from(imported in table, where: imported.site_id == ^site.id)
+          assert await_clickhouse_count(query, count)
+        end)
+      end
     end
   end
 

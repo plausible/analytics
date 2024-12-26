@@ -2,6 +2,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   use Plausible
   use Plausible.Repo
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
   use Bamboo.Test
   alias Plausible.Imported.{CSVImporter, SiteImport}
   require SiteImport
@@ -13,7 +14,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   describe "new_import/3 and parse_args/1" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :create_site]
 
     test "parses job args properly", %{user: user, site: site} do
       tables = [
@@ -81,7 +82,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   describe "import_data/2" do
-    setup [:create_user, :create_new_site, :clean_buckets]
+    setup [:create_user, :create_site, :clean_buckets]
 
     @describetag :tmp_dir
 
@@ -486,8 +487,8 @@ defmodule Plausible.Imported.CSVImporterTest do
 
     @tag :tmp_dir
     test "it works", %{conn: conn, user: user, tmp_dir: tmp_dir} do
-      exported_site = insert(:site, members: [user])
-      imported_site = insert(:site, members: [user])
+      exported_site = new_site(owner: user)
+      imported_site = new_site(owner: user)
 
       insert(:goal, site: exported_site, event_name: "Outbound Link: Click")
       insert(:goal, site: exported_site, event_name: "404")
@@ -539,7 +540,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert email.to == [{user.name, user.email}]
 
       assert email.html_body =~
-               ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export">here</a> to start the download process.]
+               ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export">here</a>]
 
       # download archive
       on_ee do

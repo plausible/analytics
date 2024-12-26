@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Filters do
   """
 
   alias Plausible.Stats.Filters.QueryParser
-  alias Plausible.Stats.Filters.{LegacyDashboardFilterParser, StatsAPIFilterParser}
+  alias Plausible.Stats.Filters.StatsAPIFilterParser
 
   @visit_props [
     :source,
@@ -52,16 +52,12 @@ defmodule Plausible.Stats.Filters do
 
   Depending on the format and type of the `filters` argument, returns:
 
-    * a decoded list, when `filters` is encoded JSON
     * a parsed filter list, when `filters` is a filter expression string
     * the same list, when `filters` is a map
 
   Returns an empty list when argument type is unexpected (e.g. `nil`).
 
   ### Examples:
-
-      iex> Filters.parse("{\\"page\\":\\"/blog/**\\"}")
-      [[:matches_wildcard, "event:page", ["/blog/**"]]]
 
       iex> Filters.parse("visit:browser!=Chrome")
       [[:is_not, "visit:browser", ["Chrome"]]]
@@ -71,14 +67,11 @@ defmodule Plausible.Stats.Filters do
   """
   def parse(filters) when is_binary(filters) do
     case Jason.decode(filters) do
-      {:ok, filters} when is_map(filters) or is_list(filters) -> parse(filters)
+      {:ok, filters} when is_list(filters) -> parse(filters)
       {:ok, _} -> []
       {:error, err} -> StatsAPIFilterParser.parse_filter_expression(err.data)
     end
   end
-
-  def parse(filters) when is_map(filters),
-    do: LegacyDashboardFilterParser.parse_and_prefix(filters)
 
   def parse(filters) when is_list(filters) do
     {:ok, parsed_filters} = QueryParser.parse_filters(filters)
@@ -99,8 +92,8 @@ defmodule Plausible.Stats.Filters do
 
     filters
     |> traverse()
-    |> Enum.filter(fn {_filter, _root, depth} -> depth >= min_depth end)
-    |> Enum.map(fn {[_operator, dimension | _rest], _root, _depth} -> dimension end)
+    |> Enum.filter(fn {_filter, depth} -> depth >= min_depth end)
+    |> Enum.map(fn {[_operator, dimension | _rest], _depth} -> dimension end)
   end
 
   def filtering_on_dimension?(query, dimension) do
@@ -115,14 +108,14 @@ defmodule Plausible.Stats.Filters do
   """
   def get_toplevel_filter(query, prefix) do
     Enum.find(query.filters, fn [_op, dimension | _rest] ->
-      String.starts_with?(dimension, prefix)
+      is_binary(dimension) and String.starts_with?(dimension, prefix)
     end)
   end
 
   def rename_dimensions_used_in_filter(filters, renames) do
     transform_filters(filters, fn
-      [operation, dimension, clauses] ->
-        [[operation, Map.get(renames, dimension, dimension), clauses]]
+      [operation, dimension | rest] ->
+        [[operation, Map.get(renames, dimension, dimension) | rest]]
 
       _subtree ->
         nil
@@ -144,8 +137,9 @@ defmodule Plausible.Stats.Filters do
   defp transform_tree(filter, transformer) do
     case {transformer.(filter), filter} do
       # Transformer did not return that value - transform that subtree
-      {nil, [:not, child_filter]} ->
-        [[:not, transform_tree(child_filter, transformer)]]
+      {nil, [operation, child_filter]} when operation in [:not, :ignore_in_totals_query] ->
+        [transformed_child] = transform_tree(child_filter, transformer)
+        [[operation, transformed_child]]
 
       {nil, [operation, filters]} when operation in [:and, :or] ->
         [[operation, transform_filters(filters, transformer)]]
@@ -160,22 +154,22 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  defp traverse(filters, root \\ nil, depth \\ -1) do
+  defp traverse(filters, depth \\ -1) do
     filters
-    |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
+    |> Enum.flat_map(&traverse_tree(&1, depth + 1))
   end
 
-  defp traverse_tree(filter, root, depth) do
+  defp traverse_tree(filter, depth) do
     case filter do
-      [:not, child_filter] ->
-        traverse_tree(child_filter, root, depth + 1)
+      [operation, child_filter] when operation in [:not, :ignore_in_totals_query] ->
+        traverse_tree(child_filter, depth + 1)
 
       [operation, filters] when operation in [:and, :or] ->
-        traverse(filters, root || filter, depth + 1)
+        traverse(filters, depth + 1)
 
       # Leaf node
       _ ->
-        [{filter, root, depth}]
+        [{filter, depth}]
     end
   end
 end

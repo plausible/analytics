@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/operating-systems" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns operating systems by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
                %{"name" => "Linux", "visitors" => 1, "percentage" => 50}
              ]
 
-      filters = Jason.encode!(%{os: "(not set)"})
+      filters = Jason.encode!([[:is, "visit:os", ["(not set)"]]])
 
       conn2 =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         build(:event, user_id: 1, name: "Signup")
       ])
 
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
@@ -111,7 +111,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["John Doe"]]])
 
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
+      filters = Jason.encode!([["is_not", "event:props:author", ["John Doe"]]])
 
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         build(:event, user_id: 1, name: "Signup")
       ])
 
-      filters = Jason.encode!(%{"goal" => "Signup"})
+      filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
@@ -215,7 +215,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
   end
 
   describe "GET /api/stats/:domain/operating-system-versions" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns top OS versions by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         )
       ])
 
-      filters = Jason.encode!(%{os: "Mac"})
+      filters = Jason.encode!([[:is, "visit:os", ["Mac"]]])
 
       conn =
         get(
@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         build(:pageview, operating_system: "Mac", operating_system_version: "14")
       ])
 
-      filters = Jason.encode!(%{os: "Mac"})
+      filters = Jason.encode!([[:is, "visit:os", ["Mac"]]])
 
       conn =
         get(

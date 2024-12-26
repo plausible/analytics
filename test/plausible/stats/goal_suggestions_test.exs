@@ -56,10 +56,14 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
              ]
     end
 
-    test "ignores the 'pageview' event name", %{site: site} do
+    test "ignores 'pageview' and 'pageleave' event names", %{site: site} do
       populate_stats(site, [
         build(:event, name: "Signup"),
-        build(:pageview)
+        build(:pageview,
+          user_id: 1,
+          timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.add(-1, :minute)
+        ),
+        build(:pageleave, user_id: 1, timestamp: NaiveDateTime.utc_now())
       ])
 
       assert GoalSuggestions.suggest_event_names(site, "") == ["Signup"]

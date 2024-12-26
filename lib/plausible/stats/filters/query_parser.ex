@@ -1,7 +1,9 @@
 defmodule Plausible.Stats.Filters.QueryParser do
   @moduledoc false
 
-  alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema}
+  use Plausible
+
+  alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema, Time}
 
   @default_include %{
     imports: false,
@@ -36,7 +38,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
-         preloaded_goals <- preload_goals_if_needed(site, filters, dimensions),
+         {preloaded_goals, revenue_currencies} <-
+           preload_needed_goals(site, metrics, filters, dimensions),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -44,15 +47,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
            dimensions: dimensions,
            order_by: order_by,
            timezone: site.timezone,
-           preloaded_goals: preloaded_goals,
            include: include,
-           pagination: pagination
+           pagination: pagination,
+           preloaded_goals: preloaded_goals,
+           revenue_currencies: revenue_currencies
          },
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_filtered_goals_exist(query),
+         :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
       {:ok, query}
@@ -128,31 +133,35 @@ defmodule Plausible.Stats.Filters.QueryParser do
               :matches_wildcard_not,
               :contains,
               :contains_not
-            ],
-       do: parse_clauses_list(filter)
+            ] do
+    with {:ok, clauses} <- parse_clauses_list(filter),
+         {:ok, modifiers} <- parse_filter_modifiers(Enum.at(filter, 3)) do
+      {:ok, [clauses | modifiers]}
+    end
+  end
 
   defp parse_filter_rest(operator, _filter)
        when operator in [:not, :and, :or],
        do: {:ok, []}
 
-  defp parse_clauses_list([operation, filter_key, list] = filter) when is_list(list) do
+  defp parse_clauses_list([operator, filter_key, list | _rest] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
     all_integers? = Enum.all?(list, &is_integer/1)
 
     case {filter_key, all_strings?} do
       {"visit:city", false} when all_integers? ->
-        {:ok, [list]}
+        {:ok, list}
 
-      {"visit:country", true} when operation in ["is", "is_not"] ->
+      {"visit:country", true} when operator in ["is", "is_not"] ->
         if Enum.all?(list, &(String.length(&1) == 2)) do
-          {:ok, [list]}
+          {:ok, list}
         else
           {:error,
            "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."}
         end
 
       {_, true} ->
-        {:ok, [list]}
+        {:ok, list}
 
       _ ->
         {:error, "Invalid filter '#{i(filter)}'."}
@@ -160,6 +169,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'"}
+
+  defp parse_filter_modifiers(modifiers) when is_map(modifiers) do
+    {:ok, [atomize_keys(modifiers)]}
+  end
+
+  defp parse_filter_modifiers(nil) do
+    {:ok, []}
+  end
 
   defp parse_date(_site, date_string, _date) when is_binary(date_string) do
     case Date.from_iso8601(date_string) do
@@ -405,14 +422,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def preload_goals_if_needed(site, filters, dimensions) do
+  def preload_needed_goals(site, metrics, filters, dimensions) do
     goal_filters? =
       Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
     if goal_filters? or Enum.member?(dimensions, "event:goal") do
-      Plausible.Goals.for_site(site)
+      goals = Plausible.Goals.Filters.preload_needed_goals(site, filters)
+
+      {
+        goals,
+        preload_revenue_currencies(site, goals, metrics, dimensions)
+      }
     else
-      []
+      {[], %{}}
     end
   end
 
@@ -458,6 +480,25 @@ defmodule Plausible.Stats.Filters.QueryParser do
     else
       :ok
     end
+  end
+
+  on_ee do
+    alias Plausible.Stats.Goal.Revenue
+
+    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions),
+      to: Plausible.Stats.Goal.Revenue
+
+    defp validate_revenue_metrics_access(site, query) do
+      if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
+        {:error, "The owner of this site does not have access to the revenue metrics feature."}
+      else
+        :ok
+      end
+    end
+  else
+    defp preload_revenue_currencies(_site, _preloaded_goals, _metrics, _dimensions), do: %{}
+
+    defp validate_revenue_metrics_access(_site, _query), do: :ok
   end
 
   defp validate_goal_filter(clause, configured_goals) do
@@ -512,6 +553,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_metric(:scroll_depth = metric, query) do
+    page_dimension? = Enum.member?(query.dimensions, "event:page")
+    toplevel_page_filter? = not is_nil(Filters.get_toplevel_filter(query, "event:page"))
+
+    if page_dimension? or toplevel_page_filter? do
+      :ok
+    else
+      {:error, "Metric `#{metric}` can only be queried with event:page filters or dimensions."}
+    end
+  end
+
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
       Filters.filtering_on_dimension?(query, "event:page") ->
@@ -549,7 +601,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_include(query) do
-    time_dimension? = Enum.any?(query.dimensions, &String.starts_with?(&1, "time"))
+    time_dimension? = Enum.any?(query.dimensions, &Time.time_dimension?/1)
 
     if query.include.time_labels and not time_dimension? do
       {:error, "Invalid include.time_labels: requires a time dimension."}

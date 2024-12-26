@@ -55,6 +55,11 @@ export const queryDefaultValue = {
 
 export type DashboardQuery = typeof queryDefaultValue
 
+export type BreakdownResultMeta = {
+  date_range_label: string
+  comparison_date_range_label?: string
+}
+
 export function addFilter(
   query: DashboardQuery,
   filter: Filter
@@ -158,7 +163,7 @@ export function revenueAvailable(query: DashboardQuery, site: PlausibleSite) {
     const goalFilters: Filter[] = getFiltersByKeyPrefix(query, 'goal')
 
     return goalFilters.some(([_op, _key, clauses]) => {
-      return clauses.includes(rg.event_name)
+      return clauses.includes(rg.display_name)
     })
   })
 

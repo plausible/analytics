@@ -1,8 +1,0 @@
-Automated notice about an enterprise account that has gone over their limits. <br /><br />
-
-Customer email: <%= @user.email %><br />
-Last billing cycle: <%= PlausibleWeb.TextHelpers.format_date_range(@pageview_usage.last_cycle.date_range) %><br >
-Last cycle pageview usage: <%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_cycle.total) %> billable pageviews<br />
-Penultimate billing cycle: <%= PlausibleWeb.TextHelpers.format_date_range(@pageview_usage.penultimate_cycle.date_range) %><br >
-Penultimate cycle pageview usage: <%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.penultimate_cycle.total) %> billable pageviews<br />
-Site usage: <%= @site_usage %> / <%= @site_allowance %> allowed sites<br />

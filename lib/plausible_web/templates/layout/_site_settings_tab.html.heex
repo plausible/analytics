@@ -9,7 +9,7 @@
     !@this_tab && "text-gray-600 dark:text-gray-400"
   ]}
 >
-  <PlausibleWeb.Components.Generic.dynamic_icon
+  <.dynamic_icon
     :if={not @submenu? && @icon}
     name={@icon}
     class={["h-4 w-4 mr-2", is_current_tab(@conn, @this_tab) && "stroke-2"]}

@@ -43,31 +43,41 @@
     <%= if ee?() do %>
       <%= if assigns[:trace_id] do %>
         <div class="my-6">
-          <%= form_for :error, Routes.error_report_path(PlausibleWeb.Endpoint, :submit_error_report), fn f -> %>
-            <%= hidden_input(f, :trace_id, value: @trace_id) %>
-            <%= label(f, "What happened?",
-              class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
-            ) %>
-            <%= textarea(f, :user_feedback,
-              rows: 5,
-              class:
-                "block w-full max-w-xl border-gray-300 dark:border-gray-700 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300",
-              placeholder: "I clicked on 'X' and then hit 'Confirm'..."
-            ) %>
-            <%= submit("Send feedback →", class: "button mt-4 w-full") %>
-          <% end %>
+          <.form
+            :let={f}
+            for={%{}}
+            as={:error}
+            action={Routes.error_report_path(PlausibleWeb.Endpoint, :submit_error_report)}
+          >
+            <.input type="hidden" field={f[:trace_id]} value={@trace_id} />
+            <PlausibleWeb.Live.Components.Form.label for="user_feedback">
+              What happened?
+            </PlausibleWeb.Live.Components.Form.label>
+            <textarea
+              name="user_feedback"
+              id="user_feedback"
+              rows="5"
+              class="block w-full max-w-xl border-gray-300 dark:border-gray-700 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
+              placeholder="I clicked on 'X' and then hit 'Confirm'..."
+            >
+        </textarea>
+            <.button class="w-full" type="submit">Send feedback</.button>
+          </.form>
         </div>
       <% end %>
 
       <div class="mb-6 mt-12">
-        <p class="text-sm text-center">
-          <%= link("Home page", to: "/", class: "text-indigo-500 mr-8") %>
-          <%= link("Status page",
-            to: "https://status.plausible.io",
-            class: "mr-8 text-indigo-500"
-          ) %>
-          <%= link("Contact us", to: "https://plausible.io/contact", class: "text-indigo-500") %>
-        </p>
+        <div class="flex gap-x-5 text-sm justify-center">
+          <.styled_link href="/">
+            Home page
+          </.styled_link>
+          <.styled_link href="https://status.plausible.io">
+            Status page
+          </.styled_link>
+          <.styled_link href="https://plausible.io/contact">
+            Contact us
+          </.styled_link>
+        </div>
       </div>
     <% end %>
   </div>

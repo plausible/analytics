@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
   @user_id Enum.random(1000..9999)
 
-  setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+  setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
   describe "aggregation with imported data" do
     setup :create_site_import
@@ -33,6 +33,301 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       assert json_response(conn2, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
       assert json_response(conn2, 200)["meta"]["imports_included"]
       refute json_response(conn2, 200)["meta"]["imports_warning"]
+    end
+
+    test "filters correctly with 'is' operator", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview, pathname: "/blog", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/blog", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/blog/post/1", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/about", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:imported_pages,
+          page: "/blog",
+          pageviews: 5,
+          visitors: 3,
+          date: ~D[2023-01-01]
+        ),
+        build(:imported_pages,
+          page: "/blog/post/1",
+          pageviews: 2,
+          visitors: 2,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "pageviews"],
+          "filters" => [
+            ["is", "event:page", ["/blog"]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [5, 7], "dimensions" => []}
+             ]
+    end
+
+    test "filters correctly with 'is' operator (case insensitive)", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview, pathname: "/BLOG", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/blog", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/blog/post/1", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/about", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:imported_pages,
+          page: "/BLOG",
+          pageviews: 5,
+          visitors: 3,
+          date: ~D[2023-01-01]
+        ),
+        build(:imported_pages,
+          page: "/blog/post/1",
+          pageviews: 2,
+          visitors: 2,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "pageviews"],
+          "filters" => [
+            ["is", "event:page", ["/blOG"], %{"case_sensitive" => false}]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [5, 7], "dimensions" => []}
+             ]
+    end
+
+    test "filters correctly with 'contains' operator", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview, pathname: "/blog", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/blog/post/1", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/blog/post/2", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/about", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:imported_pages,
+          page: "/blog",
+          pageviews: 5,
+          visitors: 3,
+          date: ~D[2023-01-01]
+        ),
+        build(:imported_pages,
+          page: "/blog/post/1",
+          pageviews: 2,
+          visitors: 2,
+          date: ~D[2023-01-01]
+        ),
+        build(:imported_pages,
+          page: "/blog/POST/2",
+          pageviews: 3,
+          visitors: 1,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "pageviews"],
+          "filters" => [
+            ["contains", "event:page", ["blog/post"]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [4, 4], "dimensions" => []}
+             ]
+    end
+
+    test "filters correctly with 'contains' operator (case insensitive)", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview, pathname: "/BLOG/post/1", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/blog/POST/2", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:pageview, pathname: "/about", timestamp: ~N[2023-01-01 00:00:00]),
+        build(:imported_pages,
+          page: "/BLOG/POST/1",
+          pageviews: 5,
+          visitors: 3,
+          date: ~D[2023-01-01]
+        ),
+        build(:imported_pages,
+          page: "/blog/post/2",
+          pageviews: 2,
+          visitors: 2,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "pageviews"],
+          "filters" => [
+            ["contains", "event:page", ["blog/POST"], %{"case_sensitive" => false}]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [7, 9], "dimensions" => []}
+             ]
+    end
+
+    test "aggregates custom event goals with 'is' and 'contains' operators", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      insert(:goal, event_name: "Purchase", site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2023-01-01]
+        ),
+        build(:imported_custom_events,
+          name: "Signup",
+          visitors: 2,
+          events: 2,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "filters" => [
+            ["is", "event:goal", ["Purchase"]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [5, 7]}
+             ]
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "filters" => [
+            ["contains", "event:goal", ["Purch", "sign"]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [5, 7]}
+             ]
+    end
+
+    test "aggregates custom event goals with 'is' and 'contains' operators (case insensitive)", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      insert(:goal, event_name: "Purchase", site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2023-01-01 00:00:00]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2023-01-01]
+        ),
+        build(:imported_custom_events,
+          name: "Signup",
+          visitors: 2,
+          events: 2,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "filters" => [
+            ["is", "event:goal", ["purchase"], %{"case_sensitive" => false}]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [5, 7]}
+             ]
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "filters" => [
+            ["contains", "event:goal", ["PURCH"], %{"case_sensitive" => false}]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [5, 7]}
+             ]
     end
   end
 
@@ -927,6 +1222,69 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                %{"dimensions" => ["Tallinn", "Estonia"], "metrics" => [3]},
                %{"dimensions" => ["Kärdla", "Estonia"], "metrics" => [2]}
              ]
+    end
+
+    test "page breakdown with paginate_optimization (ideal case)", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(
+        site,
+        site_import.id,
+        [
+          build(:pageview, pathname: "/99", timestamp: ~N[2021-01-01 00:00:00])
+        ] ++
+          Enum.map(1..100, fn i ->
+            build(:imported_pages, page: "/#{i}", pageviews: 1, visitors: 1, date: ~D[2021-01-01])
+          end)
+      )
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{"imports" => true},
+          "pagination" => %{"limit" => 1}
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => ["/99"], "metrics" => [2]}]
+    end
+
+    test "page breakdown with paginate_optimization (lossy case)", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(
+        site,
+        site_import.id,
+        [
+          build(:pageview, pathname: "/99", timestamp: ~N[2021-01-01 00:00:00])
+        ] ++
+          Enum.map(1..200, fn i ->
+            build(:imported_pages, page: "/#{i}", pageviews: 1, visitors: 1, date: ~D[2021-01-01])
+          end)
+      )
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{"imports" => true},
+          "pagination" => %{"limit" => 1}
+        })
+
+      [%{"dimensions" => ["/99"], "metrics" => [pageviews]}] = json_response(conn, 200)["results"]
+
+      # This is non-deterministic since /99 might not be in the top N items of imported pages subquery.
+      assert pageviews in 1..2
     end
   end
 end

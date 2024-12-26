@@ -3,6 +3,49 @@ defmodule Plausible.Factory do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
+  def team_factory do
+    %Plausible.Teams.Team{
+      name: "My Team",
+      trial_expiry_date: Timex.today() |> Timex.shift(days: 30)
+    }
+  end
+
+  def team_membership_factory do
+    %Plausible.Teams.Membership{
+      user: build(:user),
+      role: :viewer
+    }
+  end
+
+  def guest_membership_factory do
+    %Plausible.Teams.GuestMembership{
+      team_membership: build(:team_membership, role: :guest)
+    }
+  end
+
+  def team_invitation_factory do
+    %Plausible.Teams.Invitation{
+      invitation_id: Nanoid.generate(),
+      email: sequence(:email, &"email-#{&1}@example.com"),
+      role: :admin
+    }
+  end
+
+  def guest_invitation_factory do
+    %Plausible.Teams.GuestInvitation{
+      invitation_id: Nanoid.generate(),
+      role: :editor,
+      team_invitation: build(:team_invitation, role: :guest)
+    }
+  end
+
+  def site_transfer_factory do
+    %Plausible.Teams.SiteTransfer{
+      transfer_id: Nanoid.generate(),
+      email: sequence(:email, &"email-#{&1}@example.com")
+    }
+  end
+
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")
 
@@ -10,7 +53,6 @@ defmodule Plausible.Factory do
       name: "Jane Smith",
       email: sequence(:email, &"email-#{&1}@example.com"),
       password_hash: Plausible.Auth.Password.hash(pw),
-      trial_expiry_date: Timex.today() |> Timex.shift(days: 30),
       email_verified: true
     }
 
@@ -35,13 +77,6 @@ defmodule Plausible.Factory do
     # The é exercises unicode support in domain names
     domain = sequence(:domain, &"é-#{&1}.example.com")
 
-    defined_memberships? =
-      Map.has_key?(attrs, :memberships) ||
-        Map.has_key?(attrs, :members) ||
-        Map.has_key?(attrs, :owner)
-
-    attrs = if defined_memberships?, do: attrs, else: Map.put_new(attrs, :members, [build(:user)])
-
     site = %Plausible.Site{
       native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,
@@ -49,13 +84,6 @@ defmodule Plausible.Factory do
     }
 
     merge_attributes(site, attrs)
-  end
-
-  def site_membership_factory do
-    %Plausible.Site.Membership{
-      user: build(:user),
-      role: :viewer
-    }
   end
 
   def site_import_factory do
@@ -90,14 +118,22 @@ defmodule Plausible.Factory do
     }
   end
 
-  def pageview_factory do
-    Map.put(event_factory(), :name, "pageview")
+  def pageview_factory(attrs) do
+    Map.put(event_factory(attrs), :name, "pageview")
   end
 
-  def event_factory do
+  def pageleave_factory(attrs) do
+    Map.put(event_factory(attrs), :name, "pageleave")
+  end
+
+  def event_factory(attrs) do
+    if Map.get(attrs, :acquisition_channel) do
+      raise "Acquisition channel cannot be written directly since it's a materialized column."
+    end
+
     hostname = sequence(:domain, &"example-#{&1}.com")
 
-    %Plausible.ClickhouseEventV2{
+    event = %Plausible.ClickhouseEventV2{
       hostname: hostname,
       site_id: Enum.random(1000..10_000),
       pathname: "/",
@@ -105,6 +141,10 @@ defmodule Plausible.Factory do
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
     }
+
+    event
+    |> merge_attributes(attrs)
+    |> evaluate_lazy_attributes()
   end
 
   def goal_factory(attrs) do
@@ -189,14 +229,6 @@ defmodule Plausible.Factory do
     %Plausible.Site.SharedLink{
       name: "Link name",
       slug: Nanoid.generate()
-    }
-  end
-
-  def invitation_factory do
-    %Plausible.Auth.Invitation{
-      invitation_id: Nanoid.generate(),
-      email: sequence(:email, &"email-#{&1}@example.com"),
-      role: :admin
     }
   end
 

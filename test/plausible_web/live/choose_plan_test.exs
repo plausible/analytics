@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
   @moduletag :ee_only
 
   import Phoenix.LiveViewTest
@@ -193,6 +194,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user: user
     } do
       {:ok, lv, _doc} = get_liveview(conn)
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
 
       set_slider(lv, "200k")
       doc = element(lv, @yearly_interval_button) |> render_click()
@@ -200,7 +202,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => user.id,
+               "passthrough" => "user:#{user.id};team:#{team.id}",
                "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -219,7 +221,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {Paddle.Checkout.open"
+               "if (confirm(\"This plan does not support Custom Properties, which you have been using. By subscribing to this plan, you will not have access to this feature.\")) {Paddle.Checkout.open"
     end
 
     test "recommends Growth tier when no premium features were used", %{conn: conn} do
@@ -243,11 +245,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user: user
     } do
       previous_owner = insert(:user)
-      site = insert(:site, members: [previous_owner])
+      site = new_site(owner: previous_owner)
 
       insert(:goal, site: site, currency: :USD, event_name: "Purchase")
 
-      insert(:invitation, email: user.email, inviter: previous_owner, role: :owner, site: site)
+      invite_transfer(site, user, inviter: previous_owner)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -257,31 +259,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "recommends Business when team member limit for Growth exceeded due to pending ownerships",
          %{conn: conn, user: user} do
-      _owned_site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, role: :owner, user: user),
-            build(:site_membership, role: :admin, user: insert(:user)),
-            build(:site_membership, role: :admin, user: insert(:user))
-          ]
-        )
+      owned_site = new_site(owner: user)
+      add_guest(owned_site, role: :editor)
+      add_guest(owned_site, role: :editor)
 
-      previous_owner = insert(:user)
+      previous_owner = new_user()
 
-      pending_ownership_site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, role: :owner, user: previous_owner),
-            build(:site_membership, role: :viewer, user: insert(:user))
-          ]
-        )
+      pending_ownership_site = new_site(owner: previous_owner)
+      add_guest(pending_ownership_site, role: :viewer)
 
-      insert(:invitation,
-        email: user.email,
-        inviter: previous_owner,
-        role: :owner,
-        site: pending_ownership_site
-      )
+      invite_transfer(pending_ownership_site, user, inviter: previous_owner)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -293,18 +280,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      insert_list(9, :site, members: [user])
-      assert 10 = Plausible.Billing.Quota.Usage.site_usage(user)
+      for _ <- 1..9, do: new_site(owner: user)
+      assert user |> team_of() |> Plausible.Teams.Billing.site_usage() == 10
 
-      another_user = insert(:user)
-      pending_ownership_site = insert(:site, members: [another_user])
+      another_user = new_user()
+      pending_ownership_site = new_site(owner: another_user)
 
-      insert(:invitation,
-        email: user.email,
-        site: pending_ownership_site,
-        role: :owner,
-        inviter: another_user
-      )
+      invite_transfer(pending_ownership_site, user, inviter: another_user)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -339,7 +321,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "allows upgrade to a 10k plan with a pageview allowance margin of 0.3 when trial ended 10 days ago",
          %{conn: conn, site: site, user: user} do
       user
-      |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -10)})
+      |> team_of()
+      |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
       |> Repo.update!()
 
       generate_usage_for(site, 13_000)
@@ -365,7 +348,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user: user
     } do
       user
-      |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -11)})
+      |> team_of()
+      |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -11))
       |> Repo.update!()
 
       generate_usage_for(site, 11_000)
@@ -461,28 +445,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         build(:pageview, timestamp: yesterday)
       ])
 
-      another_user = insert(:user)
+      another_user = new_user()
 
-      pending_site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, role: :owner, user: another_user),
-            build(:site_membership, role: :admin, user: build(:user)),
-            build(:site_membership, role: :viewer, user: build(:user)),
-            build(:site_membership, role: :viewer, user: build(:user))
-          ]
-        )
+      pending_site = new_site(owner: another_user)
+      add_guest(pending_site, role: :editor)
+      add_guest(pending_site, role: :viewer)
+      add_guest(pending_site, role: :viewer)
 
       populate_stats(pending_site, [
         build(:pageview, timestamp: yesterday)
       ])
 
-      insert(:invitation,
-        site: pending_site,
-        inviter: another_user,
-        email: user.email,
-        role: :owner
-      )
+      invite_transfer(pending_site, user, inviter: another_user)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -500,24 +474,19 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
            conn: conn,
            user: user
          } do
-      another_user = insert(:user)
-      pending_site = insert(:site, members: [another_user])
+      another_user = new_user()
+      pending_site = new_site(owner: another_user)
 
       Plausible.Props.allow(pending_site, ["author"])
 
-      insert(:invitation,
-        site: pending_site,
-        inviter: another_user,
-        email: user.email,
-        role: :owner
-      )
+      invite_transfer(pending_site, user, inviter: another_user)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert doc =~ "Your account has been invited to become the owner of a site"
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {window.location = "
+               "if (confirm(\"This plan does not support Custom Properties, which you have been using. By subscribing to this plan, you will not have access to this feature.\")) {window.location ="
 
       assert text_of_element(doc, @business_highlight_pill) == "Recommended"
       refute element_exists?(doc, @growth_highlight_pill)
@@ -642,18 +611,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
            conn: conn,
            user: user
          } do
-      insert_list(49, :site, members: [user])
-      assert 50 = Plausible.Billing.Quota.Usage.site_usage(user)
+      team = team_of(user)
 
-      another_user = insert(:user)
-      pending_ownership_site = insert(:site, members: [another_user])
+      for _ <- 1..49 do
+        new_site(owner: user)
+      end
 
-      insert(:invitation,
-        email: user.email,
-        site: pending_ownership_site,
-        role: :owner,
-        inviter: another_user
-      )
+      assert 50 = Plausible.Teams.Billing.quota_usage(team).sites
+
+      another_user = new_user()
+      pending_ownership_site = new_site(owner: another_user)
+
+      invite_transfer(pending_ownership_site, user, inviter: another_user)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -690,15 +659,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
+      site = new_site(owner: user)
+      for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -713,7 +675,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      for _ <- 1..11, do: insert(:site, members: [user])
+      for _ <- 1..11, do: new_site(owner: user)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -728,17 +690,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      for _ <- 1..11, do: insert(:site, members: [user])
+      for _ <- 1..11, do: new_site(owner: user)
 
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
+      site = new_site(owner: user)
+      for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -757,7 +712,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
       generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
 
-      Plausible.Users.allow_next_upgrade_override(user)
+      user
+      |> team_of()
+      |> Ecto.Changeset.change(allow_next_upgrade_override: true)
+      |> Plausible.Repo.update!()
 
       {:ok, lv, _doc} = get_liveview(conn)
 
@@ -775,7 +733,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, Revenue Goals and Stats API, which you are currently using. Please note that by subscribing to this plan you will lose access to these features.\")) {window.location = "
+               "if (confirm(\"This plan does not support Custom Properties, Revenue Goals and Stats API, which you have been using. By subscribing to this plan, you will not have access to these features.\")) {window.location = "
     end
   end
 
@@ -914,9 +872,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "highlights recommended tier if subscription expired and no days are paid for anymore",
          %{conn: conn, user: user} do
-      user.subscription
+      user
+      |> team_of()
+      |> Repo.preload(:subscription)
+      |> Map.fetch!(:subscription)
       |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
-      |> Repo.update()
+      |> Repo.update!()
 
       {:ok, _lv, doc} = get_liveview(conn)
       assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
@@ -1065,6 +1026,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "renders Paddle upgrade buttons", %{conn: conn, user: user} do
       {:ok, lv, _doc} = get_liveview(conn)
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
 
       set_slider(lv, "200k")
       doc = element(lv, @yearly_interval_button) |> render_click()
@@ -1072,7 +1034,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => user.id,
+               "passthrough" => "user:#{user.id};team:#{team.id}",
                "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -1099,9 +1061,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      old_owner = insert(:user)
-      site = insert(:site, members: [old_owner])
-      insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+      old_owner = new_user()
+      site = new_site(owner: old_owner)
+      invite_transfer(site, user, inviter: old_owner)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -1143,15 +1105,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     )
   end
 
-  defp create_subscription_for(user, subscription_options) do
-    insert(:subscription, Keyword.put(subscription_options, :user, user))
-    {:ok, user: Plausible.Users.with_subscription(user)}
+  defp create_subscription_for(user, subscription_opts) do
+    {paddle_plan_id, subscription_opts} = Keyword.pop(subscription_opts, :paddle_plan_id)
+
+    user =
+      subscribe_to_plan(user, paddle_plan_id, subscription_opts)
+
+    {:ok, user: user}
   end
 
   defp subscribe_free_10k(%{user: user}) do
-    Plausible.Billing.Subscription.free(%{user_id: user.id})
-    |> Repo.insert!()
-
+    user = subscribe_to_plan(user, "free_10k")
     {:ok, user: user}
   end
 

@@ -6,20 +6,16 @@ defmodule Plausible.Stats.Aggregate do
   """
 
   use Plausible.ClickhouseRepo
-  use Plausible
-  alias Plausible.Stats.{Query, QueryRunner}
+  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer}
 
   def aggregate(site, query, metrics) do
-    {currency, metrics} =
-      on_ee do
-        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
-      else
-        {nil, metrics}
-      end
-
     Query.trace(query, metrics)
 
-    query = %Query{query | metrics: metrics}
+    query =
+      query
+      |> Query.set(metrics: metrics, remove_unavailable_revenue_metrics: true)
+      |> QueryOptimizer.optimize()
+
     query_result = QueryRunner.run(site, query)
 
     [entry] = query_result.results
@@ -29,7 +25,7 @@ defmodule Plausible.Stats.Aggregate do
     |> Enum.map(fn {metric, index} ->
       {
         metric,
-        metric_map(entry, index, metric, currency)
+        metric_map(entry, index, metric)
       }
     end)
     |> Enum.into(%{})
@@ -38,27 +34,25 @@ defmodule Plausible.Stats.Aggregate do
   def metric_map(
         %{metrics: metrics, comparison: %{metrics: comparison_metrics, change: change}},
         index,
-        metric,
-        currency
+        metric
       ) do
     %{
-      value: get_value(metrics, index, metric, currency),
-      comparison_value: get_value(comparison_metrics, index, metric, currency),
+      value: get_value(metrics, index, metric),
+      comparison_value: get_value(comparison_metrics, index, metric),
       change: Enum.at(change, index)
     }
   end
 
-  def metric_map(%{metrics: metrics}, index, metric, currency) do
+  def metric_map(%{metrics: metrics}, index, metric) do
     %{
-      value: get_value(metrics, index, metric, currency)
+      value: get_value(metrics, index, metric)
     }
   end
 
-  def get_value(metric_list, index, metric, currency) do
+  def get_value(metric_list, index, metric) do
     metric_list
     |> Enum.at(index)
     |> maybe_round_value(metric)
-    |> maybe_cast_metric_to_money(metric, currency)
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]
@@ -66,12 +60,4 @@ defmodule Plausible.Stats.Aggregate do
   defp maybe_round_value(nil, _metric), do: nil
   defp maybe_round_value(value, metric) when metric in @metrics_to_round, do: round(value)
   defp maybe_round_value(value, _metric), do: value
-
-  on_ee do
-    defp maybe_cast_metric_to_money(value, metric, currency) do
-      Plausible.Stats.Goal.Revenue.maybe_cast_metric_to_money(value, metric, currency)
-    end
-  else
-    defp maybe_cast_metric_to_money(value, _metric, _currency), do: value
-  end
 end

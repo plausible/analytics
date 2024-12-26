@@ -53,7 +53,7 @@ defmodule PlausibleWeb.StatsController do
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owner)
     stats_start_date = Plausible.Sites.stats_start_date(site)
-    can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
+    can_see_stats? = not Sites.locked?(site) or conn.assigns[:site_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.StatsController do
       limited_params = Map.merge(params, %{"limit" => "100"})
 
       csvs = %{
-        ~c"visitors.csv" => fn -> main_graph_csv(site, query) end,
+        ~c"visitors.csv" => fn -> main_graph_csv(site, query, conn.assigns[:current_user]) end,
         ~c"sources.csv" => fn -> Api.StatsController.sources(conn, params) end,
         ~c"utm_mediums.csv" => fn -> Api.StatsController.utm_mediums(conn, params) end,
         ~c"utm_sources.csv" => fn -> Api.StatsController.utm_sources(conn, params) end,
@@ -143,6 +143,15 @@ defmodule PlausibleWeb.StatsController do
         ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end,
         ~c"custom_props.csv" => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
       }
+
+      # credo:disable-for-lines:7
+      csvs =
+        if FunWithFlags.enabled?(:channels, for: site) ||
+             FunWithFlags.enabled?(:channels, for: conn.assigns[:current_user]) do
+          Map.put(csvs, ~c"channels.csv", fn -> Api.StatsController.channels(conn, params) end)
+        else
+          csvs
+        end
 
       csv_values =
         Map.values(csvs)
@@ -168,8 +177,8 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  defp main_graph_csv(site, query) do
-    {metrics, column_headers} = csv_graph_metrics(query)
+  defp main_graph_csv(site, query, current_user) do
+    {metrics, column_headers} = csv_graph_metrics(query, site, current_user)
 
     map_bucket_to_row = fn bucket -> Enum.map([:date | metrics], &bucket[&1]) end
     prepend_column_headers = fn data -> [column_headers | data] end
@@ -181,7 +190,12 @@ defmodule PlausibleWeb.StatsController do
     |> NimbleCSV.RFC4180.dump_to_iodata()
   end
 
-  defp csv_graph_metrics(query) do
+  defp csv_graph_metrics(query, site, current_user) do
+    include_scroll_depth? =
+      !query.include_imported &&
+        PlausibleWeb.Api.StatsController.scroll_depth_enabled?(site, current_user) &&
+        Filters.filtering_on_dimension?(query, "event:page")
+
     {metrics, column_headers} =
       if Filters.filtering_on_dimension?(query, "event:goal") do
         {
@@ -197,6 +211,8 @@ defmodule PlausibleWeb.StatsController do
           :bounce_rate,
           :visit_duration
         ]
+
+        metrics = if include_scroll_depth?, do: metrics ++ [:scroll_depth], else: metrics
 
         {
           metrics,
@@ -365,10 +381,12 @@ defmodule PlausibleWeb.StatsController do
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 
   defp get_flags(user, site),
-    do: %{
-      channels:
-        FunWithFlags.enabled?(:channels, for: user) || FunWithFlags.enabled?(:channels, for: site)
-    }
+    do:
+      [:channels, :saved_segments, :scroll_depth]
+      |> Enum.map(fn flag ->
+        {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
+      end)
+      |> Map.new()
 
   defp is_dbip() do
     on_ee do

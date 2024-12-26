@@ -6,10 +6,9 @@ defmodule Plausible.Stats.Breakdown do
   """
 
   use Plausible.ClickhouseRepo
-  use Plausible
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryOptimizer, QueryRunner}
+  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer, Comparisons}
 
   def breakdown(
         site,
@@ -22,8 +21,8 @@ defmodule Plausible.Stats.Breakdown do
     transformed_order_by = transform_order_by(order_by || [], dimension)
 
     query_with_metrics =
-      Query.set(
-        query,
+      query
+      |> Query.set(
         metrics: transformed_metrics,
         # Concat client requested order with default order, overriding only if client explicitly requests it
         order_by:
@@ -32,27 +31,61 @@ defmodule Plausible.Stats.Breakdown do
         dimensions: transform_dimensions(dimension),
         filters: query.filters ++ dimension_filters(dimension),
         pagination: %{limit: limit, offset: (page - 1) * limit},
-        v2: true,
         # Allow pageview and event metrics to be queried off of sessions table
-        legacy_breakdown: true
+        legacy_breakdown: true,
+        remove_unavailable_revenue_metrics: true
       )
       |> QueryOptimizer.optimize()
 
     QueryRunner.run(site, query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
-    |> update_currency_metrics(site, query_with_metrics)
+  end
+
+  def formatted_date_ranges(query) do
+    formatted = %{
+      date_range_label: format_date_range(query)
+    }
+
+    if query.include.comparisons do
+      comparison_date_range_label =
+        query
+        |> Comparisons.get_comparison_query(query.include.comparisons)
+        |> format_date_range()
+
+      Map.put(
+        formatted,
+        :comparison_date_range_label,
+        comparison_date_range_label
+      )
+    else
+      formatted
+    end
   end
 
   defp build_breakdown_result(query_result, query, metrics) do
+    dimension_keys = query.dimensions |> Enum.map(&result_key/1)
+
     query_result.results
-    |> Enum.map(fn %{dimensions: dimensions, metrics: entry_metrics} ->
-      dimension_map =
-        query.dimensions |> Enum.map(&result_key/1) |> Enum.zip(dimensions) |> Enum.into(%{})
+    |> Enum.map(fn entry ->
+      comparison_map =
+        if entry[:comparison] do
+          comparison =
+            build_map(metrics, entry.comparison.metrics)
+            |> Map.put(:change, build_map(metrics, entry.comparison.change))
 
-      metrics_map = Enum.zip(metrics, entry_metrics) |> Enum.into(%{})
+          %{comparison: comparison}
+        else
+          %{}
+        end
 
-      Map.merge(dimension_map, metrics_map)
+      build_map(dimension_keys, entry.dimensions)
+      |> Map.merge(build_map(metrics, entry.metrics))
+      |> Map.merge(comparison_map)
     end)
+  end
+
+  defp build_map(keys, values) do
+    Enum.zip(keys, values) |> Map.new()
   end
 
   defp result_key("event:props:" <> custom_property), do: custom_property
@@ -123,40 +156,27 @@ defmodule Plausible.Stats.Breakdown do
 
   defp dimension_filters(_), do: []
 
-  on_ee do
-    defp update_currency_metrics(results, site, %Query{dimensions: ["event:goal"]}) do
-      site = Plausible.Repo.preload(site, :goals)
+  defp format_date_range(%Query{} = query) do
+    year = query.now.year
+    %Date.Range{first: first, last: last} = Query.date_range(query, trim_trailing: true)
 
-      {event_goals, _pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
-      revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
+    cond do
+      first == last ->
+        strfdate(first, first.year != year)
 
-      if length(revenue_goals) > 0 and Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
-        Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
-      else
-        remove_revenue_metrics(results)
-      end
+      first.year == last.year ->
+        "#{strfdate(first, false)} - #{strfdate(last, year != last.year)}"
+
+      true ->
+        "#{strfdate(first, true)} - #{strfdate(last, true)}"
     end
-
-    defp update_currency_metrics(results, site, query) do
-      {currency, _metrics} =
-        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, query.metrics)
-
-      if currency do
-        results
-        |> Enum.map(&Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(&1, currency))
-      else
-        remove_revenue_metrics(results)
-      end
-    end
-  else
-    defp update_currency_metrics(results, _site, _query), do: remove_revenue_metrics(results)
   end
 
-  defp remove_revenue_metrics(results) do
-    Enum.map(results, fn map ->
-      map
-      |> Map.delete(:total_revenue)
-      |> Map.delete(:average_revenue)
-    end)
+  defp strfdate(date, true = _include_year) do
+    Calendar.strftime(date, "%-d %b %Y")
+  end
+
+  defp strfdate(date, false = _include_year) do
+    Calendar.strftime(date, "%-d %b")
   end
 end

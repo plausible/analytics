@@ -4,17 +4,18 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
   """
 
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
-  alias Plausible.Sites
   alias Plausible.Plugins.API.Tokens
-  import PlausibleWeb.Components.Generic
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
+        Plausible.Sites.get_for_user!(current_user, domain, [
+          :owner,
+          :admin,
+          :super_admin
+        ])
       end)
       |> assign_new(:displayed_tokens, fn %{site: site} ->
         Tokens.list(site)

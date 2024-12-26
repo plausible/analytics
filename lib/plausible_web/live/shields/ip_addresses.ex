@@ -3,10 +3,8 @@ defmodule PlausibleWeb.Live.Shields.IPAddresses do
   LiveView for IP Addresses Shield
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias Plausible.Shields
-  alias Plausible.Sites
 
   def mount(
         _params,
@@ -19,7 +17,11 @@ defmodule PlausibleWeb.Live.Shields.IPAddresses do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
+        Plausible.Sites.get_for_user!(current_user, domain, [
+          :owner,
+          :admin,
+          :super_admin
+        ])
       end)
       |> assign_new(:ip_rules_count, fn %{site: site} ->
         Shields.count_ip_rules(site)

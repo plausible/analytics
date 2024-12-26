@@ -4,15 +4,9 @@ defmodule PlausibleWeb.Live.Sites do
   """
 
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
-
-  import PlausibleWeb.Components.Generic
   import PlausibleWeb.Live.Components.Pagination
 
-  alias Plausible.Auth
-  alias Plausible.Site
   alias Plausible.Sites
-  alias Plausible.Site.Memberships.Invitations
 
   def mount(params, _session, socket) do
     uri =
@@ -33,16 +27,14 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:params, params)
       |> load_sites()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
-        Site.Memberships.any_or_pending?(current_user)
+        Plausible.Teams.Users.has_sites?(current_user, include_pending?: true)
       end)
-      |> assign_new(:needs_to_upgrade, fn %{current_user: current_user, sites: sites} ->
-        user_owns_sites =
-          Enum.any?(sites.entries, fn site ->
-            List.first(site.memberships ++ site.invitations).role == :owner
-          end) ||
-            Auth.user_owns_sites?(current_user)
-
-        user_owns_sites && Plausible.Billing.check_needs_to_upgrade(current_user)
+      |> assign_new(:needs_to_upgrade, fn %{
+                                            current_user: current_user,
+                                            my_team: my_team
+                                          } ->
+        Plausible.Teams.Users.owns_sites?(current_user, include_pending?: true) &&
+          Plausible.Teams.Billing.check_needs_to_upgrade(my_team)
       end)
 
     {:noreply, socket}
@@ -141,11 +133,10 @@ defmodule PlausibleWeb.Live.Sites do
           </h3>
           <div class="mt-2 text-sm text-yellow-700">
             <p>
-              To access the sites you own, you need to subscribe to a monthly or yearly payment plan. <%= link(
-                "Upgrade now →",
-                to: Routes.settings_path(PlausibleWeb.Endpoint, :subscription),
-                class: "text-sm font-medium text-yellow-800"
-              ) %>
+              To access the sites you own, you need to subscribe to a monthly or yearly payment plan.
+              <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}>
+                Upgrade now →
+              </.styled_link>
             </p>
           </div>
         </div>
@@ -155,7 +146,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr :site, Plausible.Site, required: true
-  attr :invitation, Plausible.Auth.Invitation, required: true
+  attr :invitation, :map, required: true
   attr :hourly_stats, :map, required: true
 
   def invitation(assigns) do
@@ -329,12 +320,40 @@ defmodule PlausibleWeb.Live.Sites do
 
   attr :change, :integer, required: true
 
+  # Related React component: <ChangeArrow />
   def percentage_change(assigns) do
     ~H"""
     <p class="dark:text-gray-100">
       <span :if={@change == 0} class="font-semibold">〰</span>
-      <span :if={@change > 0} class="font-semibold text-green-500">↑</span>
-      <span :if={@change < 0} class="font-semibold text-red-400">↓</span>
+      <svg
+        :if={@change > 0}
+        xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        class="text-green-500 h-3 w-3 inline-block stroke-[1px] stroke-current"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M8.25 3.75H19.5a.75.75 0 01.75.75v11.25a.75.75 0 01-1.5 0V6.31L5.03 20.03a.75.75 0 01-1.06-1.06L17.69 5.25H8.25a.75.75 0 010-1.5z"
+          clip-rule="evenodd"
+        >
+        </path>
+      </svg>
+      <svg
+        :if={@change < 0}
+        xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        class="text-red-400 h-3 w-3 inline-block stroke-[1px] stroke-current"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M3.97 3.97a.75.75 0 011.06 0l13.72 13.72V8.25a.75.75 0 011.5 0V19.5a.75.75 0 01-.75.75H8.25a.75.75 0 010-1.5h9.44L3.97 5.03a.75.75 0 010-1.06z"
+          clip-rule="evenodd"
+        >
+        </path>
+      </svg>
+
       <%= abs(@change) %>%
     </p>
     """
@@ -484,15 +503,15 @@ defmodule PlausibleWeb.Live.Sites do
             >
               Upgrade
             </.button_link>
-            <button
-              type="button"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            <.button_link
+              href="#"
+              theme="bright"
               data-method="post"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
               x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/reject')"
             >
               Reject
-            </button>
+            </.button_link>
           </div>
         </div>
       </div>
@@ -516,7 +535,7 @@ defmodule PlausibleWeb.Live.Sites do
             name="filter_text"
             id="filter-text"
             phx-debounce={200}
-            class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+            class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md"
             placeholder="Press / to search sites"
             autocomplete="off"
             value={@filter_text}
@@ -659,9 +678,15 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    case Invitations.ensure_can_take_ownership(site, user) do
+    team =
+      case Plausible.Teams.get_by_owner(user) do
+        {:ok, team} -> team
+        _ -> nil
+      end
+
+    case ensure_can_take_ownership(site, team) do
       :ok ->
-        check_features(invitation, user)
+        check_features(invitation, team)
 
       {:error, :no_plan} ->
         %{invitation: invitation, no_plan: true}
@@ -674,8 +699,10 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp check_limits(invitation, _), do: %{invitation: invitation}
 
-  defp check_features(%{role: :owner, site: site} = invitation, user) do
-    case Invitations.check_feature_access(site, user, ce?()) do
+  defdelegate ensure_can_take_ownership(site, team), to: Plausible.Teams.Invitations
+
+  def check_features(%{role: :owner, site: site} = invitation, team) do
+    case check_feature_access(site, team) do
       :ok ->
         %{invitation: invitation}
 
@@ -686,6 +713,24 @@ defmodule PlausibleWeb.Live.Sites do
           |> PlausibleWeb.TextHelpers.pretty_list()
 
         %{invitation: invitation, missing_features: feature_names}
+    end
+  end
+
+  on_ee do
+    defp check_feature_access(site, new_team) do
+      missing_features =
+        Plausible.Teams.Billing.features_usage(nil, [site.id])
+        |> Enum.filter(&(&1.check_availability(new_team) != :ok))
+
+      if missing_features == [] do
+        :ok
+      else
+        {:error, {:missing_features, missing_features}}
+      end
+    end
+  else
+    defp check_feature_access(_site, _new_team) do
+      :ok
     end
   end
 

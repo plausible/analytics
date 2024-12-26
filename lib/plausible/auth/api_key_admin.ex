@@ -14,7 +14,7 @@ defmodule Plausible.Auth.ApiKeyAdmin do
 
   def create_changeset(schema, attrs) do
     scopes = [attrs["scope"]]
-    Plausible.Auth.ApiKey.changeset(schema, Map.merge(%{"scopes" => scopes}, attrs))
+    Plausible.Auth.ApiKey.changeset(struct(schema, %{}), Map.merge(%{"scopes" => scopes}, attrs))
   end
 
   def update_changeset(schema, attrs) do

@@ -12,12 +12,14 @@
       Compose Goals into Funnels
     </:subtitle>
 
+    <PlausibleWeb.Components.Billing.Notice.premium_feature
+      billable_user={@site.owner}
+      current_user={@current_user}
+      current_team={@site_team}
+      feature_mod={Plausible.Billing.Feature.Funnels}
+    />
+
     <div :if={Plausible.Billing.Feature.Funnels.enabled?(@site)}>
-      <PlausibleWeb.Components.Billing.Notice.premium_feature
-        billable_user={@site.owner}
-        current_user={@current_user}
-        feature_mod={Plausible.Billing.Feature.Funnels}
-      />
       <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}
       ) %>

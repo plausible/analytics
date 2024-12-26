@@ -3,10 +3,7 @@ defmodule PlausibleWeb.Live.Installation do
   User assistance module around Plausible installation instructions/onboarding
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
-
   alias Plausible.Verification.{Checks, State}
-  import PlausibleWeb.Components.Generic
 
   @script_extension_params [
     "outbound-links",
@@ -220,7 +217,10 @@ defmodule PlausibleWeb.Live.Installation do
           if you prefer WordPress installation method.
         </:footer>
 
-        <:footer :if={@initial_installation_type == "GTM" and @installation_type == "manual"}>
+        <:footer :if={
+          (@initial_installation_type == "GTM" and @installation_type == "manual") or
+            (@initial_installation_type == "manual" and @installation_type == "manual")
+        }>
           <.styled_link href={} phx-click="switch-installation-type" phx-value-method="GTM">
             Click here
           </.styled_link>

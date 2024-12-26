@@ -1,10 +1,24 @@
 defmodule PlausibleWeb.Live.PropsSettingsTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
   describe "GET /:domain/settings/properties" do
     setup [:create_user, :log_in, :create_site]
+
+    @tag :ee_only
+    test "premium feature notice renders", %{conn: conn, site: site, user: user} do
+      user
+      |> team_of()
+      |> Plausible.Teams.Team.end_trial()
+      |> Plausible.Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/properties")
+      resp = conn |> html_response(200) |> text()
+
+      assert resp =~ "please upgrade your subscription"
+    end
 
     test "lists props for the site and renders links", %{conn: conn, site: site} do
       {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
@@ -21,6 +35,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       assert resp =~ "amount"
       assert resp =~ "logged_in"
       assert resp =~ "is_customer"
+      refute resp =~ "please upgrade your subscription"
     end
 
     test "lists props with disallow actions", %{conn: conn, site: site} do

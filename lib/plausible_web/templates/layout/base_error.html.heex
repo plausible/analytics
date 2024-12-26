@@ -11,24 +11,28 @@
   <body class="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
     <div class="w-full my-8 text-center">
       <a href={home_dest(@conn)}>
-        <%= img_tag(
-          PlausibleWeb.Router.Helpers.static_path(
-            @conn,
-            logo_path("logo_dark.svg")
-          ),
-          class: "w-44 hidden dark:inline",
-          alt: "Plausible logo",
-          loading: "lazy"
-        ) %>
-        <%= img_tag(
-          PlausibleWeb.Router.Helpers.static_path(
-            @conn,
-            logo_path("logo_light.svg")
-          ),
-          class: "w-44 inline dark:hidden",
-          alt: "Plausible logo",
-          loading: "lazy"
-        ) %>
+        <img
+          src={
+            PlausibleWeb.Router.Helpers.static_path(
+              @conn,
+              logo_path("logo_dark.svg")
+            )
+          }
+          class="w-44 hidden dark:inline"
+          alt="Plausible logo"
+          loading="lazy"
+        />
+        <img
+          src={
+            PlausibleWeb.Router.Helpers.static_path(
+              @conn,
+              logo_path("logo_light.svg")
+            )
+          }
+          class="w-44 inline dark:hidden"
+          alt="Plausible logo"
+          loading="lazy"
+        />
       </a>
     </div>
 

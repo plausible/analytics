@@ -1,8 +1,7 @@
 defmodule PlausibleWeb.Components.Billing.PageviewSlider do
   @moduledoc false
 
-  use Phoenix.Component
-  use Phoenix.HTML
+  use PlausibleWeb, :component
 
   def render(assigns) do
     ~H"""
@@ -71,7 +70,7 @@ defmodule PlausibleWeb.Components.Billing.PageviewSlider do
     </form>
 
     <script>
-      const SLIDER_LABELS = <%= raw Jason.encode!(@slider_labels) %>
+      const SLIDER_LABELS = <%= Phoenix.HTML.raw Jason.encode!(@slider_labels) %>
 
       function repositionBubble() {
         const input = document.getElementById("slider")

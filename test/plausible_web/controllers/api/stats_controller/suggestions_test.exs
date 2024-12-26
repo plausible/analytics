@@ -50,9 +50,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for goals", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=month&date=2019-01-01")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=month&date=2019-01-01&q=")
 
       assert json_response(conn, 200) == []
+    end
+
+    test "returns suggestions for configured site goals but not all event names", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2019-01-01 00:00:00]),
+        build(:event, name: "another", timestamp: ~N[2019-01-01 00:00:00])
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=day&date=2019-01-01&q=")
+
+      assert json_response(conn, 200) == [%{"label" => "Signup", "value" => "Signup"}]
     end
 
     test "returns suggestions for sources", %{conn: conn, site: site} do
@@ -76,11 +93,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for channels", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
         build(:pageview,
           timestamp: ~N[2019-01-01 23:00:00],
-          channel: "Video"
+          referrer_source: "Youtube"
         )
       ])
 
@@ -89,7 +106,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(conn, 200) == [
                %{"label" => "Organic Search", "value" => "Organic Search"},
-               %{"label" => "Video", "value" => "Video"}
+               %{"label" => "Organic Video", "value" => "Organic Video"}
              ]
     end
 
@@ -112,7 +129,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for regions", %{conn: conn, user: user} do
-      {:ok, [site: site]} = create_new_site(%{user: user})
+      {:ok, [site: site]} = create_site(%{user: user})
 
       populate_stats(site, [
         build(:pageview, country_code: "EE", subdivision1_code: "EE-37"),
@@ -129,7 +146,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for cities", %{conn: conn, user: user} do
-      {:ok, [site: site]} = create_new_site(%{user: user})
+      {:ok, [site: site]} = create_site(%{user: user})
 
       populate_stats(site, [
         build(:pageview,
@@ -194,7 +211,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for browser versions", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{browser: "Chrome"})
+      filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
 
       populate_stats(site, [
         build(:pageview,
@@ -224,7 +241,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for OS versions", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{os: "Mac"})
+      filters = Jason.encode!([[:is, "visit:os", ["Mac"]]])
 
       populate_stats(site, [
         build(:pageview,
@@ -244,7 +261,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for OS versions with search", %{conn: conn, site: site} do
-      filters = Jason.encode!(%{os: "Mac"})
+      filters = Jason.encode!([[:is, "visit:os", ["Mac"]]])
 
       conn =
         get(
@@ -256,7 +273,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for hostnames", %{conn: conn1, user: user} do
-      {:ok, [site: site]} = create_new_site(%{user: user})
+      {:ok, [site: site]} = create_site(%{user: user})
 
       populate_stats(site, [
         build(:pageview,
@@ -299,7 +316,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for hostnames limited by shields", %{conn: conn1, user: user} do
-      {:ok, [site: site]} = create_new_site(%{user: user})
+      {:ok, [site: site]} = create_site(%{user: user})
       Plausible.Shields.add_hostname_rule(site, %{"hostname" => "*.example.com"})
       Plausible.Shields.add_hostname_rule(site, %{"hostname" => "erin.rogue.com"})
 
@@ -378,7 +395,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
   end
 
   describe "suggestions for props" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns suggestions for prop key ordered by count", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -424,7 +441,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
-    test "returns suggestions found in time frame", %{
+    test "returns prop key suggestions found in time frame", %{
       conn: conn,
       site: site
     } do
@@ -442,11 +459,39 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       ])
 
       conn =
-        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
+        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&q=")
 
       assert json_response(conn, 200) == [
                %{"label" => "author", "value" => "author"},
                %{"label" => "logged_in", "value" => "logged_in"}
+             ]
+    end
+
+    test "returns prop key suggestions by a search string", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author", "logged_in"],
+          "meta.value": ["Uku Taht", "false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["dark_mode"],
+          "meta.value": ["true"],
+          timestamp: ~N[2022-01-02 00:00:00]
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&q=aut"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"}
              ]
     end
 
@@ -467,7 +512,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "Uku"}})
+      filters = Jason.encode!([[:is, "event:props:author", ["Uku"]]])
 
       conn =
         get(
@@ -568,17 +613,54 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=day&date=2022-01-01&filters=#{filters}&q="
         )
 
       assert json_response(conn, 200) == [
                %{"label" => "(none)", "value" => "(none)"},
                %{"label" => "Uku Taht", "value" => "Uku Taht"},
+               %{"label" => "Marko Saric", "value" => "Marko Saric"}
+             ]
+    end
+
+    test "returns (none) value as the first suggestion even when a search string is provided",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Marko Saric"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Marko Saric"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=day&date=2022-01-01&filters=#{filters}&q=Mar"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "(none)", "value" => "(none)"},
                %{"label" => "Marko Saric", "value" => "Marko Saric"}
              ]
     end
@@ -605,17 +687,57 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=day&date=2022-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
                %{"label" => "Uku Taht", "value" => "Uku Taht"},
                %{"label" => "Marko Saric", "value" => "Marko Saric"}
+             ]
+    end
+
+    test "returns prop value suggestions with multiple custom property filters in query", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author", "browser_language"],
+          "meta.value": ["Uku Taht", "en-US"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author", "browser_language"],
+          "meta.value": ["Uku Taht", "en-US"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author", "browser_language"],
+          "meta.value": ["Marko Saric", "de-DE"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview, timestamp: ~N[2022-01-01 00:00:00])
+      ])
+
+      filters =
+        Jason.encode!([
+          [:is_not, "event:props:browser_language", ["(none)"]],
+          [:is, "event:props:author", ["Uku Taht"]]
+        ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/browser_language?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "en-US", "value" => "en-US"}
              ]
     end
 
@@ -639,12 +761,12 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
       ])
 
-      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:author", ["(none)"]]])
 
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/prop_value?period=all&date=CLEVER_SECURITY_RESEARCH&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=all&date=CLEVER_SECURITY_RESEARCH&filters=#{filters}"
         )
 
       assert json_response(conn, 400) == %{
@@ -693,7 +815,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, country: "GB")
       ])
 
-      filters = Jason.encode!(%{source: "Bing"})
+      filters = Jason.encode!([[:is, "visit:source", ["Bing"]]])
 
       conn =
         get(
@@ -713,7 +835,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, date: ~D[2019-01-01], country: "EE")
       ])
 
-      filters = Jason.encode!(%{country: "EE"})
+      filters = Jason.encode!([[:is, "visit:country", ["EE"]]])
 
       conn =
         get(
@@ -821,7 +943,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, country: "EE", region: "EE-37")
       ])
 
-      filters = Jason.encode!(%{source: "Bing"})
+      filters = Jason.encode!([[:is, "visit:source", ["Bing"]]])
 
       conn =
         get(
@@ -841,7 +963,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, date: ~D[2019-01-01], region: "EE-39")
       ])
 
-      filters = Jason.encode!(%{region: "EE-39"})
+      filters = Jason.encode!([[:is, "visit:region", ["EE-39"]]])
 
       conn =
         get(
@@ -923,7 +1045,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, country: "EE", region: "EE-37", city: 588_409)
       ])
 
-      filters = Jason.encode!(%{source: "Bing"})
+      filters = Jason.encode!([[:is, "visit:source", ["Bing"]]])
 
       conn =
         get(
@@ -943,7 +1065,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, date: ~D[2019-01-01], city: 591_632)
       ])
 
-      filters = Jason.encode!(%{city: "591632"})
+      filters = Jason.encode!([[:is, "visit:city", ["591632"]]])
 
       conn =
         get(
@@ -1003,12 +1125,12 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(key_conn, 200) == [%{"label" => "url", "value" => "url"}]
 
-      filters = Jason.encode!(%{props: %{url: "!(none)"}})
+      filters = Jason.encode!([[:is_not, "event:props:url", ["(none)"]]])
 
       value_conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&with_imported=true&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/url?period=day&date=2022-01-01&with_imported=true&filters=#{filters}"
         )
 
       assert json_response(value_conn, 200) == [
@@ -1039,6 +1161,31 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         assert json_response(conn, 200) == [
                  %{"value" => "Google", "label" => "Google"},
                  %{"value" => "Bing", "label" => "Bing"}
+               ]
+      end
+
+      test "merges channel suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], referrer_source: "Google"),
+          build(:imported_sources, date: ~D[2019-01-01], channel: "Organic Social", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/channel?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "Organic Search", "label" => "Organic Search"},
+                 %{"value" => "Organic Social", "label" => "Organic Social"}
                ]
       end
     end
@@ -1223,7 +1370,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Windows")
       ])
 
-      filters = Jason.encode!(%{page: "/blog"})
+      filters = Jason.encode!([[:is, "event:page", ["/blog"]]])
 
       conn =
         get(
@@ -1249,7 +1396,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Linux")
       ])
 
-      filters = Jason.encode!(%{os: "!Linux"})
+      filters = Jason.encode!([[:is_not, "visit:os", ["Linux"]]])
 
       conn =
         get(

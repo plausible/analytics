@@ -2,8 +2,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
   @moduledoc """
   Reusable components specific to 2FA
   """
-  use Phoenix.Component, global_prefixes: ~w(x-)
-  import PlausibleWeb.Components.Generic
+  use PlausibleWeb, :component
 
   attr :text, :string, required: true
   attr :scale, :integer, default: 4
@@ -58,7 +57,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
         value: "",
         required: "required"
       ) %>
-      <PlausibleWeb.Components.Generic.button
+      <.button
         :if={@show_button?}
         type="submit"
         id={@id}
@@ -70,10 +69,9 @@ defmodule PlausibleWeb.Components.TwoFactor do
         </span>
 
         <span class="label-disabled">
-          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
-          Verifying...
+          <.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" /> Verifying...
         </span>
-      </PlausibleWeb.Components.Generic.button>
+      </.button>
     </div>
     """
   end
@@ -130,7 +128,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
           x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           class="inline-block align-bottom bg-white dark:bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
         >
-          <%= Phoenix.HTML.Form.form_for @form_data, @form_target, [onsubmit: @onsubmit], fn f -> %>
+          <.form :let={f} for={@form_data} action={@form_target} onsubmit={@onsubmit}>
             <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
                 <a
@@ -166,7 +164,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
                 Cancel
               </.button>
             </div>
-          <% end %>
+          </.form>
         </div>
       </div>
     </div>

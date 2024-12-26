@@ -1,5 +1,0 @@
-<div class="container text-center mt-24">
-  <h1 class="text-5xl font-black dark:text-gray-100"><%= @status %></h1>
-  <div class="my-4 text-xl dark:text-gray-100"><%= @message %></div>
-  <%= link("Go to the homepage", to: PlausibleWeb.LayoutView.home_dest(@conn), class: "button mt-4") %>
-</div>

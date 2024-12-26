@@ -1,6 +1,7 @@
 defmodule Plausible.Workers.CheckUsageTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
+  use Plausible.Teams.Test
   import Double
 
   alias Plausible.Workers.CheckUsage
@@ -28,7 +29,7 @@ defmodule Plausible.Workers.CheckUsageTest do
          user: user
        } do
     usage_stub =
-      Plausible.Billing.Quota.Usage
+      Plausible.Teams.Billing
       |> stub(:monthly_pageview_usage, fn _user ->
         %{
           penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -36,17 +37,17 @@ defmodule Plausible.Workers.CheckUsageTest do
         }
       end)
 
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @paddle_id_10k,
-      last_bill_date: Timex.shift(Timex.today(), days: -1),
+    subscribe_to_plan(
+      user,
+      @paddle_id_10k,
+      last_bill_date: Date.shift(Date.utc_today(), day: -1),
       status: :active
     )
 
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: "wont-exist-should-crash",
-      last_bill_date: Timex.shift(Timex.today(), days: -1),
+    subscribe_to_plan(
+      user,
+      "wont-exist-should-crash",
+      last_bill_date: Date.shift(Date.utc_today(), day: -1),
       inserted_at: DateTime.shift(DateTime.utc_now(), day: -2),
       status: :deleted
     )
@@ -61,7 +62,7 @@ defmodule Plausible.Workers.CheckUsageTest do
 
   test "sends more than one email", %{user: user} do
     usage_stub =
-      Plausible.Billing.Quota.Usage
+      Plausible.Teams.Billing
       |> stub(:monthly_pageview_usage, fn _user ->
         %{
           penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -69,15 +70,15 @@ defmodule Plausible.Workers.CheckUsageTest do
         }
       end)
 
-    user2 = insert(:user)
-    insert(:site, members: [user2])
+    user2 = new_user()
+    new_site(owner: user2)
 
     for u <- [user, user2] do
-      insert(:subscription,
-        user: u,
-        paddle_plan_id: @paddle_id_10k,
-        last_bill_date: Timex.shift(Timex.today(), days: -1),
-        next_bill_date: Timex.shift(Timex.today(), days: +5),
+      subscribe_to_plan(
+        u,
+        @paddle_id_10k,
+        last_bill_date: Date.shift(Date.utc_today(), day: -1),
+        next_bill_date: Date.shift(Date.utc_today(), day: +5),
         status: :active
       )
     end
@@ -96,9 +97,9 @@ defmodule Plausible.Workers.CheckUsageTest do
   end
 
   test "ignores user with paused subscription", %{user: user} do
-    insert(:subscription,
-      user: user,
-      paddle_plan_id: @paddle_id_10k,
+    subscribe_to_plan(
+      user,
+      @paddle_id_10k,
       last_bill_date: Timex.shift(Timex.today(), days: -1),
       status: Plausible.Billing.Subscription.Status.paused()
     )
@@ -111,9 +112,7 @@ defmodule Plausible.Workers.CheckUsageTest do
   for status <- @accepted_status_values do
     describe "#{status} subscription, regular customers" do
       test "ignores user with subscription but no usage", %{user: user} do
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
+        subscribe_to_plan(user, @paddle_id_10k,
           last_bill_date: Timex.shift(Timex.today(), days: -1),
           status: unquote(status)
         )
@@ -121,14 +120,14 @@ defmodule Plausible.Workers.CheckUsageTest do
         CheckUsage.perform(nil)
 
         assert_no_emails_delivered()
-        assert Repo.reload(user).grace_period == nil
+        assert Repo.reload(team_of(user)).grace_period == nil
       end
 
       test "does not send an email if account has been over the limit for one billing month", %{
         user: user
       } do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 9_000},
@@ -136,9 +135,7 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
+        subscribe_to_plan(user, @paddle_id_10k,
           last_bill_date: Timex.shift(Timex.today(), days: -1),
           status: unquote(status)
         )
@@ -146,14 +143,14 @@ defmodule Plausible.Workers.CheckUsageTest do
         CheckUsage.perform(nil, usage_stub)
 
         assert_no_emails_delivered()
-        assert Repo.reload(user).grace_period == nil
+        assert Repo.reload(team_of(user)).grace_period == nil
       end
 
       test "does not send an email if account is over the limit by less than 10%", %{
         user: user
       } do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 10_999},
@@ -161,9 +158,7 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
+        subscribe_to_plan(user, @paddle_id_10k,
           last_bill_date: Timex.shift(Timex.today(), days: -1),
           status: unquote(status)
         )
@@ -171,7 +166,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         CheckUsage.perform(nil, usage_stub)
 
         assert_no_emails_delivered()
-        assert Repo.reload(user).grace_period == nil
+        assert Repo.reload(team_of(user)).grace_period == nil
       end
 
       test "sends an email when an account is over their limit for two consecutive billing months",
@@ -179,7 +174,7 @@ defmodule Plausible.Workers.CheckUsageTest do
              user: user
            } do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -187,10 +182,10 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
+        subscribe_to_plan(
+          user,
+          @paddle_id_10k,
+          last_bill_date: Date.shift(Date.utc_today(), day: -1),
           status: unquote(status)
         )
 
@@ -201,14 +196,15 @@ defmodule Plausible.Workers.CheckUsageTest do
           subject: "[Action required] You have outgrown your Plausible subscription tier"
         )
 
-        assert Repo.reload(user).grace_period.end_date == Timex.shift(Timex.today(), days: 7)
+        assert Repo.reload(team_of(user)).grace_period.end_date ==
+                 Timex.shift(Timex.today(), days: 7)
       end
 
       test "sends an email suggesting enterprise plan when usage is greater than 10M ", %{
         user: user
       } do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 11_000_000},
@@ -216,9 +212,9 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
+        subscribe_to_plan(
+          user,
+          @paddle_id_10k,
           last_bill_date: Timex.shift(Timex.today(), days: -1),
           status: unquote(status)
         )
@@ -232,13 +228,10 @@ defmodule Plausible.Workers.CheckUsageTest do
       end
 
       test "skips checking users who already have a grace period", %{user: user} do
-        %{grace_period: existing_grace_period} =
-          user
-          |> Plausible.Auth.GracePeriod.start_changeset()
-          |> Repo.update!()
+        %{grace_period: existing_grace_period} = Plausible.Teams.start_grace_period(team_of(user))
 
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -246,9 +239,7 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
+        subscribe_to_plan(user, @paddle_id_10k,
           last_bill_date: Timex.shift(Timex.today(), days: -1),
           status: unquote(status)
         )
@@ -256,14 +247,14 @@ defmodule Plausible.Workers.CheckUsageTest do
         CheckUsage.perform(nil, usage_stub)
 
         assert_no_emails_delivered()
-        assert Repo.reload(user).grace_period.id == existing_grace_period.id
+        assert Repo.reload(team_of(user)).grace_period.id == existing_grace_period.id
       end
 
       test "recommends a plan to upgrade to", %{
         user: user
       } do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -271,9 +262,9 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
+        subscribe_to_plan(
+          user,
+          @paddle_id_10k,
           last_bill_date: Timex.shift(Timex.today(), days: -1),
           status: unquote(status)
         )
@@ -289,7 +280,7 @@ defmodule Plausible.Workers.CheckUsageTest do
 
       test "clears grace period when plan is applicable again", %{user: user} do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -297,18 +288,18 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
+        subscribe_to_plan(
+          user,
+          @paddle_id_10k,
+          last_bill_date: Date.shift(Date.utc_today(), day: -1),
           status: unquote(status)
         )
 
         CheckUsage.perform(nil, usage_stub)
-        assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        assert user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
 
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -317,7 +308,7 @@ defmodule Plausible.Workers.CheckUsageTest do
           end)
 
         CheckUsage.perform(nil, usage_stub)
-        refute user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        refute user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
       end
     end
   end
@@ -326,12 +317,10 @@ defmodule Plausible.Workers.CheckUsageTest do
     describe "#{status} subscription, enterprise customers" do
       test "skips checking enterprise users who already have a grace period", %{user: user} do
         %{grace_period: existing_grace_period} =
-          user
-          |> Plausible.Auth.GracePeriod.start_manual_lock_changeset()
-          |> Repo.update!()
+          Plausible.Teams.start_manual_lock_grace_period(team_of(user))
 
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
@@ -339,19 +328,18 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
-
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: enterprise_plan.paddle_plan_id,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
-          status: unquote(status)
+        subscribe_to_enterprise_plan(user,
+          monthly_pageview_limit: 1_000_000,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status)
+          ]
         )
 
         CheckUsage.perform(nil, usage_stub)
 
         assert_no_emails_delivered()
-        assert Repo.reload(user).grace_period.id == existing_grace_period.id
+        assert Repo.reload(team_of(user)).grace_period.id == existing_grace_period.id
       end
 
       test "checks billable pageview usage for enterprise customer, sends usage information to enterprise@plausible.io",
@@ -359,7 +347,7 @@ defmodule Plausible.Workers.CheckUsageTest do
              user: user
            } do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
@@ -367,13 +355,13 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
-
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: enterprise_plan.paddle_plan_id,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
-          status: unquote(status)
+        subscribe_to_enterprise_plan(
+          user,
+          monthly_pageview_limit: 1_000_000,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status)
+          ]
         )
 
         CheckUsage.perform(nil, usage_stub)
@@ -384,12 +372,44 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
       end
 
+      test "will only check usage if enterprise plan matches subscription's paddle plan id",
+           %{
+             user: user
+           } do
+        usage_stub =
+          Plausible.Teams.Billing
+          |> stub(:monthly_pageview_usage, fn _user ->
+            %{
+              penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
+              last_cycle: %{date_range: @date_range, total: 1_100_000}
+            }
+          end)
+
+        subscribe_to_enterprise_plan(
+          user,
+          monthly_pageview_limit: 1_000_000,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status),
+            # non-matching ID
+            paddle_plan_id: @paddle_id_10k
+          ]
+        )
+
+        CheckUsage.perform(nil, usage_stub)
+
+        refute_email_delivered_with(
+          to: [{nil, "enterprise@plausible.io"}],
+          subject: "#{user.email} has outgrown their enterprise plan"
+        )
+      end
+
       test "checks site limit for enterprise customer, sends usage information to enterprise@plausible.io",
            %{
              user: user
            } do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 1},
@@ -397,18 +417,17 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        enterprise_plan = insert(:enterprise_plan, user: user, site_limit: 2)
-
-        insert(:site, members: [user])
-        insert(:site, members: [user])
-        insert(:site, members: [user])
-
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: enterprise_plan.paddle_plan_id,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
-          status: unquote(status)
+        subscribe_to_enterprise_plan(user,
+          site_limit: 2,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status)
+          ]
         )
+
+        new_site(owner: user)
+        new_site(owner: user)
+        new_site(owner: user)
 
         CheckUsage.perform(nil, usage_stub)
 
@@ -420,7 +439,7 @@ defmodule Plausible.Workers.CheckUsageTest do
 
       test "starts grace period when plan is outgrown", %{user: user} do
         usage_stub =
-          Plausible.Billing.Quota.Usage
+          Plausible.Teams.Billing
           |> stub(:monthly_pageview_usage, fn _user ->
             %{
               penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
@@ -428,17 +447,17 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
-
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: enterprise_plan.paddle_plan_id,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
-          status: unquote(status)
+        subscribe_to_enterprise_plan(
+          user,
+          monthly_pageview_limit: 1_000_000,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status)
+          ]
         )
 
         CheckUsage.perform(nil, usage_stub)
-        assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        assert user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
       end
     end
   end
@@ -448,7 +467,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       user: user
     } do
       usage_stub =
-        Plausible.Billing.Quota.Usage
+        Plausible.Teams.Billing
         |> stub(:monthly_pageview_usage, fn _user ->
           %{
             penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -456,10 +475,10 @@ defmodule Plausible.Workers.CheckUsageTest do
           }
         end)
 
-      insert(:subscription,
-        user: user,
-        paddle_plan_id: @paddle_id_10k,
-        last_bill_date: Timex.shift(Timex.today(), days: -1)
+      subscribe_to_plan(
+        user,
+        @paddle_id_10k,
+        last_bill_date: Date.shift(Date.utc_today(), day: -1)
       )
 
       CheckUsage.perform(nil, usage_stub)
@@ -474,7 +493,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       user: user
     } do
       usage_stub =
-        Plausible.Billing.Quota.Usage
+        Plausible.Teams.Billing
         |> stub(:monthly_pageview_usage, fn _user ->
           %{
             penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -482,11 +501,7 @@ defmodule Plausible.Workers.CheckUsageTest do
           }
         end)
 
-      insert(:subscription,
-        user: user,
-        paddle_plan_id: @paddle_id_10k,
-        last_bill_date: ~D[2021-03-28]
-      )
+      subscribe_to_plan(user, @paddle_id_10k, last_bill_date: ~D[2021-03-28])
 
       CheckUsage.perform(nil, usage_stub, ~D[2021-03-28])
 
@@ -498,7 +513,7 @@ defmodule Plausible.Workers.CheckUsageTest do
            user: user
          } do
       usage_stub =
-        Plausible.Billing.Quota.Usage
+        Plausible.Teams.Billing
         |> stub(:monthly_pageview_usage, fn _user ->
           %{
             penultimate_cycle: %{date_range: @date_range, total: 11_000},
@@ -506,9 +521,9 @@ defmodule Plausible.Workers.CheckUsageTest do
           }
         end)
 
-      insert(:subscription,
-        user: user,
-        paddle_plan_id: @paddle_id_10k,
+      subscribe_to_plan(
+        user,
+        @paddle_id_10k,
         last_bill_date: ~D[2021-06-29]
       )
 

@@ -1,0 +1,16 @@
+<%= PlausibleWeb.EmailView.greet_recipient(assigns) %>
+<br /><br />
+
+<%= @inner_content %>
+<br /><br />
+
+<%= if ee?() do %>
+  Regards,<br /> The Plausible Team 💌 <br /><br />
+<% end %>
+-- <br /><br />
+<a href={plausible_url()}><%= plausible_url() %></a>
+<br />
+
+<%= if ee?() do %>
+  {{{ pm:unsubscribe }}}
+<% end %>

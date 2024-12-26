@@ -219,10 +219,6 @@
     "metric": {
       "oneOf": [
         {
-          "const": "time_on_page",
-          "$comment": "only :internal"
-        },
-        {
           "const": "visitors",
           "description": "Metric counting the number of unique visitors"
         },
@@ -261,6 +257,22 @@
         {
           "const": "group_conversion_rate",
           "markdownDescription": "The percentage of visitors who completed the goal with the same dimension. Requires: dimension list passed, an `event:goal` filter or `event:goal` dimension"
+        },
+        {
+          "const": "time_on_page",
+          "$comment": "only :internal"
+        },
+        {
+          "const": "total_revenue",
+          "$comment": "only :internal"
+        },
+        {
+          "const": "average_revenue",
+          "$comment": "only :internal"
+        },
+        {
+          "const": "scroll_depth",
+          "$comment": "only :internal"
         }
       ]
     },
@@ -329,17 +341,22 @@
       "enum": ["matches_wildcard", "matches_wildcard_not"],
       "description": "filter operation"
     },
-    "filter_operation_without_goals": {
+    "filter_operation_regex": {
       "type": "string",
-      "enum": ["is_not", "contains_not", "matches", "matches_not"],
+      "enum": ["matches", "matches_not"],
       "description": "filter operation"
     },
-    "filter_operation_with_goals": {
+    "filter_operation_without_goals": {
+      "type": "string",
+      "enum": ["is_not", "contains_not"],
+      "description": "filter operation"
+    },
+    "filter_operation_contains": {
       "type": "string",
       "enum": ["is", "contains"],
       "description": "filter operation"
     },
-    "filter_without_goals": {
+    "filter_with_pattern": {
       "type": "array",
       "additionalItems": false,
       "minItems": 3,
@@ -347,7 +364,7 @@
       "items": [
         {
           "oneOf": [
-            { "$ref": "#/definitions/filter_operation_without_goals" },
+            { "$ref": "#/definitions/filter_operation_regex" },
             {
               "$ref": "#/definitions/filter_operation_wildcard",
               "$comment": "only :internal"
@@ -363,14 +380,40 @@
         { "$ref": "#/definitions/clauses" }
       ]
     },
+    "filter_without_goals": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 3,
+      "maxItems": 4,
+      "items": [
+        { "$ref": "#/definitions/filter_operation_without_goals" },
+        {
+          "oneOf": [
+            { "$ref": "#/definitions/simple_filter_dimensions" },
+            { "$ref": "#/definitions/custom_property_filter_dimensions" }
+          ]
+        },
+        { "$ref": "#/definitions/clauses" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "case_sensitive": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      ]
+    },
     "filter_with_goals": {
       "type": "array",
       "additionalItems": false,
       "minItems": 3,
-      "maxItems": 3,
+      "maxItems": 4,
       "items": [
         {
-          "$ref": "#/definitions/filter_operation_with_goals"
+          "$ref": "#/definitions/filter_operation_contains"
         },
         {
           "oneOf": [
@@ -381,13 +424,24 @@
         },
         {
           "$ref": "#/definitions/clauses"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "case_sensitive": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         }
       ]
     },
     "filter_entry": {
       "oneOf": [
         { "$ref": "#/definitions/filter_without_goals" },
-        { "$ref": "#/definitions/filter_with_goals" }
+        { "$ref": "#/definitions/filter_with_goals" },
+        { "$ref": "#/definitions/filter_with_pattern" }
       ]
     },
     "filter_tree": {

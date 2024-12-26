@@ -429,6 +429,31 @@ defmodule Plausible.Ingestion.RequestTest do
     assert changeset.errors[:request]
   end
 
+  test "long body length" do
+    payload = """
+    {
+      "name": "pageview", 
+      "domain": "dummy.site",
+      "url": "#{:binary.copy("a", 1_000)}"
+    }
+    """
+
+    within_read_limit =
+      :post
+      |> build_conn("/api/events", payload)
+      |> Request.build()
+
+    assert {:ok, _} = within_read_limit
+
+    exceeding_read_limit =
+      :post
+      |> build_conn("/api/events", payload)
+      |> Plug.Conn.assign(:read_body_limit, 800)
+      |> Request.build()
+
+    assert {:error, _} = exceeding_read_limit
+  end
+
   @tag :ee_only
   test "encodable" do
     params = %{
@@ -464,7 +489,8 @@ defmodule Plausible.Ingestion.RequestTest do
              "revenue_source" => %{"amount" => "12.3", "currency" => "USD"},
              "uri" => "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
              "user_agent" => "Mozilla",
-             "ip_classification" => nil
+             "ip_classification" => nil,
+             "scroll_depth" => nil
            }
 
     assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])

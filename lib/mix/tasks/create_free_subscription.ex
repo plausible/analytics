@@ -15,8 +15,9 @@ defmodule Mix.Tasks.CreateFreeSubscription do
 
   def execute(user_id) do
     user = Repo.get(Plausible.Auth.User, user_id)
+    {:ok, team} = Plausible.Teams.get_or_create(user)
 
-    Subscription.free(%{user_id: user_id})
+    Subscription.free(%{team_id: team.id})
     |> Repo.insert!()
 
     IO.puts("Created a free subscription for user: #{user.name}")

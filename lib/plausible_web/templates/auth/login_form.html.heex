@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     <%= Phoenix.Flash.get(@flash, :login_title) || "Enter your account credentials" %>
   </:title>
@@ -9,39 +9,39 @@
       </p>
     <% end %>
   </:subtitle>
-  <%= form_for @conn, "/login", [], fn f -> %>
+  <.form :let={f} for={@conn} action="/login">
     <div class="my-4 mt-8">
-      <%= label(f, :email, class: "block text-gray-700 dark:text-gray-300 mb-2") %>
-      <%= email_input(f, :email,
-        autocomplete: "username",
-        class:
-          "bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500",
-        placeholder: "user@example.com"
-      ) %>
+      <.input
+        type="email"
+        autocomplete="username"
+        placeholder="user@example.com"
+        field={f[:email]}
+        label="Email"
+      />
     </div>
     <div class="my-4">
-      <%= label(f, :password, class: "block text-gray-700 dark:text-gray-300 mb-2") %>
-      <%= password_input(f, :password,
-        id: "current-password",
-        autocomplete: "current-password",
-        class:
-          "transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
-      ) %>
+      <.input
+        type="password"
+        autocomplete="current-password"
+        id="current-password"
+        field={f[:password]}
+        label="Password"
+      />
     </div>
 
     <%= if @conn.assigns[:error] do %>
       <div class="text-red-500 mt-4"><%= @conn.assigns[:error] %></div>
     <% end %>
 
-    <%= submit("Log in", class: "button mt-4 w-full") %>
-  <% end %>
+    <.button class="w-full" type="submit">Log in</.button>
+  </.form>
 
   <:footer>
     <.focus_list>
       <:item :if={
         Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == false
       }>
-        Don't have an account
+        Don't have an account?
         <.styled_link href="/register">
           Register
         </.styled_link>
@@ -56,4 +56,4 @@
       </:item>
     </.focus_list>
   </:footer>
-</PlausibleWeb.Components.Generic.focus_box>
+</.focus_box>

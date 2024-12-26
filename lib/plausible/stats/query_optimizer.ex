@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util}
+  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time}
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -13,6 +13,8 @@ defmodule Plausible.Stats.QueryOptimizer do
     1. Figures out what the right granularity to group by time is
     2. Adds a missing order_by clause to a query
     3. Updating "time" dimension in order_by to the right granularity
+    4. Updates event:hostname filters to also apply on visit level for sane results.
+    5. Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.
 
   """
   def optimize(query) do
@@ -35,8 +37,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     {
       Query.set(query,
         metrics: event_metrics,
-        include_imported: query.include_imported,
-        pagination: nil
+        include_imported: query.include_imported
       ),
       split_sessions_query(query, sessions_metrics)
     }
@@ -47,7 +48,8 @@ defmodule Plausible.Stats.QueryOptimizer do
       &update_group_by_time/1,
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
-      &extend_hostname_filters_to_visit/1
+      &extend_hostname_filters_to_visit/1,
+      &remove_revenue_metrics_if_unavailable/1
     ]
   end
 
@@ -82,8 +84,8 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp resolve_time_dimension(first, last) do
     cond do
-      Timex.diff(last, first, :hours) <= 48 -> "time:hour"
-      Timex.diff(last, first, :days) <= 40 -> "time:day"
+      DateTime.diff(last, first, :hour) <= 48 -> "time:hour"
+      DateTime.diff(last, first, :day) <= 40 -> "time:day"
       Timex.diff(last, first, :weeks) <= 52 -> "time:week"
       true -> "time:month"
     end
@@ -144,7 +146,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp time_dimension(query) do
-    Enum.find(query.dimensions, &String.starts_with?(&1, "time"))
+    Enum.find(query.dimensions, &Time.time_dimension?/1)
   end
 
   defp split_sessions_query(query, session_metrics) do
@@ -168,8 +170,19 @@ defmodule Plausible.Stats.QueryOptimizer do
       filters: filters,
       metrics: session_metrics,
       dimensions: dimensions,
-      include_imported: query.include_imported,
-      pagination: nil
+      include_imported: query.include_imported
     )
+  end
+
+  on_ee do
+    defp remove_revenue_metrics_if_unavailable(query) do
+      if query.remove_unavailable_revenue_metrics and map_size(query.revenue_currencies) == 0 do
+        Query.set(query, metrics: query.metrics -- Plausible.Stats.Goal.Revenue.revenue_metrics())
+      else
+        query
+      end
+    end
+  else
+    defp remove_revenue_metrics_if_unavailable(query), do: query
   end
 end

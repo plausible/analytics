@@ -1,20 +1,21 @@
 <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Add site info" />
 
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     Add website info
   </:title>
 
-  <%= form_for @changeset, @form_submit_url, [class: ""], fn f -> %>
+  <.form :let={f} for={@changeset} action={@form_submit_url}>
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={@site_limit_exceeded?}
       current_user={@current_user}
+      current_team={@my_team}
       billable_user={@current_user}
       limit={@site_limit}
       resource="sites"
     />
 
-    <%= if is_nil(@current_user.trial_expiry_date) do %>
+    <%= if is_nil(@my_team) or is_nil(@my_team.trial_expiry_date) do %>
       <div class="rounded-md bg-blue-50 dark:bg-transparent dark:border border-blue-200 p-4">
         <div class="flex">
           <div class="flex-shrink-0">
@@ -44,37 +45,26 @@
     <% end %>
 
     <div class="my-6">
-      <%= label(f, :domain, class: "block font-medium dark:text-gray-300") %>
-      <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-        Just the naked domain or subdomain without 'www', 'https' etc.
-      </p>
-      <div class="mt-2 flex rounded-md shadow-sm">
-        <%= text_input(f, :domain,
-          class:
-            "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300",
-          placeholder: "example.com",
-          disabled: @site_limit_exceeded?
-        ) %>
-      </div>
-      <%= error_tag(f, :domain) %>
+      <.input
+        help_text="Just the naked domain or subdomain without 'www', 'https' etc."
+        type="text"
+        placeholder="example.com"
+        field={f[:domain]}
+        label="Domain"
+        disabled={@site_limit_exceeded?}
+      />
     </div>
     <div class="my-6">
-      <%= label(f, :timezone, "Reporting Timezone",
-        class: "block font-medium text-gray-700 dark:text-gray-300"
-      ) %>
-      <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
-        To make sure we agree on what 'today' means
-      </p>
-
-      <div class="inline-block relative w-full">
-        <%= select(f, :timezone, Plausible.Timezones.options(),
-          id: "tz-select",
-          selected: "Etc/Greenwich",
-          class:
-            "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md",
-          disabled: @site_limit_exceeded?
-        ) %>
-      </div>
+      <.input
+        type="select"
+        help_text="To make sure we agree on what 'today' means"
+        field={f[:timezone]}
+        id="tz-select"
+        value="Etc/Greenwich"
+        disabled={@site_limit_exceeded?}
+        label="Reporting Timezone"
+        options={Plausible.Timezones.options()}
+      />
     </div>
     <script>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  var option;
@@ -92,9 +82,12 @@
       if (option) { option.selected = "selected"}
     </script>
 
-    <%= submit("Add snippet",
-      class: "button mt-4 w-full disabled:cursor-not-allowed",
-      disabled: @site_limit_exceeded?
-    ) %>
-  <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+    <.button
+      disabled={@site_limit_exceeded?}
+      type="submit"
+      class="w-full disabled:cursor-not-allowed"
+    >
+      Install Plausible
+    </.button>
+  </.form>
+</.focus_box>

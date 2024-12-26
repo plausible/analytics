@@ -56,7 +56,10 @@ export default function FilterModalPropsRow({
       return Promise.resolve([])
     }
     return fetchSuggestions(
-      apiPath(site, `/suggestions/prop_value`),
+      apiPath(
+        site,
+        `/suggestions/custom-prop-values/${encodeURIComponent(propKey)}`
+      ),
       query,
       input,
       [FILTER_OPERATIONS.isNot, filterKey, ['(none)']]

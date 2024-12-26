@@ -33,38 +33,45 @@ export default function CurrentVisitors({ tooltipBoundary }) {
     updateCount()
   }, [query, updateCount])
 
-  function tooltipInfo() {
+  if (
+    site.flags.saved_segments
+      ? currentVisitors !== null
+      : currentVisitors !== null && query.filters.length === 0
+  ) {
     return (
-      <div>
-        <p className="whitespace-nowrap text-small">
-          Last updated{' '}
-          <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp} />s ago
-        </p>
-        <p className="whitespace-nowrap font-normal text-xs">
-          Click to view realtime dashboard
-        </p>
-      </div>
-    )
-  }
-
-  if (currentVisitors !== null && query.filters.length === 0) {
-    return (
-      <Tooltip info={tooltipInfo()} boundary={tooltipBoundary}>
+      <Tooltip
+        info={
+          <div>
+            <p className="whitespace-nowrap text-small">
+              Last updated{' '}
+              <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp} />s
+              ago
+            </p>
+            <p className="whitespace-nowrap font-normal text-xs">
+              Click to view realtime dashboard
+            </p>
+          </div>
+        }
+        boundary={tooltipBoundary}
+      >
         <AppNavigationLink
           search={(prev) => ({ ...prev, period: 'realtime' })}
-          className="block ml-1 md:ml-2 mr-auto text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300"
+          className="h-9 flex items-center ml-1 mr-auto text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300"
         >
           <svg
-            className="inline w-2 mr-1 md:mr-2 text-green-500 fill-current"
+            className="inline-block w-2 mr-1 text-green-500 fill-current"
             viewBox="0 0 16 16"
             xmlns="http://www.w3.org/2000/svg"
           >
             <circle cx="8" cy="8" r="8" />
           </svg>
-          {currentVisitors}{' '}
-          <span className="hidden sm:inline-block">
-            current visitor{currentVisitors === 1 ? '' : 's'}
-          </span>
+          <div className="inline-block">
+            {currentVisitors}
+            <span className="hidden lg:inline">
+              {' '}
+              current visitor{currentVisitors === 1 ? '' : 's'}
+            </span>
+          </div>
         </AppNavigationLink>
       </Tooltip>
     )

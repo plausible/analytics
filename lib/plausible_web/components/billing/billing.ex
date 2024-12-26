@@ -1,10 +1,9 @@
 defmodule PlausibleWeb.Components.Billing do
   @moduledoc false
 
-  use Phoenix.Component
-  import PlausibleWeb.Components.Generic
+  use PlausibleWeb, :component
+
   require Plausible.Billing.Subscription.Status
-  alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.{Subscription, Subscriptions}
 
   def render_monthly_pageview_usage(%{usage: usage} = assigns)
@@ -190,7 +189,7 @@ defmodule PlausibleWeb.Components.Billing do
       </div>
       <.styled_link
         :if={
-          not (Plausible.Auth.enterprise_configured?(@user) &&
+          not (Plausible.Teams.Billing.enterprise_configured?(@team) &&
                  Subscriptions.halted?(@subscription))
         }
         id="#upgrade-or-change-plan-link"
@@ -228,6 +227,7 @@ defmodule PlausibleWeb.Components.Billing do
   attr :paddle_product_id, :string, required: true
   attr :checkout_disabled, :boolean, default: false
   attr :user, :map, required: true
+  attr :team, :map, default: nil
   attr :confirm_message, :any, default: nil
   slot :inner_block, required: true
 
@@ -235,12 +235,22 @@ defmodule PlausibleWeb.Components.Billing do
     confirmed =
       if assigns.confirm_message, do: "confirm(\"#{assigns.confirm_message}\")", else: "true"
 
-    assigns = assign(assigns, :confirmed, confirmed)
+    passthrough =
+      if assigns.team do
+        "user:#{assigns.user.id};team:#{assigns.team.id}"
+      else
+        assigns.user.id
+      end
+
+    assigns =
+      assigns
+      |> assign(:confirmed, confirmed)
+      |> assign(:passthrough, passthrough)
 
     ~H"""
     <button
       id={@id}
-      onclick={"if (#{@confirmed}) {Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @user.id, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})}"}
+      onclick={"if (#{@confirmed}) {Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @passthrough, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})}"}
       class={[
         "text-sm w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
@@ -267,12 +277,9 @@ defmodule PlausibleWeb.Components.Billing do
 
   def upgrade_link(assigns) do
     ~H"""
-    <PlausibleWeb.Components.Generic.button_link
-      id="upgrade-link-2"
-      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-    >
+    <.button_link id="upgrade-link-2" href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}>
       Upgrade
-    </PlausibleWeb.Components.Generic.button_link>
+    </.button_link>
     """
   end
 

@@ -3,7 +3,7 @@ defmodule Plausible.Workers.CheckUsage do
   use Oban.Worker, queue: :check_usage
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Quota}
-  alias Plausible.Auth.User
+  alias Plausible.Teams
 
   defmacro yesterday() do
     quote do
@@ -33,26 +33,18 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   @impl Oban.Worker
-  def perform(_job, usage_mod \\ Quota.Usage, today \\ Date.utc_today()) do
+  def perform(_job, usage_mod \\ Teams.Billing, today \\ Date.utc_today()) do
     yesterday = today |> Date.shift(day: -1)
-
-    last_subscription_query =
-      from(s in Subscription,
-        order_by: [desc: s.inserted_at],
-        where: s.user_id == parent_as(:user).id,
-        limit: 1
-      )
 
     active_subscribers =
       Repo.all(
-        from(u in User,
-          as: :user,
-          inner_join: s in Plausible.Billing.Subscription,
-          on: s.user_id == u.id,
-          inner_lateral_join: ls in subquery(last_subscription_query),
-          on: ls.id == s.id,
+        from(t in Teams.Team,
+          as: :team,
+          inner_join: o in assoc(t, :owner),
+          inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
+          on: true,
           left_join: ep in Plausible.Billing.EnterprisePlan,
-          on: ep.user_id == u.id,
+          on: ep.team_id == t.id and ep.paddle_plan_id == s.paddle_plan_id,
           where:
             s.status in [
               ^Subscription.Status.active(),
@@ -65,8 +57,8 @@ defmodule Plausible.Workers.CheckUsage do
           where:
             least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==
               day_of_month(^yesterday),
-          order_by: u.id,
-          preload: [subscription: s, enterprise_plan: ep]
+          order_by: t.id,
+          preload: [subscription: s, enterprise_plan: ep, owner: o]
         )
       )
 
@@ -91,7 +83,8 @@ defmodule Plausible.Workers.CheckUsage do
 
   defp check_site_usage_for_enterprise(subscriber) do
     limit = subscriber.enterprise_plan.site_limit
-    usage = Quota.Usage.site_usage(subscriber)
+
+    usage = Teams.Billing.site_usage(subscriber)
 
     if Quota.below_limit?(usage, limit) do
       {:below_limit, {usage, limit}}
@@ -103,9 +96,8 @@ defmodule Plausible.Workers.CheckUsage do
   def maybe_remove_grace_period(subscriber, usage_mod) do
     case check_pageview_usage_last_cycle(subscriber, usage_mod) do
       {:below_limit, _} ->
-        subscriber
-        |> Plausible.Auth.GracePeriod.remove_changeset()
-        |> Repo.update()
+        Plausible.Teams.remove_grace_period(subscriber)
+        :ok
 
       _ ->
         :skip
@@ -118,12 +110,10 @@ defmodule Plausible.Workers.CheckUsage do
         suggested_plan =
           Plausible.Billing.Plans.suggest(subscriber, pageview_usage.last_cycle.total)
 
-        PlausibleWeb.Email.over_limit_email(subscriber, pageview_usage, suggested_plan)
+        PlausibleWeb.Email.over_limit_email(subscriber.owner, pageview_usage, suggested_plan)
         |> Plausible.Mailer.send()
 
-        subscriber
-        |> Plausible.Auth.GracePeriod.start_changeset()
-        |> Repo.update()
+        Plausible.Teams.start_grace_period(subscriber)
 
       _ ->
         nil
@@ -140,22 +130,20 @@ defmodule Plausible.Workers.CheckUsage do
 
       {{_, pageview_usage}, {_, {site_usage, site_allowance}}} ->
         PlausibleWeb.Email.enterprise_over_limit_internal_email(
-          subscriber,
+          subscriber.owner,
           pageview_usage,
           site_usage,
           site_allowance
         )
         |> Plausible.Mailer.send()
 
-        subscriber
-        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset()
-        |> Repo.update()
+        Plausible.Teams.start_manual_lock_grace_period(subscriber)
     end
   end
 
   defp check_pageview_usage_two_cycles(subscriber, usage_mod) do
     usage = usage_mod.monthly_pageview_usage(subscriber)
-    limit = Quota.Limits.monthly_pageview_limit(subscriber)
+    limit = Teams.Billing.monthly_pageview_limit(subscriber.subscription)
 
     if Quota.exceeds_last_two_usage_cycles?(usage, limit) do
       {:over_limit, usage}
@@ -166,7 +154,7 @@ defmodule Plausible.Workers.CheckUsage do
 
   defp check_pageview_usage_last_cycle(subscriber, usage_mod) do
     usage = usage_mod.monthly_pageview_usage(subscriber)
-    limit = Quota.Limits.monthly_pageview_limit(subscriber)
+    limit = Teams.Billing.monthly_pageview_limit(subscriber.subscription)
 
     if :last_cycle in Quota.exceeded_cycles(usage, limit) do
       {:over_limit, usage}

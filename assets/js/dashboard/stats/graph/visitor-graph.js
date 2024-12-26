@@ -19,7 +19,7 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 function fetchTopStats(site, query) {
   const q = { ...query }
 
-  if (!isComparisonEnabled(q.comparison)) {
+  if (!isComparisonEnabled(q.comparison) && query.period !== 'realtime') {
     q.comparison = 'previous_period'
   }
 

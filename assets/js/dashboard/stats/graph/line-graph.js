@@ -3,11 +3,12 @@ import { useAppNavigate } from '../../navigation/use-app-navigate';
 import { useQueryContext } from '../../query-context';
 import Chart from 'chart.js/auto';
 import GraphTooltip from './graph-tooltip'
-import { buildDataSet, METRIC_LABELS, METRIC_FORMATTER } from './graph-util'
+import { buildDataSet, METRIC_LABELS } from './graph-util'
 import dateFormatter from './date-formatter';
 import FadeIn from '../../fade-in';
 import classNames from 'classnames';
 import { hasGoalFilter } from '../../util/filters';
+import { MetricFormatterShort } from '../reports/metric-formatter'
 
 const calculateMaximumY = function(dataset) {
   const yAxisValues = dataset
@@ -76,7 +77,7 @@ class LineGraph extends React.Component {
             min: 0,
             suggestedMax: calculateMaximumY(dataSet),
             ticks: {
-              callback: METRIC_FORMATTER[metric],
+              callback: MetricFormatterShort[metric],
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             },
             grid: {

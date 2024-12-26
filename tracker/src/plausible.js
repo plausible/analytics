@@ -31,6 +31,11 @@
   {{#if pageleave}}
   // :NOTE: Tracking pageleave events is currently experimental.
 
+  // Keeps track of the URL to be sent in the pageleave event payload.
+  // Should get updated on pageviews triggered manually with a custom
+  // URL, and on SPA navigation.
+  var currentPageLeaveURL = location.href
+
   // Multiple pageviews might be sent by the same script when the page
   // uses client-side routing (e.g. hash or history-based). This flag
   // prevents registering multiple listeners in those cases.
@@ -43,15 +48,59 @@
   // flag prevents sending multiple pageleaves in those cases.
   var pageLeaveSending = false
 
-  function triggerPageLeave(url) {
+  function getDocumentHeight() {
+    return Math.max(
+      document.body.scrollHeight || 0,
+      document.body.offsetHeight || 0,
+      document.body.clientHeight || 0,
+      document.documentElement.scrollHeight || 0,
+      document.documentElement.offsetHeight || 0,
+      document.documentElement.clientHeight || 0
+    )
+  }
+
+  function getCurrentScrollDepthPx() {
+    var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
+    var scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+
+    return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
+  }
+
+  var currentDocumentHeight = getDocumentHeight()
+  var maxScrollDepthPx = getCurrentScrollDepthPx()
+
+  window.addEventListener('load', function () {
+    currentDocumentHeight = getDocumentHeight()
+
+    // Update the document height again after every 200ms during the
+    // next 3 seconds. This makes sure dynamically loaded content is
+    // also accounted for.
+    var count = 0
+    var interval = setInterval(function () {
+      currentDocumentHeight = getDocumentHeight()
+      if (++count === 15) {clearInterval(interval)}
+    }, 200)
+  })
+
+  document.addEventListener('scroll', function() {
+    currentDocumentHeight = getDocumentHeight()
+    var currentScrollDepthPx = getCurrentScrollDepthPx()
+
+    if (currentScrollDepthPx > maxScrollDepthPx) {
+      maxScrollDepthPx = currentScrollDepthPx
+    }
+  })
+
+  function triggerPageLeave() {
     if (pageLeaveSending) {return}
     pageLeaveSending = true
     setTimeout(function () {pageLeaveSending = false}, 500)
 
     var payload = {
       n: 'pageleave',
+      sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
       d: dataDomain,
-      u: url,
+      u: currentPageLeaveURL,
     }
 
     {{#if hash}}
@@ -64,19 +113,17 @@
     }
   }
 
-  function registerPageLeaveListener(url) {
-    if (listeningPageLeave) { return }
-
-    window.addEventListener('pagehide', function () {
-      triggerPageLeave(url)
-    })
-
-    listeningPageLeave = true
+  function registerPageLeaveListener() {
+    if (!listeningPageLeave) {
+      window.addEventListener('pagehide', triggerPageLeave)
+      listeningPageLeave = true
+    }
   }
   {{/if}}
 
-
   function trigger(eventName, options) {
+    var isPageview = eventName === 'pageview'
+
     {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
       return onIgnoredEvent('localhost', options)
@@ -96,7 +143,7 @@
     var dataIncludeAttr = scriptEl && scriptEl.getAttribute('data-include')
     var dataExcludeAttr = scriptEl && scriptEl.getAttribute('data-exclude')
 
-    if (eventName === 'pageview') {
+    if (isPageview) {
       var isIncluded = !dataIncludeAttr || (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
       var isExcluded = dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
 
@@ -116,11 +163,19 @@
 
     var payload = {}
     payload.n = eventName
+
     {{#if manual}}
-    payload.u = options && options.u ? options.u : location.href
+    var customURL = options && options.u
+
+    {{#if pageleave}}
+    isPageview && customURL && (currentPageLeaveURL = customURL)
+    {{/if}}
+
+    payload.u = customURL ? customURL : location.href
     {{else}}
     payload.u = location.href
     {{/if}}
+
     payload.d = dataDomain
     payload.r = document.referrer || null
     if (options && options.meta) {
@@ -164,8 +219,8 @@
     request.onreadystatechange = function() {
       if (request.readyState === 4) {
         {{#if pageleave}}
-        if (eventName === 'pageview') {
-          registerPageLeaveListener(payload.u)
+        if (isPageview) {
+          registerPageLeaveListener()
         }
         {{/if}}
         options && options.callback && options.callback({status: request.status})
@@ -182,22 +237,18 @@
   {{#unless manual}}
     var lastPage;
 
-    {{#if pageleave}}
-    var lastUrl = location.href
-
-    function pageLeaveSPA() {
-      triggerPageLeave(lastUrl);
-      lastUrl = location.href;
-    }
-    {{/if}}
-
     function page(isSPANavigation) {
       {{#unless hash}}
       if (lastPage === location.pathname) return;
       {{/unless}}
       
       {{#if pageleave}}
-      if (isSPANavigation) {pageLeaveSPA()}
+      if (isSPANavigation && listeningPageLeave) {
+        triggerPageLeave();
+        currentPageLeaveURL = location.href;
+        currentDocumentHeight = getDocumentHeight()
+        maxScrollDepthPx = getCurrentScrollDepthPx()
+      }
       {{/if}}
 
       lastPage = location.pathname

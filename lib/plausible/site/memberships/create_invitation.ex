@@ -4,11 +4,11 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   transfers.
   """
 
-  alias Plausible.Auth.{User, Invitation}
-  alias Plausible.{Site, Sites, Site.Membership}
-  alias Plausible.Site.Memberships.Invitations
-  alias Plausible.Billing.Quota
-  import Ecto.Query
+  alias Plausible.Auth.User
+  alias Plausible.Site
+  alias Plausible.Repo
+  alias Plausible.Teams
+  use Plausible
 
   @type invite_error() ::
           Ecto.Changeset.t()
@@ -18,12 +18,14 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           | {:over_limit, non_neg_integer()}
           | :forbidden
 
+  @type invitation :: %Teams.GuestInvitation{} | %Teams.SiteTransfer{}
+
   @spec create_invitation(Site.t(), User.t(), String.t(), atom()) ::
-          {:ok, Invitation.t()} | {:error, invite_error()}
+          {:ok, invitation} | {:error, invite_error()}
   @doc """
-  Invites a new team member to the given site. Returns a
-  %Plausible.Auth.Invitation{} struct and sends the invitee an email to accept
-  this invitation.
+  Invites a new team member to the given site. Returns either
+  `%Teams.GuestInvitation{}` or `%Teams.SiteTransfer{}` struct
+  and sends the invitee an email to accept this invitation.
 
   The inviter must have enough permissions to invite the new team member,
   otherwise this function returns `{:error, :forbidden}`.
@@ -32,36 +34,15 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   as an ownership transfer and requires the inviter to be the owner of the site.
   """
   def create_invitation(site, inviter, invitee_email, role) do
-    Plausible.Repo.transaction(fn ->
+    Repo.transaction(fn ->
       do_invite(site, inviter, invitee_email, role)
     end)
   end
 
-  @spec bulk_transfer_ownership_direct([Site.t()], User.t()) ::
-          {:ok, [Membership.t()]}
-          | {:error,
-             invite_error()
-             | Quota.Limits.over_limits_error()}
-  def bulk_transfer_ownership_direct(sites, new_owner) do
-    Plausible.Repo.transaction(fn ->
-      for site <- sites do
-        site = Plausible.Repo.preload(site, :owner)
-
-        case Site.Memberships.transfer_ownership(site, new_owner) do
-          {:ok, membership} ->
-            membership
-
-          {:error, error} ->
-            Plausible.Repo.rollback(error)
-        end
-      end
-    end)
-  end
-
   @spec bulk_create_invitation([Site.t()], User.t(), String.t(), atom(), Keyword.t()) ::
-          {:ok, [Invitation.t()]} | {:error, invite_error()}
+          {:ok, [invitation]} | {:error, invite_error()}
   def bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ []) do
-    Plausible.Repo.transaction(fn ->
+    Repo.transaction(fn ->
       for site <- sites do
         do_invite(site, inviter, invitee_email, role, opts)
       end
@@ -69,76 +50,52 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   end
 
   defp do_invite(site, inviter, invitee_email, role, opts \\ []) do
-    attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
-
-    with site <- Plausible.Repo.preload(site, :owner),
-         :ok <- check_invitation_permissions(site, inviter, role, opts),
-         :ok <- check_team_member_limit(site, role, invitee_email),
+    with site <- Repo.preload(site, [:owner, :team]),
+         :ok <-
+           Teams.Invitations.check_invitation_permissions(
+             site,
+             inviter,
+             role,
+             opts
+           ),
+         :ok <-
+           Teams.Invitations.check_team_member_limit(
+             site.team,
+             role,
+             invitee_email
+           ),
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
-         :ok <- Invitations.ensure_transfer_valid(site, invitee, role),
-         :ok <- ensure_new_membership(site, invitee, role),
-         %Ecto.Changeset{} = changeset <- Invitation.new(attrs),
-         {:ok, invitation} <- Plausible.Repo.insert(changeset) do
-      send_invitation_email(invitation, invitee)
-      invitation
+         :ok <-
+           Teams.Invitations.ensure_transfer_valid(
+             site.team,
+             invitee,
+             role
+           ),
+         :ok <-
+           Teams.Invitations.ensure_new_membership(
+             site,
+             invitee,
+             role
+           ),
+         {:ok, invitation_or_transfer} <-
+           Teams.Invitations.invite(site, invitee_email, role, inviter) do
+      send_invitation_email(invitation_or_transfer, invitee)
+
+      invitation_or_transfer
     else
-      {:error, cause} -> Plausible.Repo.rollback(cause)
+      {:error, cause} -> Repo.rollback(cause)
     end
   end
 
-  defp check_invitation_permissions(site, inviter, requested_role, opts) do
-    check_permissions? = Keyword.get(opts, :check_permissions, true)
-
-    if check_permissions? do
-      required_roles = if requested_role == :owner, do: [:owner], else: [:admin, :owner]
-
-      membership_query =
-        from(m in Membership,
-          where: m.user_id == ^inviter.id and m.site_id == ^site.id and m.role in ^required_roles
-        )
-
-      if Plausible.Repo.exists?(membership_query), do: :ok, else: {:error, :forbidden}
-    else
-      :ok
-    end
+  defp send_invitation_email(%Teams.GuestInvitation{} = guest_invitation, invitee) do
+    guest_invitation
+    |> Repo.preload([:site, team_invitation: :inviter])
+    |> Teams.Invitations.send_invitation_email(invitee)
   end
 
-  defp send_invitation_email(invitation, invitee) do
-    invitation = Plausible.Repo.preload(invitation, [:site, :inviter])
-
-    email =
-      case {invitee, invitation.role} do
-        {invitee, :owner} -> PlausibleWeb.Email.ownership_transfer_request(invitation, invitee)
-        {nil, _role} -> PlausibleWeb.Email.new_user_invitation(invitation)
-        {%User{}, _role} -> PlausibleWeb.Email.existing_user_invitation(invitation)
-      end
-
-    Plausible.Mailer.send(email)
-  end
-
-  defp ensure_new_membership(_site, _invitee, :owner) do
-    :ok
-  end
-
-  defp ensure_new_membership(site, invitee, _role) do
-    if invitee && Sites.is_member?(invitee.id, site) do
-      {:error, :already_a_member}
-    else
-      :ok
-    end
-  end
-
-  defp check_team_member_limit(_site, :owner, _invitee_email) do
-    :ok
-  end
-
-  defp check_team_member_limit(site, _role, invitee_email) do
-    site = Plausible.Repo.preload(site, :owner)
-    limit = Quota.Limits.team_member_limit(site.owner)
-    usage = Quota.Usage.team_member_usage(site.owner, exclude_emails: [invitee_email])
-
-    if Quota.below_limit?(usage, limit),
-      do: :ok,
-      else: {:error, {:over_limit, limit}}
+  defp send_invitation_email(%Teams.SiteTransfer{} = site_transfer, invitee) do
+    site_transfer
+    |> Repo.preload([:site, :initiator])
+    |> Teams.Invitations.send_invitation_email(invitee)
   end
 end

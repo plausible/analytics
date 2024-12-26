@@ -3,7 +3,7 @@
   "version": "1.4.0",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "test": "jest",
+    "test": "TZ=UTC jest",
     "format": "prettier --write",
     "check-format": "prettier --check **/*.{js,css,ts,tsx} --require-pragma",
     "eslint": "eslint js/**",

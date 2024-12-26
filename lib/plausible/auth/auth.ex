@@ -35,9 +35,6 @@ defmodule Plausible.Auth do
 
   @type rate_limit_type() :: unquote(Enum.reduce(@rate_limit_types, &{:|, [], [&1, &2]}))
 
-  @spec rate_limits() :: map()
-  def rate_limits(), do: @rate_limits
-
   @spec rate_limit(rate_limit_type(), Auth.User.t() | Plug.Conn.t()) ::
           :ok | {:error, {:rate_limit, rate_limit_type()}}
   def rate_limit(limit_type, key) when limit_type in @rate_limit_types do
@@ -48,11 +45,6 @@ defmodule Plausible.Auth do
       {:allow, _} -> :ok
       {:deny, _} -> {:error, {:rate_limit, limit_type}}
     end
-  end
-
-  def create_user(name, email, pwd) do
-    Auth.User.new(%{name: name, email: email, password: pwd, password_confirmation: pwd})
-    |> Repo.insert()
   end
 
   @spec find_user_by(Keyword.t()) :: Auth.User.t() | nil
@@ -77,49 +69,28 @@ defmodule Plausible.Auth do
     end
   end
 
-  def has_active_sites?(user, roles \\ [:owner, :admin, :viewer]) do
-    sites =
-      Repo.all(
-        from u in Plausible.Auth.User,
-          where: u.id == ^user.id,
-          join: sm in Plausible.Site.Membership,
-          on: sm.user_id == u.id,
-          where: sm.role in ^roles,
-          join: s in Plausible.Site,
-          on: s.id == sm.site_id,
-          select: s
-      )
-
-    Enum.any?(sites, &Plausible.Sites.has_stats?/1)
-  end
-
   def delete_user(user) do
     Repo.transaction(fn ->
-      user =
-        user
-        |> Repo.preload(site_memberships: :site)
+      case Plausible.Teams.get_by_owner(user) do
+        {:ok, team} ->
+          for site <- Plausible.Teams.owned_sites(team) do
+            Plausible.Site.Removal.run(site)
+          end
 
-      for membership <- user.site_memberships do
-        Repo.delete!(membership)
+          Repo.delete_all(from s in Plausible.Billing.Subscription, where: s.team_id == ^team.id)
 
-        if membership.role == :owner do
-          Plausible.Site.Removal.run(membership.site.domain)
-        end
+          Repo.delete_all(
+            from ep in Plausible.Billing.EnterprisePlan, where: ep.team_id == ^team.id
+          )
+
+          Repo.delete!(team)
+
+        _ ->
+          :skip
       end
 
       Repo.delete!(user)
     end)
-  end
-
-  def user_owns_sites?(user) do
-    Repo.exists?(
-      from(s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.user_id == ^user.id,
-        where: sm.role == :owner
-      )
-    )
   end
 
   on_ee do
@@ -133,21 +104,19 @@ defmodule Plausible.Auth do
     def is_super_admin?(_), do: false
   end
 
-  def enterprise_configured?(nil), do: false
-
-  def enterprise_configured?(%Plausible.Auth.User{} = user) do
-    user
-    |> Ecto.assoc(:enterprise_plan)
-    |> Repo.exists?()
-  end
-
   @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
   def create_api_key(user, name, key) do
+    team =
+      case Plausible.Teams.get_by_owner(user) do
+        {:ok, team} -> team
+        _ -> nil
+      end
+
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
 
-    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(user),
+    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(team),
          do: Repo.insert(changeset)
   end
 
