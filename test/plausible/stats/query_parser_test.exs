@@ -1694,266 +1694,267 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "revenue metrics" do
-    on_ee do
-      setup %{user: user} do
-        subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.RevenueGoals])
-        :ok
-      end
+    @describetag :ee_only
 
-      test "can request", %{site: site} do
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all"
-        }
-        |> check_success(
-          site,
-          %{
-            metrics: [:total_revenue, :average_revenue],
-            utc_time_range: @date_range_day,
-            filters: [],
-            dimensions: [],
-            order_by: nil,
-            timezone: site.timezone,
-            include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0}
-          }
-        )
-        |> check_goals(
-          preloaded_goals: [],
-          revenue_warning: :no_revenue_goals_matching,
-          revenue_currencies: %{}
-        )
-      end
-
-      test "no access" do
-        user = new_user()
-        site = new_site(owner: user)
-
-        subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
-
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all"
-        }
-        |> check_error(
-          site,
-          "The owner of this site does not have access to the revenue metrics feature."
-        )
-      end
-
-      test "with event:goal filters with same currency", %{site: site} do
-        insert(:goal,
-          site: site,
-          event_name: "Purchase",
-          currency: "USD",
-          display_name: "PurchaseUSD"
-        )
-
-        insert(:goal, site: site, event_name: "Subscription", currency: "USD")
-        insert(:goal, site: site, event_name: "Signup")
-        insert(:goal, site: site, event_name: "Logout")
-
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all",
-          "filters" => [["is", "event:goal", ["PurchaseUSD", "Signup", "Subscription"]]]
-        }
-        |> check_success(
-          site,
-          %{
-            metrics: [:total_revenue, :average_revenue],
-            utc_time_range: @date_range_day,
-            filters: [[:is, "event:goal", ["PurchaseUSD", "Signup", "Subscription"]]],
-            dimensions: [],
-            order_by: nil,
-            timezone: site.timezone,
-            include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0}
-          }
-        )
-        |> check_goals(
-          preloaded_goals: ["PurchaseUSD", "Signup", "Subscription"],
-          revenue_warning: nil,
-          revenue_currencies: %{default: :USD}
-        )
-      end
-
-      test "with event:goal filters with different currencies", %{site: site} do
-        insert(:goal, site: site, event_name: "Purchase", currency: "USD")
-        insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
-        insert(:goal, site: site, event_name: "Signup")
-
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all",
-          "filters" => [["is", "event:goal", ["Purchase", "Signup", "Subscription"]]]
-        }
-        |> check_success(
-          site,
-          %{
-            metrics: [:total_revenue, :average_revenue],
-            utc_time_range: @date_range_day,
-            filters: [[:is, "event:goal", ["Purchase", "Signup", "Subscription"]]],
-            dimensions: [],
-            order_by: nil,
-            timezone: site.timezone,
-            include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0}
-          }
-        )
-        |> check_goals(
-          preloaded_goals: ["Purchase", "Signup", "Subscription"],
-          revenue_warning: :no_single_revenue_currency,
-          revenue_currencies: %{}
-        )
-      end
-
-      test "with event:goal filters with no revenue currencies", %{site: site} do
-        insert(:goal, site: site, event_name: "Purchase", currency: "USD")
-        insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
-        insert(:goal, site: site, event_name: "Signup")
-
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all",
-          "filters" => [["is", "event:goal", ["Signup"]]]
-        }
-        |> check_success(
-          site,
-          %{
-            metrics: [:total_revenue, :average_revenue],
-            utc_time_range: @date_range_day,
-            filters: [[:is, "event:goal", ["Signup"]]],
-            dimensions: [],
-            order_by: nil,
-            timezone: site.timezone,
-            include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0}
-          }
-        )
-        |> check_goals(
-          preloaded_goals: ["Signup"],
-          revenue_warning: :no_revenue_goals_matching,
-          revenue_currencies: %{}
-        )
-      end
-
-      test "with event:goal dimension, different currencies", %{site: site} do
-        insert(:goal, site: site, event_name: "Purchase", currency: "USD")
-        insert(:goal, site: site, event_name: "Donation", currency: "EUR")
-        insert(:goal, site: site, event_name: "Signup")
-
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all",
-          "dimensions" => ["event:goal"]
-        }
-        |> check_success(
-          site,
-          %{
-            metrics: [:total_revenue, :average_revenue],
-            utc_time_range: @date_range_day,
-            filters: [],
-            dimensions: ["event:goal"],
-            order_by: nil,
-            timezone: site.timezone,
-            include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0}
-          }
-        )
-        |> check_goals(
-          preloaded_goals: ["Donation", "Purchase", "Signup"],
-          revenue_warning: nil,
-          revenue_currencies: %{"Donation" => :EUR, "Purchase" => :USD}
-        )
-      end
-
-      test "with event:goal dimension and filters", %{site: site} do
-        insert(:goal, site: site, event_name: "Purchase", currency: "USD")
-        insert(:goal, site: site, event_name: "Subscription", currency: "USD")
-        insert(:goal, site: site, event_name: "Signup")
-        insert(:goal, site: site, event_name: "Logout")
-
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all",
-          "dimensions" => ["event:goal"],
-          "filters" => [["is", "event:goal", ["Purchase", "Signup"]]]
-        }
-        |> check_success(
-          site,
-          %{
-            metrics: [:total_revenue, :average_revenue],
-            utc_time_range: @date_range_day,
-            filters: [[:is, "event:goal", ["Purchase", "Signup"]]],
-            dimensions: ["event:goal"],
-            order_by: nil,
-            timezone: site.timezone,
-            include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0}
-          }
-        )
-        |> check_goals(
-          preloaded_goals: ["Purchase", "Signup"],
-          revenue_warning: nil,
-          revenue_currencies: %{"Purchase" => :USD}
-        )
-      end
-
-      test "with event:goal dimension and filters with no revenue goals matching", %{
-        site: site
-      } do
-        insert(:goal, site: site, event_name: "Purchase", currency: "USD")
-        insert(:goal, site: site, event_name: "Subscription", currency: "USD")
-        insert(:goal, site: site, event_name: "Signup")
-        insert(:goal, site: site, event_name: "Logout")
-
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all",
-          "dimensions" => ["event:goal"],
-          "filters" => [["is", "event:goal", ["Signup"]]]
-        }
-        |> check_success(
-          site,
-          %{
-            metrics: [:total_revenue, :average_revenue],
-            utc_time_range: @date_range_day,
-            filters: [[:is, "event:goal", ["Signup"]]],
-            dimensions: ["event:goal"],
-            order_by: nil,
-            timezone: site.timezone,
-            include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0}
-          }
-        )
-        |> check_goals(
-          preloaded_goals: ["Signup"],
-          revenue_warning: :no_revenue_goals_matching,
-          revenue_currencies: %{}
-        )
-      end
-    else
-      test "revenue metrics are not available on CE", %{site: site} do
-        %{
-          "site_id" => site.domain,
-          "metrics" => ["total_revenue", "average_revenue"],
-          "date_range" => "all"
-        }
-        |> check_error(
-          site,
-          "#/metrics/0: Invalid metric \"total_revenue\"\n#/metrics/1: Invalid metric \"average_revenue\""
-        )
-      end
+    setup %{user: user} do
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.RevenueGoals])
+      :ok
     end
+
+    test "can request", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all"
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: [],
+        revenue_warning: :no_revenue_goals_matching,
+        revenue_currencies: %{}
+      )
+    end
+
+    test "no access" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "The owner of this site does not have access to the revenue metrics feature."
+      )
+    end
+
+    test "with event:goal filters with same currency", %{site: site} do
+      insert(:goal,
+        site: site,
+        event_name: "Purchase",
+        currency: "USD",
+        display_name: "PurchaseUSD"
+      )
+
+      insert(:goal, site: site, event_name: "Subscription", currency: "USD")
+      insert(:goal, site: site, event_name: "Signup")
+      insert(:goal, site: site, event_name: "Logout")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["PurchaseUSD", "Signup", "Subscription"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:goal", ["PurchaseUSD", "Signup", "Subscription"]]],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: ["PurchaseUSD", "Signup", "Subscription"],
+        revenue_warning: nil,
+        revenue_currencies: %{default: :USD}
+      )
+    end
+
+    test "with event:goal filters with different currencies", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Purchase", "Signup", "Subscription"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:goal", ["Purchase", "Signup", "Subscription"]]],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: ["Purchase", "Signup", "Subscription"],
+        revenue_warning: :no_single_revenue_currency,
+        revenue_currencies: %{}
+      )
+    end
+
+    test "with event:goal filters with no revenue currencies", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Signup"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:goal", ["Signup"]]],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: ["Signup"],
+        revenue_warning: :no_revenue_goals_matching,
+        revenue_currencies: %{}
+      )
+    end
+
+    test "with event:goal dimension, different currencies", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Donation", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["event:goal"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: ["Donation", "Purchase", "Signup"],
+        revenue_warning: nil,
+        revenue_currencies: %{"Donation" => :EUR, "Purchase" => :USD}
+      )
+    end
+
+    test "with event:goal dimension and filters", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+      insert(:goal, site: site, event_name: "Logout")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"],
+        "filters" => [["is", "event:goal", ["Purchase", "Signup", "Subscription"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:goal", ["Purchase", "Signup", "Subscription"]]],
+          dimensions: ["event:goal"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: ["Purchase", "Signup", "Subscription"],
+        revenue_warning: nil,
+        revenue_currencies: %{"Purchase" => :USD, "Subscription" => :EUR}
+      )
+    end
+
+    test "with event:goal dimension and filters with no revenue goals matching", %{
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "USD")
+      insert(:goal, site: site, event_name: "Signup")
+      insert(:goal, site: site, event_name: "Logout")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"],
+        "filters" => [["is", "event:goal", ["Signup"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:goal", ["Signup"]]],
+          dimensions: ["event:goal"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: ["Signup"],
+        revenue_warning: :no_revenue_goals_matching,
+        revenue_currencies: %{}
+      )
+    end
+  end
+
+  @tag :ce_build_only
+  test "revenue metrics are not available on CE", %{site: site} do
+    %{
+      "site_id" => site.domain,
+      "metrics" => ["total_revenue", "average_revenue"],
+      "date_range" => "all"
+    }
+    |> check_error(
+      site,
+      "#/metrics/0: Invalid metric \"total_revenue\"\n#/metrics/1: Invalid metric \"average_revenue\""
+    )
   end
 
   describe "session metrics" do
