@@ -131,10 +131,21 @@ defmodule Plausible.BillingTest do
   }
 
   describe "subscription_created" do
-    test "creates a subscription" do
+    test "fails on callback without valid passthrough" do
       user = new_user()
 
-      %{@subscription_created_params | "passthrough" => user.id}
+      assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->
+        %{@subscription_created_params | "passthrough" => user.id}
+        |> Billing.subscription_created()
+      end
+    end
+
+    @tag :teams
+    test "creates a subscription with teams passthrough" do
+      user = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       subscription =
@@ -147,36 +158,12 @@ defmodule Plausible.BillingTest do
       assert subscription.currency_code == "EUR"
     end
 
-    @tag :teams
-    test "creates a subscription with teams passthrough" do
-      user = new_user()
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-
-      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
-      |> Billing.subscription_created()
-
-      assert user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
-    end
-
-    test "create with email address" do
-      user = new_user()
-
-      %{@subscription_created_params | "email" => user.email}
-      |> Billing.subscription_created()
-
-      subscription = subscription_of(user)
-
-      assert subscription.paddle_subscription_id == @subscription_id
-      assert subscription.next_bill_date == ~D[2019-06-01]
-      assert subscription.last_bill_date == ~D[2019-05-01]
-      assert subscription.next_bill_amount == "6.00"
-    end
-
     test "unlocks sites if user has any locked sites" do
       user = new_user()
       site = new_site(owner: user, locked: true)
+      team = team_of(user)
 
-      %{@subscription_created_params | "passthrough" => user.id}
+      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       refute Repo.reload!(site).locked
@@ -185,8 +172,10 @@ defmodule Plausible.BillingTest do
     @tag :ee_only
     test "updates accept_traffic_until" do
       user = new_user()
+      new_site(owner: user)
+      team = team_of(user)
 
-      %{@subscription_created_params | "passthrough" => user.id}
+      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       next_bill = Date.from_iso8601!(@subscription_created_params["next_bill_date"])
@@ -197,8 +186,9 @@ defmodule Plausible.BillingTest do
 
     test "sets user.allow_next_upgrade_override field to false" do
       user = new_user(team: [allow_next_upgrade_override: true])
+      team = team_of(user)
 
-      %{@subscription_created_params | "passthrough" => user.id}
+      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       refute Repo.reload!(team_of(user)).allow_next_upgrade_override
@@ -212,9 +202,11 @@ defmodule Plausible.BillingTest do
         paddle_plan_id: @plan_id_10k
       )
 
+      team = team_of(user)
+
       api_key = insert(:api_key, user: user, hourly_request_limit: 1)
 
-      %{@subscription_created_params | "passthrough" => user.id}
+      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       assert Repo.reload!(api_key).hourly_request_limit == 10_000
