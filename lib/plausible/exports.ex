@@ -442,7 +442,7 @@ defmodule Plausible.Exports do
             page: p.page,
             scroll_depth:
               fragment(
-                "if(isNull(sum(?)), NULL, toInt64(sum(?)))",
+                "if(isNull(sum(?)), NULL, toUInt64(sum(?)))",
                 p.max_scroll_depth,
                 p.max_scroll_depth
               )
