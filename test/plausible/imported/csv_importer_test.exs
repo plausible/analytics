@@ -1081,7 +1081,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
 
     @tag :tmp_dir
-    test "scroll_depth", %{user: user, tmp_dir: tmp_dir} do
+    test "scroll_depth", %{conn: conn, user: user, tmp_dir: tmp_dir} do
       exported_site = new_site(owner: user)
       imported_site = new_site(owner: user)
 
@@ -1144,29 +1144,14 @@ defmodule Plausible.Imported.CSVImporterTest do
             [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
             content = File.read!(file)
             ExAws.request!(ExAws.S3.put_object(bucket, key, content))
-            %{"filename" => Path.basename(file), "s3_url" => s3_url, "content" => content}
+            %{"filename" => Path.basename(file), "s3_url" => s3_url}
           else
             %{
               "filename" => Path.basename(file),
-              "local_path" => file,
-              "content" => File.read!(file)
+              "local_path" => file
             }
           end
         end)
-
-      # assert the intermediary imported_pages.csv file
-      pages =
-        uploads
-        |> Enum.find(&String.contains?(&1["filename"], "imported_pages"))
-        |> Map.get("content")
-        |> NimbleCSV.RFC4180.parse_string(skip_headers: false)
-
-      assert pages == [
-               ["date", "hostname", "page", "visits", "visitors", "pageviews", "scroll_depth"],
-               ["2020-01-01", "csv.test", "/another", "2", "2", "2", "50"],
-               ["2020-01-01", "csv.test", "/blog", "3", "3", "4", "180"],
-               ["2020-01-02", "csv.test", "/blog", "1", "1", "1", "\\N"]
-             ]
 
       # run importer
       date_range = CSVImporter.date_range(uploads)
@@ -1207,6 +1192,29 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert %{date: ~D[2020-01-01], page: "/another", scroll_depth: 50} in imported_data
       assert %{date: ~D[2020-01-01], page: "/blog", scroll_depth: 180} in imported_data
       assert %{date: ~D[2020-01-02], page: "/blog", scroll_depth: nil} in imported_data
+
+      # assert via stats queries that scroll_depth from imported
+      # data matches the scroll_depth from native data
+      expected_results = [
+        %{"dimensions" => ["/another"], "metrics" => [25]},
+        %{"dimensions" => ["/blog"], "metrics" => [60]}
+      ]
+
+      query_scroll_depth_per_page = fn conn, site ->
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["scroll_depth"],
+          "date_range" => "all",
+          "order_by" => [["scroll_depth", "asc"]],
+          "include" => %{"imports" => true},
+          "dimensions" => ["event:page"]
+        })
+        |> json_response(200)
+        |> Map.fetch!("results")
+      end
+
+      assert query_scroll_depth_per_page.(conn, exported_site) == expected_results
+      assert query_scroll_depth_per_page.(conn, imported_site) == expected_results
     end
   end
 
