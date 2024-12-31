@@ -666,7 +666,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           pageviews: 3,
           time_on_page: 90,
           page: "/blog",
-          scroll_depth: 120
+          scroll_depth: 120,
+          pageleave_visitors: 3
         )
       ])
 
@@ -717,19 +718,21 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         ),
         build(:imported_pages,
           date: ~D[2020-01-01],
-          visitors: 3,
-          pageviews: 3,
+          visitors: 4,
+          pageviews: 4,
           time_on_page: 180,
           page: "/native-and-imported",
-          scroll_depth: 120
+          scroll_depth: 120,
+          pageleave_visitors: 3
         ),
         build(:imported_pages,
           date: ~D[2020-01-01],
-          visitors: 10,
-          pageviews: 10,
+          visitors: 20,
+          pageviews: 30,
           time_on_page: 300,
           page: "/imported-only",
-          scroll_depth: 100
+          scroll_depth: 100,
+          pageleave_visitors: 10
         )
       ])
 
@@ -742,10 +745,10 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "/native-and-imported",
-                 "visitors" => 4,
-                 "pageviews" => 4,
+                 "visitors" => 5,
+                 "pageviews" => 5,
                  "bounce_rate" => 0,
-                 "time_on_page" => 60,
+                 "time_on_page" => 48,
                  "scroll_depth" => 50
                },
                %{
@@ -758,10 +761,10 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                },
                %{
                  "name" => "/imported-only",
-                 "visitors" => 10,
-                 "pageviews" => 10,
+                 "visitors" => 20,
+                 "pageviews" => 30,
                  "bounce_rate" => 0,
-                 "time_on_page" => 30.0,
+                 "time_on_page" => 10.0,
                  "scroll_depth" => 10
                }
              ]
@@ -778,7 +781,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           visitors: 10,
           pageviews: 10,
           page: "/blog",
-          scroll_depth: 100
+          scroll_depth: 100,
+          pageleave_visitors: 10
         ),
         build(:imported_pages,
           date: ~D[2020-01-01],

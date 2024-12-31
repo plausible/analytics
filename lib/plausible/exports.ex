@@ -445,7 +445,8 @@ defmodule Plausible.Exports do
                 "if(isNull(sum(?)), NULL, toUInt64(sum(?)))",
                 p.max_scroll_depth,
                 p.max_scroll_depth
-              )
+              ),
+            pageleave_visitors: count(p.user_id)
           },
           group_by: [:date, :page]
         )
@@ -465,7 +466,8 @@ defmodule Plausible.Exports do
           ),
           visitors(e),
           selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews),
-          selected_as(fragment("any(?)", s.scroll_depth), :scroll_depth)
+          selected_as(fragment("any(?)", s.scroll_depth), :scroll_depth),
+          selected_as(fragment("any(?)", s.pageleave_visitors), :pageleave_visitors)
         ]
       )
       |> group_by([e], [selected_as(:date), selected_as(:page)])

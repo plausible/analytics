@@ -1000,7 +1000,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
         build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80),
-        build(:imported_pages, page: "/", date: ~D[2021-01-01], visitors: 8, scroll_depth: 410),
+        build(:imported_pages,
+          page: "/",
+          date: ~D[2021-01-01],
+          visitors: 8,
+          scroll_depth: 410,
+          pageleave_visitors: 8
+        ),
         build(:imported_pages, page: "/", date: ~D[2021-01-02], visitors: 100, scroll_depth: nil)
       ])
 

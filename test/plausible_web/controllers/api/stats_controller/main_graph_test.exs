@@ -648,9 +648,21 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         # 2020-01-02 - both imported and native data
         build(:pageview, user_id: 56, timestamp: ~N[2020-01-02 00:00:00]),
         build(:pageleave, user_id: 56, timestamp: ~N[2020-01-02 00:01:00], scroll_depth: 20),
-        build(:imported_pages, date: ~D[2020-01-02], page: "/", visitors: 1, scroll_depth: 40),
+        build(:imported_pages,
+          date: ~D[2020-01-02],
+          page: "/",
+          visitors: 1,
+          scroll_depth: 40,
+          pageleave_visitors: 1
+        ),
         # 2020-01-03 - only imported data
-        build(:imported_pages, date: ~D[2020-01-03], page: "/", visitors: 1, scroll_depth: 90),
+        build(:imported_pages,
+          date: ~D[2020-01-03],
+          page: "/",
+          visitors: 1,
+          scroll_depth: 90,
+          pageleave_visitors: 1
+        ),
         build(:imported_pages, date: ~D[2020-01-03], page: "/", visitors: 100, scroll_depth: nil)
       ])
 

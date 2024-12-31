@@ -1190,14 +1190,19 @@ defmodule Plausible.Imported.CSVImporterTest do
           select: %{
             date: i.date,
             page: i.page,
-            scroll_depth: i.scroll_depth
+            scroll_depth: i.scroll_depth,
+            pageleave_visitors: i.pageleave_visitors
           }
         )
         |> Plausible.IngestRepo.all()
 
-      assert %{date: ~D[2020-01-01], page: "/another", scroll_depth: 50} in imported_data
-      assert %{date: ~D[2020-01-01], page: "/blog", scroll_depth: 180} in imported_data
-      assert %{date: ~D[2020-01-02], page: "/blog", scroll_depth: nil} in imported_data
+      assert %{date: ~D[2020-01-01], page: "/", scroll_depth: 20, pageleave_visitors: 1} in imported_data
+
+      assert %{date: ~D[2020-01-01], page: "/another", scroll_depth: 50, pageleave_visitors: 2} in imported_data
+
+      assert %{date: ~D[2020-01-01], page: "/blog", scroll_depth: 180, pageleave_visitors: 3} in imported_data
+
+      assert %{date: ~D[2020-01-02], page: "/blog", scroll_depth: nil, pageleave_visitors: 0} in imported_data
 
       # assert via stats queries that scroll_depth from imported
       # data matches the scroll_depth from native data
