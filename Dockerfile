@@ -20,8 +20,7 @@ RUN mkdir /app
 WORKDIR /app
 
 # install build dependencies
-RUN apk add --no-cache git nodejs yarn python3 npm ca-certificates wget gnupg make gcc libc-dev brotli && \
-  npm install npm@latest -g
+RUN apk add --no-cache git nodejs yarn python3 npm ca-certificates wget gnupg make gcc libc-dev brotli
 
 COPY mix.exs ./
 COPY mix.lock ./
