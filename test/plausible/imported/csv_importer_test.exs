@@ -1105,6 +1105,9 @@ defmodule Plausible.Imported.CSVImporterTest do
           build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
           build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
           build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100),
+          build(:pageview, user_id: 78, pathname: "/", timestamp: t0),
+          build(:pageleave, user_id: 78, pathname: "/", timestamp: t1, scroll_depth: 20),
+          build(:pageview, pathname: "/", timestamp: t1),
           build(:pageview, pathname: "/blog", timestamp: NaiveDateTime.add(t0, 1, :day))
         ]
         |> Enum.map(fn event -> Map.put(event, :hostname, "csv.test") end)
@@ -1178,7 +1181,7 @@ defmodule Plausible.Imported.CSVImporterTest do
              } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 7
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 9
 
       # assert on the actual rows that got imported into the imported_pages table
       imported_data =
@@ -1199,6 +1202,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       # assert via stats queries that scroll_depth from imported
       # data matches the scroll_depth from native data
       expected_results = [
+        %{"dimensions" => ["/"], "metrics" => [20]},
         %{"dimensions" => ["/another"], "metrics" => [25]},
         %{"dimensions" => ["/blog"], "metrics" => [60]}
       ]
