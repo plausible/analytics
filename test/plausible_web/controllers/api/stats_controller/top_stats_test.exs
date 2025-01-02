@@ -603,7 +603,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    test ":is filter on page returns only visitors, visits and pageviews", %{
+    test ":is filter on page returns only visitors, visits, pageviews and scroll_depth", %{
       conn: conn,
       site: site
     } do
@@ -638,7 +638,8 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert res["top_stats"] == [
                %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"},
                %{"name" => "Total visits", "value" => 4, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"}
+               %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"},
+               %{"name" => "Scroll depth", "value" => nil, "graph_metric" => "scroll_depth"}
              ]
     end
   end
@@ -985,6 +986,41 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert %{"name" => "Scroll depth", "value" => 70, "graph_metric" => "scroll_depth"} in res[
+               "top_stats"
+             ]
+    end
+
+    test "returns scroll_depth with a page filter with imported data", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:10]),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
+        build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80),
+        build(:imported_pages,
+          page: "/",
+          date: ~D[2021-01-01],
+          visitors: 8,
+          scroll_depth: 410,
+          pageleave_visitors: 8
+        ),
+        build(:imported_pages, page: "/", date: ~D[2021-01-02], visitors: 100, scroll_depth: nil)
+      ])
+
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=7d&date=2021-01-07&filters=#{filters}&with_imported=true"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Scroll depth", "value" => 55, "graph_metric" => "scroll_depth"} in res[
                "top_stats"
              ]
     end
