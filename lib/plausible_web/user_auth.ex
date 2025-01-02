@@ -16,7 +16,7 @@ defmodule PlausibleWeb.UserAuth do
   @spec log_in_user(Plug.Conn.t(), Auth.User.t(), String.t() | nil) :: Plug.Conn.t()
   def log_in_user(conn, user, redirect_path \\ nil) do
     redirect_to =
-      if String.starts_with?(redirect_path, "/") do
+      if String.starts_with?(redirect_path || "", "/") do
         redirect_path
       else
         Routes.site_path(conn, :index)
