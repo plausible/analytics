@@ -96,7 +96,7 @@ test.each([
 test.each([
   [
     { period: 'custom', from: '2024-08-10', to: '2024-08-20' },
-    '10 Aug - 20 Aug'
+    '10 Aug - 20 Aug 24'
   ],
   [{ period: 'realtime' }, 'Realtime']
 ])(
