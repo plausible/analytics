@@ -5,7 +5,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import DatePicker from './datepicker'
 import { TestContextProviders } from '../../test-utils/app-context-providers'
-import { stringifySearch } from './util/url'
+import { stringifySearch } from './util/url-search-params'
 import { useNavigate } from 'react-router-dom'
 import { getRouterBasepath } from './router'
 
