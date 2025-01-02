@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Email do
   use Plausible
-  use Bamboo.Phoenix, view: PlausibleWeb.EmailView
+  import Bamboo.Email
   import Bamboo.PostmarkHelper
 
   def mailer_email_from do
@@ -460,17 +460,71 @@ defmodule PlausibleWeb.Email do
   def base_email(), do: base_email(%{layout: "base_email.html"})
 
   def base_email(%{layout: layout}) do
-    mailer_from = Application.get_env(:plausible, :mailer_email)
-
     new_email()
     |> put_param("TrackOpens", false)
-    |> from(mailer_from)
+    |> from(mailer_email_from())
     |> maybe_put_layout(layout)
   end
 
   defp maybe_put_layout(email, nil), do: email
 
-  defp maybe_put_layout(email, layout) do
-    put_html_layout(email, {PlausibleWeb.LayoutView, layout})
+  defp maybe_put_layout(%{assigns: assigns} = email, layout) do
+    %{email | assigns: Map.put(assigns, :layout, {PlausibleWeb.LayoutView, layout})}
+  end
+
+  @doc false
+  def render(email, template, assigns \\ []) do
+    assigns = Map.merge(email.assigns, Map.new(assigns))
+    html = Phoenix.View.render_to_string(PlausibleWeb.EmailView, template, assigns)
+    email |> html_body(html) |> text_body(textify(html))
+  end
+
+  defp textify(html) do
+    Floki.parse_fragment!(html)
+    |> traverse_and_textify()
+    |> Floki.text()
+    |> collapse_whitespace()
+  end
+
+  defp traverse_and_textify([head | tail]) do
+    [traverse_and_textify(head) | traverse_and_textify(tail)]
+  end
+
+  defp traverse_and_textify(text) when is_binary(text) do
+    String.replace(text, "\n", "\s")
+  end
+
+  defp traverse_and_textify({"a" = tag, attrs, children}) do
+    href = with {"href", href} <- List.keyfind(attrs, "href", 0), do: href
+    children = traverse_and_textify(children)
+
+    if href do
+      text = Floki.text(children)
+
+      if text == href do
+        # avoids rendering "http://localhost:8000 (http://localhost:8000)" in base_email footer
+        text
+      else
+        IO.iodata_to_binary([text, " (", href, ?)])
+      end
+    else
+      {tag, attrs, children}
+    end
+  end
+
+  defp traverse_and_textify({tag, attrs, children}) do
+    {tag, attrs, traverse_and_textify(children)}
+  end
+
+  defp traverse_and_textify(other), do: other
+
+  defp collapse_whitespace(text) do
+    text
+    |> String.split("\n")
+    |> Enum.map_join("\n", fn line ->
+      line
+      |> String.split(" ", trim: true)
+      |> Enum.join(" ")
+    end)
   end
 end
