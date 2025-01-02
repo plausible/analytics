@@ -227,25 +227,25 @@ defmodule PlausibleWeb.Components.Generic do
     attr(:class, :string)
   end
 
-  slot :panel, required: true do
+  slot :menu, required: true do
     attr(:class, :string)
   end
 
   def dropdown(assigns) do
-    assigns = assign(assigns, :panel_class, assigns.panel |> List.first() |> Map.get(:class, ""))
+    assigns = assign(assigns, :menu_class, assigns.menu |> List.first() |> Map.get(:class, ""))
 
     ~H"""
     <div
       x-data="dropdown"
       x-on:keydown.escape.prevent.stop="close($refs.button)"
-      x-on:focusin.window="!$refs.panel.contains($event.target) && close()"
+      x-on:focusin.window="!$refs.menu.contains($event.target) && close()"
       class="relative inline-block text-left"
     >
       <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
         <%= render_slot(List.first(@button)) %>
       </button>
       <div
-        x-ref="panel"
+        x-ref="menu"
         x-show="open"
         x-transition:enter="transition ease-out duration-100"
         x-transition:enter-start="opacity-0 scale-95"
@@ -257,10 +257,10 @@ defmodule PlausibleWeb.Components.Generic do
         style="display: none;"
         class={[
           "origin-top-right absolute z-50 right-0 mt-2 p-1 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none",
-          @panel_class
+          @menu_class
         ]}
       >
-        <%= render_slot(List.first(@panel)) %>
+        <%= render_slot(List.first(@menu)) %>
       </div>
     </div>
     """

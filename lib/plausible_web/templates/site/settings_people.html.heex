@@ -47,7 +47,7 @@
                   <%= membership.role |> to_string() |> String.capitalize() %>
                   <Heroicons.chevron_down mini class="size-4 mt-0.5" />
                 </:button>
-                <:panel class="max-w-60">
+                <:menu class="max-w-60">
                   <%= if membership.role == :owner do %>
                     <.dropdown_item disabled={true}>
                       <div>Owner</div>
@@ -118,7 +118,7 @@
                       Remove member
                     </.dropdown_item>
                   <% end %>
-                </:panel>
+                </:menu>
               </.dropdown>
             </div>
           </li>

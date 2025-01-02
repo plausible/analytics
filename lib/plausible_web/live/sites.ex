@@ -233,7 +233,7 @@ defmodule PlausibleWeb.Live.Sites do
       <:button class="size-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400">
         <Heroicons.ellipsis_vertical class="absolute top-3 right-3 size-4" />
       </:button>
-      <:panel class="!mt-0 mr-4 min-w-40">
+      <:menu class="!mt-0 mr-4 min-w-40">
         <!-- adjust position because click area is much bigger than icon. Default positioning from click area looks weird -->
         <.dropdown_item
           :if={List.first(@site.memberships).role != :viewer}
@@ -267,7 +267,7 @@ defmodule PlausibleWeb.Live.Sites do
           <.icon_pin :if={!@site.pinned_at} class="size-4" />
           <span :if={!@site.pinned_at}>Pin Site</span>
         </.dropdown_item>
-      </:panel>
+      </:menu>
     </.dropdown>
     """
   end
