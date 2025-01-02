@@ -269,17 +269,32 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:href, :string)
   attr(:class, :string, default: "")
   attr(:new_tab, :boolean, default: false)
+  attr(:disabled, :boolean, default: false)
   attr(:rest, :global, include: ~w(method))
   slot(:inner_block, required: true)
 
-  @base_class "block rounded-lg text-sm/6 text-gray-700 dark:text-gray-300 px-3.5 py-1.5"
-  @clickable_class "hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+  @base_class "block rounded-lg text-sm/6 text-gray-900 ui-disabled:text-gray-500 dark:text-gray-100 px-3.5 py-1.5"
+  @clickable_class "hover:bg-gray-100 dark:hover:bg-gray-700"
   def dropdown_item(assigns) do
-    if assigns[:href] do
+    assigns =
+      if assigns[:disabled] do
+        assign(assigns, :state, "disabled")
+      else
+        assign(assigns, :state, "")
+      end
+
+    if assigns[:href] && !assigns[:disabled] do
       assigns = assign(assigns, :class, [assigns[:class], @base_class, @clickable_class])
 
       ~H"""
-      <.unstyled_link class={@class} new_tab={@new_tab} href={@href} x-on:click="close()" {@rest}>
+      <.unstyled_link
+        class={@class}
+        new_tab={@new_tab}
+        href={@href}
+        x-on:click="close()"
+        data-ui-state={@state}
+        {@rest}
+      >
         <%= render_slot(@inner_block) %>
       </.unstyled_link>
       """
@@ -287,7 +302,7 @@ defmodule PlausibleWeb.Components.Generic do
       assigns = assign(assigns, :class, [assigns[:class], @base_class])
 
       ~H"""
-      <div class={@class}>
+      <div data-ui-state={@state} class={@class}>
         <%= render_slot(@inner_block) %>
       </div>
       """

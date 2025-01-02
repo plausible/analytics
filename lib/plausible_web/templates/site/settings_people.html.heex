@@ -49,7 +49,7 @@
                 </:button>
                 <:panel class="max-w-60">
                   <%= if membership.role == :owner do %>
-                    <.dropdown_item>
+                    <.dropdown_item disabled={true}>
                       <div>Owner</div>
                       <div class="text-gray-500 text-xs/5">
                         Site owner cannot be assigned to any other role
@@ -81,6 +81,7 @@
                         )
                       }
                       method="put"
+                      disabled={membership.role == "admin"}
                     >
                       <div>Admin</div>
                       <div class="text-gray-500 text-xs/5">View stats and edit site settings</div>
@@ -96,6 +97,7 @@
                         )
                       }
                       method="put"
+                      disabled={membership.role == "viewer"}
                     >
                       <div>Viewer</div>
                       <div class="text-gray-500 text-xs/5">View stats only</div>
