@@ -1,5 +1,6 @@
 defmodule Plausible.SegmentSchemaTest do
   use ExUnit.Case
+  doctest Plausible.Segment, import: true
 
   setup do
     segment = %Plausible.Segment{
