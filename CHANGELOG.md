@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+
+- Add text version to emails plausible/analytics#4674
+
 ### Removed
 ### Changed
 ### Fixed
