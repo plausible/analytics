@@ -677,44 +677,31 @@ defmodule PlausibleWeb.Live.Sites do
     |> Enum.map(&check_limits(&1, user))
   end
 
-  defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} -> team
-        _ -> nil
+  on_ee do
+    defp check_limits(%{role: :owner, site: site} = invitation, user) do
+      team =
+        case Plausible.Teams.get_by_owner(user) do
+          {:ok, team} -> team
+          _ -> nil
+        end
+
+      case ensure_can_take_ownership(site, team) do
+        :ok ->
+          check_features(invitation, team)
+
+        {:error, :no_plan} ->
+          %{invitation: invitation, no_plan: true}
+
+        {:error, {:over_plan_limits, limits}} ->
+          limits = PlausibleWeb.TextHelpers.pretty_list(limits)
+          %{invitation: invitation, exceeded_limits: limits}
       end
-
-    case ensure_can_take_ownership(site, team) do
-      :ok ->
-        check_features(invitation, team)
-
-      {:error, :no_plan} ->
-        %{invitation: invitation, no_plan: true}
-
-      {:error, {:over_plan_limits, limits}} ->
-        limits = PlausibleWeb.TextHelpers.pretty_list(limits)
-        %{invitation: invitation, exceeded_limits: limits}
     end
+
+    defdelegate ensure_can_take_ownership(site, team), to: Plausible.Teams.Invitations
   end
 
   defp check_limits(invitation, _), do: %{invitation: invitation}
-
-  defdelegate ensure_can_take_ownership(site, team), to: Plausible.Teams.Invitations
-
-  def check_features(%{role: :owner, site: site} = invitation, team) do
-    case check_feature_access(site, team) do
-      :ok ->
-        %{invitation: invitation}
-
-      {:error, {:missing_features, features}} ->
-        feature_names =
-          features
-          |> Enum.map(& &1.display_name())
-          |> PlausibleWeb.TextHelpers.pretty_list()
-
-        %{invitation: invitation, missing_features: feature_names}
-    end
-  end
 
   on_ee do
     defp check_feature_access(site, new_team) do
@@ -728,9 +715,20 @@ defmodule PlausibleWeb.Live.Sites do
         {:error, {:missing_features, missing_features}}
       end
     end
-  else
-    defp check_feature_access(_site, _new_team) do
-      :ok
+
+    defp check_features(%{role: :owner, site: site} = invitation, team) do
+      case check_feature_access(site, team) do
+        :ok ->
+          %{invitation: invitation}
+
+        {:error, {:missing_features, features}} ->
+          feature_names =
+            features
+            |> Enum.map(& &1.display_name())
+            |> PlausibleWeb.TextHelpers.pretty_list()
+
+          %{invitation: invitation, missing_features: feature_names}
+      end
     end
   end
 

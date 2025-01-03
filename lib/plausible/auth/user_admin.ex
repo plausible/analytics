@@ -171,22 +171,21 @@ defmodule Plausible.Auth.UserAdmin do
   defp subscription_status(user) do
     team = user.my_team
 
-    cond do
-      team && team.subscription ->
-        status_str =
-          PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
+    if team && team.subscription do
+      status_str =
+        PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
 
-        if team.subscription.paddle_subscription_id do
-          {:safe, ~s(<a href="#{manage_url(team.subscription)}">#{status_str}</a>)}
-        else
-          status_str
-        end
-
-      Plausible.Teams.on_trial?(team) ->
+      if team.subscription.paddle_subscription_id do
+        {:safe, ~s(<a href="#{manage_url(team.subscription)}">#{status_str}</a>)}
+      else
+        status_str
+      end
+    else
+      if Plausible.Teams.on_trial?(team) do
         "On trial"
-
-      true ->
+      else
         "Trial expired"
+      end
     end
   end
 

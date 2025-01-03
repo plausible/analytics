@@ -112,7 +112,7 @@ defmodule Plausible.Goal do
   end
 
   defp maybe_drop_currency(changeset) do
-    if ee?() and get_field(changeset, :page_path) do
+    if get_field(changeset, :page_path) do
       delete_change(changeset, :currency)
     else
       changeset

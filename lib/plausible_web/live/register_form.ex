@@ -59,10 +59,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
   end
 
   def render(assigns) do
+    assigns = assign(assigns, :ce?, ce?())
+
     ~H"""
     <div class="mx-auto text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
-        <%= if ce?() or @live_action == :register_from_invitation_form do %>
+        <%= if @ce? or @live_action == :register_from_invitation_form do %>
           Register your <%= Plausible.product_name() %> account
         <% else %>
           Register your 30-day free trial
@@ -170,7 +172,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         <% end %>
 
         <% submit_text =
-          if ce?() or @invitation do
+          if @ce? or @invitation do
             "Create my account"
           else
             "Start my free trial"

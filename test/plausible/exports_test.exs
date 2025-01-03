@@ -90,7 +90,9 @@ defmodule Plausible.ExportsTest do
       end)
 
       assert {:ok, files} =
-               :zip.unzip(to_charlist(Path.join(tmp_dir, "numbers.zip")), cwd: tmp_dir)
+               :zip.unzip(to_charlist(Path.join(tmp_dir, "numbers.zip")),
+                 cwd: to_charlist(tmp_dir)
+               )
 
       assert Enum.map(files, &Path.basename/1) == ["1.csv", "2.csv"]
 
@@ -138,8 +140,10 @@ defmodule Plausible.ExportsTest do
         end)
       end
 
-      assert {:error, :einval} =
-               :zip.unzip(to_charlist(Path.join(tmp_dir, "failed.zip")), cwd: tmp_dir)
+      assert {:error, :bad_eocd} =
+               :zip.unzip(to_charlist(Path.join(tmp_dir, "failed.zip")),
+                 cwd: to_charlist(tmp_dir)
+               )
     end
   end
 end

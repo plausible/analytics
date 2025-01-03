@@ -81,21 +81,22 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
            get_site_with_role(conn, current_user, domain),
          {:ok, shared_link} <- maybe_get_shared_link(conn, site) do
       role =
-        cond do
-          membership_role ->
-            membership_role
+        if Plausible.Auth.is_super_admin?(current_user) do
+          :super_admin
+        else
+          cond do
+            membership_role ->
+              membership_role
 
-          Plausible.Auth.is_super_admin?(current_user) ->
-            :super_admin
+            site.public ->
+              :public
 
-          site.public ->
-            :public
+            shared_link ->
+              :public
 
-          shared_link ->
-            :public
-
-          true ->
-            nil
+            true ->
+              nil
+          end
         end
 
       if role in allowed_roles do
