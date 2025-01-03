@@ -51,7 +51,7 @@ defmodule PlausibleWeb.HelpScoutView do
           </p>
 
           <div class="value">
-            <%= Phoenix.HTML.Format.text_to_html(@notes, escape: true) %>
+            <%= PhoenixHTMLHelpers.Format.text_to_html(@notes, escape: true) %>
           </div>
         </div>
       <% end %>

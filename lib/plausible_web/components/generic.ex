@@ -84,7 +84,7 @@ defmodule PlausibleWeb.Components.Generic do
         []
       else
         [
-          "data-csrf": Phoenix.HTML.Tag.csrf_token_value(assigns.href),
+          "data-csrf": Phoenix.Controller.get_csrf_token(),
           "data-method": assigns.method,
           "data-to": assigns.href
         ]
@@ -327,7 +327,7 @@ defmodule PlausibleWeb.Components.Generic do
         []
       else
         [
-          "data-csrf": Phoenix.HTML.Tag.csrf_token_value(assigns.href),
+          "data-csrf": Phoenix.Controller.get_csrf_token(),
           "data-method": assigns.method,
           "data-to": assigns.href
         ]
