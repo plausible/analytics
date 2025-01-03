@@ -5,5 +5,6 @@ defmodule PlausibleWeb.Storybook do
     # assets path are remote path, not local file-system paths
     css_path: "/css/storybook.css",
     js_path: "/js/storybook.js",
-    sandbox_class: "plausible"
+    sandbox_class: "plausible",
+    color_mode: true
 end
