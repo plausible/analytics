@@ -14,6 +14,7 @@ module.exports = {
     "max-w-screen-xl"
   ],
   darkMode: 'class',
+  important: '.plausible',
   theme: {
     container: {
       center: true,
