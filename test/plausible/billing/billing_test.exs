@@ -131,21 +131,72 @@ defmodule Plausible.BillingTest do
   }
 
   describe "subscription_created" do
-    test "fails on callback without valid passthrough" do
-      user = new_user()
+    test "fails on callback without passthrough" do
+      _user = new_user()
 
-      assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->
-        %{@subscription_created_params | "passthrough" => user.id}
+      assert_raise RuntimeError, ~r/Missing passthrough/, fn ->
+        @subscription_created_params
+        |> Map.delete("passthrough")
         |> Billing.subscription_created()
       end
     end
 
-    @tag :teams
+    test "fails on callback without valid passthrough" do
+      _user = new_user()
+
+      assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->
+        %{@subscription_created_params | "passthrough" => "invalid"}
+        |> Billing.subscription_created()
+      end
+
+      assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->
+        %{@subscription_created_params | "passthrough" => "ee:true;user:invalid"}
+        |> Billing.subscription_created()
+      end
+
+      assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->
+        %{@subscription_created_params | "passthrough" => "ee:true;user:123;team:invalid"}
+        |> Billing.subscription_created()
+      end
+
+      assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->
+        %{
+          @subscription_created_params
+          | "passthrough" => "ee:true;user:123;team:456;some:invalid"
+        }
+        |> Billing.subscription_created()
+      end
+    end
+
+    test "fails on callback with non-existent user" do
+      user = new_user()
+      Repo.delete!(user)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id}"}
+        |> Billing.subscription_created()
+      end
+    end
+
+    test "fails on callback with non-existent team" do
+      user = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      Repo.delete!(team)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        %{
+          @subscription_created_params
+          | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
+        }
+        |> Billing.subscription_created()
+      end
+    end
+
     test "creates a subscription with teams passthrough" do
       user = new_user()
       {:ok, team} = Plausible.Teams.get_or_create(user)
 
-      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
+      %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       subscription =
@@ -158,12 +209,47 @@ defmodule Plausible.BillingTest do
       assert subscription.currency_code == "EUR"
     end
 
+    test "supports user without a team case" do
+      user = new_user()
+
+      %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id}"}
+      |> Billing.subscription_created()
+
+      subscription =
+        user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
+
+      assert subscription.paddle_subscription_id == @subscription_id
+      assert subscription.next_bill_date == ~D[2019-06-01]
+      assert subscription.last_bill_date == ~D[2019-05-01]
+      assert subscription.next_bill_amount == "6.00"
+      assert subscription.currency_code == "EUR"
+    end
+
+    test "supports old format without prefix" do
+      user = new_user()
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
+      |> Billing.subscription_created()
+
+      assert user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
+    end
+
+    test "supports old format without prefix for user without a team" do
+      user = new_user()
+
+      %{@subscription_created_params | "passthrough" => user.id}
+      |> Billing.subscription_created()
+
+      assert user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
+    end
+
     test "unlocks sites if user has any locked sites" do
       user = new_user()
       site = new_site(owner: user, locked: true)
       team = team_of(user)
 
-      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
+      %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       refute Repo.reload!(site).locked
@@ -175,7 +261,7 @@ defmodule Plausible.BillingTest do
       new_site(owner: user)
       team = team_of(user)
 
-      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
+      %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       next_bill = Date.from_iso8601!(@subscription_created_params["next_bill_date"])
@@ -188,7 +274,7 @@ defmodule Plausible.BillingTest do
       user = new_user(team: [allow_next_upgrade_override: true])
       team = team_of(user)
 
-      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
+      %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       refute Repo.reload!(team_of(user)).allow_next_upgrade_override
@@ -206,7 +292,7 @@ defmodule Plausible.BillingTest do
 
       api_key = insert(:api_key, user: user, hourly_request_limit: 1)
 
-      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
+      %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
       assert Repo.reload!(api_key).hourly_request_limit == 10_000
@@ -217,11 +303,12 @@ defmodule Plausible.BillingTest do
     test "updates an existing subscription" do
       user = new_user()
       subscribe_to_growth_plan(user)
+      team = team_of(user)
 
       @subscription_updated_params
       |> Map.merge(%{
         "subscription_id" => subscription_of(user).paddle_subscription_id,
-        "passthrough" => user.id
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
       })
       |> Billing.subscription_updated()
 
@@ -242,7 +329,7 @@ defmodule Plausible.BillingTest do
       |> Map.merge(%{
         "next_bill_date" => "2021-01-01",
         "subscription_id" => subscription_id,
-        "passthrough" => "user:#{user.id};team:#{team.id}"
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
       })
       |> Billing.subscription_updated()
 
@@ -255,11 +342,12 @@ defmodule Plausible.BillingTest do
     test "status update from 'paused' to 'past_due' is ignored" do
       user = new_user()
       subscribe_to_growth_plan(user, status: Subscription.Status.paused())
+      team = team_of(user)
 
       %{@subscription_updated_params | "old_status" => "paused", "status" => "past_due"}
       |> Map.merge(%{
         "subscription_id" => subscription_of(user).paddle_subscription_id,
-        "passthrough" => user.id
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
       })
       |> Billing.subscription_updated()
 
@@ -270,11 +358,12 @@ defmodule Plausible.BillingTest do
       user = new_user()
       subscribe_to_growth_plan(user, status: Subscription.Status.past_due())
       site = new_site(locked: true, owner: user)
+      team = team_of(user)
 
       @subscription_updated_params
       |> Map.merge(%{
         "subscription_id" => subscription_of(user).paddle_subscription_id,
-        "passthrough" => user.id,
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
         "old_status" => "past_due"
       })
       |> Billing.subscription_updated()
@@ -285,11 +374,12 @@ defmodule Plausible.BillingTest do
     @tag :ee_only
     test "updates accept_traffic_until" do
       user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
 
       @subscription_updated_params
       |> Map.merge(%{
         "subscription_id" => subscription_of(user).paddle_subscription_id,
-        "passthrough" => user.id
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
       })
       |> Billing.subscription_updated()
 
@@ -302,6 +392,7 @@ defmodule Plausible.BillingTest do
     test "sets user.allow_next_upgrade_override field to false" do
       user = new_user(team: [allow_next_upgrade_override: true])
       subscribe_to_growth_plan(user)
+      team = team_of(user)
 
       assert Repo.reload!(team_of(user)).allow_next_upgrade_override
 
@@ -310,7 +401,7 @@ defmodule Plausible.BillingTest do
       @subscription_updated_params
       |> Map.merge(%{
         "subscription_id" => subscription_id,
-        "passthrough" => user.id
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
       })
       |> Billing.subscription_updated()
 
@@ -325,12 +416,14 @@ defmodule Plausible.BillingTest do
           hourly_api_request_limit: 10_000
         )
 
+      team = team_of(user)
+
       api_key = insert(:api_key, user: user, hourly_request_limit: 1)
 
       @subscription_updated_params
       |> Map.merge(%{
         "subscription_id" => subscription_of(user).paddle_subscription_id,
-        "passthrough" => user.id,
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
         "subscription_plan_id" => "new-plan-id"
       })
       |> Billing.subscription_updated()
@@ -344,6 +437,8 @@ defmodule Plausible.BillingTest do
 
       subscribe_to_growth_plan(user)
 
+      team = team_of(user)
+
       site = new_site(locked: true, owner: user)
 
       subscription_id = subscription_of(user).paddle_subscription_id
@@ -351,7 +446,7 @@ defmodule Plausible.BillingTest do
       @subscription_updated_params
       |> Map.merge(%{
         "subscription_id" => subscription_id,
-        "passthrough" => user.id,
+        "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
         "subscription_plan_id" => @plan_id_100k
       })
       |> Billing.subscription_updated()
@@ -362,12 +457,14 @@ defmodule Plausible.BillingTest do
 
     test "ignores if subscription cannot be found" do
       user = insert(:user)
+      _site = new_site(owner: user)
+      team = team_of(user)
 
       res =
         @subscription_updated_params
         |> Map.merge(%{
           "subscription_id" => "666",
-          "passthrough" => user.id
+          "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"
         })
         |> Billing.subscription_updated()
 

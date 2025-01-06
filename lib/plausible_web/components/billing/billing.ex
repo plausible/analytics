@@ -237,9 +237,9 @@ defmodule PlausibleWeb.Components.Billing do
 
     passthrough =
       if assigns.team do
-        "user:#{assigns.user.id};team:#{assigns.team.id}"
+        "ee:true;user:#{assigns.user.id};team:#{assigns.team.id}"
       else
-        assigns.user.id
+        "ee:true;user:#{assigns.user.id}"
       end
 
     assigns =

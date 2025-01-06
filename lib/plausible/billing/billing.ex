@@ -2,6 +2,7 @@ defmodule Plausible.Billing do
   use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
+  alias Plausible.Auth
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
 
@@ -43,10 +44,7 @@ defmodule Plausible.Billing do
   end
 
   defp handle_subscription_created(params) do
-    team =
-      params
-      |> extract_team_id!()
-      |> Teams.get!()
+    team = get_team!(params)
 
     subscription_params =
       params
@@ -134,20 +132,53 @@ defmodule Plausible.Billing do
     end
   end
 
-  defp extract_team_id!(%{"passthrough" => passthrough}) do
-    parts = String.split(to_string(passthrough), ";")
+  defp get_team!(%{"passthrough" => passthrough}) do
+    case parse_passthrough!(passthrough) do
+      {:team_id, team_id} ->
+        Teams.get!(team_id)
 
-    with ["user:" <> _user_id, "team:" <> team_id] <- parts,
-         {team_id, ""} <- Integer.parse(team_id) do
-      team_id
-    else
-      _ ->
-        raise "Invalid passthrough sent via Paddle: #{inspect(passthrough)}"
+      {:user_id, user_id} ->
+        user = Repo.get!(Auth.User, user_id)
+        {:ok, team} = Teams.get_or_create(user)
+        team
     end
   end
 
-  defp extract_team_id!(_params) do
+  defp get_team!(_params) do
     raise "Missing passthrough"
+  end
+
+  defp parse_passthrough!(passthrough) do
+    {user_id, team_id} =
+      case String.split(to_string(passthrough), ";") do
+        ["ee:true", "user:" <> user_id, "team:" <> team_id] ->
+          {user_id, team_id}
+
+        ["ee:true", "user:" <> user_id] ->
+          {user_id, "0"}
+
+        # NOTE: legacy pattern, to be removed in a follow-up
+        ["user:" <> user_id, "team:" <> team_id] ->
+          {user_id, team_id}
+
+        # NOTE: legacy pattern, to be removed in a follow-up
+        [user_id] ->
+          {user_id, "0"}
+
+        _ ->
+          raise "Invalid passthrough sent via Paddle: #{inspect(passthrough)}"
+      end
+
+    case {Integer.parse(user_id), Integer.parse(team_id)} do
+      {{user_id, ""}, {0, ""}} when user_id > 0 ->
+        {:user_id, user_id}
+
+      {{_user_id, ""}, {team_id, ""}} when team_id > 0 ->
+        {:team_id, team_id}
+
+      _ ->
+        raise "Invalid passthrough sent via Paddle: #{inspect(passthrough)}"
+    end
   end
 
   defp format_subscription(params) do
