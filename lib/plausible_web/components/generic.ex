@@ -238,14 +238,12 @@ defmodule PlausibleWeb.Components.Generic do
     <div
       x-data="dropdown"
       x-on:keydown.escape.prevent.stop="close($refs.button)"
-      x-on:focusin.window="!$refs.menu.contains($event.target) && close()"
       class="relative inline-block text-left"
     >
       <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
         <%= render_slot(List.first(@button)) %>
       </button>
       <div
-        x-ref="menu"
         x-show="open"
         x-transition:enter="transition ease-out duration-100"
         x-transition:enter-start="opacity-0 scale-95"
