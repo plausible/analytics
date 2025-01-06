@@ -157,14 +157,6 @@ defmodule Plausible.Billing do
         ["ee:true", "user:" <> user_id] ->
           {user_id, "0"}
 
-        # NOTE: legacy pattern, to be removed in a follow-up
-        ["user:" <> user_id, "team:" <> team_id] ->
-          {user_id, team_id}
-
-        # NOTE: legacy pattern, to be removed in a follow-up
-        [user_id] ->
-          {user_id, "0"}
-
         _ ->
           raise "Invalid passthrough sent via Paddle: #{inspect(passthrough)}"
       end
