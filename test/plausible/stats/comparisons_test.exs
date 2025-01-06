@@ -161,6 +161,36 @@ defmodule Plausible.Stats.ComparisonsTest do
     end
   end
 
+  describe "year_over_year, exact dates behavior with leap years" do
+    test "start of the year matching", %{site: site} do
+      query = Query.from(site, %{"period" => "7d", "date" => "2021-01-05"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
+
+      assert comparison_query.utc_time_range.first == ~U[2019-12-30 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2020-01-05 23:59:59Z]
+      assert date_range_length(comparison_query) == 7
+    end
+
+    test "leap day matching", %{site: site} do
+      query = Query.from(site, %{"period" => "7d", "date" => "2021-03-03"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
+
+      assert comparison_query.utc_time_range.first == ~U[2020-02-25 00:00:00Z]
+      # :TRICKY: Since dates of the two months don't match precisely we cut off earlier
+      assert comparison_query.utc_time_range.last == ~U[2020-03-02 23:59:59Z]
+      assert date_range_length(comparison_query) == 7
+    end
+
+    test "end of the year matching", %{site: site} do
+      query = Query.from(site, %{"period" => "7d", "date" => "2021-11-25"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
+
+      assert comparison_query.utc_time_range.first == ~U[2020-11-19 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2020-11-25 23:59:59Z]
+      assert date_range_length(comparison_query) == 7
+    end
+  end
+
   describe "with period set to year to date" do
     test "shifts back by the same number of days when mode is previous_period", %{site: site} do
       query =
@@ -368,5 +398,11 @@ defmodule Plausible.Stats.ComparisonsTest do
       )
 
     query
+  end
+
+  def date_range_length(query) do
+    query
+    |> Query.date_range()
+    |> Enum.count()
   end
 end

@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal
 - Fix typo on login screen
 - Fix Direct / None details modal not opening
+- Fix year over year comparisons being offset by a day for leap years
 
 ## v2.1.4 - 2024-10-08
 
