@@ -23,8 +23,10 @@ RUN mkdir /app
 WORKDIR /app
 
 # install build dependencies
-RUN apk add --no-cache git yarn python3 ca-certificates wget gnupg make gcc libc-dev brotli bash \
+RUN apk add --no-cache git yarn python3 ca-certificates wget gnupg make gcc g++ libc-dev brotli bash \
   && wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash \
+  && export NVM_DIR="$HOME/.nvm" \
+  && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" \
   && nvm install ${NODE_VERSION}
 
 COPY mix.exs ./
