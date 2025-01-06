@@ -2,8 +2,8 @@ defmodule Plausible.Billing do
   use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
+  alias Plausible.Auth
   alias Plausible.Billing.Subscription
-  alias Plausible.Auth.User
   alias Plausible.Teams
 
   def subscription_created(params) do
@@ -44,25 +44,15 @@ defmodule Plausible.Billing do
   end
 
   defp handle_subscription_created(params) do
-    params =
-      if present?(params["passthrough"]) do
-        format_params(params)
-      else
-        user = Repo.get_by!(User, email: params["email"])
-        {:ok, team} = Plausible.Teams.get_or_create(user)
-
-        params
-        |> Map.put("passthrough", user.id)
-        |> Map.put("team_id", team.id)
-      end
+    team = get_team!(params)
 
     subscription_params =
       params
       |> format_subscription()
       |> add_last_bill_date(params)
 
-    %Subscription{}
-    |> Subscription.changeset(subscription_params)
+    team
+    |> Subscription.create_changeset(subscription_params)
     |> Repo.insert!()
     |> after_subscription_update()
   end
@@ -86,10 +76,7 @@ defmodule Plausible.Billing do
     irrelevant? = params["old_status"] == "paused" && params["status"] == "past_due"
 
     if subscription && not irrelevant? do
-      params =
-        params
-        |> format_params()
-        |> format_subscription()
+      params = format_subscription(params)
 
       subscription
       |> Subscription.changeset(params)
@@ -145,42 +132,66 @@ defmodule Plausible.Billing do
     end
   end
 
-  defp format_params(%{"passthrough" => passthrough} = params) do
-    case String.split(to_string(passthrough), ";") do
-      [user_id] ->
-        user = Repo.get!(User, user_id)
-        {:ok, team} = Plausible.Teams.get_or_create(user)
-        Map.put(params, "team_id", team.id)
+  defp get_team!(%{"passthrough" => passthrough}) do
+    case parse_passthrough!(passthrough) do
+      {:team_id, team_id} ->
+        Teams.get!(team_id)
 
-      ["user:" <> user_id, "team:" <> team_id] ->
-        params
-        |> Map.put("passthrough", user_id)
-        |> Map.put("team_id", team_id)
+      {:user_id, user_id} ->
+        user = Repo.get!(Auth.User, user_id)
+        {:ok, team} = Teams.get_or_create(user)
+        team
     end
   end
 
-  defp format_params(params) do
-    params
+  defp get_team!(_params) do
+    raise "Missing passthrough"
+  end
+
+  defp parse_passthrough!(passthrough) do
+    {user_id, team_id} =
+      case String.split(to_string(passthrough), ";") do
+        ["ee:true", "user:" <> user_id, "team:" <> team_id] ->
+          {user_id, team_id}
+
+        ["ee:true", "user:" <> user_id] ->
+          {user_id, "0"}
+
+        # NOTE: legacy pattern, to be removed in a follow-up
+        ["user:" <> user_id, "team:" <> team_id] ->
+          {user_id, team_id}
+
+        # NOTE: legacy pattern, to be removed in a follow-up
+        [user_id] ->
+          {user_id, "0"}
+
+        _ ->
+          raise "Invalid passthrough sent via Paddle: #{inspect(passthrough)}"
+      end
+
+    case {Integer.parse(user_id), Integer.parse(team_id)} do
+      {{user_id, ""}, {0, ""}} when user_id > 0 ->
+        {:user_id, user_id}
+
+      {{_user_id, ""}, {team_id, ""}} when team_id > 0 ->
+        {:team_id, team_id}
+
+      _ ->
+        raise "Invalid passthrough sent via Paddle: #{inspect(passthrough)}"
+    end
   end
 
   defp format_subscription(params) do
-    subscription_params = %{
+    %{
       paddle_subscription_id: params["subscription_id"],
       paddle_plan_id: params["subscription_plan_id"],
       cancel_url: params["cancel_url"],
       update_url: params["update_url"],
-      user_id: params["passthrough"],
       status: params["status"],
       next_bill_date: params["next_bill_date"],
       next_bill_amount: params["unit_price"] || params["new_unit_price"],
       currency_code: params["currency"]
     }
-
-    if team_id = params["team_id"] do
-      Map.put(subscription_params, :team_id, team_id)
-    else
-      subscription_params
-    end
   end
 
   defp add_last_bill_date(subscription_params, paddle_params) do
@@ -192,10 +203,6 @@ defmodule Plausible.Billing do
       _ -> subscription_params
     end
   end
-
-  defp present?(""), do: false
-  defp present?(nil), do: false
-  defp present?(_), do: true
 
   @spec format_price(Money.t()) :: String.t()
   def format_price(money) do

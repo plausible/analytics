@@ -477,7 +477,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a free_10k subscription (without a `last_bill_date`)
       Repo.delete!(subscription)
 
-      Plausible.Billing.Subscription.free(%{team_id: team_of(user).id})
+      user
+      |> team_of()
+      |> Plausible.Billing.Subscription.free()
       |> Repo.insert!()
 
       conn
@@ -533,7 +535,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
       new_site(owner: user)
 
-      Plausible.Billing.Subscription.free(%{team_id: team_of(user).id, currency_code: "EUR"})
+      user
+      |> team_of()
+      |> Plausible.Billing.Subscription.free(%{currency_code: "EUR"})
       |> Repo.insert!()
 
       html =

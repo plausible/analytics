@@ -19,7 +19,7 @@ defmodule Plausible.Billing.Subscription do
     :currency_code
   ]
 
-  @optional_fields [:last_bill_date, :team_id]
+  @optional_fields [:last_bill_date]
 
   schema "subscriptions" do
     field :paddle_subscription_id, :string
@@ -37,14 +37,20 @@ defmodule Plausible.Billing.Subscription do
     timestamps()
   end
 
-  def changeset(model, attrs \\ %{}) do
-    model
+  def create_changeset(team, attrs \\ %{}) do
+    %__MODULE__{}
+    |> changeset(attrs)
+    |> put_assoc(:team, team)
+  end
+
+  def changeset(subscription, attrs \\ %{}) do
+    subscription
     |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
     |> unique_constraint(:paddle_subscription_id)
   end
 
-  def free(attrs \\ %{}) do
+  def free(team, attrs \\ %{}) do
     %__MODULE__{
       paddle_plan_id: "free_10k",
       status: Subscription.Status.active(),
@@ -52,7 +58,7 @@ defmodule Plausible.Billing.Subscription do
       currency_code: "EUR"
     }
     |> cast(attrs, @required_fields ++ @optional_fields)
-    |> validate_required([:team_id])
+    |> put_assoc(:team, team)
     |> unique_constraint(:paddle_subscription_id)
   end
 end
