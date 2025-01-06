@@ -11,6 +11,9 @@ ENV MIX_ENV=$MIX_ENV
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
+ARG NODE_VERSION
+ENV NODE_VERSION=$NODE_VERSION
+
 # custom ERL_FLAGS are passed for (public) multi-platform builds
 # to fix qemu segfault, more info: https://github.com/erlang/otp/pull/6340
 ARG ERL_FLAGS
@@ -20,7 +23,9 @@ RUN mkdir /app
 WORKDIR /app
 
 # install build dependencies
-RUN apk add --no-cache git nodejs yarn python3 npm ca-certificates wget gnupg make gcc libc-dev brotli
+RUN apk add --no-cache git yarn python3 ca-certificates wget gnupg make gcc libc-dev brotli bash \
+  && wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash \
+  && nvm install ${NODE_VERSION}
 
 COPY mix.exs ./
 COPY mix.lock ./

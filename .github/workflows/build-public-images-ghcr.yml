@@ -40,6 +40,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Read .tool-versions
+        uses: marocchino/tool-versions-action@v1
+        id: versions
+
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v6
@@ -54,6 +58,7 @@ jobs:
             MIX_ENV=ce
             BUILD_METADATA=${{ steps.meta.outputs.json }}
             ERL_FLAGS=+JMsingle true
+            NODE_VERSION=${{steps.versions.outputs.nodejs}}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
