@@ -1,4 +1,4 @@
-defmodule Plausible.IngestRepo.Migrations.AddScrollDepthToImportedPages do
+defmodule Plausible.IngestRepo.Migrations.AddPageleaveVisitorsToImportedPages do
   use Ecto.Migration
 
   @on_cluster Plausible.MigrationUtils.on_cluster_statement("imported_pages")
@@ -7,7 +7,7 @@ defmodule Plausible.IngestRepo.Migrations.AddScrollDepthToImportedPages do
     execute """
     ALTER TABLE imported_pages
     #{@on_cluster}
-    ADD COLUMN scroll_depth UInt8 DEFAULT 255
+    ADD COLUMN pageleave_visitors UInt64
     """
   end
 
@@ -15,7 +15,7 @@ defmodule Plausible.IngestRepo.Migrations.AddScrollDepthToImportedPages do
     execute """
     ALTER TABLE imported_pages
     #{@on_cluster}
-    DROP COLUMN IF EXISTS scroll_depth
+    DROP COLUMN pageleave_visitors
     """
   end
 end
