@@ -1,4 +1,4 @@
-defmodule MyAppWeb.Storybook.MyComponent do
+defmodule MyAppWeb.Storybook.Dropdown do
   use PhoenixStorybook.Story, :component
 
   # required
