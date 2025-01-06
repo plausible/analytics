@@ -155,7 +155,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         |> select([p], %{
           scroll_depth_sum:
             fragment("if(count(?) = 0, NULL, sum(?))", p.user_id, p.max_scroll_depth),
-          total_visitors: fragment("count(?)", p.user_id)
+          pageleave_visitors: fragment("count(?)", p.user_id)
         })
         |> select_merge(^dim_select)
         |> group_by(^dim_group_by)
@@ -195,16 +195,16 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
               s.scroll_depth_sum,
               selected_as(:__internal_scroll_depth_sum),
               s.scroll_depth_sum,
-              selected_as(:__internal_total_visitors),
-              s.total_visitors,
+              selected_as(:__internal_pageleave_visitors),
+              s.pageleave_visitors,
               # Case 2: Only imported scroll depth sum is present
               selected_as(:__internal_scroll_depth_sum),
               selected_as(:__internal_scroll_depth_sum),
-              selected_as(:__internal_total_visitors),
+              selected_as(:__internal_pageleave_visitors),
               # Case 3: Only native scroll depth sum is present
               s.scroll_depth_sum,
               s.scroll_depth_sum,
-              s.total_visitors
+              s.pageleave_visitors
             )
         })
       else
@@ -213,9 +213,9 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           scroll_depth:
             fragment(
               "if(any(?) > 0, toUInt8(round(any(?) / any(?))), NULL)",
-              s.total_visitors,
+              s.pageleave_visitors,
               s.scroll_depth_sum,
-              s.total_visitors
+              s.pageleave_visitors
             )
         })
       end

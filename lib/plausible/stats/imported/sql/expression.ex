@@ -118,7 +118,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   defp select_metric(:scroll_depth, "imported_pages") do
     wrap_alias([i], %{
       scroll_depth_sum: sum(i.scroll_depth),
-      total_visitors: sum(i.pageleave_visitors)
+      pageleave_visitors: sum(i.pageleave_visitors)
     })
   end
 
@@ -366,7 +366,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     q
     |> select_merge_as([s, i], %{
       __internal_scroll_depth_sum: i.scroll_depth_sum,
-      __internal_total_visitors: i.total_visitors
+      __internal_pageleave_visitors: i.pageleave_visitors
     })
     |> select_joined_metrics(rest)
   end
