@@ -65,12 +65,3 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
-
-      - name: Notify team on failure
-        if: ${{ failure() }}
-        uses: fjogeleit/http-request-action@v1
-        with:
-          url: ${{ secrets.BUILD_NOTIFICATION_URL }}
-          method: 'POST'
-          customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images.yml\">Build failed</a>"}'
