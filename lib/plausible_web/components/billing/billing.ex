@@ -2,6 +2,7 @@ defmodule PlausibleWeb.Components.Billing do
   @moduledoc false
 
   use PlausibleWeb, :component
+  use Plausible
 
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Subscriptions}
@@ -237,9 +238,9 @@ defmodule PlausibleWeb.Components.Billing do
 
     passthrough =
       if assigns.team do
-        "ee:true;user:#{assigns.user.id};team:#{assigns.team.id}"
+        "ee:#{ee?()};user:#{assigns.user.id};team:#{assigns.team.id}"
       else
-        "ee:true;user:#{assigns.user.id}"
+        "ee:#{ee?()};user:#{assigns.user.id}"
       end
 
     assigns =
