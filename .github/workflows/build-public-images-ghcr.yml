@@ -17,6 +17,13 @@ jobs:
       packages: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Read .tool-versions
+        uses: marocchino/tool-versions-action@v1
+        id: versions
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -39,10 +46,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Read .tool-versions
-        uses: marocchino/tool-versions-action@v1
-        id: versions
 
       - name: Build and push
         id: docker_build
