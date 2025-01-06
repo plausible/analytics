@@ -421,6 +421,14 @@ defmodule Plausible.Exports do
     scroll_depth_enabled? =
       PlausibleWeb.Api.StatsController.scroll_depth_enabled?(site, current_user)
 
+    base_q =
+      from(e in sampled("events_v2"),
+        where: ^export_filter(site_id, date_range),
+        where: [name: "pageview"],
+        group_by: [selected_as(:date), selected_as(:page)],
+        order_by: selected_as(:date)
+      )
+
     if scroll_depth_enabled? do
       max_scroll_depth_per_visitor_q =
         from(e in "events_v2",
@@ -451,9 +459,7 @@ defmodule Plausible.Exports do
           group_by: [:date, :page]
         )
 
-      from(e in sampled("events_v2"),
-        where: ^export_filter(site_id, date_range),
-        where: [name: "pageview"],
+      from(e in base_q,
         left_join: s in subquery(scroll_depth_q),
         on: s.date == selected_as(:date) and s.page == selected_as(:page),
         select: [
@@ -470,25 +476,19 @@ defmodule Plausible.Exports do
           selected_as(fragment("any(?)", s.pageleave_visitors), :pageleave_visitors)
         ]
       )
-      |> group_by([e], [selected_as(:date), selected_as(:page)])
-      |> order_by([e], selected_as(:date))
     else
-      from e in sampled("events_v2"),
-        where: ^export_filter(site_id, date_range),
-        where: [name: "pageview"],
-        group_by: [selected_as(:date), e.pathname],
-        order_by: selected_as(:date),
-        select: [
-          date(e.timestamp, ^timezone),
-          selected_as(fragment("any(?)", e.hostname), :hostname),
-          selected_as(e.pathname, :page),
-          selected_as(
-            fragment("toUInt64(round(uniq(?)*any(_sample_factor)))", e.session_id),
-            :visits
-          ),
-          visitors(e),
-          selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews)
-        ]
+      base_q
+      |> select([e], [
+        date(e.timestamp, ^timezone),
+        selected_as(fragment("any(?)", e.hostname), :hostname),
+        selected_as(e.pathname, :page),
+        selected_as(
+          fragment("toUInt64(round(uniq(?)*any(_sample_factor)))", e.session_id),
+          :visits
+        ),
+        visitors(e),
+        selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews)
+      ])
     end
   end
 
