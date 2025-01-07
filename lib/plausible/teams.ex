@@ -12,6 +12,10 @@ defmodule Plausible.Teams do
 
   @accept_traffic_until_free ~D[2135-01-01]
 
+  def enabled?(_team) do
+    true
+  end
+
   @spec get!(pos_integer()) :: Teams.Team.t()
   def get!(team_id) do
     Repo.get!(Teams.Team, team_id)

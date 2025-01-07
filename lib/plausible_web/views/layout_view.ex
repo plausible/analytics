@@ -126,6 +126,16 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def is_current_tab(conn, tab) do
-    String.ends_with?(Enum.join(conn.path_info, "/"), tab)
+    full_path = Path.join(conn.path_info)
+
+    one_up =
+      conn.path_info
+      |> Enum.drop(-1)
+      |> Path.join()
+
+    case conn.method do
+      :get -> String.ends_with?(full_path, tab)
+      _ -> String.ends_with?(full_path, tab) or String.ends_with?(one_up, tab)
+    end
   end
 end
