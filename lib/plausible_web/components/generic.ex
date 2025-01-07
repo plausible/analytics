@@ -271,7 +271,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:rest, :global, include: ~w(method))
   slot(:inner_block, required: true)
 
-  @base_class "block rounded-lg text-sm/6 text-gray-900 ui-disabled:text-gray-500 dark:text-gray-100 px-3.5 py-1.5"
+  @base_class "block rounded-lg text-sm/6 text-gray-900 ui-disabled:text-gray-500 dark:text-gray-100 dark:ui-disabled:text-gray-400 px-3.5 py-1.5"
   @clickable_class "hover:bg-gray-100 dark:hover:bg-gray-700"
   def dropdown_item(assigns) do
     assigns =
