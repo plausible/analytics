@@ -13,7 +13,7 @@
     </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
       <div class="py-4 g:py-0 lg:col-span-3">
-        <% options = flat_settings_options(@conn) %>
+        <% options = flat_site_settings_options(@conn) %>
         <.mobile_nav_dropdown
           conn={@conn}
           action={"/sites/#{URI.encode_www_form(@site.domain)}"}
@@ -24,7 +24,7 @@
         />
 
         <div class="hidden lg:block">
-          <%= for %{key: key, value: value, icon: icon} <- settings_tabs(@conn) do %>
+          <%= for %{key: key, value: value, icon: icon} <- site_settings_sidebar(@conn) do %>
             <%= if is_binary(value) do %>
               <%= render("_site_settings_tab.html",
                 icon: icon,

@@ -1,18 +1,5 @@
 <%= render_layout "app.html", assigns do %>
-  <% options = %{
-    "Account Settings" => [
-      %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
-      %{key: "Security", value: "security", icon: :lock_closed},
-      %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
-      %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
-      %{key: "API Keys", value: "api-keys", icon: :key},
-      %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
-    ],
-    "Team Settings" => [
-      %{key: "General", value: "team/general", icon: :adjustments_horizontal}
-    ]
-  } %>
-
+  <% options = account_settings_sidebar(@conn) %>
   <div class="container pt-6">
     <.styled_link class="text-indigo-600 font-bold text-sm" href="/sites">
       ← Back to Sites
@@ -49,24 +36,23 @@
           <% end %>
         </div>
 
-        <div
-          :if={@my_team && Plausible.Teams.enabled?(@my_team)}
-          class="mb-4 mt-4 hidden lg:block"
-        >
-          <h3 class="uppercase text-sm text-indigo-600 font-semibold">Team Settings</h3>
-          <p class="text-xs dark:text-gray-400 truncate"><%= @my_team.name %></p>
-        </div>
+        <div :if={Plausible.Teams.enabled?(@my_team)}>
+          <div class="mb-4 mt-4 hidden lg:block">
+            <h3 class="uppercase text-sm text-indigo-600 font-semibold">Team Settings</h3>
+            <p class="text-xs dark:text-gray-400 truncate"><%= @my_team.name %></p>
+          </div>
 
-        <div class="hidden lg:block">
-          <%= for %{key: key, value: value, icon: icon} <- options["Team Settings"]  do %>
-            <%= render("_settings_tab.html",
-              icon: icon,
-              this_tab: value,
-              text: key,
-              conn: @conn,
-              submenu?: false
-            ) %>
-          <% end %>
+          <div class="hidden lg:block">
+            <%= for %{key: key, value: value, icon: icon} <- options["Team Settings"]  do %>
+              <%= render("_settings_tab.html",
+                icon: icon,
+                this_tab: value,
+                text: key,
+                conn: @conn,
+                submenu?: false
+              ) %>
+            <% end %>
+          </div>
         </div>
       </div>
 
