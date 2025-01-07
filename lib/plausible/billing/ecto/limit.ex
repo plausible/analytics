@@ -19,4 +19,17 @@ defmodule Plausible.Billing.Ecto.Limit do
 
   def dump(:unlimited), do: {:ok, -1}
   def dump(other), do: Ecto.Type.dump(:integer, other)
+
+  def render_form(_conn, changeset, form, field, _options) do
+    {:ok, value} = changeset |> Ecto.Changeset.get_field(field) |> dump()
+
+    [
+      {:safe, ~s(<div class="form-group">)},
+      {:safe, ~s(<label for="#{form.name}_#{field}">#{Phoenix.Naming.humanize(field)}</label>)},
+      {:safe,
+       ~s(<input id="#{form.name}_#{field}" name="#{form.name}[#{field}]" class="form-control" value="#{value}" min="-1" type="number" />)},
+      {:safe, ~s(<p class="help_text">Use -1 for unlimited.</p>)},
+      {:safe, ~s(</div>)}
+    ]
+  end
 end

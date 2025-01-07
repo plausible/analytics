@@ -44,4 +44,28 @@ defmodule Plausible.Billing.Ecto.FeatureList do
   def cast(list), do: Ecto.Type.cast(type(), list)
   def load(list), do: Ecto.Type.load(type(), list)
   def dump(list), do: Ecto.Type.dump(type(), list)
+
+  def render_form(_conn, changeset, form, field, _options) do
+    features = Ecto.Changeset.get_field(changeset, field)
+
+    checkboxes =
+      for mod <- Plausible.Billing.Feature.list(), not mod.free?() do
+        [
+          {:safe, ~s(<label style="padding-right: 15px;">)},
+          {:safe,
+           ~s(<input type="checkbox" name="#{form.name}[#{field}][]" "#{form.name}_#{field}_#{mod.name()}" value="#{mod.name()}" style="margin-right: 3px;" #{if mod in features, do: "checked", else: ""}>)},
+          mod.display_name(),
+          {:safe, ~s(</label>)}
+        ]
+      end
+
+    [
+      {:safe, ~s(<div class="form-group">)},
+      {:safe, ~s(<label for="#{form.name}_#{field}">#{Phoenix.Naming.humanize(field)}</label>)},
+      {:safe, ~s(<div class="form-control">)},
+      checkboxes,
+      {:safe, ~s(</div>)},
+      {:safe, ~s(</div>)}
+    ]
+  end
 end
