@@ -368,21 +368,20 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     end
 
     for %{role: role, type: type} <- [
-          %{role: :viewer, type: :personal},
-          %{role: :editor, type: :personal},
-          %{role: :editor, type: :site}
+          %{role: :viewer, type: "personal"},
+          %{role: :editor, type: "personal"},
+          %{role: :editor, type: "site"}
         ] do
       test "#{role} can create segment with type \"#{type}\" successfully",
            %{conn: conn, user: user} do
         site = new_site()
         add_guest(site, user: user, role: unquote(role))
 
-        t = Atom.to_string(unquote(type))
         name = "any name"
 
         conn =
           post(conn, "/internal-api/#{site.domain}/segments", %{
-            "type" => t,
+            "type" => unquote(type),
             "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
             "name" => name
           })
@@ -392,7 +391,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         assert %{
                  "name" => ^name,
                  "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
-                 "type" => ^t
+                 "type" => unquote(type)
                } = response
 
         %{
@@ -551,16 +550,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     end
 
     for %{role: role, type: type} <- [
-          %{role: :viewer, type: :personal},
-          %{role: :editor, type: :personal},
-          %{role: :editor, type: :site}
+          %{role: :viewer, type: "personal"},
+          %{role: :editor, type: "personal"},
+          %{role: :editor, type: "site"}
         ] do
       test "#{role} can delete segment with type \"#{type}\" successfully",
            %{conn: conn, user: user} do
         site = new_site()
         add_guest(site, user: user, role: unquote(role))
-
-        t = Atom.to_string(unquote(type))
 
         user_id = user.id
 
@@ -568,7 +565,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           insert(:segment,
             site: site,
             name: "any",
-            type: t,
+            type: unquote(type),
             owner_id: user_id
           )
 
@@ -582,7 +579,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                  "owner_id" => ^user_id,
                  "name" => "any",
                  "segment_data" => ^segment_data,
-                 "type" => ^t
+                 "type" => unquote(type)
                } = response
       end
     end
