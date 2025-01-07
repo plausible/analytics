@@ -14,15 +14,15 @@ import dropdown from "./liveview/dropdown"
 // })();
 
 
- // If your components require alpinejs, you'll need to start
- // alpine after the DOM is loaded and pass in an onBeforeElUpdated
+window.Alpine = Alpine
+document.addEventListener('DOMContentLoaded', () => {
+  window.Alpine.start();
+});
 
-Alpine.data('dropdown', dropdown)
+document.addEventListener('alpine:init', () => {
+  window.Alpine.data('dropdown', dropdown)
+});
 
- window.Alpine = Alpine
- document.addEventListener('DOMContentLoaded', () => {
-   window.Alpine.start();
- });
 
  (function () {
    window.storybook = {
