@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-46699A07.js"></script>
+    <script src="dist/sidebar_items-FA598EBA.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -205,17 +205,25 @@ Pages
 
       </div>
 
-        <div class="summary-synopsis"><h2>Slots</h2><ul><li><code class="inline">button</code> (required) - Accepts attributes:<ul><li><code class="inline">class</code> (<code class="inline">:string</code>)</li></ul></li><li><code class="inline">panel</code> (required) - Accepts attributes:<ul><li><code class="inline">class</code> (<code class="inline">:string</code>)</li></ul></li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul><h2>Slots</h2><ul><li><code class="inline">button</code> (required) - Accepts attributes:<ul><li><code class="inline">class</code> (<code class="inline">:string</code>)</li></ul></li><li><code class="inline">menu</code> (required) - Accepts attributes:<ul><li><code class="inline">class</code> (<code class="inline">:string</code>)</li></ul></li></ul></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dropdown_link/1" translate="no">dropdown_link(assigns)</a>
+        <a href="#dropdown_divider/1" translate="no">dropdown_divider(assigns)</a>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">href</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">new_tab</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code> (required)</li></ul></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dropdown_item/1" translate="no">dropdown_item(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">href</code> (<code class="inline">:string</code>)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">new_tab</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li><code class="inline">disabled</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;method&quot;]</code>.</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code> (required)</li></ul></div>
 
     </div>
 
@@ -487,7 +495,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">delete_button(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L665" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L698" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -543,7 +551,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">dropdown(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L232" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L234" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -553,25 +561,31 @@ Pages
 
   <section class="docstring">
 
-<h2 id="dropdown/1-slots" class="section-heading">
+<h2 id="dropdown/1-attributes" class="section-heading">
+  <a href="#dropdown/1-attributes" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Attributes</span>
+</h2>
+<ul><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul><h2 id="dropdown/1-slots" class="section-heading">
   <a href="#dropdown/1-slots" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Slots</span>
 </h2>
-<ul><li><code class="inline">button</code> (required) - Accepts attributes:<ul><li><code class="inline">class</code> (<code class="inline">:string</code>)</li></ul></li><li><code class="inline">panel</code> (required) - Accepts attributes:<ul><li><code class="inline">class</code> (<code class="inline">:string</code>)</li></ul></li></ul>
+<ul><li><code class="inline">button</code> (required) - Accepts attributes:<ul><li><code class="inline">class</code> (<code class="inline">:string</code>)</li></ul></li><li><code class="inline">menu</code> (required) - Accepts attributes:<ul><li><code class="inline">class</code> (<code class="inline">:string</code>)</li></ul></li></ul>
   </section>
 </section>
-<section class="detail" id="dropdown_link/1">
+<section class="detail" id="dropdown_divider/1">
 
   <div class="detail-header">
-    <a href="#dropdown_link/1" class="detail-link" title="Link to this function">
+    <a href="#dropdown_divider/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">dropdown_link(assigns)</h1>
+    <h1 class="signature" translate="no">dropdown_divider(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L266" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L310" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -581,14 +595,36 @@ Pages
 
   <section class="docstring">
 
-<h2 id="dropdown_link/1-attributes" class="section-heading">
-  <a href="#dropdown_link/1-attributes" class="hover-link">
+
+  </section>
+</section>
+<section class="detail" id="dropdown_item/1">
+
+  <div class="detail-header">
+    <a href="#dropdown_item/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dropdown_item(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L276" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<h2 id="dropdown_item/1-attributes" class="section-heading">
+  <a href="#dropdown_item/1-attributes" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">href</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">new_tab</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul><h2 id="dropdown_link/1-slots" class="section-heading">
-  <a href="#dropdown_link/1-slots" class="hover-link">
+<ul><li><code class="inline">href</code> (<code class="inline">:string</code>)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">new_tab</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li><code class="inline">disabled</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;method&quot;]</code>.</li></ul><h2 id="dropdown_item/1-slots" class="section-heading">
+  <a href="#dropdown_item/1-slots" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Slots</span>
@@ -605,7 +641,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">dynamic_icon(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L447" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L478" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -633,7 +669,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">edit_button(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L646" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L679" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -661,7 +697,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">filter_bar(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L686" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L719" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -695,7 +731,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">focus_box(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L482" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L515" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -729,7 +765,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">focus_list(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L466" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L499" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -757,7 +793,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">h2(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L721" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L754" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -825,7 +861,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">settings_tiles(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L357" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L388" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -847,7 +883,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">spinner(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L336" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L367" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -909,7 +945,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">table(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L526" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L559" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -943,7 +979,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">td(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L552" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L585" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -977,7 +1013,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">th(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L588" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L621" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1011,7 +1047,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">tile(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L373" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L404" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1045,7 +1081,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">title(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L732" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L765" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1079,7 +1115,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">toggle_submit(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L609" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L642" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1113,7 +1149,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">tooltip(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L406" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L437" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1147,7 +1183,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">unstyled_link(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L293" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L324" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
