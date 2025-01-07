@@ -353,4 +353,46 @@ defmodule PlausibleWeb.Live.Components.Form do
       String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
     end)
   end
+
+  attr :conn, Plug.Conn, required: true
+  attr :name, :string, required: true
+  attr :options, :list, required: true
+  attr :value, :any, default: nil
+  attr :href_base, :string, default: "/"
+  attr :selected_fn, :any, required: true
+
+  def mobile_nav_dropdown(%{options: options} = assigns) do
+    options =
+      Enum.reduce(options, Map.new(), fn
+        {section, opts}, acc when is_list(opts) ->
+          Map.put(acc, section, for(o <- opts, do: {o.key, o.value}))
+
+        {key, value}, _acc when is_binary(key) and is_binary(value) ->
+          options
+      end)
+
+    assigns = assign(assigns, :options, options)
+
+    ~H"""
+    <.form for={@conn} class="lg:hidden">
+      <.input
+        value={
+          @options
+          |> Enum.flat_map(fn
+            {_section, opts} when is_list(opts) -> opts
+            {k, v} when is_binary(k) and is_binary(v) -> [{k, v}]
+          end)
+          |> Enum.find_value(fn {_k, v} ->
+            apply(@selected_fn, [v]) && v
+          end)
+        }
+        name={@name}
+        type="select"
+        options={@options}
+        onchange={"if (event.target.value) { location.href = '#{@href_base}' + event.target.value }"}
+        class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
+      />
+    </.form>
+    """
+  end
 end
