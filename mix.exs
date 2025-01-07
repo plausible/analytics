@@ -162,10 +162,15 @@ defmodule Plausible.MixProject do
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
-        "tailwind storybook --minify",
+        "tailwind storybook",
         "esbuild default"
       ],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
+      "assets.deploy": [
+        "tailwind default --minify",
+        "tailwind storybook --minify",
+        "esbuild default --minify",
+        "phx.digest"
+      ]
     ]
   end
 
