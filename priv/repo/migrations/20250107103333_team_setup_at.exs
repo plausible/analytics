@@ -1,4 +1,4 @@
-defmodule :"Elixir.Plausible.Repo.Migrations.Team-setup-at" do
+defmodule Plausible.Repo.Migrations.TeamSetupAt do
   use Ecto.Migration
 
   def change do
