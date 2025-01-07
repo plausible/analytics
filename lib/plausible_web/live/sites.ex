@@ -220,7 +220,9 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </.unstyled_link>
 
-      <.ellipsis_menu site={@site} />
+      <div class="absolute right-0 top-2">
+        <.ellipsis_menu site={@site} />
+      </div>
     </li>
     """
   end
@@ -228,43 +230,44 @@ defmodule PlausibleWeb.Live.Sites do
   def ellipsis_menu(assigns) do
     ~H"""
     <.dropdown>
-      <:button class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400">
-        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 w-4 h-4" />
+      <:button class="size-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400">
+        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 size-4" />
       </:button>
-      <:panel class="absolute top-7 right-3 z-10 mt-2 w-40 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-        <div class="py-1 text-sm" role="none">
-          <.dropdown_link
-            :if={List.first(@site.memberships).role != :viewer}
-            href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
-          >
-            <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
-            <span>Settings</span>
-          </.dropdown_link>
+      <:menu class="!mt-0 mr-4 min-w-40">
+        <!-- adjust position because click area is much bigger than icon. Default positioning from click area looks weird -->
+        <.dropdown_item
+          :if={List.first(@site.memberships).role != :viewer}
+          href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
+          class="!flex items-center gap-x-2"
+        >
+          <Heroicons.cog_6_tooth class="size-4" />
+          <span>Settings</span>
+        </.dropdown_item>
 
-          <.dropdown_link
-            href="#"
-            x-on:click.prevent
-            phx-click={
-              JS.hide(
-                transition: {"duration-500", "opacity-100", "opacity-0"},
-                to: "#site-card-#{hash_domain(@site.domain)}",
-                time: 500
-              )
-              |> JS.push("pin-toggle")
-            }
-            phx-value-domain={@site.domain}
-          >
-            <.icon_pin
-              :if={@site.pinned_at}
-              class="pt-1 mr-3 h-5 w-5 text-red-400 stroke-red-500 dark:text-yellow-600 dark:stroke-yellow-700"
-            />
-            <span :if={@site.pinned_at}>Unpin Site</span>
+        <.dropdown_item
+          href="#"
+          x-on:click.prevent
+          phx-click={
+            JS.hide(
+              transition: {"duration-500", "opacity-100", "opacity-0"},
+              to: "#site-card-#{hash_domain(@site.domain)}",
+              time: 500
+            )
+            |> JS.push("pin-toggle")
+          }
+          phx-value-domain={@site.domain}
+          class="!flex items-center gap-x-2"
+        >
+          <.icon_pin
+            :if={@site.pinned_at}
+            class="size-4 text-red-400 stroke-red-500 dark:text-yellow-600 dark:stroke-yellow-700"
+          />
+          <span :if={@site.pinned_at}>Unpin Site</span>
 
-            <.icon_pin :if={!@site.pinned_at} class="pt-1 mr-3 h-5 w-5" />
-            <span :if={!@site.pinned_at}>Pin Site</span>
-          </.dropdown_link>
-        </div>
-      </:panel>
+          <.icon_pin :if={!@site.pinned_at} class="size-4" />
+          <span :if={!@site.pinned_at}>Pin Site</span>
+        </.dropdown_item>
+      </:menu>
     </.dropdown>
     """
   end
