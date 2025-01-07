@@ -3,6 +3,12 @@ defmodule Plausible.Teams.Team do
   Team schema
   """
 
+  defimpl FunWithFlags.Actor, for: __MODULE__ do
+    def id(%{id: id}) do
+      "team:#{id}"
+    end
+  end
+
   use Ecto.Schema
   use Plausible
 

@@ -12,8 +12,8 @@ defmodule Plausible.Teams do
 
   @accept_traffic_until_free ~D[2135-01-01]
 
-  def enabled?(_team) do
-    true
+  def enabled?(team) do
+    not is_nil(team) and FunWithFlags.enabled?(:teams, for: team)
   end
 
   @spec get!(pos_integer()) :: Teams.Team.t()
