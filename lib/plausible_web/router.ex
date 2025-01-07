@@ -362,6 +362,11 @@ defmodule PlausibleWeb.Router do
     delete "/api-keys/:id", SettingsController, :delete_api_key
 
     get "/danger-zone", SettingsController, :danger_zone
+
+    on_ee do
+      get "/team/general", SettingsController, :team_general
+      post "/team/general/name", SettingsController, :update_team_name
+    end
   end
 
   scope "/", PlausibleWeb do

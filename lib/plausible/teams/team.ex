@@ -46,6 +46,12 @@ defmodule Plausible.Teams.Team do
     |> maybe_bump_accept_traffic_until()
   end
 
+  def name_changeset(team, attrs \\ %{}) do
+    team
+    |> cast(attrs, [:name])
+    |> validate_required(:name)
+  end
+
   def start_trial(team, today \\ Date.utc_today()) do
     trial_expiry = trial_expiry(today)
 
