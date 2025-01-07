@@ -1104,7 +1104,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
   end
 
   describe "Team Settings" do
-    @describetag :ee_only
     setup [:create_user, :log_in]
 
     test "does not render team settings, when no team assigned", %{conn: conn} do

@@ -363,10 +363,8 @@ defmodule PlausibleWeb.Router do
 
     get "/danger-zone", SettingsController, :danger_zone
 
-    on_ee do
-      get "/team/general", SettingsController, :team_general
-      post "/team/general/name", SettingsController, :update_team_name
-    end
+    get "/team/general", SettingsController, :team_general
+    post "/team/general/name", SettingsController, :update_team_name
   end
 
   scope "/", PlausibleWeb do
