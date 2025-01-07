@@ -7,7 +7,7 @@ defmodule Plausible.ExportsTest do
 
   describe "export_queries/2" do
     test "returns named ecto queries" do
-      queries = Plausible.Exports.export_queries(_site_id = 1)
+      queries = Plausible.Exports.export_queries(_site_id = 1, nil)
       assert queries |> Map.values() |> Enum.all?(&match?(%Ecto.Query{}, &1))
 
       assert Map.keys(queries) == [
@@ -26,7 +26,7 @@ defmodule Plausible.ExportsTest do
 
     test "with date range" do
       queries =
-        Plausible.Exports.export_queries(_site_id = 1,
+        Plausible.Exports.export_queries(_site_id = 1, nil,
           date_range: Date.range(~D[2023-01-01], ~D[2024-03-12])
         )
 
@@ -45,10 +45,7 @@ defmodule Plausible.ExportsTest do
     end
 
     test "with custom extension" do
-      queries =
-        Plausible.Exports.export_queries(_site_id = 1,
-          extname: ".ch"
-        )
+      queries = Plausible.Exports.export_queries(_site_id = 1, nil, extname: ".ch")
 
       assert Map.keys(queries) == [
                "imported_browsers.ch",
