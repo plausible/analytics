@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-E1B09627.js"></script>
+    <script src="dist/sidebar_items-46699A07.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -177,11 +177,11 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#preload_revenue_currencies/4" translate="no">preload_revenue_currencies(site, goals, metrics, dimensions)</a>
+        <a href="#preload/4" translate="no">preload(site, goals, metrics, dimensions)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Preloads revenue currencies for a query.</p></div>
+        <div class="summary-synopsis"><p>Preloads revenue currencies for a query. Used when parsing the query.</p></div>
 
     </div>
 
@@ -223,7 +223,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">available?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L62" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L73" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -245,7 +245,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">format_revenue_metric(value, query, dimension_values)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L44" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L52" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -258,16 +258,16 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="preload_revenue_currencies/4">
+<section class="detail" id="preload/4">
 
   <div class="detail-header">
-    <a href="#preload_revenue_currencies/4" class="detail-link" title="Link to this function">
+    <a href="#preload/4" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">preload_revenue_currencies(site, goals, metrics, dimensions)</h1>
+    <h1 class="signature" translate="no">preload(site, goals, metrics, dimensions)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L24" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L27" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -277,7 +277,8 @@ Pages
 
   <section class="docstring">
 
-<p>Preloads revenue currencies for a query.</p><p>Assumptions and business logic:</p><ol><li>Goals are already filtered according to query filters and dimensions</li><li>If there's a single currency involved, return map containing the default</li><li>If there's a breakdown by event:goal we return all the relevant currencies as a map</li><li>If filtering by multiple different currencies without event:goal breakdown empty map is returned</li><li>If user has no access or preloading is not needed, empty map is returned</li></ol><p>The resulting data structure is attached to a <code class="inline">Query</code> and used below in <a href="#format_revenue_metric/3"><code class="inline">format_revenue_metric/3</code></a>.</p>
+<p>Preloads revenue currencies for a query. Used when parsing the query.</p><p>Returns tuple containing revenue warning (if set, no revenue metrics should be calculated) and
+revenue currencies map.</p><p>Assumptions and business logic:</p><ol><li>Goals are already filtered according to query filters and dimensions</li><li>If there's a single currency involved, return map containing the default</li><li>If there's a breakdown by event:goal we return all the relevant currencies as a map</li><li>If filtering by multiple different currencies without event:goal breakdown empty map is returned</li><li>If user has no access or preloading is not needed, empty map is returned</li></ol><p>The resulting data structure is attached to a <code class="inline">Query</code> and used below in <a href="#format_revenue_metric/3"><code class="inline">format_revenue_metric/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="requested?/1">
@@ -289,7 +290,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">requested?(metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L69" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
