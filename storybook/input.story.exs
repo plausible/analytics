@@ -20,16 +20,6 @@ defmodule MyAppWeb.Storybook.Input do
         }
       },
       %Variation{
-        id: :help_text,
-        description: "With help text",
-        attributes: %{
-          name: "user[name]",
-          value: "",
-          label: "Email",
-          help_text: "Get ready for spam!"
-        }
-      },
-      %Variation{
         id: :errors,
         description: "With help text and error",
         attributes: %{
@@ -38,6 +28,17 @@ defmodule MyAppWeb.Storybook.Input do
           label: "Email",
           help_text: "Get ready for spam!",
           errors: ["Cannot be blank"]
+        }
+      },
+      %Variation{
+        id: :select,
+        description: "Select input",
+        attributes: %{
+          name: "user[color_mode]",
+          value: "System",
+          label: "Color mode",
+          type: "select",
+          options: ["System", "Light", "Dark"]
         }
       }
     ]
