@@ -5,6 +5,7 @@ defmodule Plausible.Stats.JSONSchema do
   Note that `internal` queries expose some metrics, filter types and other features not
   available on the public API.
   """
+  use Plausible
   alias Plausible.Stats.JSONSchema.Utils
 
   @external_resource "priv/json-schemas/query-api-schema.json"
@@ -13,8 +14,14 @@ defmodule Plausible.Stats.JSONSchema do
                        |> File.read!()
                        |> Jason.decode!()
   @raw_public_schema Utils.traverse(@raw_internal_schema, fn
-                       %{"$comment" => "only :internal"} -> :remove
-                       value -> value
+                       %{"$comment" => "only :internal"} ->
+                         :remove
+
+                       %{"$comment" => "only :ee"} = value ->
+                         if(ee?(), do: Map.delete(value, "$comment"), else: :remove)
+
+                       value ->
+                         value
                      end)
   @internal_query_schema ExJsonSchema.Schema.resolve(@raw_internal_schema)
   @public_query_schema ExJsonSchema.Schema.resolve(@raw_public_schema)

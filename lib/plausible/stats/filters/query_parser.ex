@@ -38,8 +38,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
-         {preloaded_goals, revenue_currencies} <-
-           preload_needed_goals(site, metrics, filters, dimensions),
+         {preloaded_goals, revenue_warning, revenue_currencies} <-
+           preload_goals_and_revenue(site, metrics, filters, dimensions),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -50,6 +50,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
            include: include,
            pagination: pagination,
            preloaded_goals: preloaded_goals,
+           revenue_warning: revenue_warning,
            revenue_currencies: revenue_currencies
          },
          :ok <- validate_order_by(query),
@@ -422,20 +423,24 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def preload_needed_goals(site, metrics, filters, dimensions) do
+  def preload_goals_and_revenue(site, metrics, filters, dimensions) do
     goal_filters? =
       Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
-    if goal_filters? or Enum.member?(dimensions, "event:goal") do
-      goals = Plausible.Goals.Filters.preload_needed_goals(site, filters)
+    goals =
+      if goal_filters? or Enum.member?(dimensions, "event:goal") do
+        Plausible.Goals.Filters.preload_needed_goals(site, filters)
+      else
+        []
+      end
 
-      {
-        goals,
-        preload_revenue_currencies(site, goals, metrics, dimensions)
-      }
-    else
-      {[], %{}}
-    end
+    {revenue_warning, revenue_currencies} = preload_revenue(site, goals, metrics, dimensions)
+
+    {
+      goals,
+      revenue_warning,
+      revenue_currencies
+    }
   end
 
   @only_toplevel ["event:goal", "event:hostname"]
@@ -485,8 +490,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
   on_ee do
     alias Plausible.Stats.Goal.Revenue
 
-    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions),
-      to: Plausible.Stats.Goal.Revenue
+    def preload_revenue(site, preloaded_goals, metrics, dimensions) do
+      Revenue.preload(site, preloaded_goals, metrics, dimensions)
+    end
 
     defp validate_revenue_metrics_access(site, query) do
       if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
@@ -496,7 +502,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end
     end
   else
-    defp preload_revenue_currencies(_site, _preloaded_goals, _metrics, _dimensions), do: %{}
+    defp preload_revenue(_site, _preloaded_goals, _metrics, _dimensions), do: {nil, %{}}
 
     defp validate_revenue_metrics_access(_site, _query), do: :ok
   end
