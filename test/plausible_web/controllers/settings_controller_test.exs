@@ -1103,6 +1103,58 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  describe "Team Settings" do
+    setup [:create_user, :log_in]
+
+    test "does not render team settings, when no team assigned", %{conn: conn} do
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      refute html =~ "Team Settings"
+    end
+
+    test "renders team settings, when team assigned", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      assert html =~ "Team Settings"
+      assert html =~ team.name
+    end
+
+    test "GET /settings/team/general", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      conn = get(conn, Routes.settings_path(conn, :team_general))
+      html = html_response(conn, 200)
+      assert html =~ "Team Name"
+      assert html =~ "Change the name of your team"
+      assert text_of_attr(html, "input#team_name", "value") == team.name
+    end
+
+    test "POST /settings/team/general/name", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :update_team_name), %{
+          "team" => %{"name" => "New Name"}
+        })
+
+      assert redirected_to(conn, 302) ==
+               Routes.settings_path(conn, :team_general) <> "#update-name"
+
+      assert Repo.reload!(team).name == "New Name"
+    end
+
+    test "POST /settings/team/general/name - changeset error", %{conn: conn, user: user} do
+      {:ok, _team} = Plausible.Teams.get_or_create(user)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :update_team_name), %{
+          "team" => %{"name" => ""}
+        })
+
+      assert text(html_response(conn, 200)) =~ "can't be blank"
+    end
+  end
+
   defp configure_enterprise_plan(user, attrs \\ []) do
     subscribe_to_enterprise_plan(
       user,
