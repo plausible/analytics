@@ -359,7 +359,6 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr :options, :list, required: true
   attr :value, :any, default: nil
   attr :href_base, :string, default: "/"
-  attr :action, :string, default: nil
   attr :selected_fn, :any, required: true
 
   def mobile_nav_dropdown(%{options: options} = assigns) do
@@ -375,7 +374,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :options, options)
 
     ~H"""
-    <.form for={@conn} class="lg:hidden" action={@action}>
+    <.form for={@conn} class="lg:hidden">
       <.input
         value={
           @options

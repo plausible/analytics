@@ -16,7 +16,6 @@
         <% options = flat_site_settings_options(@conn) %>
         <.mobile_nav_dropdown
           conn={@conn}
-          action={"/sites/#{URI.encode_www_form(@site.domain)}"}
           options={options}
           name="tab"
           href_base={"/#{URI.encode_www_form(@site.domain)}/settings/"}
