@@ -284,7 +284,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         |> Map.put("email", invitation.email)
         |> Auth.User.new()
 
-      with_team? = invitation.role == :owner
+      with_team? = invitation.type == :site_transfer
 
       add_user(socket, user, with_team?: with_team?)
     else
@@ -349,6 +349,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
   defp find_by_id_unified(invitation_or_transfer_id) do
     result =
       with {:error, :invitation_not_found} <-
+             find_team_invitation_by_id_unified(invitation_or_transfer_id),
+           {:error, :invitation_not_found} <-
              find_invitation_by_id_unified(invitation_or_transfer_id) do
         find_transfer_by_id_unified(invitation_or_transfer_id)
       end
@@ -356,6 +358,25 @@ defmodule PlausibleWeb.Live.RegisterForm do
     case result do
       {:error, :invitation_not_found} -> nil
       {:ok, unified} -> unified
+    end
+  end
+
+  defp find_team_invitation_by_id_unified(id) do
+    invitation =
+      Teams.Invitation
+      |> Repo.get_by(invitation_id: id)
+      |> Repo.preload(:inviter)
+
+    case invitation do
+      nil ->
+        {:error, :invitation_not_found}
+
+      team_invitation ->
+        {:ok,
+         %{
+           type: :team_invitation,
+           email: team_invitation.email
+         }}
     end
   end
 
@@ -372,7 +393,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       guest_invitation ->
         {:ok,
          %{
-           role: guest_invitation.role,
+           type: :guest_invitation,
            email: guest_invitation.team_invitation.email
          }}
     end
@@ -391,7 +412,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       transfer ->
         {:ok,
          %{
-           role: :owner,
+           type: :site_transfer,
            email: transfer.email
          }}
     end
