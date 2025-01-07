@@ -6,7 +6,5 @@ defmodule Plausible.Repo.Migrations.TeamSetupAt do
       add :setup_done, :boolean, default: false, null: false
       add :setup_at, :naive_datetime, null: true
     end
-
-    create index(:teams, :setup_done)
   end
 end
