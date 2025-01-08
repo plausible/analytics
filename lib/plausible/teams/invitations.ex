@@ -11,7 +11,9 @@ defmodule Plausible.Teams.Invitations do
 
   def find_for_user(invitation_or_transfer_id, user) do
     with {:error, :invitation_not_found} <-
-           find_invitation_for_user(invitation_or_transfer_id, user) do
+           find_team_invitation_for_user(invitation_or_transfer_id, user),
+         {:error, :invitation_not_found} <-
+           find_guest_invitation_for_user(invitation_or_transfer_id, user) do
       find_transfer_for_user(invitation_or_transfer_id, user)
     end
   end
@@ -23,7 +25,26 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  defp find_invitation_for_user(guest_invitation_id, user) do
+  defp find_team_invitation_for_user(team_invitation_id, user) do
+    invitation_query =
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        inner_join: team in assoc(ti, :team),
+        where: ti.invitation_id == ^team_invitation_id,
+        where: ti.email == ^user.email,
+        where: ti.role != :guest,
+        preload: [inviter: inviter, team: team]
+
+    case Repo.one(invitation_query) do
+      nil ->
+        {:error, :invitation_not_found}
+
+      invitation ->
+        {:ok, invitation}
+    end
+  end
+
+  defp find_guest_invitation_for_user(guest_invitation_id, user) do
     invitation_query =
       from gi in Teams.GuestInvitation,
         inner_join: s in assoc(gi, :site),
@@ -108,6 +129,15 @@ defmodule Plausible.Teams.Invitations do
         inviter
       )
     end
+  end
+
+  def remove_team_invitation(team_invitation) do
+    Repo.delete_all(
+      from ti in Teams.Invitation,
+        where: ti.id == ^team_invitation.id
+    )
+
+    :ok
   end
 
   def remove_guest_invitation(guest_invitation) do
