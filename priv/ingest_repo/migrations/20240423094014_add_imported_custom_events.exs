@@ -4,7 +4,7 @@ defmodule Plausible.IngestRepo.Migrations.AddImportedCustomEvents do
   def change do
     # NOTE: Using another table for determining cluster presence
     on_cluster = Plausible.MigrationUtils.on_cluster_statement("imported_pages")
-    cluster? = Plausible.MigrationUtils.clustered_table?("imported_pages")
+    cluster? = Plausible.MigrationUtils.cluster_name()
 
     cluster_name =
       if cluster? do
@@ -14,7 +14,7 @@ defmodule Plausible.IngestRepo.Migrations.AddImportedCustomEvents do
       end
 
     settings =
-      if Plausible.MigrationUtils.clustered_table?("imported_pages") do
+      if Plausible.MigrationUtils.cluster_name() do
         """
         ENGINE = ReplicatedMergeTree('/clickhouse/#{cluster_name}/tables/{shard}/{database}/imported_custom_events', '{replica}')
         ORDER BY (site_id, import_id, date, name)
