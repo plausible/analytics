@@ -1,4 +1,7 @@
 defmodule Plausible.Teams.Invitations.Candidates do
+  @moduledoc """
+  Search through team's site guests looking for full membership candidates.
+  """
   import Ecto.Query
 
   alias Plausible.Repo
