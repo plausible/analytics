@@ -263,6 +263,29 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def new_user_team_invitation(email, invitation_id, team, inviter) do
+    priority_email()
+    |> to(email)
+    |> tag("new-user-team-invitation")
+    |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
+    |> render("new_user_team_invitation.html",
+      invitation_id: invitation_id,
+      team: team,
+      inviter: inviter
+    )
+  end
+
+  def existing_user_team_invitation(email, team, inviter) do
+    priority_email()
+    |> to(email)
+    |> tag("existing-user-team-invitation")
+    |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
+    |> render("existing_user_team_invitation.html",
+      team: team,
+      inviter: inviter
+    )
+  end
+
   def ownership_transfer_request(email, invitation_id, site, inviter, new_owner_account) do
     priority_email()
     |> to(email)

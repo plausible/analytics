@@ -7,12 +7,14 @@ defmodule Plausible.Teams.Invitation do
 
   import Ecto.Changeset
 
+  @roles Plausible.Teams.Membership.roles()
+
   @type t() :: %__MODULE__{}
 
   schema "team_invitations" do
     field :invitation_id, :string
     field :email, :string
-    field :role, Ecto.Enum, values: [:guest, :viewer, :editor, :admin, :owner]
+    field :role, Ecto.Enum, values: @roles
 
     belongs_to :inviter, Plausible.Auth.User
     belongs_to :team, Plausible.Teams.Team
@@ -21,6 +23,8 @@ defmodule Plausible.Teams.Invitation do
 
     timestamps()
   end
+
+  def roles(), do: @roles
 
   def changeset(team, opts) do
     email = Keyword.fetch!(opts, :email)
