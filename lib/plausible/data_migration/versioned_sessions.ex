@@ -21,7 +21,7 @@ defmodule Plausible.DataMigration.VersionedSessions do
 
     unique_suffix = Timex.now() |> Timex.format!(@suffix_format)
 
-    cluster? = Plausible.MigrationUtils.clustered_table?("sessions_v2")
+    cluster? = Plausible.MigrationUtils.cluster_name()
 
     cluster_name =
       if cluster? do
