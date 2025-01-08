@@ -148,7 +148,7 @@ export default function ListReport({
   fetchData
 }) {
   const { query } = useQueryContext()
-  const [state, setState] = useState({ loading: true, list: null })
+  const [state, setState] = useState({ loading: true, list: null, meta: null })
   const [visible, setVisible] = useState(false)
 
   const isRealtime = isRealTimeDashboard(query)
@@ -156,7 +156,7 @@ export default function ListReport({
 
   const getData = useCallback(() => {
     if (!isRealtime) {
-      setState({ loading: true, list: null })
+      setState({ loading: true, list: null, meta: null })
     }
     fetchData().then((response) => {
       if (afterFetchData) {
@@ -177,7 +177,7 @@ export default function ListReport({
       // When a goal filter is applied or removed, we always want the component to go into a
       // loading state, even in realtime mode, because the metrics list will change. We can
       // only read the new metrics once the new list is loaded.
-      setState({ loading: true, list: null })
+      setState({ loading: true, list: null, meta: null })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalFilterApplied])
