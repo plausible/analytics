@@ -60,4 +60,19 @@ defmodule Plausible.Teams.Invitations.CandidatesTest do
     assert [_, _, _] = Candidates.search_site_guests(team_of(owner), "")
     assert [_, _] = Candidates.search_site_guests(team_of(owner), "", limit: 2)
   end
+
+  test "capable of exlucding users" do
+    owner = new_user()
+    site = new_site(owner: owner)
+
+    to_be_excluded = new_user(email: "foo@example.com", name: "Jane Doe")
+
+    add_guest(site, role: :viewer, user: to_be_excluded)
+    add_guest(site, role: :viewer, user: new_user(email: "foo2@example.com", name: "Joe Doe"))
+    add_guest(site, role: :viewer, user: new_user(email: "moo@example.com", name: "Wu Tang"))
+
+    assert [
+             %{email: "foo2@example.com"}
+           ] = Candidates.search_site_guests(team_of(owner), "doe", exclude: [to_be_excluded])
+  end
 end
