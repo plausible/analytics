@@ -192,11 +192,14 @@ defmodule Plausible.Teams.Invitations do
 
     now = NaiveDateTime.utc_now(:second)
 
-    with {:ok, team_membership} <-
-           do_accept(team_invitation, user, now, guest_invitations: [guest_invitation]) do
-      prune_guest_invitations(team_invitation.team)
-      {:ok, team_membership}
-    end
+    do_accept(team_invitation, user, now, guest_invitations: [guest_invitation])
+  end
+
+  def accept_team_invitation(team_invitation, user) do
+    team_invitation = Repo.preload(team_invitation, [:team, :inviter])
+    now = NaiveDateTime.utc_now(:second)
+
+    do_accept(team_invitation, user, now, guest_invitations: [])
   end
 
   @doc false
@@ -262,7 +265,16 @@ defmodule Plausible.Teams.Invitations do
         # Clean up guest invitations after accepting
         guest_invitation_ids = Enum.map(guest_invitations, & &1.id)
         Repo.delete_all(from gi in Teams.GuestInvitation, where: gi.id in ^guest_invitation_ids)
+
+        if team_membership.role != :guest do
+          Repo.delete_all(from ti in Teams.Invitation, where: ti.id == ^team_invitation.id)
+        end
+
         prune_guest_invitations(team_invitation.team)
+
+        # Prune guest memberships if any exist when team membership role
+        # is other than guest
+        maybe_prune_guest_memberships(team_membership)
 
         if send_email? do
           send_invitation_accepted_email(team_invitation, guest_invitations)
@@ -273,6 +285,16 @@ defmodule Plausible.Teams.Invitations do
         {:error, changeset} -> Repo.rollback(changeset)
       end
     end)
+  end
+
+  defp maybe_prune_guest_memberships(%Teams.Membership{role: :guest}), do: :ok
+
+  defp maybe_prune_guest_memberships(%Teams.Membership{} = team_membership) do
+    team_membership
+    |> Ecto.assoc(:guest_memberships)
+    |> Repo.delete_all()
+
+    :ok
   end
 
   defp transfer_site_ownership(site, team, now) do
@@ -643,14 +665,15 @@ defmodule Plausible.Teams.Invitations do
     end)
   end
 
-  defp send_invitation_accepted_email(_team_invitation, []) do
-    # NOOP for now
-    :ok
+  defp send_invitation_accepted_email(team_invitation, []) do
+    team_invitation.inviter.email
+    |> PlausibleWeb.Email.team_invitation_accepted(team_invitation.email, team_invitation.team)
+    |> Plausible.Mailer.send()
   end
 
   defp send_invitation_accepted_email(team_invitation, [guest_invitation | _]) do
     team_invitation.inviter.email
-    |> PlausibleWeb.Email.invitation_accepted(team_invitation.email, guest_invitation.site)
+    |> PlausibleWeb.Email.guest_invitation_accepted(team_invitation.email, guest_invitation.site)
     |> Plausible.Mailer.send()
   end
 

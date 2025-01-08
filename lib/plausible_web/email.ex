@@ -299,16 +299,29 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def invitation_accepted(inviter_email, invitee_email, site) do
+  def guest_invitation_accepted(inviter_email, invitee_email, site) do
     priority_email()
     |> to(inviter_email)
-    |> tag("invitation-accepted")
+    |> tag("guest-invitation-accepted")
     |> subject(
       "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to #{site.domain}"
     )
-    |> render("invitation_accepted.html",
+    |> render("guest_invitation_accepted.html",
       invitee_email: invitee_email,
       site: site
+    )
+  end
+
+  def team_invitation_accepted(inviter_email, invitee_email, team) do
+    priority_email()
+    |> to(inviter_email)
+    |> tag("team-invitation-accepted")
+    |> subject(
+      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to \"#{team.name}\" team"
+    )
+    |> render("team_invitation_accepted.html",
+      invitee_email: invitee_email,
+      team: team
     )
   end
 
