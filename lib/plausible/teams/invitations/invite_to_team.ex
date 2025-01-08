@@ -6,7 +6,12 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   alias Plausible.Teams
   alias Plausible.Repo
 
-  def create(team, inviter, invitee_email, role, opts \\ []) do
+  @valid_roles Plausible.Teams.Invitation.roles() -- [:guest]
+  @valid_roles @valid_roles ++ Enum.map(@valid_roles, &to_string/1)
+
+  def invite(team, inviter, invitee_email, role, opts \\ [])
+
+  def invite(team, inviter, invitee_email, role, opts) when role in @valid_roles do
     with team <- Repo.preload(team, [:owner]),
          :ok <-
            Teams.Invitations.check_invitation_permissions(
@@ -32,10 +37,12 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
            Teams.Invitations.invite(team, invitee_email, role, inviter) do
       send_invitation_email(invitation, invitee)
 
-      invitation
-    else
-      {:error, cause} -> Repo.rollback(cause)
+      {:ok, invitation}
     end
+  end
+
+  def invite(_team, _inviter, _invitee_email, role, _opts) do
+    raise "Invalid role passed: #{inspect(role)}"
   end
 
   defp send_invitation_email(invitation, invitee) do

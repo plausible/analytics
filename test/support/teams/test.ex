@@ -110,6 +110,15 @@ defmodule Plausible.Teams.Test do
     user |> Repo.preload(:team_memberships)
   end
 
+  def add_member(team, args \\ []) do
+    user = Keyword.get(args, :user, new_user())
+    role = Keyword.fetch!(args, :role)
+
+    insert(:team_membership, team: team, user: user, role: role)
+
+    user |> Repo.preload(:team_memberships)
+  end
+
   def invite_guest(site, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do
     {role, args} = Keyword.pop!(args, :role)
     {inviter, args} = Keyword.pop!(args, :inviter)
@@ -142,6 +151,30 @@ defmodule Plausible.Teams.Test do
         [
           team_invitation: team_invitation,
           site: site,
+          role: role
+        ],
+        args
+      )
+    )
+  end
+
+  def invite_member(team, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do
+    {role, args} = Keyword.pop!(args, :role)
+    {inviter, args} = Keyword.pop!(args, :inviter)
+
+    email =
+      case invitee_or_email do
+        %{email: email} -> email
+        email when is_binary(email) -> email
+      end
+
+    insert(
+      :team_invitation,
+      Keyword.merge(
+        [
+          team: team,
+          email: email,
+          inviter: inviter,
           role: role
         ],
         args

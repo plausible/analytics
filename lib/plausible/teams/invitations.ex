@@ -440,10 +440,10 @@ defmodule Plausible.Teams.Invitations do
   def ensure_new_membership(_site_or_team, _invitee, :owner), do: :ok
 
   def ensure_new_membership(%Teams.Team{} = team, invitee, _role) do
-    if Teams.Memberships.team_role(team, invitee) == {:error, :not_a_member} do
-      :ok
-    else
-      {:error, :already_a_member}
+    case Teams.Memberships.team_role(team, invitee) do
+      {:ok, :guest} -> :ok
+      {:error, :not_a_member} -> :ok
+      {:ok, _} -> {:error, :already_a_member}
     end
   end
 
@@ -489,6 +489,15 @@ defmodule Plausible.Teams.Invitations do
         conflict_target: [:team_id, :email],
         returning: true
       )
+      |> Ecto.Multi.run(:prune_guest_entries, fn _repo, %{team_invitation: team_invitation} ->
+        if team_invitation.role != :guest do
+          team_invitation
+          |> Ecto.assoc(:guest_invitations)
+          |> Repo.delete_all()
+        end
+
+        {:ok, nil}
+      end)
       |> Repo.transaction()
 
     case result do
