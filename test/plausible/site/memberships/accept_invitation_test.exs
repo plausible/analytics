@@ -103,7 +103,69 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
   end
 
-  describe "accept_invitation/3 - invitations" do
+  describe "accept_invitation/3 - team invitations" do
+    test "converts an invitation into a membership" do
+      inviter = new_user()
+      invitee = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+
+      invitation = invite_member(team, invitee, inviter: inviter, role: :editor)
+
+      assert {:ok, _} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
+
+      assert_team_membership(invitee, team, :editor)
+
+      assert_email_delivered_with(
+        to: [nil: inviter.email],
+        subject:
+          @subject_prefix <> "#{invitee.email} accepted your invitation to \"#{team.name}\" team"
+      )
+
+      refute Repo.reload(invitation)
+    end
+
+    test "does not degrade role when trying to invite self as an owner" do
+      user = new_user()
+      _site = new_site(owner: user)
+      team = team_of(user)
+
+      invitation = invite_member(team, user, inviter: user, role: :editor)
+
+      assert {:ok, _} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, user)
+
+      assert_team_membership(user, team, :owner)
+
+      refute Repo.reload(invitation)
+    end
+
+    test "handles accepting invitation as already a member gracefully" do
+      inviter = new_user()
+      invitee = new_user()
+      _site = new_site(owner: inviter)
+      team = team_of(inviter)
+      add_member(team, user: invitee, role: :editor)
+
+      existing_team_membership =
+        Plausible.Teams.Membership
+        |> Repo.get_by(user_id: invitee.id)
+
+      invitation = invite_member(team, invitee, inviter: inviter, role: :viewer)
+
+      assert {:ok, %{team_membership: new_team_membership, guest_memberships: []}} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
+
+      new_team_membership = Repo.reload!(new_team_membership)
+      assert existing_team_membership.id == new_team_membership.id
+      assert existing_team_membership.user_id == new_team_membership.user_id
+      assert new_team_membership.role == :editor
+      refute Repo.reload(invitation)
+    end
+  end
+
+  describe "accept_invitation/3 - guest invitations" do
     test "converts an invitation into a membership" do
       inviter = new_user()
       invitee = new_user()

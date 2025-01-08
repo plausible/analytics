@@ -281,7 +281,7 @@ defmodule Plausible.Teams.Test do
   end
 
   def assert_team_membership(user, team, role \\ :owner) do
-    if role == :owner do
+    if role != :guest do
       assert membership =
                Repo.get_by(Teams.Membership,
                  team_id: team.id,
