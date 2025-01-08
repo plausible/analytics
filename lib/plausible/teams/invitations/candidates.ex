@@ -8,6 +8,7 @@ defmodule Plausible.Teams.Invitations.Candidates do
   alias Plausible.Teams.GuestMembership
   alias Plausible.Teams
 
+  @spec search_site_guests(Teams.Team.t(), String.t(), Keyword.t()) :: [Plausible.Auth.User.t()]
   def search_site_guests(%Teams.Team{} = team, name_or_email, opts \\ [])
       when is_binary(name_or_email) do
     limit = Keyword.get(opts, :limit, 50)
