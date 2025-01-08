@@ -59,8 +59,11 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
         %Teams.SiteTransfer{} = site_transfer ->
           do_accept_ownership_transfer(site_transfer, user)
 
+        %Teams.Invitation{} = team_invitation ->
+          do_accept_team_invitation(team_invitation, user)
+
         %Teams.GuestInvitation{} = guest_invitation ->
-          do_accept_invitation(guest_invitation, user)
+          do_accept_guest_invitation(guest_invitation, user)
       end
     end
   end
@@ -103,7 +106,11 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp do_accept_invitation(guest_invitation, user) do
+  defp do_accept_guest_invitation(guest_invitation, user) do
     Teams.Invitations.accept_guest_invitation(guest_invitation, user)
+  end
+
+  defp do_accept_team_invitation(team_invitation, user) do
+    Teams.Invitations.AcceptTeamInvite.accept(team_invitation, user)
   end
 end
