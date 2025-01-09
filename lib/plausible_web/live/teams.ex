@@ -60,6 +60,7 @@ defmodule PlausibleWeb.Live.Teams do
             submit_name="some"
             class="py-2"
             module={ComboBox}
+            clear_on_select
             creatable
             options={
               reject_already_selected("team-member-candidates", @all_candidates, @candidates_selected)

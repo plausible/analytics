@@ -68,6 +68,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:suggest_fun, :any, required: true)
   attr(:suggestions_limit, :integer)
   attr(:class, :string, default: "")
+  attr(:clear_on_select, :boolean, default: false)
   attr(:required, :boolean, default: false)
   attr(:creatable, :boolean, default: false)
   attr(:errors, :list, default: [])
@@ -316,6 +317,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   defp do_select(socket, submit_value, display_value) do
     id = socket.assigns.id
+
+    display_value =
+      if socket.assigns[:clear_on_select] do
+        ""
+      else
+        display_value
+      end
 
     socket =
       socket
