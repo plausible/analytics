@@ -73,7 +73,6 @@ export default (id) => ({
     this.$refs[`dropdown-${this.id}-option-${this.focus}`]?.click()
     this.close()
     document.getElementById(this.id).blur()
-    document.getElementById(this.id).value = ''
   },
   scrollTo(idx) {
     this.$refs[`dropdown-${this.id}-option-${idx}`]?.scrollIntoView({
