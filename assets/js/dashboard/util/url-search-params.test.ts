@@ -136,8 +136,32 @@ describe(`${serializeSimpleSearchEntry.name} and ${parseSimpleSearchEntry.name}`
   )
 })
 
+describe(`${parseSearch.name}`, () => {
+  it.each([
+    ['?', {}, ''],
+    ['?=&&', {}, ''],
+    ['?=undefined', {}, ''],
+    ['?foo=', { foo: '' }, '?foo='],
+    ['??foo', { '?foo': '' }, '?%3Ffoo='],
+    [
+      '?f=is,visit:page,/any/page&f',
+      { filters: [['is', 'visit:page', ['/any/page']]] },
+      '?f=is,visit:page,/any/page'
+    ]
+  ])(
+    'for search string %s, returns search record %p, which in turn stringifies to %s',
+    (searchString, expectedSearchRecord, expectedRestringifiedResult) => {
+      expect(parseSearch(searchString)).toEqual(expectedSearchRecord)
+      expect(stringifySearch(expectedSearchRecord)).toEqual(
+        expectedRestringifiedResult
+      )
+    }
+  )
+})
+
 describe(`${stringifySearch.name}`, () => {
   it.each([
+    [{}, ''],
     [
       {
         filters: [['is', 'props:browser_language', ['en-US']]]

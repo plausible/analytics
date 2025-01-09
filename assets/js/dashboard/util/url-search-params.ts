@@ -31,15 +31,27 @@ export function stringifySearch(
   return `?${serializedFilters.concat(serializedLabels).concat(definedSearchEntries).join('&')}`
 }
 
+export function normalizeSearchString(searchString: string): string {
+  return searchString.startsWith('?') ? searchString.slice(1) : searchString
+}
+
 export function parseSearch(searchString: string): Record<string, unknown> {
   const searchRecord: Record<string, string | boolean> = {}
   const filters: Filter[] = []
   const labels: FilterClauseLabels = {}
 
-  for (const param of searchString.startsWith('?')
-    ? searchString.slice(1).split('&')
-    : searchString.split('&')) {
-    const [key, rawValue] = param.split('=')
+  const normalizedSearchString = normalizeSearchString(searchString)
+
+  if (!normalizedSearchString.length) {
+    return searchRecord
+  }
+
+  const meaningfulParams = normalizedSearchString
+    .split('&')
+    .filter((i) => i.length > 0)
+
+  for (const param of meaningfulParams) {
+    const [key, rawValue = ''] = param.split('=')
     switch (key) {
       case FILTER_URL_PARAM_NAME: {
         const filter = parseFilter(rawValue)
@@ -53,6 +65,9 @@ export function parseSearch(searchString: string): Record<string, unknown> {
         if (labelKey.length && labelValue.length) {
           labels[labelKey] = labelValue
         }
+        break
+      }
+      case '': {
         break
       }
       default: {
