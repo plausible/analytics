@@ -462,23 +462,18 @@ defmodule PlausibleWeb.Live.Sites do
             </.notice>
             <.notice
               x-show="selectedInvitation && selectedInvitation.exceeded_limits"
-              title="Exceeded limits"
+              title="Unable to accept site ownership"
               class="mt-4 shadow-sm dark:shadow-none"
             >
               <p>
-                You are unable to accept the ownership of this site because doing so would exceed the
-                <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>
-                of your subscription.
-                You can review your usage in the
+                Owning this site would exceed your <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>. Please check your usage in
                 <.styled_link
                   class="inline-block"
                   href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
                 >
                   account settings
-                </.styled_link>.
-              </p>
-              <p class="mt-3">
-                To become the owner of this site, you should either reduce your usage, or upgrade your subscription.
+                </.styled_link>
+                and upgrade your subscription to accept the site ownership.
               </p>
             </.notice>
             <.notice
