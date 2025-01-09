@@ -2,6 +2,17 @@
 import { Filter, FilterClauseLabels } from '../query'
 
 /**
+ * These charcters are not URL encoded to have more readable URLs.
+ * Browsers seem to handle this just fine.
+ * `?f=is,page,/my/page/:some_param` vs `?f=is,page,%2Fmy%2Fpage%2F%3Asome_param``
+ */
+const NOT_URL_ENCODED_CHARACTERS = ':/'
+
+export const FILTER_URL_PARAM_NAME = 'f'
+
+const LABEL_URL_PARAM_NAME = 'l'
+
+/**
  * This function is able to serialize for URL simple params @see serializeSimpleSearchEntry as well
  * two complex params, labels and filters.
  */
@@ -94,7 +105,7 @@ export function parseSearch(searchString: string): Record<string, unknown> {
  * ["5391959","San Francisco"] -> "5391959,San%20Francisco"
  */
 export function serializeLabelsEntry([labelKey, labelValue]: [string, string]) {
-  return `${encodeURIComponentPermissive(labelKey, ':/')},${encodeURIComponentPermissive(labelValue, ':/')}`
+  return `${encodeURIComponentPermissive(labelKey, NOT_URL_ENCODED_CHARACTERS)},${encodeURIComponentPermissive(labelValue, NOT_URL_ENCODED_CHARACTERS)}`
 }
 
 /**
@@ -114,10 +125,13 @@ export function parseLabelsEntry(
  */
 export function serializeFilter([operator, dimension, clauses]: Filter) {
   const serializedFilter = [
-    encodeURIComponentPermissive(operator, ':/'),
-    encodeURIComponentPermissive(dimension, ':/'),
+    encodeURIComponentPermissive(operator, NOT_URL_ENCODED_CHARACTERS),
+    encodeURIComponentPermissive(dimension, NOT_URL_ENCODED_CHARACTERS),
     ...clauses.map((clause) =>
-      encodeURIComponentPermissive(clause.toString(), ':/')
+      encodeURIComponentPermissive(
+        clause.toString(),
+        NOT_URL_ENCODED_CHARACTERS
+      )
     )
   ].join(',')
   return serializedFilter
@@ -189,6 +203,3 @@ export function isSearchEntryDefined(
 ): entry is [string, string] {
   return entry[1] !== undefined
 }
-
-export const FILTER_URL_PARAM_NAME = 'f'
-const LABEL_URL_PARAM_NAME = 'l'
