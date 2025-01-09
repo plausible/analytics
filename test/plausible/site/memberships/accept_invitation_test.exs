@@ -176,7 +176,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert {:ok, _} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
 
-      assert_team_membership(invitee, site.team, :editor)
+      assert_guest_membership(site.team, site, invitee, :editor)
 
       assert_email_delivered_with(
         to: [nil: inviter.email],
