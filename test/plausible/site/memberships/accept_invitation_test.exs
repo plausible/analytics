@@ -126,19 +126,28 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       refute Repo.reload(invitation)
     end
 
-    test "does not degrade role when trying to invite self as an owner" do
-      user = new_user()
-      _site = new_site(owner: user)
-      team = team_of(user)
+    @roles Plausible.Teams.Membership.roles() -- [:guest]
+    @roles_with_downgrades @roles
+                           |> Enum.zip([nil] ++ @roles)
+                           |> Enum.drop(1)
 
-      invitation = invite_member(team, user, inviter: user, role: :editor)
+    for {old_role, new_role} <- @roles_with_downgrades do
+      test "does not degrade role when trying to invite existing #{old_role} as a(n) #{new_role}" do
+        user = new_user()
+        _site = new_site(owner: user)
+        team = team_of(user)
+        member = add_member(team, role: unquote(old_role))
+        team = team_of(user)
 
-      assert {:ok, _} =
-               AcceptInvitation.accept_invitation(invitation.invitation_id, user)
+        invitation = invite_member(team, member, inviter: user, role: unquote(new_role))
 
-      assert_team_membership(user, team, :owner)
+        assert {:ok, _} =
+                 AcceptInvitation.accept_invitation(invitation.invitation_id, member)
 
-      refute Repo.reload(invitation)
+        assert_team_membership(user, team, unquote(old_role))
+
+        refute Repo.reload(invitation)
+      end
     end
 
     test "handles accepting invitation as already a member gracefully" do
