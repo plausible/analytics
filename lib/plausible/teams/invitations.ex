@@ -629,11 +629,29 @@ defmodule Plausible.Teams.Invitations do
     Plausible.Mailer.send(email)
   end
 
+  @team_role_type Plausible.Teams.Membership.__schema__(:type, :role)
+
   defp create_team_membership(team, role, user, now) do
+    conflict_query =
+      from(tm in Teams.Membership,
+        update: [
+          set: [
+            updated_at: ^now,
+            role:
+              fragment(
+                "CASE WHEN ? = 'guest' THEN ? ELSE ? END",
+                tm.role,
+                type(^role, ^@team_role_type),
+                tm.role
+              )
+          ]
+        ]
+      )
+
     team
     |> Teams.Membership.changeset(user, role)
     |> Repo.insert(
-      on_conflict: [set: [updated_at: now]],
+      on_conflict: conflict_query,
       conflict_target: [:team_id, :user_id],
       returning: true
     )
