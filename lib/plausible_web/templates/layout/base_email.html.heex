@@ -11,6 +11,4 @@
 <a href={plausible_url()}><%= plausible_url() %></a>
 <br />
 
-<%= if ee?() do %>
-  {"{{ pm:unsubscribe }}"}
-<% end %>
+<p :if={ee?()} phx-no-curly-interpolation>{{{ pm:unsubscribe }}}</p>

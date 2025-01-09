@@ -830,7 +830,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "fails to update with no input", %{conn: conn} do
       conn =
         post(conn, Routes.settings_path(conn, :update_password), %{
-          "user" => %{}
+          "user" => %{
+            "password" => "",
+            "old_password" => "",
+            "password_confirmation" => ""
+          }
         })
 
       assert html = html_response(conn, 200)
