@@ -466,7 +466,7 @@ defmodule PlausibleWeb.Live.Sites do
               class="mt-4 shadow-sm dark:shadow-none"
             >
               <p>
-                Owning this site would exceed your current subscription usage limits. Please check your usage in
+                Owning this site would exceed your <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>. Please check your usage in
                 <.styled_link
                   class="inline-block"
                   href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
