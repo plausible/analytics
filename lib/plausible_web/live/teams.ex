@@ -12,8 +12,24 @@ defmodule PlausibleWeb.Live.Teams do
 
   def mount(_params, _session, socket) do
     my_team = socket.assigns.my_team
+
+    all_candidates =
+      my_team
+      |> Candidates.search_site_guests("")
+      |> Enum.map(fn user ->
+        {user.email, "#{user.name} <#{user.email}>"}
+      end)
+
+    candidates_selected = %{}
     team_name_changeset = Teams.Team.name_changeset(my_team)
-    socket = assign(socket, team_name_changeset: team_name_changeset)
+
+    socket =
+      assign(socket,
+        all_candidates: all_candidates,
+        team_name_changeset: team_name_changeset,
+        candidates_selected: candidates_selected
+      )
+
     {:ok, socket}
   end
 
@@ -38,25 +54,42 @@ defmodule PlausibleWeb.Live.Teams do
           Add members
         </.label>
 
-        <.live_component
-          id="id"
-          submit_name="some"
-          class="py-2"
-          module={ComboBox}
-          suggest_fun={
-            fn input, _options ->
-              @my_team
-              |> Candidates.search_site_guests(input)
-              |> Enum.map(fn user -> {user.id, "#{user.name} <#{user.email}>"} end)
-            end
-          }
-        />
+        <.form for={}>
+          <.live_component
+            id="team-member-candidates"
+            submit_name="some"
+            class="py-2"
+            module={ComboBox}
+            creatable
+            options={
+              reject_already_selected("team-member-candidates", @all_candidates, @candidates_selected)
+            }
+            on_selection_made={
+              fn email, _by_id ->
+                send(self(), {:candidate_selected, %{email: email, role: :viewer}})
+              end
+            }
+            suggest_fun={
+              fn input, _options ->
+                exclude_emails =
+                  Enum.map(@candidates_selected, fn {{email, _}, _} -> email end)
+
+                @my_team
+                |> Candidates.search_site_guests(input, exclude: exclude_emails)
+                |> IO.inspect(label: :candidates)
+                |> Enum.map(fn user -> {user.email, "#{user.name} <#{user.email}>"} end)
+              end
+            }
+            x-on-selection-change="document.getElementById('team-member-candidates').value = ''"
+          />
+        </.form>
       </div>
 
       <.member user={@current_user} role={:owner} you?={true} />
-      <.member user={%User{email: "test@example.com", name: "Joe Doe"}} role={:other} />
-      <.member user={%User{email: "test2@example.com", name: "Jane Doe"}} role={:other} />
-      <.member user={%User{email: "test3@example.com", name: "Flash Doe"}} role={:other} />
+
+      <%= for {{email, name}, role} <- @candidates_selected do %>
+        <.member user={%User{email: email, name: name}} role={role} />
+      <% end %>
     </.focus_box>
     """
   end
@@ -67,7 +100,7 @@ defmodule PlausibleWeb.Live.Teams do
 
   def member(assigns) do
     ~H"""
-    <div class="mt-2">
+    <div class="mt-4">
       <div class="flex items-center gap-x-5">
         <img src={User.profile_img_url(@user)} class="w-7 rounded-full" />
         <span class="text-sm">
@@ -79,25 +112,7 @@ defmodule PlausibleWeb.Live.Teams do
 
           <br /><span class="text-gray-500 text-xs"><%= @user.email %></span>
         </span>
-        <div :if={@role == :owner} class="flex-1 text-right">
-
-          <.dropdown class="relative">
-          <:button class="bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-          <%= @role %>
-          <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-          </:button>
-          <:menu class="max-w-60">
-          <.dropdown_item disabled={true}>
-          <div>Owner</div>
-          <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-          Site owner cannot be assigned to any other role
-          </div>
-          </.dropdown_item>
-          </:menu>
-          </.dropdown>
-
-        </div>
-        <div :if={@role != :owner} class="flex-1 text-right">
+        <div class="flex-1 text-right">
           <.dropdown class="relative">
             <:button class="bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
               <%= @role %>
@@ -116,5 +131,43 @@ defmodule PlausibleWeb.Live.Teams do
       </div>
     </div>
     """
+  end
+
+  def handle_info(
+        {:candidate_selected, %{email: email, role: role}},
+        %{assigns: %{my_team: team, candidates_selected: candidates}} = socket
+      ) do
+    socket =
+      case Candidates.get_site_guest(team, email) do
+        %User{} = user ->
+          assign(
+            socket,
+            :candidates_selected,
+            Map.put(candidates, {user.email, user.name}, role)
+          )
+
+        nil ->
+          assign(
+            socket,
+            :candidates_selected,
+            Map.put(candidates, {email, "Invited User"}, role)
+          )
+      end
+
+    {:noreply, socket}
+  end
+
+  defp reject_already_selected(combo_box, candidates, candidates_selected) do
+    result =
+      candidates
+      |> Enum.reject(fn {email, _} ->
+        Enum.find(candidates_selected, fn
+          {{^email, _}, _} -> true
+          _ -> false
+        end)
+      end)
+
+    send_update(PlausibleWeb.Live.Components.ComboBox, id: combo_box, suggestions: result)
+    result
   end
 end

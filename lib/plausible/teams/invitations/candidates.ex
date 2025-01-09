@@ -23,11 +23,24 @@ defmodule Plausible.Teams.Invitations.Candidates do
         inner_join: u in assoc(tm, :user),
         where: gm.site_id in ^all_site_ids,
         where: ilike(u.email, ^term) or ilike(u.name, ^term),
-        where: u.id not in ^for(u <- exclude, do: u.id),
+        where: u.email not in ^exclude,
         order_by: [asc: u.id],
         select: u,
         distinct: true,
         limit: ^limit
+    )
+  end
+
+  def get_site_guest(%Teams.Team{} = team, email) do
+    all_site_ids = Teams.owned_sites_ids(team)
+
+    Repo.one(
+      from gm in GuestMembership,
+        inner_join: tm in assoc(gm, :team_membership),
+        inner_join: u in assoc(tm, :user),
+        where: gm.site_id in ^all_site_ids,
+        where: u.email == ^email,
+        select: u
     )
   end
 end
