@@ -472,7 +472,8 @@ defmodule PlausibleWeb.Live.Sites do
                   href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
                 >
                   account settings
-                </.styled_link> and upgrade your subscription to accept the site ownership.
+                </.styled_link>
+                and upgrade your subscription to accept the site ownership.
               </p>
             </.notice>
             <.notice
