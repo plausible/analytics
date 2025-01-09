@@ -112,12 +112,12 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   defp do_accept_team_invitation(team_invitation, user) do
-    with :ok <- ensure_no_team_membership(team_invitation.team, user) do
+    with :ok <- ensure_no_other_team_membership(team_invitation.team, user) do
       Teams.Invitations.accept_team_invitation(team_invitation, user)
     end
   end
 
-  defp ensure_no_team_membership(team, user) do
+  defp ensure_no_other_team_membership(team, user) do
     if Teams.Users.team_member?(user, except: [team.id]) do
       {:error, :already_other_team_member}
     else
