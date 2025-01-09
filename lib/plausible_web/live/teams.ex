@@ -66,8 +66,9 @@ defmodule PlausibleWeb.Live.Teams do
               reject_already_selected("team-member-candidates", @all_candidates, @candidates_selected)
             }
             on_selection_made={
-              fn email, _by_id ->
+              fn email, _name, _by_id ->
                 send(self(), {:candidate_selected, %{email: email, role: :viewer}})
+                {:ok, email, ""}
               end
             }
             suggest_fun={

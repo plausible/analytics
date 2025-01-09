@@ -130,6 +130,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           />
         </div>
 
+        <ul :for={error <- @errors} :if={length(@errors) > 0}>
+          <li><%= error %></li>
+        </ul>
+
         <.combo_dropdown
           ref={@id}
           suggest_fun={@suggest_fun}
@@ -318,25 +322,28 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   defp do_select(socket, submit_value, display_value) do
     id = socket.assigns.id
 
-    display_value =
-      if socket.assigns[:clear_on_select] do
-        ""
+    {submit_value, display_value, errors} =
+      if socket.assigns[:on_selection_made] do
+        case socket.assigns.on_selection_made.(submit_value, display_value, id) do
+          :ok ->
+            {submit_value, display_value, []}
+
+          {:ok, submit_value, display_value} ->
+            {submit_value, display_value, []}
+
+          {:error, errors} ->
+            {submit_value, display_value, errors}
+        end
       else
-        display_value
+        {display_value, submit_value, []}
       end
 
-    socket =
-      socket
-      |> push_event("update-value", %{id: id, value: display_value, fire: false})
-      |> push_event("update-value", %{id: "submit-#{id}", value: submit_value, fire: true})
-      |> assign(:display_value, display_value)
-      |> assign(:submit_value, submit_value)
-
-    if socket.assigns[:on_selection_made] do
-      socket.assigns.on_selection_made.(submit_value, id)
-    end
-
     socket
+    |> push_event("update-value", %{id: id, value: display_value, fire: false})
+    |> push_event("update-value", %{id: "submit-#{id}", value: submit_value, fire: true})
+    |> assign(:display_value, display_value)
+    |> assign(:submit_value, submit_value)
+    |> assign(:errors, errors)
   end
 
   defp suggestions_limit(assigns) do
