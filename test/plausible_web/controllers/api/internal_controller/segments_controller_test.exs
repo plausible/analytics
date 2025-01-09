@@ -327,14 +327,19 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         })
 
       assert json_response(conn, 400) == %{
-               "errors" => ["#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"]
+               "errors" => [
+                 [
+                   "segment_data",
+                   "#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"
+                 ]
+               ]
              }
     end
 
     for %{role: role, type: type} <- [
-          %{role: :viewer, type: "personal"},
-          %{role: :editor, type: "personal"},
-          %{role: :editor, type: "site"}
+          %{role: :viewer, type: :personal},
+          %{role: :editor, type: :personal},
+          %{role: :editor, type: :site}
         ] do
       test "#{role} can create segment with type \"#{type}\" successfully",
            %{conn: conn, user: user} do
@@ -344,14 +349,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         response =
           post(conn, "/internal-api/#{site.domain}/segments", %{
             "name" => "Some segment",
-            "type" => unquote(type),
+            "type" => Atom.to_string(unquote(type)),
             "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
           })
           |> json_response(200)
 
         assert %{
                  "name" => "Some segment",
-                 "type" => unquote(type),
+                 "type" => Atom.to_string(unquote(type)),
                  "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
                  "owner_id" => user.id
                } == Map.drop(response, ["id", "inserted_at", "updated_at"])
@@ -400,8 +405,34 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     end
 
     for {filters, expected_errors} <- [
-          {[["foo", "bar"]], ["#/filters/0: Invalid filter [\"foo\", \"bar\"]"]}
-          # {[["not", ["is", "visit:entry_page", ["/campaigns/:campaign_name"]]]], "..."}
+          {[],
+           [
+             [
+               "segment_data",
+               "property \"filters\" must be an array with at least one member",
+               []
+             ]
+           ]},
+          {[["foo", "bar"]],
+           [["segment_data", "#/filters/0: Invalid filter [\"foo\", \"bar\"]", []]]},
+          {[["not", ["is", "visit:entry_page", ["/campaigns/:campaign_name"]]]],
+           [["segment_data", "Invalid filters. Deep filters are not supported.", []]]},
+          {[
+             [
+               "or",
+               [
+                 ["is", "event:goal", ["any goal"]],
+                 ["is", "visit:entry_page", ["/campaigns/:campaign_name"]]
+               ]
+             ]
+           ],
+           [
+             [
+               "segment_data",
+               "Invalid filters. Dimension `event:goal` can only be filtered at the top level.",
+               []
+             ]
+           ]}
         ] do
       test "prevents owners from updating segments to invalid filters #{inspect(filters)} with error 400",
            %{
@@ -445,14 +476,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       response =
         patch(conn, "/internal-api/#{site.domain}/segments/#{segment.id}", %{
           "name" => "updated name",
-          "type" => "personal"
+          "type" => Atom.to_string(:personal)
         })
         |> json_response(200)
 
       assert %{
                "id" => segment.id,
                "name" => "updated name",
-               "type" => "personal",
+               "type" => Atom.to_string(:personal),
                "owner_id" => user.id,
                "segment_data" => segment.segment_data,
                "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at)
@@ -486,9 +517,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     end
 
     for %{role: role, type: type} <- [
-          %{role: :viewer, type: "personal"},
-          %{role: :editor, type: "personal"},
-          %{role: :editor, type: "site"}
+          %{role: :viewer, type: :personal},
+          %{role: :editor, type: :personal},
+          %{role: :editor, type: :site}
         ] do
       test "#{role} can delete segment with type \"#{type}\" successfully",
            %{conn: conn, user: user} do
@@ -512,7 +543,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                  "id" => segment.id,
                  "name" => segment.name,
                  "segment_data" => segment.segment_data,
-                 "type" => unquote(type),
+                 "type" => Atom.to_string(unquote(type)),
                  "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at),
                  "updated_at" => NaiveDateTime.to_iso8601(segment.updated_at)
                } == response

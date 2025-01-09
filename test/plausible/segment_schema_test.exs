@@ -37,6 +37,33 @@ defmodule Plausible.SegmentSchemaTest do
            ]
   end
 
+  test "changeset forbids too long name", %{segment: valid_segment} do
+    assert Plausible.Segment.changeset(
+             valid_segment,
+             %{
+               name: String.duplicate("a", 256)
+             }
+           ).errors == [
+             name:
+               {"should be at most %{count} byte(s)",
+                [{:count, 255}, {:validation, :length}, {:kind, :max}, {:type, :binary}]}
+           ]
+  end
+
+  test "changeset forbids too large segment_data", %{segment: valid_segment} do
+    assert Plausible.Segment.changeset(
+             valid_segment,
+             %{
+               segment_data:
+                 Jason.decode!(
+                   ~s({"filters": ["is", "visit:exit_page", [#{Enum.map_join(1..(5 * 1024), ",", fn i -> "#{i}" end)}]]})
+                 )
+             }
+           ).errors == [
+             segment_data: {"should be at most %{count} byte(s)", [{:count, 5120}]}
+           ]
+  end
+
   test "changeset allows setting nil owner_id to a user id (to be able to recover dangling site segments)",
        %{segment: valid_segment} do
     assert Plausible.Segment.changeset(

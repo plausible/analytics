@@ -44,14 +44,16 @@ defmodule Plausible.Segment do
       :owner_id
     ])
     |> validate_required([:name, :segment_data, :site_id, :type, :owner_id])
+    |> validate_length(:name, count: :bytes, min: 1, max: 255)
     |> foreign_key_constraint(:site_id)
     |> foreign_key_constraint(:owner_id)
     |> validate_only_known_properties_present()
     |> validate_segment_data_filters()
     |> validate_segment_data_labels()
+    |> validate_json_byte_length(:segment_data, max: 5 * 1024)
   end
 
-  defp validate_only_known_properties_present(changeset) do
+  defp validate_only_known_properties_present(%Ecto.Changeset{} = changeset) do
     case get_field(changeset, :segment_data) do
       segment_data when is_map(segment_data) ->
         if Enum.any?(Map.keys(segment_data) -- ["filters", "labels"]) do
@@ -69,7 +71,7 @@ defmodule Plausible.Segment do
     end
   end
 
-  defp validate_segment_data_filters(changeset) do
+  defp validate_segment_data_filters(%Ecto.Changeset{} = changeset) do
     case get_field(changeset, :segment_data) do
       %{"filters" => filters} when is_list(filters) and length(filters) > 0 ->
         changeset
@@ -83,7 +85,7 @@ defmodule Plausible.Segment do
     end
   end
 
-  defp validate_segment_data_labels(changeset) do
+  defp validate_segment_data_labels(%Ecto.Changeset{} = changeset) do
     case get_field(changeset, :segment_data) do
       %{"labels" => labels} when not is_map(labels) ->
         add_error(changeset, :segment_data, "property \"labels\" must be map or nil")
@@ -93,21 +95,55 @@ defmodule Plausible.Segment do
     end
   end
 
-  def validate_segment_data_if_exists(%Plausible.Site{} = _site, nil = _segment_data), do: :ok
+  defp validate_json_byte_length(%Ecto.Changeset{} = changeset, field_key, opts) do
+    field = get_field(changeset, field_key)
+    max = Keyword.get(opts, :max, 0)
 
-  def validate_segment_data_if_exists(%Plausible.Site{} = site, segment_data),
-    do: validate_segment_data(site, segment_data)
+    if :erlang.byte_size(Jason.encode!(field)) > max do
+      add_error(changeset, field_key, "should be at most %{count} byte(s)", count: max)
+    else
+      changeset
+    end
+  end
+
+  def validate_segment_data_if_exists(
+        %Plausible.Site{} = _site,
+        nil = _segment_data,
+        _restricted_depth?
+      ),
+      do: :ok
+
+  def validate_segment_data_if_exists(%Plausible.Site{} = site, segment_data, restricted_depth?),
+    do: validate_segment_data(site, segment_data, restricted_depth?)
+
+  def maybe_validate_filters_depth(filters, restricted_depth?) do
+    if restricted_depth? do
+      case Enum.all?(filters, fn f ->
+             length(f) === 3 and Enum.at(f, 0) not in [:or, :and, :not]
+           end) do
+        true -> :ok
+        false -> :error_deep_filters_not_supported
+      end
+    else
+      :ok
+    end
+  end
 
   def validate_segment_data(
         %Plausible.Site{} = site,
-        %{"filters" => filters}
+        %{"filters" => filters},
+        restricted_depth?
       ) do
-    case build_naive_query_from_segment_data(site, filters) do
-      {:ok, %Plausible.Stats.Query{filters: _filters}} ->
-        :ok
-
+    with {:ok, %Plausible.Stats.Query{filters: _filters}} <-
+           build_naive_query_from_segment_data(site, filters),
+         :ok <- maybe_validate_filters_depth(filters, restricted_depth?) do
+      :ok
+    else
       {:error, message} ->
         reformat_filters_errors(message)
+
+      :error_deep_filters_not_supported ->
+        reformat_filters_errors("Invalid filters. Deep filters are not supported.")
     end
   end
 
@@ -142,13 +178,18 @@ defmodule Plausible.Segment do
     {:error, ~s(#/metrics/0 Invalid metric "Visitors"\\n#/filters/0 Invalid filter "A")}
 
     iex> reformat_filters_errors(~s(#/filters/0 Invalid filter "A"\\n#/filters/1 Invalid filter "B"))
-    {:error, [~s(#/filters/0 Invalid filter "A"), ~s(#/filters/1 Invalid filter "B")]}
+    {:error, {:invalid_filters, ~s(#/filters/0 Invalid filter "A"\\n#/filters/1 Invalid filter "B")}}
+
+    iex> reformat_filters_errors("Invalid filters. Dimension `event:goal` can only be filtered at the top level.")
+    {:error, {:invalid_filters, "Invalid filters. Dimension `event:goal` can only be filtered at the top level."}}
   """
   def reformat_filters_errors(message) do
     lines = String.split(message, "\n")
 
-    if Enum.all?(lines, fn m -> String.starts_with?(m, "#/filters/") end) do
-      {:error, lines}
+    if Enum.all?(lines, fn line ->
+         String.starts_with?(line, "#/filters/") or String.starts_with?(line, "Invalid filters.")
+       end) do
+      {:error, {:invalid_filters, message}}
     else
       {:error, message}
     end

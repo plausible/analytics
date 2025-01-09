@@ -95,11 +95,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     site_segments_available? = site_segments_available?(site)
 
     cond do
-      params["type"] == "personal" and
+      params["type"] == Atom.to_string(:personal) and
           site_role in roles_with_personal_segments() ->
         do_insert_segment(conn, params)
 
-      params["type"] == "site" and site_segments_available? and
+      params["type"] == Atom.to_string(:site) and site_segments_available? and
           site_role in roles_with_maybe_site_segments() ->
         do_insert_segment(conn, params)
 
@@ -263,18 +263,19 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
              %Plausible.Segment{},
              segment_definition
            ),
-         :ok <- Plausible.Segment.validate_segment_data(site, params["segment_data"]) do
+         :ok <- Plausible.Segment.validate_segment_data(site, params["segment_data"], true) do
       segment = Repo.insert!(changeset)
       json(conn, segment)
     else
       %{valid?: false, errors: errors} ->
-        conn |> put_status(400) |> json(%{errors: errors})
+        conn
+        |> put_status(400)
+        |> json(%{
+          errors: Enum.map(errors, fn {field_key, {message, _}} -> [field_key, message] end)
+        })
 
-      {:error, error_messages} when is_list(error_messages) ->
-        conn |> put_status(400) |> json(%{errors: error_messages})
-
-      _unknown_error ->
-        conn |> put_status(400) |> json(%{error: "Failed to update segment"})
+      {:error, {:invalid_filters, message}} ->
+        conn |> put_status(400) |> json(%{errors: [["segment_data", message]]})
     end
   end
 
@@ -294,7 +295,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
          :ok <-
            Plausible.Segment.validate_segment_data_if_exists(
              conn.assigns.site,
-             params["segment_data"]
+             params["segment_data"],
+             true
            ) do
       json(
         conn,
@@ -305,13 +307,15 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       )
     else
       %{valid?: false, errors: errors} ->
-        conn |> put_status(400) |> json(%{errors: errors})
+        conn
+        |> put_status(400)
+        |> json(%{
+          errors:
+            Enum.map(errors, fn {field_key, {message, opts}} -> [field_key, message, opts] end)
+        })
 
-      {:error, error_messages} when is_list(error_messages) ->
-        conn |> put_status(400) |> json(%{errors: error_messages})
-
-      _unknown_error ->
-        conn |> put_status(400) |> json(%{error: "Failed to update segment"})
+      {:error, {:invalid_filters, message}} ->
+        conn |> put_status(400) |> json(%{errors: [["segment_data", message, []]]})
     end
   end
 
