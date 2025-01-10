@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                       <%= goal %>
                       <br />
                       <span class="text-red-600">
-                        Upgrade to a Business plan to access this
+                        Upgrade to Business to access this
                       </span>
                     </div>
                   <% else %>
