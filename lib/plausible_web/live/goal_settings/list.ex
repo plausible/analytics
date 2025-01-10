@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                       <%= goal %>
                       <br />
                       <span class="text-red-600">
-                        Unlock Revenue Goals by upgrading to a business plan
+                        Upgrade to a Business plan to access this
                       </span>
                     </div>
                   <% else %>
