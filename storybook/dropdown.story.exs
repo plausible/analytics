@@ -1,4 +1,5 @@
-defmodule MyAppWeb.Storybook.Dropdown do
+defmodule PlausibleWeb.Storybook.Dropdown do
+  @moduledoc false
   use PhoenixStorybook.Story, :component
 
   # required

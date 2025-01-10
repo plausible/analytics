@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.Storybook do
+  @moduledoc false
+
   use PhoenixStorybook,
     otp_app: :plausible_web,
     title: "Plausible Storybook",

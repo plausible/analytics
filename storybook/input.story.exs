@@ -1,4 +1,5 @@
-defmodule MyAppWeb.Storybook.Input do
+defmodule PlausibleWeb.Storybook.Input do
+  @moduledoc false
   use PhoenixStorybook.Story, :component
 
   # required
