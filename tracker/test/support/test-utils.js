@@ -104,6 +104,21 @@ exports.clickPageElementAndExpectEventRequests = async function (page, locatorTo
 
 function includesSubset(body, subset) {
   return Object.keys(subset).every((key) => {
-    return body[key] === subset[key]
+    if (typeof subset[key] === 'object') {
+      return typeof body[key] === 'object' && areFlatObjectsEqual(body[key], subset[key])
+    } else {
+      return body[key] === subset[key]
+    }
   })
+}
+
+// For comparing custom props - all key-value pairs
+// must match but the order is not important.
+function areFlatObjectsEqual(obj1, obj2) {
+  const keys1 = Object.keys(obj1)
+  const keys2 = Object.keys(obj2)
+
+  if (keys1.length !== keys2.length) return false;
+
+  return keys1.every(key => obj2[key] === obj1[key])
 }
