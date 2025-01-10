@@ -36,6 +36,8 @@
   // URL, and on SPA navigation.
   var currentPageLeaveURL = location.href
 
+  var currentPageLeaveProps = {}
+
   // Multiple pageviews might be sent by the same script when the page
   // uses client-side routing (e.g. hash or history-based). This flag
   // prevents registering multiple listeners in those cases.
@@ -101,6 +103,7 @@
       sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
       d: dataDomain,
       u: currentPageLeaveURL,
+      p: currentPageLeaveProps
     }
 
     {{#if hash}}
@@ -220,6 +223,7 @@
       if (request.readyState === 4) {
         {{#if pageleave}}
         if (isPageview) {
+          currentPageLeaveProps = payload.p
           registerPageLeaveListener()
         }
         {{/if}}

@@ -16,11 +16,16 @@
   <button id="pageview-trigger-custom-url">
     Triggers a pageview with custom URL
   </button>
+  <button id="pageview-trigger-custom-props">
+    Triggers a pageview with custom props
+  </button>
 
   <script>
     document.addEventListener('click', (e) => {
       if (e.target.id === 'pageview-trigger-custom-url') {
         window.plausible('pageview', {u: 'https://example.com/custom/location'})
+      } else if (e.target.id === 'pageview-trigger-custom-props') {
+        window.plausible('pageview', {props: {author: 'John'}})
       }
     })
   </script>
