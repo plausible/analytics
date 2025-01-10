@@ -18,13 +18,13 @@
 
   <:subtitle :if={@has_email_code?}>
     <p class="truncate">
-      Please enter the 4-digit code we sent to <b><%= @conn.assigns[:current_user].email %></b>
+      Please enter the 4-digit code we sent to <b>{@conn.assigns[:current_user].email}</b>
     </p>
   </:subtitle>
 
   <:subtitle :if={!@has_email_code?}>
     <p class="truncate">
-      A 4-digit activation code will be sent to <b><%= @conn.assigns[:current_user].email %></b>
+      A 4-digit activation code will be sent to <b>{@conn.assigns[:current_user].email}</b>
     </p>
   </:subtitle>
 
@@ -46,7 +46,7 @@
     </.form>
   </div>
 
-  <.error><%= @error %></.error>
+  <.error>{@error}</.error>
 
   <div :if={!@has_email_code?}>
     <.button_link method="post" class="w-full" href="/activate/request-code">
@@ -65,7 +65,7 @@
         <.styled_link href="/activate/request-code" method="post">
           Send a new code
         </.styled_link>
-        to <%= @conn.assigns[:current_user].email %>
+        to {@conn.assigns[:current_user].email}
       </:item>
       <:item :if={ee?()}>
         <.styled_link href="https://plausible.io/contact" new_tab={true}>
@@ -88,7 +88,7 @@
         <.styled_link method="post" href={Routes.settings_path(@conn, :cancel_update_email)}>
           Change email back to
         </.styled_link>
-        <%= @conn.assigns[:current_user].previous_email %>
+        {@conn.assigns[:current_user].previous_email}
       </:item>
 
       <:item :if={not @has_any_memberships?}>

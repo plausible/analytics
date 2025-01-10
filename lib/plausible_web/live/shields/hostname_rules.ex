@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
             theme={:gray}
           >
             <p>
-              You've reached the maximum number of hostnames you can block (<%= Shields.maximum_hostname_rules() %>). Please remove one before adding another.
+              You've reached the maximum number of hostnames you can block ({Shields.maximum_hostname_rules()}). Please remove one before adding another.
             </p>
           </.notice>
 
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                     class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
                     title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                   >
-                    <%= rule.hostname %>
+                    {rule.hostname}
                   </span>
                 </div>
               </.td>
@@ -134,11 +134,11 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                 id={"#{f[:hostname].id}-#{modal_unique_id}"}
                 creatable
               />
-              <.error :for={msg <- f[:hostname].errors}><%= translate_error(msg) %></.error>
+              <.error :for={msg <- f[:hostname].errors}>{translate_error(msg)}</.error>
 
               <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,
-                <code>*<%= @site.domain %></code>
+                <code>*{@site.domain}</code>
                 will only record traffic on your main domain and all of its subdomains.<br /><br />
 
                 <%= if @hostname_rules_count >= 1 do %>

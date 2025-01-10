@@ -51,14 +51,14 @@
                   class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
                   href={Routes.settings_path(@conn, :subscription)}
                 >
-                  <%= trial_notification(@conn.assigns[:my_team]) %>
+                  {trial_notification(@conn.assigns[:my_team])}
                 </.styled_link>
               </li>
               <li class="w-full sm:w-auto">
                 <.dropdown>
                   <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
                     <span class="font-medium truncate dark:text-gray-100 hidden md:block">
-                      <%= @conn.assigns[:current_user].name %>
+                      {@conn.assigns[:current_user].name}
                     </span>
                     <img
                       src={Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user])}
@@ -69,7 +69,7 @@
                     <.dropdown_item>
                       <div class="text-xs text-gray-500 dark:text-gray-400">Signed in as</div>
                       <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
-                        <%= @conn.assigns[:current_user].email %>
+                        {@conn.assigns[:current_user].email}
                       </p>
                     </.dropdown_item>
                     <.dropdown_divider />

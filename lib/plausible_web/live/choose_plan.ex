@@ -106,9 +106,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <Notice.upgrade_ineligible :if={not Quota.eligible_for_upgrade?(@usage)} />
         <div class="mx-auto max-w-4xl text-center">
           <p class="text-4xl font-bold tracking-tight lg:text-5xl">
-            <%= if @owned_plan,
+            {if @owned_plan,
               do: "Change subscription plan",
-              else: "Upgrade your account" %>
+              else: "Upgrade your account"}
           </p>
         </div>
         <div class="mt-12 flex flex-col gap-8 lg:flex-row items-center lg:items-baseline">

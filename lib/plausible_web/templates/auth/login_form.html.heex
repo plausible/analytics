@@ -1,11 +1,11 @@
 <.focus_box>
   <:title>
-    <%= Phoenix.Flash.get(@flash, :login_title) || "Enter your account credentials" %>
+    {Phoenix.Flash.get(@flash, :login_title) || "Enter your account credentials"}
   </:title>
   <:subtitle>
     <%= if Phoenix.Flash.get(@flash, :login_instructions) do %>
       <p class="text-gray-500 mt-1 mb-2">
-        <%= Phoenix.Flash.get(@flash, :login_instructions) %>
+        {Phoenix.Flash.get(@flash, :login_instructions)}
       </p>
     <% end %>
   </:subtitle>
@@ -30,7 +30,7 @@
     </div>
 
     <%= if @conn.assigns[:error] do %>
-      <div class="text-red-500 mt-4"><%= @conn.assigns[:error] %></div>
+      <div class="text-red-500 mt-4">{@conn.assigns[:error]}</div>
     <% end %>
 
     <.button class="w-full" type="submit">Log in</.button>
