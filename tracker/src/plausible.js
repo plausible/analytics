@@ -31,11 +31,7 @@
   {{#if pageleave}}
   // :NOTE: Tracking pageleave events is currently experimental.
 
-  // Keeps track of the URL to be sent in the pageleave event payload.
-  // Should get updated on pageviews triggered manually with a custom
-  // URL, and on SPA navigation.
   var currentPageLeaveURL = location.href
-
   var currentPageLeaveProps = {}
 
   // Multiple pageviews might be sent by the same script when the page
@@ -170,10 +166,6 @@
     {{#if manual}}
     var customURL = options && options.u
 
-    {{#if pageleave}}
-    isPageview && customURL && (currentPageLeaveURL = customURL)
-    {{/if}}
-
     payload.u = customURL ? customURL : location.href
     {{else}}
     payload.u = location.href
@@ -223,6 +215,7 @@
       if (request.readyState === 4) {
         {{#if pageleave}}
         if (isPageview) {
+          currentPageLeaveURL = payload.u
           currentPageLeaveProps = payload.p
           registerPageLeaveListener()
         }
@@ -249,7 +242,6 @@
       {{#if pageleave}}
       if (isSPANavigation && listeningPageLeave) {
         triggerPageLeave();
-        currentPageLeaveURL = location.href;
         currentDocumentHeight = getDocumentHeight()
         maxScrollDepthPx = getCurrentScrollDepthPx()
       }
