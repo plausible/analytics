@@ -103,4 +103,14 @@ test.describe('pageleave extension', () => {
       {n: 'pageleave', p: {author: 'John'}}
     ])
   })
+
+  test('sends pageleave with the same props as pageview (pageview-props extension)', async ({ page }) => {
+    await pageActionAndExpectEventRequests(page, () => page.goto('/pageleave-pageview-props.html'), [
+      {n: 'pageview', p: {author: 'John'}}
+    ])
+
+    await pageActionAndExpectEventRequests(page, () => page.click('#navigate-away'), [
+      {n: 'pageleave', p: {author: 'John'}}
+    ])
+  })
 })
