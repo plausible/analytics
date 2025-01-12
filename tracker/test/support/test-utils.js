@@ -54,23 +54,22 @@ exports.expectCustomEvent = function (request, eventName, eventProps) {
   }
 }
 
-
 /**
  * A powerful utility function that makes it easy to assert on the event
- * requests that should or should not have been made after clicking a page
- * element. 
+ * requests that should or should not have been made after doing a page
+ * action (e.g. navigating to the page, clicking a page element, etc). 
  * 
  * This function accepts subsets of request bodies (the JSON payloads) as
  * arguments, and compares them with the bodies of the requests that were
  * actually made. For a body subset to match a request, all the key-value
  * pairs present in the subset should also appear in the request body.
  */
-exports.clickPageElementAndExpectEventRequests = async function (page, locatorToClick, expectedBodySubsets, refutedBodySubsets = []) {
+exports.pageActionAndExpectEventRequests = async function (page, pageActionFn, expectedBodySubsets, refutedBodySubsets = []) {
   const requestsToExpect = expectedBodySubsets.length
   const requestsToAwait = requestsToExpect + refutedBodySubsets.length
   
   const plausibleRequestMockList = mockManyRequests(page, '/api/event', requestsToAwait)
-  await page.click(locatorToClick)
+  await pageActionFn()
   const requestBodies = (await plausibleRequestMockList).map(r => r.postDataJSON())
 
   const expectedButNotFoundBodySubsets = []

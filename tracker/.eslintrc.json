@@ -19,7 +19,7 @@
       {
         "assertFunctionNames": [
           "expect",
-          "clickPageElementAndExpectEventRequests",
+          "pageActionAndExpectEventRequests",
           "expectCustomEvent"
         ]
       }
