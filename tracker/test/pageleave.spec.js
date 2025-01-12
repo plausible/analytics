@@ -113,4 +113,30 @@ test.describe('pageleave extension', () => {
       {n: 'pageleave', p: {author: 'John'}}
     ])
   })
+
+  test('sends pageleave with the same props as pageview (hash navigation / pageview-props extension)', async ({ page }) => {
+    await pageActionAndExpectEventRequests(page, () => page.goto('/pageleave-hash-pageview-props.html'), [
+      {n: 'pageview', p: {}}
+    ])
+
+    await pageActionAndExpectEventRequests(page, () => page.click('#john-post'), [
+      {n: 'pageleave', p: {}},
+      {n: 'pageview', p: {author: 'john'}}
+    ])
+
+    // Wait 600ms before navigating again because pageleave events are throttled to 500ms.
+    await page.waitForTimeout(600)
+
+    await pageActionAndExpectEventRequests(page, () => page.click('#jane-post'), [
+      {n: 'pageleave', p: {author: 'john'}},
+      {n: 'pageview', p: {author: 'jane'}}
+    ])
+
+    await page.waitForTimeout(600)
+
+    await pageActionAndExpectEventRequests(page, () => page.click('#home'), [
+      {n: 'pageleave', p: {author: 'jane'}},
+      {n: 'pageview', p: {}}
+    ])
+  })
 })
