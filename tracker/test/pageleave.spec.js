@@ -1,5 +1,5 @@
 /* eslint-disable playwright/no-skipped-test */
-const { pageActionAndExpectEventRequests } = require('./support/test-utils')
+const { pageActionAndExpectEventRequests, pageleaveCooldown } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
@@ -124,15 +124,14 @@ test.describe('pageleave extension', () => {
       {n: 'pageview', p: {author: 'john'}}
     ])
 
-    // Wait 600ms before navigating again because pageleave events are throttled to 500ms.
-    await page.waitForTimeout(600)
+    await pageleaveCooldown(page)
 
     await pageActionAndExpectEventRequests(page, () => page.click('#jane-post'), [
       {n: 'pageleave', p: {author: 'john'}},
       {n: 'pageview', p: {author: 'jane'}}
     ])
 
-    await page.waitForTimeout(600)
+    await pageleaveCooldown(page)
 
     await pageActionAndExpectEventRequests(page, () => page.click('#home'), [
       {n: 'pageleave', p: {author: 'jane'}},

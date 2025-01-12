@@ -1,5 +1,5 @@
 /* eslint-disable playwright/no-skipped-test */
-const { pageActionAndExpectEventRequests } = require('./support/test-utils')
+const { pageActionAndExpectEventRequests, pageleaveCooldown } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
@@ -29,8 +29,7 @@ test.describe('scroll depth', () => {
       {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`}
     ])
 
-    // Wait 600ms before navigating again because pageleave events are throttled to 500ms.
-    await page.waitForTimeout(600)
+    await pageleaveCooldown(page)
 
     await pageActionAndExpectEventRequests(page, () => page.click('#home-link'), [
       {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`, sd: 34},
