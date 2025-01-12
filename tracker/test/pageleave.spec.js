@@ -71,6 +71,8 @@ test.describe('pageleave extension', () => {
       {n: 'pageleave', u: pageBaseURL, h: 1}
     ])
 
+    await pageleaveCooldown(page)
+
     // Navigate from ignored page to a tracked page ->
     // no pageleave from the current page, pageview on the next page
     await pageActionAndExpectEventRequests(
@@ -79,6 +81,8 @@ test.describe('pageleave extension', () => {
       [{n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1}],
       [{n: 'pageleave'}]
     )
+
+    await pageleaveCooldown(page)
 
     // Navigate from a tracked page to another tracked page ->
     // pageleave with the last page URL, pageview with the new URL

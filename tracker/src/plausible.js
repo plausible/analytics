@@ -12,9 +12,15 @@
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
   var dataDomain = scriptEl.getAttribute('data-domain')
 
-  function onIgnoredEvent(reason, options) {
+  function onIgnoredEvent(eventName, reason, options) {
     if (reason) console.warn('Ignoring Event: ' + reason);
     options && options.callback && options.callback()
+
+    {{#if pageleave}}
+    if (eventName === 'pageview') {
+      currentPageLeaveIgnored = true
+    }
+    {{/if}}
   }
 
   function defaultEndpoint(el) {
@@ -31,6 +37,7 @@
   {{#if pageleave}}
   // :NOTE: Tracking pageleave events is currently experimental.
 
+  var currentPageLeaveIgnored
   var currentPageLeaveURL = location.href
   var currentPageLeaveProps = {}
 
@@ -90,7 +97,7 @@
   })
 
   function triggerPageLeave() {
-    if (pageLeaveSending) {return}
+    if (pageLeaveSending || currentPageLeaveIgnored) {return}
     pageLeaveSending = true
     setTimeout(function () {pageLeaveSending = false}, 500)
 
@@ -125,15 +132,15 @@
 
     {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
-      return onIgnoredEvent('localhost', options)
+      return onIgnoredEvent(eventName, 'localhost', options)
     }
     if ((window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) && !window.__plausible) {
-      return onIgnoredEvent(null, options)
+      return onIgnoredEvent(eventName, null, options)
     }
     {{/unless}}
     try {
       if (window.localStorage.plausible_ignore === 'true') {
-        return onIgnoredEvent('localStorage flag', options)
+        return onIgnoredEvent(eventName, 'localStorage flag', options)
       }
     } catch (e) {
 
@@ -146,7 +153,7 @@
       var isIncluded = !dataIncludeAttr || (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
       var isExcluded = dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
 
-      if (!isIncluded || isExcluded) return onIgnoredEvent('exclusion rule', options)
+      if (!isIncluded || isExcluded) return onIgnoredEvent(eventName, 'exclusion rule', options)
     }
 
     function pathMatches(wildcardPath) {
@@ -215,6 +222,7 @@
       if (request.readyState === 4) {
         {{#if pageleave}}
         if (isPageview) {
+          currentPageLeaveIgnored = false
           currentPageLeaveURL = payload.u
           currentPageLeaveProps = payload.p
           registerPageLeaveListener()
