@@ -47,7 +47,30 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert Repo.reload!(team).name == "New Team Name"
     end
 
-    test "existing member is suggested from combobox dropdown"
+    test "existing guest is suggested from combobox dropdown", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      guest = add_guest(site, role: :viewer)
+
+      {:ok, lv, _html} = live(conn, @url)
+
+      type_into_combo(lv, "team-member-candidates", guest.email)
+      select_combo_option(lv, 1)
+
+      [member1_row, member2_row] =
+        lv
+        |> render()
+        |> find(".member")
+
+      assert text(member1_row) =~ user.name
+      assert text(member1_row) =~ "You"
+      assert text(member1_row) =~ user.email
+
+      assert text(member2_row) =~ guest.name
+      assert text(member2_row) =~ guest.email
+
+      assert member1_row |> Floki.find(".role") |> text() =~ "Owner"
+      assert member2_row |> Floki.find(".role") |> text() =~ "Viewer"
+    end
 
     test "team member is added from input", %{conn: conn, user: user} do
       new_member_email = build(:user).email
@@ -55,10 +78,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, lv, _html} = live(conn, @url)
 
       type_into_combo(lv, "team-member-candidates", new_member_email)
-
-      lv
-      |> element(~s/li#dropdown-team-member-candidates-option-0 a/)
-      |> render_click()
+      select_combo_option(lv, 0)
 
       [member1_row, member2_row] =
         lv
@@ -75,6 +95,78 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert member1_row |> Floki.find(".role") |> text() =~ "Owner"
       assert member2_row |> Floki.find(".role") |> text() =~ "Viewer"
     end
+
+    test "arbitrary invalid e-mail attempt", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, @url)
+      type_into_combo(lv, "team-member-candidates", "invalid")
+
+      refute lv |> render |> text() =~ "Sorry"
+
+      select_combo_option(lv, 0)
+
+      assert lv |> render() |> text() =~
+               "Sorry, e-mail 'invalid' is invalid. Please type the address again."
+    end
+
+    test "owner's own e-mail attempt", %{conn: conn, user: user} do
+      {:ok, lv, _html} = live(conn, @url)
+      type_into_combo(lv, "team-member-candidates", user.email)
+
+      refute lv |> render |> text() =~ "Sorry"
+
+      select_combo_option(lv, 0)
+
+      assert lv |> render() |> text() =~
+               "Sorry, e-mail '#{user.email}' is invalid. Please type the address again."
+    end
+
+    test "owner's role dropdown consists of inactive options", %{conn: conn, user: user} do
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert html
+             |> find(".member")
+             |> Enum.take(1)
+             |> find(".dropdown-items > *:not([^role=separator])")
+             |> Enum.all?(fn el ->
+               text_of_attr(el, "data-ui-state") == "disabled"
+             end)
+    end
+
+    test "candidate's role dropdown allows changing role", %{conn: conn, user: user} do
+      new_member_email = build(:user).email
+      {:ok, lv, _html} = live(conn, @url)
+
+      type_into_combo(lv, "team-member-candidates", new_member_email)
+      select_combo_option(lv, 0)
+
+      lv
+      |> element(~s|.member a[phx-click="update-role"][phx-value-role="admin"]:nth-of-type(1)|)
+      |> render_click()
+
+      member2_row =
+        lv
+        |> render()
+        |> find(".member")
+        |> Enum.take(2)
+        |> find(".role")
+        |> text()
+
+      assert member2_row =~ "Admin"
+
+      # lv
+      # |> element(~s|.member a[phx-click="update-role"][phx-value-role="viewer"]:nth-of-type(1)|)
+      #                                                                 |> render_click()
+      #
+      # member2_row =
+      #   lv
+      #   |> render()
+      #   |> find(".member")
+      #   |> Enum.take(2)
+      #   |> find(".role")
+      #   |> text()
+      #
+      # assert member2_row =~ "Viewer"
+    end
   end
 
   defp type_into_input(lv, id, text) do
@@ -90,5 +182,11 @@ defmodule PlausibleWeb.Live.SitesTest do
       "_target" => ["display-#{id}"],
       "display-#{id}" => "#{text}"
     })
+  end
+
+  defp select_combo_option(lv, index) do
+    lv
+    |> element(~s/li#dropdown-team-member-candidates-option-#{index} a/)
+    |> render_click()
   end
 end

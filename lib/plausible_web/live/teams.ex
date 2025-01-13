@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Live.Teams do
               <%= @role |> to_string() |> String.capitalize() %>
               <Heroicons.chevron_down mini class="size-4 mt-0.5" />
             </:button>
-            <:menu class="max-w-60">
+            <:menu class="dropdown-items max-w-60">
               <.dropdown_item
                 href="#"
                 disabled={@you? or @role == :admin}
@@ -205,7 +205,8 @@ defmodule PlausibleWeb.Live.Teams do
 
   def handle_info(
         {:candidate_selected, %{email: email, role: role}},
-        %{assigns: %{my_team: team, candidates_selected: candidates}} = socket
+        %{assigns: %{my_team: team, candidates_selected: candidates, current_user: current_user}} =
+          socket
       ) do
     socket =
       case Candidates.get_site_guest(team, email) do
@@ -217,7 +218,7 @@ defmodule PlausibleWeb.Live.Teams do
           )
 
         nil ->
-          if valid_email?(email) do
+          if valid_email?(email) and email != current_user.email do
             assign(
               socket,
               :candidates_selected,
@@ -254,6 +255,7 @@ defmodule PlausibleWeb.Live.Teams do
   end
 
   def handle_event("update-role", %{"name" => name, "email" => email, "role" => role}, socket) do
+    IO.inspect role
     updated_candidates =
       Map.put(socket.assigns.candidates_selected, {email, name}, String.to_existing_atom(role))
 

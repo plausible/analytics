@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Live.Components.ComboBoxTest do
+  # TODO: test creatable_prompt & clear_on_select
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest, except: [render_component: 2]
   import Plausible.LiveViewTest, only: [render_component: 2]
