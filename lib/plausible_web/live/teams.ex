@@ -78,7 +78,6 @@ defmodule PlausibleWeb.Live.Teams do
 
                 @my_team
                 |> Candidates.search_site_guests(input, exclude: exclude_emails)
-                |> IO.inspect(label: :candidates)
                 |> Enum.map(fn user -> {user.email, "#{user.name} <#{user.email}>"} end)
               end
             }
