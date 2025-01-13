@@ -127,14 +127,63 @@ defmodule PlausibleWeb.Live.Teams do
         <div class="flex-1 text-right">
           <.dropdown class="relative">
             <:button class="bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-              <%= @role %>
+              <%= @role |> to_string() |> String.capitalize() %>
               <Heroicons.chevron_down mini class="size-4 mt-0.5" />
             </:button>
             <:menu class="max-w-60">
-              <.dropdown_item href={} method="put" disabled={}>
+              <.dropdown_item
+                href="#"
+                disabled={@you? or @role == :admin}
+                phx-click="update-role"
+                phx-value-role={:admin}
+                phx-value-email={@user.email}
+                phx-value-name={@user.name}
+              >
                 <div>Admin</div>
                 <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-                  View stats and edit site settings
+                  Manage all team settings
+                </div>
+              </.dropdown_item>
+
+              <.dropdown_item
+                href="#"
+                disabled={@you? or @role == :editor}
+                phx-click="update-role"
+                phx-value-role={:editor}
+                phx-value-email={@user.email}
+                phx-value-name={@user.name}
+              >
+                <div>Editor</div>
+                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
+                  Create and view new sites
+                </div>
+              </.dropdown_item>
+
+              <.dropdown_item
+                href="#"
+                disabled={@you? or @role == :viewer}
+                phx-click="update-role"
+                phx-value-role={:viewer}
+                phx-value-email={@user.email}
+                phx-value-name={@user.name}
+              >
+                <div>Viewer</div>
+                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
+                  Can only view all sites under your team
+                </div>
+              </.dropdown_item>
+
+              <.dropdown_divider />
+              <.dropdown_item
+                href="#"
+                disabled={@you?}
+                phx-click="remove-member"
+                phx-value-email={@user.email}
+                phx-value-name={@user.name}
+              >
+                <div class="text-red-600 hover:text-red-600">Remove member</div>
+                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
+                  Remove member from your team
                 </div>
               </.dropdown_item>
             </:menu>
@@ -193,6 +242,18 @@ defmodule PlausibleWeb.Live.Teams do
     else
       {:noreply, socket}
     end
+  end
+
+  def handle_event("update-role", %{"name" => name, "email" => email, "role" => role}, socket) do
+    updated_candidates =
+      Map.put(socket.assigns.candidates_selected, {email, name}, String.to_existing_atom(role))
+
+    {:noreply, assign(socket, candidates_selected: updated_candidates)}
+  end
+
+  def handle_event("remove-member", %{"name" => name, "email" => email}, socket) do
+    updated_candidates = Map.delete(socket.assigns.candidates_selected, {email, name})
+    {:noreply, assign(socket, candidates_selected: updated_candidates)}
   end
 
   defp valid_email?(email) do
