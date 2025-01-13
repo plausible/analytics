@@ -182,13 +182,17 @@ defmodule PlausibleWeb.Live.Teams do
       socket.assigns.my_team
       |> Teams.Team.name_changeset(params)
 
-    my_team = Repo.update!(team_name_changeset)
+    if team_name_changeset.valid? do
+      my_team = Repo.update!(team_name_changeset)
 
-    {:noreply,
-     assign(socket,
-       team_name_changeset: team_name_changeset,
-       my_team: my_team
-     )}
+      {:noreply,
+       assign(socket,
+         team_name_changeset: team_name_changeset,
+         my_team: my_team
+       )}
+    else
+      {:noreply, socket}
+    end
   end
 
   defp valid_email?(email) do
