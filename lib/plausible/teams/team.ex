@@ -61,6 +61,16 @@ defmodule Plausible.Teams.Team do
     |> validate_required(:name)
   end
 
+  def setup_changeset(team) do
+    now = NaiveDateTime.utc_now(:second)
+
+    team
+    |> change(
+      setup_complete: true,
+      setup_at: now
+    )
+  end
+
   def start_trial(team, today \\ Date.utc_today()) do
     trial_expiry = trial_expiry(today)
 
