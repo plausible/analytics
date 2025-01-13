@@ -349,14 +349,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         response =
           post(conn, "/api/#{site.domain}/segments", %{
             "name" => "Some segment",
-            "type" => Atom.to_string(unquote(type)),
+            "type" => "#{unquote(type)}",
             "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
           })
           |> json_response(200)
 
         assert %{
                  "name" => "Some segment",
-                 "type" => Atom.to_string(unquote(type)),
+                 "type" => "#{unquote(type)}",
                  "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
                  "owner_id" => user.id
                } == Map.drop(response, ["id", "inserted_at", "updated_at"])
@@ -365,6 +365,17 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         assert is_binary(response["inserted_at"])
         assert is_binary(response["updated_at"])
         assert response["inserted_at"] == response["updated_at"]
+
+        verify_segment_in_db(%Plausible.Segment{
+          id: response["id"],
+          name: response["name"],
+          type: String.to_existing_atom(response["type"]),
+          segment_data: response["segment_data"],
+          owner_id: response["owner_id"],
+          site_id: site.id,
+          inserted_at: NaiveDateTime.from_iso8601!(response["inserted_at"]),
+          updated_at: NaiveDateTime.from_iso8601!(response["updated_at"])
+        })
       end
     end
   end
@@ -395,7 +406,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         conn =
           patch(conn, "/api/#{site.domain}/segments/#{segment_id}", %{
             "name" => "updated name",
-            "type" => Atom.to_string(unquote(patch_type))
+            "type" => "#{unquote(patch_type)}"
           })
 
         assert json_response(conn, 403) == %{
@@ -514,6 +525,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       assert json_response(conn, 403) == %{
                "error" => "Not enough permissions to delete segment"
              }
+
+      verify_segment_in_db(segment)
     end
 
     for %{role: role, type: type} <- [
@@ -543,11 +556,24 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                  "id" => segment.id,
                  "name" => segment.name,
                  "segment_data" => segment.segment_data,
-                 "type" => Atom.to_string(unquote(type)),
+                 "type" => "#{unquote(type)}",
                  "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at),
                  "updated_at" => NaiveDateTime.to_iso8601(segment.updated_at)
                } == response
+
+        verify_no_segment_in_db(segment)
       end
     end
+  end
+
+  defp verify_segment_in_db(segment) do
+    uncomparable_keys = [:__meta__, :site]
+
+    assert Map.drop(Repo.get(Plausible.Segment, segment.id), uncomparable_keys) ==
+             Map.drop(segment, uncomparable_keys)
+  end
+
+  defp verify_no_segment_in_db(segment) do
+    assert Repo.get(Plausible.Segment, segment.id) == nil
   end
 end
