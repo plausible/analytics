@@ -4577,4 +4577,116 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert "metric_warnings" not in json_response(conn, 200)["meta"]
     end
   end
+
+  describe "behavioral (has_done/has_not_done) filters" do
+    test "has_done returns all events by users who match condition if no further filters are provided", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "AddToCart", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 5, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "pageviews"],
+          "date_range" => "all",
+          "filters" => [["has_done", ["is", "event:name", ["Purchase"]]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [3, 6, 2]}
+             ]
+    end
+
+    test "has_done event:page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "pageview", user_id: 1, pathname: "/blog/post/1", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 3, pathname: "/blog/post/1", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews"],
+          "date_range" => "all",
+          "filters" => [["has_done", ["contains", "event:page", ["/blog/"]]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+        %{"dimensions" => [], "metrics" => [2, 3]}
+      ]
+    end
+
+    test "has_done_not event:page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "pageview", user_id: 1, pathname: "/blog/post/1", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 3, pathname: "/blog/post/1", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews"],
+          "date_range" => "all",
+          "filters" => [["has_done_not", ["contains", "event:page", ["/blog/"]]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+        %{"dimensions" => [], "metrics" => [1, 1]}
+      ]
+    end
+
+    test "has_done with complex event:props and event:name filters", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-03 00:00:00]),
+
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 2, timestamp: ~N[2021-01-03 00:00:00]),
+
+        build(:event, name: "Signup", user_id: 3, "meta.key": ["paid"], "meta.value": ["true"], timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+
+        build(:event, name: "Signup", user_id: 4, "meta.key": ["paid"], "meta.value": ["true"], timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+
+        build(:event, name: "Signup", user_id: 5, "meta.key": ["paid"], "meta.value": ["false"], timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 5, timestamp: ~N[2021-01-01 00:00:00]),
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews"],
+          "date_range" => "all",
+          "filters" => [
+            ["has_done", [
+              "or", [
+                ["is", "event:name", ["Purchase"]],
+                ["and", [
+                  ["is", "event:name", ["Signup"]],
+                  ["is", "event:props:paid", ["true"]]
+                ]]
+              ]]
+            ]
+          ]
+        })
+
+
+      assert json_response(conn, 200)["results"] == [
+        %{"dimensions" => [], "metrics" => [4, 3]}
+      ]
+    end
+  end
 end

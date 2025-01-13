@@ -106,15 +106,18 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["matches_wildcard_not" | _rest]), do: {:ok, :matches_wildcard_not}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
   defp parse_operator(["contains_not" | _rest]), do: {:ok, :contains_not}
-  defp parse_operator(["not" | _rest]), do: {:ok, :not}
   defp parse_operator(["and" | _rest]), do: {:ok, :and}
   defp parse_operator(["or" | _rest]), do: {:ok, :or}
+  defp parse_operator(["not" | _rest]), do: {:ok, :not}
+  defp parse_operator(["has_done" | _rest]), do: {:ok, :has_done}
+  defp parse_operator(["has_done_not" | _rest]), do: {:ok, :has_done_not}
   defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{i(filter)}'."}
-
-  def parse_filter_second(:not, [_, filter | _rest]), do: parse_filter(filter)
 
   def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
     do: parse_filters(filters)
+
+  def parse_filter_second(operator, [_, filter | _rest]) when operator in [:not, :has_done, :has_done_not],
+    do: parse_filter(filter)
 
   def parse_filter_second(_operator, filter), do: parse_filter_key(filter)
 
@@ -142,7 +145,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_filter_rest(operator, _filter)
-       when operator in [:not, :and, :or],
+       when operator in [:not, :and, :or, :has_done, :has_done_not],
        do: {:ok, []}
 
   defp parse_clauses_list([operator, filter_key, list | _rest] = filter) when is_list(list) do

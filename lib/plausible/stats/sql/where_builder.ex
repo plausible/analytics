@@ -94,6 +94,21 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc or ^condition) end)
   end
 
+  defp add_filter(_table, query, [:has_done, filter]) do
+    condition = dynamic([], ^filter_site_time_range(:events, query) and ^add_filter(:events, query, filter))
+
+    dynamic(
+      [t],
+      t.user_id in subquery(
+        from(e in "events_v2", where: ^condition, select: e.user_id)
+      )
+    )
+  end
+
+  defp add_filter(table, query, [:has_done_not, filter]) do
+    dynamic([], not (^add_filter(table, query, [:has_done, filter])))
+  end
+
   defp add_filter(:events, _query, [:is, "event:name" | _rest] = filter) do
     in_clause(col_value(:name), filter)
   end

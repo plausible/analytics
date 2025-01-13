@@ -450,15 +450,21 @@
       "oneOf": [
         { "$ref": "#/definitions/filter_entry" },
         { "$ref": "#/definitions/filter_and_or" },
-        { "$ref": "#/definitions/filter_not" }
+        { "$ref": "#/definitions/filter_not_has_done" }
       ]
     },
-    "filter_not": {
+    "filter_not_has_done": {
       "type": "array",
       "additionalItems": false,
       "minItems": 2,
       "maxItems": 2,
-      "items": [{ "const": "not" }, { "$ref": "#/definitions/filter_tree" }]
+      "items": [
+        {
+          "type": "string",
+          "enum": ["not", "has_done", "has_done_not"]
+        },
+        { "$ref": "#/definitions/filter_tree" }
+      ]
     },
     "filter_and_or": {
       "type": "array",
