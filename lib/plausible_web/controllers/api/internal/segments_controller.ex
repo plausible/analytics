@@ -190,7 +190,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   def delete_segment(%Plug.Conn{} = conn, _params), do: H.bad_request(conn, "Invalid request")
 
   @spec get_site_segments_only_query(pos_integer(), list(atom())) :: Ecto.Query.t()
-
   defp get_site_segments_only_query(site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
@@ -202,7 +201,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   @spec get_personal_segments_only_query(pos_integer(), pos_integer(), list(atom())) ::
           Ecto.Query.t()
-
   defp get_personal_segments_only_query(user_id, site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
@@ -214,7 +212,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   @spec get_personal_and_site_semgents_query(pos_integer(), pos_integer(), list(atom())) ::
           Ecto.Query.t()
-
   defp get_personal_and_site_semgents_query(user_id, site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
@@ -226,7 +223,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   end
 
   @spec normalize_segment_id_param(any()) :: nil | pos_integer()
-
   defp normalize_segment_id_param(input) do
     case Integer.parse(input) do
       {int_value, ""} when int_value > 0 -> int_value
