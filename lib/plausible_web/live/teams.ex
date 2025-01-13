@@ -14,22 +14,28 @@ defmodule PlausibleWeb.Live.Teams do
   def mount(_params, _session, socket) do
     my_team = socket.assigns.my_team
 
-    all_candidates =
-      my_team
-      |> Candidates.search_site_guests("")
-      |> Enum.map(fn user ->
-        {user.email, "#{user.name} <#{user.email}>"}
-      end)
-
-    candidates_selected = %{}
-    team_name_changeset = Teams.Team.name_changeset(my_team)
-
     socket =
-      assign(socket,
-        all_candidates: all_candidates,
-        team_name_changeset: team_name_changeset,
-        candidates_selected: candidates_selected
-      )
+      if my_team.setup_complete do
+        socket
+        |> put_flash(:success, "Your team is now setup")
+        |> redirect(to: "/settings/team/general")
+      else
+        all_candidates =
+          my_team
+          |> Candidates.search_site_guests("")
+          |> Enum.map(fn user ->
+            {user.email, "#{user.name} <#{user.email}>"}
+          end)
+
+        candidates_selected = %{}
+        team_name_changeset = Teams.Team.name_changeset(my_team)
+
+        assign(socket,
+          all_candidates: all_candidates,
+          team_name_changeset: team_name_changeset,
+          candidates_selected: candidates_selected
+        )
+      end
 
     {:ok, socket}
   end
@@ -41,7 +47,7 @@ defmodule PlausibleWeb.Live.Teams do
   def render(assigns) do
     ~H"""
     <.flash_messages flash={@flash} />
-    <.focus_box>
+    <.focus_box :if={not @my_team.setup_complete}>
       <:title>Create a new team</:title>
       <:subtitle>
         Add members and assign roles to manage different sites access efficiently
