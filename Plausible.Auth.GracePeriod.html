@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Auth.GracePeriod — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,54 +98,55 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Auth.GracePeriod</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Auth.GracePeriod</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>This embedded schema stores information about the account locking grace
 period.</p><p>Users are given this 7-day grace period to upgrade their account after
 outgrowing their subscriptions. The actual account locking happens in
 background with <a href="Plausible.Workers.LockSites.html"><code class="inline">Plausible.Workers.LockSites</code></a>.</p><p>The grace period can also be manual, without an end date, being controlled
 manually from the CRM, and not by the background site locker job. This is
 useful for enterprise subscriptions.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -166,7 +162,7 @@ useful for enterprise subscriptions.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -180,7 +176,7 @@ useful for enterprise subscriptions.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#active?/1" translate="no">active?(team)</a>
+        <a href="#active?/1" data-no-tooltip translate="no">active?(team)</a>
 
       </div>
 
@@ -191,7 +187,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#end_changeset/1" translate="no">end_changeset(team)</a>
+        <a href="#end_changeset/1" data-no-tooltip translate="no">end_changeset(team)</a>
 
       </div>
 
@@ -202,7 +198,7 @@ This means the grace period has expired.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#expired?/1" translate="no">expired?(team)</a>
+        <a href="#expired?/1" data-no-tooltip translate="no">expired?(team)</a>
 
       </div>
 
@@ -213,7 +209,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove_changeset/1" translate="no">remove_changeset(team)</a>
+        <a href="#remove_changeset/1" data-no-tooltip translate="no">remove_changeset(team)</a>
 
       </div>
 
@@ -223,7 +219,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_changeset/1" translate="no">start_changeset(team)</a>
+        <a href="#start_changeset/1" data-no-tooltip translate="no">start_changeset(team)</a>
 
       </div>
 
@@ -233,7 +229,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_manual_lock_changeset/1" translate="no">start_manual_lock_changeset(team)</a>
+        <a href="#start_manual_lock_changeset/1" data-no-tooltip translate="no">start_manual_lock_changeset(team)</a>
 
       </div>
 
@@ -259,15 +255,13 @@ CRM.</p></div>
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L18" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L18" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -304,15 +298,13 @@ CRM.</p></div>
 <section class="detail" id="active?/1">
 
   <div class="detail-header">
-    <a href="#active?/1" class="detail-link" title="Link to this function">
+    <a href="#active?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">active?(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L82" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L82" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -333,15 +325,13 @@ false if the user is nil or there is no grace period.</p>
 <section class="detail" id="end_changeset/1">
 
   <div class="detail-header">
-    <a href="#end_changeset/1" class="detail-link" title="Link to this function">
+    <a href="#end_changeset/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">end_changeset(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L65" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L65" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -351,7 +341,7 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> end_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> end_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
@@ -362,15 +352,13 @@ This means the grace period has expired.</p>
 <section class="detail" id="expired?/1">
 
   <div class="detail-header">
-    <a href="#expired?/1" class="detail-link" title="Link to this function">
+    <a href="#expired?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">expired?(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L99" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L99" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -391,15 +379,13 @@ false if the user is nil or there is no grace period.</p>
 <section class="detail" id="remove_changeset/1">
 
   <div class="detail-header">
-    <a href="#remove_changeset/1" class="detail-link" title="Link to this function">
+    <a href="#remove_changeset/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">remove_changeset(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L73" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L73" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -409,7 +395,7 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> remove_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> remove_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
@@ -419,15 +405,13 @@ false if the user is nil or there is no grace period.</p>
 <section class="detail" id="start_changeset/1">
 
   <div class="detail-header">
-    <a href="#start_changeset/1" class="detail-link" title="Link to this function">
+    <a href="#start_changeset/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">start_changeset(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L34" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -437,7 +421,7 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
@@ -447,15 +431,13 @@ false if the user is nil or there is no grace period.</p>
 <section class="detail" id="start_manual_lock_changeset/1">
 
   <div class="detail-header">
-    <a href="#start_manual_lock_changeset/1" class="detail-link" title="Link to this function">
+    <a href="#start_manual_lock_changeset/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">start_manual_lock_changeset(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L50" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L50" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -465,7 +447,7 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_manual_lock_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start_manual_lock_changeset(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
@@ -478,34 +460,33 @@ CRM.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.S3 — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,49 +98,50 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.S3</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.S3</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Helper functions for S3 exports/imports.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -161,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#download_url/2" translate="no">download_url(s3_bucket, s3_path)</a>
+        <a href="#download_url/2" data-no-tooltip translate="no">download_url(s3_bucket, s3_path)</a>
 
       </div>
 
@@ -172,7 +168,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#export_upload_multipart/4" translate="no">export_upload_multipart(stream, s3_bucket, s3_path, filename)</a>
+        <a href="#export_upload_multipart/4" data-no-tooltip translate="no">export_upload_multipart(stream, s3_bucket, s3_path, filename)</a>
 
       </div>
 
@@ -182,7 +178,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#exports_bucket/0" translate="no">exports_bucket()</a>
+        <a href="#exports_bucket/0" data-no-tooltip translate="no">exports_bucket()</a>
 
       </div>
 
@@ -192,7 +188,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#import_clickhouse_credentials/0" translate="no">import_clickhouse_credentials()</a>
+        <a href="#import_clickhouse_credentials/0" data-no-tooltip translate="no">import_clickhouse_credentials()</a>
 
       </div>
 
@@ -202,7 +198,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#import_presign_upload/2" translate="no">import_presign_upload(site_id, filename)</a>
+        <a href="#import_presign_upload/2" data-no-tooltip translate="no">import_presign_upload(site_id, filename)</a>
 
       </div>
 
@@ -212,7 +208,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#imports_bucket/0" translate="no">imports_bucket()</a>
+        <a href="#imports_bucket/0" data-no-tooltip translate="no">imports_bucket()</a>
 
       </div>
 
@@ -236,15 +232,13 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p></div>
 <section class="detail" id="download_url/2">
 
   <div class="detail-header">
-    <a href="#download_url/2" class="detail-link" title="Link to this function">
+    <a href="#download_url/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">download_url(s3_bucket, s3_path)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L101" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L101" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -254,7 +248,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> download_url(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: <a href="https://www.erlang.org/doc/man/uri_string.html#type-uri_string">:uri_string.uri_string</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> download_url(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: <a href="https://www.erlang.org/doc/apps/stdlib/uri_string.html#t:uri_string/0">:uri_string.uri_string</a>()</pre>
 
       </div>
 
@@ -265,15 +259,13 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
 <section class="detail" id="export_upload_multipart/4">
 
   <div class="detail-header">
-    <a href="#export_upload_multipart/4" class="detail-link" title="Link to this function">
+    <a href="#export_upload_multipart/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">export_upload_multipart(stream, s3_bucket, s3_path, filename)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L81" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L81" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -293,15 +285,13 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
 <section class="detail" id="exports_bucket/0">
 
   <div class="detail-header">
-    <a href="#exports_bucket/0" class="detail-link" title="Link to this function">
+    <a href="#exports_bucket/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">exports_bucket()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L19" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L19" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -316,22 +306,20 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
       </div>
 
 <p>Returns the pre-configured S3 bucket for CSV exports.</p><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:plausible</span><span class="p">,</span><span class="w"> </span><span class="nc">Plausible.S3</span><span class="p">,</span><span class="w">
-  </span><span class="ss">exports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="5769436048-1">(</span><span class="s">&quot;S3_EXPORTS_BUCKET&quot;</span><span class="p" data-group-id="5769436048-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">exports_bucket</span><span class="p" data-group-id="4776361044-1">(</span><span class="p" data-group-id="4776361044-1">)</span><span class="w">
+  </span><span class="ss">exports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="4362353724-1">(</span><span class="s">&quot;S3_EXPORTS_BUCKET&quot;</span><span class="p" data-group-id="4362353724-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">exports_bucket</span><span class="p" data-group-id="3992602780-1">(</span><span class="p" data-group-id="3992602780-1">)</span><span class="w">
 </span><span class="s">&quot;test-exports&quot;</span></code></pre>
   </section>
 </section>
 <section class="detail" id="import_clickhouse_credentials/0">
 
   <div class="detail-header">
-    <a href="#import_clickhouse_credentials/0" class="detail-link" title="Link to this function">
+    <a href="#import_clickhouse_credentials/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">import_clickhouse_credentials()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L148" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L148" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -348,22 +336,20 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
 
       </div>
 
-<p>Returns <code class="inline">access_key_id</code> and <code class="inline">secret_access_key</code> to be used by ClickHouse during imports from S3.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">import_clickhouse_credentials</span><span class="p" data-group-id="4195587913-1">(</span><span class="p" data-group-id="4195587913-1">)</span><span class="w">
-</span><span class="p" data-group-id="4195587913-2">%{</span><span class="ss">access_key_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">secret_access_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p" data-group-id="4195587913-2">}</span></code></pre>
+<p>Returns <code class="inline">access_key_id</code> and <code class="inline">secret_access_key</code> to be used by ClickHouse during imports from S3.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">import_clickhouse_credentials</span><span class="p" data-group-id="9755379561-1">(</span><span class="p" data-group-id="9755379561-1">)</span><span class="w">
+</span><span class="p" data-group-id="9755379561-2">%{</span><span class="ss">access_key_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">secret_access_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p" data-group-id="9755379561-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="import_presign_upload/2">
 
   <div class="detail-header">
-    <a href="#import_presign_upload/2" class="detail-link" title="Link to this function">
+    <a href="#import_presign_upload/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">import_presign_upload(site_id, filename)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L51" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L51" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -371,23 +357,21 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
 
   <section class="docstring">
 
-<p>Presigns an upload for an imported file.</p><p>In the current implementation the bucket always goes into the path component.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">upload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">import_presign_upload</span><span class="p" data-group-id="1973420272-1">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="c">_filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;imported_browsers.csv&quot;</span><span class="p" data-group-id="1973420272-1">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="no">true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">ends_with?</span><span class="p" data-group-id="1973420272-2">(</span><span class="n">upload</span><span class="o">.</span><span class="n">s3_url</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/test-imports/123/imported_browsers.csv&quot;</span><span class="p" data-group-id="1973420272-2">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="no">true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">contains?</span><span class="p" data-group-id="1973420272-3">(</span><span class="n">upload</span><span class="o">.</span><span class="n">presigned_url</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;&quot;</span><span class="p" data-group-id="1973420272-3">)</span></code></pre>
+<p>Presigns an upload for an imported file.</p><p>In the current implementation the bucket always goes into the path component.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">upload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">import_presign_upload</span><span class="p" data-group-id="2553679923-1">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="c">_filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;imported_browsers.csv&quot;</span><span class="p" data-group-id="2553679923-1">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="no">true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">ends_with?</span><span class="p" data-group-id="2553679923-2">(</span><span class="n">upload</span><span class="o">.</span><span class="n">s3_url</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/test-imports/123/imported_browsers.csv&quot;</span><span class="p" data-group-id="2553679923-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="no">true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">contains?</span><span class="p" data-group-id="2553679923-3">(</span><span class="n">upload</span><span class="o">.</span><span class="n">presigned_url</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;&quot;</span><span class="p" data-group-id="2553679923-3">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="imports_bucket/0">
 
   <div class="detail-header">
-    <a href="#imports_bucket/0" class="detail-link" title="Link to this function">
+    <a href="#imports_bucket/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">imports_bucket()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L34" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -402,7 +386,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
       </div>
 
 <p>Returns the pre-configured S3 bucket for CSV imports.</p><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:plausible</span><span class="p">,</span><span class="w"> </span><span class="nc">Plausible.S3</span><span class="p">,</span><span class="w">
-  </span><span class="ss">imports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="6275198331-1">(</span><span class="s">&quot;S3_IMPORTS_BUCKET&quot;</span><span class="p" data-group-id="6275198331-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">imports_bucket</span><span class="p" data-group-id="1359134521-1">(</span><span class="p" data-group-id="1359134521-1">)</span><span class="w">
+  </span><span class="ss">imports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="0278332106-1">(</span><span class="s">&quot;S3_IMPORTS_BUCKET&quot;</span><span class="p" data-group-id="0278332106-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">imports_bucket</span><span class="p" data-group-id="6827131976-1">(</span><span class="p" data-group-id="6827131976-1">)</span><span class="w">
 </span><span class="s">&quot;test-imports&quot;</span></code></pre>
   </section>
 </section>
@@ -410,34 +394,33 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

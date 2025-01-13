@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Auth.TOTP — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,46 +98,46 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Auth.TOTP</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Auth.TOTP</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>TOTP auth context</p><p>Handles all the aspects of TOTP setup, management and validation for users.</p><h2 id="module-setup" class="section-heading">
   <a href="#module-setup" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -153,7 +148,7 @@ Pages
 binary is generated for user and stored under <code class="inline">User.totp_secret</code>. The secret
 is additionally encrypted while stored in the database using <a href="https://hexdocs.pm/cloak/1.1.2/Cloak.html"><code class="inline">Cloak</code></a>. The
 vault for safe storage is configured in <a href="Plausible.Auth.TOTP.Vault.html"><code class="inline">Plausible.Auth.TOTP.Vault</code></a> via
-a dedicated <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.html"><code class="inline">Ecto</code></a> type defined in <a href="Plausible.Auth.TOTP.EncryptedBinary.html"><code class="inline">Plausible.Auth.TOTP.EncryptedBinary</code></a>.
+a dedicated <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.html"><code class="inline">Ecto</code></a> type defined in <a href="Plausible.Auth.TOTP.EncryptedBinary.html"><code class="inline">Plausible.Auth.TOTP.EncryptedBinary</code></a>.
 The function returns updated user along with TOTP URI and a readable form
 of secret. Both - the URI and readable secret - are meant for exposure
 in the user's setup screen. The URI should be encoded as a QR code.</p><p>After initiation, user is expected to confirm valid setup with <a href="#enable/2"><code class="inline">enable/2</code></a>,
@@ -212,8 +207,9 @@ for next N days. The token should then be stored in an encrypted,
 signed cookie with a proper expiration timestamp.</p><p>The token should be reset each time it either fails to match
 or when other credentials (like password) are reset. This should
 effectively invalidate all trusted devices for a given user.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -229,7 +225,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#disable/2" translate="no">disable(user, password)</a>
+        <a href="#disable/2" data-no-tooltip translate="no">disable(user, password)</a>
 
       </div>
 
@@ -237,7 +233,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#enable/3" translate="no">enable(user, code, opts \\ [])</a>
+        <a href="#enable/3" data-no-tooltip translate="no">enable(user, code, opts \\ [])</a>
 
       </div>
 
@@ -245,7 +241,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#enabled?/1" translate="no">enabled?(user)</a>
+        <a href="#enabled?/1" data-no-tooltip translate="no">enabled?(user)</a>
 
       </div>
 
@@ -253,7 +249,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#force_disable/1" translate="no">force_disable(user)</a>
+        <a href="#force_disable/1" data-no-tooltip translate="no">force_disable(user)</a>
 
       </div>
 
@@ -261,7 +257,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#generate_recovery_codes/1" translate="no">generate_recovery_codes(map)</a>
+        <a href="#generate_recovery_codes/1" data-no-tooltip translate="no">generate_recovery_codes(map)</a>
 
       </div>
 
@@ -269,7 +265,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#generate_recovery_codes/2" translate="no">generate_recovery_codes(user, password)</a>
+        <a href="#generate_recovery_codes/2" data-no-tooltip translate="no">generate_recovery_codes(user, password)</a>
 
       </div>
 
@@ -277,7 +273,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#initiate/1" translate="no">initiate(user)</a>
+        <a href="#initiate/1" data-no-tooltip translate="no">initiate(user)</a>
 
       </div>
 
@@ -285,7 +281,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#initiated?/1" translate="no">initiated?(user)</a>
+        <a href="#initiated?/1" data-no-tooltip translate="no">initiated?(user)</a>
 
       </div>
 
@@ -293,7 +289,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#reset_token/1" translate="no">reset_token(user)</a>
+        <a href="#reset_token/1" data-no-tooltip translate="no">reset_token(user)</a>
 
       </div>
 
@@ -301,7 +297,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#use_recovery_code/2" translate="no">use_recovery_code(user, code)</a>
+        <a href="#use_recovery_code/2" data-no-tooltip translate="no">use_recovery_code(user, code)</a>
 
       </div>
 
@@ -309,7 +305,7 @@ effectively invalidate all trusted devices for a given user.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validate_code/3" translate="no">validate_code(user, code, opts \\ [])</a>
+        <a href="#validate_code/3" data-no-tooltip translate="no">validate_code(user, code, opts \\ [])</a>
 
       </div>
 
@@ -331,15 +327,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="disable/2">
 
   <div class="detail-header">
-    <a href="#disable/2" class="detail-link" title="Link to this function">
+    <a href="#disable/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">disable(user, password)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L172" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L172" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -362,15 +356,13 @@ effectively invalidate all trusted devices for a given user.</p>
     <span id="enable/2"></span>
 
   <div class="detail-header">
-    <a href="#enable/3" class="detail-link" title="Link to this function">
+    <a href="#enable/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">enable(user, code, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L132" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L132" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -392,15 +384,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="enabled?/1">
 
   <div class="detail-header">
-    <a href="#enabled?/1" class="detail-link" title="Link to this function">
+    <a href="#enabled?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">enabled?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L94" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L94" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -420,15 +410,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="force_disable/1">
 
   <div class="detail-header">
-    <a href="#force_disable/1" class="detail-link" title="Link to this function">
+    <a href="#force_disable/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">force_disable(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L187" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L187" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -448,15 +436,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="generate_recovery_codes/1">
 
   <div class="detail-header">
-    <a href="#generate_recovery_codes/1" class="detail-link" title="Link to this function">
+    <a href="#generate_recovery_codes/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">generate_recovery_codes(map)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L205" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L205" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -470,15 +456,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="generate_recovery_codes/2">
 
   <div class="detail-header">
-    <a href="#generate_recovery_codes/2" class="detail-link" title="Link to this function">
+    <a href="#generate_recovery_codes/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">generate_recovery_codes(user, password)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L209" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L209" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -499,15 +483,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="initiate/1">
 
   <div class="detail-header">
-    <a href="#initiate/1" class="detail-link" title="Link to this function">
+    <a href="#initiate/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">initiate(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L106" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L106" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -529,15 +511,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="initiated?/1">
 
   <div class="detail-header">
-    <a href="#initiated?/1" class="detail-link" title="Link to this function">
+    <a href="#initiated?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">initiated?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L99" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L99" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -557,15 +537,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="reset_token/1">
 
   <div class="detail-header">
-    <a href="#reset_token/1" class="detail-link" title="Link to this function">
+    <a href="#reset_token/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">reset_token(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L192" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L192" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -585,15 +563,13 @@ effectively invalidate all trusted devices for a given user.</p>
 <section class="detail" id="use_recovery_code/2">
 
   <div class="detail-header">
-    <a href="#use_recovery_code/2" class="detail-link" title="Link to this function">
+    <a href="#use_recovery_code/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">use_recovery_code(user, code)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L262" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L262" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -616,15 +592,13 @@ effectively invalidate all trusted devices for a given user.</p>
     <span id="validate_code/2"></span>
 
   <div class="detail-header">
-    <a href="#validate_code/3" class="detail-link" title="Link to this function">
+    <a href="#validate_code/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">validate_code(user, code, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L250" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L250" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -646,34 +620,33 @@ effectively invalidate all trusted devices for a given user.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.ClickhouseRepo — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,45 +98,46 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.ClickhouseRepo</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.ClickhouseRepo</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -157,37 +153,37 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#aggregate/3" translate="no">aggregate(queryable, aggregate, opts \\ [])</a>
+        <a href="#aggregate/3" data-no-tooltip translate="no">aggregate(queryable, aggregate, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#aggregate/4" translate="no">aggregate(queryable, aggregate, field, opts)</a>
+        <a href="#aggregate/4" data-no-tooltip translate="no">aggregate(queryable, aggregate, field, opts)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#all/2" translate="no">all(queryable, opts \\ [])</a>
+        <a href="#all/2" data-no-tooltip translate="no">all(queryable, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#alter_update_all/3" translate="no">alter_update_all(queryable, updates, opts \\ [])</a>
+        <a href="#alter_update_all/3" data-no-tooltip translate="no">alter_update_all(queryable, updates, opts \\ [])</a>
 
       </div>
 
@@ -197,27 +193,27 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#checked_out?/0" translate="no">checked_out?()</a>
+        <a href="#checked_out?/0" data-no-tooltip translate="no">checked_out?()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#checkout/2" translate="no">checkout(fun, opts \\ [])</a>
+        <a href="#checkout/2" data-no-tooltip translate="no">checkout(fun, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/1" translate="no">child_spec(opts)</a>
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(opts)</a>
 
       </div>
 
@@ -225,27 +221,27 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#config/0" translate="no">config()</a>
+        <a href="#config/0" data-no-tooltip translate="no">config()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#default_options/1" translate="no">default_options(operation)</a>
+        <a href="#default_options/1" data-no-tooltip translate="no">default_options(operation)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#disconnect_all/2" translate="no">disconnect_all(interval, opts \\ [])</a>
+        <a href="#disconnect_all/2" data-no-tooltip translate="no">disconnect_all(interval, opts \\ [])</a>
 
       </div>
 
@@ -256,67 +252,67 @@ pool to disconnect within the given interval.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#exists?/2" translate="no">exists?(queryable, opts \\ [])</a>
+        <a href="#exists?/2" data-no-tooltip translate="no">exists?(queryable, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get/3" translate="no">get(queryable, id, opts \\ [])</a>
+        <a href="#get/3" data-no-tooltip translate="no">get(queryable, id, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get!/3" translate="no">get!(queryable, id, opts \\ [])</a>
+        <a href="#get!/3" data-no-tooltip translate="no">get!(queryable, id, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_by/3" translate="no">get_by(queryable, clauses, opts \\ [])</a>
+        <a href="#get_by/3" data-no-tooltip translate="no">get_by(queryable, clauses, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_by!/3" translate="no">get_by!(queryable, clauses, opts \\ [])</a>
+        <a href="#get_by!/3" data-no-tooltip translate="no">get_by!(queryable, clauses, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_dynamic_repo/0" translate="no">get_dynamic_repo()</a>
+        <a href="#get_dynamic_repo/0" data-no-tooltip translate="no">get_dynamic_repo()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#insert_stream/3" translate="no">insert_stream(source_or_schema, rows, opts \\ [])</a>
+        <a href="#insert_stream/3" data-no-tooltip translate="no">insert_stream(source_or_schema, rows, opts \\ [])</a>
 
       </div>
 
@@ -326,37 +322,37 @@ pool to disconnect within the given interval.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#load/2" translate="no">load(schema_or_types, data)</a>
+        <a href="#load/2" data-no-tooltip translate="no">load(schema_or_types, data)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#one/2" translate="no">one(queryable, opts \\ [])</a>
+        <a href="#one/2" data-no-tooltip translate="no">one(queryable, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#one!/2" translate="no">one!(queryable, opts \\ [])</a>
+        <a href="#one!/2" data-no-tooltip translate="no">one!(queryable, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parallel_tasks/2" translate="no">parallel_tasks(queries, opts \\ [])</a>
+        <a href="#parallel_tasks/2" data-no-tooltip translate="no">parallel_tasks(queries, opts \\ [])</a>
 
       </div>
 
@@ -364,37 +360,27 @@ pool to disconnect within the given interval.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#preload/3" translate="no">preload(struct_or_structs_or_nil, preloads, opts \\ [])</a>
+        <a href="#preload/3" data-no-tooltip translate="no">preload(struct_or_structs_or_nil, preloads, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put_dynamic_repo/1" translate="no">put_dynamic_repo(dynamic)</a>
+        <a href="#put_dynamic_repo/1" data-no-tooltip translate="no">put_dynamic_repo(dynamic)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#query/3" translate="no">query(sql, params \\ [], opts \\ [])</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that executes the given query.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#query!/3" translate="no">query!(sql, params \\ [], opts \\ [])</a>
+        <a href="#query/3" data-no-tooltip translate="no">query(sql, params \\ [], opts \\ [])</a>
 
       </div>
 
@@ -404,57 +390,67 @@ pool to disconnect within the given interval.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#reload/2" translate="no">reload(queryable, opts \\ [])</a>
+        <a href="#query!/3" data-no-tooltip translate="no">query!(sql, params \\ [], opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that executes the given query.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#reload!/2" translate="no">reload!(queryable, opts \\ [])</a>
+        <a href="#reload/2" data-no-tooltip translate="no">reload(queryable, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_link/1" translate="no">start_link(opts \\ [])</a>
+        <a href="#reload!/2" data-no-tooltip translate="no">reload!(queryable, opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stop/1" translate="no">stop(timeout \\ 5000)</a>
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(opts \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stream/2" translate="no">stream(queryable, opts \\ [])</a>
+        <a href="#stop/1" data-no-tooltip translate="no">stop(timeout \\ 5000)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#to_inline_sql/2" translate="no">to_inline_sql(operation, queryable)</a>
+        <a href="#stream/2" data-no-tooltip translate="no">stream(queryable, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#to_inline_sql/2" data-no-tooltip translate="no">to_inline_sql(operation, queryable)</a>
 
       </div>
 
@@ -464,7 +460,7 @@ pool to disconnect within the given interval.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#to_sql/2" translate="no">to_sql(operation, queryable)</a>
+        <a href="#to_sql/2" data-no-tooltip translate="no">to_sql(operation, queryable)</a>
 
       </div>
 
@@ -490,15 +486,13 @@ pool to disconnect within the given interval.</p></div>
     <span id="aggregate/2"></span>
 
   <div class="detail-header">
-    <a href="#aggregate/3" class="detail-link" title="Link to this function">
+    <a href="#aggregate/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">aggregate(queryable, aggregate, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -506,21 +500,19 @@ pool to disconnect within the given interval.</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="aggregate/4">
 
   <div class="detail-header">
-    <a href="#aggregate/4" class="detail-link" title="Link to this function">
+    <a href="#aggregate/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">aggregate(queryable, aggregate, field, opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -528,7 +520,7 @@ pool to disconnect within the given interval.</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="all/2">
@@ -536,15 +528,13 @@ pool to disconnect within the given interval.</p></div>
     <span id="all/1"></span>
 
   <div class="detail-header">
-    <a href="#all/2" class="detail-link" title="Link to this function">
+    <a href="#all/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">all(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -552,7 +542,7 @@ pool to disconnect within the given interval.</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="alter_update_all/3">
@@ -560,15 +550,13 @@ pool to disconnect within the given interval.</p></div>
     <span id="alter_update_all/2"></span>
 
   <div class="detail-header">
-    <a href="#alter_update_all/3" class="detail-link" title="Link to this function">
+    <a href="#alter_update_all/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">alter_update_all(queryable, updates, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -582,15 +570,13 @@ pool to disconnect within the given interval.</p></div>
 <section class="detail" id="checked_out?/0">
 
   <div class="detail-header">
-    <a href="#checked_out?/0" class="detail-link" title="Link to this function">
+    <a href="#checked_out?/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">checked_out?()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -598,7 +584,7 @@ pool to disconnect within the given interval.</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="checkout/2">
@@ -606,15 +592,13 @@ pool to disconnect within the given interval.</p></div>
     <span id="checkout/1"></span>
 
   <div class="detail-header">
-    <a href="#checkout/2" class="detail-link" title="Link to this function">
+    <a href="#checkout/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">checkout(fun, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -622,21 +606,19 @@ pool to disconnect within the given interval.</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">child_spec(opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -650,15 +632,13 @@ pool to disconnect within the given interval.</p></div>
 <section class="detail" id="config/0">
 
   <div class="detail-header">
-    <a href="#config/0" class="detail-link" title="Link to this function">
+    <a href="#config/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">config()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -666,21 +646,19 @@ pool to disconnect within the given interval.</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="default_options/1">
 
   <div class="detail-header">
-    <a href="#default_options/1" class="detail-link" title="Link to this function">
+    <a href="#default_options/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">default_options(operation)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -688,7 +666,7 @@ pool to disconnect within the given interval.</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="disconnect_all/2">
@@ -696,15 +674,13 @@ pool to disconnect within the given interval.</p></div>
     <span id="disconnect_all/1"></span>
 
   <div class="detail-header">
-    <a href="#disconnect_all/2" class="detail-link" title="Link to this function">
+    <a href="#disconnect_all/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">disconnect_all(interval, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -721,15 +697,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="exists?/1"></span>
 
   <div class="detail-header">
-    <a href="#exists?/2" class="detail-link" title="Link to this function">
+    <a href="#exists?/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">exists?(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -737,7 +711,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get/3">
@@ -745,15 +719,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="get/2"></span>
 
   <div class="detail-header">
-    <a href="#get/3" class="detail-link" title="Link to this function">
+    <a href="#get/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get(queryable, id, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -761,7 +733,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get!/3">
@@ -769,15 +741,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="get!/2"></span>
 
   <div class="detail-header">
-    <a href="#get!/3" class="detail-link" title="Link to this function">
+    <a href="#get!/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get!(queryable, id, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -785,7 +755,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_by/3">
@@ -793,15 +763,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="get_by/2"></span>
 
   <div class="detail-header">
-    <a href="#get_by/3" class="detail-link" title="Link to this function">
+    <a href="#get_by/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_by(queryable, clauses, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -809,7 +777,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_by!/3">
@@ -817,15 +785,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="get_by!/2"></span>
 
   <div class="detail-header">
-    <a href="#get_by!/3" class="detail-link" title="Link to this function">
+    <a href="#get_by!/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_by!(queryable, clauses, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -833,21 +799,19 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_dynamic_repo/0">
 
   <div class="detail-header">
-    <a href="#get_dynamic_repo/0" class="detail-link" title="Link to this function">
+    <a href="#get_dynamic_repo/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_dynamic_repo()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -855,7 +819,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="insert_stream/3">
@@ -863,15 +827,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="insert_stream/2"></span>
 
   <div class="detail-header">
-    <a href="#insert_stream/3" class="detail-link" title="Link to this function">
+    <a href="#insert_stream/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">insert_stream(source_or_schema, rows, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -879,37 +841,35 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Similar to <code class="inline">insert_all/2</code> but with the following differences:</p><ul><li>accepts rows as streams or lists</li><li>sends rows as a chunked request</li><li>doesn't autogenerate ids or does any other preprocessing</li></ul><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Repo</span><span class="o">.</span><span class="n">query!</span><span class="p" data-group-id="7998041899-1">(</span><span class="s">&quot;create table ecto_ch_demo(a UInt64, b String) engine Null&quot;</span><span class="p" data-group-id="7998041899-1">)</span><span class="w">
+<p>Similar to <code class="inline">insert_all/2</code> but with the following differences:</p><ul><li>accepts rows as streams or lists</li><li>sends rows as a chunked request</li><li>doesn't autogenerate ids or does any other preprocessing</li></ul><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Repo</span><span class="o">.</span><span class="n">query!</span><span class="p" data-group-id="0030244032-1">(</span><span class="s">&quot;create table ecto_ch_demo(a UInt64, b String) engine Null&quot;</span><span class="p" data-group-id="0030244032-1">)</span><span class="w">
 
-</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Demo</span><span class="w"> </span><span class="k" data-group-id="7998041899-2">do</span><span class="w">
+</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Demo</span><span class="w"> </span><span class="k" data-group-id="0030244032-2">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Ecto.Schema</span><span class="w">
 
   </span><span class="na">@primary_key</span><span class="w"> </span><span class="no">false</span><span class="w">
-  </span><span class="n">schema</span><span class="w"> </span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="w"> </span><span class="k" data-group-id="7998041899-3">do</span><span class="w">
+  </span><span class="n">schema</span><span class="w"> </span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="w"> </span><span class="k" data-group-id="0030244032-3">do</span><span class="w">
     </span><span class="n">field</span><span class="w"> </span><span class="ss">:a</span><span class="p">,</span><span class="w"> </span><span class="nc">Ch</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;UInt64&quot;</span><span class="w">
     </span><span class="n">field</span><span class="w"> </span><span class="ss">:b</span><span class="p">,</span><span class="w"> </span><span class="ss">:string</span><span class="w">
-  </span><span class="k" data-group-id="7998041899-3">end</span><span class="w">
-</span><span class="k" data-group-id="7998041899-2">end</span><span class="w">
+  </span><span class="k" data-group-id="0030244032-3">end</span><span class="w">
+</span><span class="k" data-group-id="0030244032-2">end</span><span class="w">
 
-</span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">map</span><span class="p" data-group-id="7998041899-4">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="7998041899-5">fn</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p" data-group-id="7998041899-6">%{</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="n">to_string</span><span class="p" data-group-id="7998041899-7">(</span><span class="n">i</span><span class="p" data-group-id="7998041899-7">)</span><span class="p" data-group-id="7998041899-6">}</span><span class="w"> </span><span class="k" data-group-id="7998041899-5">end</span><span class="p" data-group-id="7998041899-4">)</span><span class="w">
-</span><span class="p" data-group-id="7998041899-8">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="7998041899-8">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="7998041899-9">(</span><span class="nc">Demo</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p" data-group-id="7998041899-9">)</span><span class="w">
+</span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">map</span><span class="p" data-group-id="0030244032-4">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="0030244032-5">fn</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p" data-group-id="0030244032-6">%{</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="n">to_string</span><span class="p" data-group-id="0030244032-7">(</span><span class="n">i</span><span class="p" data-group-id="0030244032-7">)</span><span class="p" data-group-id="0030244032-6">}</span><span class="w"> </span><span class="k" data-group-id="0030244032-5">end</span><span class="p" data-group-id="0030244032-4">)</span><span class="w">
+</span><span class="p" data-group-id="0030244032-8">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="0030244032-8">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="0030244032-9">(</span><span class="nc">Demo</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p" data-group-id="0030244032-9">)</span><span class="w">
 
 </span><span class="c1"># schemaless</span><span class="w">
-</span><span class="p" data-group-id="7998041899-10">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="7998041899-10">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="7998041899-11">(</span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="ss">types</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7998041899-12">[</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="nc">Ch.Types</span><span class="o">.</span><span class="n">u64</span><span class="p" data-group-id="7998041899-13">(</span><span class="p" data-group-id="7998041899-13">)</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p" data-group-id="7998041899-12">]</span><span class="p" data-group-id="7998041899-11">)</span></code></pre>
+</span><span class="p" data-group-id="0030244032-10">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="0030244032-10">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="0030244032-11">(</span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="ss">types</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0030244032-12">[</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="nc">Ch.Types</span><span class="o">.</span><span class="n">u64</span><span class="p" data-group-id="0030244032-13">(</span><span class="p" data-group-id="0030244032-13">)</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p" data-group-id="0030244032-12">]</span><span class="p" data-group-id="0030244032-11">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="load/2">
 
   <div class="detail-header">
-    <a href="#load/2" class="detail-link" title="Link to this function">
+    <a href="#load/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">load(schema_or_types, data)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -917,7 +877,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="one/2">
@@ -925,15 +885,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="one/1"></span>
 
   <div class="detail-header">
-    <a href="#one/2" class="detail-link" title="Link to this function">
+    <a href="#one/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">one(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -941,7 +899,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="one!/2">
@@ -949,15 +907,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="one!/1"></span>
 
   <div class="detail-header">
-    <a href="#one!/2" class="detail-link" title="Link to this function">
+    <a href="#one!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">one!(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -965,7 +921,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="parallel_tasks/2">
@@ -973,15 +929,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="parallel_tasks/1"></span>
 
   <div class="detail-header">
-    <a href="#parallel_tasks/2" class="detail-link" title="Link to this function">
+    <a href="#parallel_tasks/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">parallel_tasks(queries, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L18" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L18" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -997,15 +951,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="preload/2"></span>
 
   <div class="detail-header">
-    <a href="#preload/3" class="detail-link" title="Link to this function">
+    <a href="#preload/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">preload(struct_or_structs_or_nil, preloads, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1013,21 +965,19 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="put_dynamic_repo/1">
 
   <div class="detail-header">
-    <a href="#put_dynamic_repo/1" class="detail-link" title="Link to this function">
+    <a href="#put_dynamic_repo/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">put_dynamic_repo(dynamic)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1035,7 +985,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="query/3">
@@ -1045,15 +995,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="query/2"></span>
 
   <div class="detail-header">
-    <a href="#query/3" class="detail-link" title="Link to this function">
+    <a href="#query/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">query(sql, params \\ [], opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1071,15 +1019,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="query!/2"></span>
 
   <div class="detail-header">
-    <a href="#query!/3" class="detail-link" title="Link to this function">
+    <a href="#query!/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">query!(sql, params \\ [], opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1095,15 +1041,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="reload/1"></span>
 
   <div class="detail-header">
-    <a href="#reload/2" class="detail-link" title="Link to this function">
+    <a href="#reload/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">reload(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1111,7 +1055,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="reload!/2">
@@ -1119,15 +1063,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="reload!/1"></span>
 
   <div class="detail-header">
-    <a href="#reload!/2" class="detail-link" title="Link to this function">
+    <a href="#reload!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">reload!(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1135,7 +1077,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -1143,15 +1085,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="start_link/0"></span>
 
   <div class="detail-header">
-    <a href="#start_link/1" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">start_link(opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1159,7 +1099,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="stop/1">
@@ -1167,15 +1107,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="stop/0"></span>
 
   <div class="detail-header">
-    <a href="#stop/1" class="detail-link" title="Link to this function">
+    <a href="#stop/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">stop(timeout \\ 5000)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1183,7 +1121,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="stream/2">
@@ -1191,15 +1129,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="stream/1"></span>
 
   <div class="detail-header">
-    <a href="#stream/2" class="detail-link" title="Link to this function">
+    <a href="#stream/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">stream(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L4" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1207,21 +1143,19 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="to_inline_sql/2">
 
   <div class="detail-header">
-    <a href="#to_inline_sql/2" class="detail-link" title="Link to this function">
+    <a href="#to_inline_sql/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">to_inline_sql(operation, queryable)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1231,7 +1165,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> to_inline_sql(:all | :delete_all | :update_all, <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Queryable.html#t:t/0">Ecto.Queryable.t</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> to_inline_sql(:all | :delete_all | :update_all, <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Queryable.html#t:t/0">Ecto.Queryable.t</a>()) ::
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
 
       </div>
@@ -1242,15 +1176,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 <section class="detail" id="to_sql/2">
 
   <div class="detail-header">
-    <a href="#to_sql/2" class="detail-link" title="Link to this function">
+    <a href="#to_sql/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">to_sql(operation, queryable)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1265,34 +1197,33 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

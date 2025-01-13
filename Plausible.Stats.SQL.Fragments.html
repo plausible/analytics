@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Stats.SQL.Fragments — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,49 +98,50 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Stats.SQL.Fragments</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Stats.SQL.Fragments</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Various macros and common SQL fragments used in Stats code.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -161,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bounce_rate/0" translate="no">bounce_rate()</a>
+        <a href="#bounce_rate/0" data-no-tooltip translate="no">bounce_rate()</a>
 
       </div>
 
@@ -169,7 +165,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#coalesce_string/2" translate="no">coalesce_string(fieldA, fieldB)</a>
+        <a href="#coalesce_string/2" data-no-tooltip translate="no">coalesce_string(fieldA, fieldB)</a>
 
       </div>
 
@@ -177,7 +173,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_by_key/3" translate="no">get_by_key(table, meta_column, key)</a>
+        <a href="#get_by_key/3" data-no-tooltip translate="no">get_by_key(table, meta_column, key)</a>
 
       </div>
 
@@ -187,7 +183,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#has_key/3" translate="no">has_key(table, meta_column, key)</a>
+        <a href="#has_key/3" data-no-tooltip translate="no">has_key(table, meta_column, key)</a>
 
       </div>
 
@@ -197,7 +193,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#meta_key_column/1" translate="no">meta_key_column(atom)</a>
+        <a href="#meta_key_column/1" data-no-tooltip translate="no">meta_key_column(atom)</a>
 
       </div>
 
@@ -205,7 +201,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#meta_value_column/1" translate="no">meta_value_column(atom)</a>
+        <a href="#meta_value_column/1" data-no-tooltip translate="no">meta_value_column(atom)</a>
 
       </div>
 
@@ -213,7 +209,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#sample_percent/0" translate="no">sample_percent()</a>
+        <a href="#sample_percent/0" data-no-tooltip translate="no">sample_percent()</a>
 
       </div>
 
@@ -221,7 +217,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#select_join_fields/4" translate="no">select_join_fields(q, query, list, table_name)</a>
+        <a href="#select_join_fields/4" data-no-tooltip translate="no">select_join_fields(q, query, list, table_name)</a>
 
       </div>
 
@@ -231,7 +227,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#select_merge_as/3" translate="no">select_merge_as(q, binding, map_literal)</a>
+        <a href="#select_merge_as/3" data-no-tooltip translate="no">select_merge_as(q, binding, map_literal)</a>
 
       </div>
 
@@ -241,7 +237,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#to_timezone/2" translate="no">to_timezone(date, timezone)</a>
+        <a href="#to_timezone/2" data-no-tooltip translate="no">to_timezone(date, timezone)</a>
 
       </div>
 
@@ -251,7 +247,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#total/0" translate="no">total()</a>
+        <a href="#total/0" data-no-tooltip translate="no">total()</a>
 
       </div>
 
@@ -259,7 +255,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#uniq/1" translate="no">uniq(user_id)</a>
+        <a href="#uniq/1" data-no-tooltip translate="no">uniq(user_id)</a>
 
       </div>
 
@@ -267,7 +263,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#visit_duration/0" translate="no">visit_duration()</a>
+        <a href="#visit_duration/0" data-no-tooltip translate="no">visit_duration()</a>
 
       </div>
 
@@ -275,7 +271,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#weekstart_not_before/2" translate="no">weekstart_not_before(date, not_before)</a>
+        <a href="#weekstart_not_before/2" data-no-tooltip translate="no">weekstart_not_before(date, not_before)</a>
 
       </div>
 
@@ -286,7 +282,7 @@ boundary, <code class="inline">not_before</code> is returned.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#wrap_alias/2" translate="no">wrap_alias(binding, map_literal)</a>
+        <a href="#wrap_alias/2" data-no-tooltip translate="no">wrap_alias(binding, map_literal)</a>
 
       </div>
 
@@ -311,15 +307,13 @@ expression gets wrapped in dynamic and set as selected_as.</p></div>
 <section class="detail" id="bounce_rate/0">
 
   <div class="detail-header">
-    <a href="#bounce_rate/0" class="detail-link" title="Link to this macro">
+    <a href="#bounce_rate/0" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">bounce_rate()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L31" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -335,15 +329,13 @@ expression gets wrapped in dynamic and set as selected_as.</p></div>
 <section class="detail" id="coalesce_string/2">
 
   <div class="detail-header">
-    <a href="#coalesce_string/2" class="detail-link" title="Link to this macro">
+    <a href="#coalesce_string/2" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">coalesce_string(fieldA, fieldB)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L48" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L48" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -359,15 +351,13 @@ expression gets wrapped in dynamic and set as selected_as.</p></div>
 <section class="detail" id="get_by_key/3">
 
   <div class="detail-header">
-    <a href="#get_by_key/3" class="detail-link" title="Link to this macro">
+    <a href="#get_by_key/3" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">get_by_key(table, meta_column, key)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L134" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L134" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -390,15 +380,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="has_key/3">
 
   <div class="detail-header">
-    <a href="#has_key/3" class="detail-link" title="Link to this macro">
+    <a href="#has_key/3" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">has_key(table, meta_column, key)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L114" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L114" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -420,15 +408,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="meta_key_column/1">
 
   <div class="detail-header">
-    <a href="#meta_key_column/1" class="detail-link" title="Link to this function">
+    <a href="#meta_key_column/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">meta_key_column(atom)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L145" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L145" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -442,15 +428,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="meta_value_column/1">
 
   <div class="detail-header">
-    <a href="#meta_value_column/1" class="detail-link" title="Link to this function">
+    <a href="#meta_value_column/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">meta_value_column(atom)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L148" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L148" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -464,15 +448,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="sample_percent/0">
 
   <div class="detail-header">
-    <a href="#sample_percent/0" class="detail-link" title="Link to this macro">
+    <a href="#sample_percent/0" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">sample_percent()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L25" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L25" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -488,15 +470,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="select_join_fields/4">
 
   <div class="detail-header">
-    <a href="#select_join_fields/4" class="detail-link" title="Link to this macro">
+    <a href="#select_join_fields/4" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">select_join_fields(q, query, list, table_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L190" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L190" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -512,15 +492,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="select_merge_as/3">
 
   <div class="detail-header">
-    <a href="#select_merge_as/3" class="detail-link" title="Link to this macro">
+    <a href="#select_merge_as/3" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">select_merge_as(q, binding, map_literal)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L181" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L181" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -543,15 +521,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="to_timezone/2">
 
   <div class="detail-header">
-    <a href="#to_timezone/2" class="detail-link" title="Link to this macro">
+    <a href="#to_timezone/2" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">to_timezone(date, timezone)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L59" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L59" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -567,15 +543,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="total/0">
 
   <div class="detail-header">
-    <a href="#total/0" class="detail-link" title="Link to this macro">
+    <a href="#total/0" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">total()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L19" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L19" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -591,15 +565,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="uniq/1">
 
   <div class="detail-header">
-    <a href="#uniq/1" class="detail-link" title="Link to this macro">
+    <a href="#uniq/1" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">uniq(user_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L13" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -615,15 +587,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="visit_duration/0">
 
   <div class="detail-header">
-    <a href="#visit_duration/0" class="detail-link" title="Link to this macro">
+    <a href="#visit_duration/0" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">visit_duration()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L42" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L42" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -639,15 +609,13 @@ Callsites should also check whether key exists first in SQL via <code class="inl
 <section class="detail" id="weekstart_not_before/2">
 
   <div class="detail-header">
-    <a href="#weekstart_not_before/2" class="detail-link" title="Link to this macro">
+    <a href="#weekstart_not_before/2" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">weekstart_not_before(date, not_before)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L93" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L93" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -668,27 +636,25 @@ boundary, <code class="inline">not_before</code> is returned.</p><h2 id="weeksta
 <code class="inline">not_before</code> boundary is set to the past Saturday, which is before the
 weekstart, therefore the cap does not apply.</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">this_wednesday</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2022-11-09]</span><span class="w">
   </span><span class="o">&gt;</span><span class="w"> </span><span class="n">past_saturday</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2022-11-05]</span><span class="w">
-  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">weekstart_not_before</span><span class="p" data-group-id="6701160708-1">(</span><span class="n">this_wednesday</span><span class="p">,</span><span class="w"> </span><span class="n">past_saturday</span><span class="p" data-group-id="6701160708-1">)</span><span class="w">
+  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">weekstart_not_before</span><span class="p" data-group-id="5933272877-1">(</span><span class="n">this_wednesday</span><span class="p">,</span><span class="w"> </span><span class="n">past_saturday</span><span class="p" data-group-id="5933272877-1">)</span><span class="w">
   </span><span class="ld">~D[2022-11-07]</span></code></pre><p>In this other example, the fragment returns Tuesday and not the weekstart.
 The <code class="inline">not_before</code> boundary is set to Tuesday, which is past the weekstart,
 therefore the cap applies.</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">this_wednesday</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2022-11-09]</span><span class="w">
   </span><span class="o">&gt;</span><span class="w"> </span><span class="n">this_tuesday</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2022-11-08]</span><span class="w">
-  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">weekstart_not_before</span><span class="p" data-group-id="0167935758-1">(</span><span class="n">this_wednesday</span><span class="p">,</span><span class="w"> </span><span class="n">this_tuesday</span><span class="p" data-group-id="0167935758-1">)</span><span class="w">
+  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">weekstart_not_before</span><span class="p" data-group-id="5363566937-1">(</span><span class="n">this_wednesday</span><span class="p">,</span><span class="w"> </span><span class="n">this_tuesday</span><span class="p" data-group-id="5363566937-1">)</span><span class="w">
   </span><span class="ld">~D[2022-11-08]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="wrap_alias/2">
 
   <div class="detail-header">
-    <a href="#wrap_alias/2" class="detail-link" title="Link to this macro">
+    <a href="#wrap_alias/2" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">wrap_alias(binding, map_literal)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L160" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/fragments.ex#L160" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -713,34 +679,33 @@ expression gets wrapped in dynamic and set as selected_as.</p><h3 id="wrap_alias
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

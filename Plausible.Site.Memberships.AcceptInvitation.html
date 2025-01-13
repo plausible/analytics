@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Site.Memberships.AcceptInvitation — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,54 +98,55 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Site.Memberships.AcceptInvitation</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Site.Memberships.AcceptInvitation</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Service for accepting invitations, including ownership transfers.</p><p>Accepting invitation accounts for the fact that it's possible
 that accepting user has an existing membership for the site and
 acts permissively to not unnecessarily disrupt the flow while
 also maintaining integrity of site memberships. This also applies
 to cases where users update their email address between issuing
 the invitation and accepting it.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -166,7 +162,7 @@ the invitation and accepting it.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:accept_error/0" translate="no">accept_error()</a>
+        <a href="#t:accept_error/0" data-no-tooltip translate="no">accept_error()</a>
 
       </div>
 
@@ -174,7 +170,7 @@ the invitation and accepting it.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:membership/0" translate="no">membership()</a>
+        <a href="#t:membership/0" data-no-tooltip translate="no">membership()</a>
 
       </div>
 
@@ -182,7 +178,7 @@ the invitation and accepting it.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:transfer_error/0" translate="no">transfer_error()</a>
+        <a href="#t:transfer_error/0" data-no-tooltip translate="no">transfer_error()</a>
 
       </div>
 
@@ -196,7 +192,7 @@ the invitation and accepting it.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#accept_invitation/2" translate="no">accept_invitation(invitation_or_transfer_id, user)</a>
+        <a href="#accept_invitation/2" data-no-tooltip translate="no">accept_invitation(invitation_or_transfer_id, user)</a>
 
       </div>
 
@@ -204,7 +200,7 @@ the invitation and accepting it.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bulk_transfer_ownership_direct/2" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</a>
+        <a href="#bulk_transfer_ownership_direct/2" data-no-tooltip translate="no">bulk_transfer_ownership_direct(sites, new_owner)</a>
 
       </div>
 
@@ -226,15 +222,13 @@ the invitation and accepting it.</p>
 <section class="detail" id="t:accept_error/0">
 
   <div class="detail-header">
-    <a href="#t:accept_error/0" class="detail-link" title="Link to this type">
+    <a href="#t:accept_error/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">accept_error()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L29" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L29" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -248,7 +242,7 @@ the invitation and accepting it.</p>
   :invitation_not_found
   | :already_other_team_member
   | Plausible.Billing.Quota.Limits.over_limits_error()
-  | <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
+  | <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
   | :no_plan</pre>
 
       </div>
@@ -259,15 +253,13 @@ the invitation and accepting it.</p>
 <section class="detail" id="t:membership/0">
 
   <div class="detail-header">
-    <a href="#t:membership/0" class="detail-link" title="Link to this type">
+    <a href="#t:membership/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">membership()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L36" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L36" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -298,15 +290,13 @@ the invitation and accepting it.</p>
 <section class="detail" id="t:transfer_error/0">
 
   <div class="detail-header">
-    <a href="#t:transfer_error/0" class="detail-link" title="Link to this type">
+    <a href="#t:transfer_error/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">transfer_error()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L23" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L23" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -318,7 +308,7 @@ the invitation and accepting it.</p>
 
           <pre translate="no"><span class="attribute">@type</span> transfer_error() ::
   Plausible.Billing.Quota.Limits.over_limits_error()
-  | <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
+  | <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
   | :transfer_to_self
   | :no_plan</pre>
 
@@ -342,15 +332,13 @@ the invitation and accepting it.</p>
 <section class="detail" id="accept_invitation/2">
 
   <div class="detail-header">
-    <a href="#accept_invitation/2" class="detail-link" title="Link to this function">
+    <a href="#accept_invitation/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">accept_invitation(invitation_or_transfer_id, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L56" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L56" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -371,15 +359,13 @@ the invitation and accepting it.</p>
 <section class="detail" id="bulk_transfer_ownership_direct/2">
 
   <div class="detail-header">
-    <a href="#bulk_transfer_ownership_direct/2" class="detail-link" title="Link to this function">
+    <a href="#bulk_transfer_ownership_direct/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L40" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L40" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -401,34 +387,33 @@ the invitation and accepting it.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

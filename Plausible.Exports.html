@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Exports — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,49 +98,50 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Exports</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Exports</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Contains functions to export data for events and sessions as Zip archives.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -161,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:export/0" translate="no">export()</a>
+        <a href="#t:export/0" data-no-tooltip translate="no">export()</a>
 
       </div>
 
@@ -175,7 +171,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#archive_filename/2" translate="no">archive_filename(domain, created_on)</a>
+        <a href="#archive_filename/2" data-no-tooltip translate="no">archive_filename(domain, created_on)</a>
 
       </div>
 
@@ -185,7 +181,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#content_disposition/1" translate="no">content_disposition(filename)</a>
+        <a href="#content_disposition/1" data-no-tooltip translate="no">content_disposition(filename)</a>
 
       </div>
 
@@ -195,7 +191,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#date_range/2" translate="no">date_range(site_id, timezone)</a>
+        <a href="#date_range/2" data-no-tooltip translate="no">date_range(site_id, timezone)</a>
 
       </div>
 
@@ -205,7 +201,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_local_export/1" translate="no">delete_local_export(site_id)</a>
+        <a href="#delete_local_export/1" data-no-tooltip translate="no">delete_local_export(site_id)</a>
 
       </div>
 
@@ -215,7 +211,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_s3_export!/1" translate="no">delete_s3_export!(site_id)</a>
+        <a href="#delete_s3_export!/1" data-no-tooltip translate="no">delete_s3_export!(site_id)</a>
 
       </div>
 
@@ -225,7 +221,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#export_queries/3" translate="no">export_queries(site_id, current_user_id, opts \\ [])</a>
+        <a href="#export_queries/3" data-no-tooltip translate="no">export_queries(site_id, current_user_id, opts \\ [])</a>
 
       </div>
 
@@ -236,7 +232,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_last_export_job/1" translate="no">get_last_export_job(site_id)</a>
+        <a href="#get_last_export_job/1" data-no-tooltip translate="no">get_last_export_job(site_id)</a>
 
       </div>
 
@@ -246,7 +242,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_local_export/3" translate="no">get_local_export(site_id, domain, timezone)</a>
+        <a href="#get_local_export/3" data-no-tooltip translate="no">get_local_export(site_id, domain, timezone)</a>
 
       </div>
 
@@ -256,7 +252,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_s3_export!/2" translate="no">get_s3_export!(site_id, retries \\ 0)</a>
+        <a href="#get_s3_export!/2" data-no-tooltip translate="no">get_s3_export!(site_id, retries \\ 0)</a>
 
       </div>
 
@@ -266,7 +262,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#oban_listen/0" translate="no">oban_listen()</a>
+        <a href="#oban_listen/0" data-no-tooltip translate="no">oban_listen()</a>
 
       </div>
 
@@ -276,7 +272,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#schedule_local_export/2" translate="no">schedule_local_export(site_id, email_to)</a>
+        <a href="#schedule_local_export/2" data-no-tooltip translate="no">schedule_local_export(site_id, email_to)</a>
 
       </div>
 
@@ -286,7 +282,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#schedule_s3_export/3" translate="no">schedule_s3_export(site_id, current_user_id, email_to)</a>
+        <a href="#schedule_s3_export/3" data-no-tooltip translate="no">schedule_s3_export(site_id, current_user_id, email_to)</a>
 
       </div>
 
@@ -296,7 +292,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#stream_archive/3" translate="no">stream_archive(conn, named_queries, opts \\ [])</a>
+        <a href="#stream_archive/3" data-no-tooltip translate="no">stream_archive(conn, named_queries, opts \\ [])</a>
 
       </div>
 
@@ -320,15 +316,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="t:export/0">
 
   <div class="detail-header">
-    <a href="#t:export/0" class="detail-link" title="Link to this type">
+    <a href="#t:export/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">export()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L100" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L100" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -365,15 +359,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="archive_filename/2">
 
   <div class="detail-header">
-    <a href="#archive_filename/2" class="detail-link" title="Link to this function">
+    <a href="#archive_filename/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">archive_filename(domain, created_on)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L74" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L74" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -381,22 +373,20 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
   <section class="docstring">
 
-<p>Renders export archive filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">archive_filename</span><span class="p" data-group-id="7865202943-1">(</span><span class="s">&quot;plausible.io&quot;</span><span class="p">,</span><span class="w"> </span><span class="c">_created_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2024-12-31]</span><span class="p" data-group-id="7865202943-1">)</span><span class="w">
+<p>Renders export archive filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">archive_filename</span><span class="p" data-group-id="5885161740-1">(</span><span class="s">&quot;plausible.io&quot;</span><span class="p">,</span><span class="w"> </span><span class="c">_created_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2024-12-31]</span><span class="p" data-group-id="5885161740-1">)</span><span class="w">
 </span><span class="s">&quot;plausible_io_20241231.zip&quot;</span></code></pre>
   </section>
 </section>
 <section class="detail" id="content_disposition/1">
 
   <div class="detail-header">
-    <a href="#content_disposition/1" class="detail-link" title="Link to this function">
+    <a href="#content_disposition/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">content_disposition(filename)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L90" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L90" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -404,25 +394,23 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
   <section class="docstring">
 
-<p>Safely renders content disposition for an arbitrary export filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">content_disposition</span><span class="p" data-group-id="3110992957-1">(</span><span class="s">&quot;plausible_io_20241231.zip&quot;</span><span class="p" data-group-id="3110992957-1">)</span><span class="w">
+<p>Safely renders content disposition for an arbitrary export filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">content_disposition</span><span class="p" data-group-id="6402766264-1">(</span><span class="s">&quot;plausible_io_20241231.zip&quot;</span><span class="p" data-group-id="6402766264-1">)</span><span class="w">
 </span><span class="s">&quot;attachment; filename=</span><span class="se">\&quot;</span><span class="s">plausible_io_20241231.zip</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">content_disposition</span><span class="p" data-group-id="3110992957-2">(</span><span class="s">&quot;📊.zip&quot;</span><span class="p" data-group-id="3110992957-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">content_disposition</span><span class="p" data-group-id="6402766264-2">(</span><span class="s">&quot;📊.zip&quot;</span><span class="p" data-group-id="6402766264-2">)</span><span class="w">
 </span><span class="s">&quot;attachment; filename=</span><span class="se">\&quot;</span><span class="s">plausible-export.zip</span><span class="se">\&quot;</span><span class="s">; filename*=utf-8&#39;&#39;%F0%9F%93%8A.zip&quot;</span></code></pre>
   </section>
 </section>
 <section class="detail" id="date_range/2">
 
   <div class="detail-header">
-    <a href="#date_range/2" class="detail-link" title="Link to this function">
+    <a href="#date_range/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">date_range(site_id, timezone)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L192" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L192" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -442,15 +430,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="delete_local_export/1">
 
   <div class="detail-header">
-    <a href="#delete_local_export/1" class="detail-link" title="Link to this function">
+    <a href="#delete_local_export/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">delete_local_export(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L124" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L124" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -470,15 +456,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="delete_s3_export!/1">
 
   <div class="detail-header">
-    <a href="#delete_s3_export!/1" class="detail-link" title="Link to this function">
+    <a href="#delete_s3_export!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">delete_s3_export!(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L178" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L178" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -500,15 +484,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
     <span id="export_queries/2"></span>
 
   <div class="detail-header">
-    <a href="#export_queries/3" class="detail-link" title="Link to this function">
+    <a href="#export_queries/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">export_queries(site_id, current_user_id, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L218" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L218" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -522,7 +504,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
   extname: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
   date_range: <a href="https://hexdocs.pm/elixir/Date.Range.html#t:t/0">Date.Range.t</a>(),
   timezone: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()
-) :: %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()}</pre>
+) :: %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()}</pre>
 
       </div>
 
@@ -533,15 +515,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="get_last_export_job/1">
 
   <div class="detail-header">
-    <a href="#get_last_export_job/1" class="detail-link" title="Link to this function">
+    <a href="#get_last_export_job/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_last_export_job(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L52" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L52" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -561,15 +541,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="get_local_export/3">
 
   <div class="detail-header">
-    <a href="#get_local_export/3" class="detail-link" title="Link to this function">
+    <a href="#get_local_export/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_local_export(site_id, domain, timezone)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L109" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L109" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -591,15 +569,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
     <span id="get_s3_export!/1"></span>
 
   <div class="detail-header">
-    <a href="#get_s3_export!/2" class="detail-link" title="Link to this function">
+    <a href="#get_s3_export!/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_s3_export!(site_id, retries \\ 0)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L142" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L142" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -619,15 +595,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="oban_listen/0">
 
   <div class="detail-header">
-    <a href="#oban_listen/0" class="detail-link" title="Link to this function">
+    <a href="#oban_listen/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">oban_listen()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L61" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L61" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -641,15 +615,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="schedule_local_export/2">
 
   <div class="detail-header">
-    <a href="#schedule_local_export/2" class="detail-link" title="Link to this function">
+    <a href="#schedule_local_export/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">schedule_local_export(site_id, email_to)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L30" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L30" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -670,15 +642,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 <section class="detail" id="schedule_s3_export/3">
 
   <div class="detail-header">
-    <a href="#schedule_s3_export/3" class="detail-link" title="Link to this function">
+    <a href="#schedule_s3_export/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">schedule_s3_export(site_id, current_user_id, email_to)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L13" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -701,15 +671,13 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
     <span id="stream_archive/2"></span>
 
   <div class="detail-header">
-    <a href="#stream_archive/3" class="detail-link" title="Link to this function">
+    <a href="#stream_archive/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">stream_archive(conn, named_queries, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L656" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L656" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -719,55 +687,54 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> stream_archive(<a href="https://hexdocs.pm/db_connection/2.7.0/DBConnection.html#t:t/0">DBConnection.t</a>(), %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()}, [
+          <pre translate="no"><span class="attribute">@spec</span> stream_archive(<a href="https://hexdocs.pm/db_connection/2.7.0/DBConnection.html#t:t/0">DBConnection.t</a>(), %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()}, [
   <a href="https://hexdocs.pm/ch/0.2.9/Ch.html#t:query_option/0">Ch.query_option</a>()
 ]) ::
   <a href="https://hexdocs.pm/elixir/Enumerable.html#t:t/0">Enumerable.t</a>()</pre>
 
       </div>
 
-<p>Creates a streamable Zip archive from the provided (named) Ecto queries.</p><p>Example usage:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="0513337172-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pool</span><span class="p" data-group-id="0513337172-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Ch</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="0513337172-2">(</span><span class="ss">pool_size</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="0513337172-2">)</span><span class="w">
+<p>Creates a streamable Zip archive from the provided (named) Ecto queries.</p><p>Example usage:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="6208893054-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pool</span><span class="p" data-group-id="6208893054-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Ch</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="6208893054-2">(</span><span class="ss">pool_size</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="6208893054-2">)</span><span class="w">
 
-</span><span class="nc">DBConnection</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="0513337172-3">(</span><span class="n">pool</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="0513337172-4">fn</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+</span><span class="nc">DBConnection</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="6208893054-3">(</span><span class="n">pool</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="6208893054-4">fn</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
   </span><span class="n">conn</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">stream_archive</span><span class="p" data-group-id="0513337172-5">(</span><span class="n">export_queries</span><span class="p" data-group-id="0513337172-6">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="0513337172-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CSVWithNames&quot;</span><span class="p" data-group-id="0513337172-5">)</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">into</span><span class="p" data-group-id="0513337172-7">(</span><span class="nc">File</span><span class="o">.</span><span class="n">stream!</span><span class="p" data-group-id="0513337172-8">(</span><span class="s">&quot;export.zip&quot;</span><span class="p" data-group-id="0513337172-8">)</span><span class="p" data-group-id="0513337172-7">)</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="0513337172-9">(</span><span class="p" data-group-id="0513337172-9">)</span><span class="w">
-</span><span class="k" data-group-id="0513337172-4">end</span><span class="p" data-group-id="0513337172-3">)</span></code></pre>
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">stream_archive</span><span class="p" data-group-id="6208893054-5">(</span><span class="n">export_queries</span><span class="p" data-group-id="6208893054-6">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="6208893054-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CSVWithNames&quot;</span><span class="p" data-group-id="6208893054-5">)</span><span class="w">
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">into</span><span class="p" data-group-id="6208893054-7">(</span><span class="nc">File</span><span class="o">.</span><span class="n">stream!</span><span class="p" data-group-id="6208893054-8">(</span><span class="s">&quot;export.zip&quot;</span><span class="p" data-group-id="6208893054-8">)</span><span class="p" data-group-id="6208893054-7">)</span><span class="w">
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="6208893054-9">(</span><span class="p" data-group-id="6208893054-9">)</span><span class="w">
+</span><span class="k" data-group-id="6208893054-4">end</span><span class="p" data-group-id="6208893054-3">)</span></code></pre>
   </section>
 </section>
 
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

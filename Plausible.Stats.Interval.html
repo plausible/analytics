@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Stats.Interval — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,51 +98,52 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Stats.Interval</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Stats.Interval</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Collection of functions to work with intervals.</p><p>The interval of a query defines the granularity of the data. You can think of
 it as a <code class="inline">GROUP BY</code> clause. Possible values are <code class="inline">minute</code>, <code class="inline">hour</code>, <code class="inline">day</code>,
 <code class="inline">week</code>, and <code class="inline">month</code>.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -163,7 +159,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:opt/0" translate="no">opt()</a>
+        <a href="#t:opt/0" data-no-tooltip translate="no">opt()</a>
 
       </div>
 
@@ -171,7 +167,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:opts/0" translate="no">opts()</a>
+        <a href="#t:opts/0" data-no-tooltip translate="no">opts()</a>
 
       </div>
 
@@ -179,7 +175,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -193,7 +189,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#default_for_date_range/1" translate="no">default_for_date_range(date_time_range)</a>
+        <a href="#default_for_date_range/1" data-no-tooltip translate="no">default_for_date_range(date_time_range)</a>
 
       </div>
 
@@ -203,7 +199,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#default_for_period/1" translate="no">default_for_period(period)</a>
+        <a href="#default_for_period/1" data-no-tooltip translate="no">default_for_period(period)</a>
 
       </div>
 
@@ -213,7 +209,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list/0" translate="no">list()</a>
+        <a href="#list/0" data-no-tooltip translate="no">list()</a>
 
       </div>
 
@@ -221,7 +217,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#valid?/1" translate="no">valid?(interval)</a>
+        <a href="#valid?/1" data-no-tooltip translate="no">valid?(interval)</a>
 
       </div>
 
@@ -229,7 +225,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#valid_by_period/1" translate="no">valid_by_period(opts \\ [])</a>
+        <a href="#valid_by_period/1" data-no-tooltip translate="no">valid_by_period(opts \\ [])</a>
 
       </div>
 
@@ -237,7 +233,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#valid_for_period?/3" translate="no">valid_for_period?(period, interval, opts \\ [])</a>
+        <a href="#valid_for_period?/3" data-no-tooltip translate="no">valid_for_period?(period, interval, opts \\ [])</a>
 
       </div>
 
@@ -261,15 +257,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 <section class="detail" id="t:opt/0">
 
   <div class="detail-header">
-    <a href="#t:opt/0" class="detail-link" title="Link to this type">
+    <a href="#t:opt/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">opt()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L13" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -289,15 +283,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 <section class="detail" id="t:opts/0">
 
   <div class="detail-header">
-    <a href="#t:opts/0" class="detail-link" title="Link to this type">
+    <a href="#t:opts/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">opts()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L14" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L14" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -317,15 +309,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L12" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L12" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -357,15 +347,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 <section class="detail" id="default_for_date_range/1">
 
   <div class="detail-header">
-    <a href="#default_for_date_range/1" class="detail-link" title="Link to this function">
+    <a href="#default_for_date_range/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">default_for_date_range(date_time_range)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L43" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L43" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -385,15 +373,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 <section class="detail" id="default_for_period/1">
 
   <div class="detail-header">
-    <a href="#default_for_period/1" class="detail-link" title="Link to this function">
+    <a href="#default_for_period/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">default_for_period(period)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L30" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L30" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -413,15 +399,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 <section class="detail" id="list/0">
 
   <div class="detail-header">
-    <a href="#list/0" class="detail-link" title="Link to this function">
+    <a href="#list/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">list()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L19" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L19" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -441,15 +425,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 <section class="detail" id="valid?/1">
 
   <div class="detail-header">
-    <a href="#valid?/1" class="detail-link" title="Link to this function">
+    <a href="#valid?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">valid?(interval)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L22" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L22" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -471,15 +453,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     <span id="valid_by_period/0"></span>
 
   <div class="detail-header">
-    <a href="#valid_by_period/1" class="detail-link" title="Link to this function">
+    <a href="#valid_by_period/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">valid_by_period(opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L70" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L70" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -501,15 +481,13 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     <span id="valid_for_period?/2"></span>
 
   <div class="detail-header">
-    <a href="#valid_for_period?/3" class="detail-link" title="Link to this function">
+    <a href="#valid_for_period?/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">valid_for_period?(period, interval, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L105" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L105" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -532,34 +510,33 @@ a month interval, or today stats with a week interval.</p><p>There are two dynam
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

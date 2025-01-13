@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Imported.Importer — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-behaviour">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,46 +98,46 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Imported.Importer</span> <small>behaviour</small>
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Imported.Importer</span> <small>behaviour</small>
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Behaviour that should be implemented for each import source.</p><p>All imports are executed as background jobs run via <a href="Plausible.Workers.ImportAnalytics.html"><code class="inline">Plausible.Workers.ImportAnalytics</code></a>
 Oban worker. Each import source must define a module conforming <code class="inline">Importer</code> behaviour.</p><p>The callbacks that need to be implemented:</p><ul><li><code class="inline">name/0</code> - Returns import source name as an atom. Example: <code class="inline">:universal_analytics</code>.</li><li><code class="inline">label/0</code> - Descriptive, display friendly name of the source.
 Example: &quot;Google Analytics&quot;.</li><li><code class="inline">email_template/0</code> - Name of the email template to use for notifications in
@@ -183,33 +178,34 @@ scope of importer logic and is expected to be implemented separately.</p><h2 id=
 </h2>
 <p>In case it's necessary to run the whole import job fully synchronously, the
 <a href="Plausible.Workers.ImportAnalytics.html"><code class="inline">Plausible.Workers.ImportAnalytics</code></a> worker sends an <a href="https://hexdocs.pm/oban/2.17.2/Oban.Notifier.html"><code class="inline">Oban.Notifier</code></a> message
-on completion, failure or transient failure of the import.</p><p>A basic usage scenario looks like this:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2270279790-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">job</span><span class="p" data-group-id="2270279790-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Plausible.Imported.NoopImporter</span><span class="o">.</span><span class="n">new_import</span><span class="p" data-group-id="2270279790-2">(</span><span class="w">
+on completion, failure or transient failure of the import.</p><p>A basic usage scenario looks like this:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="1096392323-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">job</span><span class="p" data-group-id="1096392323-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Plausible.Imported.NoopImporter</span><span class="o">.</span><span class="n">new_import</span><span class="p" data-group-id="1096392323-2">(</span><span class="w">
   </span><span class="n">site</span><span class="p">,</span><span class="w">
   </span><span class="n">user</span><span class="p">,</span><span class="w">
   </span><span class="ss">start_date</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[2005-01-01]</span><span class="p">,</span><span class="w">
-  </span><span class="ss">end_date</span><span class="p">:</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">utc_today</span><span class="p" data-group-id="2270279790-3">(</span><span class="p" data-group-id="2270279790-3">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">end_date</span><span class="p">:</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">utc_today</span><span class="p" data-group-id="1096392323-3">(</span><span class="p" data-group-id="1096392323-3">)</span><span class="p">,</span><span class="w">
   </span><span class="c1"># this option is necessary to setup the calling process as listener</span><span class="w">
   </span><span class="ss">listen?</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
-</span><span class="p" data-group-id="2270279790-2">)</span><span class="w">
+</span><span class="p" data-group-id="1096392323-2">)</span><span class="w">
 
-</span><span class="n">import_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">job</span><span class="o">.</span><span class="n">args</span><span class="p" data-group-id="2270279790-4">[</span><span class="ss">:import_id</span><span class="p" data-group-id="2270279790-4">]</span><span class="w">
+</span><span class="n">import_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">job</span><span class="o">.</span><span class="n">args</span><span class="p" data-group-id="1096392323-4">[</span><span class="ss">:import_id</span><span class="p" data-group-id="1096392323-4">]</span><span class="w">
 
-</span><span class="k">receive</span><span class="w"> </span><span class="k" data-group-id="2270279790-5">do</span><span class="w">
-  </span><span class="p" data-group-id="2270279790-6">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2270279790-7">%{</span><span class="s">&quot;event&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;complete&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;import_id&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="2270279790-7">}</span><span class="p" data-group-id="2270279790-6">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="2270279790-8">(</span><span class="s">&quot;Job completed&quot;</span><span class="p" data-group-id="2270279790-8">)</span><span class="w">
+</span><span class="k">receive</span><span class="w"> </span><span class="k" data-group-id="1096392323-5">do</span><span class="w">
+  </span><span class="p" data-group-id="1096392323-6">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1096392323-7">%{</span><span class="s">&quot;event&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;complete&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;import_id&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="1096392323-7">}</span><span class="p" data-group-id="1096392323-6">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="1096392323-8">(</span><span class="s">&quot;Job completed&quot;</span><span class="p" data-group-id="1096392323-8">)</span><span class="w">
 
-  </span><span class="p" data-group-id="2270279790-9">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2270279790-10">%{</span><span class="s">&quot;event&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;transient_fail&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;import_id&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="2270279790-10">}</span><span class="p" data-group-id="2270279790-9">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="2270279790-11">(</span><span class="s">&quot;Job failed transiently&quot;</span><span class="p" data-group-id="2270279790-11">)</span><span class="w">
+  </span><span class="p" data-group-id="1096392323-9">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1096392323-10">%{</span><span class="s">&quot;event&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;transient_fail&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;import_id&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="1096392323-10">}</span><span class="p" data-group-id="1096392323-9">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="1096392323-11">(</span><span class="s">&quot;Job failed transiently&quot;</span><span class="p" data-group-id="1096392323-11">)</span><span class="w">
 
-  </span><span class="p" data-group-id="2270279790-12">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2270279790-13">%{</span><span class="s">&quot;event&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;fail&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;import_id&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="2270279790-13">}</span><span class="p" data-group-id="2270279790-12">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="2270279790-14">(</span><span class="s">&quot;Job failed permanently&quot;</span><span class="p" data-group-id="2270279790-14">)</span><span class="w">
-</span><span class="k" data-group-id="2270279790-5">after</span><span class="w">
+  </span><span class="p" data-group-id="1096392323-12">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1096392323-13">%{</span><span class="s">&quot;event&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;fail&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;import_id&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="1096392323-13">}</span><span class="p" data-group-id="1096392323-12">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="1096392323-14">(</span><span class="s">&quot;Job failed permanently&quot;</span><span class="p" data-group-id="1096392323-14">)</span><span class="w">
+</span><span class="k" data-group-id="1096392323-5">after</span><span class="w">
   </span><span class="mi">15_000</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="2270279790-15">(</span><span class="s">&quot;Job didn&#39;t finish in 15 seconds&quot;</span><span class="p" data-group-id="2270279790-15">)</span><span class="w">
-</span><span class="k" data-group-id="2270279790-5">end</span></code></pre><p>In a more realistic scenario, job scheduling will be done inside a GenServer process
+    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="1096392323-15">(</span><span class="s">&quot;Job didn&#39;t finish in 15 seconds&quot;</span><span class="p" data-group-id="1096392323-15">)</span><span class="w">
+</span><span class="k" data-group-id="1096392323-5">end</span></code></pre><p>In a more realistic scenario, job scheduling will be done inside a GenServer process
 like LiveView, where notifications can be listened for via <code class="inline">handle_info/2</code>.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -225,7 +221,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:before_start/2" translate="no">before_start(t, t)</a>
+        <a href="#c:before_start/2" data-no-tooltip translate="no">before_start(t, t)</a>
 
       </div>
 
@@ -233,7 +229,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:email_template/0" translate="no">email_template()</a>
+        <a href="#c:email_template/0" data-no-tooltip translate="no">email_template()</a>
 
       </div>
 
@@ -241,7 +237,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:import_data/2" translate="no">import_data(t, t)</a>
+        <a href="#c:import_data/2" data-no-tooltip translate="no">import_data(t, t)</a>
 
       </div>
 
@@ -249,7 +245,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:label/0" translate="no">label()</a>
+        <a href="#c:label/0" data-no-tooltip translate="no">label()</a>
 
       </div>
 
@@ -257,7 +253,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:name/0" translate="no">name()</a>
+        <a href="#c:name/0" data-no-tooltip translate="no">name()</a>
 
       </div>
 
@@ -265,7 +261,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:on_failure/1" translate="no">on_failure(t)</a>
+        <a href="#c:on_failure/1" data-no-tooltip translate="no">on_failure(t)</a>
 
       </div>
 
@@ -273,7 +269,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:on_success/2" translate="no">on_success(t, map)</a>
+        <a href="#c:on_success/2" data-no-tooltip translate="no">on_success(t, map)</a>
 
       </div>
 
@@ -281,7 +277,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:parse_args/1" translate="no">parse_args(map)</a>
+        <a href="#c:parse_args/1" data-no-tooltip translate="no">parse_args(map)</a>
 
       </div>
 
@@ -295,7 +291,7 @@ like LiveView, where notifications can be listened for via <code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#listen/0" translate="no">listen()</a>
+        <a href="#listen/0" data-no-tooltip translate="no">listen()</a>
 
       </div>
 
@@ -319,15 +315,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="c:before_start/2">
 
   <div class="detail-header">
-    <a href="#c:before_start/2" class="detail-link" title="Link to this callback">
+    <a href="#c:before_start/2" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">before_start(t, t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L109" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L109" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -348,15 +342,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="c:email_template/0">
 
   <div class="detail-header">
-    <a href="#c:email_template/0" class="detail-link" title="Link to this callback">
+    <a href="#c:email_template/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">email_template()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L105" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L105" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -376,15 +368,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="c:import_data/2">
 
   <div class="detail-header">
-    <a href="#c:import_data/2" class="detail-link" title="Link to this callback">
+    <a href="#c:import_data/2" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">import_data(t, t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L107" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L107" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -405,15 +395,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="c:label/0">
 
   <div class="detail-header">
-    <a href="#c:label/0" class="detail-link" title="Link to this callback">
+    <a href="#c:label/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">label()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L104" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L104" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -433,15 +421,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="c:name/0">
 
   <div class="detail-header">
-    <a href="#c:name/0" class="detail-link" title="Link to this callback">
+    <a href="#c:name/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">name()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L103" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L103" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -461,15 +447,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="c:on_failure/1">
 
   <div class="detail-header">
-    <a href="#c:on_failure/1" class="detail-link" title="Link to this callback">
+    <a href="#c:on_failure/1" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">on_failure(t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L111" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L111" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -489,15 +473,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="c:on_success/2">
 
   <div class="detail-header">
-    <a href="#c:on_success/2" class="detail-link" title="Link to this callback">
+    <a href="#c:on_success/2" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">on_success(t, map)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L110" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L110" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -517,15 +499,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="c:parse_args/1">
 
   <div class="detail-header">
-    <a href="#c:parse_args/1" class="detail-link" title="Link to this callback">
+    <a href="#c:parse_args/1" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">parse_args(map)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L106" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L106" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -557,15 +537,13 @@ like LiveView, where notifications can be listened for via <code class="inline">
 <section class="detail" id="listen/0">
 
   <div class="detail-header">
-    <a href="#listen/0" class="detail-link" title="Link to this function">
+    <a href="#listen/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">listen()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L228" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L228" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -586,34 +564,33 @@ like LiveView, where notifications can be listened for via <code class="inline">
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

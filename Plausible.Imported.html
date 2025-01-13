@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Imported — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,49 +98,50 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Imported</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Imported</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Context for managing site statistics imports.</p><p>For list of currently supported import sources see <a href="Plausible.Imported.ImportSources.html"><code class="inline">Plausible.Imported.ImportSources</code></a>.</p><p>For more information on implementing importers, see <a href="Plausible.Imported.Importer.html"><code class="inline">Plausible.Imported.Importer</code></a>.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -161,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#clamp_dates/3" translate="no">clamp_dates(site, start_date, end_date)</a>
+        <a href="#clamp_dates/3" data-no-tooltip translate="no">clamp_dates(site, start_date, end_date)</a>
 
       </div>
 
@@ -169,7 +165,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#clamp_dates/4" translate="no">clamp_dates(occupied_ranges, cutoff_date, start_date, end_date)</a>
+        <a href="#clamp_dates/4" data-no-tooltip translate="no">clamp_dates(occupied_ranges, cutoff_date, start_date, end_date)</a>
 
       </div>
 
@@ -177,7 +173,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_imports_for_site/1" translate="no">delete_imports_for_site(site)</a>
+        <a href="#delete_imports_for_site/1" data-no-tooltip translate="no">delete_imports_for_site(site)</a>
 
       </div>
 
@@ -185,7 +181,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_cutoff_date/1" translate="no">get_cutoff_date(site)</a>
+        <a href="#get_cutoff_date/1" data-no-tooltip translate="no">get_cutoff_date(site)</a>
 
       </div>
 
@@ -193,7 +189,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_import/2" translate="no">get_import(site, import_id)</a>
+        <a href="#get_import/2" data-no-tooltip translate="no">get_import(site, import_id)</a>
 
       </div>
 
@@ -201,7 +197,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_imports_date_range/1" translate="no">get_imports_date_range(site)</a>
+        <a href="#get_imports_date_range/1" data-no-tooltip translate="no">get_imports_date_range(site)</a>
 
       </div>
 
@@ -209,7 +205,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_legacy_import/1" translate="no">get_legacy_import(site)</a>
+        <a href="#get_legacy_import/1" data-no-tooltip translate="no">get_legacy_import(site)</a>
 
       </div>
 
@@ -217,7 +213,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_occupied_date_ranges/1" translate="no">get_occupied_date_ranges(site)</a>
+        <a href="#get_occupied_date_ranges/1" data-no-tooltip translate="no">get_occupied_date_ranges(site)</a>
 
       </div>
 
@@ -225,7 +221,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#goals_with_path/0" translate="no">goals_with_path()</a>
+        <a href="#goals_with_path/0" data-no-tooltip translate="no">goals_with_path()</a>
 
       </div>
 
@@ -233,7 +229,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#goals_with_url/0" translate="no">goals_with_url()</a>
+        <a href="#goals_with_url/0" data-no-tooltip translate="no">goals_with_url()</a>
 
       </div>
 
@@ -241,7 +237,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#imported_custom_props/0" translate="no">imported_custom_props()</a>
+        <a href="#imported_custom_props/0" data-no-tooltip translate="no">imported_custom_props()</a>
 
       </div>
 
@@ -249,7 +245,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_all_imports/2" translate="no">list_all_imports(site, status \\ nil)</a>
+        <a href="#list_all_imports/2" data-no-tooltip translate="no">list_all_imports(site, status \\ nil)</a>
 
       </div>
 
@@ -257,7 +253,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_complete_import_ids/1" translate="no">list_complete_import_ids(site)</a>
+        <a href="#list_complete_import_ids/1" data-no-tooltip translate="no">list_complete_import_ids(site)</a>
 
       </div>
 
@@ -265,7 +261,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#listen/0" translate="no">listen()</a>
+        <a href="#listen/0" data-no-tooltip translate="no">listen()</a>
 
       </div>
 
@@ -275,7 +271,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#load_import_data/1" translate="no">load_import_data(site)</a>
+        <a href="#load_import_data/1" data-no-tooltip translate="no">load_import_data(site)</a>
 
       </div>
 
@@ -283,7 +279,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#max_complete_imports/0" translate="no">max_complete_imports()</a>
+        <a href="#max_complete_imports/0" data-no-tooltip translate="no">max_complete_imports()</a>
 
       </div>
 
@@ -291,7 +287,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#other_imports_in_progress?/1" translate="no">other_imports_in_progress?(site_import)</a>
+        <a href="#other_imports_in_progress?/1" data-no-tooltip translate="no">other_imports_in_progress?(site_import)</a>
 
       </div>
 
@@ -299,7 +295,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#schemas/0" translate="no">schemas()</a>
+        <a href="#schemas/0" data-no-tooltip translate="no">schemas()</a>
 
       </div>
 
@@ -307,7 +303,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tables/0" translate="no">tables()</a>
+        <a href="#tables/0" data-no-tooltip translate="no">tables()</a>
 
       </div>
 
@@ -329,15 +325,13 @@ Pages
 <section class="detail" id="clamp_dates/3">
 
   <div class="detail-header">
-    <a href="#clamp_dates/3" class="detail-link" title="Link to this function">
+    <a href="#clamp_dates/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">clamp_dates(site, start_date, end_date)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L171" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L171" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -358,15 +352,13 @@ Pages
 <section class="detail" id="clamp_dates/4">
 
   <div class="detail-header">
-    <a href="#clamp_dates/4" class="detail-link" title="Link to this function">
+    <a href="#clamp_dates/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">clamp_dates(occupied_ranges, cutoff_date, start_date, end_date)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L180" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L180" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -387,15 +379,13 @@ Pages
 <section class="detail" id="delete_imports_for_site/1">
 
   <div class="detail-header">
-    <a href="#delete_imports_for_site/1" class="detail-link" title="Link to this function">
+    <a href="#delete_imports_for_site/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">delete_imports_for_site(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L163" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L163" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -415,15 +405,13 @@ Pages
 <section class="detail" id="get_cutoff_date/1">
 
   <div class="detail-header">
-    <a href="#get_cutoff_date/1" class="detail-link" title="Link to this function">
+    <a href="#get_cutoff_date/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_cutoff_date(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L202" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L202" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -443,15 +431,13 @@ Pages
 <section class="detail" id="get_import/2">
 
   <div class="detail-header">
-    <a href="#get_import/2" class="detail-link" title="Link to this function">
+    <a href="#get_import/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_import(site, import_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L87" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L87" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -472,15 +458,13 @@ Pages
 <section class="detail" id="get_imports_date_range/1">
 
   <div class="detail-header">
-    <a href="#get_imports_date_range/1" class="detail-link" title="Link to this function">
+    <a href="#get_imports_date_range/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_imports_date_range(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L151" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L151" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -503,15 +487,13 @@ Pages
 <section class="detail" id="get_legacy_import/1">
 
   <div class="detail-header">
-    <a href="#get_legacy_import/1" class="detail-link" title="Link to this function">
+    <a href="#get_legacy_import/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_legacy_import(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L92" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L92" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -531,15 +513,13 @@ Pages
 <section class="detail" id="get_occupied_date_ranges/1">
 
   <div class="detail-header">
-    <a href="#get_occupied_date_ranges/1" class="detail-link" title="Link to this function">
+    <a href="#get_occupied_date_ranges/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_occupied_date_ranges(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L193" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L193" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -559,15 +539,13 @@ Pages
 <section class="detail" id="goals_with_path/0">
 
   <div class="detail-header">
-    <a href="#goals_with_path/0" class="detail-link" title="Link to this function">
+    <a href="#goals_with_path/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">goals_with_path()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L66" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L66" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -587,15 +565,13 @@ Pages
 <section class="detail" id="goals_with_url/0">
 
   <div class="detail-header">
-    <a href="#goals_with_url/0" class="detail-link" title="Link to this function">
+    <a href="#goals_with_url/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">goals_with_url()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L61" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L61" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -615,15 +591,13 @@ Pages
 <section class="detail" id="imported_custom_props/0">
 
   <div class="detail-header">
-    <a href="#imported_custom_props/0" class="detail-link" title="Link to this function">
+    <a href="#imported_custom_props/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">imported_custom_props()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L53" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L53" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -645,15 +619,13 @@ Pages
     <span id="list_all_imports/1"></span>
 
   <div class="detail-header">
-    <a href="#list_all_imports/2" class="detail-link" title="Link to this function">
+    <a href="#list_all_imports/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">list_all_imports(site, status \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L104" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L104" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -675,15 +647,13 @@ Pages
 <section class="detail" id="list_complete_import_ids/1">
 
   <div class="detail-header">
-    <a href="#list_complete_import_ids/1" class="detail-link" title="Link to this function">
+    <a href="#list_complete_import_ids/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">list_complete_import_ids(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L127" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L127" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -703,15 +673,13 @@ Pages
 <section class="detail" id="listen/0">
 
   <div class="detail-header">
-    <a href="#listen/0" class="detail-link" title="Link to this function">
+    <a href="#listen/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">listen()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L101" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L101" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -725,15 +693,13 @@ Pages
 <section class="detail" id="load_import_data/1">
 
   <div class="detail-header">
-    <a href="#load_import_data/1" class="detail-link" title="Link to this function">
+    <a href="#load_import_data/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">load_import_data(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L71" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L71" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -753,15 +719,13 @@ Pages
 <section class="detail" id="max_complete_imports/0">
 
   <div class="detail-header">
-    <a href="#max_complete_imports/0" class="detail-link" title="Link to this function">
+    <a href="#max_complete_imports/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">max_complete_imports()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L48" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L48" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -781,15 +745,13 @@ Pages
 <section class="detail" id="other_imports_in_progress?/1">
 
   <div class="detail-header">
-    <a href="#other_imports_in_progress?/1" class="detail-link" title="Link to this function">
+    <a href="#other_imports_in_progress?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">other_imports_in_progress?(site_import)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L111" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L111" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -809,15 +771,13 @@ Pages
 <section class="detail" id="schemas/0">
 
   <div class="detail-header">
-    <a href="#schemas/0" class="detail-link" title="Link to this function">
+    <a href="#schemas/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">schemas()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L42" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L42" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -837,15 +797,13 @@ Pages
 <section class="detail" id="tables/0">
 
   <div class="detail-header">
-    <a href="#tables/0" class="detail-link" title="Link to this function">
+    <a href="#tables/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">tables()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L45" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L45" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -866,34 +824,33 @@ Pages
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

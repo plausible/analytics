@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>PlausibleWeb.Live.Components.Form — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,49 +98,50 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">PlausibleWeb.Live.Components.Form</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">PlausibleWeb.Live.Components.Form</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Generic components stolen from mix phx.new templates</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -161,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#error/1" translate="no">error(assigns)</a>
+        <a href="#error/1" data-no-tooltip translate="no">error(assigns)</a>
 
       </div>
 
@@ -171,7 +167,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#input/1" translate="no">input(assigns)</a>
+        <a href="#input/1" data-no-tooltip translate="no">input(assigns)</a>
 
       </div>
 
@@ -181,7 +177,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#input_with_clipboard/1" translate="no">input_with_clipboard(assigns)</a>
+        <a href="#input_with_clipboard/1" data-no-tooltip translate="no">input_with_clipboard(assigns)</a>
 
       </div>
 
@@ -191,7 +187,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#label/1" translate="no">label(assigns)</a>
+        <a href="#label/1" data-no-tooltip translate="no">label(assigns)</a>
 
       </div>
 
@@ -201,7 +197,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mobile_nav_dropdown/1" translate="no">mobile_nav_dropdown(assigns)</a>
+        <a href="#mobile_nav_dropdown/1" data-no-tooltip translate="no">mobile_nav_dropdown(assigns)</a>
 
       </div>
 
@@ -211,27 +207,27 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#password_input_with_strength/1" translate="no">password_input_with_strength(assigns)</a>
+        <a href="#password_input_with_strength/1" data-no-tooltip translate="no">password_input_with_strength(assigns)</a>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) (required) - a form field struct retrieved from the form, for example: @form[:password].</li><li><code class="inline">strength</code> (<code class="inline">:any</code>)</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;autocomplete&quot;, &quot;disabled&quot;, &quot;form&quot;, &quot;maxlength&quot;, &quot;minlength&quot;, &quot;readonly&quot;, &quot;required&quot;, &quot;size&quot;]</code>.</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) (required) - a form field struct retrieved from the form, for example: @form[:password].</li><li><code class="inline">strength</code> (<code class="inline">:any</code>)</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;autocomplete&quot;, &quot;disabled&quot;, &quot;form&quot;, &quot;maxlength&quot;, &quot;minlength&quot;, &quot;readonly&quot;, &quot;required&quot;, &quot;size&quot;]</code>.</li></ul></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#password_length_hint/1" translate="no">password_length_hint(assigns)</a>
+        <a href="#password_length_hint/1" data-no-tooltip translate="no">password_length_hint(assigns)</a>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">minimum</code> (<code class="inline">:integer</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:any</code>)</li><li><code class="inline">ok_class</code> (<code class="inline">:any</code>)</li><li><code class="inline">error_class</code> (<code class="inline">:any</code>)</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) (required) - a form field struct retrieved from the form, for example: @form[:password].</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">minimum</code> (<code class="inline">:integer</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:any</code>)</li><li><code class="inline">ok_class</code> (<code class="inline">:any</code>)</li><li><code class="inline">error_class</code> (<code class="inline">:any</code>)</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) (required) - a form field struct retrieved from the form, for example: @form[:password].</li></ul></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#strength_meter/1" translate="no">strength_meter(assigns)</a>
+        <a href="#strength_meter/1" data-no-tooltip translate="no">strength_meter(assigns)</a>
 
       </div>
 
@@ -241,7 +237,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#translate_error/1" translate="no">translate_error(arg)</a>
+        <a href="#translate_error/1" data-no-tooltip translate="no">translate_error(arg)</a>
 
       </div>
 
@@ -263,15 +259,13 @@ Pages
 <section class="detail" id="error/1">
 
   <div class="detail-header">
-    <a href="#error/1" class="detail-link" title="Link to this function">
+    <a href="#error/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">error(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L343" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L349" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -291,15 +285,13 @@ Pages
 <section class="detail" id="input/1">
 
   <div class="detail-header">
-    <a href="#input/1" class="detail-link" title="Link to this function">
+    <a href="#input/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">input(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L57" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L57" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -307,7 +299,7 @@ Pages
 
   <section class="docstring">
 
-<p>Renders an input with label and error messages.</p><p>A <a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a> may be passed as argument,
+<p>Renders an input with label and error messages.</p><p>A <a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a> may be passed as argument,
 which is used to retrieve the input name, id, and values.
 Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" class="section-heading">
   <a href="#input/1-examples" class="hover-link">
@@ -322,7 +314,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">name</code> (<code class="inline">:any</code>)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">help_text</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">value</code> (<code class="inline">:any</code>)</li><li><code class="inline">width</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;w-full&quot;</code>.</li><li><code class="inline">type</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;text&quot;</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) - a form field struct retrieved from the form, for example: @form[:email].</li><li><code class="inline">errors</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">checked</code> (<code class="inline">:boolean</code>) - the checked flag for checkbox inputs.</li><li><code class="inline">prompt</code> (<code class="inline">:string</code>) - the prompt for select inputs. Defaults to <code class="inline">nil</code>.</li><li><code class="inline">options</code> (<code class="inline">:list</code>) - the options to pass to Phoenix.HTML.Form.options_for_select/2.</li><li><code class="inline">multiple</code> (<code class="inline">:boolean</code>) - the multiple flag for select inputs. Defaults to <code class="inline">false</code>.</li><li><code class="inline">class</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">&quot;text-sm dark:bg-gray-900 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md&quot;</code>.</li><li><code class="inline">mt?</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">true</code>.</li><li><code class="inline">max_one_error</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;accept&quot;, &quot;autocomplete&quot;, &quot;capture&quot;, &quot;cols&quot;, &quot;disabled&quot;, &quot;form&quot;, &quot;list&quot;, &quot;max&quot;, &quot;maxlength&quot;, &quot;min&quot;, &quot;minlength&quot;, &quot;multiple&quot;, &quot;pattern&quot;, &quot;placeholder&quot;, &quot;readonly&quot;, &quot;required&quot;, &quot;rows&quot;, &quot;size&quot;, &quot;step&quot;, &quot;x-model&quot;]</code>.</li></ul><h2 id="input/1-slots" class="section-heading">
+<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">name</code> (<code class="inline">:any</code>)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">help_text</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">value</code> (<code class="inline">:any</code>)</li><li><code class="inline">width</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;w-full&quot;</code>.</li><li><code class="inline">type</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;text&quot;</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) - a form field struct retrieved from the form, for example: @form[:email].</li><li><code class="inline">errors</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">checked</code> (<code class="inline">:boolean</code>) - the checked flag for checkbox inputs.</li><li><code class="inline">prompt</code> (<code class="inline">:string</code>) - the prompt for select inputs. Defaults to <code class="inline">nil</code>.</li><li><code class="inline">options</code> (<code class="inline">:list</code>) - the options to pass to Phoenix.HTML.Form.options_for_select/2.</li><li><code class="inline">multiple</code> (<code class="inline">:boolean</code>) - the multiple flag for select inputs. Defaults to <code class="inline">false</code>.</li><li><code class="inline">class</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">&quot;text-sm text-gray-900 dark:text-white dark:bg-gray-900 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md&quot;</code>.</li><li><code class="inline">mt?</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">true</code>.</li><li><code class="inline">max_one_error</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;accept&quot;, &quot;autocomplete&quot;, &quot;capture&quot;, &quot;cols&quot;, &quot;disabled&quot;, &quot;form&quot;, &quot;list&quot;, &quot;max&quot;, &quot;maxlength&quot;, &quot;min&quot;, &quot;minlength&quot;, &quot;multiple&quot;, &quot;pattern&quot;, &quot;placeholder&quot;, &quot;readonly&quot;, &quot;required&quot;, &quot;rows&quot;, &quot;size&quot;, &quot;step&quot;, &quot;x-model&quot;]</code>.</li></ul><h2 id="input/1-slots" class="section-heading">
   <a href="#input/1-slots" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -334,15 +326,13 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
 <section class="detail" id="input_with_clipboard/1">
 
   <div class="detail-header">
-    <a href="#input_with_clipboard/1" class="detail-link" title="Link to this function">
+    <a href="#input_with_clipboard/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">input_with_clipboard(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L148" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L150" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -362,15 +352,13 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
 <section class="detail" id="label/1">
 
   <div class="detail-header">
-    <a href="#label/1" class="detail-link" title="Link to this function">
+    <a href="#label/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">label(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L330" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L336" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -396,15 +384,13 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
 <section class="detail" id="mobile_nav_dropdown/1">
 
   <div class="detail-header">
-    <a href="#mobile_nav_dropdown/1" class="detail-link" title="Link to this function">
+    <a href="#mobile_nav_dropdown/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">mobile_nav_dropdown(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L364" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L370" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -424,15 +410,13 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
 <section class="detail" id="password_input_with_strength/1">
 
   <div class="detail-header">
-    <a href="#password_input_with_strength/1" class="detail-link" title="Link to this function">
+    <a href="#password_input_with_strength/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">password_input_with_strength(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L199" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L201" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -446,21 +430,19 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) (required) - a form field struct retrieved from the form, for example: @form[:password].</li><li><code class="inline">strength</code> (<code class="inline">:any</code>)</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;autocomplete&quot;, &quot;disabled&quot;, &quot;form&quot;, &quot;maxlength&quot;, &quot;minlength&quot;, &quot;readonly&quot;, &quot;required&quot;, &quot;size&quot;]</code>.</li></ul>
+<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) (required) - a form field struct retrieved from the form, for example: @form[:password].</li><li><code class="inline">strength</code> (<code class="inline">:any</code>)</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;autocomplete&quot;, &quot;disabled&quot;, &quot;form&quot;, &quot;maxlength&quot;, &quot;minlength&quot;, &quot;readonly&quot;, &quot;required&quot;, &quot;size&quot;]</code>.</li></ul>
   </section>
 </section>
 <section class="detail" id="password_length_hint/1">
 
   <div class="detail-header">
-    <a href="#password_length_hint/1" class="detail-link" title="Link to this function">
+    <a href="#password_length_hint/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">password_length_hint(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L240" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L246" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -474,21 +456,19 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">minimum</code> (<code class="inline">:integer</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:any</code>)</li><li><code class="inline">ok_class</code> (<code class="inline">:any</code>)</li><li><code class="inline">error_class</code> (<code class="inline">:any</code>)</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) (required) - a form field struct retrieved from the form, for example: @form[:password].</li></ul>
+<ul><li><code class="inline">minimum</code> (<code class="inline">:integer</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:any</code>)</li><li><code class="inline">ok_class</code> (<code class="inline">:any</code>)</li><li><code class="inline">error_class</code> (<code class="inline">:any</code>)</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) (required) - a form field struct retrieved from the form, for example: @form[:password].</li></ul>
   </section>
 </section>
 <section class="detail" id="strength_meter/1">
 
   <div class="detail-header">
-    <a href="#strength_meter/1" class="detail-link" title="Link to this function">
+    <a href="#strength_meter/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">strength_meter(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L285" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L291" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -508,15 +488,13 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
 <section class="detail" id="translate_error/1">
 
   <div class="detail-header">
-    <a href="#translate_error/1" class="detail-link" title="Link to this function">
+    <a href="#translate_error/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">translate_error(arg)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L351" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L357" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -531,34 +509,33 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

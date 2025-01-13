@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>PlausibleWeb.SiteView — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,45 +98,46 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">PlausibleWeb.SiteView</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">PlausibleWeb.SiteView</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -157,7 +153,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#__resource__/0" translate="no">__resource__()</a>
+        <a href="#__resource__/0" data-no-tooltip translate="no">__resource__()</a>
 
       </div>
 
@@ -167,7 +163,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#change_domain.html/1" translate="no">change_domain.html(assigns)</a>
+        <a href="#change_domain.html/1" data-no-tooltip translate="no">change_domain.html(assigns)</a>
 
       </div>
 
@@ -175,7 +171,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#csv_import.html/1" translate="no">csv_import.html(assigns)</a>
+        <a href="#csv_import.html/1" data-no-tooltip translate="no">csv_import.html(assigns)</a>
 
       </div>
 
@@ -183,7 +179,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#edit_shared_link.html/1" translate="no">edit_shared_link.html(assigns)</a>
+        <a href="#edit_shared_link.html/1" data-no-tooltip translate="no">edit_shared_link.html(assigns)</a>
 
       </div>
 
@@ -191,7 +187,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new.html/1" translate="no">new.html(assigns)</a>
+        <a href="#new.html/1" data-no-tooltip translate="no">new.html(assigns)</a>
 
       </div>
 
@@ -199,7 +195,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new_shared_link.html/1" translate="no">new_shared_link.html(assigns)</a>
+        <a href="#new_shared_link.html/1" data-no-tooltip translate="no">new_shared_link.html(assigns)</a>
 
       </div>
 
@@ -207,7 +203,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#plausible_url/0" translate="no">plausible_url()</a>
+        <a href="#plausible_url/0" data-no-tooltip translate="no">plausible_url()</a>
 
       </div>
 
@@ -215,7 +211,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#render/2" translate="no">render(template, assigns \\ %{})</a>
+        <a href="#render/2" data-no-tooltip translate="no">render(template, assigns \\ %{})</a>
 
       </div>
 
@@ -225,7 +221,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#render_snippet/1" translate="no">render_snippet(site)</a>
+        <a href="#render_snippet/1" data-no-tooltip translate="no">render_snippet(site)</a>
 
       </div>
 
@@ -233,7 +229,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_danger_zone.html/1" translate="no">settings_danger_zone.html(assigns)</a>
+        <a href="#settings_danger_zone.html/1" data-no-tooltip translate="no">settings_danger_zone.html(assigns)</a>
 
       </div>
 
@@ -241,7 +237,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_email_reports.html/1" translate="no">settings_email_reports.html(assigns)</a>
+        <a href="#settings_email_reports.html/1" data-no-tooltip translate="no">settings_email_reports.html(assigns)</a>
 
       </div>
 
@@ -249,7 +245,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_funnels.html/1" translate="no">settings_funnels.html(assigns)</a>
+        <a href="#settings_funnels.html/1" data-no-tooltip translate="no">settings_funnels.html(assigns)</a>
 
       </div>
 
@@ -257,7 +253,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_general.html/1" translate="no">settings_general.html(assigns)</a>
+        <a href="#settings_general.html/1" data-no-tooltip translate="no">settings_general.html(assigns)</a>
 
       </div>
 
@@ -265,7 +261,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_goals.html/1" translate="no">settings_goals.html(assigns)</a>
+        <a href="#settings_goals.html/1" data-no-tooltip translate="no">settings_goals.html(assigns)</a>
 
       </div>
 
@@ -273,7 +269,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_imports_exports.html/1" translate="no">settings_imports_exports.html(assigns)</a>
+        <a href="#settings_imports_exports.html/1" data-no-tooltip translate="no">settings_imports_exports.html(assigns)</a>
 
       </div>
 
@@ -281,7 +277,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_integrations.html/1" translate="no">settings_integrations.html(assigns)</a>
+        <a href="#settings_integrations.html/1" data-no-tooltip translate="no">settings_integrations.html(assigns)</a>
 
       </div>
 
@@ -289,7 +285,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_people.html/1" translate="no">settings_people.html(assigns)</a>
+        <a href="#settings_people.html/1" data-no-tooltip translate="no">settings_people.html(assigns)</a>
 
       </div>
 
@@ -297,7 +293,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_props.html/1" translate="no">settings_props.html(assigns)</a>
+        <a href="#settings_props.html/1" data-no-tooltip translate="no">settings_props.html(assigns)</a>
 
       </div>
 
@@ -305,7 +301,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_search_console.html/1" translate="no">settings_search_console.html(assigns)</a>
+        <a href="#settings_search_console.html/1" data-no-tooltip translate="no">settings_search_console.html(assigns)</a>
 
       </div>
 
@@ -313,7 +309,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_shields.html/1" translate="no">settings_shields.html(assigns)</a>
+        <a href="#settings_shields.html/1" data-no-tooltip translate="no">settings_shields.html(assigns)</a>
 
       </div>
 
@@ -321,7 +317,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_visibility.html/1" translate="no">settings_visibility.html(assigns)</a>
+        <a href="#settings_visibility.html/1" data-no-tooltip translate="no">settings_visibility.html(assigns)</a>
 
       </div>
 
@@ -329,7 +325,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#shared_link_dest/2" translate="no">shared_link_dest(site, link)</a>
+        <a href="#shared_link_dest/2" data-no-tooltip translate="no">shared_link_dest(site, link)</a>
 
       </div>
 
@@ -337,7 +333,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#template_not_found/2" translate="no">template_not_found(template, assigns)</a>
+        <a href="#template_not_found/2" data-no-tooltip translate="no">template_not_found(template, assigns)</a>
 
       </div>
 
@@ -349,7 +345,7 @@ to render a particular template.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#with_indefinite_article/1" translate="no">with_indefinite_article(word)</a>
+        <a href="#with_indefinite_article/1" data-no-tooltip translate="no">with_indefinite_article(word)</a>
 
       </div>
 
@@ -371,15 +367,13 @@ to render a particular template.</p></div>
 <section class="detail" id="__resource__/0">
 
   <div class="detail-header">
-    <a href="#__resource__/0" class="detail-link" title="Link to this function">
+    <a href="#__resource__/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">__resource__()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L2" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L2" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -393,15 +387,13 @@ to render a particular template.</p></div>
 <section class="detail" id="change_domain.html/1">
 
   <div class="detail-header">
-    <a href="#change_domain.html/1" class="detail-link" title="Link to this function">
+    <a href="#change_domain.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">change_domain.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -415,15 +407,13 @@ to render a particular template.</p></div>
 <section class="detail" id="csv_import.html/1">
 
   <div class="detail-header">
-    <a href="#csv_import.html/1" class="detail-link" title="Link to this function">
+    <a href="#csv_import.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">csv_import.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -437,15 +427,13 @@ to render a particular template.</p></div>
 <section class="detail" id="edit_shared_link.html/1">
 
   <div class="detail-header">
-    <a href="#edit_shared_link.html/1" class="detail-link" title="Link to this function">
+    <a href="#edit_shared_link.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">edit_shared_link.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -459,15 +447,13 @@ to render a particular template.</p></div>
 <section class="detail" id="new.html/1">
 
   <div class="detail-header">
-    <a href="#new.html/1" class="detail-link" title="Link to this function">
+    <a href="#new.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">new.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -481,15 +467,13 @@ to render a particular template.</p></div>
 <section class="detail" id="new_shared_link.html/1">
 
   <div class="detail-header">
-    <a href="#new_shared_link.html/1" class="detail-link" title="Link to this function">
+    <a href="#new_shared_link.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">new_shared_link.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -503,15 +487,13 @@ to render a particular template.</p></div>
 <section class="detail" id="plausible_url/0">
 
   <div class="detail-header">
-    <a href="#plausible_url/0" class="detail-link" title="Link to this function">
+    <a href="#plausible_url/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">plausible_url()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L5" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L5" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -527,15 +509,13 @@ to render a particular template.</p></div>
     <span id="render/1"></span>
 
   <div class="detail-header">
-    <a href="#render/2" class="detail-link" title="Link to this function">
+    <a href="#render/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">render(template, assigns \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L2" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L2" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -549,15 +529,13 @@ to render a particular template.</p></div>
 <section class="detail" id="render_snippet/1">
 
   <div class="detail-header">
-    <a href="#render_snippet/1" class="detail-link" title="Link to this function">
+    <a href="#render_snippet/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">render_snippet(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L13" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -571,15 +549,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_danger_zone.html/1">
 
   <div class="detail-header">
-    <a href="#settings_danger_zone.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_danger_zone.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_danger_zone.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -593,15 +569,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_email_reports.html/1">
 
   <div class="detail-header">
-    <a href="#settings_email_reports.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_email_reports.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_email_reports.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -615,15 +589,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_funnels.html/1">
 
   <div class="detail-header">
-    <a href="#settings_funnels.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_funnels.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_funnels.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -637,15 +609,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_general.html/1">
 
   <div class="detail-header">
-    <a href="#settings_general.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_general.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_general.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -659,15 +629,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_goals.html/1">
 
   <div class="detail-header">
-    <a href="#settings_goals.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_goals.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_goals.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -681,15 +649,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_imports_exports.html/1">
 
   <div class="detail-header">
-    <a href="#settings_imports_exports.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_imports_exports.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_imports_exports.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -703,15 +669,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_integrations.html/1">
 
   <div class="detail-header">
-    <a href="#settings_integrations.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_integrations.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_integrations.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -725,15 +689,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_people.html/1">
 
   <div class="detail-header">
-    <a href="#settings_people.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_people.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_people.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -747,15 +709,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_props.html/1">
 
   <div class="detail-header">
-    <a href="#settings_props.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_props.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_props.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -769,15 +729,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_search_console.html/1">
 
   <div class="detail-header">
-    <a href="#settings_search_console.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_search_console.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_search_console.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -791,15 +749,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_shields.html/1">
 
   <div class="detail-header">
-    <a href="#settings_shields.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_shields.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_shields.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -813,15 +769,13 @@ to render a particular template.</p></div>
 <section class="detail" id="settings_visibility.html/1">
 
   <div class="detail-header">
-    <a href="#settings_visibility.html/1" class="detail-link" title="Link to this function">
+    <a href="#settings_visibility.html/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_visibility.html(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -835,15 +789,13 @@ to render a particular template.</p></div>
 <section class="detail" id="shared_link_dest/2">
 
   <div class="detail-header">
-    <a href="#shared_link_dest/2" class="detail-link" title="Link to this function">
+    <a href="#shared_link_dest/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">shared_link_dest(site, link)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L9" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L9" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -857,15 +809,13 @@ to render a particular template.</p></div>
 <section class="detail" id="template_not_found/2">
 
   <div class="detail-header">
-    <a href="#template_not_found/2" class="detail-link" title="Link to this function">
+    <a href="#template_not_found/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">template_not_found(template, assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L2" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L2" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -887,15 +837,13 @@ to render a particular template.</p>
 <section class="detail" id="with_indefinite_article/1">
 
   <div class="detail-header">
-    <a href="#with_indefinite_article/1" class="detail-link" title="Link to this function">
+    <a href="#with_indefinite_article/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">with_indefinite_article(word)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L21" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/site_view.ex#L21" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -910,34 +858,33 @@ to render a particular template.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

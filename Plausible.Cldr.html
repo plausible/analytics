@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Cldr — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,53 +98,54 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Cldr</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Cldr</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Provides the core functions to retrieve and manage
 the CLDR data that supports formatting and localisation.</p><p>It provides the core functions to access formatted
 CLDR data, set and retrieve a current locale and validate
 certain core data types such as locales, currencies and
 territories.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -165,7 +161,7 @@ territories.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#available_locale_name?/1" translate="no">available_locale_name?(locale_name)</a>
+        <a href="#available_locale_name?/1" data-no-tooltip translate="no">available_locale_name?(locale_name)</a>
 
       </div>
 
@@ -175,7 +171,7 @@ territories.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#default_locale/0" translate="no">default_locale()</a>
+        <a href="#default_locale/0" data-no-tooltip translate="no">default_locale()</a>
 
       </div>
 
@@ -185,7 +181,7 @@ territories.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#default_territory/0" translate="no">default_territory()</a>
+        <a href="#default_territory/0" data-no-tooltip translate="no">default_territory()</a>
 
       </div>
 
@@ -196,7 +192,7 @@ does not specify one and none can be inferred.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ellipsis/2" translate="no">ellipsis(string, options \\ [])</a>
+        <a href="#ellipsis/2" data-no-tooltip translate="no">ellipsis(string, options \\ [])</a>
 
       </div>
 
@@ -206,7 +202,7 @@ does not specify one and none can be inferred.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_locale/0" translate="no">get_locale()</a>
+        <a href="#get_locale/0" data-no-tooltip translate="no">get_locale()</a>
 
       </div>
 
@@ -217,7 +213,7 @@ take an optional locale parameter for which a locale is not supplied.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_calendars/0" translate="no">known_calendars()</a>
+        <a href="#known_calendars/0" data-no-tooltip translate="no">known_calendars()</a>
 
       </div>
 
@@ -227,7 +223,7 @@ take an optional locale parameter for which a locale is not supplied.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_currencies/0" translate="no">known_currencies()</a>
+        <a href="#known_currencies/0" data-no-tooltip translate="no">known_currencies()</a>
 
       </div>
 
@@ -237,7 +233,7 @@ take an optional locale parameter for which a locale is not supplied.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_gettext_locale_name/1" translate="no">known_gettext_locale_name(locale_name)</a>
+        <a href="#known_gettext_locale_name/1" data-no-tooltip translate="no">known_gettext_locale_name(locale_name)</a>
 
       </div>
 
@@ -249,7 +245,7 @@ take an optional locale parameter for which a locale is not supplied.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_gettext_locale_name?/1" translate="no">known_gettext_locale_name?(locale_name)</a>
+        <a href="#known_gettext_locale_name?/1" data-no-tooltip translate="no">known_gettext_locale_name?(locale_name)</a>
 
       </div>
 
@@ -260,7 +256,7 @@ name is configured and available in Gettext.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_gettext_locale_names/0" translate="no">known_gettext_locale_names()</a>
+        <a href="#known_gettext_locale_names/0" data-no-tooltip translate="no">known_gettext_locale_names()</a>
 
       </div>
 
@@ -272,7 +268,7 @@ with <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html"><code class="inline">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_locale_name/1" translate="no">known_locale_name(locale_name)</a>
+        <a href="#known_locale_name/1" data-no-tooltip translate="no">known_locale_name(locale_name)</a>
 
       </div>
 
@@ -283,7 +279,7 @@ whether the locale name is configured in <a href="https://hexdocs.pm/ex_cldr/2.3
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_locale_name?/1" translate="no">known_locale_name?(locale_name)</a>
+        <a href="#known_locale_name?/1" data-no-tooltip translate="no">known_locale_name?(locale_name)</a>
 
       </div>
 
@@ -294,7 +290,7 @@ name is configured and available in Cldr.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_locale_names/0" translate="no">known_locale_names()</a>
+        <a href="#known_locale_names/0" data-no-tooltip translate="no">known_locale_names()</a>
 
       </div>
 
@@ -304,7 +300,7 @@ name is configured and available in Cldr.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_number_system_types/0" translate="no">known_number_system_types()</a>
+        <a href="#known_number_system_types/0" data-no-tooltip translate="no">known_number_system_types()</a>
 
       </div>
 
@@ -314,7 +310,7 @@ name is configured and available in Cldr.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_number_systems/0" translate="no">known_number_systems()</a>
+        <a href="#known_number_systems/0" data-no-tooltip translate="no">known_number_systems()</a>
 
       </div>
 
@@ -324,7 +320,7 @@ name is configured and available in Cldr.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_rbnf_locale_name/1" translate="no">known_rbnf_locale_name(locale_name)</a>
+        <a href="#known_rbnf_locale_name/1" data-no-tooltip translate="no">known_rbnf_locale_name(locale_name)</a>
 
       </div>
 
@@ -336,7 +332,7 @@ and has RBNF rules defined.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_rbnf_locale_name?/1" translate="no">known_rbnf_locale_name?(locale_name)</a>
+        <a href="#known_rbnf_locale_name?/1" data-no-tooltip translate="no">known_rbnf_locale_name?(locale_name)</a>
 
       </div>
 
@@ -348,7 +344,7 @@ rules based number formats (RBNF).</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_rbnf_locale_names/0" translate="no">known_rbnf_locale_names()</a>
+        <a href="#known_rbnf_locale_names/0" data-no-tooltip translate="no">known_rbnf_locale_names()</a>
 
       </div>
 
@@ -359,7 +355,7 @@ formats (RBNF).</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#known_territories/0" translate="no">known_territories()</a>
+        <a href="#known_territories/0" data-no-tooltip translate="no">known_territories()</a>
 
       </div>
 
@@ -369,7 +365,7 @@ formats (RBNF).</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#normalize_lenient_parse/3" translate="no">normalize_lenient_parse(string, scope, locale \\ get_locale())</a>
+        <a href="#normalize_lenient_parse/3" data-no-tooltip translate="no">normalize_lenient_parse(string, scope, locale \\ get_locale())</a>
 
       </div>
 
@@ -380,7 +376,7 @@ of common symbols in numbers, currencies and dates</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put_gettext_locale/1" translate="no">put_gettext_locale(locale)</a>
+        <a href="#put_gettext_locale/1" data-no-tooltip translate="no">put_gettext_locale(locale)</a>
 
       </div>
 
@@ -391,7 +387,7 @@ of common symbols in numbers, currencies and dates</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put_locale/1" translate="no">put_locale(locale_name)</a>
+        <a href="#put_locale/1" data-no-tooltip translate="no">put_locale(locale_name)</a>
 
       </div>
 
@@ -402,7 +398,7 @@ take an optional locale parameter for which a locale is not supplied.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#quote/2" translate="no">quote(string, options \\ [])</a>
+        <a href="#quote/2" data-no-tooltip translate="no">quote(string, options \\ [])</a>
 
       </div>
 
@@ -412,7 +408,7 @@ take an optional locale parameter for which a locale is not supplied.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#unknown_locale_names/0" translate="no">unknown_locale_names()</a>
+        <a href="#unknown_locale_names/0" data-no-tooltip translate="no">unknown_locale_names()</a>
 
       </div>
 
@@ -423,7 +419,7 @@ but not known in CLDR.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validate_calendar/1" translate="no">validate_calendar(calendar)</a>
+        <a href="#validate_calendar/1" data-no-tooltip translate="no">validate_calendar(calendar)</a>
 
       </div>
 
@@ -433,7 +429,7 @@ but not known in CLDR.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validate_currency/1" translate="no">validate_currency(currency)</a>
+        <a href="#validate_currency/1" data-no-tooltip translate="no">validate_currency(currency)</a>
 
       </div>
 
@@ -443,7 +439,7 @@ but not known in CLDR.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validate_locale/1" translate="no">validate_locale(locale)</a>
+        <a href="#validate_locale/1" data-no-tooltip translate="no">validate_locale(locale)</a>
 
       </div>
 
@@ -453,7 +449,7 @@ but not known in CLDR.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validate_number_system/1" translate="no">validate_number_system(number_system)</a>
+        <a href="#validate_number_system/1" data-no-tooltip translate="no">validate_number_system(number_system)</a>
 
       </div>
 
@@ -463,7 +459,7 @@ but not known in CLDR.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validate_number_system_type/1" translate="no">validate_number_system_type(number_system_type)</a>
+        <a href="#validate_number_system_type/1" data-no-tooltip translate="no">validate_number_system_type(number_system_type)</a>
 
       </div>
 
@@ -473,7 +469,7 @@ but not known in CLDR.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validate_territory/1" translate="no">validate_territory(territory)</a>
+        <a href="#validate_territory/1" data-no-tooltip translate="no">validate_territory(territory)</a>
 
       </div>
 
@@ -483,7 +479,7 @@ but not known in CLDR.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#with_locale/2" translate="no">with_locale(locale, fun)</a>
+        <a href="#with_locale/2" data-no-tooltip translate="no">with_locale(locale, fun)</a>
 
       </div>
 
@@ -508,15 +504,13 @@ current locale is restored after the function.</p></div>
 <section class="detail" id="available_locale_name?/1">
 
   <div class="detail-header">
-    <a href="#available_locale_name?/1" class="detail-link" title="Link to this function">
+    <a href="#available_locale_name?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">available_locale_name?(locale_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -530,15 +524,13 @@ current locale is restored after the function.</p></div>
 <section class="detail" id="default_locale/0">
 
   <div class="detail-header">
-    <a href="#default_locale/0" class="detail-link" title="Link to this function">
+    <a href="#default_locale/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">default_locale()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -558,38 +550,36 @@ current locale is restored after the function.</p></div>
   </a>
   <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_locale</span><span class="p" data-group-id="7132832972-1">(</span><span class="p" data-group-id="7132832972-1">)</span><span class="w">
-</span><span class="p" data-group-id="7132832972-2">%</span><span class="nc" data-group-id="7132832972-2">Cldr.LanguageTag</span><span class="p" data-group-id="7132832972-2">{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_locale</span><span class="p" data-group-id="1339943117-1">(</span><span class="p" data-group-id="1339943117-1">)</span><span class="w">
+</span><span class="p" data-group-id="1339943117-2">%</span><span class="nc" data-group-id="1339943117-2">Cldr.LanguageTag</span><span class="p" data-group-id="1339943117-2">{</span><span class="w">
   </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="p">,</span><span class="w">
   </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en-001&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:&quot;en-001&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">language_subtags</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7132832972-3">[</span><span class="p" data-group-id="7132832972-3">]</span><span class="p">,</span><span class="w">
-  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7132832972-4">%{</span><span class="p" data-group-id="7132832972-4">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language_subtags</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1339943117-3">[</span><span class="p" data-group-id="1339943117-3">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1339943117-4">%{</span><span class="p" data-group-id="1339943117-4">}</span><span class="p">,</span><span class="w">
   </span><span class="ss">gettext_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7132832972-5">%{</span><span class="p" data-group-id="7132832972-5">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7132832972-6">[</span><span class="p" data-group-id="7132832972-6">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1339943117-5">%{</span><span class="p" data-group-id="1339943117-5">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1339943117-6">[</span><span class="p" data-group-id="1339943117-6">]</span><span class="p">,</span><span class="w">
   </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
   </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en-001&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
   </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:&quot;001&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7132832972-7">%{</span><span class="p" data-group-id="7132832972-7">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7132832972-8">[</span><span class="p" data-group-id="7132832972-8">]</span><span class="w">
-</span><span class="p" data-group-id="7132832972-2">}</span></code></pre>
+  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1339943117-7">%{</span><span class="p" data-group-id="1339943117-7">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1339943117-8">[</span><span class="p" data-group-id="1339943117-8">]</span><span class="w">
+</span><span class="p" data-group-id="1339943117-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="default_territory/0">
 
   <div class="detail-header">
-    <a href="#default_territory/0" class="detail-link" title="Link to this function">
+    <a href="#default_territory/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">default_territory()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -610,7 +600,7 @@ does not specify one and none can be inferred.</p><h2 id="default_territory/0-ex
   </a>
   <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_territory</span><span class="p" data-group-id="0779549651-1">(</span><span class="p" data-group-id="0779549651-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_territory</span><span class="p" data-group-id="9041189748-1">(</span><span class="p" data-group-id="9041189748-1">)</span><span class="w">
 </span><span class="ss">:&quot;001&quot;</span></code></pre>
   </section>
 </section>
@@ -619,15 +609,13 @@ does not specify one and none can be inferred.</p><h2 id="default_territory/0-ex
     <span id="ellipsis/1"></span>
 
   <div class="detail-header">
-    <a href="#ellipsis/2" class="detail-link" title="Link to this function">
+    <a href="#ellipsis/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">ellipsis(string, options \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -670,31 +658,29 @@ is inserted between words or sentences. The valid options are
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="p" data-group-id="4127675286-1">(</span><span class="s">&quot;And furthermore&quot;</span><span class="p" data-group-id="4127675286-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="p" data-group-id="5167965425-1">(</span><span class="s">&quot;And furthermore&quot;</span><span class="p" data-group-id="5167965425-1">)</span><span class="w">
 </span><span class="s">&quot;And furthermore…&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="p" data-group-id="4127675286-2">(</span><span class="p" data-group-id="4127675286-3">[</span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;there is much to be done&quot;</span><span class="p" data-group-id="4127675286-3">]</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="p" data-group-id="4127675286-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="p" data-group-id="5167965425-2">(</span><span class="p" data-group-id="5167965425-3">[</span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;there is much to be done&quot;</span><span class="p" data-group-id="5167965425-3">]</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="p" data-group-id="5167965425-2">)</span><span class="w">
 </span><span class="s">&quot;And furthermore…there is much to be done&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="p" data-group-id="4127675286-4">(</span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:word</span><span class="p" data-group-id="4127675286-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="p" data-group-id="5167965425-4">(</span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:word</span><span class="p" data-group-id="5167965425-4">)</span><span class="w">
 </span><span class="s">&quot;And furthermore …&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="p" data-group-id="4127675286-5">(</span><span class="p" data-group-id="4127675286-6">[</span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;there is much to be done&quot;</span><span class="p" data-group-id="4127675286-6">]</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:word</span><span class="p" data-group-id="4127675286-5">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="p" data-group-id="5167965425-5">(</span><span class="p" data-group-id="5167965425-6">[</span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;there is much to be done&quot;</span><span class="p" data-group-id="5167965425-6">]</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:word</span><span class="p" data-group-id="5167965425-5">)</span><span class="w">
 </span><span class="s">&quot;And furthermore … there is much to be done&quot;</span></code></pre>
   </section>
 </section>
 <section class="detail" id="get_locale/0">
 
   <div class="detail-header">
-    <a href="#get_locale/0" class="detail-link" title="Link to this function">
+    <a href="#get_locale/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_locale()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -715,37 +701,35 @@ take an optional locale parameter for which a locale is not supplied.</p><h2 id=
   </a>
   <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="4675126767-1">(</span><span class="s">&quot;pl&quot;</span><span class="p" data-group-id="4675126767-1">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">get_locale</span><span class="p" data-group-id="4675126767-2">(</span><span class="p" data-group-id="4675126767-2">)</span><span class="w">
-</span><span class="p" data-group-id="4675126767-3">%</span><span class="nc" data-group-id="4675126767-3">Cldr.LanguageTag</span><span class="p" data-group-id="4675126767-3">{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="7039530206-1">(</span><span class="s">&quot;pl&quot;</span><span class="p" data-group-id="7039530206-1">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">get_locale</span><span class="p" data-group-id="7039530206-2">(</span><span class="p" data-group-id="7039530206-2">)</span><span class="w">
+</span><span class="p" data-group-id="7039530206-3">%</span><span class="nc" data-group-id="7039530206-3">Cldr.LanguageTag</span><span class="p" data-group-id="7039530206-3">{</span><span class="w">
    </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Elixir.Plausible.Cldr</span><span class="p">,</span><span class="w">
    </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pl&quot;</span><span class="p">,</span><span class="w">
    </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:pl</span><span class="p">,</span><span class="w">
-   </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4675126767-4">%{</span><span class="p" data-group-id="4675126767-4">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7039530206-4">%{</span><span class="p" data-group-id="7039530206-4">}</span><span class="p">,</span><span class="w">
    </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pl&quot;</span><span class="p">,</span><span class="w">
-   </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4675126767-5">%{</span><span class="p" data-group-id="4675126767-5">}</span><span class="p">,</span><span class="w">
-   </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4675126767-6">[</span><span class="p" data-group-id="4675126767-6">]</span><span class="p">,</span><span class="w">
+   </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7039530206-5">%{</span><span class="p" data-group-id="7039530206-5">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7039530206-6">[</span><span class="p" data-group-id="7039530206-6">]</span><span class="p">,</span><span class="w">
    </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:pl</span><span class="p">,</span><span class="w">
    </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:PL</span><span class="p">,</span><span class="w">
    </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pl&quot;</span><span class="p">,</span><span class="w">
    </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
-   </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4675126767-7">%{</span><span class="p" data-group-id="4675126767-7">}</span><span class="p">,</span><span class="w">
-   </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4675126767-8">[</span><span class="p" data-group-id="4675126767-8">]</span><span class="w">
- </span><span class="p" data-group-id="4675126767-3">}</span></code></pre>
+   </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7039530206-7">%{</span><span class="p" data-group-id="7039530206-7">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7039530206-8">[</span><span class="p" data-group-id="7039530206-8">]</span><span class="w">
+ </span><span class="p" data-group-id="7039530206-3">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_calendars/0">
 
   <div class="detail-header">
-    <a href="#known_calendars/0" class="detail-link" title="Link to this function">
+    <a href="#known_calendars/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_calendars()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -759,15 +743,13 @@ take an optional locale parameter for which a locale is not supplied.</p><h2 id=
 <section class="detail" id="known_currencies/0">
 
   <div class="detail-header">
-    <a href="#known_currencies/0" class="detail-link" title="Link to this function">
+    <a href="#known_currencies/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_currencies()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -781,15 +763,13 @@ take an optional locale parameter for which a locale is not supplied.</p><h2 id=
 <section class="detail" id="known_gettext_locale_name/1">
 
   <div class="detail-header">
-    <a href="#known_gettext_locale_name/1" class="detail-link" title="Link to this function">
+    <a href="#known_gettext_locale_name/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_gettext_locale_name(locale_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -818,25 +798,23 @@ take an optional locale parameter for which a locale is not supplied.</p><h2 id=
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name</span><span class="p" data-group-id="2497784424-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="2497784424-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name</span><span class="p" data-group-id="2146812112-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="2146812112-1">)</span><span class="w">
 </span><span class="s">&quot;en&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name</span><span class="p" data-group-id="2497784424-2">(</span><span class="s">&quot;en-SA&quot;</span><span class="p" data-group-id="2497784424-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name</span><span class="p" data-group-id="2146812112-2">(</span><span class="s">&quot;en-SA&quot;</span><span class="p" data-group-id="2146812112-2">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_gettext_locale_name?/1">
 
   <div class="detail-header">
-    <a href="#known_gettext_locale_name?/1" class="detail-link" title="Link to this function">
+    <a href="#known_gettext_locale_name?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_gettext_locale_name?(locale_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -864,25 +842,23 @@ name is configured and available in Gettext.</p><h2 id="known_gettext_locale_nam
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name?</span><span class="p" data-group-id="0236756948-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="0236756948-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name?</span><span class="p" data-group-id="6660026583-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="6660026583-1">)</span><span class="w">
 </span><span class="no">true</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name?</span><span class="p" data-group-id="0236756948-2">(</span><span class="s">&quot;!!&quot;</span><span class="p" data-group-id="0236756948-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name?</span><span class="p" data-group-id="6660026583-2">(</span><span class="s">&quot;!!&quot;</span><span class="p" data-group-id="6660026583-2">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_gettext_locale_names/0">
 
   <div class="detail-header">
-    <a href="#known_gettext_locale_names/0" class="detail-link" title="Link to this function">
+    <a href="#known_gettext_locale_names/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_gettext_locale_names()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -904,15 +880,13 @@ with <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html"><code class="inline">
 <section class="detail" id="known_locale_name/1">
 
   <div class="detail-header">
-    <a href="#known_locale_name/1" class="detail-link" title="Link to this function">
+    <a href="#known_locale_name/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_locale_name(locale_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -941,25 +915,23 @@ to return the first known locale name from a list.</p><h2 id="known_locale_name/
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name</span><span class="p" data-group-id="3158853137-1">(</span><span class="ss">:&quot;en-AU&quot;</span><span class="p" data-group-id="3158853137-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name</span><span class="p" data-group-id="2773527223-1">(</span><span class="ss">:&quot;en-AU&quot;</span><span class="p" data-group-id="2773527223-1">)</span><span class="w">
 </span><span class="ss">:&quot;en-AU&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name</span><span class="p" data-group-id="3158853137-2">(</span><span class="ss">:&quot;en-SA&quot;</span><span class="p" data-group-id="3158853137-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name</span><span class="p" data-group-id="2773527223-2">(</span><span class="ss">:&quot;en-SA&quot;</span><span class="p" data-group-id="2773527223-2">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_locale_name?/1">
 
   <div class="detail-header">
-    <a href="#known_locale_name?/1" class="detail-link" title="Link to this function">
+    <a href="#known_locale_name?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_locale_name?(locale_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -986,25 +958,23 @@ name is configured and available in Cldr.</p><h2 id="known_locale_name?/1-argume
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name?</span><span class="p" data-group-id="6858094548-1">(</span><span class="ss">:en</span><span class="p" data-group-id="6858094548-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name?</span><span class="p" data-group-id="8307365998-1">(</span><span class="ss">:en</span><span class="p" data-group-id="8307365998-1">)</span><span class="w">
 </span><span class="no">true</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name?</span><span class="p" data-group-id="6858094548-2">(</span><span class="ss">:&quot;!!&quot;</span><span class="p" data-group-id="6858094548-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name?</span><span class="p" data-group-id="8307365998-2">(</span><span class="ss">:&quot;!!&quot;</span><span class="p" data-group-id="8307365998-2">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_locale_names/0">
 
   <div class="detail-header">
-    <a href="#known_locale_names/0" class="detail-link" title="Link to this function">
+    <a href="#known_locale_names/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_locale_names()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1021,15 +991,13 @@ in this module or in <a href="https://hexdocs.pm/gettext/0.24.0/Gettext.html"><c
 <section class="detail" id="known_number_system_types/0">
 
   <div class="detail-header">
-    <a href="#known_number_system_types/0" class="detail-link" title="Link to this function">
+    <a href="#known_number_system_types/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_number_system_types()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1043,22 +1011,20 @@ in this module or in <a href="https://hexdocs.pm/gettext/0.24.0/Gettext.html"><c
   </a>
   <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_number_system_types</span><span class="p" data-group-id="9216573645-1">(</span><span class="p" data-group-id="9216573645-1">)</span><span class="w">
-</span><span class="p" data-group-id="9216573645-2">[</span><span class="ss">:default</span><span class="p">,</span><span class="w"> </span><span class="ss">:finance</span><span class="p">,</span><span class="w"> </span><span class="ss">:native</span><span class="p">,</span><span class="w"> </span><span class="ss">:traditional</span><span class="p" data-group-id="9216573645-2">]</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_number_system_types</span><span class="p" data-group-id="8812004742-1">(</span><span class="p" data-group-id="8812004742-1">)</span><span class="w">
+</span><span class="p" data-group-id="8812004742-2">[</span><span class="ss">:default</span><span class="p">,</span><span class="w"> </span><span class="ss">:finance</span><span class="p">,</span><span class="w"> </span><span class="ss">:native</span><span class="p">,</span><span class="w"> </span><span class="ss">:traditional</span><span class="p" data-group-id="8812004742-2">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_number_systems/0">
 
   <div class="detail-header">
-    <a href="#known_number_systems/0" class="detail-link" title="Link to this function">
+    <a href="#known_number_systems/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_number_systems()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1072,15 +1038,13 @@ in this module or in <a href="https://hexdocs.pm/gettext/0.24.0/Gettext.html"><c
 <section class="detail" id="known_rbnf_locale_name/1">
 
   <div class="detail-header">
-    <a href="#known_rbnf_locale_name/1" class="detail-link" title="Link to this function">
+    <a href="#known_rbnf_locale_name/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_rbnf_locale_name(locale_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1109,25 +1073,23 @@ and has RBNF rules defined.</p><h2 id="known_rbnf_locale_name/1-arguments" class
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name</span><span class="p" data-group-id="3904781257-1">(</span><span class="ss">:en</span><span class="p" data-group-id="3904781257-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name</span><span class="p" data-group-id="9136068455-1">(</span><span class="ss">:en</span><span class="p" data-group-id="9136068455-1">)</span><span class="w">
 </span><span class="ss">:en</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name</span><span class="p" data-group-id="3904781257-2">(</span><span class="ss">:&quot;en-SA&quot;</span><span class="p" data-group-id="3904781257-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name</span><span class="p" data-group-id="9136068455-2">(</span><span class="ss">:&quot;en-SA&quot;</span><span class="p" data-group-id="9136068455-2">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_rbnf_locale_name?/1">
 
   <div class="detail-header">
-    <a href="#known_rbnf_locale_name?/1" class="detail-link" title="Link to this function">
+    <a href="#known_rbnf_locale_name?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_rbnf_locale_name?(locale_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1155,25 +1117,23 @@ rules based number formats (RBNF).</p><h2 id="known_rbnf_locale_name?/1-argument
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name?</span><span class="p" data-group-id="9594065974-1">(</span><span class="ss">:en</span><span class="p" data-group-id="9594065974-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name?</span><span class="p" data-group-id="0454548883-1">(</span><span class="ss">:en</span><span class="p" data-group-id="0454548883-1">)</span><span class="w">
 </span><span class="no">true</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name?</span><span class="p" data-group-id="9594065974-2">(</span><span class="ss">:&quot;!!&quot;</span><span class="p" data-group-id="9594065974-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name?</span><span class="p" data-group-id="0454548883-2">(</span><span class="ss">:&quot;!!&quot;</span><span class="p" data-group-id="0454548883-2">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_rbnf_locale_names/0">
 
   <div class="detail-header">
-    <a href="#known_rbnf_locale_names/0" class="detail-link" title="Link to this function">
+    <a href="#known_rbnf_locale_names/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_rbnf_locale_names()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1194,15 +1154,13 @@ formats (RBNF).</p>
 <section class="detail" id="known_territories/0">
 
   <div class="detail-header">
-    <a href="#known_territories/0" class="detail-link" title="Link to this function">
+    <a href="#known_territories/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">known_territories()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1218,15 +1176,13 @@ formats (RBNF).</p>
     <span id="normalize_lenient_parse/2"></span>
 
   <div class="detail-header">
-    <a href="#normalize_lenient_parse/3" class="detail-link" title="Link to this function">
+    <a href="#normalize_lenient_parse/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">normalize_lenient_parse(string, scope, locale \\ get_locale())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1241,15 +1197,13 @@ of common symbols in numbers, currencies and dates</p>
 <section class="detail" id="put_gettext_locale/1">
 
   <div class="detail-header">
-    <a href="#put_gettext_locale/1" class="detail-link" title="Link to this function">
+    <a href="#put_gettext_locale/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">put_gettext_locale(locale)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1294,32 +1248,30 @@ CLDR backend defined by the <code class="inline">t:Cldr.LanguageTag</code> is se
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nc">Cldr.LanguageTag.Sigil</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_gettext_locale</span><span class="p" data-group-id="8530717197-1">(</span><span class="sx">~l&quot;en&quot;</span><span class="p" data-group-id="8530717197-1">)</span><span class="w">
-</span><span class="p" data-group-id="8530717197-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="8530717197-2">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_gettext_locale</span><span class="p" data-group-id="1107777240-1">(</span><span class="sx">~l&quot;en&quot;</span><span class="p" data-group-id="1107777240-1">)</span><span class="w">
+</span><span class="p" data-group-id="1107777240-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="1107777240-2">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nc">Cldr.LanguageTag.Sigil</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_gettext_locale</span><span class="p" data-group-id="8530717197-3">(</span><span class="sx">~l&quot;de&quot;</span><span class="p" data-group-id="8530717197-3">)</span><span class="w">
-</span><span class="p" data-group-id="8530717197-4">{</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_gettext_locale</span><span class="p" data-group-id="1107777240-3">(</span><span class="sx">~l&quot;de&quot;</span><span class="p" data-group-id="1107777240-3">)</span><span class="w">
+</span><span class="p" data-group-id="1107777240-4">{</span><span class="w">
   </span><span class="ss">:error</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="8530717197-5">{</span><span class="w">
+  </span><span class="p" data-group-id="1107777240-5">{</span><span class="w">
     </span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w">
     </span><span class="s">&quot;Locale TestBackend.Cldr.Locale.new!(</span><span class="se">\&quot;</span><span class="s">de-DE</span><span class="se">\&quot;</span><span class="s">) does not map to a known gettext locale name&quot;</span><span class="w">
-  </span><span class="p" data-group-id="8530717197-5">}</span><span class="w">
-</span><span class="p" data-group-id="8530717197-4">}</span></code></pre>
+  </span><span class="p" data-group-id="1107777240-5">}</span><span class="w">
+</span><span class="p" data-group-id="1107777240-4">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="put_locale/1">
 
   <div class="detail-header">
-    <a href="#put_locale/1" class="detail-link" title="Link to this function">
+    <a href="#put_locale/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">put_locale(locale_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1349,29 +1301,29 @@ of a language tag.</p><h2 id="put_locale/1-examples" class="section-heading">
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="4785628728-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="4785628728-1">)</span><span class="w">
-</span><span class="p" data-group-id="4785628728-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="4785628728-3">%</span><span class="nc" data-group-id="4785628728-3">Cldr.LanguageTag</span><span class="p" data-group-id="4785628728-3">{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="7919800823-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="7919800823-1">)</span><span class="w">
+</span><span class="p" data-group-id="7919800823-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="7919800823-3">%</span><span class="nc" data-group-id="7919800823-3">Cldr.LanguageTag</span><span class="p" data-group-id="7919800823-3">{</span><span class="w">
    </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="p">,</span><span class="w">
    </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
    </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
-   </span><span class="ss">language_subtags</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4785628728-4">[</span><span class="p" data-group-id="4785628728-4">]</span><span class="p">,</span><span class="w">
-   </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4785628728-5">%{</span><span class="p" data-group-id="4785628728-5">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">language_subtags</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7919800823-4">[</span><span class="p" data-group-id="7919800823-4">]</span><span class="p">,</span><span class="w">
+   </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7919800823-5">%{</span><span class="p" data-group-id="7919800823-5">}</span><span class="p">,</span><span class="w">
    </span><span class="ss">gettext_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
    </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
-   </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4785628728-6">%{</span><span class="p" data-group-id="4785628728-6">}</span><span class="p">,</span><span class="w">
-   </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4785628728-7">[</span><span class="p" data-group-id="4785628728-7">]</span><span class="p">,</span><span class="w">
+   </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7919800823-6">%{</span><span class="p" data-group-id="7919800823-6">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7919800823-7">[</span><span class="p" data-group-id="7919800823-7">]</span><span class="p">,</span><span class="w">
    </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
    </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
    </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
    </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:US</span><span class="p">,</span><span class="w">
-   </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4785628728-8">%{</span><span class="p" data-group-id="4785628728-8">}</span><span class="p">,</span><span class="w">
-   </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4785628728-9">[</span><span class="p" data-group-id="4785628728-9">]</span><span class="w">
- </span><span class="p" data-group-id="4785628728-3">}</span><span class="p" data-group-id="4785628728-2">}</span><span class="w">
+   </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7919800823-8">%{</span><span class="p" data-group-id="7919800823-8">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7919800823-9">[</span><span class="p" data-group-id="7919800823-9">]</span><span class="w">
+ </span><span class="p" data-group-id="7919800823-3">}</span><span class="p" data-group-id="7919800823-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="4785628728-10">(</span><span class="s">&quot;invalid-locale!&quot;</span><span class="p" data-group-id="4785628728-10">)</span><span class="w">
-</span><span class="p" data-group-id="4785628728-11">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4785628728-12">{</span><span class="nc">Cldr.LanguageTag.ParseError</span><span class="p">,</span><span class="w">
-  </span><span class="s">&quot;Expected a BCP47 language tag. Could not parse the remaining </span><span class="se">\&quot;</span><span class="s">!</span><span class="se">\&quot;</span><span class="s"> starting at position 15&quot;</span><span class="p" data-group-id="4785628728-12">}</span><span class="p" data-group-id="4785628728-11">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="7919800823-10">(</span><span class="s">&quot;invalid-locale!&quot;</span><span class="p" data-group-id="7919800823-10">)</span><span class="w">
+</span><span class="p" data-group-id="7919800823-11">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7919800823-12">{</span><span class="nc">Cldr.LanguageTag.ParseError</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;Expected a BCP47 language tag. Could not parse the remaining </span><span class="se">\&quot;</span><span class="s">!</span><span class="se">\&quot;</span><span class="s"> starting at position 15&quot;</span><span class="p" data-group-id="7919800823-12">}</span><span class="p" data-group-id="7919800823-11">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="quote/2">
@@ -1379,15 +1331,13 @@ of a language tag.</p><h2 id="put_locale/1-examples" class="section-heading">
     <span id="quote/1"></span>
 
   <div class="detail-header">
-    <a href="#quote/2" class="detail-link" title="Link to this function">
+    <a href="#quote/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">quote(string, options \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1420,25 +1370,23 @@ The default is <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#get_locale/0
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="k">quote</span><span class="p" data-group-id="6749485829-1">(</span><span class="s">&quot;Quoted String&quot;</span><span class="p" data-group-id="6749485829-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="k">quote</span><span class="p" data-group-id="2486001459-1">(</span><span class="s">&quot;Quoted String&quot;</span><span class="p" data-group-id="2486001459-1">)</span><span class="w">
 </span><span class="s">&quot;“Quoted String”&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="k">quote</span><span class="p" data-group-id="6749485829-2">(</span><span class="s">&quot;Quoted String&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="p" data-group-id="6749485829-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="k">quote</span><span class="p" data-group-id="2486001459-2">(</span><span class="s">&quot;Quoted String&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="p" data-group-id="2486001459-2">)</span><span class="w">
 </span><span class="s">&quot;「Quoted String」&quot;</span></code></pre>
   </section>
 </section>
 <section class="detail" id="unknown_locale_names/0">
 
   <div class="detail-header">
-    <a href="#unknown_locale_names/0" class="detail-link" title="Link to this function">
+    <a href="#unknown_locale_names/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">unknown_locale_names()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1461,15 +1409,13 @@ return an empty list.</p>
 <section class="detail" id="validate_calendar/1">
 
   <div class="detail-header">
-    <a href="#validate_calendar/1" class="detail-link" title="Link to this function">
+    <a href="#validate_calendar/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">validate_calendar(calendar)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1483,15 +1429,13 @@ return an empty list.</p>
 <section class="detail" id="validate_currency/1">
 
   <div class="detail-header">
-    <a href="#validate_currency/1" class="detail-link" title="Link to this function">
+    <a href="#validate_currency/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">validate_currency(currency)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1505,15 +1449,13 @@ return an empty list.</p>
 <section class="detail" id="validate_locale/1">
 
   <div class="detail-header">
-    <a href="#validate_locale/1" class="detail-link" title="Link to this function">
+    <a href="#validate_locale/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">validate_locale(locale)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1554,61 +1496,59 @@ of a language tag.</p><h2 id="validate_locale/1-examples" class="section-heading
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="8098820929-1">(</span><span class="ss">:en</span><span class="p" data-group-id="8098820929-1">)</span><span class="w">
-</span><span class="p" data-group-id="8098820929-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-</span><span class="p" data-group-id="8098820929-3">%</span><span class="nc" data-group-id="8098820929-3">Cldr.LanguageTag</span><span class="p" data-group-id="8098820929-3">{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="7464566363-1">(</span><span class="ss">:en</span><span class="p" data-group-id="7464566363-1">)</span><span class="w">
+</span><span class="p" data-group-id="7464566363-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+</span><span class="p" data-group-id="7464566363-3">%</span><span class="nc" data-group-id="7464566363-3">Cldr.LanguageTag</span><span class="p" data-group-id="7464566363-3">{</span><span class="w">
   </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="p">,</span><span class="w">
   </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
-  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-4">%{</span><span class="p" data-group-id="8098820929-4">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-4">%{</span><span class="p" data-group-id="7464566363-4">}</span><span class="p">,</span><span class="w">
   </span><span class="ss">gettext_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-5">%{</span><span class="p" data-group-id="8098820929-5">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-6">[</span><span class="p" data-group-id="8098820929-6">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-5">%{</span><span class="p" data-group-id="7464566363-5">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-6">[</span><span class="p" data-group-id="7464566363-6">]</span><span class="p">,</span><span class="w">
   </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
   </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
   </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:US</span><span class="p">,</span><span class="w">
-  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-7">%{</span><span class="p" data-group-id="8098820929-7">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-8">[</span><span class="p" data-group-id="8098820929-8">]</span><span class="w">
-</span><span class="p" data-group-id="8098820929-3">}</span><span class="p" data-group-id="8098820929-2">}</span><span class="w">
+  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-7">%{</span><span class="p" data-group-id="7464566363-7">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-8">[</span><span class="p" data-group-id="7464566363-8">]</span><span class="w">
+</span><span class="p" data-group-id="7464566363-3">}</span><span class="p" data-group-id="7464566363-2">}</span><span class="w">
 
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_locale</span><span class="p" data-group-id="8098820929-9">(</span><span class="p" data-group-id="8098820929-9">)</span><span class="w">
-</span><span class="p" data-group-id="8098820929-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-</span><span class="p" data-group-id="8098820929-11">%</span><span class="nc" data-group-id="8098820929-11">Cldr.LanguageTag</span><span class="p" data-group-id="8098820929-11">{</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_locale</span><span class="p" data-group-id="7464566363-9">(</span><span class="p" data-group-id="7464566363-9">)</span><span class="w">
+</span><span class="p" data-group-id="7464566363-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+</span><span class="p" data-group-id="7464566363-11">%</span><span class="nc" data-group-id="7464566363-11">Cldr.LanguageTag</span><span class="p" data-group-id="7464566363-11">{</span><span class="w">
   </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="p">,</span><span class="w">
   </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en-001&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:&quot;en-001&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-12">%{</span><span class="p" data-group-id="8098820929-12">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-12">%{</span><span class="p" data-group-id="7464566363-12">}</span><span class="p">,</span><span class="w">
   </span><span class="ss">gettext_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-13">%{</span><span class="p" data-group-id="8098820929-13">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-14">[</span><span class="p" data-group-id="8098820929-14">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-13">%{</span><span class="p" data-group-id="7464566363-13">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-14">[</span><span class="p" data-group-id="7464566363-14">]</span><span class="p">,</span><span class="w">
   </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
   </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en-001&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
   </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:&quot;001&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-15">%{</span><span class="p" data-group-id="8098820929-15">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8098820929-16">[</span><span class="p" data-group-id="8098820929-16">]</span><span class="w">
-</span><span class="p" data-group-id="8098820929-11">}</span><span class="p" data-group-id="8098820929-10">}</span><span class="w">
+  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-15">%{</span><span class="p" data-group-id="7464566363-15">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7464566363-16">[</span><span class="p" data-group-id="7464566363-16">]</span><span class="w">
+</span><span class="p" data-group-id="7464566363-11">}</span><span class="p" data-group-id="7464566363-10">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="8098820929-17">(</span><span class="s">&quot;zzz&quot;</span><span class="p" data-group-id="8098820929-17">)</span><span class="w">
-</span><span class="p" data-group-id="8098820929-18">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8098820929-19">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zzz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="8098820929-19">}</span><span class="p" data-group-id="8098820929-18">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="7464566363-17">(</span><span class="s">&quot;zzz&quot;</span><span class="p" data-group-id="7464566363-17">)</span><span class="w">
+</span><span class="p" data-group-id="7464566363-18">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7464566363-19">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zzz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="7464566363-19">}</span><span class="p" data-group-id="7464566363-18">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="validate_number_system/1">
 
   <div class="detail-header">
-    <a href="#validate_number_system/1" class="detail-link" title="Link to this function">
+    <a href="#validate_number_system/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">validate_number_system(number_system)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1622,15 +1562,13 @@ of a language tag.</p><h2 id="validate_locale/1-examples" class="section-heading
 <section class="detail" id="validate_number_system_type/1">
 
   <div class="detail-header">
-    <a href="#validate_number_system_type/1" class="detail-link" title="Link to this function">
+    <a href="#validate_number_system_type/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">validate_number_system_type(number_system_type)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1664,37 +1602,35 @@ of a language tag.</p><h2 id="validate_locale/1-examples" class="section-heading
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="p" data-group-id="8241494573-1">(</span><span class="ss">:default</span><span class="p" data-group-id="8241494573-1">)</span><span class="w">
-</span><span class="p" data-group-id="8241494573-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="p" data-group-id="8241494573-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="p" data-group-id="9349843773-1">(</span><span class="ss">:default</span><span class="p" data-group-id="9349843773-1">)</span><span class="w">
+</span><span class="p" data-group-id="9349843773-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="p" data-group-id="9349843773-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="p" data-group-id="8241494573-3">(</span><span class="ss">:traditional</span><span class="p" data-group-id="8241494573-3">)</span><span class="w">
-</span><span class="p" data-group-id="8241494573-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:traditional</span><span class="p" data-group-id="8241494573-4">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="p" data-group-id="9349843773-3">(</span><span class="ss">:traditional</span><span class="p" data-group-id="9349843773-3">)</span><span class="w">
+</span><span class="p" data-group-id="9349843773-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:traditional</span><span class="p" data-group-id="9349843773-4">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="p" data-group-id="8241494573-5">(</span><span class="ss">:latn</span><span class="p" data-group-id="8241494573-5">)</span><span class="w">
-</span><span class="p" data-group-id="8241494573-6">{</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="p" data-group-id="9349843773-5">(</span><span class="ss">:latn</span><span class="p" data-group-id="9349843773-5">)</span><span class="w">
+</span><span class="p" data-group-id="9349843773-6">{</span><span class="w">
   </span><span class="ss">:error</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="8241494573-7">{</span><span class="nc">Cldr.UnknownNumberSystemTypeError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system type :latn is unknown&quot;</span><span class="p" data-group-id="8241494573-7">}</span><span class="w">
-</span><span class="p" data-group-id="8241494573-6">}</span><span class="w">
+  </span><span class="p" data-group-id="9349843773-7">{</span><span class="nc">Cldr.UnknownNumberSystemTypeError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system type :latn is unknown&quot;</span><span class="p" data-group-id="9349843773-7">}</span><span class="w">
+</span><span class="p" data-group-id="9349843773-6">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="p" data-group-id="8241494573-8">(</span><span class="s">&quot;bork&quot;</span><span class="p" data-group-id="8241494573-8">)</span><span class="w">
-</span><span class="p" data-group-id="8241494573-9">{</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="p" data-group-id="9349843773-8">(</span><span class="s">&quot;bork&quot;</span><span class="p" data-group-id="9349843773-8">)</span><span class="w">
+</span><span class="p" data-group-id="9349843773-9">{</span><span class="w">
   </span><span class="ss">:error</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="8241494573-10">{</span><span class="nc">Cldr.UnknownNumberSystemTypeError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system type </span><span class="se">\&quot;</span><span class="s">bork</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="8241494573-10">}</span><span class="w">
-</span><span class="p" data-group-id="8241494573-9">}</span></code></pre>
+  </span><span class="p" data-group-id="9349843773-10">{</span><span class="nc">Cldr.UnknownNumberSystemTypeError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system type </span><span class="se">\&quot;</span><span class="s">bork</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="9349843773-10">}</span><span class="w">
+</span><span class="p" data-group-id="9349843773-9">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="validate_territory/1">
 
   <div class="detail-header">
-    <a href="#validate_territory/1" class="detail-link" title="Link to this function">
+    <a href="#validate_territory/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">validate_territory(territory)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1708,15 +1644,13 @@ of a language tag.</p><h2 id="validate_locale/1-examples" class="section-heading
 <section class="detail" id="with_locale/2">
 
   <div class="detail-header">
-    <a href="#with_locale/2" class="detail-link" title="Link to this function">
+    <a href="#with_locale/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">with_locale(locale, fun)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1753,34 +1687,33 @@ identified.</p></li></ul>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

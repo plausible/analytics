@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>PlausibleWeb.Live.GoalSettings.Form — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,49 +98,50 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">PlausibleWeb.Live.GoalSettings.Form</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">PlausibleWeb.Live.GoalSettings.Form</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Live view for the goal creation form</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -161,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_form/1" translate="no">create_form(assigns)</a>
+        <a href="#create_form/1" data-no-tooltip translate="no">create_form(assigns)</a>
 
       </div>
 
@@ -169,45 +165,17 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#custom_event_fields/1" translate="no">custom_event_fields(assigns)</a>
+        <a href="#custom_event_fields/1" data-no-tooltip translate="no">custom_event_fields(assigns)</a>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">existing_goals</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal_options</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">has_access_to_revenue_goals?</code> (<code class="inline">:boolean</code>)</li><li>Global attributes are accepted.</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">existing_goals</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal_options</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">has_access_to_revenue_goals?</code> (<code class="inline">:boolean</code>)</li><li>Global attributes are accepted.</li></ul></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#edit_form/1" translate="no">edit_form(assigns)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#handle_event/3" translate="no">handle_event(binary, arg2, socket)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:handle_event/3"><code class="inline">Phoenix.LiveComponent.handle_event/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#pageview_fields/1" translate="no">pageview_fields(assigns)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li>Global attributes are accepted.</li></ul></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#pageviews_tab/1" translate="no">pageviews_tab(assigns)</a>
+        <a href="#edit_form/1" data-no-tooltip translate="no">edit_form(assigns)</a>
 
       </div>
 
@@ -215,33 +183,27 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#render/1" translate="no">render(assigns)</a>
+        <a href="#handle_event/3" data-no-tooltip translate="no">handle_event(binary, arg2, socket)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:render/1"><code class="inline">Phoenix.LiveComponent.render/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveComponent.html#c:handle_event/3"><code class="inline">Phoenix.LiveComponent.handle_event/3</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#revenue_goal_settings/1" translate="no">revenue_goal_settings(assigns)</a>
+        <a href="#pageview_fields/1" data-no-tooltip translate="no">pageview_fields(assigns)</a>
 
       </div>
+
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li>Global attributes are accepted.</li></ul></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#suggest_event_names/3" translate="no">suggest_event_names(input, site, existing_goals)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#suggest_page_paths/2" translate="no">suggest_page_paths(input, site)</a>
+        <a href="#pageviews_tab/1" data-no-tooltip translate="no">pageviews_tab(assigns)</a>
 
       </div>
 
@@ -249,7 +211,17 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tabs/1" translate="no">tabs(assigns)</a>
+        <a href="#render/1" data-no-tooltip translate="no">render(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveComponent.html#c:render/1"><code class="inline">Phoenix.LiveComponent.render/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#revenue_goal_settings/1" data-no-tooltip translate="no">revenue_goal_settings(assigns)</a>
 
       </div>
 
@@ -257,11 +229,35 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#update/2" translate="no">update(assigns, socket)</a>
+        <a href="#suggest_event_names/3" data-no-tooltip translate="no">suggest_event_names(input, site, existing_goals)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:update/2"><code class="inline">Phoenix.LiveComponent.update/2</code></a>.</p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#suggest_page_paths/2" data-no-tooltip translate="no">suggest_page_paths(input, site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#tabs/1" data-no-tooltip translate="no">tabs(assigns)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update/2" data-no-tooltip translate="no">update(assigns, socket)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveComponent.html#c:update/2"><code class="inline">Phoenix.LiveComponent.update/2</code></a>.</p></div>
 
     </div>
 
@@ -281,15 +277,13 @@ Pages
 <section class="detail" id="create_form/1">
 
   <div class="detail-header">
-    <a href="#create_form/1" class="detail-link" title="Link to this function">
+    <a href="#create_form/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">create_form(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L97" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L97" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -303,15 +297,13 @@ Pages
 <section class="detail" id="custom_event_fields/1">
 
   <div class="detail-header">
-    <a href="#custom_event_fields/1" class="detail-link" title="Link to this function">
+    <a href="#custom_event_fields/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">custom_event_fields(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L212" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L212" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -325,21 +317,19 @@ Pages
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">existing_goals</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal_options</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">has_access_to_revenue_goals?</code> (<code class="inline">:boolean</code>)</li><li>Global attributes are accepted.</li></ul>
+<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">current_user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>)</li><li><code class="inline">site_team</code> (<a href="Plausible.Teams.Team.html"><code class="inline">Plausible.Teams.Team</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">existing_goals</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal_options</code> (<code class="inline">:list</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">has_access_to_revenue_goals?</code> (<code class="inline">:boolean</code>)</li><li>Global attributes are accepted.</li></ul>
   </section>
 </section>
 <section class="detail" id="edit_form/1">
 
   <div class="detail-header">
-    <a href="#edit_form/1" class="detail-link" title="Link to this function">
+    <a href="#edit_form/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">edit_form(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L65" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L65" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -353,15 +343,13 @@ Pages
 <section class="detail" id="handle_event/3">
 
   <div class="detail-header">
-    <a href="#handle_event/3" class="detail-link" title="Link to this function">
+    <a href="#handle_event/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">handle_event(binary, arg2, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L407" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L407" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -369,21 +357,19 @@ Pages
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:handle_event/3"><code class="inline">Phoenix.LiveComponent.handle_event/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveComponent.html#c:handle_event/3"><code class="inline">Phoenix.LiveComponent.handle_event/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="pageview_fields/1">
 
   <div class="detail-header">
-    <a href="#pageview_fields/1" class="detail-link" title="Link to this function">
+    <a href="#pageview_fields/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">pageview_fields(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L164" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L164" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -397,21 +383,19 @@ Pages
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li>Global attributes are accepted.</li></ul>
+<ul><li><code class="inline">f</code> (<a href="https://hexdocs.pm/phoenix_html/4.2.0/Phoenix.HTML.Form.html"><code class="inline">Phoenix.HTML.Form</code></a>)</li><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>)</li><li><code class="inline">suffix</code> (<code class="inline">:string</code>)</li><li><code class="inline">goal</code> (<a href="Plausible.Goal.html"><code class="inline">Plausible.Goal</code></a>) - Defaults to <code class="inline">nil</code>.</li><li>Global attributes are accepted.</li></ul>
   </section>
 </section>
 <section class="detail" id="pageviews_tab/1">
 
   <div class="detail-header">
-    <a href="#pageviews_tab/1" class="detail-link" title="Link to this function">
+    <a href="#pageviews_tab/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">pageviews_tab(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L388" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L388" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -425,15 +409,13 @@ Pages
 <section class="detail" id="render/1">
 
   <div class="detail-header">
-    <a href="#render/1" class="detail-link" title="Link to this function">
+    <a href="#render/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L56" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L56" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -441,21 +423,19 @@ Pages
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:render/1"><code class="inline">Phoenix.LiveComponent.render/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveComponent.html#c:render/1"><code class="inline">Phoenix.LiveComponent.render/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="revenue_goal_settings/1">
 
   <div class="detail-header">
-    <a href="#revenue_goal_settings/1" class="detail-link" title="Link to this function">
+    <a href="#revenue_goal_settings/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">revenue_goal_settings(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L274" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L274" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -469,15 +449,13 @@ Pages
 <section class="detail" id="suggest_event_names/3">
 
   <div class="detail-header">
-    <a href="#suggest_event_names/3" class="detail-link" title="Link to this function">
+    <a href="#suggest_event_names/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">suggest_event_names(input, site, existing_goals)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L459" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L459" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -491,15 +469,13 @@ Pages
 <section class="detail" id="suggest_page_paths/2">
 
   <div class="detail-header">
-    <a href="#suggest_page_paths/2" class="detail-link" title="Link to this function">
+    <a href="#suggest_page_paths/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">suggest_page_paths(input, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L451" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L451" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -513,15 +489,13 @@ Pages
 <section class="detail" id="tabs/1">
 
   <div class="detail-header">
-    <a href="#tabs/1" class="detail-link" title="Link to this function">
+    <a href="#tabs/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">tabs(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L358" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L358" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -535,15 +509,13 @@ Pages
 <section class="detail" id="update/2">
 
   <div class="detail-header">
-    <a href="#update/2" class="detail-link" title="Link to this function">
+    <a href="#update/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">update(assigns, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L11" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/goal_settings/form.ex#L11" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -551,41 +523,40 @@ Pages
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:update/2"><code class="inline">Phoenix.LiveComponent.update/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveComponent.html#c:update/2"><code class="inline">Phoenix.LiveComponent.update/2</code></a>.</p>
   </section>
 </section>
 
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

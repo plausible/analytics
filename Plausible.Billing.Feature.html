@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Billing.Feature — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-behaviour">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,46 +98,46 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Billing.Feature</span> <small>behaviour</small>
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Billing.Feature</span> <small>behaviour</small>
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>This module provides an interface for managing features, e.g. Revenue Goals,
 Funnels and Custom Properties.</p><p>Feature modules have functions for toggling the feature on/off and checking
 whether the feature is available for a site/user.</p><p>When defining new features, the following options are expected by the
@@ -150,8 +145,9 @@ whether the feature is available for a site/user.</p><p>When defining new featur
 file (see also Plausible.Billing.Plan).</p></li><li><p><code class="inline">:display_name</code> - human-readable display name of the feature</p></li><li><p><code class="inline">:toggle_field</code> - the field in the %Plausible.Site{} schema that toggles
 the feature. If <code class="inline">nil</code> or not set, toggle/2 silently returns <code class="inline">:ok</code></p></li><li><p><code class="inline">:free</code> - if set to <code class="inline">true</code>, makes the <code class="inline">check_availability/1</code> function
 always return <code class="inline">:ok</code> (no matter the user's subscription status)</p></li></ul><p>Functions defined by <code class="inline">__using__</code> can be overridden if needed.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -167,7 +163,7 @@ always return <code class="inline">:ok</code> (no matter the user's subscription
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
 
       </div>
 
@@ -181,7 +177,7 @@ always return <code class="inline">:ok</code> (no matter the user's subscription
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:check_availability/1" translate="no">check_availability(arg1)</a>
+        <a href="#c:check_availability/1" data-no-tooltip translate="no">check_availability(arg1)</a>
 
       </div>
 
@@ -191,7 +187,7 @@ always return <code class="inline">:ok</code> (no matter the user's subscription
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:display_name/0" translate="no">display_name()</a>
+        <a href="#c:display_name/0" data-no-tooltip translate="no">display_name()</a>
 
       </div>
 
@@ -201,7 +197,7 @@ always return <code class="inline">:ok</code> (no matter the user's subscription
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:enabled?/1" translate="no">enabled?(t)</a>
+        <a href="#c:enabled?/1" data-no-tooltip translate="no">enabled?(t)</a>
 
       </div>
 
@@ -212,7 +208,7 @@ disabled or the user does not have access to it.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:free?/0" translate="no">free?()</a>
+        <a href="#c:free?/0" data-no-tooltip translate="no">free?()</a>
 
       </div>
 
@@ -222,7 +218,7 @@ disabled or the user does not have access to it.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:name/0" translate="no">name()</a>
+        <a href="#c:name/0" data-no-tooltip translate="no">name()</a>
 
       </div>
 
@@ -232,7 +228,7 @@ disabled or the user does not have access to it.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:opted_out?/1" translate="no">opted_out?(t)</a>
+        <a href="#c:opted_out?/1" data-no-tooltip translate="no">opted_out?(t)</a>
 
       </div>
 
@@ -244,7 +240,7 @@ owner does not have access to the feature.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:toggle/3" translate="no">toggle(t, t, t)</a>
+        <a href="#c:toggle/3" data-no-tooltip translate="no">toggle(t, t, t)</a>
 
       </div>
 
@@ -256,7 +252,7 @@ have access to.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:toggle_field/0" translate="no">toggle_field()</a>
+        <a href="#c:toggle_field/0" data-no-tooltip translate="no">toggle_field()</a>
 
       </div>
 
@@ -272,7 +268,7 @@ have access to.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list/0" translate="no">list()</a>
+        <a href="#list/0" data-no-tooltip translate="no">list()</a>
 
       </div>
 
@@ -282,7 +278,7 @@ have access to.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#list_short_names/0" translate="no">list_short_names()</a>
+        <a href="#list_short_names/0" data-no-tooltip translate="no">list_short_names()</a>
 
       </div>
 
@@ -306,15 +302,13 @@ have access to.</p></div>
 <section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L82" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L82" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -351,15 +345,13 @@ have access to.</p></div>
 <section class="detail" id="c:check_availability/1">
 
   <div class="detail-header">
-    <a href="#c:check_availability/1" class="detail-link" title="Link to this callback">
+    <a href="#c:check_availability/1" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">check_availability(arg1)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L70" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L70" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -380,15 +372,13 @@ have access to.</p></div>
 <section class="detail" id="c:display_name/0">
 
   <div class="detail-header">
-    <a href="#c:display_name/0" class="detail-link" title="Link to this callback">
+    <a href="#c:display_name/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">display_name()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L34" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -408,15 +398,13 @@ have access to.</p></div>
 <section class="detail" id="c:enabled?/1">
 
   <div class="detail-header">
-    <a href="#c:enabled?/1" class="detail-link" title="Link to this callback">
+    <a href="#c:enabled?/1" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">enabled?(t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L58" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L58" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -437,15 +425,13 @@ disabled or the user does not have access to it.</p>
 <section class="detail" id="c:free?/0">
 
   <div class="detail-header">
-    <a href="#c:free?/0" class="detail-link" title="Link to this callback">
+    <a href="#c:free?/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">free?()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L44" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L44" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -465,15 +451,13 @@ disabled or the user does not have access to it.</p>
 <section class="detail" id="c:name/0">
 
   <div class="detail-header">
-    <a href="#c:name/0" class="detail-link" title="Link to this callback">
+    <a href="#c:name/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">name()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L29" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L29" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -493,15 +477,13 @@ disabled or the user does not have access to it.</p>
 <section class="detail" id="c:opted_out?/1">
 
   <div class="detail-header">
-    <a href="#c:opted_out?/1" class="detail-link" title="Link to this callback">
+    <a href="#c:opted_out?/1" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">opted_out?(t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L65" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L65" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -523,15 +505,13 @@ owner does not have access to the feature.</p>
 <section class="detail" id="c:toggle/3">
 
   <div class="detail-header">
-    <a href="#c:toggle/3" class="detail-link" title="Link to this callback">
+    <a href="#c:toggle/3" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">toggle(t, t, t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L51" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L51" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -554,15 +534,13 @@ have access to.</p>
 <section class="detail" id="c:toggle_field/0">
 
   <div class="detail-header">
-    <a href="#c:toggle_field/0" class="detail-link" title="Link to this callback">
+    <a href="#c:toggle_field/0" class="detail-link" data-no-tooltip aria-label="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this callback</span>
     </a>
     <h1 class="signature" translate="no">toggle_field()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L39" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L39" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -594,15 +572,13 @@ have access to.</p>
 <section class="detail" id="list/0">
 
   <div class="detail-header">
-    <a href="#list/0" class="detail-link" title="Link to this function">
+    <a href="#list/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">list()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L87" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L87" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -616,15 +592,13 @@ have access to.</p>
 <section class="detail" id="list_short_names/0">
 
   <div class="detail-header">
-    <a href="#list_short_names/0" class="detail-link" title="Link to this macro">
+    <a href="#list_short_names/0" class="detail-link" data-no-tooltip aria-label="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
     </a>
     <h1 class="signature" translate="no">list_short_names()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L94" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L94" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -641,34 +615,33 @@ have access to.</p>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

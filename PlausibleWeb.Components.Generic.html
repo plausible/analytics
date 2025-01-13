@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>PlausibleWeb.Components.Generic — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,49 +98,50 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">PlausibleWeb.Components.Generic</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">PlausibleWeb.Components.Generic</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Generic reusable components</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -161,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#button/1" translate="no">button(assigns)</a>
+        <a href="#button/1" data-no-tooltip translate="no">button(assigns)</a>
 
       </div>
 
@@ -171,7 +167,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#button_link/1" translate="no">button_link(assigns)</a>
+        <a href="#button_link/1" data-no-tooltip translate="no">button_link(assigns)</a>
 
       </div>
 
@@ -181,7 +177,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_button/1" translate="no">delete_button(assigns)</a>
+        <a href="#delete_button/1" data-no-tooltip translate="no">delete_button(assigns)</a>
 
       </div>
 
@@ -191,7 +187,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#docs_info/1" translate="no">docs_info(assigns)</a>
+        <a href="#docs_info/1" data-no-tooltip translate="no">docs_info(assigns)</a>
 
       </div>
 
@@ -201,7 +197,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dropdown/1" translate="no">dropdown(assigns)</a>
+        <a href="#dropdown/1" data-no-tooltip translate="no">dropdown(assigns)</a>
 
       </div>
 
@@ -211,7 +207,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dropdown_divider/1" translate="no">dropdown_divider(assigns)</a>
+        <a href="#dropdown_divider/1" data-no-tooltip translate="no">dropdown_divider(assigns)</a>
 
       </div>
 
@@ -219,7 +215,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dropdown_item/1" translate="no">dropdown_item(assigns)</a>
+        <a href="#dropdown_item/1" data-no-tooltip translate="no">dropdown_item(assigns)</a>
 
       </div>
 
@@ -229,7 +225,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dynamic_icon/1" translate="no">dynamic_icon(assigns)</a>
+        <a href="#dynamic_icon/1" data-no-tooltip translate="no">dynamic_icon(assigns)</a>
 
       </div>
 
@@ -239,7 +235,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#edit_button/1" translate="no">edit_button(assigns)</a>
+        <a href="#edit_button/1" data-no-tooltip translate="no">edit_button(assigns)</a>
 
       </div>
 
@@ -249,7 +245,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#filter_bar/1" translate="no">filter_bar(assigns)</a>
+        <a href="#filter_bar/1" data-no-tooltip translate="no">filter_bar(assigns)</a>
 
       </div>
 
@@ -259,7 +255,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#focus_box/1" translate="no">focus_box(assigns)</a>
+        <a href="#focus_box/1" data-no-tooltip translate="no">focus_box(assigns)</a>
 
       </div>
 
@@ -269,7 +265,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#focus_list/1" translate="no">focus_list(assigns)</a>
+        <a href="#focus_list/1" data-no-tooltip translate="no">focus_list(assigns)</a>
 
       </div>
 
@@ -279,7 +275,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#h2/1" translate="no">h2(assigns)</a>
+        <a href="#h2/1" data-no-tooltip translate="no">h2(assigns)</a>
 
       </div>
 
@@ -289,7 +285,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#notice/1" translate="no">notice(assigns)</a>
+        <a href="#notice/1" data-no-tooltip translate="no">notice(assigns)</a>
 
       </div>
 
@@ -299,7 +295,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#settings_tiles/1" translate="no">settings_tiles(assigns)</a>
+        <a href="#settings_tiles/1" data-no-tooltip translate="no">settings_tiles(assigns)</a>
 
       </div>
 
@@ -307,7 +303,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#spinner/1" translate="no">spinner(assigns)</a>
+        <a href="#spinner/1" data-no-tooltip translate="no">spinner(assigns)</a>
 
       </div>
 
@@ -317,7 +313,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#styled_link/1" translate="no">styled_link(assigns)</a>
+        <a href="#styled_link/1" data-no-tooltip translate="no">styled_link(assigns)</a>
 
       </div>
 
@@ -327,7 +323,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#table/1" translate="no">table(assigns)</a>
+        <a href="#table/1" data-no-tooltip translate="no">table(assigns)</a>
 
       </div>
 
@@ -337,7 +333,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#td/1" translate="no">td(assigns)</a>
+        <a href="#td/1" data-no-tooltip translate="no">td(assigns)</a>
 
       </div>
 
@@ -347,7 +343,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#th/1" translate="no">th(assigns)</a>
+        <a href="#th/1" data-no-tooltip translate="no">th(assigns)</a>
 
       </div>
 
@@ -357,7 +353,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tile/1" translate="no">tile(assigns)</a>
+        <a href="#tile/1" data-no-tooltip translate="no">tile(assigns)</a>
 
       </div>
 
@@ -367,7 +363,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#title/1" translate="no">title(assigns)</a>
+        <a href="#title/1" data-no-tooltip translate="no">title(assigns)</a>
 
       </div>
 
@@ -377,7 +373,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#toggle_submit/1" translate="no">toggle_submit(assigns)</a>
+        <a href="#toggle_submit/1" data-no-tooltip translate="no">toggle_submit(assigns)</a>
 
       </div>
 
@@ -387,7 +383,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tooltip/1" translate="no">tooltip(assigns)</a>
+        <a href="#tooltip/1" data-no-tooltip translate="no">tooltip(assigns)</a>
 
       </div>
 
@@ -397,7 +393,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#unstyled_link/1" translate="no">unstyled_link(assigns)</a>
+        <a href="#unstyled_link/1" data-no-tooltip translate="no">unstyled_link(assigns)</a>
 
       </div>
 
@@ -421,15 +417,13 @@ Pages
 <section class="detail" id="button/1">
 
   <div class="detail-header">
-    <a href="#button/1" class="detail-link" title="Link to this function">
+    <a href="#button/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">button(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L47" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L47" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -455,15 +449,13 @@ Pages
 <section class="detail" id="button_link/1">
 
   <div class="detail-header">
-    <a href="#button_link/1" class="detail-link" title="Link to this function">
+    <a href="#button_link/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">button_link(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L81" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L81" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -489,15 +481,13 @@ Pages
 <section class="detail" id="delete_button/1">
 
   <div class="detail-header">
-    <a href="#delete_button/1" class="detail-link" title="Link to this function">
+    <a href="#delete_button/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">delete_button(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L698" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L699" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -517,15 +507,13 @@ Pages
 <section class="detail" id="docs_info/1">
 
   <div class="detail-header">
-    <a href="#docs_info/1" class="detail-link" title="Link to this function">
+    <a href="#docs_info/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">docs_info(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L136" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L136" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -545,15 +533,13 @@ Pages
 <section class="detail" id="dropdown/1">
 
   <div class="detail-header">
-    <a href="#dropdown/1" class="detail-link" title="Link to this function">
+    <a href="#dropdown/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">dropdown(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L234" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L234" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -579,15 +565,13 @@ Pages
 <section class="detail" id="dropdown_divider/1">
 
   <div class="detail-header">
-    <a href="#dropdown_divider/1" class="detail-link" title="Link to this function">
+    <a href="#dropdown_divider/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">dropdown_divider(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L310" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L311" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -601,15 +585,13 @@ Pages
 <section class="detail" id="dropdown_item/1">
 
   <div class="detail-header">
-    <a href="#dropdown_item/1" class="detail-link" title="Link to this function">
+    <a href="#dropdown_item/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">dropdown_item(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L276" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L277" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -635,15 +617,13 @@ Pages
 <section class="detail" id="dynamic_icon/1">
 
   <div class="detail-header">
-    <a href="#dynamic_icon/1" class="detail-link" title="Link to this function">
+    <a href="#dynamic_icon/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">dynamic_icon(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L478" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L479" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -663,15 +643,13 @@ Pages
 <section class="detail" id="edit_button/1">
 
   <div class="detail-header">
-    <a href="#edit_button/1" class="detail-link" title="Link to this function">
+    <a href="#edit_button/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">edit_button(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L679" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L680" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -691,15 +669,13 @@ Pages
 <section class="detail" id="filter_bar/1">
 
   <div class="detail-header">
-    <a href="#filter_bar/1" class="detail-link" title="Link to this function">
+    <a href="#filter_bar/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">filter_bar(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L719" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L720" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -725,15 +701,13 @@ Pages
 <section class="detail" id="focus_box/1">
 
   <div class="detail-header">
-    <a href="#focus_box/1" class="detail-link" title="Link to this function">
+    <a href="#focus_box/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">focus_box(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L515" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L516" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -759,15 +733,13 @@ Pages
 <section class="detail" id="focus_list/1">
 
   <div class="detail-header">
-    <a href="#focus_list/1" class="detail-link" title="Link to this function">
+    <a href="#focus_list/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">focus_list(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L499" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L500" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -787,15 +759,13 @@ Pages
 <section class="detail" id="h2/1">
 
   <div class="detail-header">
-    <a href="#h2/1" class="detail-link" title="Link to this function">
+    <a href="#h2/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">h2(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L754" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L755" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -821,15 +791,13 @@ Pages
 <section class="detail" id="notice/1">
 
   <div class="detail-header">
-    <a href="#notice/1" class="detail-link" title="Link to this function">
+    <a href="#notice/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">notice(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L151" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L151" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -855,15 +823,13 @@ Pages
 <section class="detail" id="settings_tiles/1">
 
   <div class="detail-header">
-    <a href="#settings_tiles/1" class="detail-link" title="Link to this function">
+    <a href="#settings_tiles/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">settings_tiles(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L388" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L389" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -877,15 +843,13 @@ Pages
 <section class="detail" id="spinner/1">
 
   <div class="detail-header">
-    <a href="#spinner/1" class="detail-link" title="Link to this function">
+    <a href="#spinner/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">spinner(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L367" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L368" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -905,15 +869,13 @@ Pages
 <section class="detail" id="styled_link/1">
 
   <div class="detail-header">
-    <a href="#styled_link/1" class="detail-link" title="Link to this function">
+    <a href="#styled_link/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">styled_link(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L210" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L210" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -939,15 +901,13 @@ Pages
 <section class="detail" id="table/1">
 
   <div class="detail-header">
-    <a href="#table/1" class="detail-link" title="Link to this function">
+    <a href="#table/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">table(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L559" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L560" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -973,15 +933,13 @@ Pages
 <section class="detail" id="td/1">
 
   <div class="detail-header">
-    <a href="#td/1" class="detail-link" title="Link to this function">
+    <a href="#td/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">td(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L585" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L586" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1007,15 +965,13 @@ Pages
 <section class="detail" id="th/1">
 
   <div class="detail-header">
-    <a href="#th/1" class="detail-link" title="Link to this function">
+    <a href="#th/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">th(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L621" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L622" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1041,15 +997,13 @@ Pages
 <section class="detail" id="tile/1">
 
   <div class="detail-header">
-    <a href="#tile/1" class="detail-link" title="Link to this function">
+    <a href="#tile/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">tile(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L404" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L405" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1075,15 +1029,13 @@ Pages
 <section class="detail" id="title/1">
 
   <div class="detail-header">
-    <a href="#title/1" class="detail-link" title="Link to this function">
+    <a href="#title/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">title(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L765" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L766" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1109,15 +1061,13 @@ Pages
 <section class="detail" id="toggle_submit/1">
 
   <div class="detail-header">
-    <a href="#toggle_submit/1" class="detail-link" title="Link to this function">
+    <a href="#toggle_submit/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">toggle_submit(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L642" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L643" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1143,15 +1093,13 @@ Pages
 <section class="detail" id="tooltip/1">
 
   <div class="detail-header">
-    <a href="#tooltip/1" class="detail-link" title="Link to this function">
+    <a href="#tooltip/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">tooltip(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L437" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L438" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1177,15 +1125,13 @@ Pages
 <section class="detail" id="unstyled_link/1">
 
   <div class="detail-header">
-    <a href="#unstyled_link/1" class="detail-link" title="Link to this function">
+    <a href="#unstyled_link/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">unstyled_link(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L324" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/generic.ex#L325" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -1212,34 +1158,33 @@ Pages
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Cache.Adapter — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,51 +98,52 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">Plausible.Cache.Adapter</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">Plausible.Cache.Adapter</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>Interface for the underlying cache implementation.
 Currently: ConCache</p><p>Using the Adapter module directly, the user must ensure that the relevant
 processes are available to use, which is normally done via the child specification.</p>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -163,7 +159,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#child_spec/3" translate="no">child_spec(name, child_id, opts \\ [])</a>
+        <a href="#child_spec/3" data-no-tooltip translate="no">child_spec(name, child_id, opts \\ [])</a>
 
       </div>
 
@@ -171,7 +167,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete/2" translate="no">delete(cache_name, key)</a>
+        <a href="#delete/2" data-no-tooltip translate="no">delete(cache_name, key)</a>
 
       </div>
 
@@ -179,7 +175,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fetch/3" translate="no">fetch(cache_name, key, fallback_fn)</a>
+        <a href="#fetch/3" data-no-tooltip translate="no">fetch(cache_name, key, fallback_fn)</a>
 
       </div>
 
@@ -187,7 +183,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get/2" translate="no">get(cache_name, key)</a>
+        <a href="#get/2" data-no-tooltip translate="no">get(cache_name, key)</a>
 
       </div>
 
@@ -195,7 +191,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get/3" translate="no">get(cache_name, key, fallback_fn)</a>
+        <a href="#get/3" data-no-tooltip translate="no">get(cache_name, key, fallback_fn)</a>
 
       </div>
 
@@ -203,7 +199,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#keys/1" translate="no">keys(cache_name)</a>
+        <a href="#keys/1" data-no-tooltip translate="no">keys(cache_name)</a>
 
       </div>
 
@@ -211,7 +207,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put/4" translate="no">put(cache_name, key, value, opts \\ [])</a>
+        <a href="#put/4" data-no-tooltip translate="no">put(cache_name, key, value, opts \\ [])</a>
 
       </div>
 
@@ -219,7 +215,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put_many/2" translate="no">put_many(cache_name, items)</a>
+        <a href="#put_many/2" data-no-tooltip translate="no">put_many(cache_name, items)</a>
 
       </div>
 
@@ -227,7 +223,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#size/1" translate="no">size(cache_name)</a>
+        <a href="#size/1" data-no-tooltip translate="no">size(cache_name)</a>
 
       </div>
 
@@ -235,7 +231,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#with_lock/4" translate="no">with_lock(cache_name, key, timeout, fun)</a>
+        <a href="#with_lock/4" data-no-tooltip translate="no">with_lock(cache_name, key, timeout, fun)</a>
 
       </div>
 
@@ -259,15 +255,13 @@ processes are available to use, which is normally done via the child specificati
     <span id="child_spec/2"></span>
 
   <div class="detail-header">
-    <a href="#child_spec/3" class="detail-link" title="Link to this function">
+    <a href="#child_spec/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">child_spec(name, child_id, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L13" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -287,15 +281,13 @@ processes are available to use, which is normally done via the child specificati
 <section class="detail" id="delete/2">
 
   <div class="detail-header">
-    <a href="#delete/2" class="detail-link" title="Link to this function">
+    <a href="#delete/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">delete(cache_name, key)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L90" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L90" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -315,15 +307,13 @@ processes are available to use, which is normally done via the child specificati
 <section class="detail" id="fetch/3">
 
   <div class="detail-header">
-    <a href="#fetch/3" class="detail-link" title="Link to this function">
+    <a href="#fetch/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">fetch(cache_name, key, fallback_fn)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L56" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L56" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -343,15 +333,13 @@ processes are available to use, which is normally done via the child specificati
 <section class="detail" id="get/2">
 
   <div class="detail-header">
-    <a href="#get/2" class="detail-link" title="Link to this function">
+    <a href="#get/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get(cache_name, key)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L38" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L38" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -371,15 +359,13 @@ processes are available to use, which is normally done via the child specificati
 <section class="detail" id="get/3">
 
   <div class="detail-header">
-    <a href="#get/3" class="detail-link" title="Link to this function">
+    <a href="#get/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get(cache_name, key, fallback_fn)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L47" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L47" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -399,15 +385,13 @@ processes are available to use, which is normally done via the child specificati
 <section class="detail" id="keys/1">
 
   <div class="detail-header">
-    <a href="#keys/1" class="detail-link" title="Link to this function">
+    <a href="#keys/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">keys(cache_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L99" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L99" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -429,15 +413,13 @@ processes are available to use, which is normally done via the child specificati
     <span id="put/3"></span>
 
   <div class="detail-header">
-    <a href="#put/4" class="detail-link" title="Link to this function">
+    <a href="#put/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">put(cache_name, key, value, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L65" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L65" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -451,15 +433,13 @@ processes are available to use, which is normally done via the child specificati
 <section class="detail" id="put_many/2">
 
   <div class="detail-header">
-    <a href="#put_many/2" class="detail-link" title="Link to this function">
+    <a href="#put_many/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">put_many(cache_name, items)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L80" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L80" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -479,15 +459,13 @@ processes are available to use, which is normally done via the child specificati
 <section class="detail" id="size/1">
 
   <div class="detail-header">
-    <a href="#size/1" class="detail-link" title="Link to this function">
+    <a href="#size/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">size(cache_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L31" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -507,15 +485,13 @@ processes are available to use, which is normally done via the child specificati
 <section class="detail" id="with_lock/4">
 
   <div class="detail-header">
-    <a href="#with_lock/4" class="detail-link" title="Link to this function">
+    <a href="#with_lock/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">with_lock(cache_name, key, timeout, fun)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L118" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L118" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -538,34 +514,33 @@ when result: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any<
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 

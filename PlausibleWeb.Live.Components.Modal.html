@@ -4,22 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="generator" content="ExDoc v0.35.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>PlausibleWeb.Live.Components.Modal — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9C05BF74.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-L4O5OK2K.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-D08A90DC.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -37,13 +34,11 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
 <button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
-
-<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -103,46 +98,46 @@ Pages
 
 <main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
-      <div class="top-search">
-        <div class="search-settings">
-          <form class="search-bar" action="search.html">
-            <label class="search-label">
-              <span class="sr-only">Search documentation of Plausible</span>
-              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            </label>
-            <button type="submit" class="search-button" aria-label="Submit Search">
-              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
-            </button>
-            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
-              <i class="ri-close-line ri-lg" title="Cancel search"></i>
-            </button>
-          </form>
-          <div class="autocomplete">
-          </div>
-          <button class="icon-settings display-settings">
-            <i class="ri-settings-3-line"></i>
-            <span class="sr-only">Settings</span>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
           </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
         </div>
-
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
       </div>
+    </div>
 
-<h1>
+<div id="top-content">
+  <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L1" title="View Source" class="icon-action" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
 
-  <span translate="no">PlausibleWeb.Live.Components.Modal</span> 
-  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+    <span translate="no">PlausibleWeb.Live.Components.Modal</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
-</h1>
+  </h1>
 
 
-  <section id="moduledoc">
+    <section id="moduledoc">
 <p>LiveView implementation of modal component.</p><p>This component is a general purpose modal implementation for LiveView
 with emphasis on keeping nested components largely agnostic of the fact
 that they are placed in a modal and maintaining good user experience
@@ -153,18 +148,18 @@ on connections with high latency.</p><h2 id="module-usage" class="section-headin
   <span class="text">Usage</span>
 </h2>
 <p>An example use case for a modal is embedding a form inside
-existing live view which allows adding new entries of some kind:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w"> </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="5317581358-1">{</span><span class="nc">Modal</span><span class="p" data-group-id="5317581358-1">}</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form-modal&quot;</span><span class="w"> </span><span class="ss">:let</span><span class="o">=</span><span class="p" data-group-id="5317581358-2">{</span><span class="n">modal_unique_id</span><span class="p" data-group-id="5317581358-2">}</span><span class="o">&gt;</span><span class="w">
+existing live view which allows adding new entries of some kind:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w"> </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="3903397427-1">{</span><span class="nc">Modal</span><span class="p" data-group-id="3903397427-1">}</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form-modal&quot;</span><span class="w"> </span><span class="ss">:let</span><span class="o">=</span><span class="p" data-group-id="3903397427-2">{</span><span class="n">modal_unique_id</span><span class="p" data-group-id="3903397427-2">}</span><span class="o">&gt;</span><span class="w">
   </span><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w">
-    </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="5317581358-3">{</span><span class="nc">SomeForm</span><span class="p" data-group-id="5317581358-3">}</span><span class="w">
-    </span><span class="n">id</span><span class="o">=</span><span class="p" data-group-id="5317581358-4">{</span><span class="s">&quot;some-form-</span><span class="si" data-group-id="5317581358-5">#{</span><span class="n">modal_unique_id</span><span class="si" data-group-id="5317581358-5">}</span><span class="s">&quot;</span><span class="p" data-group-id="5317581358-4">}</span><span class="w">
-    </span><span class="n">on_save_form</span><span class="o">=</span><span class="p" data-group-id="5317581358-6">{</span><span class="w">
-      </span><span class="k" data-group-id="5317581358-7">fn</span><span class="w"> </span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-        </span><span class="n">send</span><span class="p" data-group-id="5317581358-8">(</span><span class="n">self</span><span class="p" data-group-id="5317581358-9">(</span><span class="p" data-group-id="5317581358-9">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5317581358-10">{</span><span class="ss">:entry_added</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="5317581358-10">}</span><span class="p" data-group-id="5317581358-8">)</span><span class="w">
-        </span><span class="nc">Modal</span><span class="o">.</span><span class="n">close</span><span class="p" data-group-id="5317581358-11">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;some-form-modal&quot;</span><span class="p" data-group-id="5317581358-11">)</span><span class="w">
-      </span><span class="k" data-group-id="5317581358-7">end</span><span class="w">
-    </span><span class="p" data-group-id="5317581358-6">}</span><span class="w">
+    </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="3903397427-3">{</span><span class="nc">SomeForm</span><span class="p" data-group-id="3903397427-3">}</span><span class="w">
+    </span><span class="n">id</span><span class="o">=</span><span class="p" data-group-id="3903397427-4">{</span><span class="s">&quot;some-form-</span><span class="si" data-group-id="3903397427-5">#{</span><span class="n">modal_unique_id</span><span class="si" data-group-id="3903397427-5">}</span><span class="s">&quot;</span><span class="p" data-group-id="3903397427-4">}</span><span class="w">
+    </span><span class="n">on_save_form</span><span class="o">=</span><span class="p" data-group-id="3903397427-6">{</span><span class="w">
+      </span><span class="k" data-group-id="3903397427-7">fn</span><span class="w"> </span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="n">send</span><span class="p" data-group-id="3903397427-8">(</span><span class="n">self</span><span class="p" data-group-id="3903397427-9">(</span><span class="p" data-group-id="3903397427-9">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3903397427-10">{</span><span class="ss">:entry_added</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="3903397427-10">}</span><span class="p" data-group-id="3903397427-8">)</span><span class="w">
+        </span><span class="nc">Modal</span><span class="o">.</span><span class="n">close</span><span class="p" data-group-id="3903397427-11">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;some-form-modal&quot;</span><span class="p" data-group-id="3903397427-11">)</span><span class="w">
+      </span><span class="k" data-group-id="3903397427-7">end</span><span class="w">
+    </span><span class="p" data-group-id="3903397427-6">}</span><span class="w">
   </span><span class="o">/</span><span class="o">&gt;</span><span class="w">
-</span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">live_component</span><span class="o">&gt;</span></code></pre><p>Then somewhere in the same live view the modal is rendered in:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">button</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">data</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">on</span><span class="ss">:click</span><span class="o">=</span><span class="p" data-group-id="2128496446-1">{</span><span class="nc">Modal.JS</span><span class="o">.</span><span class="n">open</span><span class="p" data-group-id="2128496446-2">(</span><span class="s">&quot;goals-form-modal&quot;</span><span class="p" data-group-id="2128496446-2">)</span><span class="p" data-group-id="2128496446-1">}</span><span class="o">&gt;</span><span class="w">
+</span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">live_component</span><span class="o">&gt;</span></code></pre><p>Then somewhere in the same live view the modal is rendered in:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">button</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">data</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">on</span><span class="ss">:click</span><span class="o">=</span><span class="p" data-group-id="4669435636-1">{</span><span class="nc">Modal.JS</span><span class="o">.</span><span class="n">open</span><span class="p" data-group-id="4669435636-2">(</span><span class="s">&quot;goals-form-modal&quot;</span><span class="p" data-group-id="4669435636-2">)</span><span class="p" data-group-id="4669435636-1">}</span><span class="o">&gt;</span><span class="w">
   </span><span class="o">+</span><span class="w"> </span><span class="nc">Add</span><span class="w"> </span><span class="nc">Entry</span><span class="w">
 </span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">button</span><span class="o">&gt;</span></code></pre><h2 id="module-explanation" class="section-heading">
   <a href="#module-explanation" class="hover-link">
@@ -199,29 +194,30 @@ and providing the state. Should be used together with
 <code class="inline">Modal.JS.preopen/1</code> for optimal user experience.</p></li><li><p><code class="inline">Modal.close/2</code> - to close the modal from the backend; usually
 done inside wrapped component's <code class="inline">handle_event/2</code>. The example
 quoted above shows one way to implement this, under that assumption
-that the component exposes a callback, like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">SomeForm</span><span class="w"> </span><span class="k" data-group-id="2725058781-1">do</span><span class="w">
+that the component exposes a callback, like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">SomeForm</span><span class="w"> </span><span class="k" data-group-id="3011829961-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Phoenix.LiveComponent</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update</span><span class="p" data-group-id="2725058781-2">(</span><span class="n">assigns</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="2725058781-2">)</span><span class="w"> </span><span class="k" data-group-id="2725058781-3">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update</span><span class="p" data-group-id="3011829961-2">(</span><span class="n">assigns</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="3011829961-2">)</span><span class="w"> </span><span class="k" data-group-id="3011829961-3">do</span><span class="w">
     </span><span class="c1"># ...</span><span class="w">
 
-    </span><span class="p" data-group-id="2725058781-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">assign</span><span class="p" data-group-id="2725058781-5">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="ss">:on_save_form</span><span class="p">,</span><span class="w"> </span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="2725058781-5">)</span><span class="p" data-group-id="2725058781-4">}</span><span class="w">
-  </span><span class="k" data-group-id="2725058781-3">end</span><span class="w">
+    </span><span class="p" data-group-id="3011829961-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">assign</span><span class="p" data-group-id="3011829961-5">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="ss">:on_save_form</span><span class="p">,</span><span class="w"> </span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="3011829961-5">)</span><span class="p" data-group-id="3011829961-4">}</span><span class="w">
+  </span><span class="k" data-group-id="3011829961-3">end</span><span class="w">
 
   </span><span class="c1">#...</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p" data-group-id="2725058781-6">(</span><span class="s">&quot;save-form&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2725058781-7">%{</span><span class="s">&quot;form&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">form</span><span class="p" data-group-id="2725058781-7">}</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="2725058781-6">)</span><span class="w"> </span><span class="k" data-group-id="2725058781-8">do</span><span class="w">
-    </span><span class="k">case</span><span class="w"> </span><span class="n">save_entry</span><span class="p" data-group-id="2725058781-9">(</span><span class="n">form</span><span class="p" data-group-id="2725058781-9">)</span><span class="w"> </span><span class="k" data-group-id="2725058781-10">do</span><span class="w">
-      </span><span class="p" data-group-id="2725058781-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="2725058781-11">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-        </span><span class="p" data-group-id="2725058781-12">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="o">.</span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="2725058781-13">(</span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="2725058781-13">)</span><span class="p" data-group-id="2725058781-12">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p" data-group-id="3011829961-6">(</span><span class="s">&quot;save-form&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3011829961-7">%{</span><span class="s">&quot;form&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">form</span><span class="p" data-group-id="3011829961-7">}</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="3011829961-6">)</span><span class="w"> </span><span class="k" data-group-id="3011829961-8">do</span><span class="w">
+    </span><span class="k">case</span><span class="w"> </span><span class="n">save_entry</span><span class="p" data-group-id="3011829961-9">(</span><span class="n">form</span><span class="p" data-group-id="3011829961-9">)</span><span class="w"> </span><span class="k" data-group-id="3011829961-10">do</span><span class="w">
+      </span><span class="p" data-group-id="3011829961-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="3011829961-11">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="p" data-group-id="3011829961-12">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="o">.</span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="3011829961-13">(</span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="3011829961-13">)</span><span class="p" data-group-id="3011829961-12">}</span><span class="w">
 
       </span><span class="c1"># error case handling ...</span><span class="w">
-    </span><span class="k" data-group-id="2725058781-10">end</span><span class="w">
-  </span><span class="k" data-group-id="2725058781-8">end</span><span class="w">
-</span><span class="k" data-group-id="2725058781-1">end</span></code></pre><p>Using callback approach has an added benefit of making the
+    </span><span class="k" data-group-id="3011829961-10">end</span><span class="w">
+  </span><span class="k" data-group-id="3011829961-8">end</span><span class="w">
+</span><span class="k" data-group-id="3011829961-1">end</span></code></pre><p>Using callback approach has an added benefit of making the
 component more flexible.</p></li></ul>
-  </section>
+    </section>
 
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
@@ -237,7 +233,7 @@ component more flexible.</p></li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#close/2" translate="no">close(socket, id)</a>
+        <a href="#close/2" data-no-tooltip translate="no">close(socket, id)</a>
 
       </div>
 
@@ -245,7 +241,7 @@ component more flexible.</p></li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#open/2" translate="no">open(socket, id)</a>
+        <a href="#open/2" data-no-tooltip translate="no">open(socket, id)</a>
 
       </div>
 
@@ -253,7 +249,7 @@ component more flexible.</p></li></ul>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#render/1" translate="no">render(assigns)</a>
+        <a href="#render/1" data-no-tooltip translate="no">render(assigns)</a>
 
       </div>
 
@@ -277,15 +273,13 @@ component more flexible.</p></li></ul>
 <section class="detail" id="close/2">
 
   <div class="detail-header">
-    <a href="#close/2" class="detail-link" title="Link to this function">
+    <a href="#close/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">close(socket, id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L128" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L128" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -295,7 +289,7 @@ component more flexible.</p></li></ul>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> close(<a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> close(<a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>()</pre>
 
       </div>
 
@@ -305,15 +299,13 @@ component more flexible.</p></li></ul>
 <section class="detail" id="open/2">
 
   <div class="detail-header">
-    <a href="#open/2" class="detail-link" title="Link to this function">
+    <a href="#open/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">open(socket, id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L123" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L123" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -323,7 +315,7 @@ component more flexible.</p></li></ul>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> open(<a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> open(<a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/phoenix_live_view/1.0.2/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>()</pre>
 
       </div>
 
@@ -333,15 +325,13 @@ component more flexible.</p></li></ul>
 <section class="detail" id="render/1">
 
   <div class="detail-header">
-    <a href="#render/1" class="detail-link" title="Link to this function">
+    <a href="#render/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L158" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L158" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
      </a>
 
 
@@ -368,34 +358,33 @@ component more flexible.</p></li></ul>
     </div>
   </section>
 
-      <footer class="footer">
-        <p>
+    <footer class="footer">
+      <p>
 
-          <span class="line">
-            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
-              Search HexDocs
-            </button>
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-              <a href="Plausible.epub" title="ePub version">
-                Download ePub version
-              </a>
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-          </span>
-        </p>
+        </span>
+      </p>
 
-        <p class="built-using">
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
-        </p>
-      </footer>
-    </div>
+      </p>
+
+    </footer>
   </div>
 </main>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad: true})</script>
 
