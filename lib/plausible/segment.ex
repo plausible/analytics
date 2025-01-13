@@ -116,27 +116,14 @@ defmodule Plausible.Segment do
   def validate_segment_data_if_exists(%Plausible.Site{} = site, segment_data, restricted_depth?),
     do: validate_segment_data(site, segment_data, restricted_depth?)
 
-  def maybe_validate_filters_depth(filters, restricted_depth?) do
-    if restricted_depth? do
-      case Enum.all?(filters, fn f ->
-             length(f) === 3 and Enum.at(f, 0) not in [:or, :and, :not]
-           end) do
-        true -> :ok
-        false -> :error_deep_filters_not_supported
-      end
-    else
-      :ok
-    end
-  end
-
   def validate_segment_data(
         %Plausible.Site{} = site,
         %{"filters" => filters},
         restricted_depth?
       ) do
-    with {:ok, %Plausible.Stats.Query{filters: _filters}} <-
+    with {:ok, %Plausible.Stats.Query{filters: parsed_filters}} <-
            build_naive_query_from_segment_data(site, filters),
-         :ok <- maybe_validate_filters_depth(filters, restricted_depth?) do
+         :ok <- maybe_validate_filters_depth(parsed_filters, restricted_depth?) do
       :ok
     else
       {:error, message} ->
@@ -193,5 +180,26 @@ defmodule Plausible.Segment do
     else
       {:error, message}
     end
+  end
+
+  @spec maybe_validate_filters_depth([any()], boolean()) ::
+          :ok | :error_deep_filters_not_supported
+  defp maybe_validate_filters_depth(filters, restricted_depth?)
+
+  defp maybe_validate_filters_depth(_filters, false), do: :ok
+
+  defp maybe_validate_filters_depth(filters, true) do
+    if Enum.all?(filters, &dashboard_compatible_filter?/1) do
+      :ok
+    else
+      :error_deep_filters_not_supported
+    end
+  end
+
+  defp dashboard_compatible_filter?(filter) do
+    is_list(filter) and length(filter) === 3 and
+      is_atom(Enum.at(filter, 0)) and
+      is_binary(Enum.at(filter, 1)) and
+      is_list(Enum.at(filter, 2))
   end
 end
