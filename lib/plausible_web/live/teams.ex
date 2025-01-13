@@ -103,6 +103,12 @@ defmodule PlausibleWeb.Live.Teams do
       <%= for {{email, name}, role} <- @candidates_selected do %>
         <.member user={%User{email: email, name: name}} role={role} />
       <% end %>
+
+      <:footer>
+        <.button type="submit" class="mt-0 w-full">
+          Create team
+        </.button>
+      </:footer>
     </.focus_box>
     """
   end
