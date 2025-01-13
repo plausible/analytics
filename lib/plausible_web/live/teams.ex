@@ -92,7 +92,6 @@ defmodule PlausibleWeb.Live.Teams do
                 |> Enum.map(fn user -> {user.email, "#{user.name} <#{user.email}>"} end)
               end
             }
-            x-on-selection-change="document.getElementById('team-member-candidates').value = ''"
           />
         </.form>
       </div>
@@ -104,7 +103,7 @@ defmodule PlausibleWeb.Live.Teams do
       <% end %>
 
       <:footer>
-        <.button type="submit" class="mt-0 w-full">
+        <.button phx-click="setup-team" type="submit" class="mt-0 w-full">
           Create team
         </.button>
       </:footer>
@@ -262,6 +261,53 @@ defmodule PlausibleWeb.Live.Teams do
   def handle_event("remove-member", %{"name" => name, "email" => email}, socket) do
     updated_candidates = Map.delete(socket.assigns.candidates_selected, {email, name})
     {:noreply, assign(socket, candidates_selected: updated_candidates)}
+  end
+
+  def handle_event("setup-team", %{}, socket) do
+    candidates = socket.assigns.candidates_selected
+    team = socket.assigns.my_team
+    inviter = Repo.preload(team, :owner).owner
+
+    result =
+      Repo.transaction(fn ->
+        team
+        |> Teams.Team.setup_changeset()
+        |> Repo.update!()
+
+        Enum.map(
+          candidates,
+          fn {{email, _name}, role} ->
+            case Teams.Invitations.InviteToTeam.invite(team, inviter, email, role,
+                   send_email?: false
+                 ) do
+              {:ok, invitation} -> invitation
+              {:error, error} -> Repo.rollback(error)
+            end
+          end
+        )
+      end)
+
+    case result do
+      {:ok, invitations} ->
+        Enum.each(invitations, fn invitation ->
+          invitee = Plausible.Auth.find_user_by(email: invitation.email)
+          Teams.Invitations.InviteToTeam.send_invitation_email(invitation, invitee)
+        end)
+
+        socket =
+          socket
+          |> put_flash(:success, "Your team is now setup")
+          |> push_redirect(to: "/settings/team/general")
+
+        {:noreply, socket}
+
+      {:error, error} ->
+        socket =
+          socket
+          |> put_live_flash(:error, "Error: #{inspect(error)}")
+
+        {:noreply, socket}
+    end
   end
 
   defp valid_email?(email) do
