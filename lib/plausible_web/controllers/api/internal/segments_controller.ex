@@ -31,7 +31,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       site_role in roles_with_personal_segments() and
           site_segments_available? ->
         result =
-          Repo.all(get_mixed_segments_query(current_user.id, site.id, @fields_in_index_query))
+          Repo.all(
+            get_personal_and_site_semgents_query(current_user.id, site.id, @fields_in_index_query)
+          )
 
         json(conn, result)
 
@@ -210,10 +212,10 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     )
   end
 
-  @spec get_personal_segments_only_query(pos_integer(), pos_integer(), list(atom())) ::
+  @spec get_personal_and_site_semgents_query(pos_integer(), pos_integer(), list(atom())) ::
           Ecto.Query.t()
 
-  defp get_mixed_segments_query(user_id, site_id, fields) do
+  defp get_personal_and_site_semgents_query(user_id, site_id, fields) do
     from(segment in Plausible.Segment,
       select: ^fields,
       where: segment.site_id == ^site_id,
