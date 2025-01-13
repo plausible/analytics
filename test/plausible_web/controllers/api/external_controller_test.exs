@@ -648,6 +648,29 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == ["true", "12"]
     end
 
+    test "records custom props for a pageleave event", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{
+        n: "pageview",
+        u: "https://ab.cd",
+        d: site.domain
+      })
+
+      post(conn, "/api/event", %{
+        name: "pageleave",
+        url: "http://ab.cd/",
+        domain: site.domain,
+        props: %{
+          bool_test: true,
+          number_test: 12
+        }
+      })
+
+      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+
+      assert Map.get(pageleave, :"meta.key") == ["bool_test", "number_test"]
+      assert Map.get(pageleave, :"meta.value") == ["true", "12"]
+    end
+
     test "filters out bad props", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
