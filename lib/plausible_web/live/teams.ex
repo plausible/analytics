@@ -72,7 +72,6 @@ defmodule PlausibleWeb.Live.Teams do
             clear_on_select
             creatable
             creatable_prompt="Send invitation to email:"
-            row_option_formatter={&format_row/1}
             placeholder="Select existing member or type email address to invite"
             options={
               reject_already_selected("team-member-candidates", @all_candidates, @candidates_selected)
@@ -201,8 +200,7 @@ defmodule PlausibleWeb.Live.Teams do
 
   def handle_info(
         {:candidate_selected, %{email: email, role: role}},
-        %{assigns: %{my_team: team, candidates_selected: candidates, current_user: current_user}} =
-          socket
+        %{assigns: %{my_team: team, candidates_selected: candidates}} = socket
       ) do
     socket =
       case Candidates.get_site_guest(team, email) do
@@ -214,8 +212,7 @@ defmodule PlausibleWeb.Live.Teams do
           )
 
         nil ->
-          if valid_email?(email) and
-               email != current_user.email do
+          if valid_email?(email) do
             assign(
               socket,
               :candidates_selected,
@@ -225,7 +222,7 @@ defmodule PlausibleWeb.Live.Teams do
             put_live_flash(
               socket,
               :error,
-              "Sorry, e-mail '#{email}' cannot be used. Please ensure the address is valid and try again."
+              "Sorry, e-mail '#{email}' is invalid. Please type the address again."
             )
           end
       end
@@ -326,24 +323,5 @@ defmodule PlausibleWeb.Live.Teams do
 
     send_update(PlausibleWeb.Live.Components.ComboBox, id: combo_box, suggestions: result)
     result
-  end
-
-  def format_row(assigns) do
-    ~H"""
-    <div class="flex items-center gap-x-5">
-      <img
-        src={
-          User.profile_img_url(%User{
-            email: @submit_value
-          })
-        }
-        class="w-7 rounded-full"
-      />
-
-      <span class="text-sm">
-        <%= @display_value %>
-      </span>
-    </div>
-    """
   end
 end
