@@ -38,11 +38,11 @@
 
       <:tbody :let={api_key}>
         <.td truncate max_width="max-w-40">
-          <%= api_key.name %>
+          {api_key.name}
         </.td>
         <.td hide_on_mobile>
-          <%= api_key.key_prefix %>
-          <%= String.duplicate("*", 32 - 6) %>
+          {api_key.key_prefix}
+          {String.duplicate("*", 32 - 6)}
         </.td>
         <.td actions>
           <.delete_button
