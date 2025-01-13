@@ -46,11 +46,49 @@ defmodule PlausibleWeb.Live.SitesTest do
       type_into_input(lv, "team[name]", "New Team Name")
       assert Repo.reload!(team).name == "New Team Name"
     end
+
+    test "existing member is suggested from combobox dropdown"
+
+    test "team member is added from input", %{conn: conn, user: user} do
+      new_member_email = build(:user).email
+
+      {:ok, lv, _html} = live(conn, @url)
+
+      type_into_combo(lv, "team-member-candidates", new_member_email)
+
+      lv
+      |> element(~s/li#dropdown-team-member-candidates-option-0 a/)
+      |> render_click()
+
+      [member1_row, member2_row] =
+        lv
+        |> render()
+        |> find(".member")
+
+      assert text(member1_row) =~ user.name
+      assert text(member1_row) =~ "You"
+      assert text(member1_row) =~ user.email
+
+      assert text(member2_row) =~ "Invited User"
+      assert text(member2_row) =~ new_member_email
+
+      assert member1_row |> Floki.find(".role") |> text() =~ "Owner"
+      assert member2_row |> Floki.find(".role") |> text() =~ "Viewer"
+    end
   end
 
   defp type_into_input(lv, id, text) do
     lv
     |> element("form")
     |> render_change(%{id => text})
+  end
+
+  defp type_into_combo(lv, id, text) do
+    lv
+    |> element("input##{id}")
+    |> render_change(%{
+      "_target" => ["display-#{id}"],
+      "display-#{id}" => "#{text}"
+    })
   end
 end
