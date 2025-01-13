@@ -3,12 +3,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
   use Plausible.Repo
   use Plausible.Teams.Test
 
-  describe "GET /internal-api/:domain/segments" do
+  describe "GET /api/:domain/segments" do
     setup [:create_user, :log_in, :create_site]
 
     test "returns empty list when no segments", %{conn: conn, site: site} do
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments")
+        get(conn, "/api/#{site.domain}/segments")
 
       assert json_response(conn, 200) == []
     end
@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         name: "other user personal segment"
       )
 
-      conn = get(conn, "/internal-api/#{site.domain}/segments")
+      conn = get(conn, "/api/#{site.domain}/segments")
 
       assert json_response(conn, 200) ==
                Enum.reverse(
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       )
 
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments")
+        get(conn, "/api/#{site.domain}/segments")
 
       assert json_response(conn, 200) == []
     end
@@ -115,7 +115,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           )
 
         conn =
-          get(conn, "/internal-api/#{site.domain}/segments")
+          get(conn, "/api/#{site.domain}/segments")
 
         assert json_response(conn, 200) ==
                  Enum.map([apac_site_segment, emea_site_segment, personal_segment], fn s ->
@@ -133,19 +133,19 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     end
   end
 
-  describe "GET /internal-api/:domain/segments/:segment_id" do
+  describe "GET /api/:domain/segments/:segment_id" do
     setup [:create_user, :create_site, :log_in]
 
     test "serves 404 when invalid segment key used", %{conn: conn, site: site} do
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments/any-id")
+        get(conn, "/api/#{site.domain}/segments/any-id")
 
       assert json_response(conn, 404) == %{"error" => "Segment not found with ID \"any-id\""}
     end
 
     test "serves 404 when no segment found", %{conn: conn, site: site} do
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments/100100")
+        get(conn, "/api/#{site.domain}/segments/100100")
 
       assert json_response(conn, 404) == %{"error" => "Segment not found with ID \"100100\""}
     end
@@ -162,7 +162,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         )
 
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments/#{segment.id}")
+        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
 
       assert json_response(conn, 404) == %{
                "error" => "Segment not found with ID \"#{segment.id}\""
@@ -185,7 +185,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         )
 
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments/#{segment.id}")
+        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
 
       assert json_response(conn, 403) == %{
                "error" => "Not enough permissions to get segment data"
@@ -208,7 +208,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         )
 
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments/#{segment.id}")
+        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
 
       assert json_response(conn, 404) == %{
                "error" => "Segment not found with ID \"#{segment.id}\""
@@ -233,7 +233,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         )
 
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments/#{segment.id}")
+        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
 
       assert json_response(conn, 200) == %{
                "id" => segment.id,
@@ -260,7 +260,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         )
 
       conn =
-        get(conn, "/internal-api/#{site.domain}/segments/#{segment.id}")
+        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
 
       assert json_response(conn, 200) == %{
                "id" => segment.id,
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     end
   end
 
-  describe "POST /internal-api/:domain/segments" do
+  describe "POST /api/:domain/segments" do
     setup [:create_user, :log_in, :create_site]
 
     test "forbids viewers from creating site segments", %{conn: conn, user: user} do
@@ -282,7 +282,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       add_guest(site, user: user, role: :viewer)
 
       conn =
-        post(conn, "/internal-api/#{site.domain}/segments", %{
+        post(conn, "/api/#{site.domain}/segments", %{
           "type" => "site",
           "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
           "name" => "any name"
@@ -301,7 +301,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       user |> subscribe_to_growth_plan()
 
       conn =
-        post(conn, "/internal-api/#{site.domain}/segments", %{
+        post(conn, "/api/#{site.domain}/segments", %{
           "type" => "site",
           "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
           "name" => "any name"
@@ -318,7 +318,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
            site: site
          } do
       conn =
-        post(conn, "/internal-api/#{site.domain}/segments", %{
+        post(conn, "/api/#{site.domain}/segments", %{
           "type" => "site",
           "segment_data" => %{
             "filters" => [["is", "entry_page", ["/blog"]]]
@@ -347,7 +347,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         add_guest(site, user: user, role: unquote(role))
 
         response =
-          post(conn, "/internal-api/#{site.domain}/segments", %{
+          post(conn, "/api/#{site.domain}/segments", %{
             "name" => "Some segment",
             "type" => Atom.to_string(unquote(type)),
             "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
@@ -369,7 +369,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     end
   end
 
-  describe "PATCH /internal-api/:domain/segments/:segment_id" do
+  describe "PATCH /api/:domain/segments/:segment_id" do
     setup [:create_user, :create_site, :log_in]
 
     for {current_type, patch_type} <- [
@@ -393,7 +393,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           )
 
         conn =
-          patch(conn, "/internal-api/#{site.domain}/segments/#{segment_id}", %{
+          patch(conn, "/api/#{site.domain}/segments/#{segment_id}", %{
             "name" => "updated name",
             "type" => Atom.to_string(unquote(patch_type))
           })
@@ -449,7 +449,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           )
 
         conn =
-          patch(conn, "/internal-api/#{site.domain}/segments/#{segment.id}", %{
+          patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
             "segment_data" => %{"filters" => unquote(filters)}
           })
 
@@ -474,7 +474,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         )
 
       response =
-        patch(conn, "/internal-api/#{site.domain}/segments/#{segment.id}", %{
+        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
           "name" => "updated name",
           "type" => Atom.to_string(:personal)
         })
@@ -493,7 +493,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     end
   end
 
-  describe "DELETE /internal-api/:domain/segments/:segment_id" do
+  describe "DELETE /api/:domain/segments/:segment_id" do
     setup [:create_user, :create_site, :log_in]
 
     test "forbids viewers from deleting site segments", %{conn: conn, user: user} do
@@ -509,7 +509,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         )
 
       conn =
-        delete(conn, "/internal-api/#{site.domain}/segments/#{segment.id}")
+        delete(conn, "/api/#{site.domain}/segments/#{segment.id}")
 
       assert json_response(conn, 403) == %{
                "error" => "Not enough permissions to delete segment"
@@ -535,7 +535,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           )
 
         response =
-          delete(conn, "/internal-api/#{site.domain}/segments/#{segment.id}")
+          delete(conn, "/api/#{site.domain}/segments/#{segment.id}")
           |> json_response(200)
 
         assert %{
