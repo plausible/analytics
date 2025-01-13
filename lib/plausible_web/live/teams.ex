@@ -11,11 +11,12 @@ defmodule PlausibleWeb.Live.Teams do
   alias Plausible.Teams.Invitations.Candidates
   alias Plausible.Auth.User
 
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     my_team = socket.assigns.my_team
 
+    # TODO: remove dev param, once manual testing is considered done
     socket =
-      if my_team.setup_complete do
+      if my_team.setup_complete and !params["dev"] do
         socket
         |> put_flash(:success, "Your team is now setup")
         |> redirect(to: "/settings/team/general")
@@ -47,7 +48,7 @@ defmodule PlausibleWeb.Live.Teams do
   def render(assigns) do
     ~H"""
     <.flash_messages flash={@flash} />
-    <.focus_box :if={not @my_team.setup_complete}>
+    <.focus_box>
       <:title>Create a new team</:title>
       <:subtitle>
         Add members and assign roles to manage different sites access efficiently
