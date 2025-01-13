@@ -75,6 +75,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:errors, :list, default: [])
   attr(:async, :boolean, default: Mix.env() != :test)
   attr(:on_selection_made, :any)
+  attr(:row_option_formatter, :any, default: nil)
 
   def render(assigns) do
     assigns =
@@ -143,6 +144,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           creatable={@creatable}
           display_value={@display_value}
           creatable_prompt={@creatable_prompt}
+          row_option_formatter={@row_option_formatter}
         />
       </div>
     </div>
@@ -179,6 +181,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:creatable, :boolean, required: true)
   attr(:creatable_prompt, :string, default: nil)
   attr(:display_value, :string, required: true)
+  attr(:row_option_formatter, :any, default: nil)
 
   def combo_dropdown(assigns) do
     ~H"""
@@ -209,6 +212,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             )
         }
         :if={@suggestions != []}
+        row_option_formatter={@row_option_formatter}
         idx={idx}
         submit_value={submit_value}
         display_value={display_value}
@@ -239,6 +243,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:idx, :integer, required: true)
   attr(:creatable, :boolean, default: false)
   attr(:creatable_prompt, :string, required: false)
+  attr(:row_option_formatter, :any, default: nil)
 
   def option(assigns) do
     assigns = assign(assigns, :suggestions_limit, suggestions_limit(assigns))
@@ -265,7 +270,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         <%= if @creatable do %>
           {@creatable_prompt} "{@display_value}"
         <% else %>
-          {@display_value}
+          {(is_function(@row_option_formatter, 1) && @row_option_formatter.(assigns)) ||
+            @display_value}
         <% end %>
       </a>
     </li>
