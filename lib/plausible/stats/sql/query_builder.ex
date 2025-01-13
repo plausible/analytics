@@ -37,7 +37,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     q =
       from(
         e in "events_v2",
-        where: ^SQL.WhereBuilder.build(:events, site, events_query),
+        where: ^SQL.WhereBuilder.build(:events, events_query),
         select: ^select_event_metrics(events_query)
       )
 
@@ -46,18 +46,18 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
 
     q
-    |> join_sessions_if_needed(site, events_query)
+    |> join_sessions_if_needed(events_query)
     |> build_group_by(:events, events_query)
     |> merge_imported(site, events_query, events_query.metrics)
     |> SQL.SpecialMetrics.add(site, events_query)
   end
 
-  defp join_sessions_if_needed(q, site, query) do
+  defp join_sessions_if_needed(q, query) do
     if TableDecider.events_join_sessions?(query) do
       sessions_q =
         from(
           s in "sessions_v2",
-          where: ^SQL.WhereBuilder.build(:sessions, site, query),
+          where: ^SQL.WhereBuilder.build(:sessions, query),
           where: s.sign == 1,
           select: %{session_id: s.session_id},
           group_by: s.session_id
@@ -83,7 +83,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     q =
       from(
         e in "sessions_v2",
-        where: ^SQL.WhereBuilder.build(:sessions, site, sessions_query),
+        where: ^SQL.WhereBuilder.build(:sessions, sessions_query),
         select: ^select_session_metrics(sessions_query)
       )
 
@@ -92,17 +92,17 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
 
     q
-    |> join_events_if_needed(site, sessions_query)
+    |> join_events_if_needed(sessions_query)
     |> build_group_by(:sessions, sessions_query)
     |> merge_imported(site, sessions_query, sessions_query.metrics)
     |> SQL.SpecialMetrics.add(site, sessions_query)
   end
 
-  def join_events_if_needed(q, site, query) do
+  def join_events_if_needed(q, query) do
     if TableDecider.sessions_join_events?(query) do
       events_q =
         from(e in "events_v2",
-          where: ^SQL.WhereBuilder.build(:events, site, query),
+          where: ^SQL.WhereBuilder.build(:events, query),
           select: %{
             session_id: fragment("DISTINCT ?", e.session_id),
             _sample_factor: fragment("_sample_factor")

@@ -29,11 +29,11 @@ defmodule Plausible.Stats.QueryTest do
   } do
     q1 = %{now: %DateTime{}} = Query.from(site, %{"period" => "realtime"})
     q2 = %{now: %DateTime{}} = Query.from(site, %{"period" => "30m"})
-    boundaries1 = Plausible.Stats.Time.utc_boundaries(q1, site)
-    boundaries2 = Plausible.Stats.Time.utc_boundaries(q2, site)
+    boundaries1 = Plausible.Stats.Time.utc_boundaries(q1)
+    boundaries2 = Plausible.Stats.Time.utc_boundaries(q2)
     :timer.sleep(1500)
-    assert ^boundaries1 = Plausible.Stats.Time.utc_boundaries(q1, site)
-    assert ^boundaries2 = Plausible.Stats.Time.utc_boundaries(q2, site)
+    assert ^boundaries1 = Plausible.Stats.Time.utc_boundaries(q1)
+    assert ^boundaries2 = Plausible.Stats.Time.utc_boundaries(q2)
   end
 
   test "parses day format", %{site: site} do

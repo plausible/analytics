@@ -4,7 +4,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   """
 
   import Ecto.Query
-  import Plausible.Stats.Time, only: [utc_boundaries: 2]
+  import Plausible.Stats.Time, only: [utc_boundaries: 1]
   import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
 
   use Plausible.Stats.SQL.Fragments
@@ -19,8 +19,8 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   ]
 
   @doc "Builds WHERE clause for a given Query against sessions or events table"
-  def build(table, site, query) do
-    base_condition = filter_site_time_range(table, site, query)
+  def build(table, query) do
+    base_condition = filter_site_time_range(table, query)
 
     query.filters
     |> Enum.map(&add_filter(table, query, &1))
@@ -41,17 +41,18 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     end
   end
 
-  defp filter_site_time_range(:events, site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
+  defp filter_site_time_range(:events, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query)
 
     dynamic(
       [e],
-      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp <= ^last_datetime
+      e.site_id == ^query.site_id and e.timestamp >= ^first_datetime and
+        e.timestamp <= ^last_datetime
     )
   end
 
-  defp filter_site_time_range(:sessions, site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
+  defp filter_site_time_range(:sessions, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query)
 
     # Counts each _active_ session in time range even if they started before
     dynamic(
@@ -66,7 +67,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       # Without it, the sample factor would be greatly overestimated for large sites,
       # as query would be estimated to return _all_ rows matching other conditions
       # before `start == last_datetime`.
-      s.site_id == ^site.id and
+      s.site_id == ^query.site_id and
         s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
         s.timestamp >= ^first_datetime and
         s.start <= ^last_datetime

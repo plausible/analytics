@@ -22,7 +22,9 @@ defmodule Plausible.Stats.Query do
             # Revenue metric specific metadata
             revenue_currencies: %{},
             revenue_warning: nil,
-            remove_unavailable_revenue_metrics: false
+            remove_unavailable_revenue_metrics: false,
+            site_id: nil,
+            site_native_stats_start_at: nil
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy}
@@ -34,7 +36,12 @@ defmodule Plausible.Stats.Query do
       query =
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
-        |> struct!(now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
+        |> struct!(
+          now: DateTime.utc_now(:second),
+          debug_metadata: debug_metadata,
+          site_id: site.id,
+          site_native_stats_start_at: site.native_stats_start_at
+        )
 
       on_ee do
         query = Plausible.Stats.Sampling.put_threshold(query, site, params)
