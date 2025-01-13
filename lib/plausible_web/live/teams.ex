@@ -16,26 +16,33 @@ defmodule PlausibleWeb.Live.Teams do
 
     # TODO: remove dev param, once manual testing is considered done
     socket =
-      if my_team.setup_complete and !params["dev"] do
-        socket
-        |> put_flash(:success, "Your team is now setup")
-        |> redirect(to: "/settings/team/general")
-      else
-        all_candidates =
-          my_team
-          |> Candidates.search_site_guests("")
-          |> Enum.map(fn user ->
-            {user.email, "#{user.name} <#{user.email}>"}
-          end)
+      case {my_team, params["dev"]} do
+        {%Teams.Team{setup_complete: true}, nil} ->
+          socket
+          |> put_flash(:success, "Your team is now setup")
+          |> redirect(to: "/settings/team/general")
 
-        candidates_selected = %{}
-        team_name_changeset = Teams.Team.name_changeset(my_team)
+        {nil, _} ->
+          socket
+          |> put_flash(:error, "You cannot set up any team just yet")
+          |> redirect(to: "/sites")
 
-        assign(socket,
-          all_candidates: all_candidates,
-          team_name_changeset: team_name_changeset,
-          candidates_selected: candidates_selected
-        )
+        {%Teams.Team{}, _} ->
+          all_candidates =
+            my_team
+            |> Candidates.search_site_guests("")
+            |> Enum.map(fn user ->
+              {user.email, "#{user.name} <#{user.email}>"}
+            end)
+
+          candidates_selected = %{}
+          team_name_changeset = Teams.Team.name_changeset(my_team)
+
+          assign(socket,
+            all_candidates: all_candidates,
+            team_name_changeset: team_name_changeset,
+            candidates_selected: candidates_selected
+          )
       end
 
     {:ok, socket}
@@ -54,26 +61,17 @@ defmodule PlausibleWeb.Live.Teams do
         Add members and assign roles to manage different sites access efficiently
       </:subtitle>
 
-      <.form :let={f} for={@team_name_changeset} method="post">
-        <.input
-          type="text"
-          field={f[:name]}
-          label="Name"
-          width="w-1/2"
-          phx-change="update-team"
-          phx-debounce="500"
-        />
-      </.form>
+      <.form :let={f} for={@team_name_changeset} method="post" phx-change="update-team">
+        <.input type="text" field={f[:name]} label="Name" width="w-1/2" phx-debounce="500" />
 
-      <div class="mt-4">
-        <.label>
-          Add members
-        </.label>
+        <div class="mt-4">
+          <.label>
+            Add members
+          </.label>
 
-        <.form for={}>
           <.live_component
             id="team-member-candidates"
-            submit_name="some"
+            submit_name="team-member-candidate"
             class="py-2"
             module={ComboBox}
             clear_on_select
@@ -99,8 +97,8 @@ defmodule PlausibleWeb.Live.Teams do
               end
             }
           />
-        </.form>
-      </div>
+        </div>
+      </.form>
 
       <.member user={@current_user} role={:owner} you?={true} />
 
