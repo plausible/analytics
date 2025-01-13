@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-DDCC61F6.js"></script>
+    <script src="dist/sidebar_items-9C05BF74.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -246,6 +246,7 @@ the invitation and accepting it.</p>
 
           <pre translate="no"><span class="attribute">@type</span> accept_error() ::
   :invitation_not_found
+  | :already_other_team_member
   | Plausible.Billing.Quota.Limits.over_limits_error()
   | <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
   | :no_plan</pre>
@@ -264,7 +265,7 @@ the invitation and accepting it.</p>
     </a>
     <h1 class="signature" translate="no">membership()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L35" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L36" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -347,7 +348,7 @@ the invitation and accepting it.</p>
     </a>
     <h1 class="signature" translate="no">accept_invitation(invitation_or_transfer_id, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L55" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L56" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -376,7 +377,7 @@ the invitation and accepting it.</p>
     </a>
     <h1 class="signature" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L39" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L40" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
