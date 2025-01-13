@@ -450,9 +450,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   @only_toplevel ["event:goal", "event:hostname"]
   defp validate_toplevel_only_filter_dimension(query) do
-    not_toplevel = Filters.dimensions_used_in_filters(query.filters, min_depth: 1)
+    not_toplevel =
+      query.filters
+      |> Filters.dimensions_used_in_filters(min_depth: 1, behavioral_filters: :ignore)
+      |> Enum.filter(&(&1 in @only_toplevel))
 
-    if Enum.any?(not_toplevel, &(&1 in @only_toplevel)) do
+    if Enum.count(not_toplevel) > 0 do
       {:error,
        "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."}
     else
@@ -480,14 +483,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp validate_behavioral_filters_are_event_dimension_only(query) do
     behavioral_visit_filter? =
       query.filters
-      |> Filters.traverse(
-        false,
-        fn behavioral, operator -> behavioral or operator in [:has_done, :has_done_not] end
-      )
-      |> Enum.any?(fn
-        {[_, "visit:" <> _ | _], true} -> true
-        _ -> false
-      end)
+      |> Filters.dimensions_used_in_filters(behavioral_filters: :only)
+      |> Enum.any?(&(not String.starts_with?(&1, "event:")))
 
     if behavioral_visit_filter? do
       {:error,

@@ -544,19 +544,24 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "valid has_done and has_done_not filters", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
       %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
           ["has_done", ["is", "event:name", ["Signup"]]],
-          ["has_done_not", [
-            "or",
+          [
+            "has_done_not",
             [
-              ["is", "event:name", ["Signup"]],
-              ["is", "event:page", ["/signup"]]
+              "or",
+              [
+                ["is", "event:goal", ["Signup"]],
+                ["is", "event:page", ["/signup"]]
+              ]
             ]
-          ]]
+          ]
         ]
       }
       |> check_success(site, %{
@@ -564,7 +569,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         utc_time_range: @date_range_day,
         filters: [
           [:has_done, [:is, "event:name", ["Signup"]]],
-          [:has_done_not, [:or, [[:is, "event:name", ["Signup"]], [:is, "event:page", ["/signup"]]]]]
+          [
+            :has_done_not,
+            [:or, [[:is, "event:goal", ["Signup"]], [:is, "event:page", ["/signup"]]]]
+          ]
         ],
         dimensions: [],
         order_by: nil,

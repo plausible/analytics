@@ -89,10 +89,24 @@ defmodule Plausible.Stats.Filters do
 
   def dimensions_used_in_filters(filters, opts \\ []) do
     min_depth = Keyword.get(opts, :min_depth, 0)
+    # :ignore or :only
+    behavioral_filter_option = Keyword.get(opts, :behavioral_filters, nil)
 
     filters
-    |> traverse(0, fn depth, _ -> depth + 1 end)
-    |> Enum.filter(fn {_filter, depth} -> depth >= min_depth end)
+    |> traverse(
+      {0, false},
+      fn {depth, is_behavioral_filter}, operator ->
+        {depth + 1, is_behavioral_filter or operator in [:has_done, :has_done_not]}
+      end
+    )
+    |> Enum.filter(fn {_filter, {depth, _}} -> depth >= min_depth end)
+    |> Enum.filter(fn {_filter, {_, is_behavioral_filter}} ->
+      case behavioral_filter_option do
+        :ignore -> not is_behavioral_filter
+        :only -> is_behavioral_filter
+        _ -> true
+      end
+    end)
     |> Enum.map(fn {[_operator, dimension | _rest], _depth} -> dimension end)
   end
 
@@ -154,14 +168,15 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  def traverse(filters, state, state_transformer) do
+  defp traverse(filters, state, state_transformer) do
     filters
     |> Enum.flat_map(&traverse_tree(&1, state, state_transformer))
   end
 
   defp traverse_tree(filter, state, state_transformer) do
     case filter do
-      [operation, child_filter] when operation in [:not, :ignore_in_totals_query, :has_done, :has_done_not] ->
+      [operation, child_filter]
+      when operation in [:not, :ignore_in_totals_query, :has_done, :has_done_not] ->
         traverse_tree(child_filter, state_transformer.(state, operation), state_transformer)
 
       [operation, filters] when operation in [:and, :or] ->
