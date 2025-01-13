@@ -133,7 +133,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       is_nil(existing_segment) ->
         H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
 
-      existing_segment.type == :personal and params["type"] !== "site" and
+      existing_segment.type == :personal and params["type"] != "site" and
           site_role in roles_with_personal_segments() ->
         do_update_segment(conn, params, existing_segment, user_id)
 
