@@ -294,7 +294,7 @@ defmodule PlausibleWeb.Live.Teams do
         socket =
           socket
           |> put_flash(:success, "Your team is now setup")
-          |> push_redirect(to: "/settings/team/general")
+          |> redirect(to: "/settings/team/general")
 
         {:noreply, socket}
 
