@@ -39,6 +39,7 @@ defmodule PlausibleWeb.Live.Teams do
 
   def render(assigns) do
     ~H"""
+    <.flash_messages flash={@flash} />
     <.focus_box>
       <:title>Create a new team</:title>
       <:subtitle>
@@ -62,6 +63,8 @@ defmodule PlausibleWeb.Live.Teams do
             module={ComboBox}
             clear_on_select
             creatable
+            creatable_prompt="Send invitation to email:"
+            placeholder="Select existing member or type email address to invite"
             options={
               reject_already_selected("team-member-candidates", @all_candidates, @candidates_selected)
             }
@@ -148,14 +151,26 @@ defmodule PlausibleWeb.Live.Teams do
           )
 
         nil ->
-          assign(
-            socket,
-            :candidates_selected,
-            Map.put(candidates, {email, "Invited User"}, role)
-          )
+          if valid_email?(email) do
+            assign(
+              socket,
+              :candidates_selected,
+              Map.put(candidates, {email, "Invited User"}, role)
+            )
+          else
+            put_live_flash(
+              socket,
+              :error,
+              "Sorry, e-mail '#{email}' is invalid. Please type the address again."
+            )
+          end
       end
 
     {:noreply, socket}
+  end
+
+  defp valid_email?(email) do
+    String.contains?(email, "@") and String.contains?(email, ".")
   end
 
   defp reject_already_selected(combo_box, candidates, candidates_selected) do
