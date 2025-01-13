@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Live.Teams do
 
   use PlausibleWeb, :live_view
 
+  alias Plausible.Repo
   alias Plausible.Teams
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Teams.Invitations.Candidates
@@ -47,7 +48,14 @@ defmodule PlausibleWeb.Live.Teams do
       </:subtitle>
 
       <.form :let={f} for={@team_name_changeset} method="post">
-        <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
+        <.input
+          type="text"
+          field={f[:name]}
+          label="Name"
+          width="w-1/2"
+          phx-change="update-team"
+          phx-debounce="500"
+        />
       </.form>
 
       <div class="mt-4">
@@ -167,6 +175,20 @@ defmodule PlausibleWeb.Live.Teams do
       end
 
     {:noreply, socket}
+  end
+
+  def handle_event("update-team", %{"team" => params}, socket) do
+    team_name_changeset =
+      socket.assigns.my_team
+      |> Teams.Team.name_changeset(params)
+
+    my_team = Repo.update!(team_name_changeset)
+
+    {:noreply,
+     assign(socket,
+       team_name_changeset: team_name_changeset,
+       my_team: my_team
+     )}
   end
 
   defp valid_email?(email) do
