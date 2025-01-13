@@ -89,9 +89,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                     module={PlausibleWeb.Live.Components.ComboBox}
                     suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
                     on_selection_made={
-                      fn value, _, by_id ->
+                      fn value, by_id ->
                         send(self(), {:selection_made, %{submit_value: value, by: by_id}})
-                        :ok
                       end
                     }
                     id={"step-#{step_idx}"}
