@@ -91,7 +91,7 @@ defmodule Plausible.Stats.Filters do
     min_depth = Keyword.get(opts, :min_depth, 0)
 
     filters
-    |> traverse()
+    |> traverse(0, fn depth, _ -> depth + 1 end)
     |> Enum.filter(fn {_filter, depth} -> depth >= min_depth end)
     |> Enum.map(fn {[_operator, dimension | _rest], _depth} -> dimension end)
   end
@@ -137,12 +137,12 @@ defmodule Plausible.Stats.Filters do
   defp transform_tree(filter, transformer) do
     case {transformer.(filter), filter} do
       # Transformer did not return that value - transform that subtree
-      {nil, [operation, child_filter]} when operation in [:not, :ignore_in_totals_query] ->
+      {nil, [operator, child_filter]} when operator in [:not, :ignore_in_totals_query] ->
         [transformed_child] = transform_tree(child_filter, transformer)
-        [[operation, transformed_child]]
+        [[operator, transformed_child]]
 
-      {nil, [operation, filters]} when operation in [:and, :or] ->
-        [[operation, transform_filters(filters, transformer)]]
+      {nil, [operator, filters]} when operator in [:and, :or] ->
+        [[operator, transform_filters(filters, transformer)]]
 
       # Reached a leaf node, return existing value
       {nil, filter} ->
@@ -154,22 +154,22 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  defp traverse(filters, depth \\ -1) do
+  def traverse(filters, state, state_transformer) do
     filters
-    |> Enum.flat_map(&traverse_tree(&1, depth + 1))
+    |> Enum.flat_map(&traverse_tree(&1, state, state_transformer))
   end
 
-  defp traverse_tree(filter, depth) do
+  defp traverse_tree(filter, state, state_transformer) do
     case filter do
-      [operation, child_filter] when operation in [:not, :ignore_in_totals_query] ->
-        traverse_tree(child_filter, depth + 1)
+      [operation, child_filter] when operation in [:not, :ignore_in_totals_query, :has_done, :has_done_not] ->
+        traverse_tree(child_filter, state_transformer.(state, operation), state_transformer)
 
       [operation, filters] when operation in [:and, :or] ->
-        traverse(filters, depth + 1)
+        traverse(filters, state_transformer.(state, operation), state_transformer)
 
       # Leaf node
       _ ->
-        [{filter, depth}]
+        [{filter, state}]
     end
   end
 end

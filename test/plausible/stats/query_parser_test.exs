@@ -264,7 +264,9 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           ["or", []],
           ["not"],
           ["is_not"],
-          ["is_not", "event:name"]
+          ["is_not", "event:name"],
+          ["has_done"],
+          ["has_done_not"]
         ] do
       test "errors on too short filter #{inspect(too_short_filter)}", %{
         site: site
@@ -541,30 +543,65 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       })
     end
 
-    test "invalid `not` clause", %{site: site} do
+    test "valid has_done and has_done_not filters", %{site: site} do
       %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
-        "filters" => [["not", []]]
+        "filters" => [
+          ["has_done", ["is", "event:name", ["Signup"]]],
+          ["has_done_not", [
+            "or",
+            [
+              ["is", "event:name", ["Signup"]],
+              ["is", "event:page", ["/signup"]]
+            ]
+          ]]
+        ]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [
+          [:has_done, [:is, "event:name", ["Signup"]]],
+          [:has_done_not, [:or, [[:is, "event:name", ["Signup"]], [:is, "event:page", ["/signup"]]]]]
+        ],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+    end
+
+    test "fails when using visit filters within has_done filters", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["has_done", ["is", "visit:browser", ["Chrome"]]]
+        ]
       }
       |> check_error(
         site,
-        "#/filters/0: Invalid filter [\"not\", []]"
+        "Invalid filters. Behavioral filters (has_done, has_done_not) can only be used with event dimension filters."
       )
     end
 
-    test "invalid `or` clause", %{site: site} do
-      %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "filters" => [["or", []]]
-      }
-      |> check_error(
-        site,
-        "#/filters/0: Invalid filter [\"or\", []]"
-      )
+    for operator <- ["not", "or", "has_done", "has_done_not"] do
+      test "invalid `#{operator}` clause", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [[unquote(operator), []]]
+        }
+        |> check_error(
+          site,
+          "#/filters/0: Invalid filter [\"#{unquote(operator)}\", []]"
+        )
+      end
     end
 
     test "event:hostname filter", %{site: site} do

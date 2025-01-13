@@ -57,6 +57,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
+         :ok <- validate_behavioral_filters_are_event_dimension_only(query),
          :ok <- validate_filtered_goals_exist(query),
          :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
@@ -116,8 +117,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
   def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
     do: parse_filters(filters)
 
-  def parse_filter_second(operator, [_, filter | _rest]) when operator in [:not, :has_done, :has_done_not],
-    do: parse_filter(filter)
+  def parse_filter_second(operator, [_, filter | _rest])
+      when operator in [:not, :has_done, :has_done_not],
+      do: parse_filter(filter)
 
   def parse_filter_second(_operator, filter), do: parse_filter_key(filter)
 
@@ -470,6 +472,26 @@ defmodule Plausible.Stats.Filters.QueryParser do
     if special_metric? and deep_custom_property? do
       {:error,
        "Invalid filters. When `conversion_rate` or `group_conversion_rate` metrics are used, custom property filters can only be used on top level."}
+    else
+      :ok
+    end
+  end
+
+  defp validate_behavioral_filters_are_event_dimension_only(query) do
+    behavioral_visit_filter? =
+      query.filters
+      |> Filters.traverse(
+        false,
+        fn behavioral, operator -> behavioral or operator in [:has_done, :has_done_not] end
+      )
+      |> Enum.any?(fn
+        {[_, "visit:" <> _ | _], true} -> true
+        _ -> false
+      end)
+
+    if behavioral_visit_filter? do
+      {:error,
+       "Invalid filters. Behavioral filters (has_done, has_done_not) can only be used with event dimension filters."}
     else
       :ok
     end

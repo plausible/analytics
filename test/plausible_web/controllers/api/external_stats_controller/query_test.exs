@@ -4688,5 +4688,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         %{"dimensions" => [], "metrics" => [4, 3]}
       ]
     end
+
+    test "visit filters are not allowed with has_done/has_done_not filters", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["visit:browser"],
+          "filters" => [
+            ["has_done", ["is", "visit:browser", ["Chrome"]]]
+          ]
+        })
+
+      assert %{"error" => error} = json_response(conn, 400)
+      assert error =~ "Invalid filters. Behavioral filters (has_done, has_done_not) can only be used with event dimension filters."
+    end
   end
 end
