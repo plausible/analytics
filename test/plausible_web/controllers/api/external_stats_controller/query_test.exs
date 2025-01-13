@@ -3759,6 +3759,40 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "can query scroll_depth with page + custom prop filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["john"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:10]
+        ),
+        build(:pageleave,
+          "meta.key": ["author"],
+          "meta.value": ["john"],
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:20],
+          scroll_depth: 60
+        ),
+        build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "filters" => [["is", "event:page", ["/"]], ["is", "event:props:author", ["john"]]],
+          "date_range" => "all",
+          "metrics" => ["scroll_depth"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [60], "dimensions" => []}
+             ]
+    end
+
     test "scroll depth is 0 when no pageleave data in range", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -4046,6 +4080,78 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["/another", "2020-01-01"], "metrics" => [25]},
                %{"dimensions" => ["/another", "2020-01-02"], "metrics" => [24]},
                %{"dimensions" => ["/blog", "2020-01-02"], "metrics" => [20]}
+             ]
+    end
+
+    test "breakdown by a custom prop with a page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00], pathname: "/blog"),
+        build(:pageleave,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00],
+          pathname: "/blog",
+          scroll_depth: 91
+        ),
+        build(:pageview,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:02:00],
+          "meta.key": ["author"],
+          "meta.value": ["john"],
+          pathname: "/blog/john-post"
+        ),
+        build(:pageleave,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:03:00],
+          "meta.key": ["author"],
+          "meta.value": ["john"],
+          pathname: "/blog/john-post",
+          scroll_depth: 40
+        ),
+        build(:pageview,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:02:00],
+          "meta.key": ["author"],
+          "meta.value": ["john"],
+          pathname: "/another-blog/john-post"
+        ),
+        build(:pageleave,
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:03:00],
+          "meta.key": ["author"],
+          "meta.value": ["john"],
+          pathname: "/another-blog/john-post",
+          scroll_depth: 90
+        ),
+        build(:pageview,
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:02:00],
+          "meta.key": ["author"],
+          "meta.value": ["john"],
+          pathname: "/blog/john-post"
+        ),
+        build(:pageleave,
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:03:00],
+          "meta.key": ["author"],
+          "meta.value": ["john"],
+          pathname: "/blog/john-post",
+          scroll_depth: 46
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["scroll_depth"],
+          "order_by" => [["scroll_depth", "desc"]],
+          "date_range" => "all",
+          "filters" => [["matches", "event:page", ["/blog.*"]]],
+          "dimensions" => ["event:props:author"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["(none)"], "metrics" => [91]},
+               %{"dimensions" => ["john"], "metrics" => [43]}
              ]
     end
   end
