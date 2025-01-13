@@ -50,16 +50,6 @@ const mockManyRequests = function(page, path, numberOfRequests) {
 
 exports.mockManyRequests = mockManyRequests
 
-exports.expectCustomEvent = function (request, eventName, eventProps) {
-  const payload = request.postDataJSON()
-
-  expect(payload.n).toEqual(eventName)
-
-  for (const [key, value] of Object.entries(eventProps)) {
-    expect(payload.p[key]).toEqual(value)
-  }
-}
-
 /**
  * A powerful utility function that makes it easy to assert on the event
  * requests that should or should not have been made after doing a page
@@ -70,9 +60,9 @@ exports.expectCustomEvent = function (request, eventName, eventProps) {
  * actually made. For a body subset to match a request, all the key-value
  * pairs present in the subset should also appear in the request body.
  */
-exports.pageActionAndExpectEventRequests = async function (page, pageActionFn, expectedBodySubsets, refutedBodySubsets = []) {
+exports.pageActionAndExpectEventRequests = async function (page, pageActionFn, expectedBodySubsets, refutedBodySubsets = [], eventsToAwait = null) {
   const requestsToExpect = expectedBodySubsets.length
-  const requestsToAwait = requestsToExpect + refutedBodySubsets.length
+  const requestsToAwait = eventsToAwait ? eventsToAwait : requestsToExpect + refutedBodySubsets.length
   
   const plausibleRequestMockList = mockManyRequests(page, '/api/event', requestsToAwait)
   await pageActionFn()

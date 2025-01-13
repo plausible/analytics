@@ -1,4 +1,4 @@
-const { mockRequest, mockManyRequests, expectCustomEvent, metaKey } = require('./support/test-utils')
+const { mockRequest, metaKey, pageActionAndExpectEventRequests } = require('./support/test-utils')
 const { expect, test } = require('@playwright/test')
 
 test.describe('tagged-events extension', () => {
@@ -7,47 +7,48 @@ test.describe('tagged-events extension', () => {
 
         const linkURL = await page.locator('#link').getAttribute('href')
 
-        const plausibleRequestMock = mockRequest(page, '/api/event')
-        await page.click('#link')
-        expectCustomEvent(await plausibleRequestMock, 'Payment Complete', { amount: '100', method: "Credit Card", url: linkURL })
+        await pageActionAndExpectEventRequests(page, () => page.click('#link'), [
+            {n: 'Payment Complete', p: {amount: '100', method: "Credit Card", url: linkURL}}
+        ])
     })
 
     test('tracks a tagged form submit with custom props when submitting by pressing enter', async ({ page }) => {
         await page.goto('/tagged-event.html')
-        const plausibleRequestMock = mockRequest(page, '/api/event')
 
-        const inputLocator = page.locator('#form-text-input')
-        await inputLocator.type('some input')
-        await inputLocator.press('Enter')
+        const submitForm = async function() {
+            const inputLocator = page.locator('#form-text-input')
+            await inputLocator.fill('some input')
+            await inputLocator.press('Enter')
+        }
 
-        expectCustomEvent(await plausibleRequestMock, 'Signup', { type: "Newsletter" })
+        await pageActionAndExpectEventRequests(page, submitForm, [
+            {n: 'Signup', p: {type: "Newsletter"}}
+        ])
     })
 
     test('tracks submit on a form with a tagged parent when submit button is clicked', async ({ page }) => {
         await page.goto('/tagged-event.html')
 
-        const plausibleRequestMockList = mockManyRequests(page, '/api/event', 2)
-
-        await page.click('#submit-form-with-tagged-parent')
-
-        const requests = await plausibleRequestMockList
-
-        expect(requests.length).toBe(1)
-        expectCustomEvent(requests[0], "Form Submit", {})
+        await pageActionAndExpectEventRequests(
+            page,
+            () => page.click('#submit-form-with-tagged-parent'),
+            [{n: 'Form Submit', p: {}}],
+            [],
+            2
+        )
     })
 
     test('tracks click and auxclick on any tagged HTML element', async ({ page }) => {
         await page.goto('/tagged-event.html')
 
-        const plausibleRequestMockList = mockManyRequests(page, '/api/event', 3)
+        const clickThreeElements = async function() {
+            await page.click('#button')
+            await page.click('#span')
+            await page.click('#div', { modifiers: [metaKey()] })
+        }
 
-        await page.click('#button')
-        await page.click('#span')
-        await page.click('#div', { modifiers: [metaKey()] })
-
-        const requests = await plausibleRequestMockList
-        expect(requests.length).toBe(3)
-        requests.forEach(request => expectCustomEvent(request, 'Custom Event', { foo: "bar" }))
+        const expected = new Array(3).fill({n: 'Custom Event', p: { foo: "bar" }})
+        await pageActionAndExpectEventRequests(page, clickThreeElements, expected)
     })
 
     test('does not track elements without plausible-event-name class + link elements navigate', async ({ page }) => {
@@ -70,28 +71,22 @@ test.describe('tagged-events extension', () => {
     test('tracks tagged HTML elements when their child element is clicked', async ({ page }) => {
         await page.goto('/tagged-event.html')
 
-        const plausibleRequestMockList = mockManyRequests(page, '/api/event', 2)
+        const clickLinks = async function() {
+            await page.click('#h2-with-link-parent', { modifiers: [metaKey()] })
+            await page.click('#link-with-div-parent')
+        }
 
-        await page.click('#h2-with-link-parent', { modifiers: [metaKey()] })
-        await page.click('#link-with-div-parent')
-
-        const requests = await plausibleRequestMockList
-        expect(requests.length).toBe(2)
-        requests.forEach(request => expectCustomEvent(request, 'Custom Event', { foo: "bar" }))
+        const expected = new Array(2).fill({n: 'Custom Event', p: { foo: "bar", url: "https://awesome.website.com/payment/"}})
+        await pageActionAndExpectEventRequests(page, clickLinks, expected)
     })
 
     test('tracks tagged element that is dynamically added to the DOM', async ({ page }) => {
         await page.goto('/tagged-event.html')
 
-        const plausibleRequestMock = mockRequest(page, '/api/event')
-
         const buttonLocator = page.locator('#dynamic-tagged-button')
         await buttonLocator.waitFor({state: 'visible'})
-        await page.waitForTimeout(500)
 
-        await buttonLocator.click()
-
-        expectCustomEvent(await plausibleRequestMock, 'Custom Event', {})
+        await pageActionAndExpectEventRequests(page, () => buttonLocator.click(), [{n: 'Custom Event', p: {}}])
     })
 
     test('does not track clicks inside a tagged form, except submit click', async ({ page }) => {

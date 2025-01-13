@@ -1,4 +1,4 @@
-const { mockRequest, expectCustomEvent, mockManyRequests, metaKey } = require('./support/test-utils')
+const { mockRequest, mockManyRequests, metaKey, pageActionAndExpectEventRequests } = require('./support/test-utils')
 const { expect, test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
@@ -7,23 +7,26 @@ test.describe('file-downloads extension', () => {
     await page.goto('/file-download.html')
     const downloadURL = await page.locator('#link').getAttribute('href')
 
-    const plausibleRequestMock = mockRequest(page, '/api/event')
     const downloadRequestMock = mockRequest(page, downloadURL)
-    await page.click('#link', { modifiers: [metaKey()] })
 
-    expectCustomEvent(await plausibleRequestMock, 'File Download', { url: downloadURL })
+    await pageActionAndExpectEventRequests(page, () => page.click('#link', { modifiers: [metaKey()] }), [
+      {n: 'File Download', p: { url: downloadURL }}
+    ])
+
     expect(await downloadRequestMock, "should not make download request").toBeNull()
+    
   })
 
   test('sends event and starts download when link child is clicked', async ({ page }) => {
     await page.goto('/file-download.html')
     const downloadURL = await page.locator('#link').getAttribute('href')
 
-    const plausibleRequestMock = mockRequest(page, '/api/event')
     const downloadRequestMock = mockRequest(page, downloadURL)
-    await page.click('#link-child')
+    
+    await pageActionAndExpectEventRequests(page, () => page.click('#link-child'), [
+      {n: 'File Download', p: { url: downloadURL }}
+    ])
 
-    expectCustomEvent(await plausibleRequestMock, 'File Download', { url: downloadURL })
     expect((await downloadRequestMock).url()).toContain(downloadURL)
   })
 
@@ -31,11 +34,9 @@ test.describe('file-downloads extension', () => {
     await page.goto('/file-download.html')
     const downloadURL = await page.locator('#link-query').getAttribute('href')
 
-    const plausibleRequestMock = mockRequest(page, '/api/event')
-    await page.click('#link-query')
-
-    const expectedURL = downloadURL.split("?")[0]
-    expectCustomEvent(await plausibleRequestMock, 'File Download', { url: expectedURL })
+    await pageActionAndExpectEventRequests(page, () => page.click('#link-query'), [
+      {n: 'File Download', p: { url: downloadURL.split("?")[0] }}
+    ])
   })
 
   test('starts download only once', async ({ page }) => {

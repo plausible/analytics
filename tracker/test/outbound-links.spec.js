@@ -1,4 +1,4 @@
-const { mockRequest, expectCustomEvent, metaKey } = require('./support/test-utils')
+const { mockRequest, metaKey, pageActionAndExpectEventRequests } = require('./support/test-utils')
 const { expect, test } = require('@playwright/test')
 
 test.describe('outbound-links extension', () => {
@@ -7,12 +7,12 @@ test.describe('outbound-links extension', () => {
     await page.goto('/outbound-link.html')
     const outboundURL = await page.locator('#link').getAttribute('href')
 
-    const plausibleRequestMock = mockRequest(page, '/api/event')
     const navigationRequestMock = mockRequest(page, outboundURL)
+    
+    await pageActionAndExpectEventRequests(page, () => page.click('#link', { modifiers: [metaKey()] }), [
+      {n: 'Outbound Link: Click', p: { url: outboundURL }}
+    ])
 
-    await page.click('#link', { modifiers: [metaKey()] })
-
-    expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
     expect(await navigationRequestMock, "should not have made navigation request").toBeNull()
   })
 
@@ -20,13 +20,13 @@ test.describe('outbound-links extension', () => {
     await page.goto('/outbound-link.html')
     const outboundURL = await page.locator('#link').getAttribute('href')
 
-    const plausibleRequestMock = mockRequest(page, '/api/event')
     const navigationRequestMock = mockRequest(page, outboundURL)
 
-    await page.click('#link-child')
+    await pageActionAndExpectEventRequests(page, () => page.click('#link-child'), [
+      {n: 'Outbound Link: Click', p: { url: outboundURL }}
+    ])
 
     const navigationRequest = await navigationRequestMock
-    expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
     expect(navigationRequest.url()).toContain(outboundURL)
   })
 
@@ -34,12 +34,12 @@ test.describe('outbound-links extension', () => {
     await page.goto('/outbound-link.html')
     const outboundURL = await page.locator('#link-default-prevented').getAttribute('href')
 
-    const plausibleRequestMock = mockRequest(page, '/api/event')
     const navigationRequestMock = mockRequest(page, outboundURL)
+    
+    await pageActionAndExpectEventRequests(page, () => page.click('#link-default-prevented'), [
+      {n: 'Outbound Link: Click', p: { url: outboundURL }}
+    ])
 
-    await page.click('#link-default-prevented')
-
-    expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
     expect(await navigationRequestMock, "should not have made navigation request").toBeNull()
   })
 })

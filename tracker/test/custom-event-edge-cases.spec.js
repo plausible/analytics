@@ -1,5 +1,5 @@
-const { mockRequest, mockManyRequests, expectCustomEvent } = require('./support/test-utils')
-const { expect, test } = require('@playwright/test')
+const { pageActionAndExpectEventRequests } = require('./support/test-utils')
+const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
 test.describe('script.file-downloads.outbound-links.tagged-events.js', () => {
@@ -7,32 +7,29 @@ test.describe('script.file-downloads.outbound-links.tagged-events.js', () => {
         await page.goto('/custom-event-edge-case.html')
         const downloadURL = await page.locator('#outbound-download-link').getAttribute('href')
 
-        const plausibleRequestMockList = mockManyRequests(page, '/api/event', 2)
-        await page.click('#outbound-download-link')
-
-        const requests = await plausibleRequestMockList
-        expect(requests.length).toBe(1)
-        expectCustomEvent(requests[0], 'Outbound Link: Click', {url: downloadURL})
+        await pageActionAndExpectEventRequests(page, () => page.click('#outbound-download-link'), [
+            {n: 'Outbound Link: Click', p: {url: downloadURL}}
+        ])
     })
 
     test('sends file download event when local download link clicked', async ({ page }) => {
         await page.goto('/custom-event-edge-case.html')
         const downloadURL = LOCAL_SERVER_ADDR + '/' + await page.locator('#local-download').getAttribute('href')
 
-        const plausibleRequestMock = mockRequest(page, '/api/event')
-        await page.click('#local-download')
-
-        expectCustomEvent(await plausibleRequestMock, 'File Download', {url: downloadURL})
+        await pageActionAndExpectEventRequests(page, () => page.click('#local-download'), [
+            {n: 'File Download', p: {url: downloadURL}}
+        ])
     })
 
     test('sends only tagged event when clicked link is tagged + outbound + download', async ({ page }) => {
         await page.goto('/custom-event-edge-case.html')
 
-        const plausibleRequestMockList = mockManyRequests(page, '/api/event', 3)
-        await page.click('#tagged-outbound-download-link')
-
-        const requests = await plausibleRequestMockList
-        expect(requests.length).toBe(1)
-        expectCustomEvent(requests[0], 'Foo', {})
+        await pageActionAndExpectEventRequests(
+            page,
+            () => page.click('#tagged-outbound-download-link'),
+            [{n: 'Foo', p: {url: 'https://awesome.website.com/file.pdf'}}],
+            [],
+            3
+        )
     })
 })
