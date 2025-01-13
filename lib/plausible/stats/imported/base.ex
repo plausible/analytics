@@ -124,9 +124,9 @@ defmodule Plausible.Stats.Imported.Base do
       |> Enum.any?(&(&1 in special_goals_for(property)))
 
     has_unsupported_filters? =
-      Enum.any?(query.filters, fn [_, filter_key | _] ->
-        filter_key not in [property, "event:name", "event:goal"]
-      end)
+      query.filters
+      |> dimensions_used_in_filters()
+      |> Enum.any?(&(&1 not in [property, "event:name", "event:goal"]))
 
     if has_required_name_filter? and not has_unsupported_filters? do
       ["imported_custom_events"]
