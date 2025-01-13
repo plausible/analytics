@@ -282,8 +282,8 @@ defmodule PlausibleWeb.Live.Teams do
     <div class="flex items-center gap-x-5">
       <img
         src={
-          Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{
-            email: @submit_value |> IO.inspect(label: :display)
+          User.profile_img_url(%User{
+            email: @submit_value
           })
         }
         class="w-7 rounded-full"
