@@ -78,7 +78,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
       case result do
         nil -> H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
-        %{} -> json(conn, result)
+        result when is_map(result) -> json(conn, result)
       end
     else
       H.not_enough_permissions(conn, "Not enough permissions to get segment data")
