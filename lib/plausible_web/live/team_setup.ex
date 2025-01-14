@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
     my_team = socket.assigns.my_team
     enabled? = Teams.enabled?(my_team)
 
-    # TODO: remove dev param, once manual testing is considered done
+    # XXX: remove dev param, once manual testing is considered done
     socket =
       case {enabled?, my_team, params["dev"]} do
         {true, %Teams.Team{setup_complete: true}, nil} ->
