@@ -174,6 +174,31 @@ defmodule PlausibleWeb.Live.SitesTest do
              |> find("#dropdown-team-member-candidates")
              |> text() =~ guest.email
     end
+
+    test "member candidate can be removed", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+
+      guest = add_guest(site, role: :viewer)
+
+      {:ok, lv, _html} = live(conn, @url)
+
+      type_into_combo(lv, "team-member-candidates", guest.email)
+      select_combo_option(lv, 1)
+
+      assert lv
+             |> render()
+             |> find(".member:nth-of-type(2)")
+             |> text() =~ guest.email
+
+      lv
+      |> element(~s|.member a[phx-click="remove-member"][phx-value-email="#{guest.email}"]|)
+      |> render_click()
+
+      refute lv
+             |> render()
+             |> find(".member")
+             |> text() =~ guest.email
+    end
   end
 
   defp type_into_input(lv, id, text) do
