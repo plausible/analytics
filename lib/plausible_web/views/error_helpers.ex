@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.ErrorHelpers do
+  @moduledoc false
   use Phoenix.HTML
 
   def error_tag(map_or_form, field, opts \\ [])
