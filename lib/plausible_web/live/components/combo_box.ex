@@ -117,7 +117,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           />
 
           <.spinner class="spinner hidden absolute inset-y-3 right-8" />
-          <.spinner x-show="selectionInProgress" class="spinner absolute inset-y-3 right-8" />
+          <.spinner phx-update="ignore" x-show="selectionInProgress" class="spinner absolute inset-y-3 right-8" />
 
           <.dropdown_anchor id={@id} />
 
@@ -184,6 +184,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       x-show="isOpen"
       x-ref="suggestions"
       class="text-sm w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-900"
+      style="display: none;"
     >
       <.option
         :if={display_creatable_option?(assigns)}
