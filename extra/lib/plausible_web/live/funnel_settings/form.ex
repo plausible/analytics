@@ -56,6 +56,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
           <.form
             :let={f}
             for={@form}
+            phx-change="validate"
             phx-submit="save"
             phx-target="#funnel-form"
             phx-click-away="cancel-add-funnel"
