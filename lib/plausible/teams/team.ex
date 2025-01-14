@@ -3,6 +3,12 @@ defmodule Plausible.Teams.Team do
   Team schema
   """
 
+  defimpl FunWithFlags.Actor, for: __MODULE__ do
+    def id(%{id: id}) do
+      "team:#{id}"
+    end
+  end
+
   use Ecto.Schema
   use Plausible
 
@@ -18,6 +24,9 @@ defmodule Plausible.Teams.Team do
     field :trial_expiry_date, :date
     field :accept_traffic_until, :date
     field :allow_next_upgrade_override, :boolean, default: false
+
+    field :setup_complete, :boolean, default: false
+    field :setup_at, :naive_datetime
 
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
@@ -44,6 +53,12 @@ defmodule Plausible.Teams.Team do
     |> validate_required(:name)
     |> start_trial(today)
     |> maybe_bump_accept_traffic_until()
+  end
+
+  def name_changeset(team, attrs \\ %{}) do
+    team
+    |> cast(attrs, [:name])
+    |> validate_required(:name)
   end
 
   def start_trial(team, today \\ Date.utc_today()) do

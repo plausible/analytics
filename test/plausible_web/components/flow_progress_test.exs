@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Components.FlowProgressTest do
   use Plausible.DataCase
 
-  import Plausible.LiveViewTest, only: [render_component: 2]
+  import Phoenix.LiveViewTest, only: [render_component: 2]
   import Plausible.Test.Support.HTML
 
   alias PlausibleWeb.Components.FlowProgress

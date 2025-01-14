@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Email do
   use Plausible
-  use Bamboo.Phoenix, view: PlausibleWeb.EmailView
+  import Bamboo.Email
   import Bamboo.PostmarkHelper
 
   def mailer_email_from do
@@ -263,6 +263,29 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def new_user_team_invitation(email, invitation_id, team, inviter) do
+    priority_email()
+    |> to(email)
+    |> tag("new-user-team-invitation")
+    |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
+    |> render("new_user_team_invitation.html",
+      invitation_id: invitation_id,
+      team: team,
+      inviter: inviter
+    )
+  end
+
+  def existing_user_team_invitation(email, team, inviter) do
+    priority_email()
+    |> to(email)
+    |> tag("existing-user-team-invitation")
+    |> subject("[#{Plausible.product_name()}] You've been invited to \"#{team.name}\" team")
+    |> render("existing_user_team_invitation.html",
+      team: team,
+      inviter: inviter
+    )
+  end
+
   def ownership_transfer_request(email, invitation_id, site, inviter, new_owner_account) do
     priority_email()
     |> to(email)
@@ -276,29 +299,53 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def invitation_accepted(inviter_email, invitee_email, site) do
+  def guest_invitation_accepted(inviter_email, invitee_email, site) do
     priority_email()
     |> to(inviter_email)
-    |> tag("invitation-accepted")
+    |> tag("guest-invitation-accepted")
     |> subject(
       "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to #{site.domain}"
     )
-    |> render("invitation_accepted.html",
+    |> render("guest_invitation_accepted.html",
       invitee_email: invitee_email,
       site: site
     )
   end
 
-  def invitation_rejected(guest_invitation) do
+  def team_invitation_accepted(inviter_email, invitee_email, team) do
+    priority_email()
+    |> to(inviter_email)
+    |> tag("team-invitation-accepted")
+    |> subject(
+      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to \"#{team.name}\" team"
+    )
+    |> render("team_invitation_accepted.html",
+      invitee_email: invitee_email,
+      team: team
+    )
+  end
+
+  def guest_invitation_rejected(guest_invitation) do
     priority_email()
     |> to(guest_invitation.team_invitation.inviter.email)
-    |> tag("invitation-rejected")
+    |> tag("guest-invitation-rejected")
     |> subject(
       "[#{Plausible.product_name()}] #{guest_invitation.team_invitation.email} rejected your invitation to #{guest_invitation.site.domain}"
     )
-    |> render("invitation_rejected.html",
-      user: guest_invitation.team_invitation.inviter,
+    |> render("guest_invitation_rejected.html",
       guest_invitation: guest_invitation
+    )
+  end
+
+  def team_invitation_rejected(team_invitation) do
+    priority_email()
+    |> to(team_invitation.inviter.email)
+    |> tag("team-invitation-rejected")
+    |> subject(
+      "[#{Plausible.product_name()}] #{team_invitation.email} rejected your invitation to \"#{team_invitation.team.name}\" team"
+    )
+    |> render("team_invitation_rejected.html",
+      team_invitation: team_invitation
     )
   end
 
@@ -460,17 +507,71 @@ defmodule PlausibleWeb.Email do
   def base_email(), do: base_email(%{layout: "base_email.html"})
 
   def base_email(%{layout: layout}) do
-    mailer_from = Application.get_env(:plausible, :mailer_email)
-
     new_email()
     |> put_param("TrackOpens", false)
-    |> from(mailer_from)
+    |> from(mailer_email_from())
     |> maybe_put_layout(layout)
   end
 
   defp maybe_put_layout(email, nil), do: email
 
-  defp maybe_put_layout(email, layout) do
-    put_html_layout(email, {PlausibleWeb.LayoutView, layout})
+  defp maybe_put_layout(%{assigns: assigns} = email, layout) do
+    %{email | assigns: Map.put(assigns, :layout, {PlausibleWeb.LayoutView, layout})}
+  end
+
+  @doc false
+  def render(email, template, assigns \\ []) do
+    assigns = Map.merge(email.assigns, Map.new(assigns))
+    html = Phoenix.View.render_to_string(PlausibleWeb.EmailView, template, assigns)
+    email |> html_body(html) |> text_body(textify(html))
+  end
+
+  defp textify(html) do
+    Floki.parse_fragment!(html)
+    |> traverse_and_textify()
+    |> Floki.text()
+    |> collapse_whitespace()
+  end
+
+  defp traverse_and_textify([head | tail]) do
+    [traverse_and_textify(head) | traverse_and_textify(tail)]
+  end
+
+  defp traverse_and_textify(text) when is_binary(text) do
+    String.replace(text, "\n", "\s")
+  end
+
+  defp traverse_and_textify({"a" = tag, attrs, children}) do
+    href = with {"href", href} <- List.keyfind(attrs, "href", 0), do: href
+    children = traverse_and_textify(children)
+
+    if href do
+      text = Floki.text(children)
+
+      if text == href do
+        # avoids rendering "http://localhost:8000 (http://localhost:8000)" in base_email footer
+        text
+      else
+        IO.iodata_to_binary([text, " (", href, ?)])
+      end
+    else
+      {tag, attrs, children}
+    end
+  end
+
+  defp traverse_and_textify({tag, attrs, children}) do
+    {tag, attrs, traverse_and_textify(children)}
+  end
+
+  defp traverse_and_textify(other), do: other
+
+  defp collapse_whitespace(text) do
+    text
+    |> String.split("\n")
+    |> Enum.map_join("\n", fn line ->
+      line
+      |> String.split(" ", trim: true)
+      |> Enum.join(" ")
+    end)
   end
 end

@@ -346,40 +346,4 @@ defmodule Plausible.Sites do
       select: s
     )
   end
-
-  def owned_sites_locked?(user) do
-    user
-    |> owned_sites_query()
-    |> where([s], s.locked == true)
-    |> Repo.exists?()
-  end
-
-  def owned_sites_count(user) do
-    user
-    |> owned_sites_query()
-    |> Repo.aggregate(:count)
-  end
-
-  def owned_sites_domains(user) do
-    user
-    |> owned_sites_query()
-    |> select([site], site.domain)
-    |> Repo.all()
-  end
-
-  def owned_site_ids(user) do
-    user
-    |> owned_sites_query()
-    |> select([site], site.id)
-    |> Repo.all()
-  end
-
-  defp owned_sites_query(user) do
-    from(s in Site,
-      join: sm in Site.Membership,
-      on: sm.site_id == s.id,
-      where: sm.role == :owner,
-      where: sm.user_id == ^user.id
-    )
-  end
 end

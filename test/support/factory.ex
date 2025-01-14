@@ -6,7 +6,9 @@ defmodule Plausible.Factory do
   def team_factory do
     %Plausible.Teams.Team{
       name: "My Team",
-      trial_expiry_date: Timex.today() |> Timex.shift(days: 30)
+      trial_expiry_date: Timex.today() |> Timex.shift(days: 30),
+      setup_complete: true,
+      setup_at: NaiveDateTime.utc_now()
     }
   end
 
@@ -373,6 +375,12 @@ defmodule Plausible.Factory do
   def country_rule_factory do
     %Plausible.Shield.CountryRule{
       added_by: "Mr Seed <user@plausible.test>"
+    }
+  end
+
+  def segment_factory do
+    %Plausible.Segment{
+      segment_data: %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
     }
   end
 

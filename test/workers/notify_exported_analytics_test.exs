@@ -28,6 +28,7 @@ defmodule Plausible.Workers.NotifyExportedAnalyticsTest do
 
       assert_receive {:delivered_email, email}
       assert email.html_body =~ "was unsuccessful."
+      assert email.text_body =~ "was unsuccessful."
     end
   end
 end

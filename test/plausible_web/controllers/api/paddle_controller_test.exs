@@ -32,8 +32,8 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
   describe "webhook verification" do
     test "is verified when signature is correct", %{conn: conn} do
       insert(:user, id: 235)
-      conn = post(conn, Routes.paddle_path(conn, :webhook), @webhook_body)
 
+      conn = post(conn, Routes.paddle_path(conn, :webhook), @webhook_body)
       assert conn.status == 200
     end
 

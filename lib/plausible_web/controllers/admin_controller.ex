@@ -2,6 +2,9 @@ defmodule PlausibleWeb.AdminController do
   use PlausibleWeb, :controller
   use Plausible
 
+  import Ecto.Query
+
+  alias Plausible.Repo
   alias Plausible.Teams
 
   def usage(conn, params) do
@@ -69,6 +72,60 @@ defmodule PlausibleWeb.AdminController do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(200, json_response)
+  end
+
+  def user_by_id(conn, params) do
+    id = params["user_id"]
+
+    entry =
+      Repo.one(
+        from u in Plausible.Auth.User,
+          where: u.id == ^id,
+          select: fragment("concat(?, ?, ?, ?)", u.name, " (", u.email, ")")
+      ) || ""
+
+    conn
+    |> send_resp(200, entry)
+  end
+
+  def user_search(conn, params) do
+    search =
+      (params["search"] || "")
+      |> String.trim()
+
+    choices =
+      if search != "" do
+        term =
+          search
+          |> String.replace("%", "\%")
+          |> String.replace("_", "\_")
+
+        term = "%#{term}%"
+
+        user_id =
+          case Integer.parse(search) do
+            {id, ""} -> id
+            _ -> 0
+          end
+
+        if user_id != 0 do
+          []
+        else
+          Repo.all(
+            from u in Plausible.Auth.User,
+              where: u.id == ^user_id or ilike(u.name, ^term) or ilike(u.email, ^term),
+              order_by: [u.name, u.id],
+              select: [fragment("concat(?, ?, ?, ?)", u.name, " (", u.email, ")"), u.id],
+              limit: 20
+          )
+        end
+      else
+        []
+      end
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, Jason.encode!(choices))
   end
 
   defp usage_and_limits_html(team, usage, limits, embed?) do

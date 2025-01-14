@@ -8,13 +8,15 @@ defmodule Plausible.Exports do
   import Ecto.Query
 
   @doc "Schedules CSV export job to S3 storage"
-  @spec schedule_s3_export(pos_integer, String.t()) :: {:ok, Oban.Job.t()} | {:error, :no_data}
-  def schedule_s3_export(site_id, email_to) do
+  @spec schedule_s3_export(pos_integer, pos_integer | nil, String.t()) ::
+          {:ok, Oban.Job.t()} | {:error, :no_data}
+  def schedule_s3_export(site_id, current_user_id, email_to) do
     with :ok <- ensure_has_data(site_id) do
       args = %{
         "storage" => "s3",
         "site_id" => site_id,
         "email_to" => email_to,
+        "current_user_id" => current_user_id,
         "s3_bucket" => Plausible.S3.exports_bucket(),
         "s3_path" => s3_export_key(site_id)
       }
@@ -207,13 +209,13 @@ defmodule Plausible.Exports do
   Builds Ecto queries to export data from `events_v2` and `sessions_v2`
   tables into the format of `imported_*` tables for a website.
   """
-  @spec export_queries(pos_integer,
+  @spec export_queries(pos_integer, pos_integer | nil,
           extname: String.t(),
           date_range: Date.Range.t(),
           timezone: String.t()
         ) ::
           %{String.t() => Ecto.Query.t()}
-  def export_queries(site_id, opts \\ []) do
+  def export_queries(site_id, current_user_id, opts \\ []) do
     extname = opts[:extname] || ".csv"
     date_range = opts[:date_range]
     timezone = opts[:timezone] || "UTC"
@@ -232,7 +234,8 @@ defmodule Plausible.Exports do
     %{
       filename.("imported_visitors") => export_visitors_q(site_id, timezone, date_range),
       filename.("imported_sources") => export_sources_q(site_id, timezone, date_range),
-      filename.("imported_pages") => export_pages_q(site_id, timezone, date_range),
+      filename.("imported_pages") =>
+        export_pages_q(site_id, current_user_id, timezone, date_range),
       filename.("imported_entry_pages") => export_entry_pages_q(site_id, timezone, date_range),
       filename.("imported_exit_pages") => export_exit_pages_q(site_id, timezone, date_range),
       filename.("imported_custom_events") =>
@@ -411,13 +414,71 @@ defmodule Plausible.Exports do
       ]
   end
 
-  defp export_pages_q(site_id, timezone, date_range) do
-    from e in sampled("events_v2"),
-      where: ^export_filter(site_id, date_range),
-      where: [name: "pageview"],
-      group_by: [selected_as(:date), e.pathname],
-      order_by: selected_as(:date),
-      select: [
+  defp export_pages_q(site_id, current_user_id, timezone, date_range) do
+    site = Plausible.Repo.get(Plausible.Site, site_id)
+    current_user = current_user_id && Plausible.Repo.get(Plausible.Auth.User, current_user_id)
+
+    scroll_depth_enabled? =
+      PlausibleWeb.Api.StatsController.scroll_depth_enabled?(site, current_user)
+
+    base_q =
+      from(e in sampled("events_v2"),
+        where: ^export_filter(site_id, date_range),
+        where: [name: "pageview"],
+        group_by: [selected_as(:date), selected_as(:page)],
+        order_by: selected_as(:date)
+      )
+
+    if scroll_depth_enabled? do
+      max_scroll_depth_per_visitor_q =
+        from(e in "events_v2",
+          where: ^export_filter(site_id, date_range),
+          where: e.name == "pageleave" and e.scroll_depth <= 100,
+          select: %{
+            date: date(e.timestamp, ^timezone),
+            page: selected_as(e.pathname, :page),
+            user_id: e.user_id,
+            max_scroll_depth: max(e.scroll_depth)
+          },
+          group_by: [e.user_id, selected_as(:date), selected_as(:page)]
+        )
+
+      scroll_depth_q =
+        from(p in subquery(max_scroll_depth_per_visitor_q),
+          select: %{
+            date: p.date,
+            page: p.page,
+            scroll_depth:
+              fragment(
+                "if(isNull(sum(?)), NULL, toUInt64(sum(?)))",
+                p.max_scroll_depth,
+                p.max_scroll_depth
+              ),
+            pageleave_visitors: count(p.user_id)
+          },
+          group_by: [:date, :page]
+        )
+
+      from(e in base_q,
+        left_join: s in subquery(scroll_depth_q),
+        on: s.date == selected_as(:date) and s.page == selected_as(:page),
+        select: [
+          date(e.timestamp, ^timezone),
+          selected_as(fragment("any(?)", e.hostname), :hostname),
+          selected_as(e.pathname, :page),
+          selected_as(
+            fragment("toUInt64(round(uniq(?)*any(_sample_factor)))", e.session_id),
+            :visits
+          ),
+          visitors(e),
+          selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews),
+          selected_as(fragment("any(?)", s.scroll_depth), :scroll_depth),
+          selected_as(fragment("any(?)", s.pageleave_visitors), :pageleave_visitors)
+        ]
+      )
+    else
+      base_q
+      |> select([e], [
         date(e.timestamp, ^timezone),
         selected_as(fragment("any(?)", e.hostname), :hostname),
         selected_as(e.pathname, :page),
@@ -427,7 +488,8 @@ defmodule Plausible.Exports do
         ),
         visitors(e),
         selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews)
-      ]
+      ])
+    end
   end
 
   defp export_entry_pages_q(site_id, timezone, date_range) do

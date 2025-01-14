@@ -173,7 +173,7 @@ defmodule PlausibleWeb.Live.CSVExport do
       <:tbody :let={export}>
         <.td>
           <.styled_link href={@href}>
-            <%= export.name %>
+            {export.name}
           </.styled_link>
         </.td>
         <.td actions>
@@ -188,14 +188,14 @@ defmodule PlausibleWeb.Live.CSVExport do
     <p :if={@export.expires_at} class="text-sm">
       Note: this file will expire
       <.hint message={@export.expires_at}>
-        <%= Timex.Format.DateTime.Formatters.Relative.format!(@export.expires_at, "{relative}") %>.
+        {Timex.Format.DateTime.Formatters.Relative.format!(@export.expires_at, "{relative}")}.
       </.hint>
     </p>
 
     <p :if={@storage == "local"} class="text-sm">
       Located at
-      <.hint message={@export.path}><%= format_path(@export.path) %></.hint>
-      (<%= format_bytes(@export.size) %>)
+      <.hint message={@export.path}>{format_path(@export.path)}</.hint>
+      ({format_bytes(@export.size)})
     </p>
     """
   end
@@ -203,18 +203,19 @@ defmodule PlausibleWeb.Live.CSVExport do
   defp hint(assigns) do
     ~H"""
     <span title={@message} class="underline cursor-help underline-offset-2 decoration-dashed">
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </span>
     """
   end
 
   @impl true
   def handle_event("export", _params, socket) do
-    %{storage: storage, site_id: site_id, email_to: email_to} = socket.assigns
+    %{storage: storage, site_id: site_id, email_to: email_to, current_user: current_user} =
+      socket.assigns
 
     schedule_result =
       case storage do
-        "s3" -> Exports.schedule_s3_export(site_id, email_to)
+        "s3" -> Exports.schedule_s3_export(site_id, current_user.id, email_to)
         "local" -> Exports.schedule_local_export(site_id, email_to)
       end
 

@@ -150,15 +150,12 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         dim_shortnames
         |> Enum.map(fn dim -> dynamic([p], field(p, ^dim)) end)
 
-      scroll_depth_q =
+      scroll_depth_sum_q =
         subquery(max_per_visitor_q)
         |> select([p], %{
-          scroll_depth:
-            fragment(
-              "if(isFinite(avg(?)), toUInt8(round(avg(?))), NULL)",
-              p.max_scroll_depth,
-              p.max_scroll_depth
-            )
+          scroll_depth_sum:
+            fragment("if(count(?) = 0, NULL, sum(?))", p.user_id, p.max_scroll_depth),
+          pageleave_visitors: fragment("count(?)", p.user_id)
         })
         |> select_merge(^dim_select)
         |> group_by(^dim_group_by)
@@ -173,9 +170,55 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
         end
 
-      q
-      |> join(:left, [e], s in subquery(scroll_depth_q), on: ^join_on_dim_condition)
-      |> select_merge_as([_e, ..., s], %{scroll_depth: fragment("any(?)", s.scroll_depth)})
+      joined_q =
+        join(q, :left, [e], s in subquery(scroll_depth_sum_q), on: ^join_on_dim_condition)
+
+      if query.include_imported do
+        joined_q
+        |> select_merge_as([..., s], %{
+          scroll_depth:
+            fragment(
+              """
+              case
+                when isNotNull(?) AND isNotNull(?) then
+                  toUInt8(round((? + ?) / (? + ?)))
+                when isNotNull(?) then
+                  toUInt8(round(? / ?))
+                when isNotNull(?) then
+                  toUInt8(round(? / ?))
+                else
+                  NULL
+              end
+              """,
+              # Case 1: Both imported and native scroll depth sums are present
+              selected_as(:__internal_scroll_depth_sum),
+              s.scroll_depth_sum,
+              selected_as(:__internal_scroll_depth_sum),
+              s.scroll_depth_sum,
+              selected_as(:__internal_pageleave_visitors),
+              s.pageleave_visitors,
+              # Case 2: Only imported scroll depth sum is present
+              selected_as(:__internal_scroll_depth_sum),
+              selected_as(:__internal_scroll_depth_sum),
+              selected_as(:__internal_pageleave_visitors),
+              # Case 3: Only native scroll depth sum is present
+              s.scroll_depth_sum,
+              s.scroll_depth_sum,
+              s.pageleave_visitors
+            )
+        })
+      else
+        joined_q
+        |> select_merge_as([..., s], %{
+          scroll_depth:
+            fragment(
+              "if(any(?) > 0, toUInt8(round(any(?) / any(?))), NULL)",
+              s.pageleave_visitors,
+              s.scroll_depth_sum,
+              s.pageleave_visitors
+            )
+        })
+      end
     else
       q
     end

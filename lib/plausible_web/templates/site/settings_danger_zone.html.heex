@@ -10,7 +10,7 @@
       href={Routes.membership_path(@conn, :transfer_ownership_form, @site.domain)}
       theme="danger"
     >
-      Transfer <%= @site.domain %> ownership
+      Transfer {@site.domain} ownership
     </.button_link>
   </.tile>
 
@@ -23,7 +23,7 @@
       data-confirm="Resetting the stats cannot be reversed. Are you sure?"
       theme="danger"
     >
-      Reset <%= @site.domain %> stats
+      Reset {@site.domain} stats
     </.button_link>
   </.tile>
 
@@ -36,7 +36,7 @@
       method="delete"
       data-confirm="Deleting the site data cannot be reversed. Are you sure?"
     >
-      Delete <%= @site.domain %>
+      Delete {@site.domain}
     </.button_link>
   </.tile>
 </.settings_tiles>

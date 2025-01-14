@@ -12,6 +12,38 @@ defmodule PlausibleWeb.SettingsController do
     redirect(conn, to: Routes.settings_path(conn, :preferences))
   end
 
+  def team_general(conn, _params) do
+    render_team_general(conn)
+  end
+
+  def update_team_name(conn, %{"team" => params}) do
+    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.my_team, params)
+
+    case Repo.update(changeset) do
+      {:ok, _user} ->
+        conn
+        |> put_flash(:success, "Team name changed")
+        |> redirect(to: Routes.settings_path(conn, :team_general) <> "#update-name")
+
+      {:error, changeset} ->
+        render_team_general(conn, team_name_changeset: changeset)
+    end
+  end
+
+  defp render_team_general(conn, opts \\ []) do
+    name_changeset =
+      Keyword.get(
+        opts,
+        :team_name_changeset,
+        Plausible.Teams.Team.name_changeset(conn.assigns.my_team)
+      )
+
+    render(conn, :team_general,
+      team_name_changeset: name_changeset,
+      layout: {PlausibleWeb.LayoutView, :settings}
+    )
+  end
+
   def preferences(conn, _params) do
     render_preferences(conn)
   end

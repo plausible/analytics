@@ -8,56 +8,50 @@
     </.styled_link>
     <div class="pb-5 border-b border-gray-200 dark:border-gray-500">
       <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
-        Settings for <%= @site.domain %>
+        Settings for {@site.domain}
       </h2>
     </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
       <div class="py-4 g:py-0 lg:col-span-3">
-        <.form
-          for={@conn}
-          action={"/sites/#{URI.encode_www_form(@site.domain)}"}
-          class="lg:hidden"
-        >
-          <% options = flat_settings_options(@conn) %>
-          <.input
-            type="select"
-            name="tab"
-            options={options}
-            class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
-            onchange={"location.href = '/" <> URI.encode_www_form(@site.domain) <> "/settings/' + event.target.value"}
-            value={Enum.find_value(options, &(is_current_tab(@conn, elem(&1, 1)) && elem(&1, 1)))}
-          />
-        </.form>
+        <% options = flat_site_settings_options(@conn) %>
+        <.mobile_nav_dropdown
+          conn={@conn}
+          options={options}
+          name="tab"
+          href_base={"/#{URI.encode_www_form(@site.domain)}/settings/"}
+          selected_fn={&is_current_tab(@conn, &1)}
+        />
+
         <div class="hidden lg:block">
-          <%= for %{key: key, value: value, icon: icon} <- settings_tabs(@conn) do %>
+          <%= for %{key: key, value: value, icon: icon} <- site_settings_sidebar(@conn) do %>
             <%= if is_binary(value) do %>
-              <%= render("_site_settings_tab.html",
+              {render("_site_settings_tab.html",
                 icon: icon,
                 this_tab: value,
                 text: key,
                 site: @site,
                 conn: @conn,
                 submenu?: false
-              ) %>
+              )}
             <% else %>
-              <%= render("_site_settings_tab.html",
+              {render("_site_settings_tab.html",
                 icon: icon,
                 this_tab: nil,
                 text: key,
                 site: @site,
                 conn: @conn,
                 submenu?: false
-              ) %>
+              )}
               <div class="ml-6">
                 <%= for %{key: key, value: val} <- value do %>
-                  <%= render("_site_settings_tab.html",
+                  {render("_site_settings_tab.html",
                     icon: nil,
                     this_tab: val,
                     text: key,
                     site: @site,
                     conn: @conn,
                     submenu?: true
-                  ) %>
+                  )}
                 <% end %>
               </div>
             <% end %>
@@ -66,7 +60,7 @@
       </div>
 
       <div class="space-y-6 lg:col-span-9 lg:mt-4">
-        <%= @inner_content %>
+        {@inner_content}
       </div>
     </div>
   </div>
