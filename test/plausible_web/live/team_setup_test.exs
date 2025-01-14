@@ -140,32 +140,18 @@ defmodule PlausibleWeb.Live.SitesTest do
       select_combo_option(lv, 0)
 
       lv
-      |> element(~s|.member a[phx-click="update-role"][phx-value-role="admin"]:nth-of-type(1)|)
+      |> element(~s|.member a[phx-click="update-role"][phx-value-role="admin"]|)
       |> render_click()
 
-      member2_row =
-        lv
-        |> render()
-        |> find(".member")
-        |> Enum.take(2)
-        |> find(".role")
-        |> text()
-
+      member2_row = lv |> render() |> find(".member:nth-of-type(2) .role") |> text()
       assert member2_row =~ "Admin"
 
-      # lv
-      # |> element(~s|.member a[phx-click="update-role"][phx-value-role="viewer"]:nth-of-type(1)|)
-      #                                                                 |> render_click()
-      #
-      # member2_row =
-      #   lv
-      #   |> render()
-      #   |> find(".member")
-      #   |> Enum.take(2)
-      #   |> find(".role")
-      #   |> text()
-      #
-      # assert member2_row =~ "Viewer"
+      lv
+      |> element(~s|.member a[phx-click="update-role"][phx-value-role="viewer"]|)
+      |> render_click()
+
+      member2_row = lv |> render() |> find(".member:nth-of-type(2) .role") |> text()
+      assert member2_row =~ "Viewer"
     end
   end
 

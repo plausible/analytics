@@ -255,7 +255,6 @@ defmodule PlausibleWeb.Live.Teams do
   end
 
   def handle_event("update-role", %{"name" => name, "email" => email, "role" => role}, socket) do
-    IO.inspect role
     updated_candidates =
       Map.put(socket.assigns.candidates_selected, {email, name}, String.to_existing_atom(role))
 
