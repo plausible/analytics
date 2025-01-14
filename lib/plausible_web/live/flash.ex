@@ -55,10 +55,10 @@ defmodule PlausibleWeb.Live.Flash do
             <.icon_success />
           </:icon>
           <:title>
-            <%= Flash.get(@flash, :success_title) || "Success!" %>
+            {Flash.get(@flash, :success_title) || "Success!"}
           </:title>
           <:message>
-            <%= Flash.get(@flash, :success) %>
+            {Flash.get(@flash, :success)}
           </:message>
         </.flash>
         <.flash :if={Flash.get(@flash, :error)} key="error">
@@ -66,10 +66,10 @@ defmodule PlausibleWeb.Live.Flash do
             <.icon_error />
           </:icon>
           <:title>
-            <%= Flash.get(@flash, :error_title) || "Error!" %>
+            {Flash.get(@flash, :error_title) || "Error!"}
           </:title>
           <:message>
-            <%= Flash.get(@flash, :error) %>
+            {Flash.get(@flash, :error)}
           </:message>
         </.flash>
         <.flash
@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Live.Flash do
   end
 
   slot(:icon, required: true)
-  slot(:title, require: true)
+  slot(:title, required: true)
   slot(:message, required: true)
   attr(:key, :string, default: nil)
   attr(:on_close, :any, default: "lv:clear-flash")
@@ -115,13 +115,13 @@ defmodule PlausibleWeb.Live.Flash do
       <div class="rounded-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
         <div class="p-4">
           <div class="flex items-start">
-            <%= render_slot(@icon) %>
+            {render_slot(@icon)}
             <div class="ml-3 w-0 flex-1 pt-0.5">
               <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-                <%= render_slot(@title) %>
+                {render_slot(@title)}
               </p>
               <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-                <%= render_slot(@message) %>
+                {render_slot(@message)}
               </p>
             </div>
             <div class="ml-4 flex-shrink-0 flex">

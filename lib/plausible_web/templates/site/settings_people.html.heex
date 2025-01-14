@@ -26,11 +26,11 @@
               <div class="flex-1 min-w-0">
                 <p class="text-sm truncate">
                   <span class="font-medium text-gray-900 dark:text-gray-50">
-                    <%= membership.user.name %>
+                    {membership.user.name}
                   </span>
                   <br />
                   <span class="text-gray-500 dark:text-gray-400">
-                    <%= membership.user.email %>
+                    {membership.user.email}
                   </span>
                   <.styled_link
                     :if={ee?() and Plausible.Auth.is_super_admin?(@current_user)}
@@ -44,7 +44,7 @@
 
               <.dropdown class="relative">
                 <:button class="bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-                  <%= membership.role |> to_string() |> String.capitalize() %>
+                  {membership.role |> to_string() |> String.capitalize()}
                   <Heroicons.chevron_down mini class="size-4 mt-0.5" />
                 </:button>
                 <:menu class="max-w-60">
@@ -145,8 +145,8 @@
         <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={invitation}>
-        <.td><%= invitation.email %></.td>
-        <.td hide_on_mobile><%= Phoenix.Naming.humanize(invitation.role) %></.td>
+        <.td>{invitation.email}</.td>
+        <.td hide_on_mobile>{Phoenix.Naming.humanize(invitation.role)}</.td>
         <.td actions>
           <.delete_button
             href={

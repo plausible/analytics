@@ -8,7 +8,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
 
   alias Plausible.Site.Memberships.RejectInvitation
 
-  test "rejects invitation and sends email to inviter" do
+  test "rejects guest invitation and sends email to inviter" do
     inviter = new_user()
     invitee = new_user()
     site = new_site(owner: inviter)
@@ -24,6 +24,47 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
     assert_email_delivered_with(
       to: [nil: inviter.email],
       subject: @subject_prefix <> "#{invitee.email} rejected your invitation to #{site.domain}"
+    )
+  end
+
+  test "rejects team invitation and sends email to inviter" do
+    inviter = new_user()
+    invitee = new_user()
+    _site = new_site(owner: inviter)
+    team = team_of(inviter)
+
+    invitation = invite_member(team, invitee, inviter: inviter, role: :editor)
+
+    assert {:ok, rejected_invitation} =
+             RejectInvitation.reject_invitation(invitation.invitation_id, invitee)
+
+    assert rejected_invitation.id == invitation.id
+    refute Repo.reload(rejected_invitation)
+
+    assert_email_delivered_with(
+      to: [nil: inviter.email],
+      subject:
+        @subject_prefix <> "#{invitee.email} rejected your invitation to \"#{team.name}\" team"
+    )
+  end
+
+  test "rejects site transfer and sends email to inviter" do
+    inviter = new_user()
+    invitee = new_user()
+    site = new_site(owner: inviter)
+
+    site_transfer = invite_transfer(site, invitee, inviter: inviter)
+
+    assert {:ok, rejected_transfer} =
+             RejectInvitation.reject_invitation(site_transfer.transfer_id, invitee)
+
+    assert rejected_transfer.id == site_transfer.id
+    refute Repo.reload(rejected_transfer)
+
+    assert_email_delivered_with(
+      to: [nil: inviter.email],
+      subject:
+        @subject_prefix <> "#{invitee.email} rejected the ownership transfer of #{site.domain}"
     )
   end
 

@@ -13,12 +13,12 @@
       Control Plugin Access
     </:subtitle>
 
-    <%= live_render(@conn, PlausibleWeb.Live.Plugins.API.Settings,
+    {live_render(@conn, PlausibleWeb.Live.Plugins.API.Settings,
       session: %{
         "site_id" => @site.id,
         "domain" => @site.domain,
         "new_token" => @conn.query_params["new_token"]
       }
-    ) %>
+    )}
   </.tile>
 </.settings_tiles>

@@ -29,7 +29,7 @@
         <% {:ok, domains} -> %>
           <%= if @site.google_auth.property && !(@site.google_auth.property in domains) do %>
             <.notice class="mt-4 mb-4">
-              Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
+              Your Google account does not have access to your currently configured property, {@site.google_auth.property}. Please select a verified property from the list below.
             </.notice>
           <% else %>
             <p class="text-sm mt-4">
@@ -117,7 +117,7 @@
         </path>
       </svg>
       <p>
-        An extra step is needed to set up your <%= Plausible.product_name() %> for the Google Search Console integration.
+        An extra step is needed to set up your {Plausible.product_name()} for the Google Search Console integration.
         Find instructions
         <.styled_link href="https://github.com/plausible/community-edition/wiki/google-integration">
           here

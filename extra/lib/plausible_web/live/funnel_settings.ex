@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       <.flash_messages flash={@flash} />
 
       <%= if @setup_funnel? do %>
-        <%= live_render(
+        {live_render(
           @socket,
           PlausibleWeb.Live.FunnelSettings.Form,
           id: "funnels-form",
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
             "domain" => @domain,
             "funnel_id" => @funnel_id
           }
-        ) %>
+        )}
       <% end %>
       <div :if={@goal_count >= Funnel.min_steps()}>
         <.live_component

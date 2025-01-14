@@ -114,12 +114,12 @@ defmodule PlausibleWeb.Components.Billing do
             class="text-sm dark:text-gray-100"
             x-bind:class={"tab === '#{@tab}' ? 'text-indigo-600 dark:text-indigo-500 font-semibold' : 'font-medium'"}
           >
-            <%= @name %>
+            {@name}
           </span>
           <span class="flex text-xs text-gray-500 dark:text-gray-400">
-            <%= if @disabled,
+            {if @disabled,
               do: "Not available",
-              else: PlausibleWeb.TextHelpers.format_date_range(@date_range) %>
+              else: PlausibleWeb.TextHelpers.format_date_range(@date_range)}
           </span>
         </div>
       </button>
@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <table class="min-w-full text-gray-900 dark:text-gray-100" {@rest}>
       <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
-        <%= render_slot(@inner_block) %>
+        {render_slot(@inner_block)}
       </tbody>
     </table>
     """
@@ -168,11 +168,11 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <tr {@rest}>
       <td class={["text-sm py-4 pr-1 sm:whitespace-nowrap text-left", @pad && "pl-6"]}>
-        <%= @title %>
+        {@title}
       </td>
       <td class="text-sm py-4 sm:whitespace-nowrap text-right">
-        <%= Cldr.Number.to_string!(@usage) %>
-        <%= if is_number(@limit), do: "/ #{Cldr.Number.to_string!(@limit)}" %>
+        {Cldr.Number.to_string!(@usage)}
+        {if is_number(@limit), do: "/ #{Cldr.Number.to_string!(@limit)}"}
       </td>
     </tr>
     """
@@ -186,7 +186,7 @@ defmodule PlausibleWeb.Components.Billing do
     >
       <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
       <div class="py-2 text-xl font-medium dark:text-gray-100">
-        <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
+        {PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long)}
       </div>
       <.styled_link
         :if={
@@ -196,7 +196,7 @@ defmodule PlausibleWeb.Components.Billing do
         id="#upgrade-or-change-plan-link"
         href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
       >
-        <%= change_plan_or_upgrade_text(@subscription) %>
+        {change_plan_or_upgrade_text(@subscription)}
       </.styled_link>
     </div>
     """
@@ -206,13 +206,13 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <ul class="w-full py-4">
       <li>
-        Up to <b><%= present_limit(@plan, :monthly_pageview_limit) %></b> monthly pageviews
+        Up to <b>{present_limit(@plan, :monthly_pageview_limit)}</b> monthly pageviews
       </li>
       <li>
-        Up to <b><%= present_limit(@plan, :site_limit) %></b> sites
+        Up to <b>{present_limit(@plan, :site_limit)}</b> sites
       </li>
       <li>
-        Up to <b><%= present_limit(@plan, :hourly_api_request_limit) %></b> hourly api requests
+        Up to <b>{present_limit(@plan, :hourly_api_request_limit)}</b> hourly api requests
       </li>
     </ul>
     """
@@ -258,7 +258,7 @@ defmodule PlausibleWeb.Components.Billing do
         @checkout_disabled && "pointer-events-none bg-gray-400 dark:bg-gray-600"
       ]}
     >
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </button>
     """
   end
