@@ -1,12 +1,12 @@
 <%= if @success do %>
-  Your CSV import has completed successfully. The Plausible dashboard for <%= @site_import.site.domain %> now contains historical imported data from <%= date_format(
+  Your CSV import has completed successfully. The Plausible dashboard for {@site_import.site.domain} now contains historical imported data from {date_format(
     @site_import.start_date
-  ) %> to <%= date_format(@site_import.end_date) %>
+  )} to {date_format(@site_import.end_date)}
   <br /><br />
   <a href={@link}>Click here</a>
   to view your dashboard.
 <% else %>
-  Unfortunately, your CSV import for <%= @site_import.site.domain %> did not complete successfully. Sorry about that!
+  Unfortunately, your CSV import for {@site_import.site.domain} did not complete successfully. Sorry about that!
   <br /><br /> Please try to do the import once again.
   <%= if ee?() do %>
     <br /> <br />

@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
 
     ~H"""
     <.notice :if={@import_warning} theme={:gray}>
-      <%= @import_warning %>
+      {@import_warning}
     </.notice>
 
     <div class="mt-4 flex justify-end gap-x-4">
@@ -132,24 +132,22 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
                 class="max-w-sm"
                 title={"#{Plausible.Imported.SiteImport.label(entry.site_import)} created at #{format_date(entry.site_import.inserted_at)}"}
               >
-                <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+                {Plausible.Imported.SiteImport.label(entry.site_import)}
               </div>
             </div>
           </.td>
 
           <.td hide_on_mobile>
-            <%= format_date(entry.site_import.start_date) %> - <%= format_date(
-              entry.site_import.end_date
-            ) %>
+            {format_date(entry.site_import.start_date)} - {format_date(entry.site_import.end_date)}
           </.td>
 
           <.td>
             <div class="text-right">
-              <%= if entry.live_status == SiteImport.completed(),
+              {if entry.live_status == SiteImport.completed(),
                 do:
                   PlausibleWeb.StatsView.large_number_format(
                     pageview_count(entry.site_import, @pageview_counts)
-                  ) %>
+                  )}
             </div>
           </.td>
           <.td actions>

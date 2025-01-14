@@ -60,7 +60,6 @@ defmodule PlausibleWeb do
 
       use Phoenix.Component
 
-      import PlausibleWeb.ErrorHelpers
       import PlausibleWeb.Components.Generic
       import PlausibleWeb.Live.Components.Form
       alias PlausibleWeb.Router.Helpers, as: Routes

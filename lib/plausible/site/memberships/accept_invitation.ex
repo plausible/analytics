@@ -28,6 +28,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   @type accept_error() ::
           :invitation_not_found
+          | :already_other_team_member
           | Billing.Quota.Limits.over_limits_error()
           | Ecto.Changeset.t()
           | :no_plan
@@ -59,8 +60,11 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
         %Teams.SiteTransfer{} = site_transfer ->
           do_accept_ownership_transfer(site_transfer, user)
 
+        %Teams.Invitation{} = team_invitation ->
+          do_accept_team_invitation(team_invitation, user)
+
         %Teams.GuestInvitation{} = guest_invitation ->
-          do_accept_invitation(guest_invitation, user)
+          do_accept_guest_invitation(guest_invitation, user)
       end
     end
   end
@@ -103,7 +107,21 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp do_accept_invitation(guest_invitation, user) do
+  defp do_accept_guest_invitation(guest_invitation, user) do
     Teams.Invitations.accept_guest_invitation(guest_invitation, user)
+  end
+
+  defp do_accept_team_invitation(team_invitation, user) do
+    with :ok <- ensure_no_other_team_membership(team_invitation.team, user) do
+      Teams.Invitations.accept_team_invitation(team_invitation, user)
+    end
+  end
+
+  defp ensure_no_other_team_membership(team, user) do
+    if Teams.Users.team_member?(user, except: [team.id]) do
+      {:error, :already_other_team_member}
+    else
+      :ok
+    end
   end
 end

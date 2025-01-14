@@ -41,6 +41,7 @@ COPY tracker ./tracker
 COPY priv ./priv
 COPY lib ./lib
 COPY extra ./extra
+COPY storybook ./storybook
 
 RUN npm run deploy --prefix ./tracker && \
   mix assets.deploy && \

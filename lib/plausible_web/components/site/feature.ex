@@ -26,12 +26,12 @@ defmodule PlausibleWeb.Components.Site.Feature do
         class={@class}
       >
         <.toggle_submit set_to={@current_setting} disabled?={@disabled?}>
-          Show <%= @feature_mod.display_name() %> in the Dashboard
+          Show {@feature_mod.display_name()} in the Dashboard
         </.toggle_submit>
       </.form>
 
       <div :if={@current_setting}>
-        <%= render_slot(@inner_block) %>
+        {render_slot(@inner_block)}
       </div>
     </div>
     """
