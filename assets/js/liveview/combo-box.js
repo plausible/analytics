@@ -11,6 +11,7 @@ export default (id) => ({
     this.focus = f;
   },
   initFocus() {
+    console.log('init focus called')
     if (this.focus === null) {
       this.setFocus(this.leastFocusableIndex())
       if (!this.firstFocusRegistered) {
@@ -26,6 +27,7 @@ export default (id) => ({
   },
   open() {
     if (!this.isOpen) {
+      console.log('open triggered')
       this.initFocus()
       this.isOpen = true
     }
@@ -54,6 +56,7 @@ export default (id) => ({
     return currentFocus - 1 >= this.leastFocusableIndex() ? currentFocus - 1 : this.maxFocusableIndex()
   },
   close(e) {
+    console.log('close called')
     // Pressing Escape should not propagate to window,
     // so we'll only close the suggestions pop-up
     if (this.isOpen && e.key === "Escape") {
@@ -62,6 +65,7 @@ export default (id) => ({
     this.isOpen = false
   },
   select() {
+    console.log('select called')
     this.$refs[`dropdown-${this.id}-option-${this.focus}`]?.click()
     this.close()
     document.getElementById(this.id).blur()
