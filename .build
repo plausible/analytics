@@ -273,6 +273,7 @@ PlausibleWeb.Api.ExternalController.html
 PlausibleWeb.Api.ExternalSitesController.html
 PlausibleWeb.Api.ExternalStatsController.html
 PlausibleWeb.Api.Helpers.html
+PlausibleWeb.Api.Internal.SegmentsController.html
 PlausibleWeb.Api.InternalController.html
 PlausibleWeb.Api.PaddleController.html
 PlausibleWeb.Api.StatsController.html
@@ -402,6 +403,7 @@ PlausibleWeb.Plugs.AuthorizePluginsAPI.html
 PlausibleWeb.Plugs.AuthorizePublicAPI.html
 PlausibleWeb.Plugs.AuthorizeSiteAccess.html
 PlausibleWeb.Plugs.ErrorHandler.html
+PlausibleWeb.Plugs.FeatureFlagCheckPlug.html
 PlausibleWeb.Plugs.MaybeDisableRegistration.html
 PlausibleWeb.Plugs.NoRobots.html
 PlausibleWeb.Plugs.UserSessionTouch.html
@@ -445,8 +447,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-95ECEDA8.js
-dist/sidebar_items-D08A90DC.js
+dist/search_data-FC860BF3.js
+dist/sidebar_items-04D7F711.js
 index.html
 readme.html
 search.html
