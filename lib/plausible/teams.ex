@@ -264,23 +264,20 @@ defmodule Plausible.Teams do
   def setup_team(team, candidates) do
     inviter = Repo.preload(team, :owner).owner
 
+    setup_team_fn = fn {{email, _name}, role} ->
+      case Teams.Invitations.InviteToTeam.invite(team, inviter, email, role, send_email?: false) do
+        {:ok, invitation} -> invitation
+        {:error, error} -> Repo.rollback(error)
+      end
+    end
+
     result =
       Repo.transaction(fn ->
         team
         |> Teams.Team.setup_changeset()
         |> Repo.update!()
 
-        Enum.map(
-          candidates,
-          fn {{email, _name}, role} ->
-            case Teams.Invitations.InviteToTeam.invite(team, inviter, email, role,
-                   send_email?: false
-                 ) do
-              {:ok, invitation} -> invitation
-              {:error, error} -> Repo.rollback(error)
-            end
-          end
-        )
+        Enum.map(candidates, setup_team_fn)
       end)
 
     case result do
