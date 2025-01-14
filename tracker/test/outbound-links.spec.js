@@ -1,17 +1,17 @@
-const { mockRequest, metaKey, pageActionAndExpectEventRequests } = require('./support/test-utils')
+const { mockRequest, metaKey, expectPlausibleInAction } = require('./support/test-utils')
 const { expect, test } = require('@playwright/test')
 
 test.describe('outbound-links extension', () => {
-
   test('sends event and does not navigate when link opens in new tab', async ({ page }) => {
     await page.goto('/outbound-link.html')
     const outboundURL = await page.locator('#link').getAttribute('href')
 
     const navigationRequestMock = mockRequest(page, outboundURL)
     
-    await pageActionAndExpectEventRequests(page, () => page.click('#link', { modifiers: [metaKey()] }), [
-      {n: 'Outbound Link: Click', p: { url: outboundURL }}
-    ])
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#link', { modifiers: [metaKey()] }),
+      expectedRequests: [{n: 'Outbound Link: Click', p: { url: outboundURL }}]
+    })
 
     expect(await navigationRequestMock, "should not have made navigation request").toBeNull()
   })
@@ -22,9 +22,10 @@ test.describe('outbound-links extension', () => {
 
     const navigationRequestMock = mockRequest(page, outboundURL)
 
-    await pageActionAndExpectEventRequests(page, () => page.click('#link-child'), [
-      {n: 'Outbound Link: Click', p: { url: outboundURL }}
-    ])
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#link-child'),
+      expectedRequests: [{n: 'Outbound Link: Click', p: { url: outboundURL }}]
+    })
 
     const navigationRequest = await navigationRequestMock
     expect(navigationRequest.url()).toContain(outboundURL)
@@ -35,10 +36,11 @@ test.describe('outbound-links extension', () => {
     const outboundURL = await page.locator('#link-default-prevented').getAttribute('href')
 
     const navigationRequestMock = mockRequest(page, outboundURL)
-    
-    await pageActionAndExpectEventRequests(page, () => page.click('#link-default-prevented'), [
-      {n: 'Outbound Link: Click', p: { url: outboundURL }}
-    ])
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#link-default-prevented'),
+      expectedRequests: [{n: 'Outbound Link: Click', p: { url: outboundURL }}]
+    })
 
     expect(await navigationRequestMock, "should not have made navigation request").toBeNull()
   })

@@ -1,4 +1,4 @@
-const { expect } = require("@playwright/test");
+const { expect, Page } = require("@playwright/test");
 
 // Since pageleave events in the Plausible script are throttled to 500ms, we
 // often need to wait for an artificial timeout before navigating in tests.
@@ -54,23 +54,43 @@ exports.mockManyRequests = mockManyRequests
  * A powerful utility function that makes it easy to assert on the event
  * requests that should or should not have been made after doing a page
  * action (e.g. navigating to the page, clicking a page element, etc). 
- * 
- * This function accepts subsets of request bodies (the JSON payloads) as
- * arguments, and compares them with the bodies of the requests that were
- * actually made. For a body subset to match a request, all the key-value
- * pairs present in the subset should also appear in the request body.
+ *
+ * @param {Page} page - The Playwright Page object.
+ * @param {Object} args - The object configuring the action and related expectations.
+ * @param {Function} args.action - A function that returns a promise. The function is called
+ *  without arguments, and is `await`ed. This is the action that should or should not trigger
+ *  Plausible requests on the page.
+ * @param {Array} [args.expectedRequests] - A list of partial JSON payloads that get matched 
+ *  against the bodies of event requests made. An `expectedRequest` is considered as having
+ *  occurred if all of its key-value pairs are found from the JSON body of an event request
+ *  that was made. The default value is `[]`
+ * @param {Array} [args.refutedRequests] - Same as `expectedRequests` but the opposite. The
+ *  expectation passes if none of the made requests match with these partial payloads. Note
+ *  that the condition on which a partial payload matches an event request payload is exactly
+ *  the same as it is for `expectedRequests`. The default value is `[]`
+ * @param {number} [args.awaitedRequestCount] - Sometimes we might want to wait for more events
+ *  to happen, just to make sure they didn't. By default, the number of requests we wait for
+ *  is `expectedRequests.length + refutedRequests.length`.
+ * @param {number} [args.expectedRequestCount] - When provided, expects the total amount of
+ *  event requests made to match this number.
  */
-exports.pageActionAndExpectEventRequests = async function (page, pageActionFn, expectedBodySubsets, refutedBodySubsets = [], eventsToAwait = null) {
-  const requestsToExpect = expectedBodySubsets.length
-  const requestsToAwait = eventsToAwait ? eventsToAwait : requestsToExpect + refutedBodySubsets.length
+exports.expectPlausibleInAction = async function (page, {
+  action,
+  expectedRequests = [],
+  refutedRequests = [],
+  awaitedRequestCount,
+  expectedRequestCount
+}) {
+  const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
+  const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
   
   const plausibleRequestMockList = mockManyRequests(page, '/api/event', requestsToAwait)
-  await pageActionFn()
+  await action()
   const requestBodies = (await plausibleRequestMockList).map(r => r.postDataJSON())
 
   const expectedButNotFoundBodySubsets = []
 
-  expectedBodySubsets.forEach((bodySubset) => {
+  expectedRequests.forEach((bodySubset) => {
     const wasFound = requestBodies.some((requestBody) => {
       return includesSubset(requestBody, bodySubset)
     })
@@ -80,7 +100,7 @@ exports.pageActionAndExpectEventRequests = async function (page, pageActionFn, e
 
   const refutedButFoundRequestBodies = []
 
-  refutedBodySubsets.forEach((bodySubset) => {
+  refutedRequests.forEach((bodySubset) => {
     const found = requestBodies.find((requestBody) => {
       return includesSubset(requestBody, bodySubset)
     })
