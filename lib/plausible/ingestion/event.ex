@@ -130,7 +130,8 @@ defmodule Plausible.Ingestion.Event do
       put_user_id: &put_user_id/2,
       validate_clickhouse_event: &validate_clickhouse_event/2,
       register_session: &register_session/2,
-      write_to_buffer: &write_to_buffer/2
+      write_to_buffer: &write_to_buffer/2,
+      update_scroll_depth_enabled: &update_scroll_depth_enabled/2
     ]
   end
 
@@ -402,6 +403,19 @@ defmodule Plausible.Ingestion.Event do
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event, _context) do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
     emit_telemetry_buffered(event)
+    event
+  end
+
+  defp update_scroll_depth_enabled(%__MODULE__{site: site} = event, _context) do
+    if not site.scroll_depth_enabled and not is_nil(event.scroll_depth) and event.scroll_depth > 0 do
+      site
+      |> Ecto.Changeset.change(updated_at: now)
+      |> Plausible.Repo.update!()
+
+      updated_site = Map.put(site, :scroll_depth_enabled, true)
+      Plausible.Cache.update(site.domain, updated_site)
+    end
+
     event
   end
 

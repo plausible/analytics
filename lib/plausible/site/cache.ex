@@ -31,6 +31,7 @@ defmodule Plausible.Site.Cache do
     domain_changed_from
     ingest_rate_limit_scale_seconds
     ingest_rate_limit_threshold
+    scroll_depth_enabled
    )a
 
   @impl true
@@ -88,6 +89,14 @@ defmodule Plausible.Site.Cache do
     site
     |> Ecto.Changeset.change(updated_at: now)
     |> Plausible.Repo.update!()
+  end
+
+  @doc """
+  Updates the cache with a new site struct. Used when a site is updated during
+  ingestion to minimize later updates
+  """
+  def update(domain, site) do
+    Plausible.Cache.Adapter.put(name(), domain, site)
   end
 
   @impl true
