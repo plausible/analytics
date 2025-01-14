@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
   end
 
-  describe "/team/setup" do
+  describe "/team/setup - functional details" do
     setup [:create_user, :log_in, :create_team]
 
     test "renders form", %{conn: conn} do
@@ -152,6 +152,27 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       member2_row = lv |> render() |> find(".member:nth-of-type(2) .role") |> text()
       assert member2_row =~ "Viewer"
+    end
+
+    test "member candidate suggestion disappears when selected", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      guest = add_guest(site, role: :viewer)
+
+      {:ok, lv, _html} = live(conn, @url)
+
+      type_into_combo(lv, "team-member-candidates", guest.email)
+
+      assert lv
+             |> render()
+             |> find("#dropdown-team-member-candidates")
+             |> text() =~ guest.email
+
+      select_combo_option(lv, 1)
+
+      refute lv
+             |> render()
+             |> find("#dropdown-team-member-candidates")
+             |> text() =~ guest.email
     end
   end
 
