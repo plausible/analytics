@@ -120,7 +120,7 @@ defmodule PlausibleWeb.Live.SitesTest do
                "Sorry, e-mail '#{user.email}' is invalid. Please type the address again."
     end
 
-    test "owner's role dropdown consists of inactive options", %{conn: conn, user: user} do
+    test "owner's role dropdown consists of inactive options", %{conn: conn} do
       {:ok, _lv, html} = live(conn, @url)
 
       assert html
@@ -132,7 +132,7 @@ defmodule PlausibleWeb.Live.SitesTest do
              end)
     end
 
-    test "candidate's role dropdown allows changing role", %{conn: conn, user: user} do
+    test "candidate's role dropdown allows changing role", %{conn: conn} do
       new_member_email = build(:user).email
       {:ok, lv, _html} = live(conn, @url)
 
