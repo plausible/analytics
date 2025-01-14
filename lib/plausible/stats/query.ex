@@ -181,8 +181,9 @@ defmodule Plausible.Stats.Query do
   def trace(%__MODULE__{} = query, metrics) do
     filter_keys =
       query.filters
-      |> Enum.map(fn [_op, prop | _rest] -> prop end)
+      |> Plausible.Stats.Filters.dimensions_used_in_filters()
       |> Enum.sort()
+      |> Enum.uniq()
       |> Enum.join(";")
 
     metrics = metrics |> Enum.sort() |> Enum.join(";")

@@ -29,14 +29,16 @@ export const FILTER_OPERATIONS = {
   is: 'is',
   isNot: 'is_not',
   contains: 'contains',
-  contains_not: 'contains_not'
+  contains_not: 'contains_not',
+  has_done_not: 'has_done_not'
 }
 
 export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.is]: 'is',
   [FILTER_OPERATIONS.isNot]: 'is not',
   [FILTER_OPERATIONS.contains]: 'contains',
-  [FILTER_OPERATIONS.contains_not]: 'does not contain'
+  [FILTER_OPERATIONS.contains_not]: 'does not contain',
+  [FILTER_OPERATIONS.has_done_not]: 'has not done'
 }
 
 export function supportsIsNot(filterName) {
@@ -47,6 +49,10 @@ export function supportsContains(filterName) {
   return !['screen']
     .concat(FILTER_MODAL_TO_FILTER_GROUP['location'])
     .includes(filterName)
+}
+
+export function supportsHasDoneNot(filterName) {
+  return filterName === 'goal'
 }
 
 export function isFreeChoiceFilterOperation(operation) {
@@ -194,20 +200,23 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
 const EVENT_FILTER_KEYS = new Set(['name', 'page', 'goal', 'hostname'])
 
 export function serializeApiFilters(filters) {
-  const apiFilters = filters.map(
-    ([operation, filterKey, clauses, ...modifiers]) => {
-      let apiFilterKey = `visit:${filterKey}`
-      if (
-        filterKey.startsWith(EVENT_PROPS_PREFIX) ||
-        EVENT_FILTER_KEYS.has(filterKey)
-      ) {
-        apiFilterKey = `event:${filterKey}`
-      }
-      return [operation, apiFilterKey, clauses, ...modifiers]
-    }
-  )
-
+  const apiFilters = filters.map(serializeFilter)
   return JSON.stringify(apiFilters)
+}
+
+function serializeFilter([operation, filterKey, clauses, ...modifiers]) {
+  let apiFilterKey = `visit:${filterKey}`
+  if (
+    filterKey.startsWith(EVENT_PROPS_PREFIX) ||
+    EVENT_FILTER_KEYS.has(filterKey)
+  ) {
+    apiFilterKey = `event:${filterKey}`
+  }
+  if (operation === FILTER_OPERATIONS.has_done_not) {
+    return ['has_done_not', ['is', apiFilterKey, clauses, ...modifiers]]
+  } else {
+    return [operation, apiFilterKey, clauses, ...modifiers]
+  }
 }
 
 export function fetchSuggestions(apiPath, query, input, additionalFilter) {
