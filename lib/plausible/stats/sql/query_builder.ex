@@ -139,7 +139,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   defp dimension_group_by(q, _table, query, "event:goal" = dimension) do
-    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+    {events, page_regexes} =
+      Filters.Utils.split_goals_query_expressions(query.preloaded_goals.matching_toplevel_filters)
 
     from(e in q,
       join: goal in Expression.event_goal_join(events, page_regexes),

@@ -58,7 +58,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         |> Query.set(
           dimensions: [],
           include_imported: query.include_imported,
-          preloaded_goals: [],
+          preloaded_goals: Map.put(query.preloaded_goals, :matching_toplevel_filters, []),
           pagination: nil
         )
 
@@ -102,7 +102,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           metrics: [:visitors],
           order_by: [],
           include_imported: query.include_imported,
-          preloaded_goals: [],
+          preloaded_goals: Map.put(query.preloaded_goals, :matching_toplevel_filters, []),
           pagination: nil
         )
 

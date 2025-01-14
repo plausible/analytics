@@ -144,7 +144,7 @@ defmodule Plausible.Stats.Imported.Base do
   defp do_decide_tables(%Query{dimensions: ["event:goal"]} = query) do
     filter_dimensions = dimensions_used_in_filters(query.filters)
 
-    filter_goals = query.preloaded_goals
+    filter_goals = query.preloaded_goals.matching_toplevel_filters
 
     any_event_goals? = Enum.any?(filter_goals, fn goal -> Plausible.Goal.type(goal) == :event end)
 
@@ -177,7 +177,7 @@ defmodule Plausible.Stats.Imported.Base do
       |> Enum.map(&@property_to_table_mappings[&1])
 
     filter_goal_table_candidates =
-      query.preloaded_goals
+      query.preloaded_goals.matching_toplevel_filters
       |> Enum.map(&Plausible.Goal.type/1)
       |> Enum.map(fn
         :event -> "imported_custom_events"

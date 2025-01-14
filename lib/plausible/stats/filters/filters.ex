@@ -3,6 +3,7 @@ defmodule Plausible.Stats.Filters do
   A module for parsing filters used in stat queries.
   """
 
+  alias Plausible.Stats.Query
   alias Plausible.Stats.Filters.QueryParser
   alias Plausible.Stats.Filters.StatsAPIFilterParser
 
@@ -111,7 +112,20 @@ defmodule Plausible.Stats.Filters do
   end
 
   def filtering_on_dimension?(query, dimension) do
-    dimension in dimensions_used_in_filters(query.filters)
+    filters =
+      case query do
+        %Query{filters: filters} -> filters
+        %{filters: filters} -> filters
+        filters when is_list(filters) -> filters
+      end
+
+    dimension in dimensions_used_in_filters(filters)
+  end
+
+  def all_leaf_filters(filters) do
+    filters
+    |> traverse(nil, fn _, _ -> nil end)
+    |> Enum.map(fn {filter, _} -> filter end)
   end
 
   @doc """
@@ -168,7 +182,10 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  defp traverse(filters, state, state_transformer) do
+  @doc """
+  Traverses a filter tree while accumulating state.
+  """
+  def traverse(filters, state, state_transformer) do
     filters
     |> Enum.flat_map(&traverse_tree(&1, state, state_transformer))
   end

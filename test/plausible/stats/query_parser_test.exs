@@ -83,15 +83,17 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   def check_goals(actual, opts) do
-    preloaded_goal_names =
-      actual[:preloaded_goals]
-      |> Enum.map(& &1.display_name)
-      |> Enum.sort()
+    assert goal_names(actual[:preloaded_goals][:all]) ==
+             Enum.sort(Keyword.get(opts, :preloaded_goals)[:all])
 
-    assert preloaded_goal_names == Keyword.get(opts, :preloaded_goals)
+    assert goal_names(actual[:preloaded_goals][:matching_toplevel_filters]) ==
+             Enum.sort(Keyword.get(opts, :preloaded_goals)[:matching_toplevel_filters])
+
     assert actual[:revenue_warning] == Keyword.get(opts, :revenue_warning)
     assert actual[:revenue_currencies] == Keyword.get(opts, :revenue_currencies)
   end
+
+  defp goal_names(goals), do: Enum.map(goals, & &1.display_name) |> Enum.sort()
 
   test "parsing empty map fails", %{site: site} do
     %{}
@@ -597,6 +599,21 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
+    test "fails when nesting behavioral filters", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["has_done", ["has_done_not", ["is", "visit:browser", ["Chrome"]]]]
+        ]
+      }
+      |> check_error(
+        site,
+        "Invalid filters. Behavioral filters (has_done, has_done_not) cannot be nested."
+      )
+    end
+
     for operator <- ["not", "or", "has_done", "has_done_not"] do
       test "invalid `#{operator}` clause", %{site: site} do
         %{
@@ -733,7 +750,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
         pagination: %{limit: 10_000, offset: 0}
       })
-      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+      |> check_goals(
+        preloaded_goals: %{
+          all: ["Contact", "Purchase", "Signup"],
+          matching_toplevel_filters: ["Purchase", "Signup"]
+        },
+        revenue_currencies: %{}
+      )
     end
 
     test "with case insensitive match", %{site: site} do
@@ -753,7 +776,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
         pagination: %{limit: 10_000, offset: 0}
       })
-      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+      |> check_goals(
+        preloaded_goals: %{
+          all: ["Contact", "Purchase", "Signup"],
+          matching_toplevel_filters: ["Purchase", "Signup"]
+        },
+        revenue_currencies: %{}
+      )
     end
 
     test "with contains match", %{site: site} do
@@ -773,7 +802,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
         pagination: %{limit: 10_000, offset: 0}
       })
-      |> check_goals(preloaded_goals: ["Signup"], revenue_currencies: %{})
+      |> check_goals(
+        preloaded_goals: %{
+          all: ["Contact", "Purchase", "Signup"],
+          matching_toplevel_filters: ["Signup"]
+        },
+        revenue_currencies: %{}
+      )
     end
 
     test "with case insensitive contains match", %{site: site} do
@@ -793,7 +828,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
         pagination: %{limit: 10_000, offset: 0}
       })
-      |> check_goals(preloaded_goals: ["Contact", "Signup"], revenue_currencies: %{})
+      |> check_goals(
+        preloaded_goals: %{
+          all: ["Contact", "Purchase", "Signup"],
+          matching_toplevel_filters: ["Contact", "Signup"]
+        },
+        revenue_currencies: %{}
+      )
     end
   end
 
@@ -1027,7 +1068,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       insert(:goal, %{site: site, event_name: "Signup"})
       insert(:goal, %{site: site, page_path: "/thank-you"})
 
-      params = %{
+      %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
@@ -1035,26 +1076,29 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           ["is", "event:goal", ["Signup", "Visit /thank-you"]]
         ]
       }
-
-      assert {:ok, res} = parse(site, :public, params, @now)
-      expected_timezone = site.timezone
-
-      assert %{
-               metrics: [:visitors],
-               utc_time_range: @date_range_day,
-               filters: [
-                 [:is, "event:goal", ["Signup", "Visit /thank-you"]]
-               ],
-               dimensions: [],
-               order_by: nil,
-               timezone: ^expected_timezone,
-               include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-               pagination: %{limit: 10_000, offset: 0},
-               preloaded_goals: [
-                 %Plausible.Goal{page_path: "/thank-you"},
-                 %Plausible.Goal{event_name: "Signup"}
-               ]
-             } = res
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [
+            [:is, "event:goal", ["Signup", "Visit /thank-you"]]
+          ],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: %{
+          all: ["Signup", "Visit /thank-you"],
+          matching_toplevel_filters: ["Signup", "Visit /thank-you"]
+        },
+        revenue_warning: nil,
+        revenue_currencies: %{}
+      )
     end
 
     test "invalid event filter", %{site: site} do
@@ -1120,6 +1164,72 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_error(
         site,
         "Invalid filters. Dimension `event:goal` can only be filtered at the top level."
+      )
+    end
+
+    test "allowed within behavioral filters has_done", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          [
+            "has_done",
+            [
+              "or",
+              [
+                ["is", "event:goal", ["Signup"]],
+                ["is", "event:name", ["pageview"]]
+              ]
+            ]
+          ]
+        ]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [
+            [
+              :has_done,
+              [
+                :or,
+                [
+                  [:is, "event:goal", ["Signup"]],
+                  [:is, "event:name", ["pageview"]]
+                ]
+              ]
+            ]
+          ],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        }
+      )
+      |> check_goals(
+        preloaded_goals: %{all: ["Signup"], matching_toplevel_filters: ["Signup"]},
+        revenue_warning: nil,
+        revenue_currencies: %{}
+      )
+    end
+
+    test "name is checked even within behavioral filters", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["has_done", ["is", "event:goal", ["Unknown"]]]]
+      }
+      |> check_error(
+        site,
+        "The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
       )
     end
   end
@@ -1550,7 +1660,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
         pagination: %{limit: 10_000, offset: 0}
       })
-      |> check_goals(preloaded_goals: ["Signup"], revenue_currencies: %{})
+      |> check_goals(
+        preloaded_goals: %{
+          all: ["Purchase", "Signup"],
+          matching_toplevel_filters: ["Signup"]
+        },
+        revenue_currencies: %{}
+      )
     end
 
     test "succeeds with event:goal dimension", %{site: site} do
@@ -1573,7 +1689,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
         pagination: %{limit: 10_000, offset: 0}
       })
-      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+      |> check_goals(
+        preloaded_goals: %{
+          all: ["Purchase", "Signup"],
+          matching_toplevel_filters: ["Purchase", "Signup"]
+        },
+        revenue_currencies: %{}
+      )
     end
 
     test "custom properties filter with special metric", %{site: site} do
@@ -1708,7 +1830,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
         pagination: %{limit: 10_000, offset: 0}
       })
-      |> check_goals(preloaded_goals: ["Signup"], revenue_currencies: %{})
+      |> check_goals(
+        preloaded_goals: %{all: ["Signup"], matching_toplevel_filters: ["Signup"]},
+        revenue_currencies: %{}
+      )
     end
 
     test "fails validation if event:page filter specified", %{site: site} do
@@ -1766,7 +1891,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
       )
       |> check_goals(
-        preloaded_goals: [],
+        preloaded_goals: %{
+          all: [],
+          matching_toplevel_filters: []
+        },
         revenue_warning: :no_revenue_goals_matching,
         revenue_currencies: %{}
       )
@@ -1821,7 +1949,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
       )
       |> check_goals(
-        preloaded_goals: ["PurchaseUSD", "Signup", "Subscription"],
+        preloaded_goals: %{
+          all: ["PurchaseUSD", "Signup", "Subscription", "Logout"],
+          matching_toplevel_filters: ["PurchaseUSD", "Signup", "Subscription"]
+        },
         revenue_warning: nil,
         revenue_currencies: %{default: :USD}
       )
@@ -1852,7 +1983,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
       )
       |> check_goals(
-        preloaded_goals: ["Purchase", "Signup", "Subscription"],
+        preloaded_goals: %{
+          all: ["Purchase", "Signup", "Subscription"],
+          matching_toplevel_filters: ["Purchase", "Signup", "Subscription"]
+        },
         revenue_warning: :no_single_revenue_currency,
         revenue_currencies: %{}
       )
@@ -1883,7 +2017,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
       )
       |> check_goals(
-        preloaded_goals: ["Signup"],
+        preloaded_goals: %{
+          all: ["Purchase", "Subscription", "Signup"],
+          matching_toplevel_filters: ["Signup"]
+        },
         revenue_warning: :no_revenue_goals_matching,
         revenue_currencies: %{}
       )
@@ -1914,7 +2051,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
       )
       |> check_goals(
-        preloaded_goals: ["Donation", "Purchase", "Signup"],
+        preloaded_goals: %{
+          all: ["Donation", "Purchase", "Signup"],
+          matching_toplevel_filters: ["Donation", "Purchase", "Signup"]
+        },
         revenue_warning: nil,
         revenue_currencies: %{"Donation" => :EUR, "Purchase" => :USD}
       )
@@ -1947,7 +2087,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
       )
       |> check_goals(
-        preloaded_goals: ["Purchase", "Signup", "Subscription"],
+        preloaded_goals: %{
+          all: ["Logout", "Purchase", "Signup", "Subscription"],
+          matching_toplevel_filters: ["Purchase", "Signup", "Subscription"]
+        },
         revenue_warning: nil,
         revenue_currencies: %{"Purchase" => :USD, "Subscription" => :EUR}
       )
@@ -1982,7 +2125,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
       )
       |> check_goals(
-        preloaded_goals: ["Signup"],
+        preloaded_goals: %{
+          all: ["Logout", "Signup", "Subscription", "Purchase"],
+          matching_toplevel_filters: ["Signup"]
+        },
         revenue_warning: :no_revenue_goals_matching,
         revenue_currencies: %{}
       )
