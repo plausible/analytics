@@ -7,6 +7,10 @@ import {
 
 const permittedCharactersInURLParamKeyValue = ',:/'
 
+function isV2(urlSearchParams: URLSearchParams): boolean {
+  return !!urlSearchParams.get('filters')
+}
+
 function encodeSearchParamEntry([k, v]: [string, string]): string {
   return [k, v]
     .map((s) =>
@@ -15,11 +19,9 @@ function encodeSearchParamEntry([k, v]: [string, string]): string {
     .join('=')
 }
 
-export function legacyStringifySearch(
-  searchRecord: Record<string, unknown>
-): '' | string {
+function stringifySearch(searchRecord: Record<string, unknown>): '' | string {
   const definedSearchEntries = Object.entries(searchRecord || {})
-    .map(legacyStringifySearchEntry)
+    .map(stringifySearchEntry)
     .filter(isSearchEntryDefined)
 
   const encodedSearchEntries = definedSearchEntries.map(encodeSearchParamEntry)
@@ -27,7 +29,7 @@ export function legacyStringifySearch(
   return encodedSearchEntries.length ? `?${encodedSearchEntries.join('&')}` : ''
 }
 
-export function legacyStringifySearchEntry([key, value]: [string, unknown]): [
+function stringifySearchEntry([key, value]: [string, unknown]): [
   string,
   undefined | string
 ] {
@@ -42,9 +44,7 @@ export function legacyStringifySearchEntry([key, value]: [string, unknown]): [
   return [key, JsonURL.stringify(value)]
 }
 
-export function legacyParseSearchFragment(
-  searchStringFragment: string
-): null | unknown {
+function parseSearchFragment(searchStringFragment: string): null | unknown {
   if (searchStringFragment === '') {
     return null
   }
@@ -68,13 +68,17 @@ export function legacyParseSearchFragment(
   }
 }
 
-export function legacyParseSearch(
-  searchString: string
-): Record<string, unknown> {
+function parseSearch(searchString: string): Record<string, unknown> {
   const urlSearchParams = new URLSearchParams(searchString)
   const searchRecord: Record<string, unknown> = {}
-  urlSearchParams.forEach(
-    (v, k) => (searchRecord[k] = legacyParseSearchFragment(v))
-  )
+  urlSearchParams.forEach((v, k) => (searchRecord[k] = parseSearchFragment(v)))
   return searchRecord
+}
+
+export const v2 = {
+  isV2,
+  parseSearch,
+  parseSearchFragment,
+  stringifySearch,
+  stringifySearchEntry
 }

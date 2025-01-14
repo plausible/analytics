@@ -1,5 +1,7 @@
 /** @format */
 import { Filter, FilterClauseLabels } from '../query'
+import { v1 } from './url-search-params-v1'
+import { v2 } from './url-search-params-v2'
 
 /**
  * These charcters are not URL encoded to have more readable URLs.
@@ -11,6 +13,8 @@ const NOT_URL_ENCODED_CHARACTERS = ':/'
 export const FILTER_URL_PARAM_NAME = 'f'
 
 const LABEL_URL_PARAM_NAME = 'l'
+
+const REDIRECTED_SEARCH_PARAM_NAME = 'r'
 
 /**
  * This function is able to serialize for URL simple params @see serializeSimpleSearchEntry as well
@@ -202,4 +206,64 @@ export function isSearchEntryDefined(
   entry: [string, undefined | string]
 ): entry is [string, string] {
   return entry[1] !== undefined
+}
+
+function isAlreadyRedirected(searchParams: URLSearchParams) {
+  return ['v1', 'v2'].includes(searchParams.get(REDIRECTED_SEARCH_PARAM_NAME)!)
+}
+
+/** 
+  Dashboard state is kept on the URL for people to be able to link to what that they see.
+  Because dashboard state is a complex object, in the interest of readable URLs, custom serialization and parsing is in place.
+  
+  Versions
+    * v1: @see v1
+      A custom encoding schema was used for filters, (e.g. "?page=/blog"). 
+      This was not flexible enough and diverged from how we represented filters in the code.
+      
+    * v2: @see v2
+      jsonurl library was used to serialize the state. 
+      The links from this solution didn't always auto-sense across all platforms (e.g. Twitter), cutting off too soon and leading users to broken dashboards.
+      
+    * current version: this module. 
+      Custom encoding.
+   
+  The purpose of this function is to redirect users from one of the previous versions to the current version, 
+  so previous dashboard links still work.
+*/
+export function getRedirectTarget(windowLocation: Location): null | string {
+  const searchParams = new URLSearchParams(windowLocation.search)
+  if (isAlreadyRedirected(searchParams)) {
+    return null
+  }
+  const isCurrentVersion = searchParams.get(FILTER_URL_PARAM_NAME)
+  if (isCurrentVersion) {
+    return null
+  }
+
+  const isV2 = v2.isV2(searchParams)
+  if (isV2) {
+    return `${windowLocation.pathname}${stringifySearch({ ...v2.parseSearch(windowLocation.search), [REDIRECTED_SEARCH_PARAM_NAME]: 'v2' })}`
+  }
+
+  const searchRecord = v2.parseSearch(windowLocation.search)
+  const isV1 = v1.isV1(searchRecord)
+
+  if (!isV1) {
+    return null
+  }
+
+  return `${windowLocation.pathname}${stringifySearch({ ...v1.parseSearchRecord(searchRecord), [REDIRECTED_SEARCH_PARAM_NAME]: 'v1' })}`
+}
+
+/** Called once before React app mounts. If legacy url search params are present, does a redirect to new format. */
+export function redirectForLegacyParams(
+  windowLocation: Location,
+  windowHistory: History
+) {
+  const redirectTargetURL = getRedirectTarget(windowLocation)
+  if (redirectTargetURL === null) {
+    return
+  }
+  windowHistory.pushState({}, '', redirectTargetURL)
 }

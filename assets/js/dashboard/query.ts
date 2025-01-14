@@ -9,21 +9,11 @@ import {
   parseUTCDate,
   isAfter
 } from './util/date'
-import {
-  FILTER_OPERATIONS,
-  getFiltersByKeyPrefix,
-  parseLegacyFilter,
-  parseLegacyPropsFilter
-} from './util/filters'
+import { FILTER_OPERATIONS, getFiltersByKeyPrefix } from './util/filters'
 import { PlausibleSite } from './site-context'
 import { ComparisonMode, QueryPeriod } from './query-time-periods'
 import { AppNavigationTarget } from './navigation/use-app-navigate'
 import { Dayjs } from 'dayjs'
-import { legacyParseSearch } from './util/legacy-jsonurl-url-search-params'
-import {
-  FILTER_URL_PARAM_NAME,
-  stringifySearch
-} from './util/url-search-params'
 
 export type FilterClause = string | number
 
@@ -71,29 +61,6 @@ export function addFilter(
   return { ...query, filters: [...query.filters, filter] }
 }
 
-const LEGACY_URL_PARAMETERS = {
-  goal: null,
-  source: null,
-  utm_medium: null,
-  utm_source: null,
-  utm_campaign: null,
-  utm_content: null,
-  utm_term: null,
-  referrer: null,
-  screen: null,
-  browser: null,
-  browser_version: null,
-  os: null,
-  os_version: null,
-  country: 'country_labels',
-  region: 'region_labels',
-  city: 'city_labels',
-  page: null,
-  hostname: null,
-  entry_page: null,
-  exit_page: null
-}
-
 export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
   return filters.map(([operation, dimension, clauses]) => {
     // Rename old name of the operation
@@ -102,79 +69,6 @@ export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
     }
     return [operation, dimension, clauses]
   })
-}
-
-export function maybeGetRedirectTargetFromLegacySearchParams(
-  windowLocation: Location
-): null | string {
-  const searchParams = new URLSearchParams(windowLocation.search)
-  const isCurrentVersion = searchParams.get(FILTER_URL_PARAM_NAME)
-  if (isCurrentVersion) {
-    return null
-  }
-
-  const isJsonURLVersion = searchParams.get('filters')
-  if (isJsonURLVersion) {
-    return `${windowLocation.pathname}${stringifySearch(legacyParseSearch(windowLocation.search))}`
-  }
-
-  const searchRecord = legacyParseSearch(windowLocation.search)
-  const searchRecordEntries = Object.entries(
-    legacyParseSearch(windowLocation.search)
-  )
-
-  const isBeforeJsonURLVersion = searchRecordEntries.some(
-    ([k]) => k === 'props' || LEGACY_URL_PARAMETERS.hasOwnProperty(k)
-  )
-
-  if (!isBeforeJsonURLVersion) {
-    return null
-  }
-
-  const changedSearchRecordEntries = []
-  const filters: DashboardQuery['filters'] = []
-  let labels: DashboardQuery['labels'] = {}
-
-  for (const [key, value] of searchRecordEntries) {
-    if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {
-      const filter = parseLegacyFilter(key, value) as Filter
-      filters.push(filter)
-      const labelsKey: string | null | undefined =
-        LEGACY_URL_PARAMETERS[key as keyof typeof LEGACY_URL_PARAMETERS]
-      if (labelsKey && searchRecord[labelsKey]) {
-        const clauses = filter[2]
-        const labelsValues = (searchRecord[labelsKey] as string)
-          .split('|')
-          .filter((label) => !!label)
-        const newLabels = Object.fromEntries(
-          clauses.map((clause, index) => [clause, labelsValues[index]])
-        )
-
-        labels = Object.assign(labels, newLabels)
-      }
-    } else {
-      changedSearchRecordEntries.push([key, value])
-    }
-  }
-
-  if (searchRecord['props']) {
-    filters.push(...(parseLegacyPropsFilter(searchRecord['props']) as Filter[]))
-  }
-  changedSearchRecordEntries.push(['filters', filters], ['labels', labels])
-  return `${windowLocation.pathname}${stringifySearch(Object.fromEntries(changedSearchRecordEntries))}`
-}
-
-/** Called once before React app mounts. If legacy url search params are present, does a redirect to new format. */
-export function filtersBackwardsCompatibilityRedirect(
-  windowLocation: Location,
-  windowHistory: History
-) {
-  const redirectTargetURL =
-    maybeGetRedirectTargetFromLegacySearchParams(windowLocation)
-  if (redirectTargetURL === null) {
-    return
-  }
-  windowHistory.pushState({}, '', redirectTargetURL)
 }
 
 // Returns a boolean indicating whether the given query includes a

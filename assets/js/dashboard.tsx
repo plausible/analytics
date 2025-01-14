@@ -9,7 +9,7 @@ import { createAppRouter } from './dashboard/router'
 import ErrorBoundary from './dashboard/error/error-boundary'
 import * as api from './dashboard/api'
 import * as timer from './dashboard/util/realtime-update-timer'
-import { filtersBackwardsCompatibilityRedirect } from './dashboard/query'
+import { redirectForLegacyParams } from './dashboard/util/url-search-params'
 import SiteContextProvider, {
   parseSiteFromDataset
 } from './dashboard/site-context'
@@ -38,7 +38,7 @@ if (container && container.dataset) {
     }
 
     try {
-      filtersBackwardsCompatibilityRedirect(window.location, window.history)
+      redirectForLegacyParams(window.location, window.history)
     } catch (e) {
       console.error('Error redirecting in a backwards compatible way', e)
     }

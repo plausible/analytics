@@ -1,19 +1,20 @@
 /** @format */
 
 import JsonURL from '@jsonurl/jsonurl'
-import {
-  legacyParseSearch,
-  legacyParseSearchFragment,
-  legacyStringifySearch,
-  legacyStringifySearchEntry
-} from './legacy-jsonurl-url-search-params'
+import { v2 } from './url-search-params-v2'
 
-beforeEach(() => {
-  // Silence logs in tests
-  jest.spyOn(console, 'error').mockImplementation(jest.fn())
-})
+const {
+  stringifySearchEntry,
+  stringifySearch,
+  parseSearch,
+  parseSearchFragment
+} = v2
 
 describe('using json URL parsing with URLSearchParams intermediate', () => {
+  beforeEach(() => {
+    // Silence logs in tests
+    jest.spyOn(console, 'error').mockImplementation(jest.fn())
+  })
   it.each([['#'], ['&'], ['=']])('throws on special symbol %p', (s) => {
     const searchString = `?param=${encodeURIComponent(s)}`
     expect(() =>
@@ -22,7 +23,7 @@ describe('using json URL parsing with URLSearchParams intermediate', () => {
   })
 })
 
-describe(`${legacyStringifySearchEntry.name}`, () => {
+describe(`${stringifySearchEntry.name}`, () => {
   it.each<[[string, unknown], [string, string | undefined]]>([
     [
       ['any-key', {}],
@@ -53,12 +54,12 @@ describe(`${legacyStringifySearchEntry.name}`, () => {
       ['filters', "((is,'props:foo:bar',(one,two)))"]
     ]
   ])('when input is %p, returns %p', (input, expected) => {
-    const result = legacyStringifySearchEntry(input)
+    const result = stringifySearchEntry(input)
     expect(result).toEqual(expected)
   })
 })
 
-describe(`${legacyParseSearchFragment.name}`, () => {
+describe(`${parseSearchFragment.name}`, () => {
   it.each([
     ['', null],
     ['("foo":)', null],
@@ -83,13 +84,13 @@ describe(`${legacyParseSearchFragment.name}`, () => {
   ])(
     'when searchStringFragment is %p, returns %p',
     (searchStringFragment, expected) => {
-      const result = legacyParseSearchFragment(searchStringFragment)
+      const result = parseSearchFragment(searchStringFragment)
       expect(result).toEqual(expected)
     }
   )
 })
 
-describe(`${legacyParseSearch.name}`, () => {
+describe(`${parseSearch.name}`, () => {
   it.each([
     ['', {}],
     ['?', {}],
@@ -118,12 +119,12 @@ describe(`${legacyParseSearch.name}`, () => {
       }
     ]
   ])('when searchString is %p, returns %p', (searchString, expected) => {
-    const result = legacyParseSearch(searchString)
+    const result = parseSearch(searchString)
     expect(result).toEqual(expected)
   })
 })
 
-describe(`${legacyStringifySearch.name} and ${legacyParseSearch.name} are inverses of each other`, () => {
+describe(`${stringifySearch.name} and ${parseSearch.name} are inverses of each other`, () => {
   it.each([
     ["?filters=((is,'props:browser_language',(en-US)))"],
     [
@@ -136,10 +137,10 @@ describe(`${legacyStringifySearch.name} and ${legacyParseSearch.name} are invers
       '?filters=((is,utm_source,(hackernewsletter)),(is,utm_campaign,(profile)))&period=day&keybindHint=D'
     ]
   ])(
-    `input %p is returned for ${legacyParseSearch.name}(${legacyParseSearch.name}(input))`,
+    `input %p is returned for ${parseSearch.name}(${parseSearch.name}(input))`,
     (searchString) => {
-      const searchRecord = legacyParseSearch(searchString)
-      const reStringifiedSearch = legacyStringifySearch(searchRecord)
+      const searchRecord = parseSearch(searchString)
+      const reStringifiedSearch = stringifySearch(searchRecord)
       expect(reStringifiedSearch).toEqual(searchString)
     }
   )
@@ -194,10 +195,10 @@ describe(`${legacyStringifySearch.name} and ${legacyParseSearch.name} are invers
       '?filters=((is,utm_source,(hackernewsletter)),(is,utm_campaign,(profile)))&period=day&keybindHint=D'
     ]
   ])(
-    `for input %p, ${legacyStringifySearch.name}(input) returns %p and ${legacyParseSearch.name}(${legacyStringifySearch.name}(input)) returns the original input`,
+    `for input %p, ${stringifySearch.name}(input) returns %p and ${parseSearch.name}(${stringifySearch.name}(input)) returns the original input`,
     (searchRecord, expected) => {
-      const searchString = legacyStringifySearch(searchRecord)
-      const parsedSearchRecord = legacyParseSearch(searchString)
+      const searchString = stringifySearch(searchRecord)
+      const parsedSearchRecord = parseSearch(searchString)
       expect(parsedSearchRecord).toEqual(searchRecord)
       expect(searchString).toEqual(expected)
     }
