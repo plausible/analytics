@@ -79,4 +79,7 @@ defmodule PlausibleWeb.ErrorView do
   rescue
     _ -> %{status: 500, message: "Server error"}
   end
+
+  defp url_path(%Plug.Conn{request_path: path, query_string: ""}), do: path
+  defp url_path(%Plug.Conn{request_path: path, query_string: query}), do: path <> "?" <> query
 end
