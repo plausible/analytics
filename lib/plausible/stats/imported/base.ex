@@ -8,7 +8,8 @@ defmodule Plausible.Stats.Imported.Base do
   alias Plausible.Imported
   alias Plausible.Stats.Query
 
-  import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
+  import Plausible.Stats.Filters,
+    only: [dimensions_used_in_filters: 1, dimensions_used_in_filters: 2]
 
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
@@ -74,10 +75,18 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   def decide_tables(query) do
-    if custom_prop_query?(query) do
-      do_decide_custom_prop_table(query)
-    else
-      do_decide_tables(query)
+    behavioral_filters = dimensions_used_in_filters(query.filters, behavioral_filters: :only)
+
+    cond do
+      # Behavioral filters cannot be emulated via aggregated imported stats
+      length(behavioral_filters) > 0 ->
+        []
+
+      custom_prop_query?(query) ->
+        do_decide_custom_prop_table(query)
+
+      true ->
+        do_decide_tables(query)
     end
   end
 

@@ -1287,4 +1287,79 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       assert pageviews in 1..2
     end
   end
+
+  describe "behavioral filters" do
+    setup :create_site_import
+
+    test "imports are skipped when has_done filter is used", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_pages,
+          page: "/blog",
+          pageviews: 5,
+          visitors: 3,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            ["has_done", ["is", "event:name", ["pageview"]]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [2]}]
+      refute json_response(conn, 200)["meta"]["imports_included"]
+
+      assert json_response(conn, 200)["meta"]["imports_warning"] =~
+               "Imported stats are not included in the results"
+    end
+
+    test "imports are skipped when has_done_not filter is used", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_pages,
+          page: "/blog",
+          pageviews: 5,
+          visitors: 3,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:goal"],
+          "filters" => [
+            ["has_done_not", ["is", "event:name", ["pageview"]]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == []
+      refute json_response(conn, 200)["meta"]["imports_included"]
+
+      assert json_response(conn, 200)["meta"]["imports_warning"] =~
+               "Imported stats are not included in the results"
+    end
+  end
 end
