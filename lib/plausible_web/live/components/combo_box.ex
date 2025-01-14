@@ -323,19 +323,19 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   defp do_select(socket, submit_value, display_value) do
     id = socket.assigns.id
 
-    {final_display_value, final_submit_value} =
+    display_value =
       if socket.assigns[:clear_on_select] do
-        {"", ""}
+        ""
       else
-        {display_value, submit_value}
+        display_value
       end
 
     socket =
       socket
-      |> push_event("update-value", %{id: id, value: final_display_value, fire: false})
-      |> push_event("update-value", %{id: "submit-#{id}", value: final_submit_value, fire: true})
-      |> assign(:display_value, final_display_value)
-      |> assign(:submit_value, final_submit_value)
+      |> push_event("update-value", %{id: id, value: display_value, fire: false})
+      |> push_event("update-value", %{id: "submit-#{id}", value: submit_value, fire: true})
+      |> assign(:display_value, display_value)
+      |> assign(:submit_value, submit_value)
 
     if socket.assigns[:on_selection_made] do
       socket.assigns.on_selection_made.(submit_value, id)
