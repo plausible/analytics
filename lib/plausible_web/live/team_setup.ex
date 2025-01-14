@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
       <% end %>
 
       <:footer>
-        <.button phx-click="setup-team" type="submit" class="mt-0 w-full">
+        <.button phx-click="setup-team" type="submit" mt?={false} class="w-full">
           Create team
         </.button>
       </:footer>
