@@ -66,42 +66,42 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
       <.form :let={f} for={@team_name_changeset} method="post" phx-change="update-team">
         <.input type="text" field={f[:name]} label="Name" width="w-full" phx-debounce="500" />
+
+        <div class="mt-4">
+          <.label>
+            Add members
+          </.label>
+
+          <.live_component
+            id="team-member-candidates"
+            submit_name="team-member-candidate"
+            class="py-2"
+            module={ComboBox}
+            clear_on_select
+            creatable
+            creatable_prompt="Send invitation to email:"
+            placeholder="Select existing member or type email address to invite"
+            options={
+              reject_already_selected("team-member-candidates", @all_candidates, @candidates_selected)
+            }
+            on_selection_made={
+              fn email, _by_id ->
+                send(self(), {:candidate_selected, %{email: email, role: :viewer}})
+              end
+            }
+            suggest_fun={
+              fn input, _options ->
+                exclude_emails =
+                  Enum.map(@candidates_selected, fn {{email, _}, _} -> email end)
+
+                @my_team
+                |> Candidates.search_site_guests(input, exclude: exclude_emails)
+                |> Enum.map(fn user -> {user.email, "#{user.name} <#{user.email}>"} end)
+              end
+            }
+          />
+        </div>
       </.form>
-
-      <div class="mt-4">
-        <.label>
-          Add members
-        </.label>
-
-        <.live_component
-          id="team-member-candidates"
-          submit_name="team-member-candidate"
-          class="py-2"
-          module={ComboBox}
-          clear_on_select
-          creatable
-          creatable_prompt="Send invitation to email:"
-          placeholder="Select existing member or type email address to invite"
-          options={
-            reject_already_selected("team-member-candidates", @all_candidates, @candidates_selected)
-          }
-          on_selection_made={
-            fn email, _by_id ->
-              send(self(), {:candidate_selected, %{email: email, role: :viewer}})
-            end
-          }
-          suggest_fun={
-            fn input, _options ->
-              exclude_emails =
-                Enum.map(@candidates_selected, fn {{email, _}, _} -> email end)
-
-              @my_team
-              |> Candidates.search_site_guests(input, exclude: exclude_emails)
-              |> Enum.map(fn user -> {user.email, "#{user.name} <#{user.email}>"} end)
-            end
-          }
-        />
-      </div>
 
       <.member user={@current_user} role={:owner} you?={true} />
 
@@ -129,7 +129,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
         <img src={User.profile_img_url(@user)} class="w-7 rounded-full" />
         <span class="text-sm">
           {@user.name}
-
           <span
             :if={@you?}
             class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-100 text-gray-500 text-xs px-1 rounded"
