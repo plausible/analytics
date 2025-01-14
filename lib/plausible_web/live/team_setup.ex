@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
             creatable_prompt="Send invitation to email:"
             placeholder="Select existing member or type email address to invite"
             options={
-              reject_already_selected("team-member-candidates", @all_candidates, @candidates_selected)
+              reject_already_selected(@all_candidates, @candidates_selected)
             }
             on_selection_made={
               fn email, _by_id ->
@@ -302,17 +302,13 @@ defmodule PlausibleWeb.Live.TeamSetup do
     String.contains?(email, "@") and String.contains?(email, ".")
   end
 
-  defp reject_already_selected(combo_box, candidates, candidates_selected) do
-    result =
-      candidates
-      |> Enum.reject(fn {email, _} ->
-        Enum.find(candidates_selected, fn
-          {{^email, _}, _} -> true
-          _ -> false
-        end)
+  defp reject_already_selected(candidates, candidates_selected) do
+    candidates
+    |> Enum.reject(fn {email, _} ->
+      Enum.find(candidates_selected, fn
+        {{^email, _}, _} -> true
+        _ -> false
       end)
-
-    send_update(PlausibleWeb.Live.Components.ComboBox, id: combo_box, suggestions: result)
-    result
+    end)
   end
 end
