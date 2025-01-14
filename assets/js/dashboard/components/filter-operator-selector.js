@@ -6,7 +6,8 @@ import {
   FILTER_OPERATIONS,
   FILTER_OPERATIONS_DISPLAY_NAMES,
   supportsContains,
-  supportsIsNot
+  supportsIsNot,
+  supportsHasDoneNot
 } from '../util/filters'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
@@ -82,6 +83,10 @@ export default function FilterOperatorSelector(props) {
                   {renderTypeItem(
                     FILTER_OPERATIONS.contains_not,
                     supportsContains(filterName) && supportsIsNot(filterName)
+                  )}
+                  {renderTypeItem(
+                    FILTER_OPERATIONS.has_done_not,
+                    supportsHasDoneNot(filterName)
                   )}
                 </div>
               </Menu.Items>
