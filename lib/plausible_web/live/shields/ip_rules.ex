@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             theme={:gray}
           >
             <p>
-              You've reached the maximum number of IP addresses you can block ({Shields.maximum_ip_rules()}). Please remove one before adding another.
+              You've reached the maximum number of IP addresses you can block (<%= Shields.maximum_ip_rules() %>). Please remove one before adding another.
             </p>
           </.notice>
 
@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                     class="cursor-help"
                     title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                   >
-                    {rule.inet}
+                    <%= rule.inet %>
                   </span>
                 </div>
               </.td>
@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               </.td>
               <.td hide_on_mobile truncate>
                 <span :if={rule.description} title={rule.description}>
-                  {rule.description}
+                  <%= rule.description %>
                 </span>
                 <span :if={!rule.description} class="text-gray-400 dark:text-gray-600">
                   --

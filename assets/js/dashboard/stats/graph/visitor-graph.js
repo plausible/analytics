@@ -146,7 +146,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
 
     return (
       <FadeIn show={showingImported && unsupportedInterval} className="h-6 mr-1">
-        <span tooltip={"Interval is too short to graph imported data"}>
+        <span tooltip={"Inteval is too short to graph imported data"}>
           <ExclamationCircleIcon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
         </span>
       </FadeIn>

@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
       <.flash_messages flash={@flash} />
 
       <%= if @add_token? do %>
-        {live_render(
+        <%= live_render(
           @socket,
           PlausibleWeb.Live.Plugins.API.TokenForm,
           id: "token-form",
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
             "token_description" => @token_description,
             "rendered_by" => self()
           }
-        )}
+        ) %>
       <% end %>
 
       <div>
@@ -64,14 +64,14 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
           <:tbody :let={token}>
             <.td>
               <span class="token-description">
-                {token.description}
+                <%= token.description %>
               </span>
             </.td>
             <.td hide_on_mobile>
-              **********{token.hint}
+              **********<%= token.hint %>
             </.td>
             <.td hide_on_mobile>
-              {Plausible.Plugins.API.Token.last_used_humanize(token)}
+              <%= Plausible.Plugins.API.Token.last_used_humanize(token) %>
             </.td>
             <.td actions>
               <.delete_button

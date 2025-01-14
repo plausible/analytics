@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Live.Components.FormTest do
   use PlausibleWeb.ConnCase, async: true
-  import Phoenix.LiveViewTest, only: [render_component: 2]
+  import Plausible.LiveViewTest, only: [render_component: 2]
   import Plausible.Test.Support.HTML
 
   alias Plausible.Auth.User

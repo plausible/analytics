@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
             <span :if={not @finished?}>Verifying your installation</span>
 
             <span :if={@finished? and not @success? and @interpretation}>
-              {List.first(@interpretation.errors)}
+              <%= List.first(@interpretation.errors) %>
             </span>
           </.title>
           <p :if={@finished? and @success?} id="progress" class="text-sm mt-4">
@@ -67,19 +67,19 @@ defmodule PlausibleWeb.Live.Components.Verification do
           </p>
           <p
             :if={@finished? and @success? and @awaiting_first_pageview?}
-            id="awaiting"
+            id="progress"
             class="text-sm mt-4 animate-pulse"
           >
             Awaiting your first pageview
           </p>
-          <p :if={not @finished?} class="text-sm mt-4 animate-pulse" id="progress">{@message}</p>
+          <p :if={not @finished?} class="text-sm mt-4 animate-pulse" id="progress"><%= @message %></p>
 
           <p
             :if={@finished? and not @success? and @interpretation}
             class="mt-4 text-sm text-ellipsis overflow-hidden"
             id="recommendation"
           >
-            <span>{List.first(@interpretation.recommendations).text}.&nbsp;</span>
+            <span><%= List.first(@interpretation.recommendations).text %>.&nbsp;</span>
             <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
               Learn more
             </.styled_link>
@@ -145,7 +145,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
               <.focus_list>
                 <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
                   <span class="text-sm">
-                    {Phoenix.Naming.humanize(diag)}: <span class="font-mono">{value}</span>
+                    <%= Phoenix.Naming.humanize(diag) %>: <span class="font-mono"><%= value %></span>
                   </span>
                 </:item>
               </.focus_list>

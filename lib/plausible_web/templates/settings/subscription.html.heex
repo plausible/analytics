@@ -22,7 +22,7 @@
           subscription_colors(@subscription.status)
         ]}
       >
-        {present_subscription_status(@subscription.status)}
+        <%= present_subscription_status(@subscription.status) %>
       </span>
     </div>
 
@@ -40,7 +40,7 @@
         <h4 class="font-black dark:text-gray-100">Next bill amount</h4>
         <%= if Plausible.Billing.Subscription.Status.in?(@subscription, [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()]) do %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">
-            {PlausibleWeb.BillingView.present_currency(@subscription.currency_code)}{@subscription.next_bill_amount}
+            <%= PlausibleWeb.BillingView.present_currency(@subscription.currency_code) %><%= @subscription.next_bill_amount %>
           </div>
           <.styled_link :if={@subscription.update_url} href={@subscription.update_url}>
             Update billing info
@@ -54,10 +54,10 @@
 
         <%= if @subscription && @subscription.next_bill_date && Plausible.Billing.Subscription.Status.in?(@subscription, [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()]) do %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">
-            {Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y")}
+            <%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %>
           </div>
           <span class="text-gray-600 dark:text-gray-400">
-            ({subscription_interval(@subscription)} billing)
+            (<%= subscription_interval(@subscription) %> billing)
           </span>
         <% else %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>

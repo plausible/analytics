@@ -100,7 +100,7 @@ defmodule PlausibleWeb.Live.Sites do
           page_number={@sites.page_number}
           total_pages={@sites.total_pages}
         >
-          Total of <span class="font-medium">{@sites.total_entries}</span> sites
+          Total of <span class="font-medium"><%= @sites.total_entries %></span> sites
         </.pagination>
         <.invitation_modal :if={Enum.any?(@sites.entries, &(&1.entry_type == "invitation"))} />
       </div>
@@ -166,7 +166,7 @@ defmodule PlausibleWeb.Live.Sites do
           />
           <div class="flex-1 truncate -mt-px">
             <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100">
-              {@site.domain}
+              <%= @site.domain %>
             </h3>
           </div>
 
@@ -212,7 +212,7 @@ defmodule PlausibleWeb.Live.Sites do
                 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
                 style="width: calc(100% - 4rem)"
               >
-                {@site.domain}
+                <%= @site.domain %>
               </h3>
             </div>
           </div>
@@ -308,7 +308,7 @@ defmodule PlausibleWeb.Live.Sites do
           <div class="flex justify-between items-center">
             <p>
               <span class="text-gray-800 dark:text-gray-200">
-                <b>{PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors)}</b>
+                <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
                 visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
               </span>
             </p>
@@ -357,7 +357,7 @@ defmodule PlausibleWeb.Live.Sites do
         </path>
       </svg>
 
-      {abs(@change)}%
+      <%= abs(@change) %>%
     </p>
     """
   end
@@ -462,18 +462,23 @@ defmodule PlausibleWeb.Live.Sites do
             </.notice>
             <.notice
               x-show="selectedInvitation && selectedInvitation.exceeded_limits"
-              title="Unable to accept site ownership"
+              title="Exceeded limits"
               class="mt-4 shadow-sm dark:shadow-none"
             >
               <p>
-                Owning this site would exceed your <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>. Please check your usage in
+                You are unable to accept the ownership of this site because doing so would exceed the
+                <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>
+                of your subscription.
+                You can review your usage in the
                 <.styled_link
                   class="inline-block"
                   href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
                 >
                   account settings
-                </.styled_link>
-                and upgrade your subscription to accept the site ownership.
+                </.styled_link>.
+              </p>
+              <p class="mt-3">
+                To become the owner of this site, you should either reduce your usage, or upgrade your subscription.
               </p>
             </.notice>
             <.notice

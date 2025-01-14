@@ -10,7 +10,6 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @retry_button ~s|a[phx-click="retry"]|
   # @go_to_dashboard_button ~s|a[href$="?skip_to_dashboard=true"]|
   @progress ~s|#progress-indicator p#progress|
-  @awaiting ~s|#progress-indicator p#awaiting|
   @heading ~s|#progress-indicator h2|
 
   describe "GET /:domain" do
@@ -67,7 +66,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
                html = render(lv)
 
                {
-                 text_of_element(html, @awaiting) =~
+                 text_of_element(html, @progress) =~
                    "Awaiting your first pageview",
                  html
                }
@@ -100,7 +99,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       html = render(lv)
 
-      refute text_of_element(html, @awaiting) =~ "Awaiting your first pageview"
+      refute text_of_element(html, @progress) =~ "Awaiting your first pageview"
       refute_redirected(lv, "http://localhost:8000/#{URI.encode_www_form(site.domain)}")
     end
 

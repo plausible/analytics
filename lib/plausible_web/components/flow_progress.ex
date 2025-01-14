@@ -34,25 +34,25 @@ defmodule PlausibleWeb.Components.FlowProgress do
               :if={idx == @current_step_idx}
               class="w-5 h-5 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold"
             >
-              {idx + 1}
+              <%= idx + 1 %>
             </div>
             <div
               :if={idx > @current_step_idx}
               class="w-5 h-5 bg-gray-300 text-white dark:bg-gray-800 rounded-full flex items-center justify-center"
             >
-              {idx + 1}
+              <%= idx + 1 %>
             </div>
             <span :if={idx < @current_step_idx} class="ml-2 text-gray-500">
-              {step}
+              <%= step %>
             </span>
             <span
               :if={idx == @current_step_idx}
               class="ml-2 font-semibold text-black dark:text-gray-300"
             >
-              {step}
+              <%= step %>
             </span>
             <span :if={idx > @current_step_idx} class="ml-2 text-gray-500">
-              {step}
+              <%= step %>
             </span>
           </div>
           <div :if={idx + 1 != length(@steps)} class="flex-1 h-px bg-gray-300 mx-4 dark:bg-gray-800 ">

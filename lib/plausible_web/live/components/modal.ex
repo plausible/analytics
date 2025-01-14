@@ -260,7 +260,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
           x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           x-on:click.outside="closeModal()"
         >
-          {render_slot(@inner_block, modal_unique_id(@modal_sequence_id))}
+          <%= render_slot(@inner_block, modal_unique_id(@modal_sequence_id)) %>
         </Phoenix.Component.focus_wrap>
         <div x-show="modalOpen" class="modal-loading hidden w-full self-center">
           <div class="text-center">

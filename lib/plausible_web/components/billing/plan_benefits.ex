@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     <ul role="list" class={["mt-8 space-y-3 text-sm leading-6 xl:mt-10", @class]}>
       <li :for={benefit <- @benefits} class="flex gap-x-3">
         <Heroicons.check class="h-6 w-5 text-indigo-600 dark:text-green-600" />
-        {if is_binary(benefit), do: benefit, else: benefit.(assigns)}
+        <%= if is_binary(benefit), do: benefit, else: benefit.(assigns) %>
       </li>
     </ul>
     """

@@ -35,8 +35,8 @@
               <.th>Invoice</.th>
             </:thead>
             <:tbody :let={{invoice, _idx}}>
-              <.td>{invoice.date}</.td>
-              <.td>{invoice.currency <> invoice.amount}</.td>
+              <.td><%= invoice.date %></.td>
+              <.td><%= invoice.currency <> invoice.amount %></.td>
               <.td>
                 <.styled_link href={invoice.url} new_tab={true}>View</.styled_link>
               </.td>

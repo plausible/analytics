@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 <div class="truncate block">
                   <%= if not @revenue_goals_enabled? && goal.currency do %>
                     <div class="truncate">
-                      {goal}
+                      <%= goal %>
                       <br />
                       <span class="text-red-600">
                         Unlock Revenue Goals by upgrading to a business plan
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                     </div>
                   <% else %>
                     <.goal_description goal={goal} />
-                    <span>{goal}</span>
+                    <span><%= goal %></span>
                   <% end %>
                 </div>
               </div>
@@ -115,11 +115,11 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   def goal_description(assigns) do
     ~H"""
     <span :if={@goal.page_path} class="block truncate text-gray-400 dark:text-gray-600">
-      {pageview_description(@goal)}
+      <%= pageview_description(@goal) %>
     </span>
 
     <span :if={@goal.event_name} class="block truncate text-gray-400 dark:text-gray-600">
-      {custom_event_description(@goal)}
+      <%= custom_event_description(@goal) %>
     </span>
     """
   end

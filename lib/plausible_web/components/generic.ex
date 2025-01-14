@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Components.Generic do
       ]}
       {@rest}
     >
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </button>
     """
   end
@@ -84,7 +84,7 @@ defmodule PlausibleWeb.Components.Generic do
         []
       else
         [
-          "data-csrf": Phoenix.Controller.get_csrf_token(),
+          "data-csrf": Phoenix.HTML.Tag.csrf_token_value(assigns.href),
           "data-method": assigns.method,
           "data-to": assigns.href
         ]
@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Components.Generic do
       {@extra}
       {@rest}
     >
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </.link>
     """
   end
@@ -178,11 +178,11 @@ defmodule PlausibleWeb.Components.Generic do
           </div>
           <div class={["w-full", @title && "ml-3"]}>
             <h3 :if={@title} class={"font-medium #{@theme.title_text} mb-2"}>
-              {@title}
+              <%= @title %>
             </h3>
             <div class={"#{@theme.body_text}"}>
               <p>
-                {render_slot(@inner_block)}
+                <%= render_slot(@inner_block) %>
               </p>
             </div>
           </div>
@@ -216,7 +216,7 @@ defmodule PlausibleWeb.Components.Generic do
       class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> @class}
       {@rest}
     >
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </.unstyled_link>
     """
   end
@@ -241,11 +241,10 @@ defmodule PlausibleWeb.Components.Generic do
       class="relative inline-block text-left"
     >
       <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
-        {render_slot(List.first(@button))}
+        <%= render_slot(List.first(@button)) %>
       </button>
       <div
         x-show="open"
-        x-cloak
         x-transition:enter="transition ease-out duration-100"
         x-transition:enter-start="opacity-0 scale-95"
         x-transition:enter-end="opacity-100 scale-100"
@@ -259,7 +258,7 @@ defmodule PlausibleWeb.Components.Generic do
           @menu_class
         ]}
       >
-        {render_slot(List.first(@menu))}
+        <%= render_slot(List.first(@menu)) %>
       </div>
     </div>
     """
@@ -294,7 +293,7 @@ defmodule PlausibleWeb.Components.Generic do
         data-ui-state={@state}
         {@rest}
       >
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </.unstyled_link>
       """
     else
@@ -302,7 +301,7 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <div data-ui-state={@state} class={@class}>
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </div>
       """
     end
@@ -328,7 +327,7 @@ defmodule PlausibleWeb.Components.Generic do
         []
       else
         [
-          "data-csrf": Phoenix.Controller.get_csrf_token(),
+          "data-csrf": Phoenix.HTML.Tag.csrf_token_value(assigns.href),
           "data-method": assigns.method,
           "data-to": assigns.href
         ]
@@ -351,13 +350,13 @@ defmodule PlausibleWeb.Components.Generic do
         {@extra}
         {@rest}
       >
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
         <Heroicons.arrow_top_right_on_square class={["opacity-60", @icon_class]} />
       </.link>
       """
     else
       ~H"""
-      <.link class={@class} href={@href} {@extra} {@rest}>{render_slot(@inner_block)}</.link>
+      <.link class={@class} href={@href} {@extra} {@rest}><%= render_slot(@inner_block) %></.link>
       """
     end
   end
@@ -389,7 +388,7 @@ defmodule PlausibleWeb.Components.Generic do
   def settings_tiles(assigns) do
     ~H"""
     <div class="text-gray-900 leading-5 dark:text-gray-100">
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </div>
     """
   end
@@ -407,12 +406,12 @@ defmodule PlausibleWeb.Components.Generic do
     <div class="shadow bg-white dark:bg-gray-800 rounded-md mb-6">
       <header class="relative py-4 px-6">
         <.title>
-          {render_slot(@title)}
+          <%= render_slot(@title) %>
 
           <.docs_info :if={@docs} slug={@docs} />
         </.title>
         <div class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
-          {render_slot(@subtitle)}
+          <%= render_slot(@subtitle) %>
         </div>
         <%= if @feature_mod do %>
           <PlausibleWeb.Components.Site.Feature.toggle
@@ -425,7 +424,7 @@ defmodule PlausibleWeb.Components.Generic do
       </header>
 
       <div class="pb-4 px-6">
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </div>
     </div>
     """
@@ -456,7 +455,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
       >
-        {render_slot(List.first(@tooltip_content))}
+        <%= render_slot(List.first(@tooltip_content)) %>
       </div>
       <div
         x-on:click="sticky = true; hovered = true"
@@ -464,7 +463,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-on:mouseover="hovered = true"
         x-on:mouseout="hovered = false"
       >
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </div>
     </div>
     """
@@ -501,7 +500,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <ol class="list-disc space-y-1 ml-4 text-sm">
       <li :for={item <- @item} class="marker:text-indigo-700 dark:marker:text-indigo-700">
-        {render_slot(item)}
+        <%= render_slot(item) %>
       </li>
     </ol>
     """
@@ -521,20 +520,20 @@ defmodule PlausibleWeb.Components.Generic do
     >
       <div class="p-8">
         <.title :if={@title != []}>
-          {render_slot(@title)}
+          <%= render_slot(@title) %>
         </.title>
         <div></div>
 
         <div :if={@subtitle != []} class="text-sm mt-4 leading-6">
-          {render_slot(@subtitle)}
+          <%= render_slot(@subtitle) %>
         </div>
 
         <div :if={@title != []} class="mt-8">
-          {render_slot(@inner_block)}
+          <%= render_slot(@inner_block) %>
         </div>
 
         <div :if={@title == []}>
-          {render_slot(@inner_block)}
+          <%= render_slot(@inner_block) %>
         </div>
       </div>
       <div
@@ -542,7 +541,7 @@ defmodule PlausibleWeb.Components.Generic do
         class="flex flex-col dark:text-gray-200 border-t border-gray-300 dark:border-gray-700"
       >
         <div class="p-8">
-          {render_slot(@footer)}
+          <%= render_slot(@footer) %>
         </div>
       </div>
     </div>
@@ -562,14 +561,14 @@ defmodule PlausibleWeb.Components.Generic do
     <table :if={not Enum.empty?(@rows)} class={@width} {@rest}>
       <thead :if={@thead != []}>
         <tr class="border-b border-gray-200 dark:border-gray-700">
-          {render_slot(@thead)}
+          <%= render_slot(@thead) %>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
         <tr :for={item <- @rows} {if @row_attrs, do: @row_attrs.(item), else: %{}}>
-          {render_slot(@tbody, item)}
+          <%= render_slot(@tbody, item) %>
         </tr>
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </tbody>
     </table>
     """
@@ -606,10 +605,10 @@ defmodule PlausibleWeb.Components.Generic do
       {@rest}
     >
       <div :if={@actions} class="flex gap-2">
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </div>
       <div :if={!@actions}>
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </div>
     </td>
     """
@@ -631,7 +630,7 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <th scope="col" class={[@hide_on_mobile && "hidden md:table-cell", @class]}>
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </th>
     """
   end
@@ -668,7 +667,7 @@ defmodule PlausibleWeb.Components.Generic do
           else: "text-gray-900 dark:text-gray-100"
         )
       ]}>
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </span>
     </div>
     """
@@ -744,7 +743,7 @@ defmodule PlausibleWeb.Components.Generic do
           </form>
         </div>
       </div>
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </div>
     """
   end
@@ -755,7 +754,7 @@ defmodule PlausibleWeb.Components.Generic do
   def h2(assigns) do
     ~H"""
     <h2 class={[@class || "font-semibold leading-6 text-gray-900 dark:text-gray-100"]}>
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </h2>
     """
   end
@@ -766,7 +765,7 @@ defmodule PlausibleWeb.Components.Generic do
   def title(assigns) do
     ~H"""
     <.h2 class={["text-lg font-medium text-gray-900 dark:text-gray-100 leading-7", @class]}>
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </.h2>
     """
   end

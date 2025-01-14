@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Components.Billing.PageviewSlider do
     <output class="lg:w-1/4 lg:order-1 font-medium text-lg text-gray-600 dark:text-gray-200">
       <span :if={@volume != :enterprise}>Up to</span>
       <strong id="slider-value" class="text-gray-900 dark:text-gray-100">
-        {format_volume(@volume, @available_volumes)}
+        <%= format_volume(@volume, @available_volumes) %>
       </strong>
       monthly pageviews
     </output>
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Components.Billing.PageviewSlider do
     <form class="max-w-md lg:max-w-none w-full lg:w-1/2 lg:order-2">
       <div class="flex items-baseline space-x-2">
         <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
-          {List.first(@slider_labels)}
+          <%= List.first(@slider_labels) %>
         </span>
         <div class="flex-1 relative">
           <input
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Components.Billing.PageviewSlider do
           />
         </div>
         <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
-          {List.last(@slider_labels)}
+          <%= List.last(@slider_labels) %>
         </span>
       </div>
     </form>

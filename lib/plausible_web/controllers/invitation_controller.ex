@@ -27,11 +27,6 @@ defmodule PlausibleWeb.InvitationController do
         |> put_flash(:error, "Invitation missing or already accepted")
         |> redirect(to: "/sites")
 
-      {:error, :already_other_team_member} ->
-        conn
-        |> put_flash(:error, "You already are a team member in another team")
-        |> redirect(to: "/sites")
-
       {:error, :no_plan} ->
         conn
         |> put_flash(:error, "No existing subscription")

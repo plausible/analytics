@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full plausible">
+<html lang="en" class="h-full">
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -17,12 +17,12 @@
     <PlausibleWeb.Components.Layout.favicon conn={@conn} />
 
     <title>
-      {assigns[:title] ||
-        "Plausible · Simple, privacy-friendly alternative to Google Analytics"}
+      <%= assigns[:title] ||
+        "Plausible · Simple, privacy-friendly alternative to Google Analytics" %>
     </title>
     <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
     <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />
-    {render("_tracking.html", assigns)}
+    <%= render("_tracking.html", assigns) %>
   </head>
   <body
     class={[
@@ -34,12 +34,12 @@
     style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
   >
     <%= if !assigns[:embedded] do %>
-      {render("_header.html", assigns)}
-      {render("_notice.html", assigns)}
+      <%= render("_header.html", assigns) %>
+      <%= render("_notice.html", assigns) %>
     <% end %>
 
     <main class="flex-1">
-      {Map.get(assigns, :inner_layout) || @inner_content}
+      <%= Map.get(assigns, :inner_layout) || @inner_content %>
     </main>
 
     <%= if assigns[:embedded] do %>
@@ -47,7 +47,7 @@
       <script type="text/javascript" src={Routes.static_path(@conn, "/js/embed.content.js")}>
       </script>
     <% else %>
-      {render("_footer.html", assigns)}
+      <%= render("_footer.html", assigns) %>
     <% end %>
     <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
     </script>

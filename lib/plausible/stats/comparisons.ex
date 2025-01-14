@@ -75,15 +75,11 @@ defmodule Plausible.Stats.Comparisons do
   defp add_query_filters(query, []), do: query
 
   defp add_query_filters(query, [filter]) do
-    query
-    |> Query.add_filter([:ignore_in_totals_query, filter])
-    |> Query.set(pagination: nil)
+    Query.add_filter(query, [:ignore_in_totals_query, filter])
   end
 
   defp add_query_filters(query, filters) do
-    query
-    |> Query.add_filter([:ignore_in_totals_query, [:or, filters]])
-    |> Query.set(pagination: nil)
+    Query.add_filter(query, [:ignore_in_totals_query, [:or, filters]])
   end
 
   defp build_comparison_filter(%{dimensions: dimension_labels}, query) do

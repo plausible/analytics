@@ -378,7 +378,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn =
         post(conn, "/sites", %{
           "site" => %{
-            "domain" => "",
             "timezone" => "Europe/London"
           }
         })
