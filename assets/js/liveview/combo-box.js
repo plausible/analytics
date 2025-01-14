@@ -19,7 +19,9 @@ export default (id) => ({
       }
     }
   },
-  trackSubmitValueChange() {
+  trackSubmitValueChange(val) {
+    console.log('trackSubmitValueChange triggered with ', val);
+
     this.selectionInProgress = false;
   },
   open() {
