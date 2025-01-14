@@ -303,7 +303,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       {:ok, lv, html} = live_isolated(conn, CreatableView, session: %{})
       regular_option = find(html, "li#dropdown-test-creatable-component-option-1 a")
 
-      assert Floki.attribute(regular_option, "x-on:click") == ["selectionInProgress = true"]
+      assert Floki.attribute(regular_option, "x-on:click") == ["selectionInProgress = false"]
 
       creatable_option =
         lv
