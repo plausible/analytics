@@ -11,7 +11,7 @@ export default (id) => ({
     this.focus = f;
   },
   initFocus() {
-    console.log('init focus called')
+    console.log(`init focus called (selectionInProgress: ${this.selectionInProgress}, isOpen: ${this.isOpen})`)
     if (this.focus === null) {
       this.setFocus(this.leastFocusableIndex())
       if (!this.firstFocusRegistered) {
@@ -21,13 +21,13 @@ export default (id) => ({
     }
   },
   trackSubmitValueChange(val) {
-    console.log('trackSubmitValueChange triggered with ', val);
+    console.log(`trackSubmitValueChange triggered with ${val} (selectionInProgress: ${this.selectionInProgress}, isOpen: ${this.isOpen})`)
 
     this.selectionInProgress = false;
   },
   open() {
     if (!this.isOpen) {
-      console.log('open triggered')
+      console.log(`open triggered (selectionInProgress: ${this.selectionInProgress}, isOpen: ${this.isOpen})`)
       this.initFocus()
       this.isOpen = true
     }
@@ -56,7 +56,7 @@ export default (id) => ({
     return currentFocus - 1 >= this.leastFocusableIndex() ? currentFocus - 1 : this.maxFocusableIndex()
   },
   close(e) {
-    console.log('close called')
+    console.log(`close called (selectionInProgress: ${this.selectionInProgress}, isOpen: ${this.isOpen})`)
     // Pressing Escape should not propagate to window,
     // so we'll only close the suggestions pop-up
     if (this.isOpen && e.key === "Escape") {
@@ -65,7 +65,7 @@ export default (id) => ({
     this.isOpen = false
   },
   select() {
-    console.log('select called')
+    console.log(`selected called (selectionInProgress: ${this.selectionInProgress}, isOpen: ${this.isOpen})`)
     this.$refs[`dropdown-${this.id}-option-${this.focus}`]?.click()
     this.close()
     document.getElementById(this.id).blur()
@@ -76,6 +76,7 @@ export default (id) => ({
     )
   },
   focusNext() {
+    console.log(`focusNext called (selectionInProgress: ${this.selectionInProgress}, isOpen: ${this.isOpen})`)
     const nextIndex = this.nextFocusableIndex()
 
     this.open()
@@ -84,6 +85,7 @@ export default (id) => ({
     this.scrollTo(nextIndex)
   },
   focusPrev() {
+    console.log(`focusPrev called (selectionInProgress: ${this.selectionInProgress}, isOpen: ${this.isOpen})`)
     const prevIndex = this.prevFocusableIndex()
 
     this.open()
