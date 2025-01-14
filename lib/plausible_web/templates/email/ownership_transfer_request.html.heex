@@ -1,4 +1,4 @@
-{@inviter.email} has requested to transfer the ownership of {@site.domain} site on {Plausible.product_name()} to you.
+<%= @inviter.email %> has requested to transfer the ownership of <%= @site.domain %> site on <%= Plausible.product_name() %> to you.
 <%= if @new_owner_account do %>
   <a href={Routes.site_url(PlausibleWeb.Endpoint, :index)}>Click here</a>
   to view and respond to the invitation.

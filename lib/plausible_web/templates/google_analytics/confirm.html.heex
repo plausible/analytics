@@ -19,7 +19,7 @@
   <div class="mt-6">
     <.label for={f[:property].id}>Google Analytics property</.label>
     <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
-      {@selected_property_name}
+      <%= @selected_property_name %>
     </span>
     <.input type="hidden" value={@selected_property} field={f[:property]} readonly="true" />
   </div>
@@ -27,7 +27,7 @@
     <div class="w-36">
       <.label for={f[:start_date].id}>From</.label>
       <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
-        {PlausibleWeb.EmailView.date_format(@start_date)}
+        <%= PlausibleWeb.EmailView.date_format(@start_date) %>
       </span>
       <.input type="hidden" value={@start_date} field={f[:start_date]} readonly="true" />
     </div>
@@ -35,7 +35,7 @@
     <div class="w-36">
       <.label for={f[:end_date].id}>To</.label>
       <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
-        {PlausibleWeb.EmailView.date_format(@end_date)}
+        <%= PlausibleWeb.EmailView.date_format(@end_date) %>
       </span>
       <.input type="hidden" value={@end_date} field={f[:end_date]} readonly="true" />
     </div>

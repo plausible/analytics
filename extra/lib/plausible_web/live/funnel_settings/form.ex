@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
           >
             <.title class="mb-6">
-              {if @funnel, do: "Edit", else: "Add"} Funnel
+              <%= if @funnel, do: "Edit", else: "Add" %> Funnel
             </.title>
 
             <.input
@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                     length(@step_ids) > map_size(@selections_made)
                 }
               >
-                <span>{if @funnel, do: "Update", else: "Add"} Funnel</span>
+                <span><%= if @funnel, do: "Update", else: "Add" %> Funnel</span>
               </.button>
             </div>
           </.form>

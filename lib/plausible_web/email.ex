@@ -299,53 +299,29 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def guest_invitation_accepted(inviter_email, invitee_email, site) do
+  def invitation_accepted(inviter_email, invitee_email, site) do
     priority_email()
     |> to(inviter_email)
-    |> tag("guest-invitation-accepted")
+    |> tag("invitation-accepted")
     |> subject(
       "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to #{site.domain}"
     )
-    |> render("guest_invitation_accepted.html",
+    |> render("invitation_accepted.html",
       invitee_email: invitee_email,
       site: site
     )
   end
 
-  def team_invitation_accepted(inviter_email, invitee_email, team) do
-    priority_email()
-    |> to(inviter_email)
-    |> tag("team-invitation-accepted")
-    |> subject(
-      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to \"#{team.name}\" team"
-    )
-    |> render("team_invitation_accepted.html",
-      invitee_email: invitee_email,
-      team: team
-    )
-  end
-
-  def guest_invitation_rejected(guest_invitation) do
+  def invitation_rejected(guest_invitation) do
     priority_email()
     |> to(guest_invitation.team_invitation.inviter.email)
-    |> tag("guest-invitation-rejected")
+    |> tag("invitation-rejected")
     |> subject(
       "[#{Plausible.product_name()}] #{guest_invitation.team_invitation.email} rejected your invitation to #{guest_invitation.site.domain}"
     )
-    |> render("guest_invitation_rejected.html",
+    |> render("invitation_rejected.html",
+      user: guest_invitation.team_invitation.inviter,
       guest_invitation: guest_invitation
-    )
-  end
-
-  def team_invitation_rejected(team_invitation) do
-    priority_email()
-    |> to(team_invitation.inviter.email)
-    |> tag("team-invitation-rejected")
-    |> subject(
-      "[#{Plausible.product_name()}] #{team_invitation.email} rejected your invitation to \"#{team_invitation.team.name}\" team"
-    )
-    |> render("team_invitation_rejected.html",
-      team_invitation: team_invitation
     )
   end
 

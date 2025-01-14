@@ -830,11 +830,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "fails to update with no input", %{conn: conn} do
       conn =
         post(conn, Routes.settings_path(conn, :update_password), %{
-          "user" => %{
-            "password" => "",
-            "old_password" => "",
-            "password_confirmation" => ""
-          }
+          "user" => %{}
         })
 
       assert html = html_response(conn, 200)
@@ -897,7 +893,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "renders form with error on no fields filled", %{conn: conn} do
-      conn = post(conn, Routes.settings_path(conn, :update_email), %{"user" => %{"email" => ""}})
+      conn = post(conn, Routes.settings_path(conn, :update_email), %{"user" => %{}})
 
       assert text(html_response(conn, 200)) =~ "can't be blank"
     end

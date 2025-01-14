@@ -25,12 +25,12 @@
           <tbody class="bg-white dark:bg-gray-800">
             <tr class="border-b border-gray-200">
               <td class="px-6 py-4 text-sm leading-5 font-bold dark:text-gray-100">
-                {present_currency(@preview_info["immediate_payment"]["currency"])}{@preview_info[
+                <%= present_currency(@preview_info["immediate_payment"]["currency"]) %><%= @preview_info[
                   "immediate_payment"
-                ]["amount"]}
+                ]["amount"] %>
               </td>
               <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100">
-                {present_date(@preview_info["immediate_payment"]["date"])}
+                <%= present_date(@preview_info["immediate_payment"]["date"]) %>
               </td>
             </tr>
           </tbody>
@@ -60,12 +60,12 @@
           <tbody class="bg-white dark:bg-gray-800">
             <tr class="border-b border-gray-200">
               <td class="px-6 py-4 text-sm leading-5 font-bold dark:text-gray-100">
-                {present_currency(@preview_info["immediate_payment"]["currency"])}{@preview_info[
+                <%= present_currency(@preview_info["immediate_payment"]["currency"]) %><%= @preview_info[
                   "next_payment"
-                ]["amount"]}
+                ]["amount"] %>
               </td>
               <td class="px-6 py-4 text-sm leading-5 dark:text-gray-100">
-                {present_date(@preview_info["next_payment"]["date"])}
+                <%= present_date(@preview_info["next_payment"]["date"]) %>
               </td>
             </tr>
           </tbody>

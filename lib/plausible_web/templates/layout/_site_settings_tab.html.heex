@@ -14,7 +14,7 @@
     name={@icon}
     class={["h-4 w-4 mr-2", is_current_tab(@conn, @this_tab) && "stroke-2"]}
   />
-  {@text}
+  <%= @text %>
   <Heroicons.chevron_down
     :if={is_nil(@this_tab)}
     class="h-3 w-3 ml-2 text-gray-400 dark:text-gray-500"

@@ -293,11 +293,11 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     test "updates a site member's role by user id", %{conn: conn, user: user} do
       site = new_site(owner: user)
       collaborator = add_guest(site, role: :editor)
-      assert_guest_membership(site.team, site, collaborator, :editor)
+      assert_team_membership(collaborator, site.team, :editor)
 
       put(conn, "/sites/#{site.domain}/memberships/u/#{collaborator.id}/role/viewer")
 
-      assert_guest_membership(site.team, site, collaborator, :viewer)
+      assert_team_membership(collaborator, site.team, :viewer)
     end
 
     test "can downgrade yourself from admin to viewer, redirects to stats", %{
@@ -323,7 +323,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       conn = put(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}/role/owner")
 
-      assert_guest_membership(site.team, site, user, :editor)
+      assert_team_membership(user, site.team, :editor)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "You are not allowed to grant the owner role"
@@ -356,7 +356,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       conn = put(conn, "/sites/#{site.domain}/memberships/u/#{viewer.id}/role/editor")
 
-      assert_guest_membership(site.team, site, viewer, :editor)
+      assert_team_membership(viewer, site.team, :editor)
       assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
     end
 
@@ -366,7 +366,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       conn = put(conn, "/sites/#{site.domain}/memberships/u/#{user.id}/role/owner")
 
-      assert_guest_membership(site.team, site, user, :editor)
+      assert_team_membership(user, site.team, :editor)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "You are not allowed to grant the owner role"

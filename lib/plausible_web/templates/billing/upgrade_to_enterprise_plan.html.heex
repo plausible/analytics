@@ -1,19 +1,19 @@
 <div class="mx-auto mt-6 text-center">
   <h1 class="text-3xl font-black text-black dark:text-gray-100">
-    {if @subscription_resumable,
+    <%= if @subscription_resumable,
       do: "Change subscription plan",
-      else: "Upgrade to Enterprise"}
+      else: "Upgrade to Enterprise" %>
   </h1>
 </div>
 <div class="w-full max-w-lg px-4 mx-auto mt-4 text-gray-900 dark:text-gray-100">
   <div class="flex-1 p-8 mt-8 rounded bg-white shadow-md dark:bg-gray-800 dark:shadow-none">
     <div class="w-full pb-4">
       <span>
-        {if @subscription_resumable,
+        <%= if @subscription_resumable,
           do:
             "We've prepared your account for an upgrade to custom limits outside the listed plans:",
           else:
-            "We've prepared a custom enterprise plan for your account with the following limits:"}
+            "We've prepared a custom enterprise plan for your account with the following limits:" %>
       </span>
     </div>
     <PlausibleWeb.Components.Billing.present_enterprise_plan plan={@latest_enterprise_plan} />
@@ -21,19 +21,19 @@
       <span>
         The plan is priced at
         <b>
-          {case @price do
+          <%= case @price do
             %Money{} = money -> Plausible.Billing.format_price(money)
             nil -> "N/A"
-          end}
+          end %>
         </b>
       </span>
       <span>
-        per {if @latest_enterprise_plan.billing_interval == :yearly,
+        per <%= if @latest_enterprise_plan.billing_interval == :yearly,
           do: "year",
-          else: "month"} + VAT if applicable. {if @subscription_resumable,
+          else: "month" %> + VAT if applicable. <%= if @subscription_resumable,
           do:
             "On the next page, our payment provider will calculate the prorated amount that your card will be charged if you decide to upgrade now.",
-          else: "Click the button below to upgrade."}
+          else: "Click the button below to upgrade." %>
       </span>
     </ul>
     <div class="w-max">

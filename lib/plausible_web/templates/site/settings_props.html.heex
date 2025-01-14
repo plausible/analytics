@@ -22,10 +22,10 @@
     />
 
     <div :if={Plausible.Billing.Feature.Props.enabled?(@site)}>
-      {live_render(@conn, PlausibleWeb.Live.PropsSettings,
+      <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,
         id: "props-form",
         session: %{"site_id" => @site.id, "domain" => @site.domain}
-      )}
+      ) %>
     </div>
   </.tile>
 </.settings_tiles>

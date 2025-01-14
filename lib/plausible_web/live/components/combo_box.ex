@@ -259,9 +259,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         class="block truncate py-2 px-3"
       >
         <%= if @creatable do %>
-          {@creatable_prompt} "{@display_value}"
+          <%= @creatable_prompt %> "<%= @display_value %>"
         <% else %>
-          {@display_value}
+          <%= @display_value %>
         <% end %>
       </a>
     </li>

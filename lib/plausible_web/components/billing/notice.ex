@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       title="Notice"
       {@rest}
     >
-      {account_label(@current_user, @billable_user)} does not have access to {@feature_mod.display_name()}. To get access to this feature,
+      <%= account_label(@current_user, @billable_user) %> does not have access to <%= @feature_mod.display_name() %>. To get access to this feature,
       <.upgrade_call_to_action
         current_team={@current_team}
         current_user={@current_user}
@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def limit_exceeded(assigns) do
     ~H"""
     <.notice {@rest} title="Notice">
-      {account_label(@current_user, @billable_user)} is limited to {@limit} {@resource}. To increase this limit,
+      <%= account_label(@current_user, @billable_user) %> is limited to <%= @limit %> <%= @resource %>. To increase this limit,
       <.upgrade_call_to_action
         current_team={@current_team}
         current_user={@current_user}
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       ~H"""
       <aside class={@class}>
         <.notice title="Pending ownership transfers" class="shadow-md dark:shadow-none mt-4">
-          {@message} To exclude pending sites from your usage, please go to
+          <%= @message %> To exclude pending sites from your usage, please go to
           <.link href="https://plausible.io/sites" class="whitespace-nowrap font-semibold">
             plausible.io/sites
           </.link>

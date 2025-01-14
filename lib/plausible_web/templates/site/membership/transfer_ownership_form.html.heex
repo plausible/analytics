@@ -1,10 +1,10 @@
 <.focus_box>
   <:title>
-    Transfer ownership of {@site.domain}
+    Transfer ownership of <%= @site.domain %>
   </:title>
   <:subtitle>
     Enter the email address of the new owner. We will contact them over email to
-    offer them the ownership of {@site.domain}. If they don't respond in 48
+    offer them the ownership of <%= @site.domain %>. If they don't respond in 48
     hours, the request will expire automatically. <br /><br />
     Do note that a subscription plan is not transferred alongside the site. If
     they accept the transfer request, the new owner will need to have an active
@@ -18,7 +18,7 @@
     action={Routes.membership_path(@conn, :transfer_ownership, @site.domain)}
   >
     <%= if @conn.assigns[:error] do %>
-      <div class="text-red-500 text-xs italic mt-4">{@conn.assigns[:error]}</div>
+      <div class="text-red-500 text-xs italic mt-4"><%= @conn.assigns[:error] %></div>
     <% end %>
 
     <div class="my-6">

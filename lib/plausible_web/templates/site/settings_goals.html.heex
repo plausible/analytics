@@ -21,9 +21,9 @@
     </:subtitle>
 
     <div :if={Plausible.Billing.Feature.Goals.enabled?(@site)}>
-      {live_render(@conn, PlausibleWeb.Live.GoalSettings,
+      <%= live_render(@conn, PlausibleWeb.Live.GoalSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}
-      )}
+      ) %>
     </div>
   </.tile>
 </.settings_tiles>

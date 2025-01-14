@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
     assigns = assign(assigns, :code, qr_code)
 
     ~H"""
-    {Phoenix.HTML.raw(@code)}
+    <%= Phoenix.HTML.raw(@code) %>
     """
   end
 
@@ -38,29 +38,25 @@ defmodule PlausibleWeb.Components.TwoFactor do
       end
 
     assigns = assign(assigns, :input_class, input_class)
-    assigns = assign(assigns, :field, assigns[:form][assigns[:field]])
 
     ~H"""
     <div class={[@class, "flex items-center"]}>
-      <input
-        type="text"
-        name={@field.name}
-        value={@field.value}
-        autocomplete="off"
-        class={@input_class}
-        oninput={
+      <%= Phoenix.HTML.Form.text_input(@form, @field,
+        autocomplete: "off",
+        class: @input_class,
+        oninput:
           if @show_button? do
             "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('#{@id}').focus()"
           else
             "this.value=this.value.replace(/[^0-9]/g, '');"
-          end
-        }
-        onclick="this.select();"
-        oninvalid={@show_button? && "document.getElementById('#{@id}').disabled = false"}
-        maxlength="6"
-        placeholder="••••••"
-        required="required"
-      />
+          end,
+        onclick: "this.select();",
+        oninvalid: @show_button? && "document.getElementById('#{@id}').disabled = false",
+        maxlength: "6",
+        placeholder: "••••••",
+        value: "",
+        required: "required"
+      ) %>
       <.button
         :if={@show_button?}
         type="submit"
@@ -146,19 +142,19 @@ defmodule PlausibleWeb.Components.TwoFactor do
               </div>
               <div class="sm:flex sm:items-start">
                 <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
-                  {render_slot(@icon)}
+                  <%= render_slot(@icon) %>
                 </div>
                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left text-gray-900 dark:text-gray-100">
                   <h3 class="text-lg leading-6 font-medium" id="modal-title">
-                    {@title}
+                    <%= @title %>
                   </h3>
 
-                  {render_slot(@inner_block, f)}
+                  <%= render_slot(@inner_block, f) %>
                 </div>
               </div>
             </div>
             <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-9 sm:flex sm:flex-row-reverse">
-              {render_slot(@buttons)}
+              <%= render_slot(@buttons) %>
               <.button
                 type="button"
                 x-on:click={"#{@state_param} = false"}

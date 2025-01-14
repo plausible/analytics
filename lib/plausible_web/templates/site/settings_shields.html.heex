@@ -1,31 +1,31 @@
 <%= case @shield do %>
   <% "ip_addresses" -> %>
-    {live_render(@conn, PlausibleWeb.Live.Shields.IPAddresses,
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.IPAddresses,
       session: %{
         "site_id" => @site.id,
         "domain" => @site.domain,
         "remote_ip" => PlausibleWeb.RemoteIP.get(@conn)
       }
-    )}
+    ) %>
   <% "countries" -> %>
-    {live_render(@conn, PlausibleWeb.Live.Shields.Countries,
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.Countries,
       session: %{
         "site_id" => @site.id,
         "domain" => @site.domain
       }
-    )}
+    ) %>
   <% "pages" -> %>
-    {live_render(@conn, PlausibleWeb.Live.Shields.Pages,
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.Pages,
       session: %{
         "site_id" => @site.id,
         "domain" => @site.domain
       }
-    )}
+    ) %>
   <% "hostnames" -> %>
-    {live_render(@conn, PlausibleWeb.Live.Shields.Hostnames,
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.Hostnames,
       session: %{
         "site_id" => @site.id,
         "domain" => @site.domain
       }
-    )}
+    ) %>
 <% end %>

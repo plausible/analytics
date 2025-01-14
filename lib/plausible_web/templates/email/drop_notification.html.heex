@@ -1,7 +1,7 @@
-We've recorded {@current_visitors} visitors on
+We've recorded <%= @current_visitors %> visitors on
 <a href={"https://" <> @site.domain}><%= @site.domain %></a> in the last 12 hours.
 <%= if @dashboard_link do %>
-  <br /><br /> View dashboard: <a href={@dashboard_link}>{@dashboard_link}</a>
+  <br /><br /> View dashboard: <a href={@dashboard_link}><%= @dashboard_link %></a>
   <br /><br /> Something looks off? Please
   <a href={@installation_link}>review your installation</a>
   to verify that Plausible has been integrated correctly.

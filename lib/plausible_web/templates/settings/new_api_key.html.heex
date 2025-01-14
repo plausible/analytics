@@ -10,7 +10,7 @@
       <.error :for={
         msg <- Enum.map(f[:key].errors, &PlausibleWeb.Live.Components.Form.translate_error/1)
       }>
-        {msg}
+        <%= msg %>
       </.error>
 
       <p class="mt-2 text-gray-500 dark:text-gray-200">

@@ -6,12 +6,12 @@
     <:subtitle>
       Import existing data from external sources.
       Pick one of the options below to start a new import. <br />
-      A maximum of {Plausible.Imported.max_complete_imports()} imports at any time is allowed.
+      A maximum of <%= Plausible.Imported.max_complete_imports() %> imports at any time is allowed.
     </:subtitle>
 
-    {live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
+    <%= live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
       session: %{"domain" => @site.domain}
-    )}
+    ) %>
   </.tile>
 
   <.tile>
@@ -22,12 +22,12 @@
       Export all your data into CSV format
     </:subtitle>
 
-    {live_render(@conn, PlausibleWeb.Live.CSVExport,
+    <%= live_render(@conn, PlausibleWeb.Live.CSVExport,
       session: %{
         "site_id" => @site.id,
         "email_to" => @current_user.email,
         "storage" => on_ee(do: "s3", else: "local")
       }
-    )}
+    ) %>
   </.tile>
 </.settings_tiles>
