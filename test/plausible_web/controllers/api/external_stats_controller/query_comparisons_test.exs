@@ -125,7 +125,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
       build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
       build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
-      build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00])
+      build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+      build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00]),
+      build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00]),
+      build(:pageview, browser: "Safari", timestamp: ~N[2021-01-08 00:00:00])
     ])
 
     conn =
@@ -143,20 +146,44 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     assert json_response(conn, 200)["results"] == [
              %{
                "dimensions" => ["Chrome"],
-               "metrics" => [2, 66.7],
+               "metrics" => [3, 50.0],
                "comparison" => %{
                  "dimensions" => ["Chrome"],
                  "metrics" => [1, 12.5],
-                 "change" => [100, 434]
+                 "change" => [200, 300]
                }
              },
              %{
                "dimensions" => ["Firefox"],
-               "metrics" => [1, 33.3],
+               "metrics" => [2, 33.3],
                "comparison" => %{
                  "dimensions" => ["Firefox"],
                  "metrics" => [4, 50.0],
-                 "change" => [-75, -33]
+                 "change" => [-50, -33]
+               }
+             }
+           ]
+
+    conn2 =
+      post(conn, "/api/v2/query-internal-test", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors", "percentage"],
+        "date_range" => ["2021-01-07", "2021-01-13"],
+        "dimensions" => ["visit:browser"],
+        "include" => %{
+          "comparisons" => %{"mode" => "previous_period"}
+        },
+        "pagination" => %{"limit" => 2, "offset" => 2}
+      })
+
+    assert json_response(conn2, 200)["results"] == [
+             %{
+               "dimensions" => ["Safari"],
+               "metrics" => [1, 16.7],
+               "comparison" => %{
+                 "dimensions" => ["Safari"],
+                 "metrics" => [3, 37.5],
+                 "change" => [-67, -55]
                }
              }
            ]

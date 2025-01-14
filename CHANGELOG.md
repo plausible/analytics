@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Fix typo on login screen
 - Fix Direct / None details modal not opening
 - Fix year over year comparisons being offset by a day for leap years
+- Breakdown modals now display correct comparison values instead of 0 after pagination
 
 ## v2.1.4 - 2024-10-08
 

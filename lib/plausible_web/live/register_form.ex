@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   def render(%{invitation_expired: true} = assigns) do
     ~H"""
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
-      <h1 class="text-3xl font-black"><%= Plausible.product_name() %></h1>
+      <h1 class="text-3xl font-black">{Plausible.product_name()}</h1>
       <div class="text-xl font-medium">Lightweight and privacy-friendly web analytics</div>
     </div>
 
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     <div class="mx-auto text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
         <%= if ce?() or @live_action == :register_from_invitation_form do %>
-          Register your <%= Plausible.product_name() %> account
+          Register your {Plausible.product_name()} account
         <% else %>
           Register your 30-day free trial
         <% end %>
@@ -155,7 +155,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
             </div>
             <%= if @captcha_error do %>
               <div class="text-red-500 text-xs italic mt-3" x-data x-init="hcaptcha.reset()">
-                <%= @captcha_error %>
+                {@captcha_error}
               </div>
             <% end %>
             <script
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
             "Start my free trial"
           end %>
         <.button id="register" disabled={@disable_submit} type="submit" class="mt-4 w-full">
-          <%= submit_text %>
+          {submit_text}
         </.button>
 
         <p class="text-center text-gray-600 dark:text-gray-500  mt-4">

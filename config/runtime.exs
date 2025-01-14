@@ -969,3 +969,5 @@ unless s3_disabled? do
     exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET"),
     imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end
+
+config :phoenix_storybook, enabled: env !== "prod"
