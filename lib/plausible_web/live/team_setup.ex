@@ -126,18 +126,21 @@ defmodule PlausibleWeb.Live.TeamSetup do
       <div class="flex items-center gap-x-5">
         <img src={User.profile_img_url(@user)} class="w-7 rounded-full" />
         <span class="text-sm">
-          <%= @user.name %>
+          {@user.name}
 
-          <span :if={@you?} class="ml-1 bg-gray-100 text-gray-500 text-xs p-1 rounded">
+          <span
+            :if={@you?}
+            class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-100 text-gray-500 text-xs px-1 rounded"
+          >
             You
           </span>
 
-          <br /><span class="text-gray-500 text-xs"><%= @user.email %></span>
+          <br /><span class="text-gray-500 text-xs">{@user.email}</span>
         </span>
         <div class="flex-1 text-right">
           <.dropdown class="relative">
             <:button class="role bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-              <%= @role |> to_string() |> String.capitalize() %>
+              {@role |> to_string() |> String.capitalize()}
               <Heroicons.chevron_down mini class="size-4 mt-0.5" />
             </:button>
             <:menu class="dropdown-items max-w-60">
@@ -191,7 +194,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
               >
-                <div class="text-red-600 hover:text-red-600">Remove member</div>
+                <div class="text-red-600 hover:text-red-600 dark:text-red-500 hover:dark:text-red-400">
+                  Remove member
+                </div>
                 <div class="text-gray-500 dark:text-gray-400 text-xs/5">
                   Remove member from your team
                 </div>
