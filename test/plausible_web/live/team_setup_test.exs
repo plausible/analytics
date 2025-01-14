@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.SitesTest do
+defmodule PlausibleWeb.Live.TeamSetupTest do
   use PlausibleWeb.ConnCase, async: true
 
   alias Plausible.Teams
@@ -198,6 +198,37 @@ defmodule PlausibleWeb.Live.SitesTest do
              |> render()
              |> find(".member")
              |> text() =~ guest.email
+    end
+  end
+
+  describe "/team/setup - full integration" do
+    setup [:create_user, :log_in, :create_team]
+
+    test "setting up team above plan member limits", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      site = new_site(owner: user)
+      guest = add_guest(site, role: :viewer)
+
+      extra_guests = build_list(3, :user)
+
+      {:ok, lv, _html} = live(conn, @url)
+
+      type_into_combo(lv, "team-member-candidates", guest.email)
+      select_combo_option(lv, 1)
+
+      for g <- extra_guests do
+        type_into_combo(lv, "team-member-candidates", g.email)
+        select_combo_option(lv, 0)
+      end
+
+      lv |> element(~s|button[phx-click="setup-team"]|) |> render_click()
+
+      assert team |> Ecto.assoc(:team_invitations) |> Repo.aggregate(:count) == 0
+
+      assert lv |> render() |> text() =~ "Your account is limited to 3 team members"
     end
   end
 

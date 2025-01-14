@@ -304,10 +304,13 @@ defmodule PlausibleWeb.Live.Teams do
 
         {:noreply, socket}
 
-      {:error, error} ->
+      {:error, {:over_limit, limit}} ->
         socket =
           socket
-          |> put_live_flash(:error, "Error: #{inspect(error)}")
+          |> put_live_flash(
+            :error,
+            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit."
+          )
 
         {:noreply, socket}
     end
