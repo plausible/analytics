@@ -15,13 +15,17 @@ defmodule PlausibleWeb.UserAuth do
 
   @spec log_in_user(Plug.Conn.t(), Auth.User.t(), String.t() | nil) :: Plug.Conn.t()
   def log_in_user(conn, user, redirect_path \\ nil) do
-    login_dest =
-      redirect_path || Plug.Conn.get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+    redirect_to =
+      if String.starts_with?(redirect_path || "", "/") do
+        redirect_path
+      else
+        Routes.site_path(conn, :index)
+      end
 
     conn
     |> set_user_session(user)
     |> set_logged_in_cookie()
-    |> Phoenix.Controller.redirect(external: login_dest)
+    |> Phoenix.Controller.redirect(to: redirect_to)
   end
 
   @spec log_out_user(Plug.Conn.t()) :: Plug.Conn.t()

@@ -337,6 +337,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == ""
+      assert session.referrer == ""
     end
 
     test "ignores localhost referrer", %{conn: conn, site: site} do

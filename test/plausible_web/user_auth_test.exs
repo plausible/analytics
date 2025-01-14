@@ -30,33 +30,12 @@ defmodule PlausibleWeb.UserAuthTest do
       assert conn.private[:plug_session_info] == :renew
       assert conn.resp_cookies["logged_in"].max_age > 0
       assert get_session(conn, :user_token) == session.token
-      assert get_session(conn, :login_dest) == nil
-    end
-
-    test "redirects to `login_dest` if present", %{conn: conn, user: user} do
-      conn =
-        conn
-        |> init_session()
-        |> put_session("login_dest", "/next")
-        |> UserAuth.log_in_user(user)
-
-      assert redirected_to(conn, 302) == "/next"
     end
 
     test "redirects to `redirect_path` if present", %{conn: conn, user: user} do
       conn =
         conn
         |> init_session()
-        |> UserAuth.log_in_user(user, "/next")
-
-      assert redirected_to(conn, 302) == "/next"
-    end
-
-    test "redirect_path` has precednce over `login_dest`", %{conn: conn, user: user} do
-      conn =
-        conn
-        |> init_session()
-        |> put_session("login_dest", "/ignored")
         |> UserAuth.log_in_user(user, "/next")
 
       assert redirected_to(conn, 302) == "/next"
@@ -76,7 +55,6 @@ defmodule PlausibleWeb.UserAuthTest do
       conn =
         conn
         |> init_session()
-        |> put_session("login_dest", "/ignored")
         |> UserAuth.log_out_user()
 
       # the other session remains intact
@@ -84,7 +62,6 @@ defmodule PlausibleWeb.UserAuthTest do
       assert another_session.token == another_session_token
       assert conn.private[:plug_session_info] == :renew
       assert conn.resp_cookies["logged_in"].max_age == 0
-      assert get_session(conn, :login_dest) == nil
     end
   end
 

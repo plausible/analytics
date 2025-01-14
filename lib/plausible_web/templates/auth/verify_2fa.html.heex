@@ -26,7 +26,7 @@
 
   <.form
     :let={f}
-    action={Routes.auth_path(@conn, :verify_2fa)}
+    action={Routes.auth_path(@conn, :verify_2fa, Map.take(@conn.query_params, ["return_to"]))}
     for={@conn.params}
     onsubmit="document.getElementById('verify-button').disabled = true"
   >
@@ -42,6 +42,8 @@
           class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
         />
       </div>
+
+      <.input type="hidden" field={f[:return_to]} />
     </div>
   </.form>
 </.focus_box>
