@@ -1,4 +1,4 @@
-{@inviter.email} has invited you to join the {@site.domain} site on {Plausible.product_name()}.
+<%= @inviter.email %> has invited you to join the <%= @site.domain %> site on <%= Plausible.product_name() %>.
 <a href={
   Routes.auth_url(
     PlausibleWeb.Endpoint,

@@ -17,7 +17,7 @@ defmodule PlausibleWeb.HelpScoutView do
 
       <%= if @conn.assigns[:error] do %>
         <p>
-          Failed to get details: {@error}
+          Failed to get details: <%= @error %>
         </p>
       <% else %>
         <div class="status">
@@ -25,7 +25,7 @@ defmodule PlausibleWeb.HelpScoutView do
             Status
           </p>
           <p class="value">
-            <a href={@status_link} target="_blank">{@status_label}</a>
+            <a href={@status_link} target="_blank"><%= @status_label %></a>
           </p>
         </div>
 
@@ -34,13 +34,13 @@ defmodule PlausibleWeb.HelpScoutView do
             Plan
           </p>
           <p class="value">
-            <a href={@plan_link} target="_blank">{@plan_label}</a>
+            <a href={@plan_link} target="_blank"><%= @plan_label %></a>
           </p>
         </div>
 
         <div class="sites">
           <p class="label">
-            Owner of <b><a href={@sites_link} target="_blank">{@sites_count} sites</a></b>
+            Owner of <b><a href={@sites_link} target="_blank"><%= @sites_count %> sites</a></b>
           </p>
           <p class="value"></p>
         </div>
@@ -51,7 +51,7 @@ defmodule PlausibleWeb.HelpScoutView do
           </p>
 
           <div class="value">
-            {PhoenixHTMLHelpers.Format.text_to_html(@notes, escape: true)}
+            <%= Phoenix.HTML.Format.text_to_html(@notes, escape: true) %>
           </div>
         </div>
       <% end %>
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.HelpScoutView do
     <.layout>
       <%= if @conn.assigns[:error] do %>
         <p>
-          Failed to run search: {@error}
+          Failed to run search: <%= @error %>
         </p>
       <% else %>
         <div class="search">
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.HelpScoutView do
                 onclick={"loadContent('/helpscout/show?#{URI.encode_query(email: user.email, conversation_id: @conversation_id, customer_id: @customer_id)}')"}
                 href="#"
               >
-                {user.email} ({user.sites_count} sites)
+                <%= user.email %> (<%= user.sites_count %> sites)
               </a>
             </li>
           </ul>
@@ -160,7 +160,7 @@ defmodule PlausibleWeb.HelpScoutView do
 
         <body>
           <div id="content">
-            {render_slot(@inner_block)}
+            <%= render_slot(@inner_block) %>
           </div>
 
           <script type="text/javascript">

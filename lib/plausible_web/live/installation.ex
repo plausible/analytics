@@ -293,12 +293,12 @@ defmodule PlausibleWeb.Live.Installation do
           class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
         />
         <label for={"check-#{@variant}"}>
-          {@label}
+          <%= @label %>
         </label>
         <div class="ml-2 collapse md:visible">
           <.tooltip sticky?={false}>
             <:tooltip_content>
-              {@tooltip}
+              <%= @tooltip %>
               <br /><br />Click to learn more.
             </:tooltip_content>
             <a href={@learn_more} target="_blank" rel="noopener noreferrer">

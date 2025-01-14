@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
       <%= if is_list(@props) && length(@props) > 0 do %>
         <.table id="allowed-props" rows={Enum.with_index(@props)}>
           <:tbody :let={{prop, index}}>
-            <.td id={"prop-#{index}"}><span class="font-medium">{prop}</span></.td>
+            <.td id={"prop-#{index}"}><span class="font-medium"><%= prop %></span></.td>
             <.td actions>
               <.delete_button
                 id={"disallow-prop-#{prop}"}

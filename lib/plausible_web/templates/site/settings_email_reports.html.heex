@@ -26,10 +26,10 @@
 
   <.tile :for={{_type, meta} <- email_reports} docs="email-reports">
     <:title>
-      {meta.heading}
+      <%= meta.heading %>
     </:title>
     <:subtitle>
-      {meta.subtitle}
+      <%= meta.subtitle %>
     </:subtitle>
 
     <.form
@@ -42,7 +42,7 @@
     >
       <div>
         <.toggle_submit set_to={meta.report}>
-          {meta.toggle}
+          <%= meta.toggle %>
         </.toggle_submit>
       </div>
     </.form>
@@ -65,7 +65,7 @@
             <div class="flex items-center gap-x-2">
               <Heroicons.envelope_open class="w-6 h-6 feather" />
               <div>
-                {recipient}
+                <%= recipient %>
               </div>
             </div>
           </.td>
@@ -128,10 +128,10 @@
 
   <.tile :for={{type, meta} <- change_notifications} docs="traffic-spikes">
     <:title>
-      {meta.heading}
+      <%= meta.heading %>
     </:title>
     <:subtitle>
-      {meta.subtitle}
+      <%= meta.subtitle %>
     </:subtitle>
 
     <.form
@@ -144,7 +144,7 @@
       method="post"
     >
       <.toggle_submit set_to={meta.notification}>
-        {meta.toggle}
+        <%= meta.toggle %>
       </.toggle_submit>
     </.form>
 
@@ -186,7 +186,7 @@
             <div class="flex items-cetner gap-x-2">
               <Heroicons.envelope_open class="w-6 h-6 feather" />
               <div>
-                {recipient}
+                <%= recipient %>
               </div>
             </div>
           </.td>

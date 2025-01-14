@@ -33,7 +33,7 @@ end
 
 defmodule Plausible.Billing.Ecto.FeatureList do
   @moduledoc """
-  Ecto type representing a list of features. This is a proxy for
+  Ecto type representing a list of features. This is a proxy for 
   `{:array, Plausible.Billing.Ecto.Feature}` and is required for Kaffy to
   render the HTML input correctly.
   """
@@ -52,8 +52,15 @@ defmodule Plausible.Billing.Ecto.FeatureList do
       for mod <- Plausible.Billing.Feature.list(), not mod.free?() do
         [
           {:safe, ~s(<label style="padding-right: 15px;">)},
-          {:safe,
-           ~s(<input type="checkbox" name="#{form.name}[#{field}][]" "#{form.name}_#{field}_#{mod.name()}" value="#{mod.name()}" style="margin-right: 3px;" #{if mod in features, do: "checked", else: ""}>)},
+          Phoenix.HTML.Tag.tag(
+            :input,
+            name: Phoenix.HTML.Form.input_name(form, field) <> "[]",
+            id: Phoenix.HTML.Form.input_id(form, field, mod.name()),
+            type: "checkbox",
+            value: mod.name(),
+            style: "margin-right: 3px;",
+            checked: mod in features
+          ),
           mod.display_name(),
           {:safe, ~s(</label>)}
         ]
@@ -61,7 +68,7 @@ defmodule Plausible.Billing.Ecto.FeatureList do
 
     [
       {:safe, ~s(<div class="form-group">)},
-      {:safe, ~s(<label for="#{form.name}_#{field}">#{Phoenix.Naming.humanize(field)}</label>)},
+      Phoenix.HTML.Form.label(form, field),
       {:safe, ~s(<div class="form-control">)},
       checkboxes,
       {:safe, ~s(</div>)},

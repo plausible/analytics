@@ -1,10 +1,10 @@
 <.focus_box>
   <:title>
-    Invite member to {@site.domain}
+    Invite member to <%= @site.domain %>
   </:title>
 
   <:subtitle>
-    Enter the email address and role of the person you want to invite. We will contact them over email to offer them access to {@site.domain} analytics.<br /><br />
+    Enter the email address and role of the person you want to invite. We will contact them over email to offer them access to <%= @site.domain %> analytics.<br /><br />
     The invitation will expire in 48 hours
   </:subtitle>
 
@@ -28,7 +28,7 @@
       />
 
       <%= if @conn.assigns[:error] do %>
-        <div class="text-red-500 mb-4">{@conn.assigns[:error]}</div>
+        <div class="text-red-500 mb-4"><%= @conn.assigns[:error] %></div>
       <% end %>
     </div>
 

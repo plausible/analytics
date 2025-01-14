@@ -22,11 +22,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
         <.table rows={@funnels}>
           <:tbody :let={funnel}>
             <.td truncate>
-              <span class="font-medium">{funnel.name}</span>
+              <span class="font-medium"><%= funnel.name %></span>
             </.td>
             <.td hide_on_mobile>
               <span class="text-gray-500 dark:text-gray-400">
-                {funnel.steps_count}-step funnel
+                <%= funnel.steps_count %>-step funnel
               </span>
             </.td>
             <.td actions>

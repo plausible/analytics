@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input name="my-input" errors={["oh no!"]} />
   """
 
-  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-900 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+  @default_input_class "text-sm dark:bg-gray-900 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
 
   attr(:id, :any, default: nil)
   attr(:name, :any)
@@ -55,8 +55,6 @@ defmodule PlausibleWeb.Live.Components.Form do
   slot(:inner_block)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
-    errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
-
     assigns
     |> assign(
       field: nil,
@@ -65,7 +63,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       mt?: assigns.mt?,
       width: assigns.width
     )
-    |> assign(:errors, Enum.map(errors, &translate_error(&1)))
+    |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
     |> input()
@@ -73,27 +71,27 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class={@mt? && "mt-2"}>
-      <.label for={@id} class="mb-2">{@label}</.label>
+    <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
+      <.label for={@id} class="mb-2"><%= @label %></.label>
 
       <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
-        {@help_text}
+        <%= @help_text %>
       </p>
       <select id={@id} name={@name} multiple={@multiple} class={[@class, @width]} {@rest}>
-        <option :if={@prompt} value="">{@prompt}</option>
-        {Phoenix.HTML.Form.options_for_select(@options, @value)}
+        <option :if={@prompt} value=""><%= @prompt %></option>
+        <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
       </select>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end
 
   def input(%{type: "checkbox"} = assigns) do
     ~H"""
-    <div class={[
-      "flex flex-inline items-center sm:justify-start justify-center gap-x-2",
-      @mt? && "mt-2"
-    ]}>
+    <div
+      phx-feedback-for={@name}
+      class={["flex flex-inline items-center sm:justify-start justify-center gap-x-2", @mt? && "mt-2"]}
+    >
       <input
         type="checkbox"
         value={@value || "true"}
@@ -101,7 +99,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         name={@name}
         class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
       />
-      <.label for={@id}>{@label}</.label>
+      <.label for={@id}><%= @label %></.label>
     </div>
     """
   end
@@ -118,12 +116,12 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :errors, errors)
 
     ~H"""
-    <div class={@mt? && "mt-2"}>
+    <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-2">
-        {@label}
+        <%= @label %>
       </.label>
       <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
-        {@help_text}
+        <%= @help_text %>
       </p>
       <input
         type={@type}
@@ -133,9 +131,9 @@ defmodule PlausibleWeb.Live.Components.Form do
         class={[@class, @width, assigns[:rest][:disabled] && "text-gray-500 dark:text-gray-400"]}
         {@rest}
       />
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
       <.error :for={msg <- @errors}>
-        {msg}
+        <%= msg %>
       </.error>
     </div>
     """
@@ -155,7 +153,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     <div>
       <div :if={@label}>
         <.label for={@id} class="mb-2">
-          {@label}
+          <%= @label %>
         </.label>
       </div>
       <div class="relative">
@@ -220,14 +218,10 @@ defmodule PlausibleWeb.Live.Components.Form do
       |> assign(:too_weak?, too_weak?)
       |> assign(:field, %{field | errors: errors})
       |> assign(:strength, strength)
-      |> assign(
-        :show_meter?,
-        Phoenix.Component.used_input?(field) && (too_weak? || strength.score > 0)
-      )
 
     ~H"""
     <.input field={@field} type="password" autocomplete="new-password" label={@label} id={@id} {@rest}>
-      <.strength_meter :if={@show_meter?} {@strength} />
+      <.strength_meter :if={@too_weak? or @strength.score > 0} {@strength} />
     </.input>
     """
   end
@@ -262,7 +256,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :class, final_class)
 
     ~H"""
-    <p class={@class}>Min {@minimum} characters</p>
+    <p class={@class}>Min <%= @minimum %> characters</p>
     """
   end
 
@@ -317,11 +311,11 @@ defmodule PlausibleWeb.Live.Components.Form do
       >
       </div>
     </div>
-    <p :if={@score <= 2} class="text-sm text-red-500">
+    <p :if={@score <= 2} class="text-sm text-red-500 phx-no-feedback:hidden">
       Password is too weak
     </p>
     <p :if={@feedback} class="text-xs text-gray-500">
-      {@feedback}
+      <%= @feedback %>
     </p>
     """
   end
@@ -336,7 +330,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   def label(assigns) do
     ~H"""
     <label for={@for} class={["text-sm block font-medium dark:text-gray-100", @class]}>
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </label>
     """
   end
@@ -348,8 +342,8 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def error(assigns) do
     ~H"""
-    <p class="flex gap-3 text-sm leading-6 text-red-500">
-      {render_slot(@inner_block)}
+    <p class="flex gap-3 text-sm leading-6 text-red-500 phx-no-feedback:hidden">
+      <%= render_slot(@inner_block) %>
     </p>
     """
   end

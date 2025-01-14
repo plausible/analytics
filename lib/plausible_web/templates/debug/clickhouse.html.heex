@@ -3,9 +3,9 @@
     <%= for log <- @queries do %>
       <details class="group py-1">
         <summary class="flex cursor-pointer flex-row items-center justify-between py-1 font-semibold text-gray-800 dark:text-gray-200 pt-4">
-          {log["request_method"]} {controller_name(log["phoenix_controller"])}.{log[
+          <%= log["request_method"] %> <%= controller_name(log["phoenix_controller"]) %>.<%= log[
             "phoenix_action"
-          ]} ({log[:query_duration_ms]}ms)
+          ] %> (<%= log[:query_duration_ms] %>ms)
           <svg
             class="h-6 w-6 rotate-0 transform text-gray-400 dark:text-gray-200 group-open:rotate-180"
             xmlns="http://www.w3.org/2000/svg"
@@ -22,7 +22,7 @@
           <tbody>
             <%= for {key, value} <- log do %>
               <tr class="table-row">
-                <td class="table-cell p-2">{key}</td>
+                <td class="table-cell p-2"><%= key %></td>
                 <td class="table-cell p-2">
                   <%= case key do %>
                     <% :query -> %>
@@ -30,7 +30,7 @@
                     <% "params" -> %>
                       <pre><%= Jason.encode!(value, pretty: true) %></pre>
                     <% _ -> %>
-                      {value}
+                      <%= value %>
                   <% end %>
                 </td>
               </tr>

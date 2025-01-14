@@ -2,7 +2,7 @@
   You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
   <br /><br />
 <% end %>
-To finish your setup for {@site.domain}, review
+To finish your setup for <%= @site.domain %>, review
 <a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}/installation"}>your installation</a> and start collecting visitor statistics.
 <br /><br />
 This Plausible script is 45 times smaller than Google Analytics script so you’ll have a fast loading site while getting all the important traffic insights on one single page.

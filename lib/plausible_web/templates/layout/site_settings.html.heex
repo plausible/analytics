@@ -8,7 +8,7 @@
     </.styled_link>
     <div class="pb-5 border-b border-gray-200 dark:border-gray-500">
       <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
-        Settings for {@site.domain}
+        Settings for <%= @site.domain %>
       </h2>
     </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
@@ -25,33 +25,33 @@
         <div class="hidden lg:block">
           <%= for %{key: key, value: value, icon: icon} <- site_settings_sidebar(@conn) do %>
             <%= if is_binary(value) do %>
-              {render("_site_settings_tab.html",
+              <%= render("_site_settings_tab.html",
                 icon: icon,
                 this_tab: value,
                 text: key,
                 site: @site,
                 conn: @conn,
                 submenu?: false
-              )}
+              ) %>
             <% else %>
-              {render("_site_settings_tab.html",
+              <%= render("_site_settings_tab.html",
                 icon: icon,
                 this_tab: nil,
                 text: key,
                 site: @site,
                 conn: @conn,
                 submenu?: false
-              )}
+              ) %>
               <div class="ml-6">
                 <%= for %{key: key, value: val} <- value do %>
-                  {render("_site_settings_tab.html",
+                  <%= render("_site_settings_tab.html",
                     icon: nil,
                     this_tab: val,
                     text: key,
                     site: @site,
                     conn: @conn,
                     submenu?: true
-                  )}
+                  ) %>
                 <% end %>
               </div>
             <% end %>
@@ -60,7 +60,7 @@
       </div>
 
       <div class="space-y-6 lg:col-span-9 lg:mt-4">
-        {@inner_content}
+        <%= @inner_content %>
       </div>
     </div>
   </div>

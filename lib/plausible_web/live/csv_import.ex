@@ -87,7 +87,7 @@ defmodule PlausibleWeb.Live.CSVImport do
           original={@original_date_range}
         />
         <p :for={error <- upload_errors(@uploads.import)} class="text-red-400">
-          {error_to_string(error)}
+          <%= error_to_string(error) %>
         </p>
       </form>
     </div>
@@ -151,8 +151,8 @@ defmodule PlausibleWeb.Live.CSVImport do
   defp dates(assigns) do
     ~H"""
     <span class="whitespace-nowrap">
-      <span class="font-medium">{@range.first}</span>
-      to <span class="font-medium">{@range.last}</span>
+      <span class="font-medium"><%= @range.first %></span>
+      to <span class="font-medium"><%= @range.last %></span>
     </span>
     """
   end
@@ -182,15 +182,15 @@ defmodule PlausibleWeb.Live.CSVImport do
           if(@status == :error, do: "text-red-600 dark:text-red-700")
         ]}>
           <%= if @upload do %>
-            {@upload.client_name}
+            <%= @upload.client_name %>
           <% else %>
-            {@table}_YYYYMMDD_YYYYMMDD.csv
+            <%= @table %>_YYYYMMDD_YYYYMMDD.csv
           <% end %>
         </span>
       </div>
 
       <p :for={error <- @errors} class="ml-6 text-sm text-red-600 dark:text-red-700">
-        {error_to_string(error)}
+        <%= error_to_string(error) %>
       </p>
     </li>
     """
