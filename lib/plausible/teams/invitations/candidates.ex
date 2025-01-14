@@ -40,6 +40,7 @@ defmodule Plausible.Teams.Invitations.Candidates do
         inner_join: u in assoc(tm, :user),
         where: gm.site_id in ^all_site_ids,
         where: u.email == ^email,
+        distinct: true,
         select: u
     )
   end
