@@ -59,9 +59,8 @@ site =
     owner: user
   )
 
-add_guest(site, user: new_user(name: "Adrian Gruntkowski @ Plausible staging", email: "adrian+staging@plausible.io", password: "plausible"), role: :viewer)
-add_guest(site, user: new_user(name: "Adrian 99991", email: "adrian+99991@plausible.io", password: "plausible"), role: :editor)
-add_guest(site, user: new_user(name: "Adrian 99992", email: "adrian+99992@plausible.io", password: "plausible"), role: :editor)
+add_guest(site, user: new_user(name: "Arnold Wallaby", password: "plausible"), role: :viewer)
+add_guest(site, user: new_user(name: "Lois Lane", password: "plausible"), role: :editor)
 
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
 Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")
