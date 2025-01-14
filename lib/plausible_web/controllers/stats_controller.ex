@@ -194,10 +194,10 @@ defmodule PlausibleWeb.StatsController do
     include_scroll_depth? =
       !query.include_imported &&
         PlausibleWeb.Api.StatsController.scroll_depth_enabled?(site, current_user) &&
-        Filters.filtering_on_dimension?(query, "event:page")
+        Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 
     {metrics, column_headers} =
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0) do
         {
           [:visitors, :events, :conversion_rate],
           [:date, :unique_conversions, :total_conversions, :conversion_rate]

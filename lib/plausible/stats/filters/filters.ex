@@ -90,6 +90,7 @@ defmodule Plausible.Stats.Filters do
 
   def dimensions_used_in_filters(filters, opts \\ []) do
     min_depth = Keyword.get(opts, :min_depth, 0)
+    max_depth = Keyword.get(opts, :max_depth, 999)
     # :ignore or :only
     behavioral_filter_option = Keyword.get(opts, :behavioral_filters, nil)
 
@@ -100,7 +101,7 @@ defmodule Plausible.Stats.Filters do
         {depth + 1, is_behavioral_filter or operator in [:has_done, :has_done_not]}
       end
     )
-    |> Enum.filter(fn {_filter, {depth, _}} -> depth >= min_depth end)
+    |> Enum.filter(fn {_filter, {depth, _}} -> depth >= min_depth and depth <= max_depth end)
     |> Enum.filter(fn {_filter, {_, is_behavioral_filter}} ->
       case behavioral_filter_option do
         :ignore -> not is_behavioral_filter
@@ -111,7 +112,7 @@ defmodule Plausible.Stats.Filters do
     |> Enum.map(fn {[_operator, dimension | _rest], _depth} -> dimension end)
   end
 
-  def filtering_on_dimension?(query, dimension) do
+  def filtering_on_dimension?(query, dimension, opts \\ []) do
     filters =
       case query do
         %Query{filters: filters} -> filters
@@ -119,7 +120,7 @@ defmodule Plausible.Stats.Filters do
         filters when is_list(filters) -> filters
       end
 
-    dimension in dimensions_used_in_filters(filters)
+    dimension in dimensions_used_in_filters(filters, opts)
   end
 
   def all_leaf_filters(filters) do

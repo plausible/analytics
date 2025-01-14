@@ -493,8 +493,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     cond do
       nested_behavioral_filter? ->
-        {:error,
-         "Invalid filters. Behavioral filters (has_done, has_done_not) cannot be nested."}
+        {:error, "Invalid filters. Behavioral filters (has_done, has_done_not) cannot be nested."}
 
       bad_behavioral_filter? ->
         {:error,
@@ -588,7 +587,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(metric, query) when metric in [:conversion_rate, :group_conversion_rate] do
     if Enum.member?(query.dimensions, "event:goal") or
-         Filters.filtering_on_dimension?(query, "event:goal") do
+         Filters.filtering_on_dimension?(query, "event:goal", behavioral_filters: :ignore) do
       :ok
     else
       {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions."}
@@ -608,7 +607,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
-      Filters.filtering_on_dimension?(query, "event:page") ->
+      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
       length(query.dimensions) > 0 ->
