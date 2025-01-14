@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.Teams do
+defmodule PlausibleWeb.Live.TeamSetup do
   @moduledoc """
   LiveView for Team setup
   """
