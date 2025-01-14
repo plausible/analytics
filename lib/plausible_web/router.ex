@@ -120,16 +120,16 @@ defmodule PlausibleWeb.Router do
       scope [] do
         pipe_through :browser
 
-        get("/basic", TestController, :browser)
-        get("/:domain/shared-link/:slug", TestController, :browser)
-        get("/:domain/with-domain", TestController, :browser)
+        get("/basic", TestController, :browser_basic)
+        get("/:domain/shared-link/:slug", TestController, :browser_basic)
+        get("/:domain/with-domain", TestController, :browser_basic)
       end
 
       scope [] do
         pipe_through :api
 
-        get("/api-basic", TestController, :api)
-        get("/:domain/api-with-domain", TestController, :api)
+        get("/api-basic", TestController, :api_basic)
+        get("/:domain/api-with-domain", TestController, :api_basic)
       end
     end
   end
@@ -180,42 +180,56 @@ defmodule PlausibleWeb.Router do
     end
   end
 
-  scope "/api/stats", PlausibleWeb.Api do
+  scope "/api" do
     pipe_through :internal_stats_api
 
-    on_ee do
-      get "/:domain/funnels/:id", StatsController, :funnel
+    scope "/stats", PlausibleWeb.Api do
+      on_ee do
+        get "/:domain/funnels/:id", StatsController, :funnel
+      end
+
+      get "/:domain/current-visitors", StatsController, :current_visitors
+      get "/:domain/main-graph", StatsController, :main_graph
+      get "/:domain/top-stats", StatsController, :top_stats
+      get "/:domain/sources", StatsController, :sources
+      get "/:domain/channels", StatsController, :channels
+      get "/:domain/utm_mediums", StatsController, :utm_mediums
+      get "/:domain/utm_sources", StatsController, :utm_sources
+      get "/:domain/utm_campaigns", StatsController, :utm_campaigns
+      get "/:domain/utm_contents", StatsController, :utm_contents
+      get "/:domain/utm_terms", StatsController, :utm_terms
+      get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
+      get "/:domain/pages", StatsController, :pages
+      get "/:domain/entry-pages", StatsController, :entry_pages
+      get "/:domain/exit-pages", StatsController, :exit_pages
+      get "/:domain/countries", StatsController, :countries
+      get "/:domain/regions", StatsController, :regions
+      get "/:domain/cities", StatsController, :cities
+      get "/:domain/browsers", StatsController, :browsers
+      get "/:domain/browser-versions", StatsController, :browser_versions
+      get "/:domain/operating-systems", StatsController, :operating_systems
+      get "/:domain/operating-system-versions", StatsController, :operating_system_versions
+      get "/:domain/screen-sizes", StatsController, :screen_sizes
+      get "/:domain/conversions", StatsController, :conversions
+      get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
+      get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
+
+      get "/:domain/suggestions/custom-prop-values/:prop_key",
+          StatsController,
+          :custom_prop_value_filter_suggestions
     end
 
-    get "/:domain/current-visitors", StatsController, :current_visitors
-    get "/:domain/main-graph", StatsController, :main_graph
-    get "/:domain/top-stats", StatsController, :top_stats
-    get "/:domain/sources", StatsController, :sources
-    get "/:domain/channels", StatsController, :channels
-    get "/:domain/utm_mediums", StatsController, :utm_mediums
-    get "/:domain/utm_sources", StatsController, :utm_sources
-    get "/:domain/utm_campaigns", StatsController, :utm_campaigns
-    get "/:domain/utm_contents", StatsController, :utm_contents
-    get "/:domain/utm_terms", StatsController, :utm_terms
-    get "/:domain/referrers/:referrer", StatsController, :referrer_drilldown
-    get "/:domain/pages", StatsController, :pages
-    get "/:domain/entry-pages", StatsController, :entry_pages
-    get "/:domain/exit-pages", StatsController, :exit_pages
-    get "/:domain/countries", StatsController, :countries
-    get "/:domain/regions", StatsController, :regions
-    get "/:domain/cities", StatsController, :cities
-    get "/:domain/browsers", StatsController, :browsers
-    get "/:domain/browser-versions", StatsController, :browser_versions
-    get "/:domain/operating-systems", StatsController, :operating_systems
-    get "/:domain/operating-system-versions", StatsController, :operating_system_versions
-    get "/:domain/screen-sizes", StatsController, :screen_sizes
-    get "/:domain/conversions", StatsController, :conversions
-    get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
-    get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
+    scope "/:domain/segments", PlausibleWeb.Api.Internal do
+      pipeline :segments_endpoints,
+        do: plug(PlausibleWeb.Plugs.FeatureFlagCheckPlug, [:saved_segments])
 
-    get "/:domain/suggestions/custom-prop-values/:prop_key",
-        StatsController,
-        :custom_prop_value_filter_suggestions
+      pipe_through :segments_endpoints
+      get "/", SegmentsController, :get_all_segments
+      post "/", SegmentsController, :create_segment
+      get "/:segment_id", SegmentsController, :get_segment
+      patch "/:segment_id", SegmentsController, :update_segment
+      delete "/:segment_id", SegmentsController, :delete_segment
+    end
   end
 
   scope "/api/v1/stats", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
