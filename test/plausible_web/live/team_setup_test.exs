@@ -68,8 +68,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert text(member2_row) =~ guest.name
       assert text(member2_row) =~ guest.email
 
-      assert member1_row |> Floki.find(".role") |> text() =~ "Owner"
-      assert member2_row |> Floki.find(".role") |> text() =~ "Viewer"
+      assert member1_row |> find(".role") |> text() =~ "Owner"
+      assert member2_row |> find(".role") |> text() =~ "Viewer"
     end
 
     test "team member is added from input", %{conn: conn, user: user} do
@@ -92,8 +92,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert text(member2_row) =~ "Invited User"
       assert text(member2_row) =~ new_member_email
 
-      assert member1_row |> Floki.find(".role") |> text() =~ "Owner"
-      assert member2_row |> Floki.find(".role") |> text() =~ "Viewer"
+      assert member1_row |> find(".role") |> text() =~ "Owner"
+      assert member2_row |> find(".role") |> text() =~ "Viewer"
     end
 
     test "arbitrary invalid e-mail attempt", %{conn: conn} do
