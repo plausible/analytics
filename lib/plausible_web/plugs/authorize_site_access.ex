@@ -128,8 +128,12 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     end
   end
 
+  defp valid_path_fragment?(fragment), do: is_binary(fragment) and String.valid?(fragment)
+
   defp get_domain(conn, nil) do
-    if domain = conn.path_params["domain"] do
+    domain = conn.path_params["domain"]
+
+    if valid_path_fragment?(domain) do
       {:ok, domain}
     else
       error_not_found(conn)
@@ -139,7 +143,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   defp get_domain(conn, site_param) do
     domain = conn.params[site_param]
 
-    if is_binary(domain) do
+    if valid_path_fragment?(domain) do
       {:ok, domain}
     else
       error_not_found(conn)
@@ -165,7 +169,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   defp maybe_get_shared_link(conn, site) do
     slug = conn.path_params["slug"] || conn.params["auth"]
 
-    if is_binary(slug) do
+    if valid_path_fragment?(slug) do
       if shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug, site_id: site.id) do
         {:ok, shared_link}
       else
