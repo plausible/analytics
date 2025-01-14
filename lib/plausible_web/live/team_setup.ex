@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
       </:subtitle>
 
       <.form :let={f} for={@team_name_changeset} method="post" phx-change="update-team">
-        <.input type="text" field={f[:name]} label="Name" width="w-1/2" phx-debounce="500" />
+        <.input type="text" field={f[:name]} label="Name" width="w-full" phx-debounce="500" />
 
         <div class="mt-4">
           <.label>
