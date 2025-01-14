@@ -169,6 +169,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       select_combo_option(lv, 1)
 
+      _ = render(lv)
+
       refute lv
              |> render()
              |> find("#dropdown-team-member-candidates")

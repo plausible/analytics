@@ -13,21 +13,17 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   def mount(params, _session, socket) do
     my_team = socket.assigns.my_team
+    enabled? = Teams.enabled?(my_team)
 
     # TODO: remove dev param, once manual testing is considered done
     socket =
-      case {my_team, params["dev"]} do
-        {%Teams.Team{setup_complete: true}, nil} ->
+      case {enabled?, my_team, params["dev"]} do
+        {true, %Teams.Team{setup_complete: true}, nil} ->
           socket
           |> put_flash(:success, "Your team is now setup")
           |> redirect(to: "/settings/team/general")
 
-        {nil, _} ->
-          socket
-          |> put_flash(:error, "You cannot set up any team just yet")
-          |> redirect(to: "/sites")
-
-        {%Teams.Team{}, _} ->
+        {true, %Teams.Team{}, _} ->
           all_candidates =
             my_team
             |> Candidates.search_site_guests("")
@@ -43,6 +39,11 @@ defmodule PlausibleWeb.Live.TeamSetup do
             team_name_changeset: team_name_changeset,
             candidates_selected: candidates_selected
           )
+
+        {false, _, _} ->
+          socket
+          |> put_flash(:error, "You cannot set up any team just yet")
+          |> redirect(to: "/sites")
       end
 
     {:ok, socket}
