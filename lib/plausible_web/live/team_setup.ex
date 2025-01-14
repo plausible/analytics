@@ -11,6 +11,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
   alias Plausible.Teams.Invitations.Candidates
   alias Plausible.Auth.User
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
+
   def mount(params, _session, socket) do
     my_team = socket.assigns.my_team
     enabled? = Teams.enabled?(my_team)
@@ -21,7 +23,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         {true, %Teams.Team{setup_complete: true}, nil} ->
           socket
           |> put_flash(:success, "Your team is now setup")
-          |> redirect(to: "/settings/team/general")
+          |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {true, %Teams.Team{}, _} ->
           all_candidates =
@@ -43,7 +45,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         {false, _, _} ->
           socket
           |> put_flash(:error, "You cannot set up any team just yet")
-          |> redirect(to: "/sites")
+          |> redirect(to: Routes.site_path(socket, :index))
       end
 
     {:ok, socket}
@@ -281,7 +283,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         socket =
           socket
           |> put_flash(:success, "Your team is now setup")
-          |> redirect(to: "/settings/team/general")
+          |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {:noreply, socket}
 
