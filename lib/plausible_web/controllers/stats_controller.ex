@@ -121,6 +121,7 @@ defmodule PlausibleWeb.StatsController do
       csvs = %{
         ~c"visitors.csv" => fn -> main_graph_csv(site, query, conn.assigns[:current_user]) end,
         ~c"sources.csv" => fn -> Api.StatsController.sources(conn, params) end,
+        ~c"channels.csv" => fn -> Api.StatsController.channels(conn, params) end,
         ~c"utm_mediums.csv" => fn -> Api.StatsController.utm_mediums(conn, params) end,
         ~c"utm_sources.csv" => fn -> Api.StatsController.utm_sources(conn, params) end,
         ~c"utm_campaigns.csv" => fn -> Api.StatsController.utm_campaigns(conn, params) end,
@@ -143,15 +144,6 @@ defmodule PlausibleWeb.StatsController do
         ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end,
         ~c"custom_props.csv" => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
       }
-
-      # credo:disable-for-lines:7
-      csvs =
-        if FunWithFlags.enabled?(:channels, for: site) ||
-             FunWithFlags.enabled?(:channels, for: conn.assigns[:current_user]) do
-          Map.put(csvs, ~c"channels.csv", fn -> Api.StatsController.channels(conn, params) end)
-        else
-          csvs
-        end
 
       csv_values =
         Map.values(csvs)
@@ -382,7 +374,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user, site),
     do:
-      [:channels, :saved_segments, :scroll_depth]
+      [:saved_segments, :scroll_depth]
       |> Enum.map(fn flag ->
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)
