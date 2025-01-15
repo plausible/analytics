@@ -351,8 +351,13 @@ defmodule PlausibleWeb.StatsController do
   defp render_shared_link(conn, shared_link) do
     cond do
       !shared_link.site.locked ->
+        current_user = conn.assigns[:current_user]
         shared_link = Plausible.Repo.preload(shared_link, site: :owner)
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
+
+        if scroll_depth_enabled?(shared_link.site, current_user) do
+          Plausible.Sites.maybe_enable_engagement_metrics(shared_link.site)
+        end
 
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
@@ -372,7 +377,7 @@ defmodule PlausibleWeb.StatsController do
           embedded: conn.params["embed"] == "true",
           background: conn.params["background"],
           theme: conn.params["theme"],
-          flags: get_flags(conn.assigns[:current_user], shared_link.site),
+          flags: get_flags(current_user, shared_link.site),
           is_dbip: is_dbip(),
           load_dashboard_js: true
         )

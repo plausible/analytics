@@ -1059,6 +1059,33 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/share/#{site2.domain}/?auth=#{site1_link.slug}")
       assert response(conn, 404) =~ "nothing here"
     end
+
+    test "site.engagement_metrics_enabled_at gets updated correctly", %{conn: conn} do
+      site = insert(:site)
+      link = insert(:shared_link, site: site)
+
+      # No pageleaves yet - `engagement_metrics_enabled_at` will remain `nil`
+      get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+
+      site = Repo.reload!(site)
+      assert is_nil(site.engagement_metrics_enabled_at)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 123),
+        build(:pageleave, user_id: 123)
+      ])
+
+      # Pageleaves exist now - `engagement_metrics_enabled_at` gets set to `utc_now`
+      get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+
+      site = Repo.reload!(site)
+
+      assert NaiveDateTime.diff(
+               NaiveDateTime.utc_now(:second),
+               site.engagement_metrics_enabled_at,
+               :second
+             ) <= 1
+    end
   end
 
   describe "GET /share/:slug - backwards compatibility" do
