@@ -34,6 +34,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
          utc_time_range = raw_time_range |> DateTimeRange.to_timezone("Etc/UTC"),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
+         {:ok, preloaded_segments} <- preload_needed_segments(site, filters),
+         {:ok, filters} <-
+           resolve_segments(filters, preloaded_segments),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
@@ -161,7 +164,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
            "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."}
         end
 
-      {_, true} ->
+      {"segment", _} when all_integers? ->
+        {:ok, list}
+
+      {_, true} when filter_key !== "segment" ->
         {:ok, list}
 
       _ ->
@@ -396,6 +402,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
           {:error, error_message}
         end
 
+      "segment" ->
+        {:ok, filter_key}
+
       _ ->
         {:error, error_message}
     end
@@ -441,6 +450,72 @@ defmodule Plausible.Stats.Filters.QueryParser do
       revenue_warning,
       revenue_currencies
     }
+  end
+
+  def get_segment_ids(filters) do
+    max_segment_filters_count = 10
+
+    ids =
+      filters
+      |> Filters.traverse()
+      |> Enum.filter(fn {[_, filter_key | _rest], _depth} -> filter_key === "segment" end)
+      |> Enum.map(fn {[_, _filter_key, clauses], _depth} -> clauses end)
+      |> Enum.concat()
+
+    if length(ids) > max_segment_filters_count do
+      {:error,
+       "Invalid filters. You can only use up to #{max_segment_filters_count} segment filters in a query."}
+    else
+      {:ok, Enum.uniq(ids)}
+    end
+  end
+
+  def preload_needed_segments(%Plausible.Site{} = site, filters) do
+    with {:ok, segment_ids} <- get_segment_ids(filters),
+         {:ok, segments} <-
+           Plausible.Segments.get_many(
+             site,
+             segment_ids,
+             fields: [:id, :segment_data]
+           ),
+         {:ok, segments_by_id} <-
+           {:ok,
+            Enum.into(
+              segments,
+              %{},
+              fn %Plausible.Segments.Segment{id: id, segment_data: segment_data} ->
+                case parse_filters(segment_data["filters"]) do
+                  {:ok, filters} -> {id, filters}
+                  _ -> {id, nil}
+                end
+              end
+            )},
+         :ok <-
+           if(Enum.any?(segment_ids, fn id -> is_nil(Map.get(segments_by_id, id)) end),
+             do: {:error, "Invalid filters. Some segments don't exist or aren't accessible."},
+             else: :ok
+           ) do
+      {:ok, segments_by_id}
+    end
+  end
+
+  defp replace_segment_with_filter_tree([_, "segment", clauses], preloaded_segments) do
+    [[:or, Enum.map(clauses, fn id -> [:and, Map.get(preloaded_segments, id)] end)]]
+  end
+
+  defp replace_segment_with_filter_tree(_filter_tree, _preloaded_segments) do
+    nil
+  end
+
+  def resolve_segments(original_filters, preloaded_segments) do
+    if Map.keys(preloaded_segments) !== [] do
+      {:ok,
+       Filters.transform_filters(original_filters, fn f ->
+         replace_segment_with_filter_tree(f, preloaded_segments)
+       end)}
+    else
+      {:ok, original_filters}
+    end
   end
 
   @only_toplevel ["event:goal", "event:hostname"]

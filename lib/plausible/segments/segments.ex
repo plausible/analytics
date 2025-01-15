@@ -37,6 +37,21 @@ defmodule Plausible.Segments do
     end
   end
 
+  @spec get_many(Plausible.Site.t(), list(pos_integer()), Keyword.t()) ::
+          {:ok, [Segment.t()]}
+  def get_many(%Plausible.Site{} = site, segment_ids, opts) when is_list(segment_ids) do
+    fields = Keyword.get(opts, :fields, [:id])
+
+    query =
+      from(segment in Segment,
+        select: ^fields,
+        where: segment.site_id == ^site.id,
+        where: segment.id in ^segment_ids
+      )
+
+    {:ok, Repo.all(query)}
+  end
+
   @spec get_one(pos_integer(), Plausible.Site.t(), atom(), pos_integer() | nil) ::
           {:ok, Segment.t()}
           | error_not_enough_permissions()

@@ -154,7 +154,7 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  defp traverse(filters, depth \\ -1) do
+  def traverse(filters, depth \\ -1) do
     filters
     |> Enum.flat_map(&traverse_tree(&1, depth + 1))
   end
