@@ -127,7 +127,7 @@ defmodule Plausible.MixProject do
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:ex_money, "~> 5.12"},
       {:mjml_eex, "~> 0.11.0"},
-      {:mjml, "~> 1.5.0"},
+      {:mjml, "~> 2.0.0"},
       {:heroicons, "~> 0.5.0"},
       {:zxcvbn, git: "https://github.com/techgaun/zxcvbn-elixir.git"},
       {:open_api_spex, "~> 3.18"},
