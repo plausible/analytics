@@ -351,6 +351,7 @@ PlausibleWeb.Live.Shields.IPRules.html
 PlausibleWeb.Live.Shields.PageRules.html
 PlausibleWeb.Live.Shields.Pages.html
 PlausibleWeb.Live.Sites.html
+PlausibleWeb.Live.TeamSetup.html
 PlausibleWeb.Live.Verification.html
 PlausibleWeb.MJML.StatsReport.html
 PlausibleWeb.PageController.html
@@ -447,8 +448,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-E7516B41.js
-dist/sidebar_items-833FD726.js
+dist/search_data-487DE3C9.js
+dist/sidebar_items-B42945F3.js
 index.html
 readme.html
 search.html
