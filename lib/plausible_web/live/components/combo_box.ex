@@ -118,6 +118,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
           <.spinner class="spinner hidden absolute inset-y-3 right-8" />
           <.spinner
+            id={"selection-in-progress-#{@id}"}
             phx-update="ignore"
             x-show="selectionInProgress"
             class="spinner absolute inset-y-3 right-8"
