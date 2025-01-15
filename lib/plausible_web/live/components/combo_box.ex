@@ -50,10 +50,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       if connected?(socket) do
         socket
         |> assign_options()
-        |> assign_suggestions()
       else
         socket
       end
+      |> assign_suggestions(assigns[:suggestions])
 
     {:ok, socket}
   end
@@ -68,18 +68,15 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:suggest_fun, :any, required: true)
   attr(:suggestions_limit, :integer)
   attr(:class, :string, default: "")
+  attr(:clear_on_select, :boolean, default: false)
   attr(:required, :boolean, default: false)
   attr(:creatable, :boolean, default: false)
+  attr(:creatable_prompt, :string, default: "Create")
   attr(:errors, :list, default: [])
   attr(:async, :boolean, default: Mix.env() != :test)
   attr(:on_selection_made, :any)
 
   def render(assigns) do
-    assigns =
-      assign_new(assigns, :suggestions, fn ->
-        Enum.take(assigns.options, suggestions_limit(assigns))
-      end)
-
     ~H"""
     <div
       id={"input-picker-main-#{@id}"}
@@ -115,7 +112,12 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           />
 
           <.spinner class="spinner hidden absolute inset-y-3 right-8" />
-          <.spinner x-show="selectionInProgress" class="spinner absolute inset-y-3 right-8" />
+          <.spinner
+            id={"selection-in-progress-#{@id}"}
+            phx-update="ignore"
+            x-show="selectionInProgress"
+            class="spinner absolute inset-y-3 right-8"
+          />
 
           <.dropdown_anchor id={@id} />
 
@@ -136,6 +138,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           target={@myself}
           creatable={@creatable}
           display_value={@display_value}
+          creatable_prompt={@creatable_prompt}
         />
       </div>
     </div>
@@ -170,6 +173,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:suggest_fun, :any, required: true)
   attr(:target, :any)
   attr(:creatable, :boolean, required: true)
+  attr(:creatable_prompt, :string, default: nil)
   attr(:display_value, :string, required: true)
 
   def combo_dropdown(assigns) do
@@ -180,6 +184,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       x-show="isOpen"
       x-ref="suggestions"
       class="text-sm w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-900"
+      style="display: none;"
     >
       <.option
         :if={display_creatable_option?(assigns)}
@@ -189,6 +194,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         target={@target}
         ref={@ref}
         creatable
+        creatable_prompt={@creatable_prompt}
       />
 
       <.option
@@ -229,6 +235,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:target, :any)
   attr(:idx, :integer, required: true)
   attr(:creatable, :boolean, default: false)
+  attr(:creatable_prompt, :string, required: false)
 
   def option(assigns) do
     assigns = assign(assigns, :suggestions_limit, suggestions_limit(assigns))
@@ -245,7 +252,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     >
       <a
         x-ref={"dropdown-#{@ref}-option-#{@idx}"}
-        x-on:click={not @creatable && "selectionInProgress = false"}
+        x-on:click={not @creatable && "selectionInProgress = true"}
         phx-click={select_option(@ref, @submit_value, @display_value)}
         phx-value-submit-value={@submit_value}
         phx-value-display-value={@display_value}
@@ -253,7 +260,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         class="block truncate py-2 px-3"
       >
         <%= if @creatable do %>
-          Create "{@display_value}"
+          {@creatable_prompt} "{@display_value}"
         <% else %>
           {@display_value}
         <% end %>
@@ -317,6 +324,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   defp do_select(socket, submit_value, display_value) do
     id = socket.assigns.id
 
+    display_value =
+      if socket.assigns[:clear_on_select] do
+        ""
+      else
+        display_value
+      end
+
     socket =
       socket
       |> push_event("update-value", %{id: id, value: display_value, fire: false})
@@ -350,15 +364,17 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     end)
   end
 
-  defp assign_suggestions(socket) do
-    if socket.assigns[:suggestions] do
-      assign(
-        socket,
-        suggestions: Enum.take(socket.assigns.suggestions, suggestions_limit(socket.assigns))
-      )
-    else
-      socket
-    end
+  defp assign_suggestions(socket, nil = _suggestions_from_update) do
+    suggestions =
+      socket.assigns
+      |> Map.get(:options, [])
+      |> Enum.take(suggestions_limit(socket.assigns))
+
+    assign(socket, suggestions: suggestions)
+  end
+
+  defp assign_suggestions(socket, _suggestions_from_update) do
+    socket
   end
 
   defp select_default(socket) do

@@ -418,6 +418,7 @@ defmodule PlausibleWeb.Router do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
       live "/sites", Sites, :index, as: :site
+      live "/team/setup", TeamSetup, :setup, as: :team_setup
     end
 
     get "/sites/new", SiteController, :new
