@@ -50,10 +50,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       if connected?(socket) do
         socket
         |> assign_options()
-        |> assign_suggestions()
       else
         socket
       end
+      |> assign_suggestions()
 
     {:ok, socket}
   end
@@ -77,11 +77,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:on_selection_made, :any)
 
   def render(assigns) do
-    assigns =
-      assign_new(assigns, :suggestions, fn ->
-        Enum.take(assigns.options, suggestions_limit(assigns))
-      end)
-
     ~H"""
     <div
       id={"input-picker-main-#{@id}"}
@@ -370,14 +365,12 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   end
 
   defp assign_suggestions(socket) do
-    if socket.assigns[:suggestions] do
-      assign(
-        socket,
-        suggestions: Enum.take(socket.assigns.suggestions, suggestions_limit(socket.assigns))
-      )
-    else
-      socket
-    end
+    suggestions =
+      socket.assigns
+      |> Map.get(:options, [])
+      |> Enum.take(suggestions_limit(socket.assigns))
+
+    assign(socket, suggestions: suggestions)
   end
 
   defp select_default(socket) do
