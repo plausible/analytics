@@ -252,7 +252,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     >
       <a
         x-ref={"dropdown-#{@ref}-option-#{@idx}"}
-        x-on:click={not @creatable && "selectionInProgress = false"}
+        x-on:click={not @creatable && "selectionInProgress = true"}
         phx-click={select_option(@ref, @submit_value, @display_value)}
         phx-value-submit-value={@submit_value}
         phx-value-display-value={@display_value}
