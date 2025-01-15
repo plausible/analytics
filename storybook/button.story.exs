@@ -15,6 +15,14 @@ defmodule PlausibleWeb.Storybook.Button do
         slots: ["Click me!"]
       },
       %Variation{
+        id: :disabled,
+        description: "Disabled button",
+        attributes: %{
+          "disabled" => "true"
+        },
+        slots: ["Click me!"]
+      },
+      %Variation{
         id: :bright,
         description: "Bright button",
         attributes: %{
