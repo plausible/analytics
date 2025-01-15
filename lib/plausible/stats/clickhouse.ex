@@ -123,6 +123,17 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
+  def has_pageleaves_last_30d?(site) do
+    ClickhouseRepo.exists?(
+      from(e in "events_v2",
+        where:
+          e.site_id == ^site.id and
+            e.name == "pageleave" and
+            e.timestamp >= ^NaiveDateTime.add(NaiveDateTime.utc_now(), -30, :day)
+      )
+    )
+  end
+
   @spec empty_24h_visitors_hourly_intervals([Plausible.Site.t()], NaiveDateTime.t()) :: map()
   def empty_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now()) do
     sites

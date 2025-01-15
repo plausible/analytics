@@ -286,6 +286,21 @@ defmodule Plausible.Sites do
     |> Repo.update!()
   end
 
+  def maybe_enable_engagement_metrics(site) do
+    if is_nil(site.engagement_metrics_enabled_at) and
+         Plausible.Stats.Clickhouse.has_pageleaves_last_30d?(site) do
+      set_engagement_metrics_enabled_at(site)
+    end
+  end
+
+  def set_engagement_metrics_enabled_at(site) do
+    utc_now = NaiveDateTime.utc_now(:second)
+
+    site
+    |> Ecto.Changeset.change(%{engagement_metrics_enabled_at: utc_now})
+    |> Repo.update()
+  end
+
   def has_goals?(site) do
     Repo.exists?(
       from(g in Plausible.Goal,

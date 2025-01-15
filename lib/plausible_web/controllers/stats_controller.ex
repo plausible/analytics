@@ -52,11 +52,16 @@ defmodule PlausibleWeb.StatsController do
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owner)
+    current_user = conn.assigns[:current_user]
     stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:site_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
+
+    if scroll_depth_enabled?(site, current_user) do
+      Plausible.Sites.maybe_enable_engagement_metrics(site)
+    end
 
     cond do
       (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
@@ -72,7 +77,7 @@ defmodule PlausibleWeb.StatsController do
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
           demo: demo,
-          flags: get_flags(conn.assigns[:current_user], site),
+          flags: get_flags(current_user, site),
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           load_dashboard_js: true

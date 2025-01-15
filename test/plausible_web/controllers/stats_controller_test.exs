@@ -79,6 +79,32 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/test-site.com")
       assert html_response(conn, 404) =~ "There's nothing here"
     end
+
+    test "site.engagement_metrics_enabled_at gets updated correctly", %{conn: conn} do
+      site = new_site(public: true)
+
+      # No pageleaves yet - `engagement_metrics_enabled_at` will remain `nil`
+      get(conn, "/#{site.domain}")
+
+      site = Repo.reload!(site)
+      assert is_nil(site.engagement_metrics_enabled_at)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 123),
+        build(:pageleave, user_id: 123)
+      ])
+
+      # Pageleaves exist now - `engagement_metrics_enabled_at` gets set to `utc_now`
+      get(conn, "/#{site.domain}")
+
+      site = Repo.reload!(site)
+
+      assert NaiveDateTime.diff(
+               NaiveDateTime.utc_now(:second),
+               site.engagement_metrics_enabled_at,
+               :second
+             ) <= 1
+    end
   end
 
   describe "GET /:domain - as a logged in user" do
