@@ -193,7 +193,7 @@ defmodule PlausibleWeb.StatsController do
   defp csv_graph_metrics(query, site, current_user) do
     include_scroll_depth? =
       !query.include_imported &&
-        PlausibleWeb.Api.StatsController.scroll_depth_enabled?(site, current_user) &&
+        scroll_depth_enabled?(site, current_user) &&
         Filters.filtering_on_dimension?(query, "event:page")
 
     {metrics, column_headers} =
@@ -336,6 +336,11 @@ defmodule PlausibleWeb.StatsController do
     else
       render_error(conn, 404)
     end
+  end
+
+  def scroll_depth_enabled?(site, user) do
+    FunWithFlags.enabled?(:scroll_depth, for: user) ||
+      FunWithFlags.enabled?(:scroll_depth, for: site)
   end
 
   defp render_shared_link(conn, shared_link) do

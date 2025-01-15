@@ -419,7 +419,7 @@ defmodule Plausible.Exports do
     current_user = current_user_id && Plausible.Repo.get(Plausible.Auth.User, current_user_id)
 
     scroll_depth_enabled? =
-      PlausibleWeb.Api.StatsController.scroll_depth_enabled?(site, current_user)
+      PlausibleWeb.StatsController.scroll_depth_enabled?(site, current_user)
 
     base_q =
       from(e in sampled("events_v2"),
