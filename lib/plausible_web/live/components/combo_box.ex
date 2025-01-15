@@ -117,7 +117,11 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           />
 
           <.spinner class="spinner hidden absolute inset-y-3 right-8" />
-          <.spinner phx-update="ignore" x-show="selectionInProgress" class="spinner absolute inset-y-3 right-8" />
+          <.spinner
+            phx-update="ignore"
+            x-show="selectionInProgress"
+            class="spinner absolute inset-y-3 right-8"
+          />
 
           <.dropdown_anchor id={@id} />
 

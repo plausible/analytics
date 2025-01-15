@@ -81,9 +81,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
             creatable
             creatable_prompt="Send invitation to email:"
             placeholder="Select existing member or type email address to invite"
-            options={
-              reject_already_selected(@all_candidates, @candidates_selected)
-            }
+            options={reject_already_selected(@all_candidates, @candidates_selected)}
             on_selection_made={
               fn email, _by_id ->
                 send(self(), {:candidate_selected, %{email: email, role: :viewer}})
