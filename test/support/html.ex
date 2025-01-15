@@ -12,14 +12,10 @@ defmodule Plausible.Test.Support.HTML do
     |> Kernel.not()
   end
 
-  def find(html, value) when is_binary(html) do
+  def find(html, value) do
     html
     |> Floki.parse_document!()
     |> Floki.find(value)
-  end
-
-  def find(html, value) do
-    Floki.find(html, value)
   end
 
   def submit_button(html, form) do

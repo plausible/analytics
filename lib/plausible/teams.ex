@@ -261,39 +261,6 @@ defmodule Plausible.Teams do
     )
   end
 
-  def setup_team(team, candidates) do
-    inviter = Repo.preload(team, :owner).owner
-
-    setup_team_fn = fn {{email, _name}, role} ->
-      case Teams.Invitations.InviteToTeam.invite(team, inviter, email, role, send_email?: false) do
-        {:ok, invitation} -> invitation
-        {:error, error} -> Repo.rollback(error)
-      end
-    end
-
-    result =
-      Repo.transaction(fn ->
-        team
-        |> Teams.Team.setup_changeset()
-        |> Repo.update!()
-
-        Enum.map(candidates, setup_team_fn)
-      end)
-
-    case result do
-      {:ok, invitations} ->
-        Enum.each(invitations, fn invitation ->
-          invitee = Plausible.Auth.find_user_by(email: invitation.email)
-          Teams.Invitations.InviteToTeam.send_invitation_email(invitation, invitee)
-        end)
-
-        {:ok, invitations}
-
-      {:error, {:over_limit, _}} = error ->
-        error
-    end
-  end
-
   defp create_my_team(user) do
     team =
       "My Team"

@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                       end
                     }
                     id={"step-#{step_idx}"}
-                    options={reject_already_selected(@goals, @selections_made)}
+                    options={reject_already_selected("step-#{step_idx}", @goals, @selections_made)}
                   />
                 </div>
 
@@ -385,13 +385,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     Map.delete(selections_made, step_input_id)
   end
 
-  defp reject_already_selected(goals, selections_made) do
+  defp reject_already_selected(combo_box, goals, selections_made) do
     selection_ids =
       Enum.map(selections_made, fn
         {_, %{id: goal_id}} -> goal_id
       end)
 
-    Enum.reject(goals, fn {goal_id, _} -> goal_id in selection_ids end)
+    result = Enum.reject(goals, fn {goal_id, _} -> goal_id in selection_ids end)
+
+    send_update(PlausibleWeb.Live.Components.ComboBox, id: combo_box, suggestions: result)
+    result
   end
 
   defp find_preselected(%Funnel{} = funnel, false, idx) do

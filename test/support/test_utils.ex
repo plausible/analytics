@@ -42,11 +42,6 @@ defmodule Plausible.TestUtils do
     {:ok, site: Plausible.Teams.Test.new_site(owner: user)}
   end
 
-  def create_team(%{user: user}) do
-    {:ok, team} = Plausible.Teams.get_or_create(user)
-    {:ok, team: team}
-  end
-
   def create_legacy_site_import(%{site: site}) do
     create_site_import(%{site: site, create_legacy_import?: true})
   end

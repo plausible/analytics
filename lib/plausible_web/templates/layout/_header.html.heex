@@ -76,17 +76,6 @@
                     <.dropdown_item href={Routes.settings_path(@conn, :index)}>
                       Account Settings
                     </.dropdown_item>
-                    <div :if={Plausible.Teams.enabled?(@my_team) and @my_team.setup_complete}>
-                      <.dropdown_item
-                        class="flex"
-                        href={Routes.settings_path(@conn, :team_general)}
-                      >
-                        <span class="flex-1">
-                          Team Settings
-                        </span>
-                      </.dropdown_item>
-                      <.dropdown_divider />
-                    </div>
                     <.dropdown_item
                       class="!flex justify-between gap-x-12"
                       new_tab
@@ -119,17 +108,6 @@
                       Github Repo
                     </.dropdown_item>
                     <.dropdown_divider />
-                    <div :if={Plausible.Teams.enabled?(@my_team) and not @my_team.setup_complete}>
-                      <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
-                        <span class="flex-1">
-                          Create a Team
-                        </span>
-                        <span class="ml-1 bg-indigo-700 text-gray-100 text-xs p-1 rounded">
-                          NEW
-                        </span>
-                      </.dropdown_item>
-                      <.dropdown_divider />
-                    </div>
                     <.dropdown_item href="/logout">Log Out</.dropdown_item>
                   </:menu>
                 </.dropdown>
