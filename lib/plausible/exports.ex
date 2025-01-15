@@ -430,6 +430,8 @@ defmodule Plausible.Exports do
       )
 
     if scroll_depth_enabled? do
+      Plausible.Sites.maybe_enable_engagement_metrics(site)
+
       max_scroll_depth_per_visitor_q =
         from(e in "events_v2",
           where: ^export_filter(site_id, date_range),

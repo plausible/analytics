@@ -1088,7 +1088,11 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_site = new_site(owner: user)
       imported_site = new_site(owner: user)
 
-      t0 = ~N[2020-01-01 00:00:00]
+      t0 =
+        NaiveDateTime.utc_now(:second)
+        |> NaiveDateTime.add(-5, :day)
+        |> NaiveDateTime.beginning_of_day()
+
       [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
 
       stats =
@@ -1124,6 +1128,9 @@ defmodule Plausible.Imported.CSVImporterTest do
       end
 
       assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
+
+      assert %NaiveDateTime{} =
+               Plausible.Repo.reload!(exported_site).engagement_metrics_enabled_at
 
       # download archive
       on_ee do
@@ -1174,12 +1181,17 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # validate import
       assert %SiteImport{
-               start_date: ~D[2020-01-01],
-               end_date: ~D[2020-01-02],
+               start_date: start_date,
+               end_date: end_date,
                source: :csv,
                status: :completed
              } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
+      expected_start_date = t0 |> NaiveDateTime.to_date()
+      expected_end_date = t0 |> NaiveDateTime.to_date() |> Date.add(1)
+
+      assert start_date == expected_start_date
+      assert end_date == expected_end_date
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
       assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 9
 
@@ -1196,13 +1208,18 @@ defmodule Plausible.Imported.CSVImporterTest do
         )
         |> Plausible.IngestRepo.all()
 
-      assert %{date: ~D[2020-01-01], page: "/", scroll_depth: 20, pageleave_visitors: 1} in imported_data
+      assert %{date: expected_start_date, page: "/", scroll_depth: 20, pageleave_visitors: 1} in imported_data
 
-      assert %{date: ~D[2020-01-01], page: "/another", scroll_depth: 50, pageleave_visitors: 2} in imported_data
+      assert %{
+               date: expected_start_date,
+               page: "/another",
+               scroll_depth: 50,
+               pageleave_visitors: 2
+             } in imported_data
 
-      assert %{date: ~D[2020-01-01], page: "/blog", scroll_depth: 180, pageleave_visitors: 3} in imported_data
+      assert %{date: expected_start_date, page: "/blog", scroll_depth: 180, pageleave_visitors: 3} in imported_data
 
-      assert %{date: ~D[2020-01-02], page: "/blog", scroll_depth: nil, pageleave_visitors: 0} in imported_data
+      assert %{date: expected_end_date, page: "/blog", scroll_depth: nil, pageleave_visitors: 0} in imported_data
 
       # assert via stats queries that scroll_depth from imported
       # data matches the scroll_depth from native data
