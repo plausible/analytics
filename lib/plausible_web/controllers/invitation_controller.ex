@@ -88,4 +88,25 @@ defmodule PlausibleWeb.InvitationController do
         |> redirect(external: Routes.site_path(conn, :settings_people, conn.assigns.site.domain))
     end
   end
+
+  def remove_team_invitation(conn, %{"invitation_id" => invitation_id}) do
+    %{my_team: team, current_user: current_user} = conn.assigns
+
+    case Plausible.Teams.Invitations.Remove.remove(team, invitation_id, current_user) do
+      {:ok, invitation} ->
+        conn
+        |> put_flash(:success, "You have removed the invitation for #{invitation.email}")
+        |> redirect(external: Routes.settings_path(conn, :team_general))
+
+      {:error, :invitation_not_found} ->
+        conn
+        |> put_flash(:error, "Invitation missing or already removed")
+        |> redirect(external: Routes.settings_path(conn, :team_general))
+
+      {:error, :permission_denied} ->
+        conn
+        |> put_flash(:error, "You are not allowed to remove invitations")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
+    end
+  end
 end
