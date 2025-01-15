@@ -364,7 +364,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     end)
   end
 
-
   defp assign_suggestions(socket, nil = _suggestions_from_update) do
     suggestions =
       socket.assigns
