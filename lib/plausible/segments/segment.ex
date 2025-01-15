@@ -1,4 +1,4 @@
-defmodule Plausible.Segment do
+defmodule Plausible.Segments.Segment do
   @moduledoc """
   Schema for segments. Segments are saved filter combinations.
   """

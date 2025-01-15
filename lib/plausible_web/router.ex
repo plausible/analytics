@@ -224,11 +224,11 @@ defmodule PlausibleWeb.Router do
         do: plug(PlausibleWeb.Plugs.FeatureFlagCheckPlug, [:saved_segments])
 
       pipe_through :segments_endpoints
-      get "/", SegmentsController, :get_all_segments
-      post "/", SegmentsController, :create_segment
-      get "/:segment_id", SegmentsController, :get_segment
-      patch "/:segment_id", SegmentsController, :update_segment
-      delete "/:segment_id", SegmentsController, :delete_segment
+      get "/", SegmentsController, :index
+      post "/", SegmentsController, :create
+      get "/:segment_id", SegmentsController, :get
+      patch "/:segment_id", SegmentsController, :update
+      delete "/:segment_id", SegmentsController, :delete
     end
   end
 

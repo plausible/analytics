@@ -1,71 +1,37 @@
 defmodule PlausibleWeb.Api.Internal.SegmentsController do
+  @moduledoc """
+  Internal API controller for segments.
+  """
   use Plausible
   use PlausibleWeb, :controller
-  use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
   alias PlausibleWeb.Api.Helpers, as: H
+  alias Plausible.Segments
 
-  @fields_in_index_query [
-    :id,
-    :name,
-    :type,
-    :inserted_at,
-    :updated_at,
-    :owner_id
-  ]
-
-  def get_all_segments(
+  def index(
         %Plug.Conn{
           assigns: %{
             site: site,
-            site_role: site_role,
-            current_user: current_user
+            site_role: site_role
           }
         } = conn,
         %{} = _params
       ) do
-    site_segments_available? =
-      site_segments_available?(site)
+    user_id = normalize_current_user_id(conn)
 
-    cond do
-      site_role in roles_with_personal_segments() and
-          site_segments_available? ->
-        result =
-          Repo.all(
-            get_personal_and_site_segments_query(current_user.id, site.id, @fields_in_index_query)
-          )
-
-        json(conn, result)
-
-      site_role in roles_with_personal_segments() ->
-        result =
-          Repo.all(
-            get_personal_segments_only_query(current_user.id, site.id, @fields_in_index_query)
-          )
-
-        json(conn, result)
-
-      site_role in [:public] and site_segments_available? ->
-        result =
-          Repo.all(
-            get_site_segments_only_query(
-              site.id,
-              @fields_in_index_query -- [:owner_id]
-            )
-          )
-
-        json(conn, result)
-
-      true ->
+    case Segments.index(user_id, site, site_role) do
+      {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to get segments")
+
+      {:ok, segments} ->
+        json(conn, segments)
     end
   end
 
-  def get_segment(
+  def get(
         %Plug.Conn{
           assigns: %{
             site: site,
-            current_user: current_user,
             site_role: site_role
           }
         } = conn,
@@ -73,46 +39,58 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       ) do
     segment_id = normalize_segment_id_param(params["segment_id"])
 
-    if site_role in roles_with_personal_segments() do
-      result = get_one_segment(current_user.id, site.id, segment_id)
+    user_id = normalize_current_user_id(conn)
 
-      case result do
-        nil -> H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
-        result when is_map(result) -> json(conn, result)
-      end
-    else
-      H.not_enough_permissions(conn, "Not enough permissions to get segment data")
+    case Segments.get_one(
+           user_id,
+           site,
+           site_role,
+           segment_id
+         ) do
+      {:error, :not_enough_permissions} ->
+        H.not_enough_permissions(conn, "Not enough permissions to get segment data")
+
+      {:error, :segment_not_found} ->
+        segment_not_found(conn, params["segment_id"])
+
+      {:ok, segment} ->
+        json(conn, segment)
     end
   end
 
-  def create_segment(
+  def create(
         %Plug.Conn{
           assigns: %{
             site: site,
+            current_user: %{id: user_id},
             site_role: site_role
           }
         } = conn,
         %{} = params
       ) do
-    site_segments_available? = site_segments_available?(site)
-
-    cond do
-      params["type"] == Atom.to_string(:personal) and
-          site_role in roles_with_personal_segments() ->
-        do_insert_segment(conn, params)
-
-      params["type"] == Atom.to_string(:site) and site_segments_available? and
-          site_role in roles_with_maybe_site_segments() ->
-        do_insert_segment(conn, params)
-
-      true ->
+    case Segments.insert_one(user_id, site, site_role, params) do
+      {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to create segment")
+
+      {:error, :segment_not_found} ->
+        segment_not_found(conn, params["segment_id"])
+
+      {:error, {:invalid_segment, errors}} when is_list(errors) ->
+        conn
+        |> put_status(400)
+        |> json(%{
+          errors:
+            Enum.map(errors, fn {field_key, {message, opts}} -> [field_key, message, opts] end)
+        })
+
+      {:ok, segment} ->
+        json(conn, segment)
     end
   end
 
-  def create_segment(%Plug.Conn{} = conn, _params), do: H.bad_request(conn, "Invalid request")
+  def create(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
 
-  def update_segment(
+  def update(
         %Plug.Conn{
           assigns: %{
             site: site,
@@ -123,36 +101,31 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
           conn,
         %{} = params
       ) do
-    site_segments_available? = site_segments_available?(site)
-
     segment_id = normalize_segment_id_param(params["segment_id"])
 
-    existing_segment = get_one_segment(user_id, site.id, segment_id)
-
-    cond do
-      is_nil(existing_segment) ->
-        H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
-
-      existing_segment.type == :personal and params["type"] != "site" and
-          site_role in roles_with_personal_segments() ->
-        do_update_segment(conn, params, existing_segment, user_id)
-
-      existing_segment.type == :personal and params["type"] == "site" and site_segments_available? and
-          site_role in roles_with_maybe_site_segments() ->
-        do_update_segment(conn, params, existing_segment, user_id)
-
-      existing_segment.type == :site and site_segments_available? and
-          site_role in roles_with_maybe_site_segments() ->
-        do_update_segment(conn, params, existing_segment, user_id)
-
-      true ->
+    case Segments.update_one(user_id, site, site_role, segment_id, params) do
+      {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to edit segment")
+
+      {:error, :segment_not_found} ->
+        segment_not_found(conn, params["segment_id"])
+
+      {:error, {:invalid_segment, errors}} when is_list(errors) ->
+        conn
+        |> put_status(400)
+        |> json(%{
+          errors:
+            Enum.map(errors, fn {field_key, {message, opts}} -> [field_key, message, opts] end)
+        })
+
+      {:ok, segment} ->
+        json(conn, segment)
     end
   end
 
-  def update_segment(%Plug.Conn{} = conn, _params), do: H.bad_request(conn, "Invalid request")
+  def update(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
 
-  def delete_segment(
+  def delete(
         %Plug.Conn{
           assigns: %{
             site: site,
@@ -163,64 +136,25 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
           conn,
         %{} = params
       ) do
-    site_segments_available? = site_segments_available?(site)
-
     segment_id = normalize_segment_id_param(params["segment_id"])
 
-    existing_segment = get_one_segment(user_id, site.id, segment_id)
-
-    cond do
-      is_nil(existing_segment) ->
-        H.not_found(conn, "Segment not found with ID #{inspect(params["segment_id"])}")
-
-      existing_segment.type == :personal and
-          site_role in roles_with_personal_segments() ->
-        do_delete_segment(conn, existing_segment)
-
-      existing_segment.type == :site and
-        site_segments_available? and
-          site_role in roles_with_maybe_site_segments() ->
-        do_delete_segment(conn, existing_segment)
-
-      true ->
+    case Segments.delete_one(user_id, site, site_role, segment_id) do
+      {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to delete segment")
+
+      {:error, :segment_not_found} ->
+        segment_not_found(conn, params["segment_id"])
+
+      {:ok, segment} ->
+        json(conn, segment)
     end
   end
 
-  def delete_segment(%Plug.Conn{} = conn, _params), do: H.bad_request(conn, "Invalid request")
+  def delete(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
 
-  @spec get_site_segments_only_query(pos_integer(), list(atom())) :: Ecto.Query.t()
-  defp get_site_segments_only_query(site_id, fields) do
-    from(segment in Plausible.Segment,
-      select: ^fields,
-      where: segment.site_id == ^site_id,
-      where: segment.type == :site,
-      order_by: [desc: segment.updated_at, desc: segment.id]
-    )
-  end
-
-  @spec get_personal_segments_only_query(pos_integer(), pos_integer(), list(atom())) ::
-          Ecto.Query.t()
-  defp get_personal_segments_only_query(user_id, site_id, fields) do
-    from(segment in Plausible.Segment,
-      select: ^fields,
-      where: segment.site_id == ^site_id,
-      where: segment.type == :personal and segment.owner_id == ^user_id,
-      order_by: [desc: segment.updated_at, desc: segment.id]
-    )
-  end
-
-  @spec get_personal_and_site_segments_query(pos_integer(), pos_integer(), list(atom())) ::
-          Ecto.Query.t()
-  defp get_personal_and_site_segments_query(user_id, site_id, fields) do
-    from(segment in Plausible.Segment,
-      select: ^fields,
-      where: segment.site_id == ^site_id,
-      where:
-        segment.type == :site or (segment.type == :personal and segment.owner_id == ^user_id),
-      order_by: [desc: segment.updated_at, desc: segment.id]
-    )
-  end
+  @spec normalize_current_user_id(%Plug.Conn{}) :: nil | pos_integer()
+  defp normalize_current_user_id(conn),
+    do: if(is_nil(conn.assigns[:current_user]), do: nil, else: conn.assigns[:current_user].id)
 
   @spec normalize_segment_id_param(any()) :: nil | pos_integer()
   defp normalize_segment_id_param(input) do
@@ -230,104 +164,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
     end
   end
 
-  defp get_one_segment(_user_id, _site_id, nil) do
-    nil
+  defp segment_not_found(%Plug.Conn{} = conn, segment_id_param) do
+    H.not_found(conn, "Segment not found with ID #{inspect(segment_id_param)}")
   end
 
-  defp get_one_segment(user_id, site_id, segment_id) do
-    query =
-      from(segment in Plausible.Segment,
-        where: segment.site_id == ^site_id,
-        where: segment.id == ^segment_id,
-        where: segment.type == :site or segment.owner_id == ^user_id
-      )
-
-    Repo.one(query)
+  defp invalid_request(%Plug.Conn{} = conn) do
+    H.bad_request(conn, "Invalid request")
   end
-
-  defp do_insert_segment(
-         %Plug.Conn{
-           assigns: %{
-             site: site,
-             current_user: %{id: user_id}
-           }
-         } = conn,
-         %{} = params
-       ) do
-    segment_definition = Map.merge(params, %{"site_id" => site.id, "owner_id" => user_id})
-
-    with %{valid?: true} = changeset <-
-           Plausible.Segment.changeset(
-             %Plausible.Segment{},
-             segment_definition
-           ),
-         :ok <- Plausible.Segment.validate_segment_data(site, params["segment_data"], true) do
-      segment = Repo.insert!(changeset)
-      json(conn, segment)
-    else
-      %{valid?: false, errors: errors} ->
-        conn
-        |> put_status(400)
-        |> json(%{
-          errors: Enum.map(errors, fn {field_key, {message, _}} -> [field_key, message] end)
-        })
-
-      {:error, {:invalid_filters, message}} ->
-        conn |> put_status(400) |> json(%{errors: [["segment_data", message]]})
-    end
-  end
-
-  defp do_update_segment(
-         %Plug.Conn{} = conn,
-         %{} = params,
-         %Plausible.Segment{} = existing_segment,
-         owner_override
-       ) do
-    partial_segment_definition = Map.merge(params, %{"owner_id" => owner_override})
-
-    with %{valid?: true} = changeset <-
-           Plausible.Segment.changeset(
-             existing_segment,
-             partial_segment_definition
-           ),
-         :ok <-
-           Plausible.Segment.validate_segment_data_if_exists(
-             conn.assigns.site,
-             params["segment_data"],
-             true
-           ) do
-      json(
-        conn,
-        Repo.update!(
-          changeset,
-          returning: true
-        )
-      )
-    else
-      %{valid?: false, errors: errors} ->
-        conn
-        |> put_status(400)
-        |> json(%{
-          errors:
-            Enum.map(errors, fn {field_key, {message, opts}} -> [field_key, message, opts] end)
-        })
-
-      {:error, {:invalid_filters, message}} ->
-        conn |> put_status(400) |> json(%{errors: [["segment_data", message, []]]})
-    end
-  end
-
-  defp do_delete_segment(
-         %Plug.Conn{} = conn,
-         %Plausible.Segment{} = existing_segment
-       ) do
-    Repo.delete!(existing_segment)
-    json(conn, existing_segment)
-  end
-
-  defp roles_with_personal_segments(), do: [:viewer, :editor, :admin, :owner, :super_admin]
-  defp roles_with_maybe_site_segments(), do: [:editor, :admin, :owner, :super_admin]
-
-  defp site_segments_available?(site),
-    do: Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
 end

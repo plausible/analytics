@@ -12,12 +12,15 @@ defmodule PlausibleWeb.Plugs.FeatureFlagCheckPlug do
     do: raise(ArgumentError, "The first argument must be a non-empty list of feature flags")
 
   def call(%Plug.Conn{} = conn, flags) do
-    if validate(conn.assigns.current_user, conn.assigns.site, flags) do
+    if validate(conn.assigns[:current_user], conn.assigns.site, flags) do
       conn
     else
       PlausibleWeb.Api.Helpers.not_found(conn, "Not found")
     end
   end
+
+  defp validate(_current_user = nil, site, flags),
+    do: Enum.all?(flags, fn flag -> FunWithFlags.enabled?(flag, for: site) end)
 
   defp validate(current_user, site, flags),
     do:
