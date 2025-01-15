@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       else
         socket
       end
-      |> assign_suggestions()
+      |> assign_suggestions(assigns[:suggestions])
 
     {:ok, socket}
   end
@@ -364,13 +364,18 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     end)
   end
 
-  defp assign_suggestions(socket) do
+
+  defp assign_suggestions(socket, nil = _suggestions_from_update) do
     suggestions =
       socket.assigns
       |> Map.get(:options, [])
       |> Enum.take(suggestions_limit(socket.assigns))
 
     assign(socket, suggestions: suggestions)
+  end
+
+  defp assign_suggestions(socket, _suggestions_from_update) do
+    socket
   end
 
   defp select_default(socket) do
