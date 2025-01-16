@@ -301,7 +301,7 @@ defmodule PlausibleWeb.EmailTest do
       emails = [
         PlausibleWeb.Email.create_site_email(trial_user),
         PlausibleWeb.Email.site_setup_help(trial_user, site),
-        PlausibleWeb.Email.site_setup_success(trial_user, site.team, site)
+        PlausibleWeb.Email.site_setup_success(trial_user, site)
       ]
 
       {:ok, emails: emails}
