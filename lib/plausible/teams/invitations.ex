@@ -9,6 +9,16 @@ defmodule Plausible.Teams.Invitations do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  def get_team_invitation(team, invitation_id) do
+    invitation = Repo.get_by(Teams.Invitation, team_id: team.id, invitation_id: invitation_id)
+
+    if invitation do
+      {:ok, invitation}
+    else
+      {:error, :invitation_not_found}
+    end
+  end
+
   def find_for_user(invitation_or_transfer_id, user) do
     with {:error, :invitation_not_found} <-
            find_team_invitation_for_user(invitation_or_transfer_id, user),

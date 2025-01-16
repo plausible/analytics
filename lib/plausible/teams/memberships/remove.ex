@@ -14,6 +14,8 @@ defmodule Plausible.Teams.Memberships.Remove do
       team_membership = Repo.preload(team_membership, [:team, :user])
       Repo.delete!(team_membership)
       send_team_member_removed_email(team_membership)
+
+      {:ok, team_membership}
     end
   end
 
