@@ -85,7 +85,7 @@ export default function FilterOperatorSelector(props) {
                     supportsContains(filterName) && supportsIsNot(filterName)
                   )}
                   {renderTypeItem(
-                    FILTER_OPERATIONS.has_done_not,
+                    FILTER_OPERATIONS.has_not_done,
                     supportsHasDoneNot(filterName)
                   )}
                 </div>

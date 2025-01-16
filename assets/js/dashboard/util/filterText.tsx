@@ -1,55 +1,51 @@
 /* @format */
 
-import React, { isValidElement } from 'react'
-import { DashboardQuery, Filter, FilterClause } from '../query'
+import React, { ReactNode, isValidElement, Fragment } from 'react'
+import { DashboardQuery, Filter } from '../query'
 import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS, FILTER_OPERATIONS_DISPLAY_NAMES, formattedFilters, getLabel, getPropertyKeyFromFilterKey } from './filters'
 
-
-
-function formatClauses(clauseLabels: FilterClause[], joinWord: string) {
-  return clauseLabels.reduce((prev, curr) => `${prev} ${joinWord} ${curr}`)
-}
-
 export function styledFilterText(query: DashboardQuery, [operation, filterKey, clauses]: Filter) {
-  const formattedFilter = (formattedFilters as Record<string, string | undefined>)[filterKey]
-
-  if (formattedFilter) {
-    return (
-      <>
-        {formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
-        {clauses
-          .map((value, index) => (
-            <>
-              {index > 0 && ' or '}
-              <b key={value}>{getLabel(query.labels, filterKey, value)}</b>
-            </>
-          ))}
-      </>
-    )
-  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+  if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
     const propKey = getPropertyKeyFromFilterKey(filterKey)
     return (
-      <>
-        Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
-        {clauses
-          .map((label, index) => (
-            <>
-              {index > 0 && ' or '}
-              <b key={label}>{label}</b>
-            </>
-          ))}
-      </>
+      <>Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '} {formatClauses(clauses)}</>
     )
   }
 
-  throw new Error(`Unknown filter: ${filterKey}`)
+  const formattedFilter = (formattedFilters as Record<string, string | undefined>)[filterKey]
+  const clausesLabels = clauses.map((value) => getLabel(query.labels, filterKey, value))
+
+  if (!formattedFilter) {
+    throw new Error(`Unknown filter: ${filterKey}`)
+  }
+
+  if (operation === FILTER_OPERATIONS.has_not_done) {
+    // Has not done goal Visit foo
+    return (<>{capitalize(FILTER_OPERATIONS_DISPLAY_NAMES[operation])} {formattedFilter} {formatClauses(clausesLabels)}</>)
+  } else {
+    // Hostname is example.com
+    return (<>{capitalize(formattedFilter)} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {formatClauses(clausesLabels)}</>)
+  }
 }
 
 export function plainFilterText(query: DashboardQuery, filter: Filter) {
   return reactNodeToString(styledFilterText(query, filter))
 }
 
-function reactNodeToString(reactNode: React.ReactNode): string {
+function formatClauses(labels: Array<string | number>): ReactNode[] {
+  return labels.map((label, index) => (
+    <Fragment key={index}>
+      {index > 0 && ' or '}
+      <b>{label}</b>
+    </Fragment>
+  ))
+}
+
+function capitalize(str: string): string {
+  return str[0].toUpperCase() + str.slice(1)
+}
+
+function reactNodeToString(reactNode: ReactNode): string {
   let string = ""
   if (typeof reactNode === "string") {
     string = reactNode
