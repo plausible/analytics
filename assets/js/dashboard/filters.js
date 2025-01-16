@@ -14,7 +14,7 @@ import {
   formatFilterGroup,
   EVENT_PROPS_PREFIX
 } from "./util/filters"
-import { plainFilterText, styledFilterText } from "./util/filterText"
+import { plainFilterText, styledFilterText } from "./util/filter-text"
 
 const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
 
