@@ -20,6 +20,7 @@ describe('parseSiteFromDataset', () => {
       data-revenue-goals='[{"currency":"USD","display_name":"Purchase"}]'
       data-funnels='[{"id":1,"name":"From homepage to login","steps_count":3}]'
       data-has-props="true"
+      data-has-engagement-metrics="true"
       data-logged-in="true"
       data-stats-begin="2021-09-07"
       data-native-stats-begin="2022-09-02"
@@ -43,6 +44,7 @@ describe('parseSiteFromDataset', () => {
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
     hasProps: true,
+    hasEngagementMetrics: true,
     statsBegin: '2021-09-07',
     nativeStatsBegin: '2022-09-02',
     embedded: false,
