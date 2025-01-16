@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
 
   def delete(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
 
-  @spec normalize_current_user_id(%Plug.Conn{}) :: nil | pos_integer()
+  @spec normalize_current_user_id(Plug.Conn.t()) :: nil | pos_integer()
   defp normalize_current_user_id(conn),
     do: if(is_nil(conn.assigns[:current_user]), do: nil, else: conn.assigns[:current_user].id)
 

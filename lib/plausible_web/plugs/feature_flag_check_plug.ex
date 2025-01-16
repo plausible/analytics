@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Plugs.FeatureFlagCheckPlug do
     end
   end
 
-  defp validate(_current_user = nil, site, flags),
+  defp validate(nil = _current_user, site, flags),
     do: Enum.all?(flags, fn flag -> FunWithFlags.enabled?(flag, for: site) end)
 
   defp validate(current_user, site, flags),
