@@ -12,10 +12,9 @@ import {
   cleanLabels,
   FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup,
-  EVENT_PROPS_PREFIX,
-  plainFilterText,
-  styledFilterText
-} from "./util/filters";
+  EVENT_PROPS_PREFIX
+} from "./util/filters"
+import { plainFilterText, styledFilterText } from "./util/filterText"
 
 const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
 
