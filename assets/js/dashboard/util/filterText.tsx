@@ -2,18 +2,35 @@
 
 import React, { ReactNode, isValidElement, Fragment } from 'react'
 import { DashboardQuery, Filter } from '../query'
-import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS, FILTER_OPERATIONS_DISPLAY_NAMES, formattedFilters, getLabel, getPropertyKeyFromFilterKey } from './filters'
+import {
+  EVENT_PROPS_PREFIX,
+  FILTER_OPERATIONS,
+  FILTER_OPERATIONS_DISPLAY_NAMES,
+  formattedFilters,
+  getLabel,
+  getPropertyKeyFromFilterKey
+} from './filters'
 
-export function styledFilterText(query: DashboardQuery, [operation, filterKey, clauses]: Filter) {
+export function styledFilterText(
+  query: DashboardQuery,
+  [operation, filterKey, clauses]: Filter
+) {
   if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
     const propKey = getPropertyKeyFromFilterKey(filterKey)
     return (
-      <>Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '} {formatClauses(clauses)}</>
+      <>
+        Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
+        {formatClauses(clauses)}
+      </>
     )
   }
 
-  const formattedFilter = (formattedFilters as Record<string, string | undefined>)[filterKey]
-  const clausesLabels = clauses.map((value) => getLabel(query.labels, filterKey, value))
+  const formattedFilter = (
+    formattedFilters as Record<string, string | undefined>
+  )[filterKey]
+  const clausesLabels = clauses.map((value) =>
+    getLabel(query.labels, filterKey, value)
+  )
 
   if (!formattedFilter) {
     throw new Error(`Unknown filter: ${filterKey}`)
@@ -21,10 +38,21 @@ export function styledFilterText(query: DashboardQuery, [operation, filterKey, c
 
   if (operation === FILTER_OPERATIONS.has_not_done) {
     // Has not done goal Visit foo
-    return (<>{capitalize(FILTER_OPERATIONS_DISPLAY_NAMES[operation])} {formattedFilter} {formatClauses(clausesLabels)}</>)
+    return (
+      <>
+        {capitalize(FILTER_OPERATIONS_DISPLAY_NAMES[operation])}{' '}
+        {formattedFilter} {formatClauses(clausesLabels)}
+      </>
+    )
   } else {
     // Hostname is example.com
-    return (<>{capitalize(formattedFilter)} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {formatClauses(clausesLabels)}</>)
+    return (
+      <>
+        {capitalize(formattedFilter)}{' '}
+        {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
+        {formatClauses(clausesLabels)}
+      </>
+    )
   }
 }
 
@@ -46,10 +74,10 @@ function capitalize(str: string): string {
 }
 
 function reactNodeToString(reactNode: ReactNode): string {
-  let string = ""
-  if (typeof reactNode === "string") {
+  let string = ''
+  if (typeof reactNode === 'string') {
     string = reactNode
-  } else if (typeof reactNode === "number") {
+  } else if (typeof reactNode === 'number') {
     string = reactNode.toString()
   } else if (reactNode instanceof Array) {
     reactNode.forEach(function (child) {

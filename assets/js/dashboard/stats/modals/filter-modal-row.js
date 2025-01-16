@@ -18,7 +18,14 @@ import { apiPath } from '../../util/url'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 
-export default function FilterModalRow({ filter, labels, canDelete, showDelete, onUpdate, onDelete }) {
+export default function FilterModalRow({
+  filter,
+  labels,
+  canDelete,
+  showDelete,
+  onUpdate,
+  onDelete
+}) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   const [operation, filterKey, clauses] = filter
@@ -66,7 +73,12 @@ export default function FilterModalRow({ filter, labels, canDelete, showDelete, 
   }
 
   return (
-    <div className={classNames("grid mt-1", { "grid-cols-12": canDelete, "grid-cols-11": !canDelete })}>
+    <div
+      className={classNames('grid mt-1', {
+        'grid-cols-12': canDelete,
+        'grid-cols-11': !canDelete
+      })}
+    >
       <div className="col-span-3">
         <FilterOperatorSelector
           forFilter={filterKey}
