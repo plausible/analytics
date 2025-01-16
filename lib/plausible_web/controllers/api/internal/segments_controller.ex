@@ -72,9 +72,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       {:error, :not_enough_permissions} ->
         H.not_enough_permissions(conn, "Not enough permissions to create segment")
 
-      {:error, :segment_not_found} ->
-        segment_not_found(conn, params["segment_id"])
-
       {:error, {:invalid_segment, errors}} when is_list(errors) ->
         conn
         |> put_status(400)
