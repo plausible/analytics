@@ -6,7 +6,7 @@ import { FilterPill } from './filter-pill'
 import {
   cleanLabels,
   EVENT_PROPS_PREFIX,
-  FILTER_GROUP_TO_MODAL_TYPE,
+  FILTER_GROUP_TO_MODAL_TYPE
 } from '../util/filters'
 import { styledFilterText, plainFilterText } from '../util/filterText'
 import { useAppNavigate } from '../navigation/use-app-navigate'
