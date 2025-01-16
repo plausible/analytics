@@ -17,6 +17,7 @@ import {
   hasGoalFilter,
   plainFilterText
 } from '../../util/filters'
+import { plainFilterText } from '../../util/filterText'
 import { useQueryContext } from '../../query-context'
 
 const MAX_ITEMS = 9
