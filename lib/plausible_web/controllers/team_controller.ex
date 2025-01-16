@@ -37,7 +37,7 @@ defmodule PlausibleWeb.TeamController do
   end
 
   def remove_member(conn, %{"id" => user_id}) do
-    %{my_team: team, current_user: current_user} = conn
+    %{my_team: team, current_user: current_user} = conn.assigns
 
     case Teams.Memberships.Remove.remove(team, user_id, current_user) do
       {:ok, _team_membership} ->
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.TeamController do
         |> put_flash(:error, "User is the only owner and can't be changed")
         |> redirect(to: Routes.settings_path(conn, :team_general))
 
-      {:error, :member_not_found} ->
+      {:error, :membership_not_found} ->
         conn
         |> put_flash(:success, "User has been removed from \"#{team.name}\" team")
         |> redirect(external: Routes.settings_path(conn, :team_general))
