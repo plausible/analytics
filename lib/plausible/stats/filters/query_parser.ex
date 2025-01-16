@@ -457,11 +457,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   ## Examples
     iex> get_segment_ids([[:not, [:is, "segment", [10, 20]]], [:contains, "visit:entry_page", ["blog"]]])
-
     {:ok, [10, 20]}
 
     iex> get_segment_ids([[:and, [[:is, "segment", Enum.to_list(1..6)], [:is, "segment", Enum.to_list(1..6)]]]])
-
     {:error, "Invalid filters. You can only use up to 10 segment filters in a query."}
   """
   def get_segment_ids(filters) do
