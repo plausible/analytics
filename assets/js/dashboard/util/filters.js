@@ -30,7 +30,7 @@ export const FILTER_OPERATIONS = {
   isNot: 'is_not',
   contains: 'contains',
   contains_not: 'contains_not',
-  has_done_not: 'has_done_not'
+  has_not_done: 'has_not_done'
 }
 
 export const FILTER_OPERATIONS_DISPLAY_NAMES = {
@@ -38,7 +38,7 @@ export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.isNot]: 'is not',
   [FILTER_OPERATIONS.contains]: 'contains',
   [FILTER_OPERATIONS.contains_not]: 'does not contain',
-  [FILTER_OPERATIONS.has_done_not]: 'has not done'
+  [FILTER_OPERATIONS.has_not_done]: 'has not done'
 }
 
 export function supportsIsNot(filterName) {
@@ -170,8 +170,8 @@ function serializeFilter([operation, filterKey, clauses, ...modifiers]) {
   ) {
     apiFilterKey = `event:${filterKey}`
   }
-  if (operation === FILTER_OPERATIONS.has_done_not) {
-    return ['has_done_not', ['is', apiFilterKey, clauses, ...modifiers]]
+  if (operation === FILTER_OPERATIONS.has_not_done) {
+    return ['has_not_done', ['is', apiFilterKey, clauses, ...modifiers]]
   } else {
     return [operation, apiFilterKey, clauses, ...modifiers]
   }

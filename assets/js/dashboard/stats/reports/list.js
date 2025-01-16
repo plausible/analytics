@@ -14,8 +14,7 @@ import {
   cleanLabels,
   replaceFilterByPrefix,
   isRealTimeDashboard,
-  hasGoalFilter,
-  plainFilterText
+  hasGoalFilter
 } from '../../util/filters'
 import { plainFilterText } from '../../util/filterText'
 import { useQueryContext } from '../../query-context'
