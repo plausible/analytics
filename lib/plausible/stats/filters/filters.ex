@@ -57,7 +57,7 @@ defmodule Plausible.Stats.Filters do
 
   Returns an empty list when argument type is unexpected (e.g. `nil`).
 
-  ### Examples:
+  ## Examples:
 
       iex> Filters.parse("visit:browser!=Chrome")
       [[:is_not, "visit:browser", ["Chrome"]]]
@@ -128,6 +128,16 @@ defmodule Plausible.Stats.Filters do
   Transformer will receive each node (filter, and/or/not subtree) of
   query and must return a list of nodes to replace it with or nil
   to ignore and look deeper.
+
+  ## Examples
+
+    iex> Filters.transform_filters([[:is, "visit:entry_page", ["/blog"]]], fn f -> [f] end)
+    [[:is, "visit:entry_page", ["/blog"]]]
+
+    iex> Filters.transform_filters([[:is, "visit:entry_page", ["/blog"]]], fn _f -> nil end)
+    [[[:is, "visit:entry_page", ["/blog"]]]]
+
+
   """
   def transform_filters(filters, transformer) do
     filters

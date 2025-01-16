@@ -2,10 +2,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   use Plausible
   use Plausible.DataCase
   use Plausible.Teams.Test
+  import Plausible.Stats.Filters.QueryParser
+  doctest Plausible.Stats.Filters.QueryParser
 
   alias Plausible.Stats.DateTimeRange
   alias Plausible.Stats.Filters
-  import Plausible.Stats.Filters.QueryParser
 
   setup [:create_user, :create_site]
 

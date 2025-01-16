@@ -452,6 +452,18 @@ defmodule Plausible.Stats.Filters.QueryParser do
     }
   end
 
+  @doc """
+  Finds unique segment IDs used in query filters.
+
+  ## Examples
+    iex> get_segment_ids([[:not, [:is, "segment", [10, 20]]], [:contains, "visit:entry_page", ["blog"]]])
+
+    {:ok, [10, 20]}
+
+    iex> get_segment_ids([[:and, [[:is, "segment", Enum.to_list(1..6)], [:is, "segment", Enum.to_list(1..6)]]]])
+
+    {:error, "Invalid filters. You can only use up to 10 segment filters in a query."}
+  """
   def get_segment_ids(filters) do
     max_segment_filters_count = 10
 
@@ -500,13 +512,37 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp replace_segment_with_filter_tree([_, "segment", clauses], preloaded_segments) do
-    [[:or, Enum.map(clauses, fn id -> [:and, Map.get(preloaded_segments, id)] end)]]
+    if length(clauses) === 1 do
+      [[:and, Map.get(preloaded_segments, Enum.at(clauses, 0))]]
+    else
+      [[:or, Enum.map(clauses, fn id -> [:and, Map.get(preloaded_segments, id)] end)]]
+    end
   end
 
-  defp replace_segment_with_filter_tree(_filter_tree, _preloaded_segments) do
-    nil
+  defp replace_segment_with_filter_tree(filter, _preloaded_segments) do
+    [filter]
   end
 
+  @doc """
+  ## Examples
+
+    iex> resolve_segments([[:is, "visit:entry_page", ["/home"]]], %{})
+    {:ok, [[:is, "visit:entry_page", ["/home"]]]}
+
+    iex> resolve_segments([[:is, "visit:entry_page", ["/home"]], [:is, "segment", [1]]], %{1 => [[:contains, "visit:entry_page", ["blog"]], [:is, "visit:country", ["PL"]]]})
+    {:ok, [
+      [:is, "visit:entry_page", ["/home"]],
+      [:and, [[:contains, "visit:entry_page", ["blog"]], [:is, "visit:country", ["PL"]]]]
+    ]}
+
+    iex> resolve_segments([[:is, "segment", [1, 2]]], %{1 => [[:contains, "event:goal", ["Singup"]], [:is, "visit:country", ["PL"]]], 2 => [[:contains, "event:goal", ["Sauna"]], [:is, "visit:country", ["EE"]]]})
+    {:ok, [
+      [:or, [
+        [:and, [[:contains, "event:goal", ["Singup"]], [:is, "visit:country", ["PL"]]]],
+        [:and, [[:contains, "event:goal", ["Sauna"]], [:is, "visit:country", ["EE"]]]]]
+      ]
+    ]}
+  """
   def resolve_segments(original_filters, preloaded_segments) do
     if Map.keys(preloaded_segments) !== [] do
       {:ok,
