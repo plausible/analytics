@@ -101,13 +101,15 @@ defmodule Plausible.Stats.Filters do
         {depth + 1, is_behavioral_filter or operator in [:has_done, :has_not_done]}
       end
     )
-    |> Enum.filter(fn {_filter, {depth, _}} -> depth >= min_depth and depth <= max_depth end)
-    |> Enum.filter(fn {_filter, {_, is_behavioral_filter}} ->
-      case behavioral_filter_option do
-        :ignore -> not is_behavioral_filter
-        :only -> is_behavioral_filter
-        _ -> true
-      end
+    |> Enum.filter(fn {_filter, {depth, is_behavioral_filter}} ->
+      matches_behavioral_filter_option? =
+        case behavioral_filter_option do
+          :ignore -> not is_behavioral_filter
+          :only -> is_behavioral_filter
+          _ -> true
+        end
+
+      depth >= min_depth and depth <= max_depth and matches_behavioral_filter_option?
     end)
     |> Enum.map(fn {[_operator, dimension | _rest], _depth} -> dimension end)
   end
