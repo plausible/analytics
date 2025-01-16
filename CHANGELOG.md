@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Dashboard shows comparisons for all reports
 - UTM Medium report and API shows (gclid) and (msclkid) for paid searches when no explicit utm medium present.
 - Support for `case_sensitive: false` modifiers in Stats API V2 filters for case-insensitive searches.
+- Add support for behavioral filtering with `has_done` and `has_not_done` filters in APIv2 plausible/analytics#4980
 
 ### Removed
 
@@ -14,7 +15,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Filters appear in the search bar as ?f=is,page,/docs,/blog&f=... instead of ?filters=((is,page,(/docs,/blog)),...) for Plausible links sent on various platforms to work reliably. 
+- Filters appear in the search bar as ?f=is,page,/docs,/blog&f=... instead of ?filters=((is,page,(/docs,/blog)),...) for Plausible links sent on various platforms to work reliably.
 - Details modal search inputs are now case-insensitive.
 - Improved report performance in cases where site has a lot of unique pathnames
 
@@ -46,7 +47,6 @@ All notable changes to this project will be documented in this file.
 - Add ability to review and revoke particular logged in user sessions
 - Add ability to change password from user settings screen
 - Add error logs for background jobs plausible/analytics#4657
-- Add support for behavioral filtering with `has_done` and `has_not_done` filters in APIv2 plausible/analytics#4980
 
 ### Changed
 
