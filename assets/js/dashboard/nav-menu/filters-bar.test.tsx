@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../test-utils/app-context-providers'
 import { FiltersBar, handleVisibility } from './filters-bar'
 import { getRouterBasepath } from '../router'
-import { stringifySearch } from '../util/url'
+import { stringifySearch } from '../util/url-search-params'
 
 const domain = 'dummy.site'
 

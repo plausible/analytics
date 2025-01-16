@@ -1,29 +1,19 @@
 /** @format */
 
-import JsonURL from '@jsonurl/jsonurl'
+import { Filter } from '../query'
 import {
-  encodeSearchParamEntry,
   encodeURIComponentPermissive,
   isSearchEntryDefined,
+  getRedirectTarget,
+  parseFilter,
+  parseLabelsEntry,
   parseSearch,
-  parseSearchFragment,
-  stringifySearch,
-  stringifySearchEntry
-} from './url'
-
-beforeEach(() => {
-  // Silence logs in tests
-  jest.spyOn(console, 'error').mockImplementation(jest.fn())
-})
-
-describe('using json URL parsing with URLSearchParams intermediate', () => {
-  it.each([['#'], ['&'], ['=']])('throws on special symbol %p', (s) => {
-    const searchString = `?param=${encodeURIComponent(s)}`
-    expect(() =>
-      JsonURL.parse(new URLSearchParams(searchString).get('param')!)
-    ).toThrow()
-  })
-})
+  parseSimpleSearchEntry,
+  serializeFilter,
+  serializeLabelsEntry,
+  serializeSimpleSearchEntry,
+  stringifySearch
+} from './url-search-params'
 
 describe(`${encodeURIComponentPermissive.name}`, () => {
   it.each<[string, string]>([
@@ -37,7 +27,7 @@ describe(`${encodeURIComponentPermissive.name}`, () => {
   ])(
     'when input is %p, returns %s and decodes back to input',
     (input, expected) => {
-      const result = encodeURIComponentPermissive(input)
+      const result = encodeURIComponentPermissive(input, ',:/')
       expect(result).toBe(expected)
       expect(decodeURIComponent(result)).toBe(input)
     }
@@ -56,155 +46,139 @@ describe(`${isSearchEntryDefined.name}`, () => {
   })
 })
 
-describe(`${stringifySearchEntry.name}`, () => {
-  it.each<[[string, unknown], [string, string | undefined]]>([
-    [
-      ['any-key', {}],
-      ['any-key', undefined]
-    ],
-    [
-      ['any-key', []],
-      ['any-key', undefined]
-    ],
-    [
-      ['any-key', null],
-      ['any-key', undefined]
-    ],
-    [
-      ['period', 'realtime'],
-      ['period', 'realtime']
-    ],
-    [
-      ['page', 10],
-      ['page', '10']
-    ],
-    [
-      ['labels', { US: 'United States', 3448439: 'São Paulo' }],
-      ['labels', '(3448439:S%C3%A3o+Paulo,US:United+States)']
-    ],
-    [
-      ['filters', [['is', 'props:foo:bar', ['one', 'two']]]],
-      ['filters', "((is,'props:foo:bar',(one,two)))"]
-    ]
-  ])('when input is %p, returns %p', (input, expected) => {
-    const result = stringifySearchEntry(input)
-    expect(result).toEqual(expected)
-  })
-})
-
-describe(`${encodeSearchParamEntry.name}`, () => {
-  it.each<[[string, string], string]>([
-    [
-      ['labels', '(3448439:S%C3%A3o+Paulo,US:United+States)'],
-      'labels=(3448439:S%25C3%25A3o%2BPaulo,US:United%2BStates)'
-    ]
-  ])('when input is %p, returns %s', (input, expected) => {
-    const result = encodeSearchParamEntry(input)
-    expect(result).toBe(expected)
-  })
-})
-
-describe(`${parseSearchFragment.name}`, () => {
-  it.each([
-    ['', null],
-    ['("foo":)', null],
-    ['(invalid', null],
-    ['null', null],
-
-    ['123', 123],
-    ['string', 'string'],
-    ['item=#', 'item=#'],
-    ['item%3D%23', 'item=#'],
-
-    ['(any:(number:1))', { any: { number: 1 } }],
-    ['(any:(number:1.001))', { any: { number: 1.001 } }],
-    ["(any:(string:'1.001'))", { any: { string: '1.001' } }],
-
-    // Non-JSON strings that should return as string
-    ['undefined', 'undefined'],
-    ['not_json', 'not_json'],
-    ['plainstring', 'plainstring'],
-    ['a|b', 'a|b'],
-    ['foo bar#', 'foo bar#']
+describe(`${serializeLabelsEntry.name} and ${parseLabelsEntry.name}(...) are opposite of each other`, () => {
+  test.each<[[string, string], string]>([
+    [['US', 'United States'], 'US,United%20States'],
+    [['FR-IDF', 'Île-de-France'], 'FR-IDF,%C3%8Ele-de-France'],
+    [['1254661', 'Thāne'], '1254661,Th%C4%81ne']
   ])(
-    'when searchStringFragment is %p, returns %p',
-    (searchStringFragment, expected) => {
-      const result = parseSearchFragment(searchStringFragment)
-      expect(result).toEqual(expected)
+    'entry %p serializes to %p, parses back to original',
+    (entry, expected) => {
+      const serialized = serializeLabelsEntry(entry)
+      expect(serialized).toEqual(expected)
+      expect(parseLabelsEntry(serialized)).toEqual(entry)
+    }
+  )
+})
+
+describe(`${serializeFilter.name} and ${parseFilter.name}(...) are opposite of each other`, () => {
+  test.each<[Filter, string]>([
+    [
+      ['contains', 'entry_page', ['/forecast/:city', ',"\'']],
+      "contains,entry_page,/forecast/:city,%2C%22'"
+    ],
+    [
+      ['is', 'props:complex/prop-with-comma-etc,$#%', ['(none)']],
+      'is,props:complex/prop-with-comma-etc%2C%24%23%25,(none)'
+    ]
+  ])(
+    'filter %p serializes to %p, parses back to original',
+    (filter, expected) => {
+      const serialized = serializeFilter(filter)
+      expect(serialized).toEqual(expected)
+      expect(parseFilter(serialized)).toEqual(filter)
+    }
+  )
+})
+
+describe(`${serializeSimpleSearchEntry.name} and ${parseSimpleSearchEntry.name}`, () => {
+  test.each<
+    [
+      [string, unknown],
+      [string, string | boolean | undefined],
+      [string, string | boolean] | null
+    ]
+  >([
+    [['undefined-param', undefined], ['undefined-param', undefined], null],
+    [['null-param', null], ['null-param', undefined], null],
+    [['array-param', ['any-value']], ['array-param', undefined], null],
+    [['obj-param', { 'any-key': 'any-value' }], ['obj-param', undefined], null],
+    [
+      ['date-obj', new Date('2024-01-01T10:00:00.000Z')],
+      ['date-obj', undefined],
+      null
+    ],
+    [
+      ['page-nr', 5],
+      ['page-nr', '5'],
+      ['page-nr', '5']
+    ],
+    [
+      ['string-param-resembling-boolean', 'true'],
+      ['string-param-resembling-boolean', 'true'],
+      ['string-param-resembling-boolean', true]
+    ],
+    [
+      ['match-day-of-week', false],
+      ['match-day-of-week', 'false'],
+      ['match-day-of-week', false]
+    ],
+    [
+      ['with-imported-data', true],
+      ['with-imported-data', 'true'],
+      ['with-imported-data', true]
+    ],
+    [
+      ['date-string', '2024-12-10'],
+      ['date-string', '2024-12-10'],
+      ['date-string', '2024-12-10']
+    ]
+  ])(
+    'entry %p serializes to %p, parses to %p',
+    (entry, expectedSerialized, expectedParsedEntry) => {
+      const serialized = serializeSimpleSearchEntry(entry)
+      expect(serialized).toEqual(expectedSerialized)
+      expect(
+        serialized[1] === undefined
+          ? null
+          : parseSimpleSearchEntry(serialized[1])
+      ).toEqual(expectedParsedEntry === null ? null : expectedParsedEntry[1])
     }
   )
 })
 
 describe(`${parseSearch.name}`, () => {
   it.each([
-    ['', {}],
-    ['?', {}],
+    ['?', {}, ''],
+    ['?=&&', {}, ''],
+    ['?=undefined', {}, ''],
+    ['?foo=', { foo: '' }, '?foo='],
+    ['??foo', { '?foo': '' }, '?%3Ffoo='],
     [
-      '?arr=(1,2)',
-      {
-        arr: [1, 2]
-      }
-    ],
-    ['?key1=value1&key2=', { key1: 'value1', key2: null }],
-    ['?key1=value1&key2=value2', { key1: 'value1', key2: 'value2' }],
-    [
-      '?key1=(foo:bar)&filters=((is,screen,(Mobile,Desktop)))',
-      {
-        key1: { foo: 'bar' },
-        filters: [['is', 'screen', ['Mobile', 'Desktop']]]
-      }
-    ],
-    [
-      '?filters=((is,country,(US)))&labels=(US:United%2BStates)',
-      {
-        filters: [['is', 'country', ['US']]],
-        labels: {
-          US: 'United States'
-        }
-      }
-    ]
-  ])('when searchString is %p, returns %p', (searchString, expected) => {
-    const result = parseSearch(searchString)
-    expect(result).toEqual(expected)
-  })
-})
-
-describe(`${stringifySearch.name} and ${parseSearch.name} are inverses of each other`, () => {
-  it.each([
-    ["?filters=((is,'props:browser_language',(en-US)))"],
-    [
-      '?filters=((contains,utm_term,(_)),(is,screen,(Desktop,Tablet)),(is,page,(/open-source-website-analytics)))&period=custom&keybindHint=A&comparison=previous_period&match_day_of_week=false&from=2024-08-08&to=2024-08-10'
-    ],
-    [
-      "?filters=((is,'props:browser_language',(en-US)),(is,country,(US)),(is,os,(iOS)),(is,os_version,('17.3')),(is,page,('/:dashboard/settings/general')))&labels=(US:United%2BStates)"
-    ],
-    [
-      '?filters=((is,utm_source,(hackernewsletter)),(is,utm_campaign,(profile)))&period=day&keybindHint=D'
+      '?f=is,visit:page,/any/page&f',
+      { filters: [['is', 'visit:page', ['/any/page']]] },
+      '?f=is,visit:page,/any/page'
     ]
   ])(
-    `input %p is returned for ${stringifySearch.name}(${parseSearch.name}(input))`,
-    (searchString) => {
-      const searchRecord = parseSearch(searchString)
-      const reStringifiedSearch = stringifySearch(searchRecord)
-      expect(reStringifiedSearch).toEqual(searchString)
+    'for search string %s, returns search record %p, which in turn stringifies to %s',
+    (searchString, expectedSearchRecord, expectedRestringifiedResult) => {
+      expect(parseSearch(searchString)).toEqual(expectedSearchRecord)
+      expect(stringifySearch(expectedSearchRecord)).toEqual(
+        expectedRestringifiedResult
+      )
     }
   )
+})
 
+describe(`${stringifySearch.name}`, () => {
   it.each([
-    // Corresponding test cases for objects parsed from realistic URLs
-
+    [{}, ''],
     [
       {
         filters: [['is', 'props:browser_language', ['en-US']]]
       },
-      "?filters=((is,'props:browser_language',(en-US)))"
+      '?f=is,props:browser_language,en-US'
     ],
     [
       {
         filters: [
           ['contains', 'utm_term', ['_']],
           ['is', 'screen', ['Desktop', 'Tablet']],
-          ['is', 'page', ['/open-source/analytics/encoded-hash%23']]
+          [
+            'is',
+            'page',
+            ['/open-source/analytics/encoded-hash%23', '/unencoded-hash#']
+          ]
         ],
         period: 'custom',
         keybindHint: 'A',
@@ -213,7 +187,7 @@ describe(`${stringifySearch.name} and ${parseSearch.name} are inverses of each o
         from: '2024-08-08',
         to: '2024-08-10'
       },
-      '?filters=((contains,utm_term,(_)),(is,screen,(Desktop,Tablet)),(is,page,(%252Fopen-source%252Fanalytics%252Fencoded-hash%252523)))&period=custom&keybindHint=A&comparison=previous_period&match_day_of_week=false&from=2024-08-08&to=2024-08-10'
+      '?f=contains,utm_term,_&f=is,screen,Desktop,Tablet&f=is,page,/open-source/analytics/encoded-hash%2523,/unencoded-hash%23&period=custom&keybindHint=A&comparison=previous_period&match_day_of_week=false&from=2024-08-08&to=2024-08-10'
     ],
     [
       {
@@ -221,31 +195,70 @@ describe(`${stringifySearch.name} and ${parseSearch.name} are inverses of each o
           ['is', 'props:browser_language', ['en-US']],
           ['is', 'country', ['US']],
           ['is', 'os', ['iOS']],
-          ['is', 'os_version', ['17.3']],
+          ['is', 'os_version', ['17.3', '16.0']],
           ['is', 'page', ['/:dashboard/settings/general']]
         ],
         labels: { US: 'United States' }
       },
-      "?filters=((is,'props:browser_language',(en-US)),(is,country,(US)),(is,os,(iOS)),(is,os_version,('17.3')),(is,page,('/:dashboard/settings/general')))&labels=(US:United%2BStates)"
-    ],
-    [
-      {
-        filters: [
-          ['is', 'utm_source', ['hackernewsletter']],
-          ['is', 'utm_campaign', ['profile']]
-        ],
-        period: 'day',
-        keybindHint: 'D'
-      },
-      '?filters=((is,utm_source,(hackernewsletter)),(is,utm_campaign,(profile)))&period=day&keybindHint=D'
+      '?f=is,props:browser_language,en-US&f=is,country,US&f=is,os,iOS&f=is,os_version,17.3,16.0&f=is,page,/:dashboard/settings/general&l=US,United%20States'
     ]
-  ])(
-    `for input %p, ${stringifySearch.name}(input) returns %p and ${parseSearch.name}(${stringifySearch.name}(input)) returns the original input`,
-    (searchRecord, expected) => {
-      const searchString = stringifySearch(searchRecord)
-      const parsedSearchRecord = parseSearch(searchString)
-      expect(parsedSearchRecord).toEqual(searchRecord)
-      expect(searchString).toEqual(expected)
-    }
-  )
+  ])('works as expected', (searchRecord, expectedSearchString) => {
+    expect(stringifySearch(searchRecord)).toEqual(expectedSearchString)
+    expect(parseSearch(expectedSearchString)).toEqual(searchRecord)
+  })
+})
+
+describe(`${getRedirectTarget.name}`, () => {
+  it.each([
+    [''],
+    ['?auth=_Y6YOjUl2beUJF_XzG1hk&theme=light&background=%23ee00ee'],
+    ['?keybindHint=Escape&with_imported=true'],
+    ['?f=is,page,/blog/:category/:article-name&date=2024-10-10&period=day'],
+    ['?f=is,country,US&l=US,United%20States']
+  ])('for modern search %p returns null', (search) => {
+    expect(
+      getRedirectTarget({
+        pathname: '/example.com%2Fdeep%2Fpath',
+        search
+      } as Location)
+    ).toBeNull()
+  })
+
+  it('returns updated URL for jsonurl style filters (v2), and running the updated value through the function again returns null (no redirect loop)', () => {
+    const pathname = '/'
+    const search =
+      '?filters=((is,exit_page,(/plausible.io)),(is,source,(Brave)),(is,city,(993800)))&labels=(993800:Johannesburg)'
+    const expectedUpdatedSearch =
+      '?f=is,exit_page,/plausible.io&f=is,source,Brave&f=is,city,993800&l=993800,Johannesburg&r=v2'
+    expect(
+      getRedirectTarget({
+        pathname,
+        search
+      } as Location)
+    ).toEqual(`${pathname}${expectedUpdatedSearch}`)
+    expect(
+      getRedirectTarget({
+        pathname,
+        search: expectedUpdatedSearch
+      } as Location)
+    ).toBeNull()
+  })
+
+  it('returns updated URL for page=... style filters (v1), and running the updated value through the function again returns null (no redirect loop)', () => {
+    const pathname = '/'
+    const search = '?page=/docs'
+    const expectedUpdatedSearch = '?f=is,page,/docs&r=v1'
+    expect(
+      getRedirectTarget({
+        pathname,
+        search
+      } as Location)
+    ).toEqual(`${pathname}${expectedUpdatedSearch}`)
+    expect(
+      getRedirectTarget({
+        pathname,
+        search: expectedUpdatedSearch
+      } as Location)
+    ).toBeNull()
+  })
 })

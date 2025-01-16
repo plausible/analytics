@@ -1,8 +1,7 @@
 /** @format */
 
-import React, { useMemo } from 'react'
+import React from 'react'
 import * as api from '../api'
-import { useQueryContext } from '../query-context'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
   page: ['page', 'entry_page', 'exit_page'],
@@ -40,12 +39,6 @@ export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.contains_not]: 'does not contain'
 }
 
-const OPERATION_PREFIX = {
-  [FILTER_OPERATIONS.isNot]: '!',
-  [FILTER_OPERATIONS.contains]: '~',
-  [FILTER_OPERATIONS.is]: ''
-}
-
 export function supportsIsNot(filterName) {
   return !['goal', 'prop_key'].includes(filterName)
 }
@@ -61,17 +54,6 @@ export function isFreeChoiceFilterOperation(operation) {
     operation
   )
 }
-
-// As of March 2023, Safari does not support negative lookbehind regexes. In case it throws an error, falls back to plain | matching. This means
-// escaping pipe characters in filters does not currently work in Safari
-let NON_ESCAPED_PIPE_REGEX
-try {
-  NON_ESCAPED_PIPE_REGEX = new RegExp('(?<!\\\\)\\|', 'g')
-} catch (_e) {
-  NON_ESCAPED_PIPE_REGEX = '|'
-}
-
-const ESCAPED_PIPE = '\\|'
 
 export function getLabel(labels, filterKey, value) {
   if (['country', 'region', 'city'].includes(filterKey)) {
@@ -118,25 +100,8 @@ export function hasGoalFilter(query) {
   return getFiltersByKeyPrefix(query, 'goal').length > 0
 }
 
-export function useHasGoalFilter() {
-  const {
-    query: { filters }
-  } = useQueryContext()
-  return useMemo(
-    () => getFiltersByKeyPrefix({ filters }, 'goal').length > 0,
-    [filters]
-  )
-}
-
 export function isRealTimeDashboard(query) {
   return query?.period === 'realtime'
-}
-
-export function useIsRealtimeDashboard() {
-  const {
-    query: { period }
-  } = useQueryContext()
-  return useMemo(() => isRealTimeDashboard({ period }), [period])
 }
 
 export function plainFilterText(query, [operation, filterKey, clauses]) {
@@ -294,27 +259,4 @@ export const formattedFilters = {
   hostname: 'Hostname',
   entry_page: 'Entry Page',
   exit_page: 'Exit Page'
-}
-
-export function parseLegacyFilter(filterKey, rawValue) {
-  const operation =
-    Object.keys(OPERATION_PREFIX).find(
-      (operation) => OPERATION_PREFIX[operation] === rawValue[0]
-    ) || FILTER_OPERATIONS.is
-
-  const value =
-    operation === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
-
-  const clauses = value
-    .split(NON_ESCAPED_PIPE_REGEX)
-    .filter((clause) => !!clause)
-    .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
-
-  return [operation, filterKey, clauses]
-}
-
-export function parseLegacyPropsFilter(rawValue) {
-  return Object.entries(JSON.parse(rawValue)).map(([key, propVal]) => {
-    return parseLegacyFilter(`${EVENT_PROPS_PREFIX}${key}`, propVal)
-  })
 }

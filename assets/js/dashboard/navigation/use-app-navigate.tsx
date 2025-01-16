@@ -9,7 +9,7 @@ import {
   NavigateOptions,
   LinkProps
 } from 'react-router-dom'
-import { parseSearch, stringifySearch } from '../util/url'
+import { parseSearch, stringifySearch } from '../util/url-search-params'
 
 export type AppNavigationTarget = {
   /**
