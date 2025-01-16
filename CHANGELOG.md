@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 - Add ability to review and revoke particular logged in user sessions
 - Add ability to change password from user settings screen
 - Add error logs for background jobs plausible/analytics#4657
+- Add support for behavioral filtering with `has_done` and `has_not_done` filters in APIv2 plausible/analytics#4980
 
 ### Changed
 
