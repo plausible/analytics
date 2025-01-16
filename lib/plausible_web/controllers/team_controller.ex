@@ -26,10 +26,7 @@ defmodule PlausibleWeb.TeamController do
 
       {:error, :only_one_owner} ->
         conn
-        |> put_flash(
-          :error,
-          "#{team_membership.user.name} is the only owner and can't be changed"
-        )
+        |> put_flash(:error, "User is the only owner and can't be changed")
         |> redirect(to: Routes.settings_path(conn, :team_general))
 
       {:error, _} ->
@@ -54,6 +51,11 @@ defmodule PlausibleWeb.TeamController do
         conn
         |> put_flash(:success, "User has been removed from \"#{team.name}\" team")
         |> redirect(external: redirect_target)
+
+      {:error, :only_one_owner} ->
+        conn
+        |> put_flash(:error, "User is the only owner and can't be changed")
+        |> redirect(to: Routes.settings_path(conn, :team_general))
 
       {:error, :member_not_found} ->
         conn
