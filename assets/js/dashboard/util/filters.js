@@ -1,6 +1,5 @@
 /** @format */
 
-import React from 'react'
 import * as api from '../api'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
