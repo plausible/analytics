@@ -15,3 +15,9 @@ View dashboard: <%= link(@link, to: @link) %>
 <br /><br />
 
 Congrats on the spike in traffic!
+
+<%= if Plausible.ce? do %>
+  <br /><br /> Plausible CE is funded by our cloud subscribers. If you
+  <a href="https://plausible.io/?utm_medium=email&utm_source=CE">enjoy using Plausible</a>
+  and know someone who might benefit from it, please spread the word.
+<% end %>
