@@ -111,14 +111,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["or" | _rest]), do: {:ok, :or}
   defp parse_operator(["not" | _rest]), do: {:ok, :not}
   defp parse_operator(["has_done" | _rest]), do: {:ok, :has_done}
-  defp parse_operator(["has_done_not" | _rest]), do: {:ok, :has_done_not}
+  defp parse_operator(["has_not_done" | _rest]), do: {:ok, :has_not_done}
   defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{i(filter)}'."}
 
   def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
     do: parse_filters(filters)
 
   def parse_filter_second(operator, [_, filter | _rest])
-      when operator in [:not, :has_done, :has_done_not],
+      when operator in [:not, :has_done, :has_not_done],
       do: parse_filter(filter)
 
   def parse_filter_second(_operator, filter), do: parse_filter_key(filter)
@@ -147,7 +147,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_filter_rest(operator, _filter)
-       when operator in [:not, :and, :or, :has_done, :has_done_not],
+       when operator in [:not, :and, :or, :has_done, :has_not_done],
        do: {:ok, []}
 
   defp parse_clauses_list([operator, filter_key, list | _rest] = filter) when is_list(list) do
@@ -478,7 +478,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     nested_behavioral_filter? =
       query.filters
       |> Filters.traverse(0, fn behavioral_depth, operator ->
-        if operator in [:has_done, :has_done_not] do
+        if operator in [:has_done, :has_not_done] do
           behavioral_depth + 1
         else
           behavioral_depth
@@ -493,11 +493,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     cond do
       nested_behavioral_filter? ->
-        {:error, "Invalid filters. Behavioral filters (has_done, has_done_not) cannot be nested."}
+        {:error, "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."}
 
       bad_behavioral_filter? ->
         {:error,
-         "Invalid filters. Behavioral filters (has_done, has_done_not) can only be used with event dimension filters."}
+         "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."}
 
       true ->
         :ok

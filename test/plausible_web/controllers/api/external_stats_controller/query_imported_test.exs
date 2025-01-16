@@ -1326,7 +1326,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                "Imported stats are not included in the results"
     end
 
-    test "imports are skipped when has_done_not filter is used", %{
+    test "imports are skipped when has_not_done filter is used", %{
       conn: conn,
       site: site,
       site_import: site_import
@@ -1350,7 +1350,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "date_range" => "all",
           "dimensions" => ["event:goal"],
           "filters" => [
-            ["has_done_not", ["is", "event:name", ["pageview"]]]
+            ["has_not_done", ["is", "event:name", ["pageview"]]]
           ],
           "include" => %{"imports" => true}
         })

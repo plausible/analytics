@@ -98,7 +98,7 @@ defmodule Plausible.Stats.Filters do
     |> traverse(
       {0, false},
       fn {depth, is_behavioral_filter}, operator ->
-        {depth + 1, is_behavioral_filter or operator in [:has_done, :has_done_not]}
+        {depth + 1, is_behavioral_filter or operator in [:has_done, :has_not_done]}
       end
     )
     |> Enum.filter(fn {_filter, {depth, _}} -> depth >= min_depth and depth <= max_depth end)
@@ -194,7 +194,7 @@ defmodule Plausible.Stats.Filters do
   defp traverse_tree(filter, state, state_transformer) do
     case filter do
       [operation, child_filter]
-      when operation in [:not, :ignore_in_totals_query, :has_done, :has_done_not] ->
+      when operation in [:not, :ignore_in_totals_query, :has_done, :has_not_done] ->
         traverse_tree(child_filter, state_transformer.(state, operation), state_transformer)
 
       [operation, filters] when operation in [:and, :or] ->

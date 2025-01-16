@@ -268,7 +268,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           ["is_not"],
           ["is_not", "event:name"],
           ["has_done"],
-          ["has_done_not"]
+          ["has_not_done"]
         ] do
       test "errors on too short filter #{inspect(too_short_filter)}", %{
         site: site
@@ -545,7 +545,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       })
     end
 
-    test "valid has_done and has_done_not filters", %{site: site} do
+    test "valid has_done and has_not_done filters", %{site: site} do
       insert(:goal, %{site: site, event_name: "Signup"})
 
       %{
@@ -555,7 +555,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "filters" => [
           ["has_done", ["is", "event:name", ["Signup"]]],
           [
-            "has_done_not",
+            "has_not_done",
             [
               "or",
               [
@@ -572,7 +572,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [
           [:has_done, [:is, "event:name", ["Signup"]]],
           [
-            :has_done_not,
+            :has_not_done,
             [:or, [[:is, "event:goal", ["Signup"]], [:is, "event:page", ["/signup"]]]]
           ]
         ],
@@ -595,7 +595,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Behavioral filters (has_done, has_done_not) can only be used with event dimension filters."
+        "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
       )
     end
 
@@ -605,16 +605,16 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
-          ["has_done", ["has_done_not", ["is", "visit:browser", ["Chrome"]]]]
+          ["has_done", ["has_not_done", ["is", "visit:browser", ["Chrome"]]]]
         ]
       }
       |> check_error(
         site,
-        "Invalid filters. Behavioral filters (has_done, has_done_not) cannot be nested."
+        "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
       )
     end
 
-    for operator <- ["not", "or", "has_done", "has_done_not"] do
+    for operator <- ["not", "or", "has_done", "has_not_done"] do
       test "invalid `#{operator}` clause", %{site: site} do
         %{
           "site_id" => site.domain,

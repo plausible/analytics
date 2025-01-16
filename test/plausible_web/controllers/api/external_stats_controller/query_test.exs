@@ -4646,7 +4646,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "has_done_not event:page filter", %{conn: conn, site: site} do
+    test "has_not_done event:page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
           name: "pageview",
@@ -4679,7 +4679,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "site_id" => site.domain,
           "metrics" => ["visitors", "pageviews"],
           "date_range" => "all",
-          "filters" => [["has_done_not", ["contains", "event:page", ["/blog/"]]]]
+          "filters" => [["has_not_done", ["contains", "event:page", ["/blog/"]]]]
         })
 
       assert json_response(conn, 200)["results"] == [
@@ -4802,7 +4802,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "metrics" => ["visitors", "pageviews"],
           "date_range" => "all",
           "filters" => [
-            ["has_done_not", ["is", "event:goal", ["Conversion"]]],
+            ["has_not_done", ["is", "event:goal", ["Conversion"]]],
             ["is", "event:name", ["pageview"]]
           ]
         })
@@ -4812,7 +4812,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "visit filters are not allowed with has_done/has_done_not filters", %{
+    test "visit filters are not allowed with has_done/has_not_done filters", %{
       conn: conn,
       site: site
     } do
@@ -4830,7 +4830,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert %{"error" => error} = json_response(conn, 400)
 
       assert error =~
-               "Invalid filters. Behavioral filters (has_done, has_done_not) can only be used with event dimension filters."
+               "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
     end
   end
 end

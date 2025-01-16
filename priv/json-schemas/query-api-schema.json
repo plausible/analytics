@@ -461,7 +461,7 @@
       "items": [
         {
           "type": "string",
-          "enum": ["not", "has_done", "has_done_not"]
+          "enum": ["not", "has_done", "has_not_done"]
         },
         { "$ref": "#/definitions/filter_tree" }
       ]

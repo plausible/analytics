@@ -95,17 +95,16 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp add_filter(_table, query, [:has_done, filter]) do
-    condition = dynamic([], ^filter_site_time_range(:events, query) and ^add_filter(:events, query, filter))
+    condition =
+      dynamic([], ^filter_site_time_range(:events, query) and ^add_filter(:events, query, filter))
 
     dynamic(
       [t],
-      t.user_id in subquery(
-        from(e in "events_v2", where: ^condition, select: e.user_id)
-      )
+      t.user_id in subquery(from(e in "events_v2", where: ^condition, select: e.user_id))
     )
   end
 
-  defp add_filter(table, query, [:has_done_not, filter]) do
+  defp add_filter(table, query, [:has_not_done, filter]) do
     dynamic([], not (^add_filter(table, query, [:has_done, filter])))
   end
 
