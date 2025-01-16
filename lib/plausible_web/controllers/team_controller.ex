@@ -31,7 +31,7 @@ defmodule PlausibleWeb.TeamController do
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "You are not allowed to grant the #{new_role_str} role")
+        |> put_flash(:error, "You are not allowed to grant role to that member")
         |> redirect(to: Routes.settings_path(conn, :team_general))
     end
   end
@@ -40,16 +40,16 @@ defmodule PlausibleWeb.TeamController do
     %{my_team: team, current_user: current_user} = conn.assigns
 
     case Teams.Memberships.Remove.remove(team, user_id, current_user) do
-      {:ok, _team_membership} ->
+      {:ok, team_membership} ->
         redirect_target =
-          if user_id == current_user.id do
+          if team_membership.user_id == current_user.id do
             Routes.site_path(conn, :index)
           else
             Routes.settings_path(conn, :team_general)
           end
 
         conn
-        |> put_flash(:success, "User has been removed from \"#{team.name}\" team")
+        |> put_flash(:success, "User has been removed from the team")
         |> redirect(external: redirect_target)
 
       {:error, :only_one_owner} ->

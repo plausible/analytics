@@ -15,7 +15,7 @@ defmodule Plausible.Teams.Memberships do
 
   def owners_count(team) do
     Repo.aggregate(
-      from(tm in Teams.Membership, where: tm.id == ^team.id and tm.role == :owner),
+      from(tm in Teams.Membership, where: tm.team_id == ^team.id and tm.role == :owner),
       :count
     )
   end
@@ -160,7 +160,7 @@ defmodule Plausible.Teams.Memberships do
     query =
       from(
         tm in Teams.Membership,
-        where: tm.team == ^team.id and tm.user_id == ^user_id
+        where: tm.team_id == ^team.id and tm.user_id == ^user_id
       )
 
     case Repo.one(query) do

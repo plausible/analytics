@@ -291,6 +291,13 @@ defmodule Plausible.Teams.Test do
     membership
   end
 
+  def refute_team_member(user, team) do
+    refute Repo.get_by(Teams.Membership,
+             team_id: team.id,
+             user_id: user.id
+           )
+  end
+
   def assert_team_attached(site, team_id \\ nil) do
     assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owner])
 
