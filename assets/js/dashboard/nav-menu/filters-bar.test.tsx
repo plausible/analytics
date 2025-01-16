@@ -61,9 +61,9 @@ test('user can see expected filters and clear them one by one or all together', 
   )
 
   expect(queryFilterPills().map((m) => m.textContent)).toEqual([
-    'Country is Germany ',
-    'Goal is Subscribed to Newsletter ',
-    'Page is /docs or /blog '
+    'Country is Germany',
+    'Goal is Subscribed to Newsletter',
+    'Page is /docs or /blog'
   ])
 
   await userEvent.click(
@@ -74,8 +74,8 @@ test('user can see expected filters and clear them one by one or all together', 
   )
 
   expect(queryFilterPills().map((m) => m.textContent)).toEqual([
-    'Goal is Subscribed to Newsletter ',
-    'Page is /docs or /blog '
+    'Goal is Subscribed to Newsletter',
+    'Page is /docs or /blog'
   ])
 
   await userEvent.click(
