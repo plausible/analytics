@@ -83,8 +83,15 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "site.engagement_metrics_enabled_at gets updated correctly", %{conn: conn} do
       site = new_site(public: true)
 
+      populate_stats(site, [build(:pageview)])
+
       # No pageleaves yet - `engagement_metrics_enabled_at` will remain `nil`
-      get(conn, "/#{site.domain}")
+      html =
+        conn
+        |> get("/#{site.domain}")
+        |> html_response(200)
+
+      assert text_of_attr(html, @react_container, "data-has-engagement-metrics") == "false"
 
       site = Repo.reload!(site)
       assert is_nil(site.engagement_metrics_enabled_at)
@@ -95,7 +102,12 @@ defmodule PlausibleWeb.StatsControllerTest do
       ])
 
       # Pageleaves exist now - `engagement_metrics_enabled_at` gets set to `utc_now`
-      get(conn, "/#{site.domain}")
+      html =
+        conn
+        |> get("/#{site.domain}")
+        |> html_response(200)
+
+      assert text_of_attr(html, @react_container, "data-has-engagement-metrics") == "true"
 
       site = Repo.reload!(site)
 
@@ -210,6 +222,11 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /:domain/export" do
     setup [:create_user, :create_site, :log_in]
+
+    setup %{site: site} = context do
+      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      context
+    end
 
     test "exports all the necessary CSV files", %{conn: conn, site: site} do
       conn = get(conn, "/" <> site.domain <> "/export")
@@ -663,8 +680,14 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - via shared link" do
-    test "exports data in zipped csvs", %{conn: conn} do
-      site = new_site(domain: "new-site.com")
+    setup [:create_user, :create_site]
+
+    setup %{site: site} = context do
+      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      context
+    end
+
+    test "exports data in zipped csvs", %{conn: conn, site: site} do
       link = insert(:shared_link, site: site)
 
       populate_exported_stats(site)
@@ -676,6 +699,11 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /:domain/export - for past 6 months" do
     setup [:create_user, :create_site, :log_in]
 
+    setup %{site: site} = context do
+      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      context
+    end
+
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?period=6mo&date=2021-10-20")
@@ -685,6 +713,11 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /:domain/export - with path filter" do
     setup [:create_user, :create_site, :log_in]
+
+    setup %{site: site} = context do
+      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      context
+    end
 
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
@@ -746,6 +779,34 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["2020-01-06", "0", "0", "0", "0.0", "0.0", "", ""],
                ["2020-01-07", "1", "1", "1", "1.0", "100", "0", "90"],
                [""]
+             ]
+    end
+
+    test "does not export scroll depth in visitors.csv if site.engagement_metrics_enabled=nil", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
+
+      column_headers =
+        conn
+        |> get(
+          "/#{site.domain}/export?period=custom&from=2021-01-01&to=2021-01-02&filters=#{filters}"
+        )
+        |> response(200)
+        |> unzip_and_parse_csv(~c"visitors.csv")
+        |> List.first()
+
+      assert column_headers == [
+               "date",
+               "visitors",
+               "pageviews",
+               "visits",
+               "views_per_visit",
+               "bounce_rate",
+               "visit_duration"
              ]
     end
   end
@@ -1065,7 +1126,12 @@ defmodule PlausibleWeb.StatsControllerTest do
       link = insert(:shared_link, site: site)
 
       # No pageleaves yet - `engagement_metrics_enabled_at` will remain `nil`
-      get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+      html =
+        conn
+        |> get("/share/#{site.domain}/?auth=#{link.slug}")
+        |> html_response(200)
+
+      assert text_of_attr(html, @react_container, "data-has-engagement-metrics") == "false"
 
       site = Repo.reload!(site)
       assert is_nil(site.engagement_metrics_enabled_at)
@@ -1076,7 +1142,12 @@ defmodule PlausibleWeb.StatsControllerTest do
       ])
 
       # Pageleaves exist now - `engagement_metrics_enabled_at` gets set to `utc_now`
-      get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+      html =
+        conn
+        |> get("/share/#{site.domain}/?auth=#{link.slug}")
+        |> html_response(200)
+
+      assert text_of_attr(html, @react_container, "data-has-engagement-metrics") == "true"
 
       site = Repo.reload!(site)
 

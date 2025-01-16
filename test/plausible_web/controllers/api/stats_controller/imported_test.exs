@@ -787,6 +787,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         site: site,
         import_id: import_id
       } do
+        Plausible.Sites.set_engagement_metrics_enabled_at(site)
+
         populate_stats(site, [
           build(:pageview,
             pathname: "/",

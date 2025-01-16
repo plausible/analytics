@@ -480,6 +480,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   describe "GET /api/stats/top-stats - with imported data" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
+    setup %{site: site} = context do
+      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      context
+    end
+
     test "returns divisible metrics as 0 when no stats exist", %{
       site: site,
       conn: conn
@@ -889,6 +894,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
   describe "GET /api/stats/top-stats - filters" do
     setup [:create_user, :log_in, :create_site]
+
+    setup %{site: site} = context do
+      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      context
+    end
 
     test "returns graph_metric key for top stats with a page filter", %{
       conn: conn,
@@ -1301,6 +1311,29 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"name" => "Total pageviews", "value" => 4, "graph_metric" => "pageviews"} in res[
                "top_stats"
              ]
+    end
+
+    test "does not return scroll depth when site.engagement_metrics_enabled_at=nil", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
+
+      top_stats =
+        conn
+        |> get("/api/stats/#{site.domain}/top-stats?filters=#{filters}")
+        |> json_response(200)
+        |> Map.get("top_stats")
+
+      assert [
+               %{"name" => "Unique visitors"},
+               %{"name" => "Total visits"},
+               %{"name" => "Total pageviews"},
+               %{"name" => "Bounce rate"},
+               %{"name" => "Time on page"}
+             ] = top_stats
     end
   end
 

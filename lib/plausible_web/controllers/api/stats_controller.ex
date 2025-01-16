@@ -393,16 +393,19 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_other_top_stats(site, query, current_user) do
     page_filter? = Filters.filtering_on_dimension?(query, "event:page")
-    scroll_depth_enabled? = PlausibleWeb.StatsController.scroll_depth_enabled?(site, current_user)
+
+    include_sroll_depth? =
+      PlausibleWeb.StatsController.scroll_depth_enabled?(site, current_user) &&
+        Plausible.Sites.has_engagement_metrics?(site)
 
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
       cond do
-        page_filter? && scroll_depth_enabled? && query.include_imported ->
+        page_filter? && include_sroll_depth? && query.include_imported ->
           metrics ++ [:scroll_depth]
 
-        page_filter? && scroll_depth_enabled? ->
+        page_filter? && include_sroll_depth? ->
           metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
 
         page_filter? && query.include_imported ->
@@ -835,7 +838,9 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
-    include_scroll_depth? = PlausibleWeb.StatsController.scroll_depth_enabled?(site, current_user)
+    include_scroll_depth? =
+      PlausibleWeb.StatsController.scroll_depth_enabled?(site, current_user) &&
+        Plausible.Sites.has_engagement_metrics?(site)
 
     extra_metrics =
       cond do

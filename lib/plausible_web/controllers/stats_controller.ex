@@ -59,9 +59,13 @@ defmodule PlausibleWeb.StatsController do
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
 
-    if scroll_depth_enabled?(site, current_user) do
-      Plausible.Sites.maybe_enable_engagement_metrics(site)
-    end
+    has_engagement_metrics? =
+      if scroll_depth_enabled?(site, current_user) do
+        {:ok, site} = Plausible.Sites.maybe_enable_engagement_metrics(site)
+        Plausible.Sites.has_engagement_metrics?(site)
+      else
+        false
+      end
 
     cond do
       (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
@@ -73,6 +77,7 @@ defmodule PlausibleWeb.StatsController do
           revenue_goals: list_revenue_goals(site),
           funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
+          has_engagement_metrics: has_engagement_metrics?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
@@ -199,6 +204,7 @@ defmodule PlausibleWeb.StatsController do
     include_scroll_depth? =
       !query.include_imported &&
         scroll_depth_enabled?(site, current_user) &&
+        Plausible.Sites.has_engagement_metrics?(site) &&
         Filters.filtering_on_dimension?(query, "event:page")
 
     {metrics, column_headers} =
@@ -355,9 +361,13 @@ defmodule PlausibleWeb.StatsController do
         shared_link = Plausible.Repo.preload(shared_link, site: :owner)
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
-        if scroll_depth_enabled?(shared_link.site, current_user) do
-          Plausible.Sites.maybe_enable_engagement_metrics(shared_link.site)
-        end
+        has_engagement_metrics? =
+          if scroll_depth_enabled?(shared_link.site, current_user) do
+            {:ok, site} = Plausible.Sites.maybe_enable_engagement_metrics(shared_link.site)
+            Plausible.Sites.has_engagement_metrics?(site)
+          else
+            false
+          end
 
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
@@ -368,6 +378,7 @@ defmodule PlausibleWeb.StatsController do
           revenue_goals: list_revenue_goals(shared_link.site),
           funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
+          has_engagement_metrics: has_engagement_metrics?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),

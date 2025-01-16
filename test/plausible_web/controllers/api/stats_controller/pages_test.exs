@@ -1,10 +1,16 @@
 defmodule PlausibleWeb.Api.StatsController.PagesTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/pages" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
+
+    setup %{site: site} = context do
+      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      context
+    end
 
     test "returns top pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -646,6 +652,27 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "scroll_depth" => 60
                }
              ]
+    end
+
+    test "does not return scroll depth (in detailed mode) when site.engagement_metrics_enabled_at=nil",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user)
+
+      populate_stats(site, [build(:pageview)])
+
+      pages =
+        conn
+        |> get("/api/stats/#{site.domain}/pages?detailed=true")
+        |> json_response(200)
+        |> Map.get("results")
+
+      assert List.first(pages) == %{
+               "bounce_rate" => 100,
+               "name" => "/",
+               "pageviews" => 1,
+               "time_on_page" => nil,
+               "visitors" => 1
+             }
     end
 
     test "calculates scroll_depth from native and imported data combined", %{
