@@ -275,7 +275,7 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
-  describe "site_setup_success" do
+  describe "site setup emails" do
     setup do
       trial_user =
         build(:user,
@@ -285,26 +285,39 @@ defmodule PlausibleWeb.EmailTest do
         )
 
       site = build(:site, members: [trial_user])
-      email = PlausibleWeb.Email.site_setup_success(trial_user, site)
-      {:ok, email: email}
+
+      emails = [
+        PlausibleWeb.Email.create_site_email(trial_user),
+        PlausibleWeb.Email.site_setup_help(trial_user, site),
+        PlausibleWeb.Email.site_setup_success(trial_user, site.team, site)
+      ]
+
+      {:ok, emails: emails}
     end
 
-    @tag :ee_only
-    test "renders 'trial' and 'reply' blocks", %{email: email} do
-      assert email.html_body =~
-               "You're on a 30-day free trial with no obligations so do take your time to explore Plausible."
+    @trial_message "trial"
+    @reply_message "reply back"
 
-      assert email.html_body =~
-               "Do reply back to this email if you have any questions. We're here to help."
+    @tag :ee_only
+    test "has 'trial' and 'reply' blocks, correct product name", %{emails: emails} do
+      for email <- emails do
+        assert email.html_body =~ @trial_message
+        assert email.html_body =~ @reply_message
+        refute email.html_body =~ "Plausible CE"
+      end
+
+      assert Enum.any?(emails, fn email -> email.html_body =~ "Plausible Analytics" end)
     end
 
     @tag :ce_build_only
-    test "does not render 'trial' and 'reply' blocks", %{email: email} do
-      refute email.html_body =~
-               "You're on a 30-day free trial with no obligations so do take your time to explore Plausible."
+    test "no 'trial' or 'reply' blocks, correct product name", %{emails: emails} do
+      for email <- emails do
+        refute email.html_body =~ @trial_message
+        refute email.html_body =~ @reply_message
+        refute email.html_body =~ "Plausible Analytics"
+      end
 
-      refute email.html_body =~
-               "Do reply back to this email if you have any questions. We're here to help."
+      assert Enum.any?(emails, fn email -> email.html_body =~ "Plausible CE" end)
     end
   end
 

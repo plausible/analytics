@@ -1,5 +1,7 @@
-You've activated your free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
+You've activated<%= if Plausible.ee?() do %> your free 30-day trial of<% end %> <%= Plausible.product_name() %>, a simple and privacy-friendly website analytics tool.
 <br /><br />
 <%= link("Click here", to: "#{plausible_url()}/sites/new") %> to add your website URL, your timezone and install our one-line JavaScript snippet to start collecting visitor statistics.
+<%= if Plausible.ee?() do %>
 <br /><br />
 Do reply back to this email if you have any questions or need some guidance.
+<% end %>
