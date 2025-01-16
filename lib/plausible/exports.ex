@@ -418,8 +418,13 @@ defmodule Plausible.Exports do
     site = Plausible.Repo.get(Plausible.Site, site_id)
     current_user = current_user_id && Plausible.Repo.get(Plausible.Auth.User, current_user_id)
 
-    scroll_depth_enabled? =
-      PlausibleWeb.StatsController.scroll_depth_enabled?(site, current_user)
+    include_scroll_depth? =
+      if PlausibleWeb.StatsController.scroll_depth_enabled?(site, current_user) do
+        {:ok, site} = Plausible.Sites.maybe_enable_engagement_metrics(site)
+        Plausible.Sites.has_engagement_metrics?(site)
+      else
+        false
+      end
 
     base_q =
       from(e in sampled("events_v2"),
@@ -429,9 +434,7 @@ defmodule Plausible.Exports do
         order_by: selected_as(:date)
       )
 
-    if scroll_depth_enabled? do
-      Plausible.Sites.maybe_enable_engagement_metrics(site)
-
+    if include_scroll_depth? do
       max_scroll_depth_per_visitor_q =
         from(e in "events_v2",
           where: ^export_filter(site_id, date_range),
