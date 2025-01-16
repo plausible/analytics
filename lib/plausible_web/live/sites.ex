@@ -16,6 +16,10 @@ defmodule PlausibleWeb.Live.Sites do
     socket =
       socket
       |> assign(:uri, uri)
+      |> assign(
+        :team_invitations,
+        Plausible.Teams.Invitations.find_team_invitations(socket.assigns.current_user)
+      )
       |> assign(:filter_text, params["filter_text"] || "")
 
     {:ok, socket}
@@ -56,6 +60,8 @@ defmodule PlausibleWeb.Live.Sites do
           My Sites
         </h2>
       </div>
+
+      <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
       <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
         <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
@@ -145,9 +151,9 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :site, Plausible.Site, required: true
-  attr :invitation, :map, required: true
-  attr :hourly_stats, :map, required: true
+  attr(:site, Plausible.Site, required: true)
+  attr(:invitation, :map, required: true)
+  attr(:hourly_stats, :map, required: true)
 
   def invitation(assigns) do
     ~H"""
@@ -180,8 +186,8 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :site, Plausible.Site, required: true
-  attr :hourly_stats, :map, required: true
+  attr(:site, Plausible.Site, required: true)
+  attr(:hourly_stats, :map, required: true)
 
   def site(assigns) do
     ~H"""
@@ -272,7 +278,7 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :rest, :global
+  attr(:rest, :global)
 
   def icon_pin(assigns) do
     ~H"""
@@ -289,7 +295,7 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :hourly_stats, :map, required: true
+  attr(:hourly_stats, :map, required: true)
 
   def site_stats(assigns) do
     ~H"""
@@ -321,7 +327,7 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :change, :integer, required: true
+  attr(:change, :integer, required: true)
 
   # Related React component: <ChangeArrow />
   def percentage_change(assigns) do
@@ -517,8 +523,8 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :filter_text, :string, default: ""
-  attr :uri, URI, required: true
+  attr(:filter_text, :string, default: "")
+  attr(:uri, URI, required: true)
 
   def search_form(assigns) do
     ~H"""

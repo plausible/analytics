@@ -35,6 +35,17 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
+  def find_team_invitations(user) do
+    Repo.all(
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        inner_join: team in assoc(ti, :team),
+        where: ti.email == ^user.email,
+        where: ti.role != :guest,
+        preload: [inviter: inviter, team: team]
+    )
+  end
+
   defp find_team_invitation_for_user(team_invitation_id, user) do
     invitation_query =
       from ti in Teams.Invitation,
