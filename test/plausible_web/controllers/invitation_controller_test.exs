@@ -141,6 +141,20 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       refute Repo.reload(invitation)
     end
 
+    test "rejects the team invitation", %{conn: conn, user: user} do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+
+      invitation = invite_member(team, user.email, inviter: owner, role: :editor)
+
+      conn = post(conn, "/settings/team/invitations/#{invitation.invitation_id}/reject")
+
+      assert redirected_to(conn, 302) == "/sites"
+
+      refute Repo.reload(invitation)
+    end
+
     test "renders error for non-existent invitation", %{conn: conn} do
       conn = post(conn, "/sites/invitations/does-not-exist/reject")
 
