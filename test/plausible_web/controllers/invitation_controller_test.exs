@@ -28,6 +28,26 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert_guest_membership(site.team, site, user, :editor)
     end
 
+    test "converts the team invitation into a team membership", %{conn: conn, user: user} do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+
+      invitation =
+        invite_member(team, user.email, inviter: owner, role: :editor)
+
+      conn = post(conn, "/settings/team/invitations/#{invitation.invitation_id}/accept")
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+               "You now have access to \"#{team.name}\" team"
+
+      assert redirected_to(conn) == "/sites"
+
+      refute Repo.get_by(Teams.Invitation, email: user.email)
+
+      assert_team_membership(user, team, :editor)
+    end
+
     test "does not crash if clicked for the 2nd time in another tab", %{conn: conn, user: user} do
       owner = new_user()
       site = new_site(owner: owner)

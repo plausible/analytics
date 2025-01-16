@@ -9,18 +9,29 @@ defmodule PlausibleWeb.InvitationController do
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
     case Plausible.Site.Memberships.accept_invitation(invitation_id, conn.assigns.current_user) do
       {:ok, result} ->
+        team = result.team
+
         site =
           case result do
             %{guest_memberships: [guest_membership]} ->
               Plausible.Repo.preload(guest_membership, :site).site
 
+            %{guest_memberships: []} ->
+              nil
+
             %{site: site} ->
               site
           end
 
-        conn
-        |> put_flash(:success, "You now have access to #{site.domain}")
-        |> redirect(external: "/#{URI.encode_www_form(site.domain)}")
+        if site do
+          conn
+          |> put_flash(:success, "You now have access to #{site.domain}")
+          |> redirect(external: "/#{URI.encode_www_form(site.domain)}")
+        else
+          conn
+          |> put_flash(:success, "You now have access to \"#{team.name}\" team")
+          |> redirect(external: "/sites")
+        end
 
       {:error, :invitation_not_found} ->
         conn

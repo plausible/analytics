@@ -290,7 +290,11 @@ defmodule Plausible.Teams.Invitations do
           send_invitation_accepted_email(team_invitation, guest_invitations)
         end
 
-        %{team_membership: team_membership, guest_memberships: guest_memberships}
+        %{
+          team: team_invitation.team,
+          team_membership: team_membership,
+          guest_memberships: guest_memberships
+        }
       else
         {:error, changeset} -> Repo.rollback(changeset)
       end
