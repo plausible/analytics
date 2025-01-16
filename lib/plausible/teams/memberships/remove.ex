@@ -5,10 +5,10 @@ defmodule Plausible.Teams.Memberships.Remove do
 
   alias Plausible.Teams.Memberships
 
-  def remove(team, user_id, _current_user) do
+  def remove(team, user_id, current_user) do
     with {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
          {:ok, current_user_role} <- Memberships.team_role(team, current_user),
-         :ok <- check_can_remove_membership(current_user_role, team_membership_role),
+         :ok <- check_can_remove_membership(current_user_role, team_membership.role),
          :ok <- check_owner_can_get_removed(team, team_membership.role) do
       team_membership = Repo.preload(team_membership, [:team, :user])
       Repo.delete!(team_membership)
