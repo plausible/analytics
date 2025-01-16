@@ -13,6 +13,13 @@ defmodule Plausible.Teams.Memberships do
     |> Repo.all()
   end
 
+  def owners_count(team) do
+    Repo.aggregate(
+      from(tm in Teams.Membership, where: tm.id == ^team.id and tm.role == :owner),
+      :count
+    )
+  end
+
   def team_role(team, user) do
     result =
       from(u in Auth.User,
