@@ -4,12 +4,14 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   """
 
   alias Plausible.Repo
+  alias Plausible.Teams
   alias Plausible.Teams.Memberships
 
   def update(team, user_id, new_role_str, current_user) do
     new_role = String.to_existing_atom(new_role_str)
 
-    with {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
+    with :ok <- check_valid_role(new_role),
+         {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
          {:ok, current_user_role} <- Memberships.team_role(team, current_user),
          granting_to_self? = team_membership.user_id == user_id,
          :ok <- check_can_grant_role(current_user_role, new_role, granting_to_self?),
@@ -21,6 +23,14 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
         |> Repo.preload(:user)
 
       {:ok, team_membership}
+    end
+  end
+
+  defp check_valid_role(role) do
+    if role in (Teams.Membership.roles() -- [:guest]) do
+      :ok
+    else
+      {:error, :invalid_role}
     end
   end
 

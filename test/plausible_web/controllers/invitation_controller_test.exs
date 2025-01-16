@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   use Plausible.Teams.Test
   use Bamboo.Test
 
+  alias Plausible.Teams
+
   setup [:create_user, :log_in]
 
   describe "POST /sites/invitations/:invitation_id/accept" do
@@ -217,6 +219,100 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       conn = delete(conn, remove_invitation_path)
 
       assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Invitation missing or already removed"
+    end
+  end
+
+  describe "DELETE /team/invitations/:invitation_id" do
+    for role <- [:owner, :admin], invitee_role <- Teams.Membership.roles() do
+      test "#{role} removes the #{invitee_role} team invitation", %{conn: conn, user: user} do
+        owner = new_user()
+        _site = new_site(owner: owner)
+        team = team_of(owner)
+        add_member(team, user: user, role: unquote(role))
+
+        invitation =
+          invite_member(team, "jane@example.com", inviter: owner, role: unquote(invitee_role))
+
+        conn =
+          delete(
+            conn,
+            Routes.invitation_path(conn, :remove_team_invitation, invitation.invitation_id)
+          )
+
+        assert redirected_to(conn, 302) == "/settings/team/general"
+
+        refute Repo.reload(invitation)
+      end
+    end
+
+    for role <- Teams.Membership.roles() -- [:owner, :admin] do
+      test "#{role} can't remove a team invitation", %{conn: conn, user: user} do
+        owner = new_user()
+        _site = new_site(owner: owner)
+        team = team_of(owner)
+        add_member(team, user: user, role: unquote(role))
+
+        invitation =
+          invite_member(team, "jane@example.com", inviter: owner, role: :viewer)
+
+        conn =
+          delete(
+            conn,
+            Routes.invitation_path(conn, :remove_team_invitation, invitation.invitation_id)
+          )
+
+        assert redirected_to(conn, 302) == "/settings/team/general"
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+                 "You are not allowed to remove invitations"
+
+        assert Repo.reload(invitation)
+      end
+    end
+
+    test "fails to remove a team invitation from the outside", %{conn: my_conn, user: me} do
+      new_site(owner: me)
+      other_user = new_user()
+      _other_site = new_site(owner: other_user)
+      other_team = team_of(other_user)
+
+      invitation =
+        invite_member(other_team, "jane@example.com", role: :editor, inviter: other_user)
+
+      remove_invitation_path =
+        Routes.invitation_path(
+          my_conn,
+          :remove_team_invitation,
+          invitation.invitation_id
+        )
+
+      my_conn = delete(my_conn, remove_invitation_path)
+
+      assert Phoenix.Flash.get(my_conn.assigns.flash, :error) ==
+               "Invitation missing or already removed"
+
+      assert Repo.reload(invitation)
+    end
+
+    test "renders error for non-existent team invitation", %{conn: conn, user: user} do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+      add_member(team, user: user, role: :editor)
+
+      remove_invitation_path =
+        Routes.invitation_path(
+          conn,
+          :remove_team_invitation,
+          "does_not_exist"
+        )
+
+      conn = delete(conn, remove_invitation_path)
+
+      assert redirected_to(conn, 302) == "/settings/team/general"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "Invitation missing or already removed"
