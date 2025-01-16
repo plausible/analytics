@@ -3,6 +3,7 @@ defmodule Plausible.Teams.Memberships.Remove do
   Service for removing a team member.
   """
 
+  alias Plausible.Repo
   alias Plausible.Teams.Memberships
 
   def remove(team, user_id, current_user) do

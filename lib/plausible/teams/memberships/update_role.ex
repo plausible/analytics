@@ -3,8 +3,6 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   Service for updating role of a team member.
   """
 
-  import Ecto.Query
-
   alias Plausible.Repo
   alias Plausible.Teams.Memberships
 
