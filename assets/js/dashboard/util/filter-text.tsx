@@ -41,7 +41,7 @@ export function styledFilterText(
     return (
       <>
         {capitalize(FILTER_OPERATIONS_DISPLAY_NAMES[operation])}{' '}
-        {formattedFilter} {formatClauses(clausesLabels)}
+        {formattedFilter.toLowerCase()} {formatClauses(clausesLabels)}
       </>
     )
   } else {
