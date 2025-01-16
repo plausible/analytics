@@ -1,15 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## v2.1.5 - 2025-01-17
 
 ### Added
 
 - Add text version to emails plausible/analytics#4674
 
 ### Removed
-### Changed
-### Fixed
+
+- Removed billing/trial/etc. messages from HTML templates and emails in CE plausible/analytics#4766 plausible/analytics#4897 plausible/analytics#4668
 
 ## v2.1.4 - 2024-10-08
 
