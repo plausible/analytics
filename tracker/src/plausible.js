@@ -12,9 +12,15 @@
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
   var dataDomain = scriptEl.getAttribute('data-domain')
 
-  function onIgnoredEvent(reason, options) {
+  function onIgnoredEvent(eventName, reason, options) {
     if (reason) console.warn('Ignoring Event: ' + reason);
     options && options.callback && options.callback()
+
+    {{#if pageleave}}
+    if (eventName === 'pageview') {
+      currentPageLeaveIgnored = true
+    }
+    {{/if}}
   }
 
   function defaultEndpoint(el) {
@@ -31,10 +37,9 @@
   {{#if pageleave}}
   // :NOTE: Tracking pageleave events is currently experimental.
 
-  // Keeps track of the URL to be sent in the pageleave event payload.
-  // Should get updated on pageviews triggered manually with a custom
-  // URL, and on SPA navigation.
+  var currentPageLeaveIgnored
   var currentPageLeaveURL = location.href
+  var currentPageLeaveProps = {}
 
   // Multiple pageviews might be sent by the same script when the page
   // uses client-side routing (e.g. hash or history-based). This flag
@@ -92,7 +97,7 @@
   })
 
   function triggerPageLeave() {
-    if (pageLeaveSending) {return}
+    if (pageLeaveSending || currentPageLeaveIgnored) {return}
     pageLeaveSending = true
     setTimeout(function () {pageLeaveSending = false}, 500)
 
@@ -101,6 +106,7 @@
       sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
       d: dataDomain,
       u: currentPageLeaveURL,
+      p: currentPageLeaveProps
     }
 
     {{#if hash}}
@@ -126,15 +132,15 @@
 
     {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
-      return onIgnoredEvent('localhost', options)
+      return onIgnoredEvent(eventName, 'localhost', options)
     }
     if ((window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) && !window.__plausible) {
-      return onIgnoredEvent(null, options)
+      return onIgnoredEvent(eventName, null, options)
     }
     {{/unless}}
     try {
       if (window.localStorage.plausible_ignore === 'true') {
-        return onIgnoredEvent('localStorage flag', options)
+        return onIgnoredEvent(eventName, 'localStorage flag', options)
       }
     } catch (e) {
 
@@ -147,7 +153,7 @@
       var isIncluded = !dataIncludeAttr || (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
       var isExcluded = dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
 
-      if (!isIncluded || isExcluded) return onIgnoredEvent('exclusion rule', options)
+      if (!isIncluded || isExcluded) return onIgnoredEvent(eventName, 'exclusion rule', options)
     }
 
     function pathMatches(wildcardPath) {
@@ -166,10 +172,6 @@
 
     {{#if manual}}
     var customURL = options && options.u
-
-    {{#if pageleave}}
-    isPageview && customURL && (currentPageLeaveURL = customURL)
-    {{/if}}
 
     payload.u = customURL ? customURL : location.href
     {{else}}
@@ -220,6 +222,9 @@
       if (request.readyState === 4) {
         {{#if pageleave}}
         if (isPageview) {
+          currentPageLeaveIgnored = false
+          currentPageLeaveURL = payload.u
+          currentPageLeaveProps = payload.p
           registerPageLeaveListener()
         }
         {{/if}}
@@ -245,7 +250,6 @@
       {{#if pageleave}}
       if (isSPANavigation && listeningPageLeave) {
         triggerPageLeave();
-        currentPageLeaveURL = location.href;
         currentDocumentHeight = getDocumentHeight()
         maxScrollDepthPx = getCurrentScrollDepthPx()
       }
