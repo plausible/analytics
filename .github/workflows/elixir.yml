@@ -3,7 +3,6 @@ name: Elixir CI
 on:
   pull_request:
   push:
-    branches: [master, stable]
   merge_group:
 
 concurrency:
@@ -11,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_VERSION: v8
+  CACHE_VERSION: release-v215
   PERSISTENT_CACHE_DIR: cached
 
 jobs:
