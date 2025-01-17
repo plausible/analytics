@@ -44,7 +44,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build
         id: docker_build
         uses: docker/build-push-action@v6
         with:
@@ -83,7 +83,7 @@ jobs:
           customHeaders: '{"Content-Type": "application/json"}'
           data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images.yml\">Build failed</a>"}'
 
-  merge:
+  push:
     runs-on: ubuntu-latest
     needs:
       - build
