@@ -443,8 +443,13 @@ defmodule PlausibleWeb.Email do
   def priority_email(), do: priority_email(%{layout: "priority_email.html"})
 
   def priority_email(%{layout: layout}) do
-    base_email(%{layout: layout})
-    |> put_param("MessageStream", "priority")
+    email = base_email(%{layout: layout})
+
+    if Plausible.ee?() do
+      put_param(email, "MessageStream", "priority")
+    else
+      email
+    end
   end
 
   def base_email(), do: base_email(%{layout: "base_email.html"})
