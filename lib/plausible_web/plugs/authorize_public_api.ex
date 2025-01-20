@@ -65,7 +65,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
          {:ok, site} <- find_site(conn.params["site_id"]),
          :ok <- verify_site_access(api_key, site) do
       Plausible.OpenTelemetry.add_site_attributes(site)
-      site = Plausible.Imported.load_import_data(site)
       {:ok, assign(conn, :site, site)}
     end
   end

@@ -128,7 +128,7 @@ defmodule Plausible.Stats.Query do
 
     latest_import_end_date =
       if site do
-        site.latest_import_end_date
+        Plausible.Imported.latest_import_end_date(site)
       else
         query.latest_import_end_date
       end
