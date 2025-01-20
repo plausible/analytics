@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-C8E363F8.js"></script>
+    <script src="dist/sidebar_items-FB38EAFA.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -140,9 +140,9 @@ Pages
     <section id="moduledoc">
 <p>Functions to implement the number system rule-based-number-format rules of CLDR.</p><p>These rules are defined only on the &quot;und&quot; locale and represent specialised
 number formatting.</p><p>The standard public API for RBNF is via the <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.html#to_string/2"><code class="inline">Cldr.Number.to_string/2</code></a> function.</p><p>The functions on this module are defined at compile time based upon the RBNF rules
-defined in the Unicode CLDR data repository.  Available rules are identified by:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.NumberSystem</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="5303260045-1">(</span><span class="ss">:und</span><span class="p" data-group-id="5303260045-1">)</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sort</span><span class="p" data-group-id="5303260045-2">(</span><span class="p" data-group-id="5303260045-2">)</span><span class="w">
-</span><span class="p" data-group-id="5303260045-3">[</span><span class="w">
+defined in the Unicode CLDR data repository.  Available rules are identified by:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.NumberSystem</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="3533425613-1">(</span><span class="ss">:und</span><span class="p" data-group-id="3533425613-1">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sort</span><span class="p" data-group-id="3533425613-2">(</span><span class="p" data-group-id="3533425613-2">)</span><span class="w">
+</span><span class="p" data-group-id="3533425613-3">[</span><span class="w">
   </span><span class="ss">:armenian_lower</span><span class="p">,</span><span class="w">
   </span><span class="ss">:armenian_upper</span><span class="p">,</span><span class="w">
   </span><span class="ss">:cyrillic_lower</span><span class="p">,</span><span class="w">
@@ -156,9 +156,9 @@ defined in the Unicode CLDR data repository.  Available rules are identified by:
   </span><span class="ss">:roman_upper</span><span class="p">,</span><span class="w">
   </span><span class="ss">:tamil</span><span class="p">,</span><span class="w">
   </span><span class="ss">:zz_default</span><span class="w">
-</span><span class="p" data-group-id="5303260045-3">]</span></code></pre><p>A rule can then be invoked on an available rule_set.  For example</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.NumberSystem</span><span class="o">.</span><span class="n">roman_upper</span><span class="p" data-group-id="6935868998-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="6935868998-1">)</span><span class="w">
-</span><span class="s">&quot;CXXIII&quot;</span></code></pre><p>This particular call is equivalent to the call through the public API of:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="4611711101-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:roman</span><span class="p" data-group-id="4611711101-1">)</span><span class="w">
-</span><span class="p" data-group-id="4611711101-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CXXIII&quot;</span><span class="p" data-group-id="4611711101-2">}</span></code></pre>
+</span><span class="p" data-group-id="3533425613-3">]</span></code></pre><p>A rule can then be invoked on an available rule_set.  For example</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.NumberSystem</span><span class="o">.</span><span class="n">roman_upper</span><span class="p" data-group-id="0744044839-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="0744044839-1">)</span><span class="w">
+</span><span class="s">&quot;CXXIII&quot;</span></code></pre><p>This particular call is equivalent to the call through the public API of:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="0320380715-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:roman</span><span class="p" data-group-id="0320380715-1">)</span><span class="w">
+</span><span class="p" data-group-id="0320380715-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CXXIII&quot;</span><span class="p" data-group-id="0320380715-2">}</span></code></pre>
     </section>
 
 </div>

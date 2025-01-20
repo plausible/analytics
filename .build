@@ -223,7 +223,10 @@ Plausible.Teams.GuestMembership.html
 Plausible.Teams.Invitation.html
 Plausible.Teams.Invitations.Candidates.html
 Plausible.Teams.Invitations.InviteToTeam.html
+Plausible.Teams.Invitations.Remove.html
 Plausible.Teams.Membership.html
+Plausible.Teams.Memberships.Remove.html
+Plausible.Teams.Memberships.UpdateRole.html
 Plausible.Teams.SiteTransfer.html
 Plausible.Teams.Team.html
 Plausible.Teams.Test.html
@@ -421,6 +424,8 @@ PlausibleWeb.SiteController.html
 PlausibleWeb.SiteView.html
 PlausibleWeb.StatsController.html
 PlausibleWeb.StatsView.html
+PlausibleWeb.Team.Notice.html
+PlausibleWeb.TeamController.html
 PlausibleWeb.TestController.html
 PlausibleWeb.Tracker.html
 PlausibleWeb.TwoFactor.Session.html
@@ -449,8 +454,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-A9943B0D.js
-dist/sidebar_items-C8E363F8.js
+dist/search_data-38E87A73.js
+dist/sidebar_items-FB38EAFA.js
 index.html
 readme.html
 search.html
