@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Team.Notice do
 
   def team_invitations(assigns) do
     ~H"""
-    <aside class="mt-4 mb-4">
+    <aside :if={not Enum.empty?(@team_invitations)} class="mt-4 mb-4">
       <.notice
         :for={i <- @team_invitations}
         id={"invitation-#{i.invitation_id}"}
