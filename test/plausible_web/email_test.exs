@@ -87,7 +87,6 @@ defmodule PlausibleWeb.EmailTest do
       refute email.private[:message_params]["MessageStream"]
     end
 
-
     test "greets user by first name if user in template assigns" do
       email =
         Email.priority_email()
