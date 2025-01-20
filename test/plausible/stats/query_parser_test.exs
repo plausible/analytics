@@ -566,22 +566,26 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           ]
         ]
       }
-      |> check_success(site, %{
-        metrics: [:visitors],
-        utc_time_range: @date_range_day,
-        filters: [
-          [:has_done, [:is, "event:name", ["Signup"]]],
-          [
-            :has_not_done,
-            [:or, [[:is, "event:goal", ["Signup"]], [:is, "event:page", ["/signup"]]]]
-          ]
-        ],
-        dimensions: [],
-        order_by: nil,
-        timezone: site.timezone,
-        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0}
-      })
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [
+            [:has_done, [:is, "event:name", ["Signup"]]],
+            [
+              :has_not_done,
+              [:or, [[:is, "event:goal", ["Signup"]], [:is, "event:page", ["/signup"]]]]
+            ]
+          ],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
     end
 
     test "fails when using visit filters within has_done filters", %{site: site} do
@@ -595,7 +599,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
+        "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters.",
+        :internal
       )
     end
 
@@ -610,7 +615,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
+        "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested.",
+        :internal
       )
     end
 
@@ -624,7 +630,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_error(
           site,
-          "#/filters/0: Invalid filter [\"#{unquote(operator)}\", []]"
+          "#/filters/0: Invalid filter [\"#{unquote(operator)}\", []]",
+          :internal
         )
       end
     end
@@ -1209,7 +1216,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           timezone: site.timezone,
           include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
           pagination: %{limit: 10_000, offset: 0}
-        }
+        },
+        :internal
       )
       |> check_goals(
         preloaded_goals: %{all: ["Signup"], matching_toplevel_filters: ["Signup"]},
@@ -1229,7 +1237,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
+        "The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals",
+        :internal
       )
     end
   end

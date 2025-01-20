@@ -63,7 +63,7 @@ export type SimpleFilterDimensions =
 export type CustomPropertyFilterDimensions = string;
 export type GoalDimension = "event:goal";
 export type TimeDimensions = "time" | "time:month" | "time:week" | "time:day" | "time:hour";
-export type FilterTree = FilterEntry | FilterAndOr | FilterNotHasDone;
+export type FilterTree = FilterEntry | FilterAndOr | FilterNot | FilterHasDone;
 export type FilterEntry = FilterWithoutGoals | FilterWithGoals | FilterWithPattern;
 /**
  * @minItems 3
@@ -124,7 +124,12 @@ export type FilterAndOr = ["and" | "or", [FilterTree, ...FilterTree[]]];
  * @minItems 2
  * @maxItems 2
  */
-export type FilterNotHasDone = ["not" | "has_done" | "has_not_done", FilterTree];
+export type FilterNot = ["not", FilterTree];
+/**
+ * @minItems 2
+ * @maxItems 2
+ */
+export type FilterHasDone = ["has_done" | "has_not_done", FilterTree];
 /**
  * @minItems 2
  * @maxItems 2

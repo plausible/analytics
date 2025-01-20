@@ -4593,7 +4593,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query", %{
+        post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "events", "pageviews"],
           "date_range" => "all",
@@ -4634,7 +4634,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query", %{
+        post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "pageviews"],
           "date_range" => "all",
@@ -4675,7 +4675,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query", %{
+        post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "pageviews"],
           "date_range" => "all",
@@ -4721,7 +4721,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query", %{
+        post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "pageviews"],
           "date_range" => "all",
@@ -4766,7 +4766,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query", %{
+        post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "pageviews"],
           "date_range" => "all",
@@ -4797,7 +4797,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query", %{
+        post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "pageviews"],
           "date_range" => "all",
@@ -4817,7 +4817,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       site: site
     } do
       conn =
-        post(conn, "/api/v2/query", %{
+        post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => "all",

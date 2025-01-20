@@ -450,10 +450,14 @@
       "oneOf": [
         { "$ref": "#/definitions/filter_entry" },
         { "$ref": "#/definitions/filter_and_or" },
-        { "$ref": "#/definitions/filter_not_has_done" }
+        { "$ref": "#/definitions/filter_not" },
+        {
+          "$ref": "#/definitions/filter_has_done",
+          "$comment": "only :internal"
+        }
       ]
     },
-    "filter_not_has_done": {
+    "filter_not": {
       "type": "array",
       "additionalItems": false,
       "minItems": 2,
@@ -461,7 +465,7 @@
       "items": [
         {
           "type": "string",
-          "enum": ["not", "has_done", "has_not_done"]
+          "enum": ["not"]
         },
         { "$ref": "#/definitions/filter_tree" }
       ]
@@ -481,6 +485,19 @@
           "items": { "$ref": "#/definitions/filter_tree" },
           "minItems": 1
         }
+      ]
+    },
+    "filter_has_done": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "type": "string",
+          "enum": ["has_done", "has_not_done"]
+        },
+        { "$ref": "#/definitions/filter_tree" }
       ]
     },
     "order_by_entry": {
