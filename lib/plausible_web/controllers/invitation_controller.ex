@@ -65,9 +65,9 @@ defmodule PlausibleWeb.InvitationController do
 
   def reject_invitation(conn, %{"invitation_id" => invitation_id}) do
     case Plausible.Site.Memberships.reject_invitation(invitation_id, conn.assigns.current_user) do
-      {:ok, invitation} ->
+      {:ok, _invitation} ->
         conn
-        |> put_flash(:success, "You have rejected the invitation to #{invitation.site.domain}")
+        |> put_flash(:success, "You have rejected the invitation")
         |> redirect(to: "/sites")
 
       {:error, :invitation_not_found} ->
