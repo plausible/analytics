@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Team.Notice do
+  @moduledoc """
+  Components with teams related notices.
+  """
   use PlausibleWeb, :component
 
   def inviting_banner(assigns) do
