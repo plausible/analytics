@@ -5,6 +5,8 @@ defmodule Plausible.Segments.Filters do
   alias Plausible.Segments
   alias Plausible.Stats.Filters
 
+  @max_segment_filters_count 10
+
   @doc """
   Finds unique segment IDs used in query filters.
 
@@ -16,8 +18,6 @@ defmodule Plausible.Segments.Filters do
     {:error, "Invalid filters. You can only use up to 10 segment filters in a query."}
   """
   def get_segment_ids(filters) do
-    max_segment_filters_count = 10
-
     ids =
       filters
       |> Filters.traverse()
@@ -26,9 +26,9 @@ defmodule Plausible.Segments.Filters do
         _ -> []
       end)
 
-    if length(ids) > max_segment_filters_count do
+    if length(ids) > @max_segment_filters_count do
       {:error,
-       "Invalid filters. You can only use up to #{max_segment_filters_count} segment filters in a query."}
+       "Invalid filters. You can only use up to #{@max_segment_filters_count} segment filters in a query."}
     else
       {:ok, Enum.uniq(ids)}
     end

@@ -4578,7 +4578,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                  "include" => %{},
                  "metrics" => ["events"],
                  "order_by" => [["events", "desc"]],
-                 "pagination" => %{"limit" => 10000, "offset" => 0},
+                 "pagination" => %{"limit" => 10_000, "offset" => 0},
                  "site_id" => site.domain
                }
              }
