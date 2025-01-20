@@ -37,8 +37,7 @@ export function styledFilterText(
 
   return (
     <>
-      {capitalize(formattedFilter)}{' '}
-      {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
+      {capitalize(formattedFilter)} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
       {formatClauses(clausesLabels)}
     </>
   )
