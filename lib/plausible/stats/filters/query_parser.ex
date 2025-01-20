@@ -475,33 +475,34 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_behavioral_filters(query) do
-    nested_behavioral_filter? =
-      query.filters
-      |> Filters.traverse(0, fn behavioral_depth, operator ->
-        if operator in [:has_done, :has_not_done] do
-          behavioral_depth + 1
-        else
-          behavioral_depth
-        end
-      end)
-      |> Enum.any?(fn {_filter, behavioral_depth} -> behavioral_depth > 1 end)
+    query.filters
+    |> Filters.traverse(0, fn behavioral_depth, operator ->
+      if operator in [:has_done, :has_not_done] do
+        behavioral_depth + 1
+      else
+        behavioral_depth
+      end
+    end)
+    |> Enum.reduce_while(:ok, fn {[_operator, dimension | _rest], behavioral_depth}, :ok ->
+      cond do
+        behavioral_depth == 0 ->
+          # ignore non-behavioral filters
+          {:cont, :ok}
 
-    bad_behavioral_filter? =
-      query.filters
-      |> Filters.dimensions_used_in_filters(behavioral_filters: :only)
-      |> Enum.any?(&(not String.starts_with?(&1, "event:")))
+        behavioral_depth > 1 ->
+          {:halt,
+           {:error,
+            "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."}}
 
-    cond do
-      nested_behavioral_filter? ->
-        {:error, "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."}
+        not String.starts_with?(dimension, "event:") ->
+          {:halt,
+           {:error,
+            "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."}}
 
-      bad_behavioral_filter? ->
-        {:error,
-         "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."}
-
-      true ->
-        :ok
-    end
+        true ->
+          {:cont, :ok}
+      end
+    end)
   end
 
   defp validate_filtered_goals_exist(query) do
