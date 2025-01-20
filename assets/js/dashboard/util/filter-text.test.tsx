@@ -9,7 +9,7 @@ describe('styledFilterText() and plainFilterText()', () => {
     [['is', 'country', ['US']], { US: 'United States' }, 'Country is United States'],
     [['is', 'goal', ['Signup']], {}, 'Goal is Signup'],
     [['is', 'props:browser_language', ['en-US']], {}, 'Property browser_language is en-US'],
-    [['has_not_done', 'goal', ['Signup', 'Login']], {}, 'Has not done goal Signup or Login'],
+    [['has_not_done', 'goal', ['Signup', 'Login']], {}, 'Goal is not Signup or Login'],
   ])(
     'when filter is %p and labels are %p, functions return %p',
     (filter, labels, expectedPlainText) => {
