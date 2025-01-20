@@ -6,6 +6,8 @@ defmodule Plausible.Teams.Memberships.Remove do
   alias Plausible.Repo
   alias Plausible.Teams.Memberships
 
+  def remove(nil, _, _), do: {:error, :permission_denied}
+
   def remove(team, user_id, current_user) do
     with {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
          {:ok, current_user_role} <- Memberships.team_role(team, current_user),

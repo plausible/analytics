@@ -78,7 +78,7 @@ defmodule PlausibleWeb.TeamControllerTest do
       assert_team_membership(owner, team, :owner)
     end
 
-    for role <- Teams.Membership.roles() -- [:owner, :admin, :guest] do
+    for role <- Teams.Membership.roles() -- [:owner, :admin] do
       test "#{role} can't update role of a member", %{conn: conn, user: user} do
         owner = new_user()
         _site = new_site(owner: owner)
@@ -179,6 +179,25 @@ defmodule PlausibleWeb.TeamControllerTest do
                "You are not allowed to remove that member"
 
       assert_team_membership(owner, team, :owner)
+    end
+
+    for role <- Teams.Membership.roles() -- [:owner, :admin] do
+      test "#{role} can't update role of a member", %{conn: conn, user: user} do
+        owner = new_user()
+        _site = new_site(owner: owner)
+        team = team_of(owner)
+        _member = add_member(team, user: user, role: unquote(role))
+        another_member = add_member(team, role: :viewer)
+
+        conn = delete(conn, "/settings/team/memberships/u/#{another_member.id}")
+
+        assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_general)
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+                 "You are not allowed to remove that member"
+
+        assert_team_membership(another_member, team, :viewer)
+      end
     end
   end
 end
