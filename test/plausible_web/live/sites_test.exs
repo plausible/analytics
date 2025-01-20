@@ -16,6 +16,47 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text(html) =~ "You don't have any sites yet"
     end
 
+    test "renders team invitations", %{user: user, conn: conn} do
+      owner1 = new_user(name: "G.I. Joe")
+      new_site(owner: owner1)
+      team1 = team_of(owner1)
+
+      owner2 = new_user(name: "G.I. Jane")
+      new_site(owner: owner2)
+      team2 = team_of(owner2)
+
+      invitation1 = invite_member(team1, user, inviter: owner1, role: :viewer)
+      invitation2 = invite_member(team2, user, inviter: owner2, role: :editor)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert text_of_element(html, "#invitation-#{invitation1.invitation_id}") =~
+               "G.I. Joe has invited you to join the \"My Team\" as viewer member."
+
+      assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
+               "G.I. Jane has invited you to join the \"My Team\" as editor member."
+
+      assert find(
+               html,
+               "#invitation-#{invitation1.invitation_id} a[href=#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}]"
+             )
+
+      assert find(
+               html,
+               "#invitation-#{invitation1.invitation_id} a[href=#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}]"
+             )
+
+      assert find(
+               html,
+               "#invitation-#{invitation2.invitation_id} a[href=#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}]"
+             )
+
+      assert find(
+               html,
+               "#invitation-#{invitation2.invitation_id} a[href=#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}]"
+             )
+    end
+
     test "renders metadata for invitation", %{
       conn: conn,
       user: user

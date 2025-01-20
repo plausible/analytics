@@ -9,6 +9,16 @@ defmodule Plausible.Teams.Invitations do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  def get_team_invitation(team, invitation_id) do
+    invitation = Repo.get_by(Teams.Invitation, team_id: team.id, invitation_id: invitation_id)
+
+    if invitation do
+      {:ok, invitation}
+    else
+      {:error, :invitation_not_found}
+    end
+  end
+
   def find_for_user(invitation_or_transfer_id, user) do
     with {:error, :invitation_not_found} <-
            find_team_invitation_for_user(invitation_or_transfer_id, user),
@@ -23,6 +33,17 @@ defmodule Plausible.Teams.Invitations do
            find_invitation_for_site(invitation_or_transfer_id, site) do
       find_transfer_for_site(invitation_or_transfer_id, site)
     end
+  end
+
+  def find_team_invitations(user) do
+    Repo.all(
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        inner_join: team in assoc(ti, :team),
+        where: ti.email == ^user.email,
+        where: ti.role != :guest,
+        preload: [inviter: inviter, team: team]
+    )
   end
 
   defp find_team_invitation_for_user(team_invitation_id, user) do
@@ -280,7 +301,11 @@ defmodule Plausible.Teams.Invitations do
           send_invitation_accepted_email(team_invitation, guest_invitations)
         end
 
-        %{team_membership: team_membership, guest_memberships: guest_memberships}
+        %{
+          team: team_invitation.team,
+          team_membership: team_membership,
+          guest_memberships: guest_memberships
+        }
       else
         {:error, changeset} -> Repo.rollback(changeset)
       end

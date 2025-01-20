@@ -16,9 +16,13 @@ defmodule Plausible.Teams do
     not is_nil(team) and FunWithFlags.enabled?(:teams, for: team)
   end
 
-  @spec get!(pos_integer()) :: Teams.Team.t()
-  def get!(team_id) do
+  @spec get!(pos_integer() | binary()) :: Teams.Team.t()
+  def get!(team_id) when is_integer(team_id) do
     Repo.get!(Teams.Team, team_id)
+  end
+
+  def get!(team_identifier) when is_binary(team_identifier) do
+    Repo.get_by!(Teams.Team, identifier: team_identifier)
   end
 
   @spec get_owner(Teams.Team.t()) ::
@@ -68,10 +72,11 @@ defmodule Plausible.Teams do
 
   def owned_sites_ids(team) do
     Repo.all(
-      from s in Plausible.Site,
+      from(s in Plausible.Site,
         where: s.team_id == ^team.id,
         select: s.id,
         order_by: [desc: s.id]
+      )
     )
   end
 
@@ -81,9 +86,10 @@ defmodule Plausible.Teams do
 
   def owned_sites_locked?(team) do
     Repo.exists?(
-      from s in Plausible.Site,
+      from(s in Plausible.Site,
         where: s.team_id == ^team.id,
         where: s.locked == true
+      )
     )
   end
 
