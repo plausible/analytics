@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.Segment — Plausible v0.0.1</title>
+    <title>Plausible.Segments — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-B42945F3.js"></script>
+    <script src="dist/sidebar_items-C8E363F8.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -126,19 +126,19 @@ Pages
 <div id="top-content">
   <h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segment.ex#L1" title="View Source" class="icon-action" rel="help">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L1" title="View Source" class="icon-action" rel="help">
         <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         <span class="sr-only">View Source</span>
       </a>
 
-    <span translate="no">Plausible.Segment</span> 
+    <span translate="no">Plausible.Segments</span> 
     <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
   </h1>
 
 
     <section id="moduledoc">
-<p>Schema for segments. Segments are saved filter combinations.</p>
+<p>Module for accessing Segments.</p>
     </section>
 
 </div>
@@ -157,7 +157,15 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" data-no-tooltip translate="no">t()</a>
+        <a href="#t:error_not_enough_permissions/0" data-no-tooltip translate="no">error_not_enough_permissions()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:error_segment_not_found/0" data-no-tooltip translate="no">error_segment_not_found()</a>
 
       </div>
 
@@ -171,20 +179,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#build_naive_query_from_segment_data/2" data-no-tooltip translate="no">build_naive_query_from_segment_data(site, filters)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>  This function builds a simple query using the filters from Plausibe.Segment.segment_data
-  to test whether the filters used in the segment stand as legitimate query filters.
-  If they don't, it indicates an error with the filters that must be passed to the client,
-  so they could reconfigure the filters.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#changeset/2" data-no-tooltip translate="no">changeset(segment, attrs)</a>
+        <a href="#delete_one/4" data-no-tooltip translate="no">delete_one(user_id, site, site_role, segment_id)</a>
 
       </div>
 
@@ -192,20 +187,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#reformat_filters_errors/1" data-no-tooltip translate="no">reformat_filters_errors(message)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>  This function handles the error from building the naive query that is used to validate segment filters,
-  collecting filter related errors into a list.
-  If the error is not only about filters, the client can't do anything about the situation,
-  and the error message is returned as-is.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#validate_segment_data/3" data-no-tooltip translate="no">validate_segment_data(site, map, restricted_depth?)</a>
+        <a href="#get_one/4" data-no-tooltip translate="no">get_one(user_id, site, site_role, segment_id)</a>
 
       </div>
 
@@ -213,7 +195,47 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validate_segment_data_if_exists/3" data-no-tooltip translate="no">validate_segment_data_if_exists(site, segment_data, restricted_depth?)</a>
+        <a href="#index/3" data-no-tooltip translate="no">index(user_id, site, site_role)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert_one/4" data-no-tooltip translate="no">insert_one(user_id, site, site_role, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#roles_with_maybe_site_segments/0" data-no-tooltip translate="no">roles_with_maybe_site_segments()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#roles_with_personal_segments/0" data-no-tooltip translate="no">roles_with_personal_segments()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#site_segments_available?/1" data-no-tooltip translate="no">site_segments_available?(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_one/5" data-no-tooltip translate="no">update_one(user_id, site, site_role, segment_id, params)</a>
 
       </div>
 
@@ -232,15 +254,15 @@ Pages
       <span class="text">Types</span>
     </h1>
     <div class="types-list">
-<section class="detail" id="t:t/0">
+<section class="detail" id="t:error_not_enough_permissions/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+    <a href="#t:error_not_enough_permissions/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">t()</h1>
+    <h1 class="signature" translate="no">error_not_enough_permissions()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segment.ex#L11" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L12" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -251,19 +273,33 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Segment{
-  __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  name: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  owner: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  owner_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  segment_data: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  site: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  type: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
-}</pre>
+          <pre translate="no"><span class="attribute">@type</span> error_not_enough_permissions() :: {:error, :not_enough_permissions}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:error_segment_not_found/0">
+
+  <div class="detail-header">
+    <a href="#t:error_segment_not_found/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">error_segment_not_found()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L13" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> error_segment_not_found() :: {:error, :segment_not_found}</pre>
 
       </div>
 
@@ -282,38 +318,15 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="build_naive_query_from_segment_data/2">
+<section class="detail" id="delete_one/4">
 
   <div class="detail-header">
-    <a href="#build_naive_query_from_segment_data/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#delete_one/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">build_naive_query_from_segment_data(site, filters)</h1>
+    <h1 class="signature" translate="no">delete_one(user_id, site, site_role, segment_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segment.ex#L143" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>  This function builds a simple query using the filters from Plausibe.Segment.segment_data
-  to test whether the filters used in the segment stand as legitimate query filters.
-  If they don't, it indicates an error with the filters that must be passed to the client,
-  so they could reconfigure the filters.</p>
-  </section>
-</section>
-<section class="detail" id="changeset/2">
-
-  <div class="detail-header">
-    <a href="#changeset/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">changeset(segment, attrs)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segment.ex#L37" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L119" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -325,15 +338,15 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="reformat_filters_errors/1">
+<section class="detail" id="get_one/4">
 
   <div class="detail-header">
-    <a href="#reformat_filters_errors/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_one/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">reformat_filters_errors(message)</h1>
+    <h1 class="signature" translate="no">get_one(user_id, site, site_role, segment_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segment.ex#L173" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L44" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -342,24 +355,54 @@ Pages
 
   <section class="docstring">
 
-<p>  This function handles the error from building the naive query that is used to validate segment filters,
-  collecting filter related errors into a list.
-  If the error is not only about filters, the client can't do anything about the situation,
-  and the error message is returned as-is.</p><p>  ### Examples
-  iex&gt; reformat_filters_errors(~s(#/metrics/0 Invalid metric &quot;Visitors&quot;\n#/filters/0 Invalid filter &quot;A&quot;))</p><p>  iex&gt; reformat_filters_errors(~s(#/filters/0 Invalid filter &quot;A&quot;\n#/filters/1 Invalid filter &quot;B&quot;))
-  {:error, {:invalid_filters, ~s(#/filters/0 Invalid filter &quot;A&quot;\n#/filters/1 Invalid filter &quot;B&quot;)}}</p><p>  iex&gt; reformat_filters_errors(&quot;Invalid filters. Dimension <code class="inline">event:goal</code> can only be filtered at the top level.&quot;)
-  {:error, {:invalid_filters, &quot;Invalid filters. Dimension <code class="inline">event:goal</code> can only be filtered at the top level.&quot;}}</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_one(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>() | nil) ::
+  {:ok, <a href="Plausible.Segments.Segment.html#t:t/0">Plausible.Segments.Segment.t</a>()}
+  | <a href="#t:error_not_enough_permissions/0">error_not_enough_permissions</a>()
+  | <a href="#t:error_segment_not_found/0">error_segment_not_found</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
-<section class="detail" id="validate_segment_data/3">
+<section class="detail" id="index/3">
 
   <div class="detail-header">
-    <a href="#validate_segment_data/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#index/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">validate_segment_data(site, map, restricted_depth?)</h1>
+    <h1 class="signature" translate="no">index(user_id, site, site_role)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segment.ex#L119" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L17" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> index(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>() | nil, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  {:ok, [<a href="Plausible.Segments.Segment.html#t:t/0">Plausible.Segments.Segment.t</a>()]} | <a href="#t:error_not_enough_permissions/0">error_not_enough_permissions</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="insert_one/4">
+
+  <div class="detail-header">
+    <a href="#insert_one/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">insert_one(user_id, site, site_role, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L55" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -371,15 +414,75 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="validate_segment_data_if_exists/3">
+<section class="detail" id="roles_with_maybe_site_segments/0">
 
   <div class="detail-header">
-    <a href="#validate_segment_data_if_exists/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#roles_with_maybe_site_segments/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">validate_segment_data_if_exists(site, segment_data, restricted_depth?)</h1>
+    <h1 class="signature" translate="no">roles_with_maybe_site_segments()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segment.ex#L109" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L192" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="roles_with_personal_segments/0">
+
+  <div class="detail-header">
+    <a href="#roles_with_personal_segments/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">roles_with_personal_segments()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L191" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="site_segments_available?/1">
+
+  <div class="detail-header">
+    <a href="#site_segments_available?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">site_segments_available?(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L194" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="update_one/5">
+
+  <div class="detail-header">
+    <a href="#update_one/5" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">update_one(user_id, site, site_role, segment_id, params)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L82" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
