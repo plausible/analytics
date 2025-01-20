@@ -197,9 +197,7 @@ export default function SourceList() {
 
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        {site.flags.channels &&
-          <div className={currentTab === 'channels' ? activeClass : defaultClass} onClick={setTab('channels')}>Channels</div>
-        }
+        <div className={currentTab === 'channels' ? activeClass : defaultClass} onClick={setTab('channels')}>Channels</div>
         <div className={currentTab === 'all' ? activeClass : defaultClass} onClick={setTab('all')}>Sources</div>
 
         <Menu as="div" className="relative inline-block text-left">
