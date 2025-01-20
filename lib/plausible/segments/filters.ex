@@ -1,4 +1,7 @@
 defmodule Plausible.Segments.Filters do
+  @moduledoc """
+  This module contains functions that enable resolving segments in filters.
+  """
   alias Plausible.Segments
   alias Plausible.Stats.Filters
 
