@@ -4579,6 +4579,40 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   end
 
   describe "behavioral (has_done/has_not_done) filters" do
+    test "has_done does counting by sessions", %{conn: conn, site: site} do
+      populate_stats(site, [
+        # Session 1
+        build(:event, name: "Conversion", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:01:00]),
+        # Session 2
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-02 00:01:00]),
+        # Session 3
+        build(:event, name: "Conversion", user_id: 1, timestamp: ~N[2021-01-03 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-03 00:01:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-03 00:02:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-03 00:03:00]),
+        # Session 4
+        build(:event, name: "Conversion", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:02:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:03:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:04:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "visits", "events", "pageviews"],
+          "date_range" => "all",
+          "filters" => [["has_done", ["is", "event:name", ["Conversion"]]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [2, 3, 11, 8]}
+             ]
+    end
+
     test "has_done returns all events by users who match condition if no further filters are provided",
          %{conn: conn, site: site} do
       populate_stats(site, [
@@ -4690,10 +4724,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     test "has_done with complex event:props and event:name filters", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-02 00:00:00]),
-        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-03 00:00:00]),
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:10:00]),
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:20:00]),
         build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, name: "Purchase", user_id: 2, timestamp: ~N[2021-01-03 00:00:00]),
+        build(:event, name: "Purchase", user_id: 2, timestamp: ~N[2021-01-01 00:10:00]),
         build(:event,
           name: "Signup",
           user_id: 3,

@@ -100,7 +100,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
     dynamic(
       [t],
-      t.user_id in subquery(from(e in "events_v2", where: ^condition, select: e.user_id))
+      t.session_id in subquery(from(e in "events_v2", where: ^condition, select: e.session_id))
     )
   end
 
