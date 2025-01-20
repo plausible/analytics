@@ -22,6 +22,8 @@ jobs:
           - platform: linux/arm64
             runner: ubuntu-22.04-arm
 
+    runs-on: ${{ matrix.runner || 'ubuntu-22.04' }}
+
     steps:
       - name: Prepare
         run: |
