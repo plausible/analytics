@@ -29,7 +29,8 @@ export const FILTER_OPERATIONS = {
   isNot: 'is_not',
   contains: 'contains',
   contains_not: 'contains_not',
-  has_not_done: 'has_not_done'
+  has_done: 'has_done',
+  has_not_done: 'has_not_done',
 }
 
 export const FILTER_OPERATIONS_DISPLAY_NAMES = {
@@ -37,9 +38,8 @@ export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.isNot]: 'is not',
   [FILTER_OPERATIONS.contains]: 'contains',
   [FILTER_OPERATIONS.contains_not]: 'does not contain',
-  // :NOTE: Goal filters are displayed as "is not" in the UI, but in the backend they are wrapped with has_not_done.
-  // It is currently unclear if we'll do the same for other event filters in the future.
-  [FILTER_OPERATIONS.has_not_done]: 'is not'
+  [FILTER_OPERATIONS.has_done]: 'has done',
+  [FILTER_OPERATIONS.has_not_done]: 'has not done'
 }
 
 export function supportsIsNot(filterName) {
@@ -52,8 +52,8 @@ export function supportsContains(filterName) {
     .includes(filterName)
 }
 
-export function supportsHasDoneNot(filterName) {
-  return filterName === 'goal'
+export function supportsHasDone(filterName) {
+  return ['goal', 'page', 'props', 'hostname'].includes(filterName)
 }
 
 export function isFreeChoiceFilterOperation(operation) {
@@ -171,10 +171,9 @@ function serializeFilter([operation, filterKey, clauses, ...modifiers]) {
   ) {
     apiFilterKey = `event:${filterKey}`
   }
-  if (operation === FILTER_OPERATIONS.has_not_done) {
-    // :NOTE: Frontend does not support advanced query building that's used in the backend.
-    // As such we emulate the backend behavior for has_not_done goal filters
-    return ['has_not_done', ['is', apiFilterKey, clauses, ...modifiers]]
+  if ([FILTER_OPERATIONS.has_done, FILTER_OPERATIONS.has_not_done].includes(operation)) {
+    // Wrap the operation in a has_done or has_not_done filter - needed because our URL logic does not support nesting filters currently.
+    return [operation, ['is', apiFilterKey, clauses, ...modifiers]]
   } else {
     return [operation, apiFilterKey, clauses, ...modifiers]
   }
