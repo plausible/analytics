@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Team.Notice do
     <aside class="mt-4 mb-4">
       <.notice
         :for={i <- @team_invitations}
+        id={"invitation-#{i.invitation_id}"}
         title="You have received team invitation"
         class="shadow-md dark:shadow-none mt-4"
       >
