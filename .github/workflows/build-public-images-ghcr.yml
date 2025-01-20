@@ -65,7 +65,7 @@ jobs:
       - name: Export digest
         run: |
           mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
+          digest="${{ steps.docker_build.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
@@ -83,7 +83,7 @@ jobs:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: "POST"
           customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images.yml\">Build failed</a>"}'
+          data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images-ghcr.yml\">Build failed</a>"}'
 
   push:
     runs-on: ubuntu-latest
