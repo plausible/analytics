@@ -77,16 +77,16 @@ export default function FilterOperatorSelector(props) {
                     supportsIsNot(filterName)
                   )}
                   {renderTypeItem(
+                    FILTER_OPERATIONS.has_not_done,
+                    supportsHasDoneNot(filterName)
+                  )}
+                  {renderTypeItem(
                     FILTER_OPERATIONS.contains,
                     supportsContains(filterName)
                   )}
                   {renderTypeItem(
                     FILTER_OPERATIONS.contains_not,
                     supportsContains(filterName) && supportsIsNot(filterName)
-                  )}
-                  {renderTypeItem(
-                    FILTER_OPERATIONS.has_not_done,
-                    supportsHasDoneNot(filterName)
                   )}
                 </div>
               </Menu.Items>

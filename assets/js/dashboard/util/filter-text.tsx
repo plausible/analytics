@@ -4,7 +4,6 @@ import React, { ReactNode, isValidElement, Fragment } from 'react'
 import { DashboardQuery, Filter } from '../query'
 import {
   EVENT_PROPS_PREFIX,
-  FILTER_OPERATIONS,
   FILTER_OPERATIONS_DISPLAY_NAMES,
   formattedFilters,
   getLabel,
@@ -36,24 +35,13 @@ export function styledFilterText(
     throw new Error(`Unknown filter: ${filterKey}`)
   }
 
-  if (operation === FILTER_OPERATIONS.has_not_done) {
-    // Has not done goal Visit foo
-    return (
-      <>
-        {capitalize(FILTER_OPERATIONS_DISPLAY_NAMES[operation])}{' '}
-        {formattedFilter.toLowerCase()} {formatClauses(clausesLabels)}
-      </>
-    )
-  } else {
-    // Hostname is example.com
-    return (
-      <>
-        {capitalize(formattedFilter)}{' '}
-        {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
-        {formatClauses(clausesLabels)}
-      </>
-    )
-  }
+  return (
+    <>
+      {capitalize(formattedFilter)}{' '}
+      {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
+      {formatClauses(clausesLabels)}
+    </>
+  )
 }
 
 export function plainFilterText(query: DashboardQuery, filter: Filter) {

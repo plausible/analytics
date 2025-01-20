@@ -37,7 +37,9 @@ export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.isNot]: 'is not',
   [FILTER_OPERATIONS.contains]: 'contains',
   [FILTER_OPERATIONS.contains_not]: 'does not contain',
-  [FILTER_OPERATIONS.has_not_done]: 'has not done'
+  // :NOTE: Goal filters are displayed as "is not" in the UI, but in the backend they are wrapped with has_not_done.
+  // It is currently unclear if we'll do the same for other event filters in the future.
+  [FILTER_OPERATIONS.has_not_done]: 'is not'
 }
 
 export function supportsIsNot(filterName) {
