@@ -2,23 +2,20 @@ defmodule Plausible.Segments do
   @moduledoc """
   Module for accessing Segments.
   """
-  alias __MODULE__
-  use Plausible.Repo
+  alias Plausible.Segments.Segment
+  alias Plausible.Repo
+  import Ecto.Query
+
+  @roles_with_personal_segments [:viewer, :editor, :admin, :owner, :super_admin]
+  @roles_with_maybe_site_segments [:editor, :admin, :owner, :super_admin]
 
   @type error_not_enough_permissions() :: {:error, :not_enough_permissions}
   @type error_segment_not_found() :: {:error, :segment_not_found}
 
   @spec index(pos_integer() | nil, Plausible.Site.t(), atom()) ::
-          {:ok, [Segments.Segment.t()]} | error_not_enough_permissions()
+          {:ok, [Segment.t()]} | error_not_enough_permissions()
   def index(user_id, %Plausible.Site{} = site, site_role) do
-    fields_in_index_query = [
-      :id,
-      :name,
-      :type,
-      :inserted_at,
-      :updated_at,
-      :owner_id
-    ]
+    fields = [:id, :name, :type, :inserted_at, :updated_at, :owner_id]
 
     site_segments_available? =
       site_segments_available?(site)
@@ -26,16 +23,14 @@ defmodule Plausible.Segments do
     cond do
       site_role in [:public] and
           site_segments_available? ->
-        {:ok,
-         Repo.all(get_site_segments_only_query(site.id, fields_in_index_query -- [:owner_id]))}
+        {:ok, get_public_site_segments(site.id, fields -- [:owner_id])}
 
-      site_role in Segments.roles_with_maybe_site_segments() and
+      site_role in @roles_with_maybe_site_segments and
           site_segments_available? ->
-        {:ok,
-         Repo.all(get_personal_and_site_segments_query(user_id, site.id, fields_in_index_query))}
+        {:ok, get_segments(user_id, site.id, fields)}
 
-      site_role in Segments.roles_with_personal_segments() ->
-        {:ok, Repo.all(get_personal_segments_only_query(user_id, site.id, fields_in_index_query))}
+      site_role in @roles_with_personal_segments ->
+        {:ok, get_segments(user_id, site.id, fields, only: :personal)}
 
       true ->
         {:error, :not_enough_permissions}
@@ -43,13 +38,13 @@ defmodule Plausible.Segments do
   end
 
   @spec get_one(pos_integer(), Plausible.Site.t(), atom(), pos_integer() | nil) ::
-          {:ok, Segments.Segment.t()}
+          {:ok, Segment.t()}
           | error_not_enough_permissions()
           | error_segment_not_found()
   def get_one(user_id, site, site_role, segment_id) do
     if site_role in roles_with_personal_segments() do
       case do_get_one(user_id, site.id, segment_id) do
-        %Segments.Segment{} = segment -> {:ok, segment}
+        %Segment{} = segment -> {:ok, segment}
         nil -> {:error, :segment_not_found}
       end
     else
@@ -65,12 +60,12 @@ defmodule Plausible.Segments do
       ) do
     with :ok <- can_insert_one?(site, site_role, params),
          %{valid?: true} = changeset <-
-           Plausible.Segments.Segment.changeset(
-             %Plausible.Segments.Segment{},
+           Segment.changeset(
+             %Segment{},
              Map.merge(params, %{"site_id" => site.id, "owner_id" => user_id})
            ),
          :ok <-
-           Plausible.Segments.Segment.validate_segment_data(site, params["segment_data"], true) do
+           Segment.validate_segment_data(site, params["segment_data"], true) do
       {:ok, Repo.insert!(changeset)}
     else
       %{valid?: false, errors: errors} ->
@@ -94,12 +89,12 @@ defmodule Plausible.Segments do
     with {:ok, segment} <- get_one(user_id, site, site_role, segment_id),
          :ok <- can_update_one?(site, site_role, params, segment.type),
          %{valid?: true} = changeset <-
-           Segments.Segment.changeset(
+           Segment.changeset(
              segment,
              Map.merge(params, %{"owner_id" => user_id})
            ),
          :ok <-
-           Segments.Segment.validate_segment_data_if_exists(
+           Segment.validate_segment_data_if_exists(
              site,
              params["segment_data"],
              true
@@ -137,7 +132,7 @@ defmodule Plausible.Segments do
   end
 
   @spec do_get_one(pos_integer(), pos_integer(), pos_integer() | nil) ::
-          Segments.Segment.t() | nil
+          Segment.t() | nil
   defp do_get_one(user_id, site_id, segment_id)
 
   defp do_get_one(_user_id, _site_id, nil) do
@@ -146,7 +141,7 @@ defmodule Plausible.Segments do
 
   defp do_get_one(user_id, site_id, segment_id) do
     query =
-      from(segment in Plausible.Segments.Segment,
+      from(segment in Segment,
         where: segment.site_id == ^site_id,
         where: segment.id == ^segment_id,
         where: segment.type == :site or segment.owner_id == ^user_id
@@ -199,36 +194,38 @@ defmodule Plausible.Segments do
   def site_segments_available?(%Plausible.Site{} = site),
     do: Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
 
-  @spec get_site_segments_only_query(pos_integer(), list(atom())) :: Ecto.Query.t()
-  defp get_site_segments_only_query(site_id, fields) do
-    from(segment in Plausible.Segments.Segment,
-      select: ^fields,
-      where: segment.site_id == ^site_id,
-      where: segment.type == :site,
-      order_by: [desc: segment.updated_at, desc: segment.id]
+  @spec get_public_site_segments(pos_integer(), list(atom())) :: [Segment.t()]
+  defp get_public_site_segments(site_id, fields) do
+    Repo.all(
+      from(segment in Segment,
+        select: ^fields,
+        where: segment.site_id == ^site_id,
+        where: segment.type == :site,
+        order_by: [desc: segment.updated_at, desc: segment.id]
+      )
     )
   end
 
-  @spec get_personal_segments_only_query(pos_integer(), pos_integer(), list(atom())) ::
-          Ecto.Query.t()
-  defp get_personal_segments_only_query(user_id, site_id, fields) do
-    from(segment in Plausible.Segments.Segment,
-      select: ^fields,
-      where: segment.site_id == ^site_id,
-      where: segment.type == :personal and segment.owner_id == ^user_id,
-      order_by: [desc: segment.updated_at, desc: segment.id]
-    )
-  end
+  @spec get_segments(pos_integer(), pos_integer(), list(atom()), Keyword.t()) :: [Segment.t()]
+  defp get_segments(user_id, site_id, fields, opts \\ []) do
+    query =
+      from(segment in Segment,
+        select: ^fields,
+        where: segment.site_id == ^site_id,
+        order_by: [desc: segment.updated_at, desc: segment.id]
+      )
 
-  @spec get_personal_and_site_segments_query(pos_integer(), pos_integer(), list(atom())) ::
-          Ecto.Query.t()
-  defp get_personal_and_site_segments_query(user_id, site_id, fields) do
-    from(segment in Plausible.Segments.Segment,
-      select: ^fields,
-      where: segment.site_id == ^site_id,
-      where:
-        segment.type == :site or (segment.type == :personal and segment.owner_id == ^user_id),
-      order_by: [desc: segment.updated_at, desc: segment.id]
-    )
+    query =
+      if Keyword.get(opts, :only) == :personal do
+        where(query, [segment], segment.type == :personal and segment.owner_id == ^user_id)
+      else
+        where(
+          query,
+          [segment],
+          segment.type == :site or (segment.type == :personal and segment.owner_id == ^user_id)
+        )
+      end
+
+    Repo.all(query)
   end
 end
