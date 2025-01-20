@@ -1344,7 +1344,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query", %{
+        post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => "all",
