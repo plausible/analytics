@@ -81,7 +81,7 @@ jobs:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: "POST"
           customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images.yml\">Build failed</a>"}'
+          data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images-ghcr.yml\">Build failed</a>"}'
 
   push:
     runs-on: ubuntu-latest
