@@ -379,7 +379,7 @@ defmodule Plausible.Factory do
   end
 
   def segment_factory do
-    %Plausible.Segment{
+    %Plausible.Segments.Segment{
       segment_data: %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
     }
   end
