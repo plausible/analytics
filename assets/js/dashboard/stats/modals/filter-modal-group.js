@@ -20,7 +20,7 @@ export default function FilterModalGroup({
     [filterGroup, rows]
   )
 
-  const showAddRow = ['props', 'goal'].includes(filterGroup)
+  const showAddRow = true // ['props', 'goal'].includes(filterGroup)
   const showTitle = filterGroup != 'props'
 
   return (
