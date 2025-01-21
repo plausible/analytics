@@ -1,13 +1,5 @@
 <%= render_layout "app.html", assigns do %>
-  <% options = [
-    %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
-    %{key: "Security", value: "security", icon: :lock_closed},
-    %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
-    %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
-    %{key: "API Keys", value: "api-keys", icon: :key},
-    %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
-  ] %>
-
+  <% options = account_settings_sidebar(@conn) %>
   <div class="container pt-6">
     <.styled_link class="text-indigo-600 font-bold text-sm" href="/sites">
       ← Back to Sites
@@ -19,37 +11,53 @@
     </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
       <div class="py-4 g:py-0 lg:col-span-3">
-        <div class="mb-4">
+        <div class="mb-4 hidden lg:block">
           <h3 class="uppercase text-sm text-indigo-600 font-semibold">Account Settings</h3>
-          <p class="text-xs dark:text-gray-400"><%= @current_user.email %></p>
+          <p class="text-xs dark:text-gray-400 truncate">{@current_user.email}</p>
         </div>
 
-        <.form for={@conn} class="lg:hidden">
-          <.input
-            value={Enum.find_value(options, &(is_current_tab(@conn, &1.value) && &1.value))}
-            name="setting"
-            type="select"
-            options={Enum.map(options, fn opt -> {opt.key, opt.value} end)}
-            onchange="location.href = '/settings/' + event.target.value"
-            class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
-          />
-        </.form>
+        <.mobile_nav_dropdown
+          name="settings"
+          options={options}
+          selected_fn={&is_current_tab(@conn, &1)}
+          conn={@conn}
+          href_base="/settings/"
+        />
 
         <div class="hidden lg:block">
-          <%= for %{key: key, value: value, icon: icon} <- options  do %>
-            <%= render("_settings_tab.html",
+          <%= for %{key: key, value: value, icon: icon} <- options["Account Settings"]  do %>
+            {render("_settings_tab.html",
               icon: icon,
               this_tab: value,
               text: key,
               conn: @conn,
               submenu?: false
-            ) %>
+            )}
           <% end %>
+        </div>
+
+        <div :if={Plausible.Teams.enabled?(@my_team)}>
+          <div class="mb-4 mt-4 hidden lg:block">
+            <h3 class="uppercase text-sm text-indigo-600 font-semibold">Team Settings</h3>
+            <p class="text-xs dark:text-gray-400 truncate">{@my_team.name}</p>
+          </div>
+
+          <div class="hidden lg:block">
+            <%= for %{key: key, value: value, icon: icon} <- options["Team Settings"]  do %>
+              {render("_settings_tab.html",
+                icon: icon,
+                this_tab: value,
+                text: key,
+                conn: @conn,
+                submenu?: false
+              )}
+            <% end %>
+          </div>
         </div>
       </div>
 
       <div class="space-y-6 lg:col-span-9 lg:mt-4">
-        <%= @inner_content %>
+        {@inner_content}
       </div>
     </div>
   </div>

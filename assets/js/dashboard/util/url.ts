@@ -1,5 +1,4 @@
 /* @format */
-import JsonURL from '@jsonurl/jsonurl'
 import { PlausibleSite } from '../site-context'
 
 export function apiPath(
@@ -70,86 +69,6 @@ export function trimURL(url: string, maxLength: number): string {
 
     return leftSide + ellipsis + rightSide
   }
-}
-
-export function encodeURIComponentPermissive(input: string): string {
-  return (
-    encodeURIComponent(input)
-      /* @ts-expect-error API supposedly not present in compilation target */
-      .replaceAll('%2C', ',')
-      .replaceAll('%3A', ':')
-      .replaceAll('%2F', '/')
-  )
-}
-
-export function encodeSearchParamEntry([k, v]: [string, string]): string {
-  return `${encodeURIComponentPermissive(k)}=${encodeURIComponentPermissive(v)}`
-}
-
-export function isSearchEntryDefined(
-  entry: [string, undefined | string]
-): entry is [string, string] {
-  return entry[1] !== undefined
-}
-
-export function stringifySearch(
-  searchRecord: Record<string, unknown>
-): '' | string {
-  const definedSearchEntries = Object.entries(searchRecord || {})
-    .map(stringifySearchEntry)
-    .filter(isSearchEntryDefined)
-
-  const encodedSearchEntries = definedSearchEntries.map(encodeSearchParamEntry)
-
-  return encodedSearchEntries.length ? `?${encodedSearchEntries.join('&')}` : ''
-}
-
-export function stringifySearchEntry([key, value]: [string, unknown]): [
-  string,
-  undefined | string
-] {
-  const isEmptyObjectOrArray =
-    typeof value === 'object' &&
-    value !== null &&
-    Object.entries(value).length === 0
-  if (value === undefined || value === null || isEmptyObjectOrArray) {
-    return [key, undefined]
-  }
-
-  return [key, JsonURL.stringify(value)]
-}
-
-export function parseSearchFragment(
-  searchStringFragment: string
-): null | unknown {
-  if (searchStringFragment === '') {
-    return null
-  }
-  // tricky: the search string fragment is already decoded due to URLSearchParams intermediate (see tests),
-  // and these symbols are unparseable
-  const fragmentWithReEncodedSymbols = searchStringFragment
-    /* @ts-expect-error API supposedly not present in compilation target */
-    .replaceAll('=', encodeURIComponent('='))
-    .replaceAll('#', encodeURIComponent('#'))
-    .replaceAll('|', encodeURIComponent('|'))
-    .replaceAll(' ', encodeURIComponent(' '))
-
-  try {
-    return JsonURL.parse(fragmentWithReEncodedSymbols)
-  } catch (error) {
-    console.error(
-      `Failed to parse URL fragment ${fragmentWithReEncodedSymbols}`,
-      error
-    )
-    return null
-  }
-}
-
-export function parseSearch(searchString: string): Record<string, unknown> {
-  const urlSearchParams = new URLSearchParams(searchString)
-  const searchRecord: Record<string, unknown> = {}
-  urlSearchParams.forEach((v, k) => (searchRecord[k] = parseSearchFragment(v)))
-  return searchRecord
 }
 
 export function maybeEncodeRouteParam(param: string) {

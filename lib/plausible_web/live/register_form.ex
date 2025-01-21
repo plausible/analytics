@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   def render(%{invitation_expired: true} = assigns) do
     ~H"""
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
-      <h1 class="text-3xl font-black"><%= Plausible.product_name() %></h1>
+      <h1 class="text-3xl font-black">{Plausible.product_name()}</h1>
       <div class="text-xl font-medium">Lightweight and privacy-friendly web analytics</div>
     </div>
 
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     <div class="mx-auto text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
         <%= if ce?() or @live_action == :register_from_invitation_form do %>
-          Register your <%= Plausible.product_name() %> account
+          Register your {Plausible.product_name()} account
         <% else %>
           Register your 30-day free trial
         <% end %>
@@ -155,7 +155,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
             </div>
             <%= if @captcha_error do %>
               <div class="text-red-500 text-xs italic mt-3" x-data x-init="hcaptcha.reset()">
-                <%= @captcha_error %>
+                {@captcha_error}
               </div>
             <% end %>
             <script
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
             "Start my free trial"
           end %>
         <.button id="register" disabled={@disable_submit} type="submit" class="mt-4 w-full">
-          <%= submit_text %>
+          {submit_text}
         </.button>
 
         <p class="text-center text-gray-600 dark:text-gray-500  mt-4">
@@ -284,7 +284,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         |> Map.put("email", invitation.email)
         |> Auth.User.new()
 
-      with_team? = invitation.role == :owner
+      with_team? = invitation.type == :site_transfer
 
       add_user(socket, user, with_team?: with_team?)
     else
@@ -349,6 +349,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
   defp find_by_id_unified(invitation_or_transfer_id) do
     result =
       with {:error, :invitation_not_found} <-
+             find_team_invitation_by_id_unified(invitation_or_transfer_id),
+           {:error, :invitation_not_found} <-
              find_invitation_by_id_unified(invitation_or_transfer_id) do
         find_transfer_by_id_unified(invitation_or_transfer_id)
       end
@@ -356,6 +358,25 @@ defmodule PlausibleWeb.Live.RegisterForm do
     case result do
       {:error, :invitation_not_found} -> nil
       {:ok, unified} -> unified
+    end
+  end
+
+  defp find_team_invitation_by_id_unified(id) do
+    invitation =
+      Teams.Invitation
+      |> Repo.get_by(invitation_id: id)
+      |> Repo.preload(:inviter)
+
+    case invitation do
+      nil ->
+        {:error, :invitation_not_found}
+
+      team_invitation ->
+        {:ok,
+         %{
+           type: :team_invitation,
+           email: team_invitation.email
+         }}
     end
   end
 
@@ -372,7 +393,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       guest_invitation ->
         {:ok,
          %{
-           role: guest_invitation.role,
+           type: :guest_invitation,
            email: guest_invitation.team_invitation.email
          }}
     end
@@ -391,7 +412,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       transfer ->
         {:ok,
          %{
-           role: :owner,
+           type: :site_transfer,
            email: transfer.email
          }}
     end

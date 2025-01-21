@@ -60,7 +60,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       new_site(domain: "some-other-public-site.io", public: true)
 
       conn = get(conn, conn |> get("/some-other-public-site.io") |> redirected_to())
-      assert redirected_to(conn) == "/login"
+      assert redirected_to(conn) == Routes.auth_path(conn, :login_form)
     end
 
     test "public site - no stats with skip_to_dashboard", %{
@@ -547,8 +547,15 @@ defmodule PlausibleWeb.StatsControllerTest do
 
         {~c"pages.csv", data} ->
           assert parse_csv(data) == [
-                   ["name", "visitors", "pageviews", "bounce_rate", "time_on_page"],
-                   ["/test", "1", "1", "0.0", "10.0"],
+                   [
+                     "name",
+                     "visitors",
+                     "pageviews",
+                     "bounce_rate",
+                     "time_on_page",
+                     "scroll_depth"
+                   ],
+                   ["/test", "1", "1", "0.0", "10.0", ""],
                    [""]
                  ]
 

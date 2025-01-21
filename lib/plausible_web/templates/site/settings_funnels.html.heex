@@ -20,9 +20,9 @@
     />
 
     <div :if={Plausible.Billing.Feature.Funnels.enabled?(@site)}>
-      <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings,
+      {live_render(@conn, PlausibleWeb.Live.FunnelSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}
-      ) %>
+      )}
     </div>
   </.tile>
 </.settings_tiles>

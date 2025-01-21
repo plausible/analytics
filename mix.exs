@@ -63,7 +63,6 @@ defmodule Plausible.MixProject do
   defp deps do
     [
       {:bamboo, "~> 2.3", override: true},
-      {:bamboo_phoenix, "~> 1.0.0"},
       {:bamboo_postmark, git: "https://github.com/plausible/bamboo_postmark.git", branch: "main"},
       {:bamboo_smtp, "~> 4.1"},
       {:bamboo_mua, "~> 0.2.0"},
@@ -84,7 +83,7 @@ defmodule Plausible.MixProject do
       {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:finch, "~> 0.17.0"},
-      {:floki, "~> 0.35.0"},
+      {:floki, "~> 0.36"},
       {:fun_with_flags, "~> 1.11.0"},
       {:fun_with_flags_ui, "~> 1.0"},
       {:locus, "~> 2.3"},
@@ -106,11 +105,11 @@ defmodule Plausible.MixProject do
       {:opentelemetry_oban, "~> 1.0.0"},
       {:phoenix, "~> 1.7.0"},
       {:phoenix_view, "~> 2.0"},
-      {:phoenix_ecto, "~> 4.0"},
-      {:phoenix_html, "~> 3.3", override: true},
+      {:phoenix_ecto, "~> 4.5"},
+      {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: [:dev, :ce_dev]},
       {:phoenix_pubsub, "~> 2.0"},
-      {:phoenix_live_view, "~> 0.18"},
+      {:phoenix_live_view, "~> 1.0"},
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
       {:plug_cowboy, "~> 2.3"},
@@ -148,7 +147,8 @@ defmodule Plausible.MixProject do
       {:ex_json_schema, "~> 0.10.2"},
       {:odgn_json_pointer, "~> 3.0.1"},
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
-      {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]}
+      {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]},
+      {:phoenix_storybook, "~> 0.8"}
     ]
   end
 
@@ -162,9 +162,15 @@ defmodule Plausible.MixProject do
       "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
+        "tailwind storybook",
         "esbuild default"
       ],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
+      "assets.deploy": [
+        "tailwind default --minify",
+        "tailwind storybook --minify",
+        "esbuild default --minify",
+        "phx.digest"
+      ]
     ]
   end
 

@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Live.Components.Pagination do
     >
       <div class="hidden sm:block">
         <p class="text-sm text-gray-700 dark:text-gray-300">
-          <%= render_slot(@inner_block) %>
+          {render_slot(@inner_block)}
         </p>
       </div>
       <div class="flex-1 flex justify-between sm:justify-end">

@@ -75,11 +75,15 @@ defmodule Plausible.Stats.Comparisons do
   defp add_query_filters(query, []), do: query
 
   defp add_query_filters(query, [filter]) do
-    Query.add_filter(query, [:ignore_in_totals_query, filter])
+    query
+    |> Query.add_filter([:ignore_in_totals_query, filter])
+    |> Query.set(pagination: nil)
   end
 
   defp add_query_filters(query, filters) do
-    Query.add_filter(query, [:ignore_in_totals_query, [:or, filters]])
+    query
+    |> Query.add_filter([:ignore_in_totals_query, [:or, filters]])
+    |> Query.set(pagination: nil)
   end
 
   defp build_comparison_filter(%{dimensions: dimension_labels}, query) do
@@ -99,8 +103,9 @@ defmodule Plausible.Stats.Comparisons do
   defp get_comparison_date_range(source_query, %{mode: "year_over_year"} = options) do
     source_date_range = Query.date_range(source_query, trim_trailing: true)
 
-    start_date = Date.add(source_date_range.first, -365)
-    end_date = source_date_range.last |> Date.add(-365)
+    start_date = source_date_range.first |> Date.shift(year: -1)
+    diff_in_days = Date.diff(source_date_range.last, source_date_range.first)
+    end_date = Date.add(start_date, diff_in_days)
 
     Date.range(start_date, end_date)
     |> maybe_match_day_of_week(source_date_range, options)

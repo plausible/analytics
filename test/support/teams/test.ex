@@ -110,6 +110,15 @@ defmodule Plausible.Teams.Test do
     user |> Repo.preload(:team_memberships)
   end
 
+  def add_member(team, args \\ []) do
+    user = Keyword.get(args, :user, new_user())
+    role = Keyword.fetch!(args, :role)
+
+    insert(:team_membership, team: team, user: user, role: role)
+
+    user |> Repo.preload(:team_memberships)
+  end
+
   def invite_guest(site, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do
     {role, args} = Keyword.pop!(args, :role)
     {inviter, args} = Keyword.pop!(args, :inviter)
@@ -142,6 +151,30 @@ defmodule Plausible.Teams.Test do
         [
           team_invitation: team_invitation,
           site: site,
+          role: role
+        ],
+        args
+      )
+    )
+  end
+
+  def invite_member(team, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do
+    {role, args} = Keyword.pop!(args, :role)
+    {inviter, args} = Keyword.pop!(args, :inviter)
+
+    email =
+      case invitee_or_email do
+        %{email: email} -> email
+        email when is_binary(email) -> email
+      end
+
+    insert(
+      :team_invitation,
+      Keyword.merge(
+        [
+          team: team,
+          email: email,
+          inviter: inviter,
           role: role
         ],
         args
@@ -248,31 +281,21 @@ defmodule Plausible.Teams.Test do
   end
 
   def assert_team_membership(user, team, role \\ :owner) do
-    if role == :owner do
-      assert membership =
-               Repo.get_by(Teams.Membership,
-                 team_id: team.id,
-                 user_id: user.id,
-                 role: role
-               )
+    assert membership =
+             Repo.get_by(Teams.Membership,
+               team_id: team.id,
+               user_id: user.id,
+               role: role
+             )
 
-      membership
-    else
-      assert team_membership =
-               Repo.get_by(Teams.Membership,
-                 team_id: team.id,
-                 user_id: user.id,
-                 role: :guest
-               )
+    membership
+  end
 
-      assert membership =
-               Repo.get_by(Teams.GuestMembership,
-                 team_membership_id: team_membership.id,
-                 role: role
-               )
-
-      membership
-    end
+  def refute_team_member(user, team) do
+    refute Repo.get_by(Teams.Membership,
+             team_id: team.id,
+             user_id: user.id
+           )
   end
 
   def assert_team_attached(site, team_id \\ nil) do

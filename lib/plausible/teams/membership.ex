@@ -7,10 +7,12 @@ defmodule Plausible.Teams.Membership do
 
   import Ecto.Changeset
 
+  @roles [:guest, :viewer, :editor, :admin, :owner]
+
   @type t() :: %__MODULE__{}
 
   schema "team_memberships" do
-    field :role, Ecto.Enum, values: [:guest, :viewer, :editor, :admin, :owner]
+    field :role, Ecto.Enum, values: @roles
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :team, Plausible.Teams.Team
@@ -19,6 +21,8 @@ defmodule Plausible.Teams.Membership do
 
     timestamps()
   end
+
+  def roles(), do: @roles
 
   def changeset(team, user, role) do
     %__MODULE__{}

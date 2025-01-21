@@ -9,8 +9,6 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
   alias Plausible.Shields
   alias Plausible.Shield
 
-  import PlausibleWeb.ErrorHelpers
-
   def update(assigns, socket) do
     socket =
       socket
@@ -58,7 +56,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
             theme={:gray}
           >
             <p>
-              You've reached the maximum number of pages you can block (<%= Shields.maximum_page_rules() %>). Please remove one before adding another.
+              You've reached the maximum number of pages you can block ({Shields.maximum_page_rules()}). Please remove one before adding another.
             </p>
           </.notice>
 
@@ -79,7 +77,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                   class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
                   title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                 >
-                  <%= rule.page_path %>
+                  {rule.page_path}
                 </span>
               </.td>
               <.td hide_on_mobile>
@@ -132,7 +130,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                 creatable
               />
 
-              <%= error_tag(f, :page_path) %>
+              <.error :for={msg <- f[:page_path].errors}>{translate_error(msg)}</.error>
 
               <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 You can use a wildcard (<code>*</code>) to match multiple pages. For example,

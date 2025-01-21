@@ -162,7 +162,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => "user:#{user.id};team:#{team.id}",
+               "passthrough" => "ee:#{Plausible.ee?()};user:#{user.id};team:#{team.id}",
                "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -337,7 +337,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => "user:#{user.id};team:#{team.id}",
+               "passthrough" => "ee:#{Plausible.ee?()};user:#{user.id};team:#{team.id}",
                "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"

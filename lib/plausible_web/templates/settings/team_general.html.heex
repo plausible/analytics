@@ -1,0 +1,22 @@
+<.settings_tiles>
+  <.tile>
+    <:title>
+      <a id="update-name">Team Name</a>
+    </:title>
+    <:subtitle>
+      Change the name of your team
+    </:subtitle>
+    <.form
+      :let={f}
+      action={Routes.settings_path(@conn, :update_team_name)}
+      for={@team_name_changeset}
+      method="post"
+    >
+      <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
+
+      <.button type="submit">
+        Change Name
+      </.button>
+    </.form>
+  </.tile>
+</.settings_tiles>

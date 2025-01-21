@@ -61,14 +61,14 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
 
       - name: Notify team on failure
-        if: ${{ failure() }}
+        if: ${{ failure() && github.ref == 'refs/heads/master' }}
         uses: fjogeleit/http-request-action@v1
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
           data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-private-images.yml\">Build failed</a>"}'
-      
+
       - name: Notify team on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
         uses: fjogeleit/http-request-action@v1
@@ -78,7 +78,7 @@ jobs:
           customHeaders: '{"Content-Type": "application/json"}'
           escapeData: 'true'
           data: '{"content": "<h1>🚀 New changes are about to be deployed to production!</h1><br/><h3>👷 Author: ${{ github.actor }}</h3><br/><p>📝 Commit message: ${{ github.event.head_commit.message }}</p><br/>"}'
-      
+
       - name: Set Honeycomb marker on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
         uses: cnkk/honeymarker-action@1bd92aec746e38efe43a0faee94ced1ebb930712

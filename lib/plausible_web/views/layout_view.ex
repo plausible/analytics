@@ -48,7 +48,7 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def settings_tabs(conn) do
+  def site_settings_sidebar(conn) do
     [
       %{key: "General", value: "general", icon: :rocket_launch},
       %{key: "People", value: "people", icon: :users},
@@ -78,9 +78,9 @@ defmodule PlausibleWeb.LayoutView do
     |> Enum.reject(&is_nil/1)
   end
 
-  def flat_settings_options(conn) do
+  def flat_site_settings_options(conn) do
     conn
-    |> settings_tabs()
+    |> site_settings_sidebar()
     |> Enum.map(fn
       %{value: value, key: key} when is_binary(value) ->
         {key, value}
@@ -91,6 +91,27 @@ defmodule PlausibleWeb.LayoutView do
         end)
     end)
     |> List.flatten()
+  end
+
+  def account_settings_sidebar(conn) do
+    options = %{
+      "Account Settings" => [
+        %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
+        %{key: "Security", value: "security", icon: :lock_closed},
+        %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
+        %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
+        %{key: "API Keys", value: "api-keys", icon: :key},
+        %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
+      ]
+    }
+
+    if Plausible.Teams.enabled?(conn.assigns[:my_team]) do
+      Map.put(options, "Team Settings", [
+        %{key: "General", value: "team/general", icon: :adjustments_horizontal}
+      ])
+    else
+      options
+    end
   end
 
   def trial_notification(team) do
@@ -126,6 +147,16 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def is_current_tab(conn, tab) do
-    String.ends_with?(Enum.join(conn.path_info, "/"), tab)
+    full_path = Path.join(conn.path_info)
+
+    one_up =
+      conn.path_info
+      |> Enum.drop(-1)
+      |> Path.join()
+
+    case conn.method do
+      :get -> String.ends_with?(full_path, tab)
+      _ -> String.ends_with?(full_path, tab) or String.ends_with?(one_up, tab)
+    end
   end
 end

@@ -16,6 +16,10 @@ defmodule PlausibleWeb.Live.Sites do
     socket =
       socket
       |> assign(:uri, uri)
+      |> assign(
+        :team_invitations,
+        Plausible.Teams.Invitations.find_team_invitations(socket.assigns.current_user)
+      )
       |> assign(:filter_text, params["filter_text"] || "")
 
     {:ok, socket}
@@ -56,6 +60,8 @@ defmodule PlausibleWeb.Live.Sites do
           My Sites
         </h2>
       </div>
+
+      <PlausibleWeb.Team.Notice.team_invitations team_invitations={@team_invitations} />
 
       <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
         <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
@@ -100,7 +106,7 @@ defmodule PlausibleWeb.Live.Sites do
           page_number={@sites.page_number}
           total_pages={@sites.total_pages}
         >
-          Total of <span class="font-medium"><%= @sites.total_entries %></span> sites
+          Total of <span class="font-medium">{@sites.total_entries}</span> sites
         </.pagination>
         <.invitation_modal :if={Enum.any?(@sites.entries, &(&1.entry_type == "invitation"))} />
       </div>
@@ -145,9 +151,9 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :site, Plausible.Site, required: true
-  attr :invitation, :map, required: true
-  attr :hourly_stats, :map, required: true
+  attr(:site, Plausible.Site, required: true)
+  attr(:invitation, :map, required: true)
+  attr(:hourly_stats, :map, required: true)
 
   def invitation(assigns) do
     ~H"""
@@ -166,7 +172,7 @@ defmodule PlausibleWeb.Live.Sites do
           />
           <div class="flex-1 truncate -mt-px">
             <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100">
-              <%= @site.domain %>
+              {@site.domain}
             </h3>
           </div>
 
@@ -180,8 +186,8 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :site, Plausible.Site, required: true
-  attr :hourly_stats, :map, required: true
+  attr(:site, Plausible.Site, required: true)
+  attr(:hourly_stats, :map, required: true)
 
   def site(assigns) do
     ~H"""
@@ -212,7 +218,7 @@ defmodule PlausibleWeb.Live.Sites do
                 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
                 style="width: calc(100% - 4rem)"
               >
-                <%= @site.domain %>
+                {@site.domain}
               </h3>
             </div>
           </div>
@@ -220,7 +226,9 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </.unstyled_link>
 
-      <.ellipsis_menu site={@site} />
+      <div class="absolute right-0 top-2">
+        <.ellipsis_menu site={@site} />
+      </div>
     </li>
     """
   end
@@ -228,48 +236,49 @@ defmodule PlausibleWeb.Live.Sites do
   def ellipsis_menu(assigns) do
     ~H"""
     <.dropdown>
-      <:button class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400">
-        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 w-4 h-4" />
+      <:button class="size-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400">
+        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 size-4" />
       </:button>
-      <:panel class="absolute top-7 right-3 z-10 mt-2 w-40 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-        <div class="py-1 text-sm" role="none">
-          <.dropdown_link
-            :if={List.first(@site.memberships).role != :viewer}
-            href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
-          >
-            <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
-            <span>Settings</span>
-          </.dropdown_link>
+      <:menu class="!mt-0 mr-4 min-w-40">
+        <!-- adjust position because click area is much bigger than icon. Default positioning from click area looks weird -->
+        <.dropdown_item
+          :if={List.first(@site.memberships).role != :viewer}
+          href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
+          class="!flex items-center gap-x-2"
+        >
+          <Heroicons.cog_6_tooth class="size-4" />
+          <span>Settings</span>
+        </.dropdown_item>
 
-          <.dropdown_link
-            href="#"
-            x-on:click.prevent
-            phx-click={
-              JS.hide(
-                transition: {"duration-500", "opacity-100", "opacity-0"},
-                to: "#site-card-#{hash_domain(@site.domain)}",
-                time: 500
-              )
-              |> JS.push("pin-toggle")
-            }
-            phx-value-domain={@site.domain}
-          >
-            <.icon_pin
-              :if={@site.pinned_at}
-              class="pt-1 mr-3 h-5 w-5 text-red-400 stroke-red-500 dark:text-yellow-600 dark:stroke-yellow-700"
-            />
-            <span :if={@site.pinned_at}>Unpin Site</span>
+        <.dropdown_item
+          href="#"
+          x-on:click.prevent
+          phx-click={
+            JS.hide(
+              transition: {"duration-500", "opacity-100", "opacity-0"},
+              to: "#site-card-#{hash_domain(@site.domain)}",
+              time: 500
+            )
+            |> JS.push("pin-toggle")
+          }
+          phx-value-domain={@site.domain}
+          class="!flex items-center gap-x-2"
+        >
+          <.icon_pin
+            :if={@site.pinned_at}
+            class="size-4 text-red-400 stroke-red-500 dark:text-yellow-600 dark:stroke-yellow-700"
+          />
+          <span :if={@site.pinned_at}>Unpin Site</span>
 
-            <.icon_pin :if={!@site.pinned_at} class="pt-1 mr-3 h-5 w-5" />
-            <span :if={!@site.pinned_at}>Pin Site</span>
-          </.dropdown_link>
-        </div>
-      </:panel>
+          <.icon_pin :if={!@site.pinned_at} class="size-4" />
+          <span :if={!@site.pinned_at}>Pin Site</span>
+        </.dropdown_item>
+      </:menu>
     </.dropdown>
     """
   end
 
-  attr :rest, :global
+  attr(:rest, :global)
 
   def icon_pin(assigns) do
     ~H"""
@@ -286,7 +295,7 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :hourly_stats, :map, required: true
+  attr(:hourly_stats, :map, required: true)
 
   def site_stats(assigns) do
     ~H"""
@@ -305,7 +314,7 @@ defmodule PlausibleWeb.Live.Sites do
           <div class="flex justify-between items-center">
             <p>
               <span class="text-gray-800 dark:text-gray-200">
-                <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
+                <b>{PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors)}</b>
                 visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
               </span>
             </p>
@@ -318,7 +327,7 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :change, :integer, required: true
+  attr(:change, :integer, required: true)
 
   # Related React component: <ChangeArrow />
   def percentage_change(assigns) do
@@ -354,7 +363,7 @@ defmodule PlausibleWeb.Live.Sites do
         </path>
       </svg>
 
-      <%= abs(@change) %>%
+      {abs(@change)}%
     </p>
     """
   end
@@ -459,23 +468,18 @@ defmodule PlausibleWeb.Live.Sites do
             </.notice>
             <.notice
               x-show="selectedInvitation && selectedInvitation.exceeded_limits"
-              title="Exceeded limits"
+              title="Unable to accept site ownership"
               class="mt-4 shadow-sm dark:shadow-none"
             >
               <p>
-                You are unable to accept the ownership of this site because doing so would exceed the
-                <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>
-                of your subscription.
-                You can review your usage in the
+                Owning this site would exceed your <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>. Please check your usage in
                 <.styled_link
                   class="inline-block"
                   href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
                 >
                   account settings
-                </.styled_link>.
-              </p>
-              <p class="mt-3">
-                To become the owner of this site, you should either reduce your usage, or upgrade your subscription.
+                </.styled_link>
+                and upgrade your subscription to accept the site ownership.
               </p>
             </.notice>
             <.notice
@@ -519,8 +523,8 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :filter_text, :string, default: ""
-  attr :uri, URI, required: true
+  attr(:filter_text, :string, default: "")
+  attr(:uri, URI, required: true)
 
   def search_form(assigns) do
     ~H"""

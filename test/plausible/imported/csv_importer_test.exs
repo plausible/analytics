@@ -363,6 +363,71 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
+    test "imports scroll_depth as null when the column does not exist in pages CSV",
+         %{site: site, user: user} = ctx do
+      _ = ctx
+
+      pages_csv =
+        %{
+          name: "imported_pages_20211230_20220101.csv",
+          body: """
+          "date","visitors","pageviews","hostname","page"
+          "2021-12-30",1,1,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",1,1,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",6,6,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",1,1,"lucky.numbers.com","/9102354072466236765"
+          "2021-12-30",1,1,"lucky.numbers.com","/7478911940502018071"
+          "2021-12-30",1,1,"lucky.numbers.com","/6402607186523575652"
+          "2021-12-30",2,2,"lucky.numbers.com","/9962503789684934900"
+          "2021-12-30",8,10,"lucky.numbers.com","/13595620304963848161"
+          "2021-12-30",2,2,"lucky.numbers.com","/17019199732013993436"
+          "2021-12-30",32,33,"lucky.numbers.com","/9874837495456455794"
+          "2021-12-31",4,4,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-31",1,1,"lucky.numbers.com","/8738789417178304429"
+          "2021-12-31",1,1,"lucky.numbers.com","/7445073500314667742"
+          "2021-12-31",1,1,"lucky.numbers.com","/4897404798407749335"
+          "2021-12-31",1,2,"lucky.numbers.com","/11263893625781431659"
+          "2022-01-01",2,2,"lucky.numbers.com","/5878724061840196349"
+          """
+        }
+
+      uploads =
+        on_ee do
+          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, pages_csv.name)
+          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+          ExAws.request!(ExAws.S3.put_object(bucket, key, pages_csv.body))
+          %{"filename" => pages_csv.name, "s3_url" => s3_url}
+        else
+          local_path = Path.join(ctx.tmp_dir, pages_csv.name)
+          File.write!(local_path, pages_csv.body)
+          %{"filename" => pages_csv.name, "local_path" => local_path}
+        end
+        |> List.wrap()
+
+      date_range = CSVImporter.date_range(uploads)
+
+      {:ok, _job} =
+        CSVImporter.new_import(site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
+          uploads: uploads,
+          storage: on_ee(do: "s3", else: "local")
+        )
+
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
+
+      assert %SiteImport{
+               start_date: ~D[2021-12-30],
+               end_date: ~D[2022-01-01],
+               source: :csv,
+               status: :completed
+             } = Repo.get_by!(SiteImport, site_id: site.id)
+
+      q = from(i in "imported_pages", where: i.site_id == ^site.id, select: i.scroll_depth)
+
+      assert List.duplicate(nil, 16) == Plausible.IngestRepo.all(q)
+    end
+
     test "accepts cells without quotes", %{site: site, user: user} = ctx do
       _ = ctx
 
@@ -524,7 +589,8 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # export archive to s3
       on_ee do
-        assert {:ok, _job} = Plausible.Exports.schedule_s3_export(exported_site.id, user.email)
+        assert {:ok, _job} =
+                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
       else
         assert {:ok, %{args: %{"local_path" => local_path}}} =
                  Plausible.Exports.schedule_local_export(exported_site.id, user.email)
@@ -541,6 +607,9 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       assert email.html_body =~
                ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export">here</a>]
+
+      assert email.text_body =~
+               ~r[Please click here \(http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export\) to start the download process.]
 
       # download archive
       on_ee do
@@ -1012,6 +1081,152 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["events"] == imported["events"]
         assert exported["conversion_rate"] == imported["conversion_rate"]
       end)
+    end
+
+    @tag :tmp_dir
+    test "scroll_depth", %{conn: conn, user: user, tmp_dir: tmp_dir} do
+      exported_site = new_site(owner: user)
+      imported_site = new_site(owner: user)
+
+      t0 = ~N[2020-01-01 00:00:00]
+      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
+
+      stats =
+        [
+          build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
+          build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+          build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
+          build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+          build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
+          build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+          build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
+          build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+          build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
+          build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+          build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
+          build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100),
+          build(:pageview, user_id: 78, pathname: "/", timestamp: t0),
+          build(:pageleave, user_id: 78, pathname: "/", timestamp: t1, scroll_depth: 20),
+          build(:pageview, pathname: "/", timestamp: t1),
+          build(:pageview, pathname: "/blog", timestamp: NaiveDateTime.add(t0, 1, :day))
+        ]
+        |> Enum.map(fn event -> Map.put(event, :hostname, "csv.test") end)
+
+      populate_stats(exported_site, stats)
+
+      # export archive to s3
+      on_ee do
+        assert {:ok, _job} =
+                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
+      else
+        assert {:ok, %{args: %{"local_path" => local_path}}} =
+                 Plausible.Exports.schedule_local_export(exported_site.id, user.email)
+      end
+
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
+
+      # download archive
+      on_ee do
+        ExAws.request!(
+          ExAws.S3.download_file(
+            Plausible.S3.exports_bucket(),
+            to_string(exported_site.id),
+            Path.join(tmp_dir, "plausible-export.zip")
+          )
+        )
+      else
+        File.rename!(local_path, Path.join(tmp_dir, "plausible-export.zip"))
+      end
+
+      # unzip archive
+      {:ok, files} =
+        :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
+
+      # upload csvs
+      uploads =
+        Enum.map(files, fn file ->
+          on_ee do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(imported_site.id, file)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            content = File.read!(file)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, content))
+            %{"filename" => Path.basename(file), "s3_url" => s3_url}
+          else
+            %{
+              "filename" => Path.basename(file),
+              "local_path" => file
+            }
+          end
+        end)
+
+      # run importer
+      date_range = CSVImporter.date_range(uploads)
+
+      {:ok, _job} =
+        CSVImporter.new_import(imported_site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
+          uploads: uploads,
+          storage: on_ee(do: "s3", else: "local")
+        )
+
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
+
+      # validate import
+      assert %SiteImport{
+               start_date: ~D[2020-01-01],
+               end_date: ~D[2020-01-02],
+               source: :csv,
+               status: :completed
+             } = Repo.get_by!(SiteImport, site_id: imported_site.id)
+
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 9
+
+      # assert on the actual rows that got imported into the imported_pages table
+      imported_data =
+        from(i in "imported_pages",
+          where: i.site_id == ^imported_site.id,
+          select: %{
+            date: i.date,
+            page: i.page,
+            scroll_depth: i.scroll_depth,
+            pageleave_visitors: i.pageleave_visitors
+          }
+        )
+        |> Plausible.IngestRepo.all()
+
+      assert %{date: ~D[2020-01-01], page: "/", scroll_depth: 20, pageleave_visitors: 1} in imported_data
+
+      assert %{date: ~D[2020-01-01], page: "/another", scroll_depth: 50, pageleave_visitors: 2} in imported_data
+
+      assert %{date: ~D[2020-01-01], page: "/blog", scroll_depth: 180, pageleave_visitors: 3} in imported_data
+
+      assert %{date: ~D[2020-01-02], page: "/blog", scroll_depth: nil, pageleave_visitors: 0} in imported_data
+
+      # assert via stats queries that scroll_depth from imported
+      # data matches the scroll_depth from native data
+      expected_results = [
+        %{"dimensions" => ["/"], "metrics" => [20]},
+        %{"dimensions" => ["/another"], "metrics" => [25]},
+        %{"dimensions" => ["/blog"], "metrics" => [60]}
+      ]
+
+      query_scroll_depth_per_page = fn conn, site ->
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["scroll_depth"],
+          "date_range" => "all",
+          "order_by" => [["scroll_depth", "asc"]],
+          "include" => %{"imports" => true},
+          "dimensions" => ["event:page"]
+        })
+        |> json_response(200)
+        |> Map.fetch!("results")
+      end
+
+      assert query_scroll_depth_per_page.(conn, exported_site) == expected_results
+      assert query_scroll_depth_per_page.(conn, imported_site) == expected_results
     end
   end
 

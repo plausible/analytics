@@ -477,7 +477,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       # for a free_10k subscription (without a `last_bill_date`)
       Repo.delete!(subscription)
 
-      Plausible.Billing.Subscription.free(%{team_id: team_of(user).id})
+      user
+      |> team_of()
+      |> Plausible.Billing.Subscription.free()
       |> Repo.insert!()
 
       conn
@@ -533,7 +535,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "does not show invoice section for a free subscription", %{conn: conn, user: user} do
       new_site(owner: user)
 
-      Plausible.Billing.Subscription.free(%{team_id: team_of(user).id, currency_code: "EUR"})
+      user
+      |> team_of()
+      |> Plausible.Billing.Subscription.free(%{currency_code: "EUR"})
       |> Repo.insert!()
 
       html =
@@ -826,7 +830,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "fails to update with no input", %{conn: conn} do
       conn =
         post(conn, Routes.settings_path(conn, :update_password), %{
-          "user" => %{}
+          "user" => %{
+            "password" => "",
+            "old_password" => "",
+            "password_confirmation" => ""
+          }
         })
 
       assert html = html_response(conn, 200)
@@ -889,7 +897,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "renders form with error on no fields filled", %{conn: conn} do
-      conn = post(conn, Routes.settings_path(conn, :update_email), %{"user" => %{}})
+      conn = post(conn, Routes.settings_path(conn, :update_email), %{"user" => %{"email" => ""}})
 
       assert text(html_response(conn, 200)) =~ "can't be blank"
     end
@@ -1096,6 +1104,58 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = delete(conn, Routes.settings_path(conn, :delete_api_key, api_key.id))
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find API Key to delete"
       assert Repo.get(ApiKey, api_key.id)
+    end
+  end
+
+  describe "Team Settings" do
+    setup [:create_user, :log_in]
+
+    test "does not render team settings, when no team assigned", %{conn: conn} do
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      refute html =~ "Team Settings"
+    end
+
+    test "renders team settings, when team assigned", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      assert html =~ "Team Settings"
+      assert html =~ team.name
+    end
+
+    test "GET /settings/team/general", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      conn = get(conn, Routes.settings_path(conn, :team_general))
+      html = html_response(conn, 200)
+      assert html =~ "Team Name"
+      assert html =~ "Change the name of your team"
+      assert text_of_attr(html, "input#team_name", "value") == team.name
+    end
+
+    test "POST /settings/team/general/name", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :update_team_name), %{
+          "team" => %{"name" => "New Name"}
+        })
+
+      assert redirected_to(conn, 302) ==
+               Routes.settings_path(conn, :team_general) <> "#update-name"
+
+      assert Repo.reload!(team).name == "New Name"
+    end
+
+    test "POST /settings/team/general/name - changeset error", %{conn: conn, user: user} do
+      {:ok, _team} = Plausible.Teams.get_or_create(user)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :update_team_name), %{
+          "team" => %{"name" => ""}
+        })
+
+      assert text(html_response(conn, 200)) =~ "can't be blank"
     end
   end
 

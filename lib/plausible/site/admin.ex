@@ -34,7 +34,8 @@ defmodule Plausible.SiteAdmin do
     from(r in query,
       as: :site,
       inner_join: o in assoc(r, :owner),
-      preload: [owner: o, team: [team_memberships: :user]],
+      inner_join: t in assoc(r, :team),
+      preload: [owner: o, team: t, guest_memberships: [team_membership: :user]],
       or_where: ilike(r.domain, ^search_term),
       or_where: ilike(o.email, ^search_term),
       or_where: ilike(o.name, ^search_term),
@@ -193,8 +194,8 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp get_other_members(site) do
-    site.team.team_memberships
-    |> Enum.map(fn m -> m.user.email <> "(#{to_string(m.role)})" end)
+    site.guest_memberships
+    |> Enum.map(fn m -> m.team_membership.user.email <> "(#{member_role(m.role)})" end)
     |> Enum.join(", ")
   end
 
@@ -208,4 +209,7 @@ defmodule Plausible.SiteAdmin do
 
   def create_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
   def update_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
+
+  defp member_role(:editor), do: :admin
+  defp member_role(other), do: other
 end

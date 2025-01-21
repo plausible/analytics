@@ -3,6 +3,12 @@ defmodule Plausible.Teams.Team do
   Team schema
   """
 
+  defimpl FunWithFlags.Actor, for: __MODULE__ do
+    def id(%{id: id}) do
+      "team:#{id}"
+    end
+  end
+
   use Ecto.Schema
   use Plausible
 
@@ -14,10 +20,14 @@ defmodule Plausible.Teams.Team do
   @subscription_accept_traffic_until_offset_days 30
 
   schema "teams" do
+    field :identifier, Ecto.UUID
     field :name, :string
     field :trial_expiry_date, :date
     field :accept_traffic_until, :date
     field :allow_next_upgrade_override, :boolean, default: false
+
+    field :setup_complete, :boolean, default: false
+    field :setup_at, :naive_datetime
 
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
@@ -44,6 +54,23 @@ defmodule Plausible.Teams.Team do
     |> validate_required(:name)
     |> start_trial(today)
     |> maybe_bump_accept_traffic_until()
+    |> maybe_set_identifier()
+  end
+
+  def name_changeset(team, attrs \\ %{}) do
+    team
+    |> cast(attrs, [:name])
+    |> validate_required(:name)
+  end
+
+  def setup_changeset(team) do
+    now = NaiveDateTime.utc_now(:second)
+
+    team
+    |> change(
+      setup_complete: true,
+      setup_at: now
+    )
   end
 
   def start_trial(team, today \\ Date.utc_today()) do
@@ -57,6 +84,14 @@ defmodule Plausible.Teams.Team do
 
   def end_trial(team) do
     change(team, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
+  end
+
+  defp maybe_set_identifier(changeset) do
+    if get_field(changeset, :identifier) do
+      changeset
+    else
+      put_change(changeset, :identifier, Ecto.UUID.generate())
+    end
   end
 
   defp maybe_bump_accept_traffic_until(changeset) do

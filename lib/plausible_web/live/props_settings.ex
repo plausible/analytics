@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
     <section id="props-settings-main">
       <.flash_messages flash={@flash} />
       <%= if @add_prop? do %>
-        <%= live_render(
+        {live_render(
           @socket,
           PlausibleWeb.Live.PropsSettings.Form,
           id: "props-form",
@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
             "site_id" => @site_id,
             "rendered_by" => self()
           }
-        ) %>
+        )}
       <% end %>
 
       <.live_component

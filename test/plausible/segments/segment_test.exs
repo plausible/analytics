@@ -1,8 +1,9 @@
-defmodule Plausible.SegmentSchemaTest do
+defmodule Plausible.Segments.SegmentTest do
   use ExUnit.Case
+  doctest Plausible.Segments.Segment, import: true
 
   setup do
-    segment = %Plausible.Segment{
+    segment = %Plausible.Segments.Segment{
       name: "any name",
       type: :personal,
       segment_data: %{"filters" => ["is", "visit:page", ["/blog"]]},
@@ -14,7 +15,7 @@ defmodule Plausible.SegmentSchemaTest do
   end
 
   test "changeset has required fields" do
-    assert Plausible.Segment.changeset(%Plausible.Segment{}, %{}).errors == [
+    assert Plausible.Segments.Segment.changeset(%Plausible.Segments.Segment{}, %{}).errors == [
              segment_data: {"property \"filters\" must be an array with at least one member", []},
              name: {"can't be blank", [validation: :required]},
              segment_data: {"can't be blank", [validation: :required]},
@@ -26,7 +27,7 @@ defmodule Plausible.SegmentSchemaTest do
 
   test "changeset does not allow setting owner_id to nil (setting to nil happens with database triggers)",
        %{segment: valid_segment} do
-    assert Plausible.Segment.changeset(
+    assert Plausible.Segments.Segment.changeset(
              valid_segment,
              %{
                owner_id: nil
@@ -36,10 +37,37 @@ defmodule Plausible.SegmentSchemaTest do
            ]
   end
 
+  test "changeset forbids too long name", %{segment: valid_segment} do
+    assert Plausible.Segments.Segment.changeset(
+             valid_segment,
+             %{
+               name: String.duplicate("a", 256)
+             }
+           ).errors == [
+             name:
+               {"should be at most %{count} byte(s)",
+                [{:count, 255}, {:validation, :length}, {:kind, :max}, {:type, :binary}]}
+           ]
+  end
+
+  test "changeset forbids too large segment_data", %{segment: valid_segment} do
+    assert Plausible.Segments.Segment.changeset(
+             valid_segment,
+             %{
+               segment_data:
+                 Jason.decode!(
+                   ~s({"filters": ["is", "visit:exit_page", [#{Enum.map_join(1..(5 * 1024), ",", fn i -> "#{i}" end)}]]})
+                 )
+             }
+           ).errors == [
+             segment_data: {"should be at most %{count} byte(s)", [{:count, 5120}]}
+           ]
+  end
+
   test "changeset allows setting nil owner_id to a user id (to be able to recover dangling site segments)",
        %{segment: valid_segment} do
-    assert Plausible.Segment.changeset(
-             %Plausible.Segment{
+    assert Plausible.Segments.Segment.changeset(
+             %Plausible.Segments.Segment{
                valid_segment
                | owner_id: nil
              },
@@ -50,7 +78,7 @@ defmodule Plausible.SegmentSchemaTest do
   end
 
   test "changeset requires segment_data to be structured as expected", %{segment: valid_segment} do
-    assert Plausible.Segment.changeset(
+    assert Plausible.Segments.Segment.changeset(
              valid_segment,
              %{
                segment_data: %{"filters" => 1, "labels" => true, "other" => []}
@@ -65,7 +93,7 @@ defmodule Plausible.SegmentSchemaTest do
   end
 
   test "changeset forbids empty filters list", %{segment: valid_segment} do
-    assert Plausible.Segment.changeset(
+    assert Plausible.Segments.Segment.changeset(
              valid_segment,
              %{
                segment_data: %{
@@ -79,7 +107,7 @@ defmodule Plausible.SegmentSchemaTest do
   end
 
   test "changeset permits well-structured segment data", %{segment: valid_segment} do
-    assert Plausible.Segment.changeset(
+    assert Plausible.Segments.Segment.changeset(
              valid_segment,
              %{
                segment_data: %{

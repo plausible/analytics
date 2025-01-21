@@ -79,7 +79,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
 }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const [meta, setMeta] = useState<BreakdownResultMeta | undefined>(undefined)
+  const [meta, setMeta] = useState<BreakdownResultMeta | null>(null)
 
   const [search, setSearch] = useState('')
   const defaultOrderBy = getStoredOrderBy({

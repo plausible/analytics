@@ -9,9 +9,21 @@ defmodule Plausible.Teams.Invitations do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  def get_team_invitation(team, invitation_id) do
+    invitation = Repo.get_by(Teams.Invitation, team_id: team.id, invitation_id: invitation_id)
+
+    if invitation do
+      {:ok, invitation}
+    else
+      {:error, :invitation_not_found}
+    end
+  end
+
   def find_for_user(invitation_or_transfer_id, user) do
     with {:error, :invitation_not_found} <-
-           find_invitation_for_user(invitation_or_transfer_id, user) do
+           find_team_invitation_for_user(invitation_or_transfer_id, user),
+         {:error, :invitation_not_found} <-
+           find_guest_invitation_for_user(invitation_or_transfer_id, user) do
       find_transfer_for_user(invitation_or_transfer_id, user)
     end
   end
@@ -23,7 +35,37 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  defp find_invitation_for_user(guest_invitation_id, user) do
+  def find_team_invitations(user) do
+    Repo.all(
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        inner_join: team in assoc(ti, :team),
+        where: ti.email == ^user.email,
+        where: ti.role != :guest,
+        preload: [inviter: inviter, team: team]
+    )
+  end
+
+  defp find_team_invitation_for_user(team_invitation_id, user) do
+    invitation_query =
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        inner_join: team in assoc(ti, :team),
+        where: ti.invitation_id == ^team_invitation_id,
+        where: ti.email == ^user.email,
+        where: ti.role != :guest,
+        preload: [inviter: inviter, team: team]
+
+    case Repo.one(invitation_query) do
+      nil ->
+        {:error, :invitation_not_found}
+
+      invitation ->
+        {:ok, invitation}
+    end
+  end
+
+  defp find_guest_invitation_for_user(guest_invitation_id, user) do
     invitation_query =
       from gi in Teams.GuestInvitation,
         inner_join: s in assoc(gi, :site),
@@ -87,7 +129,11 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def invite(site, invitee_email, role, inviter) do
+  def invite(%Teams.Team{} = team, invitee_email, role, inviter) do
+    create_team_invitation(team, invitee_email, inviter, role: role)
+  end
+
+  def invite(%Plausible.Site{} = site, invitee_email, role, inviter) do
     site = Teams.load_for_site(site)
 
     if role == :owner do
@@ -104,6 +150,15 @@ defmodule Plausible.Teams.Invitations do
         inviter
       )
     end
+  end
+
+  def remove_team_invitation(team_invitation) do
+    Repo.delete_all(
+      from ti in Teams.Invitation,
+        where: ti.id == ^team_invitation.id
+    )
+
+    :ok
   end
 
   def remove_guest_invitation(guest_invitation) do
@@ -158,11 +213,14 @@ defmodule Plausible.Teams.Invitations do
 
     now = NaiveDateTime.utc_now(:second)
 
-    with {:ok, team_membership} <-
-           do_accept(team_invitation, user, now, guest_invitations: [guest_invitation]) do
-      prune_guest_invitations(team_invitation.team)
-      {:ok, team_membership}
-    end
+    do_accept(team_invitation, user, now, guest_invitations: [guest_invitation])
+  end
+
+  def accept_team_invitation(team_invitation, user) do
+    team_invitation = Repo.preload(team_invitation, [:team, :inviter])
+    now = NaiveDateTime.utc_now(:second)
+
+    do_accept(team_invitation, user, now, guest_invitations: [])
   end
 
   @doc false
@@ -228,17 +286,40 @@ defmodule Plausible.Teams.Invitations do
         # Clean up guest invitations after accepting
         guest_invitation_ids = Enum.map(guest_invitations, & &1.id)
         Repo.delete_all(from gi in Teams.GuestInvitation, where: gi.id in ^guest_invitation_ids)
+
+        if team_membership.role != :guest do
+          Repo.delete_all(from ti in Teams.Invitation, where: ti.id == ^team_invitation.id)
+        end
+
         prune_guest_invitations(team_invitation.team)
+
+        # Prune guest memberships if any exist when team membership role
+        # is other than guest
+        maybe_prune_guest_memberships(team_membership)
 
         if send_email? do
           send_invitation_accepted_email(team_invitation, guest_invitations)
         end
 
-        %{team_membership: team_membership, guest_memberships: guest_memberships}
+        %{
+          team: team_invitation.team,
+          team_membership: team_membership,
+          guest_memberships: guest_memberships
+        }
       else
         {:error, changeset} -> Repo.rollback(changeset)
       end
     end)
+  end
+
+  defp maybe_prune_guest_memberships(%Teams.Membership{role: :guest}), do: :ok
+
+  defp maybe_prune_guest_memberships(%Teams.Membership{} = team_membership) do
+    team_membership
+    |> Ecto.assoc(:guest_memberships)
+    |> Repo.delete_all()
+
+    :ok
   end
 
   defp transfer_site_ownership(site, team, now) do
@@ -376,7 +457,27 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def check_invitation_permissions(site, inviter, invitation_role, opts) do
+  def check_invitation_permissions(%Teams.Team{} = team, inviter, invitation_role, opts) do
+    check_permissions? = Keyword.get(opts, :check_permissions, true)
+
+    if check_permissions? do
+      case Teams.Memberships.team_role(team, inviter) do
+        {:ok, :owner} when invitation_role == :owner ->
+          :ok
+
+        {:ok, inviter_role}
+        when inviter_role in [:owner, :admin] and invitation_role != :owner ->
+          :ok
+
+        _ ->
+          {:error, :forbidden}
+      end
+    else
+      :ok
+    end
+  end
+
+  def check_invitation_permissions(%Plausible.Site{} = site, inviter, invitation_role, opts) do
     check_permissions? = Keyword.get(opts, :check_permissions, true)
 
     if check_permissions? do
@@ -411,11 +512,19 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def ensure_new_membership(_site, nil, _role), do: :ok
+  def ensure_new_membership(_site_or_team, nil, _role), do: :ok
 
-  def ensure_new_membership(_site, _invitee, :owner), do: :ok
+  def ensure_new_membership(_site_or_team, _invitee, :owner), do: :ok
 
-  def ensure_new_membership(site, invitee, _role) do
+  def ensure_new_membership(%Teams.Team{} = team, invitee, _role) do
+    case Teams.Memberships.team_role(team, invitee) do
+      {:ok, :guest} -> :ok
+      {:error, :not_a_member} -> :ok
+      {:ok, _} -> {:error, :already_a_member}
+    end
+  end
+
+  def ensure_new_membership(%Plausible.Site{} = site, invitee, _role) do
     if Teams.Memberships.site_role(site, invitee) == {:error, :not_a_member} do
       :ok
     else
@@ -439,12 +548,13 @@ defmodule Plausible.Teams.Invitations do
 
   defp create_team_invitation(team, invitee_email, inviter, opts \\ []) do
     now = NaiveDateTime.utc_now(:second)
+    role = Keyword.get(opts, :role, :guest)
 
     result =
       Ecto.Multi.new()
       |> Ecto.Multi.put(
         :changeset,
-        Teams.Invitation.changeset(team, email: invitee_email, role: :guest, inviter: inviter)
+        Teams.Invitation.changeset(team, email: invitee_email, role: role, inviter: inviter)
       )
       |> Ecto.Multi.run(:ensure_no_site_transfers, fn _repo, %{changeset: changeset} ->
         ensure_no_site_transfers(changeset, opts[:ensure_no_site_transfers_for], invitee_email)
@@ -452,10 +562,19 @@ defmodule Plausible.Teams.Invitations do
       |> Ecto.Multi.insert(
         :team_invitation,
         & &1.changeset,
-        on_conflict: [set: [updated_at: now]],
+        on_conflict: [set: [updated_at: now, role: role]],
         conflict_target: [:team_id, :email],
         returning: true
       )
+      |> Ecto.Multi.run(:prune_guest_entries, fn _repo, %{team_invitation: team_invitation} ->
+        if team_invitation.role != :guest do
+          team_invitation
+          |> Ecto.assoc(:guest_invitations)
+          |> Repo.delete_all()
+        end
+
+        {:ok, nil}
+      end)
       |> Repo.transaction()
 
     case result do
@@ -493,6 +612,26 @@ defmodule Plausible.Teams.Invitations do
     Plausible.Mailer.send(email)
   end
 
+  def send_invitation_email(%Teams.Invitation{} = team_invitation, invitee) do
+    email =
+      if invitee do
+        PlausibleWeb.Email.existing_user_team_invitation(
+          team_invitation.email,
+          team_invitation.team,
+          team_invitation.inviter
+        )
+      else
+        PlausibleWeb.Email.new_user_team_invitation(
+          team_invitation.email,
+          team_invitation.invitation_id,
+          team_invitation.team,
+          team_invitation.inviter
+        )
+      end
+
+    Plausible.Mailer.send(email)
+  end
+
   def send_invitation_email(%Teams.GuestInvitation{} = guest_invitation, invitee) do
     team_invitation = guest_invitation.team_invitation
 
@@ -515,11 +654,29 @@ defmodule Plausible.Teams.Invitations do
     Plausible.Mailer.send(email)
   end
 
+  @team_role_type Plausible.Teams.Membership.__schema__(:type, :role)
+
   defp create_team_membership(team, role, user, now) do
+    conflict_query =
+      from(tm in Teams.Membership,
+        update: [
+          set: [
+            updated_at: ^now,
+            role:
+              fragment(
+                "CASE WHEN ? = 'guest' THEN ? ELSE ? END",
+                tm.role,
+                type(^role, ^@team_role_type),
+                tm.role
+              )
+          ]
+        ]
+      )
+
     team
     |> Teams.Membership.changeset(user, role)
     |> Repo.insert(
-      on_conflict: [set: [updated_at: now]],
+      on_conflict: conflict_query,
       conflict_target: [:team_id, :user_id],
       returning: true
     )
@@ -551,14 +708,15 @@ defmodule Plausible.Teams.Invitations do
     end)
   end
 
-  defp send_invitation_accepted_email(_team_invitation, []) do
-    # NOOP for now
-    :ok
+  defp send_invitation_accepted_email(team_invitation, []) do
+    team_invitation.inviter.email
+    |> PlausibleWeb.Email.team_invitation_accepted(team_invitation.email, team_invitation.team)
+    |> Plausible.Mailer.send()
   end
 
   defp send_invitation_accepted_email(team_invitation, [guest_invitation | _]) do
     team_invitation.inviter.email
-    |> PlausibleWeb.Email.invitation_accepted(team_invitation.email, guest_invitation.site)
+    |> PlausibleWeb.Email.guest_invitation_accepted(team_invitation.email, guest_invitation.site)
     |> Plausible.Mailer.send()
   end
 

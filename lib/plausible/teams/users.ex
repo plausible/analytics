@@ -8,6 +8,19 @@ defmodule Plausible.Teams.Users do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  def team_member?(user, opts \\ []) do
+    excluded_team_ids = Keyword.get(opts, :except, [])
+
+    Repo.exists?(
+      from(
+        tm in Teams.Membership,
+        where: tm.user_id == ^user.id,
+        where: tm.role != :guest,
+        where: tm.team_id not in ^excluded_team_ids
+      )
+    )
+  end
+
   def has_sites?(user, opts \\ []) do
     include_pending? = Keyword.get(opts, :include_pending?, false)
 

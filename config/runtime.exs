@@ -29,6 +29,10 @@ log_level =
 config :logger, level: log_level
 config :logger, :default_formatter, metadata: [:request_id]
 
+config :logger, Sentry.LoggerBackend,
+  capture_log_messages: true,
+  level: :error
+
 case String.downcase(log_format) do
   "standard" ->
     config :logger, :default_formatter, format: "$time $metadata[$level] $message\n"
@@ -965,3 +969,5 @@ unless s3_disabled? do
     exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET"),
     imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end
+
+config :phoenix_storybook, enabled: env !== "prod"

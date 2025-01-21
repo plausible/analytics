@@ -15,7 +15,7 @@ defmodule Plausible.IngestRepo.Migrations.AddScrollDepthToImportedPages do
     execute """
     ALTER TABLE imported_pages
     #{@on_cluster}
-    DROP COLUMN scroll_depth
+    DROP COLUMN IF EXISTS scroll_depth
     """
   end
 end

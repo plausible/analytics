@@ -37,7 +37,7 @@ export default function MetricValue(props: {
   metric: Metric
   renderLabel: (query: DashboardQuery) => string
   formatter?: (value: ValueType) => string
-  meta: BreakdownResultMeta
+  meta: BreakdownResultMeta | null
 }) {
   const { query } = useQueryContext()
 
@@ -92,7 +92,7 @@ function ComparisonTooltipContent({
   metric: Metric
   metricLabel: string
   formatter?: (value: ValueType) => string
-  meta: BreakdownResultMeta
+  meta: BreakdownResultMeta | null
 }) {
   const longFormatter = formatter ?? MetricFormatterLong[metric]
 
@@ -104,7 +104,7 @@ function ComparisonTooltipContent({
     return ` ${metricLabel.toLowerCase()}`
   }, [metricLabel])
 
-  if (comparison) {
+  if (comparison && meta) {
     return (
       <div className="text-left whitespace-nowrap py-1 space-y-2">
         <div>

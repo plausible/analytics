@@ -12,6 +12,19 @@ defmodule Plausible.Teams do
 
   @accept_traffic_until_free ~D[2135-01-01]
 
+  def enabled?(team) do
+    not is_nil(team) and FunWithFlags.enabled?(:teams, for: team)
+  end
+
+  @spec get!(pos_integer() | binary()) :: Teams.Team.t()
+  def get!(team_id) when is_integer(team_id) do
+    Repo.get!(Teams.Team, team_id)
+  end
+
+  def get!(team_identifier) when is_binary(team_identifier) do
+    Repo.get_by!(Teams.Team, identifier: team_identifier)
+  end
+
   @spec get_owner(Teams.Team.t()) ::
           {:ok, Plausible.Auth.User.t()} | {:error, :no_owner | :multiple_owners}
   def get_owner(team) do
@@ -59,10 +72,11 @@ defmodule Plausible.Teams do
 
   def owned_sites_ids(team) do
     Repo.all(
-      from s in Plausible.Site,
+      from(s in Plausible.Site,
         where: s.team_id == ^team.id,
         select: s.id,
         order_by: [desc: s.id]
+      )
     )
   end
 
@@ -72,9 +86,10 @@ defmodule Plausible.Teams do
 
   def owned_sites_locked?(team) do
     Repo.exists?(
-      from s in Plausible.Site,
+      from(s in Plausible.Site,
         where: s.team_id == ^team.id,
         where: s.locked == true
+      )
     )
   end
 
@@ -250,6 +265,39 @@ defmodule Plausible.Teams do
       order_by: [desc: subscription.inserted_at, desc: subscription.id],
       limit: 1
     )
+  end
+
+  def setup_team(team, candidates) do
+    inviter = Repo.preload(team, :owner).owner
+
+    setup_team_fn = fn {{email, _name}, role} ->
+      case Teams.Invitations.InviteToTeam.invite(team, inviter, email, role, send_email?: false) do
+        {:ok, invitation} -> invitation
+        {:error, error} -> Repo.rollback(error)
+      end
+    end
+
+    result =
+      Repo.transaction(fn ->
+        team
+        |> Teams.Team.setup_changeset()
+        |> Repo.update!()
+
+        Enum.map(candidates, setup_team_fn)
+      end)
+
+    case result do
+      {:ok, invitations} ->
+        Enum.each(invitations, fn invitation ->
+          invitee = Plausible.Auth.find_user_by(email: invitation.email)
+          Teams.Invitations.InviteToTeam.send_invitation_email(invitation, invitee)
+        end)
+
+        {:ok, invitations}
+
+      {:error, {:over_limit, _}} = error ->
+        error
+    end
   end
 
   defp create_my_team(user) do
