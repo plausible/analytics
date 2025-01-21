@@ -61,6 +61,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
+         :ok <- validate_behavioral_filters(query),
          :ok <- validate_filtered_goals_exist(query),
          :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
@@ -110,15 +111,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["matches_wildcard_not" | _rest]), do: {:ok, :matches_wildcard_not}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
   defp parse_operator(["contains_not" | _rest]), do: {:ok, :contains_not}
-  defp parse_operator(["not" | _rest]), do: {:ok, :not}
   defp parse_operator(["and" | _rest]), do: {:ok, :and}
   defp parse_operator(["or" | _rest]), do: {:ok, :or}
+  defp parse_operator(["not" | _rest]), do: {:ok, :not}
+  defp parse_operator(["has_done" | _rest]), do: {:ok, :has_done}
+  defp parse_operator(["has_not_done" | _rest]), do: {:ok, :has_not_done}
   defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{i(filter)}'."}
-
-  def parse_filter_second(:not, [_, filter | _rest]), do: parse_filter(filter)
 
   def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
     do: parse_filters(filters)
+
+  def parse_filter_second(operator, [_, filter | _rest])
+      when operator in [:not, :has_done, :has_not_done],
+      do: parse_filter(filter)
 
   def parse_filter_second(_operator, filter), do: parse_filter_key(filter)
 
@@ -146,7 +151,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_filter_rest(operator, _filter)
-       when operator in [:not, :and, :or],
+       when operator in [:not, :and, :or, :has_done, :has_not_done],
        do: {:ok, []}
 
   defp parse_clauses_list([operator, filter_key, list | _rest] = filter) when is_list(list) do
@@ -434,20 +439,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   def preload_goals_and_revenue(site, metrics, filters, dimensions) do
-    goal_filters? =
-      Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
+    preloaded_goals =
+      Plausible.Goals.Filters.preload_needed_goals(site, dimensions, filters)
 
-    goals =
-      if goal_filters? or Enum.member?(dimensions, "event:goal") do
-        Plausible.Goals.Filters.preload_needed_goals(site, filters)
-      else
-        []
-      end
-
-    {revenue_warning, revenue_currencies} = preload_revenue(site, goals, metrics, dimensions)
+    {revenue_warning, revenue_currencies} =
+      preload_revenue(site, preloaded_goals, metrics, dimensions)
 
     {
-      goals,
+      preloaded_goals,
       revenue_warning,
       revenue_currencies
     }
@@ -455,9 +454,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   @only_toplevel ["event:goal", "event:hostname"]
   defp validate_toplevel_only_filter_dimension(query) do
-    not_toplevel = Filters.dimensions_used_in_filters(query.filters, min_depth: 1)
+    not_toplevel =
+      query.filters
+      |> Filters.dimensions_used_in_filters(min_depth: 1, behavioral_filters: :ignore)
+      |> Enum.filter(&(&1 in @only_toplevel))
 
-    if Enum.any?(not_toplevel, &(&1 in @only_toplevel)) do
+    if Enum.count(not_toplevel) > 0 do
       {:error,
        "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."}
     else
@@ -482,16 +484,53 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_behavioral_filters(query) do
+    query.filters
+    |> Filters.traverse(0, fn behavioral_depth, operator ->
+      if operator in [:has_done, :has_not_done] do
+        behavioral_depth + 1
+      else
+        behavioral_depth
+      end
+    end)
+    |> Enum.reduce_while(:ok, fn {[_operator, dimension | _rest], behavioral_depth}, :ok ->
+      cond do
+        behavioral_depth == 0 ->
+          # ignore non-behavioral filters
+          {:cont, :ok}
+
+        behavioral_depth > 1 ->
+          {:halt,
+           {:error,
+            "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."}}
+
+        not String.starts_with?(dimension, "event:") ->
+          {:halt,
+           {:error,
+            "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."}}
+
+        true ->
+          {:cont, :ok}
+      end
+    end)
+  end
+
   defp validate_filtered_goals_exist(query) do
-    # Note: Only works since event:goal is allowed as a top level filter
+    # Note: We don't check :contains goal filters since it's acceptable if they match nothing.
     goal_filter_clauses =
-      Enum.flat_map(query.filters, fn
+      query.filters
+      |> Filters.all_leaf_filters()
+      |> Enum.flat_map(fn
         [:is, "event:goal", clauses] -> clauses
         _ -> []
       end)
 
     if length(goal_filter_clauses) > 0 do
-      validate_list(goal_filter_clauses, &validate_goal_filter(&1, query.preloaded_goals))
+      configured_goal_names =
+        query.preloaded_goals.all
+        |> Enum.map(&Plausible.Goal.display_name/1)
+
+      validate_list(goal_filter_clauses, &validate_goal_filter(&1, configured_goal_names))
     else
       :ok
     end
@@ -517,10 +556,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     defp validate_revenue_metrics_access(_site, _query), do: :ok
   end
 
-  defp validate_goal_filter(clause, configured_goals) do
-    configured_goal_names =
-      Enum.map(configured_goals, fn goal -> Plausible.Goal.display_name(goal) end)
-
+  defp validate_goal_filter(clause, configured_goal_names) do
     if Enum.member?(configured_goal_names, clause) do
       :ok
     else
@@ -562,7 +598,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(metric, query) when metric in [:conversion_rate, :group_conversion_rate] do
     if Enum.member?(query.dimensions, "event:goal") or
-         Filters.filtering_on_dimension?(query, "event:goal") do
+         Filters.filtering_on_dimension?(query, "event:goal", behavioral_filters: :ignore) do
       :ok
     else
       {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions."}
@@ -582,7 +618,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
-      Filters.filtering_on_dimension?(query, "event:page") ->
+      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
       length(query.dimensions) > 0 ->

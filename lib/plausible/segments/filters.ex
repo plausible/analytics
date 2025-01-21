@@ -22,7 +22,7 @@ defmodule Plausible.Segments.Filters do
       filters
       |> Filters.traverse()
       |> Enum.flat_map(fn
-        {[_operation, "segment", clauses], _depth} -> clauses
+        {[_operation, "segment", clauses], _} -> clauses
         _ -> []
       end)
 

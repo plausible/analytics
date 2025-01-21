@@ -3,6 +3,7 @@ defmodule Plausible.Stats.Filters do
   A module for parsing filters used in stat queries.
   """
 
+  alias Plausible.Stats.Query
   alias Plausible.Stats.Filters.QueryParser
   alias Plausible.Stats.Filters.StatsAPIFilterParser
 
@@ -89,15 +90,45 @@ defmodule Plausible.Stats.Filters do
 
   def dimensions_used_in_filters(filters, opts \\ []) do
     min_depth = Keyword.get(opts, :min_depth, 0)
+    max_depth = Keyword.get(opts, :max_depth, 999)
+    # :ignore or :only
+    behavioral_filter_option = Keyword.get(opts, :behavioral_filters, nil)
 
     filters
-    |> traverse()
-    |> Enum.filter(fn {_filter, depth} -> depth >= min_depth end)
+    |> traverse(
+      {0, false},
+      fn {depth, is_behavioral_filter}, operator ->
+        {depth + 1, is_behavioral_filter or operator in [:has_done, :has_not_done]}
+      end
+    )
+    |> Enum.filter(fn {_filter, {depth, is_behavioral_filter}} ->
+      matches_behavioral_filter_option? =
+        case behavioral_filter_option do
+          :ignore -> not is_behavioral_filter
+          :only -> is_behavioral_filter
+          _ -> true
+        end
+
+      depth >= min_depth and depth <= max_depth and matches_behavioral_filter_option?
+    end)
     |> Enum.map(fn {[_operator, dimension | _rest], _depth} -> dimension end)
   end
 
-  def filtering_on_dimension?(query, dimension) do
-    dimension in dimensions_used_in_filters(query.filters)
+  def filtering_on_dimension?(query, dimension, opts \\ []) do
+    filters =
+      case query do
+        %Query{filters: filters} -> filters
+        %{filters: filters} -> filters
+        filters when is_list(filters) -> filters
+      end
+
+    dimension in dimensions_used_in_filters(filters, opts)
+  end
+
+  def all_leaf_filters(filters) do
+    filters
+    |> traverse(nil, fn _, _ -> nil end)
+    |> Enum.map(fn {filter, _} -> filter end)
   end
 
   @doc """
@@ -144,12 +175,13 @@ defmodule Plausible.Stats.Filters do
   defp transform_tree(filter, transformer) do
     case {transformer.(filter), filter} do
       # Transformer did not return that value - transform that subtree
-      {nil, [operation, child_filter]} when operation in [:not, :ignore_in_totals_query] ->
+      {nil, [operator, child_filter]}
+      when operator in [:not, :ignore_in_totals_query, :has_done, :has_not_done] ->
         [transformed_child] = transform_tree(child_filter, transformer)
-        [[operation, transformed_child]]
+        [[operator, transformed_child]]
 
-      {nil, [operation, filters]} when operation in [:and, :or] ->
-        [[operation, transform_filters(filters, transformer)]]
+      {nil, [operator, filters]} when operator in [:and, :or] ->
+        [[operator, transform_filters(filters, transformer)]]
 
       # Reached a leaf node, return existing value
       {nil, filter} ->
@@ -161,22 +193,26 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  def traverse(filters, depth \\ -1) do
+  @doc """
+  Traverses a filter tree while accumulating state.
+  """
+  def traverse(filters, state \\ nil, state_transformer \\ fn state, _ -> state end) do
     filters
-    |> Enum.flat_map(&traverse_tree(&1, depth + 1))
+    |> Enum.flat_map(&traverse_tree(&1, state, state_transformer))
   end
 
-  defp traverse_tree(filter, depth) do
+  defp traverse_tree(filter, state, state_transformer) do
     case filter do
-      [operation, child_filter] when operation in [:not, :ignore_in_totals_query] ->
-        traverse_tree(child_filter, depth + 1)
+      [operation, child_filter]
+      when operation in [:not, :ignore_in_totals_query, :has_done, :has_not_done] ->
+        traverse_tree(child_filter, state_transformer.(state, operation), state_transformer)
 
       [operation, filters] when operation in [:and, :or] ->
-        traverse(filters, depth + 1)
+        traverse(filters, state_transformer.(state, operation), state_transformer)
 
       # Leaf node
       _ ->
-        [{filter, depth}]
+        [{filter, state}]
     end
   end
 end

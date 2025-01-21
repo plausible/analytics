@@ -294,7 +294,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, query, current_user) do
-    goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
+    goal_filter? = toplevel_goal_filter?(query)
 
     cond do
       query.period == "30m" && goal_filter? ->
@@ -392,7 +392,9 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_other_top_stats(site, query, current_user) do
-    page_filter? = Filters.filtering_on_dimension?(query, "event:page")
+    page_filter? =
+      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
+
     scroll_depth_enabled? = scroll_depth_enabled?(site, current_user)
 
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
@@ -477,7 +479,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{source: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         res
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -509,7 +511,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{channel: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         res
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -564,7 +566,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     defp validate_funnel_query(query) do
       cond do
-        Filters.filtering_on_dimension?(query, "event:goal") ->
+        toplevel_goal_filter?(query) ->
           {:error, {:invalid_funnel_query, "goals"}}
 
         Filters.filtering_on_dimension?(query, "event:page") ->
@@ -591,7 +593,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{utm_medium: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         res
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -619,7 +621,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{utm_campaign: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         res
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -647,7 +649,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{utm_content: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         res
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -675,7 +677,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{utm_term: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         res
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -703,7 +705,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{utm_source: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         res
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -731,7 +733,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{referrer: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         res
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -857,7 +859,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{page: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         pages
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -890,7 +892,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{entry_page: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         to_csv(entry_pages, [:name, :visitors, :conversion_rate], [
           :name,
           :conversions,
@@ -926,7 +928,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{exit_page: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         to_csv(exit_pages, [:name, :visitors, :conversion_rate], [
           :name,
           :conversions,
@@ -999,7 +1001,7 @@ defmodule PlausibleWeb.Api.StatsController do
           Map.put(country, :name, country_info.name)
         end)
 
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         countries
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -1059,7 +1061,7 @@ defmodule PlausibleWeb.Api.StatsController do
       end)
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         regions
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -1103,7 +1105,7 @@ defmodule PlausibleWeb.Api.StatsController do
       end)
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         cities
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -1135,7 +1137,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{browser: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         browsers
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -1167,7 +1169,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{browser_version: :version})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         results
         |> transform_keys(%{browser: :name, visitors: :conversions})
         |> to_csv([:name, :version, :conversions, :conversion_rate])
@@ -1208,7 +1210,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{os: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         systems
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -1240,7 +1242,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{os_version: :version})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         results
         |> transform_keys(%{os: :name, visitors: :conversions})
         |> to_csv([:name, :version, :conversions, :conversion_rate])
@@ -1281,7 +1283,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{device: :name})
 
     if params["csv"] do
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         sizes
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
@@ -1371,7 +1373,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> Enum.concat()
 
       percent_or_cr =
-        if Filters.filtering_on_dimension?(query, "event:goal"),
+        if toplevel_goal_filter?(query),
           do: :conversion_rate,
           else: :percentage
 
@@ -1388,7 +1390,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site, params, debug_metadata(conn))
 
     metrics =
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if toplevel_goal_filter?(query) do
         [:visitors, :events, :conversion_rate] ++ @revenue_metrics
       else
         [:visitors, :events, :percentage] ++ @revenue_metrics
@@ -1559,10 +1561,12 @@ defmodule PlausibleWeb.Api.StatsController do
       end
 
     requires_goal_filter? = metric in [:conversion_rate, :events]
-    has_goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
+    has_goal_filter? = toplevel_goal_filter?(query)
 
     requires_page_filter? = metric == :scroll_depth
-    has_page_filter? = Filters.filtering_on_dimension?(query, "event:page")
+
+    has_page_filter? =
+      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 
     cond do
       requires_goal_filter? and not has_goal_filter? ->
@@ -1600,7 +1604,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp breakdown_metrics(query, extra_metrics \\ []) do
-    if Filters.filtering_on_dimension?(query, "event:goal") do
+    if toplevel_goal_filter?(query) do
       [:visitors, :conversion_rate, :total_visitors]
     else
       [:visitors] ++ extra_metrics
@@ -1624,6 +1628,10 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp realtime_period_to_30m(params), do: params
+
+  defp toplevel_goal_filter?(query) do
+    Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0)
+  end
 
   def scroll_depth_enabled?(site, user) do
     FunWithFlags.enabled?(:scroll_depth, for: user) ||

@@ -78,7 +78,7 @@ defmodule Plausible.Stats.Clickhouse do
   def top_sources_for_spike(site, query, limit, page) do
     offset = (page - 1) * limit
 
-    {first_datetime, last_datetime} = Plausible.Stats.Time.utc_boundaries(query, site)
+    {first_datetime, last_datetime} = Plausible.Stats.Time.utc_boundaries(query)
 
     referrers =
       from(s in "sessions_v2",
