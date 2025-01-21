@@ -2085,6 +2085,72 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
+    test "hiding custom properties filters in segments doesn't allow bypasssing feature check",
+         %{
+           site: site,
+           user: user
+         } do
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
+
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: site,
+          name: "segment with custom props filter",
+          segment_data: %{"filters" => [["is", "event:props:foobar", ["foo"]]]}
+        )
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "segment", [segment.id]]]
+      }
+      |> check_error(
+        site,
+        "The owner of this site does not have access to the custom properties feature.",
+        :internal
+      )
+    end
+
+    test "querying conversion rate is illegal if the complex event:goal filter is within a segment",
+         %{
+           site: site,
+           user: user
+         } do
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: site,
+          name: "any",
+          segment_data: %{
+            "filters" => [
+              [
+                "or",
+                [
+                  ["is", "event:goal", ["Signup"]],
+                  ["contains", "event:page", ["/"]]
+                ]
+              ]
+            ]
+          }
+        )
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors", "conversion_rate"],
+        "date_range" => "all",
+        "filters" => [["is", "segment", [segment.id]]]
+      }
+      |> check_error(
+        site,
+        "Invalid filters. Dimension `event:goal` can only be filtered at the top level.",
+        :internal
+      )
+    end
+
     test "resolves segments correctly", %{site: site, user: user} do
       emea_segment =
         insert(:segment,

@@ -4520,10 +4520,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              }
     end
 
-    test "personal segments of other users of the same site resolve to filters", %{
-      conn: conn,
-      site: site
-    } do
+    test "even personal segments of other users of the same site resolve to filters, with segments expanded in response",
+         %{
+           conn: conn,
+           site: site
+         } do
       other_user = add_guest(site, role: :editor)
 
       segment =
@@ -4568,20 +4569,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "metrics" => ["events"]
         })
 
-      assert json_response(conn, 200) == %{
-               "results" => [%{"dimensions" => [], "metrics" => [3]}],
-               "meta" => %{},
-               "query" => %{
-                 "date_range" => ["2021-01-01T00:00:00+00:00", "2025-01-20T23:59:59+00:00"],
-                 "dimensions" => [],
-                 "filters" => [["and", [["is", "event:name", ["Signup"]]]]],
-                 "include" => %{},
-                 "metrics" => ["events"],
-                 "order_by" => [["events", "desc"]],
-                 "pagination" => %{"limit" => 10_000, "offset" => 0},
-                 "site_id" => site.domain
-               }
-             }
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [3]}]
+
+      # response shows what filters the segment was resolved to
+      assert json_response(conn, 200)["query"]["filters"] == [
+               ["and", [["is", "event:name", ["Signup"]]]]
+             ]
     end
   end
 end
