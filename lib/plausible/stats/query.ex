@@ -109,8 +109,9 @@ defmodule Plausible.Stats.Query do
   """
   def remove_top_level_filters(query, prefixes) do
     new_filters =
-      Enum.reject(query.filters, fn [_, filter_key | _rest] ->
-        is_binary(filter_key) and Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
+      Enum.reject(query.filters, fn [_, dimension_or_filter_tree | _rest] ->
+        is_binary(dimension_or_filter_tree) and
+          Enum.any?(prefixes, &String.starts_with?(dimension_or_filter_tree, &1))
       end)
 
     query
@@ -179,9 +180,10 @@ defmodule Plausible.Stats.Query do
 
   @spec trace(%__MODULE__{}, [atom()]) :: %__MODULE__{}
   def trace(%__MODULE__{} = query, metrics) do
-    filter_keys =
+    filter_dimensions =
       query.filters
-      |> Enum.map(fn [_op, prop | _rest] -> prop end)
+      |> Enum.map(fn [_op, dimension | _rest] -> dimension end)
+      |> Enum.filter(&is_binary/1)
       |> Enum.sort()
       |> Enum.join(";")
 
@@ -192,7 +194,7 @@ defmodule Plausible.Stats.Query do
       {"plausible.query.period", query.period},
       {"plausible.query.dimensions", query.dimensions |> Enum.join(";")},
       {"plausible.query.include_imported", query.include_imported},
-      {"plausible.query.filter_keys", filter_keys},
+      {"plausible.query.filter_keys", filter_dimensions},
       {"plausible.query.metrics", metrics}
     ])
 
