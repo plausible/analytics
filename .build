@@ -143,6 +143,7 @@ Plausible.Release.html
 Plausible.Repo.html
 Plausible.RequestLogger.html
 Plausible.S3.html
+Plausible.Segments.Filters.html
 Plausible.Segments.Segment.html
 Plausible.Segments.html
 Plausible.Sentry.Client.html
@@ -454,8 +455,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-38E87A73.js
-dist/sidebar_items-FB38EAFA.js
+dist/search_data-839BC797.js
+dist/sidebar_items-F9916547.js
 index.html
 readme.html
 search.html
