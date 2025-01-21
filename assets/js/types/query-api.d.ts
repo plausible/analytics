@@ -64,7 +64,7 @@ export type CustomPropertyFilterDimensions = string;
 export type GoalDimension = "event:goal";
 export type TimeDimensions = "time" | "time:month" | "time:week" | "time:day" | "time:hour";
 export type FilterTree = FilterEntry | FilterAndOr | FilterNot | FilterHasDone;
-export type FilterEntry = FilterWithoutGoals | FilterWithGoals | FilterWithPattern;
+export type FilterEntry = FilterWithoutGoals | FilterWithGoals | FilterWithPattern | FilterForSegment;
 /**
  * @minItems 3
  * @maxItems 4
@@ -115,6 +115,11 @@ export type FilterWithPattern = [
  * filter operation
  */
 export type FilterOperationRegex = "matches" | "matches_not";
+/**
+ * @minItems 3
+ * @maxItems 3
+ */
+export type FilterForSegment = ["is", "segment", number[]];
 /**
  * @minItems 2
  * @maxItems 2

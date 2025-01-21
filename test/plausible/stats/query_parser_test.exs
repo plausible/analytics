@@ -2,10 +2,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   use Plausible
   use Plausible.DataCase
   use Plausible.Teams.Test
+  import Plausible.Stats.Filters.QueryParser
+  doctest Plausible.Stats.Filters.QueryParser
 
   alias Plausible.Stats.DateTimeRange
   alias Plausible.Stats.Filters
-  import Plausible.Stats.Filters.QueryParser
 
   setup [:create_user, :create_site]
 
@@ -2226,6 +2227,217 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
         pagination: %{limit: 10_000, offset: 0}
       })
+    end
+  end
+
+  describe "filtering with segments" do
+    test "parsing fails when too many segments in query", %{
+      user: user,
+      site: site
+    } do
+      segments =
+        insert_list(11, :segment,
+          type: :site,
+          owner: user,
+          site: site,
+          name: "any"
+        )
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["and", segments |> Enum.map(fn segment -> ["is", "segment", [segment.id]] end)]
+        ]
+      }
+      |> check_error(
+        site,
+        "Invalid filters. You can only use up to 10 segment filters in a query.",
+        :internal
+      )
+    end
+
+    test "parsing fails when segment filter is used, but segment is from another site", %{
+      site: site
+    } do
+      other_user = new_user()
+      other_site = new_site(owner: other_user)
+
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: other_user,
+          site: other_site,
+          name: "any"
+        )
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "segment", [segment.id]]]
+      }
+      |> check_error(
+        site,
+        "Invalid filters. Some segments don't exist or aren't accessible.",
+        :internal
+      )
+    end
+
+    test "hiding custom properties filters in segments doesn't allow bypasssing feature check",
+         %{
+           site: site,
+           user: user
+         } do
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
+
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: site,
+          name: "segment with custom props filter",
+          segment_data: %{"filters" => [["is", "event:props:foobar", ["foo"]]]}
+        )
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "segment", [segment.id]]]
+      }
+      |> check_error(
+        site,
+        "The owner of this site does not have access to the custom properties feature.",
+        :internal
+      )
+    end
+
+    test "querying conversion rate is illegal if the complex event:goal filter is within a segment",
+         %{
+           site: site,
+           user: user
+         } do
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: site,
+          name: "any",
+          segment_data: %{
+            "filters" => [
+              [
+                "or",
+                [
+                  ["is", "event:goal", ["Signup"]],
+                  ["contains", "event:page", ["/"]]
+                ]
+              ]
+            ]
+          }
+        )
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors", "conversion_rate"],
+        "date_range" => "all",
+        "filters" => [["is", "segment", [segment.id]]]
+      }
+      |> check_error(
+        site,
+        "Invalid filters. Dimension `event:goal` can only be filtered at the top level.",
+        :internal
+      )
+    end
+
+    test "resolves segments correctly", %{site: site, user: user} do
+      emea_segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: site,
+          name: "EMEA",
+          segment_data: %{
+            "filters" => [["is", "visit:country", ["FR", "DE"]]],
+            "labels" => %{"FR" => "France", "DE" => "Germany"}
+          }
+        )
+
+      apac_segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: site,
+          name: "APAC",
+          segment_data: %{
+            "filters" => [["is", "visit:country", ["AU", "NZ"]]],
+            "labels" => %{"AU" => "Australia", "NZ" => "New Zealand"}
+          }
+        )
+
+      firefox_segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: site,
+          name: "APAC",
+          segment_data: %{
+            "filters" => [
+              ["is", "visit:browser", ["Firefox"]],
+              ["is", "visit:os", ["Linux"]]
+            ]
+          }
+        )
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors", "events"],
+        "date_range" => "all",
+        "filters" => [
+          [
+            "and",
+            [
+              ["is", "segment", [apac_segment.id, emea_segment.id]],
+              ["is", "segment", [firefox_segment.id]]
+            ]
+          ]
+        ]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors, :events],
+          utc_time_range: @date_range_day,
+          filters: [
+            [
+              :and,
+              [
+                [
+                  :or,
+                  [
+                    [:and, [[:is, "visit:country", ["AU", "NZ"]]]],
+                    [:and, [[:is, "visit:country", ["FR", "DE"]]]]
+                  ]
+                ],
+                [
+                  :and,
+                  [
+                    [:is, "visit:browser", ["Firefox"]],
+                    [:is, "visit:os", ["Linux"]]
+                  ]
+                ]
+              ]
+            ]
+          ],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
     end
   end
 end

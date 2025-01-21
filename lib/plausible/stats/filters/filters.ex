@@ -58,7 +58,7 @@ defmodule Plausible.Stats.Filters do
 
   Returns an empty list when argument type is unexpected (e.g. `nil`).
 
-  ### Examples:
+  ## Examples:
 
       iex> Filters.parse("visit:browser!=Chrome")
       [[:is_not, "visit:browser", ["Chrome"]]]
@@ -159,6 +159,13 @@ defmodule Plausible.Stats.Filters do
   Transformer will receive each node (filter, and/or/not subtree) of
   query and must return a list of nodes to replace it with or nil
   to ignore and look deeper.
+
+  ## Examples
+    iex> Filters.transform_filters([[:is, "visit:os", ["Linux"]], [:and, [[:is, "segment", [1]], [:is, "segment", [2]]]]], fn
+    ...>    [_, "segment", _] -> [[:is, "segment", ["changed"]]]
+    ...>    _ -> nil
+    ...>  end)
+    [[:is, "visit:os", ["Linux"]], [:and, [[:is, "segment", ["changed"]], [:is, "segment", ["changed"]]]]]
   """
   def transform_filters(filters, transformer) do
     filters
@@ -178,7 +185,7 @@ defmodule Plausible.Stats.Filters do
 
       # Reached a leaf node, return existing value
       {nil, filter} ->
-        [[filter]]
+        [filter]
 
       # Transformer returned a value - don't transform that subtree
       {transformed_filters, _filter} ->
@@ -189,7 +196,7 @@ defmodule Plausible.Stats.Filters do
   @doc """
   Traverses a filter tree while accumulating state.
   """
-  def traverse(filters, state, state_transformer) do
+  def traverse(filters, state \\ nil, state_transformer \\ fn state, _ -> state end) do
     filters
     |> Enum.flat_map(&traverse_tree(&1, state, state_transformer))
   end
