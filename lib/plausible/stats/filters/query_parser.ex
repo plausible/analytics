@@ -34,6 +34,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
          utc_time_range = raw_time_range |> DateTimeRange.to_timezone("Etc/UTC"),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
+         {:ok, preloaded_segments} <-
+           Plausible.Segments.Filters.preload_needed_segments(site, filters),
+         {:ok, filters} <-
+           Plausible.Segments.Filters.resolve_segments(filters, preloaded_segments),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
@@ -161,7 +165,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
            "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."}
         end
 
-      {_, true} ->
+      {"segment", _} when all_integers? ->
+        {:ok, list}
+
+      {_, true} when filter_key !== "segment" ->
         {:ok, list}
 
       _ ->
@@ -395,6 +402,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
         else
           {:error, error_message}
         end
+
+      "segment" ->
+        {:ok, filter_key}
 
       _ ->
         {:error, error_message}
