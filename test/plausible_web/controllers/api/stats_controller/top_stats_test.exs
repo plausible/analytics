@@ -916,13 +916,12 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     } do
       filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
 
-      [unique_visitors, unique_conversions, total_conversions, cr] =
+      [unique_conversions, total_conversions, cr] =
         conn
         |> get("/api/stats/#{site.domain}/top-stats?filters=#{filters}")
         |> json_response(200)
         |> Map.get("top_stats")
 
-      assert %{"graph_metric" => "total_visitors"} = unique_visitors
       assert %{"graph_metric" => "visitors"} = unique_conversions
       assert %{"graph_metric" => "events"} = total_conversions
       assert %{"graph_metric" => "conversion_rate"} = cr
@@ -1307,12 +1306,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   describe "GET /api/stats/top-stats - filtered for goal" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns total unique visitors", %{conn: conn, site: site} do
+    test "returns total and unique conversions", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
       populate_stats(site, [
         build(:pageview, user_id: @user_id),
         build(:pageview, user_id: @user_id),
         build(:pageview),
-        build(:event, name: "Signup")
+        build(:event, user_id: 1, name: "Signup"),
+        build(:event, user_id: 1, name: "Signup"),
+        build(:event, user_id: 2, name: "Signup")
       ])
 
       filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
@@ -1325,7 +1328,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "total_visitors"} in res[
+      assert %{"name" => "Unique conversions", "value" => 2, "graph_metric" => "visitors"} in res[
+               "top_stats"
+             ]
+
+      assert %{"name" => "Total conversions", "value" => 3, "graph_metric" => "events"} in res[
                "top_stats"
              ]
     end
