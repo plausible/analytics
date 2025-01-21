@@ -172,6 +172,8 @@ function serializeFilter([operation, filterKey, clauses, ...modifiers]) {
     apiFilterKey = `event:${filterKey}`
   }
   if (operation === FILTER_OPERATIONS.has_not_done) {
+    // :NOTE: Frontend does not support advanced query building that's used in the backend.
+    // As such we emulate the backend behavior for has_not_done goal filters
     return ['has_not_done', ['is', apiFilterKey, clauses, ...modifiers]]
   } else {
     return [operation, apiFilterKey, clauses, ...modifiers]
