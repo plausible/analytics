@@ -173,7 +173,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       {"segment", _} when all_integers? ->
         {:ok, list}
 
-      {_, true} when filter_key !== "segment" ->
+      {_, true} when dimension !== "segment" ->
         {:ok, list}
 
       _ ->
@@ -409,7 +409,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
         end
 
       "segment" ->
-        {:ok, filter_key}
+        {:ok, dimension}
 
       _ ->
         {:error, error_message}
