@@ -168,7 +168,8 @@ defmodule Plausible.Stats.Filters do
   defp transform_tree(filter, transformer) do
     case {transformer.(filter), filter} do
       # Transformer did not return that value - transform that subtree
-      {nil, [operator, child_filter]} when operator in [:not, :ignore_in_totals_query] ->
+      {nil, [operator, child_filter]}
+      when operator in [:not, :ignore_in_totals_query, :has_done, :has_not_done] ->
         [transformed_child] = transform_tree(child_filter, transformer)
         [[operator, transformed_child]]
 
