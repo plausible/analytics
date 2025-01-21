@@ -35,7 +35,9 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
            ),
          {:ok, invitation} <-
            Teams.Invitations.invite(team, invitee_email, role, inviter) do
-      send_invitation_email(invitation, invitee)
+      if Keyword.get(opts, :send_email?, true) do
+        send_invitation_email(invitation, invitee)
+      end
 
       {:ok, invitation}
     end
@@ -45,7 +47,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
     raise "Invalid role passed: #{inspect(role)}"
   end
 
-  defp send_invitation_email(invitation, invitee) do
+  def send_invitation_email(invitation, invitee) do
     invitation
     |> Repo.preload([:team, :inviter])
     |> Teams.Invitations.send_invitation_email(invitee)

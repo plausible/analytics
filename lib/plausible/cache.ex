@@ -62,6 +62,7 @@ defmodule Plausible.Cache do
       @modes [:all, :updated_recently]
 
       alias Plausible.Cache.Adapter
+      require Logger
 
       @spec get(any(), Keyword.t()) :: any() | nil
       def get(key, opts \\ []) when is_list(opts) do
@@ -182,8 +183,13 @@ defmodule Plausible.Cache do
         Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
           telemetry_event_refresh(cache_name, mode),
           fn ->
-            items = repo().all(query)
-            :ok = merge_items(items, opts)
+            try do
+              items = repo().all(query)
+              :ok = merge_items(items, opts)
+            catch
+              _, e ->
+                Logger.error("Error refreshing '#{cache_name}' - #{inspect(e)}")
+            end
           end
         )
 

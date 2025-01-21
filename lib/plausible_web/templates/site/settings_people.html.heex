@@ -1,4 +1,8 @@
 <.settings_tiles>
+  <PlausibleWeb.Team.Notice.inviting_banner :if={
+    @site_role in [:owner, :admin] and @my_team.setup_complete
+  } />
+
   <.tile docs="users-roles">
     <:title>People</:title>
     <:subtitle>Invite your friends or coworkers</:subtitle>
@@ -11,6 +15,10 @@
         Invite new member
       </.button_link>
     </.filter_bar>
+
+    <PlausibleWeb.Team.Notice.team_members_notice :if={
+      @site_role in [:owner, :admin] and @my_team.setup_complete
+    } />
 
     <div class="flow-root">
       <ul class="divide-y divide-gray-200 dark:divide-gray-400">

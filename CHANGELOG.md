@@ -7,7 +7,6 @@ All notable changes to this project will be documented in this file.
 - Dashboard shows comparisons for all reports
 - UTM Medium report and API shows (gclid) and (msclkid) for paid searches when no explicit utm medium present.
 - Support for `case_sensitive: false` modifiers in Stats API V2 filters for case-insensitive searches.
-- Add text version to emails plausible/analytics#4674
 
 ### Removed
 
@@ -15,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Filters appear in the search bar as ?f=is,page,/docs,/blog&f=... instead of ?filters=((is,page,(/docs,/blog)),...) for Plausible links sent on various platforms to work reliably. 
 - Details modal search inputs are now case-insensitive.
 - Improved report performance in cases where site has a lot of unique pathnames
 
@@ -25,6 +25,19 @@ All notable changes to this project will be documented in this file.
 - Fix Direct / None details modal not opening
 - Fix year over year comparisons being offset by a day for leap years
 - Breakdown modals now display correct comparison values instead of 0 after pagination
+
+## v2.1.5-rc.1 - 2025-01-17
+
+### Added
+
+- Add text version to emails https://github.com/plausible/analytics/pull/4674
+- Add error logging when email delivery fails https://github.com/plausible/analytics/pull/4885
+
+### Removed
+
+- Remove Plausible Cloud contacts https://github.com/plausible/analytics/pull/4766
+- Remove trial mentions https://github.com/plausible/analytics/pull/4668
+- Remove billings and upgrade tabs from settings https://github.com/plausible/analytics/pull/4897
 
 ## v2.1.4 - 2024-10-08
 
