@@ -20,15 +20,15 @@ defmodule PlausibleWeb.EmailView do
     search_query = URI.encode_query(%{query: trace_id})
     path = "/organizations/sentry/issues/"
 
-    if is_binary(dsn) do
-      dsn
-      |> URI.parse()
-      |> Map.replace(:userinfo, nil)
-      |> Map.replace(:path, path)
-      |> Map.replace(:query, search_query)
-      |> URI.to_string()
-    else
-      ""
+    case dsn do
+      {endpoint_uri, _public_key, _secret_key} when is_binary(endpoint_uri) ->
+        URI.parse(endpoint_uri)
+        |> Map.replace(:path, path)
+        |> Map.replace(:query, search_query)
+        |> URI.to_string()
+
+      _ ->
+        ""
     end
   end
 end

@@ -10,6 +10,8 @@ defmodule Plausible.Ingestion.Event do
   alias Plausible.ClickhouseEventV2
   alias Plausible.Site.GateKeeper
 
+  require Logger
+
   defstruct domain: nil,
             site: nil,
             clickhouse_event_attrs: %{},
@@ -467,8 +469,8 @@ defmodule Plausible.Ingestion.Event do
         nil
 
       %Device{type: type} ->
-        Sentry.capture_message("Could not determine device type from UAInspector",
-          extra: %{type: type}
+        Logger.error("Could not determine device type from UAInspector",
+          sentry: %{extra: %{type: type}}
         )
 
         nil

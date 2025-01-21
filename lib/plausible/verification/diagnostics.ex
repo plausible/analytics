@@ -363,11 +363,13 @@ defmodule Plausible.Verification.Diagnostics do
   end
 
   def interpret(diagnostics, url) do
-    Sentry.capture_message("Unhandled case for site verification",
-      extra: %{
-        message: inspect(diagnostics),
-        url: url,
-        hash: :erlang.phash2(diagnostics)
+    Logger.error("Unhandled case for site verification",
+      sentry: %{
+        extra: %{
+          message: inspect(diagnostics),
+          url: url,
+          hash: :erlang.phash2(diagnostics)
+        }
       }
     )
 

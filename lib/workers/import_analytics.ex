@@ -33,11 +33,13 @@ defmodule Plausible.Workers.ImportAnalytics do
         :ok
 
       {:error, error, error_opts} ->
-        Sentry.capture_message("Failed to import from #{site_import.source}",
-          extra: %{
-            import_id: site_import.id,
-            site: site_import.site.domain,
-            error: inspect(error)
+        Logger.error("Failed to import from #{site_import.source}",
+          sentry: %{
+            extra: %{
+              import_id: site_import.id,
+              site: site_import.site.domain,
+              error: inspect(error)
+            }
           }
         )
 

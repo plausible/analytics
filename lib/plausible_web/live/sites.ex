@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Pagination
+  require Logger
 
   alias Plausible.Sites
 
@@ -614,8 +615,8 @@ defmodule PlausibleWeb.Live.Sites do
 
       {:noreply, socket}
     else
-      Sentry.capture_message("Attempting to toggle pin for invalid domain.",
-        extra: %{domain: domain, user: socket.assigns.current_user.id}
+      Logger.error("Attempting to toggle pin for invalid domain.",
+        sentry: %{extra: %{domain: domain, user: socket.assigns.current_user.id}}
       )
 
       {:noreply, socket}
