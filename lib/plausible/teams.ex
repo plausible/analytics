@@ -6,7 +6,7 @@ defmodule Plausible.Teams do
   import Ecto.Query
 
   alias __MODULE__
-  alias Plausible.Auth.GracePeriod
+  alias Plausible.Auth
   alias Plausible.Repo
   use Plausible
 
@@ -26,7 +26,7 @@ defmodule Plausible.Teams do
   end
 
   @spec get_owner(Teams.Team.t()) ::
-          {:ok, Plausible.Auth.User.t()} | {:error, :no_owner | :multiple_owners}
+          {:ok, Auth.User.t()} | {:error, :no_owner | :multiple_owners}
   def get_owner(team) do
     case Repo.preload(team, :owner).owner do
       nil -> {:error, :no_owner}
@@ -193,25 +193,25 @@ defmodule Plausible.Teams do
 
   def start_grace_period(team) do
     team
-    |> GracePeriod.start_changeset()
+    |> Teams.GracePeriod.start_changeset()
     |> Repo.update!()
   end
 
   def start_manual_lock_grace_period(team) do
     team
-    |> GracePeriod.start_manual_lock_changeset()
+    |> Teams.GracePeriod.start_manual_lock_changeset()
     |> Repo.update!()
   end
 
   def end_grace_period(team) do
     team
-    |> GracePeriod.end_changeset()
+    |> Teams.GracePeriod.end_changeset()
     |> Repo.update!()
   end
 
   def remove_grace_period(team) do
     team
-    |> GracePeriod.remove_changeset()
+    |> Teams.GracePeriod.remove_changeset()
     |> Repo.update!()
   end
 
@@ -289,7 +289,7 @@ defmodule Plausible.Teams do
     case result do
       {:ok, invitations} ->
         Enum.each(invitations, fn invitation ->
-          invitee = Plausible.Auth.find_user_by(email: invitation.email)
+          invitee = Auth.find_user_by(email: invitation.email)
           Teams.Invitations.InviteToTeam.send_invitation_email(invitation, invitee)
         end)
 
