@@ -24,10 +24,10 @@ export const SearchInput = ({
   const debouncedOnSearchInputChange = useDebounce(onSearchInputChange)
 
   const blurSearchBox = useCallback(
-    (event: KeyboardEvent) => {
+    (_event: KeyboardEvent) => {
       if (isFocused) {
         searchBoxRef.current?.blur()
-        event.stopPropagation()
+        // event.stopPropagation()
       }
     },
     [isFocused]
@@ -50,12 +50,14 @@ export const SearchInput = ({
         type="keyup"
         handler={blurSearchBox}
         shouldIgnoreWhen={[isModifierPressed]}
+        target={searchBoxRef.current}
       />
       <Keybind
         keyboardKey="/"
         type="keyup"
         handler={focusSearchBox}
         shouldIgnoreWhen={[isModifierPressed]}
+        target={document}
       />
       <input
         onBlur={() => setIsFocused(false)}
