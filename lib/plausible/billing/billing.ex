@@ -2,6 +2,7 @@ defmodule Plausible.Billing do
   use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
+  alias Plausible.Auth
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
 
@@ -132,9 +133,15 @@ defmodule Plausible.Billing do
   end
 
   defp get_team!(%{"passthrough" => passthrough}) do
-    passthrough
-    |> parse_passthrough!()
-    |> Teams.get!()
+    case parse_passthrough!(passthrough) do
+      {:team_id, team_id} ->
+        Teams.get!(team_id)
+
+      {:user_id, user_id} ->
+        user = Repo.get!(Auth.User, user_id)
+        {:ok, team} = Teams.get_or_create(user)
+        team
+    end
   end
 
   defp get_team!(_params) do
@@ -142,18 +149,32 @@ defmodule Plausible.Billing do
   end
 
   defp parse_passthrough!(passthrough) do
-    team_id =
+    {user_id, team_id} =
       case String.split(to_string(passthrough), ";") do
-        ["ee:true", "user:" <> _user_id, "team:" <> team_id] ->
-          team_id
+        ["ee:true", "user:" <> user_id, "team:" <> team_id] ->
+          {user_id, team_id}
+
+        ["ee:true", "user:" <> user_id] ->
+          {user_id, "0"}
+
+        # NOTE: legacy pattern, to be removed in a follow-up
+        ["user:" <> user_id, "team:" <> team_id] ->
+          {user_id, team_id}
+
+        # NOTE: legacy pattern, to be removed in a follow-up
+        [user_id] ->
+          {user_id, "0"}
 
         _ ->
           raise "Invalid passthrough sent via Paddle: #{inspect(passthrough)}"
       end
 
-    case Integer.parse(team_id) do
-      {team_id, ""} when team_id > 0 ->
-        team_id
+    case {Integer.parse(user_id), Integer.parse(team_id)} do
+      {{user_id, ""}, {0, ""}} when user_id > 0 ->
+        {:user_id, user_id}
+
+      {{_user_id, ""}, {team_id, ""}} when team_id > 0 ->
+        {:team_id, team_id}
 
       _ ->
         raise "Invalid passthrough sent via Paddle: #{inspect(passthrough)}"
