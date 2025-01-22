@@ -13,6 +13,7 @@ defmodule Plausible.Teams.Membership do
 
   schema "team_memberships" do
     field :role, Ecto.Enum, values: @roles
+    field :is_autocreated, :boolean, default: false
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :team, Plausible.Teams.Team
