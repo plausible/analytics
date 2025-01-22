@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'tracker/**'
+      - '.github/workflows/tracker.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,13 +17,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
     - uses: actions/setup-node@v4
       with:
         node-version: 16
+
+    - name: Cache dependencies and playwright binaries
+      uses: actions/cache@v4
+      id: cache
+      with:
+        path: |
+          tracker/node_modules
+          ~/.cache/ms-playwright
+        key: tracker-${{ hashFiles('tracker/package.json') }}
+        restore-keys: |
+          key: tracker-${{ hashFiles('tracker/package.json') }}
+
     - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: npm --prefix ./tracker ci
+
     - name: Install Playwright Browsers
+      if: steps.cache.outputs.cache-hit != 'true'
       working-directory: ./tracker
       run: npx playwright install --with-deps
+
     - name: Run Playwright tests
       run: npm --prefix ./tracker test
