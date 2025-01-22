@@ -155,8 +155,8 @@ defmodule Plausible.Segments.Segment do
       )
 
   @doc """
-    This function handles the error from building the naive query that is used to validate segment filters,
-    collecting filter related errors into a list.
+    This function handles the error from building the naive query that is used to validate segment filters.
+    If the error is only about filters, it's marked as :invalid_filters error and ultimately forwarded to client.
     If the error is not only about filters, the client can't do anything about the situation,
     and the error message is returned as-is.
 
