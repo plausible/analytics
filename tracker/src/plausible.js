@@ -212,6 +212,15 @@
     payload.h = 1
     {{/if}}
 
+    {{#if pageleave}}
+    if (isPageview) {
+      currentPageLeaveIgnored = false
+      currentPageLeaveURL = payload.u
+      currentPageLeaveProps = payload.p
+      registerPageLeaveListener()
+    }
+    {{/if}}
+
     var request = new XMLHttpRequest();
     request.open('POST', endpoint, true);
     request.setRequestHeader('Content-Type', 'text/plain');
@@ -220,14 +229,6 @@
 
     request.onreadystatechange = function() {
       if (request.readyState === 4) {
-        {{#if pageleave}}
-        if (isPageview) {
-          currentPageLeaveIgnored = false
-          currentPageLeaveURL = payload.u
-          currentPageLeaveProps = payload.p
-          registerPageLeaveListener()
-        }
-        {{/if}}
         options && options.callback && options.callback({status: request.status})
       }
     }
@@ -246,7 +247,7 @@
       {{#unless hash}}
       if (lastPage === location.pathname) return;
       {{/unless}}
-      
+
       {{#if pageleave}}
       if (isSPANavigation && listeningPageLeave) {
         triggerPageLeave();
