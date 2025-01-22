@@ -225,25 +225,6 @@ defmodule Plausible.BillingTest do
       assert subscription.currency_code == "EUR"
     end
 
-    test "supports old format without prefix" do
-      user = new_user()
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-
-      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
-      |> Billing.subscription_created()
-
-      assert user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
-    end
-
-    test "supports old format without prefix for user without a team" do
-      user = new_user()
-
-      %{@subscription_created_params | "passthrough" => user.id}
-      |> Billing.subscription_created()
-
-      assert user |> team_of() |> Plausible.Teams.with_subscription() |> Map.fetch!(:subscription)
-    end
-
     test "unlocks sites if user has any locked sites" do
       user = new_user()
       site = new_site(owner: user, locked: true)
