@@ -68,9 +68,6 @@ defmodule PlausibleWeb.Api.StatsController do
     * `includes_imported` - boolean indicating whether imported data
       was queried or not.
 
-    * `imports_exist` - boolean indicating whether there are any completed
-      imports for a given site or not.
-
     * `full_intervals` - map of dates indicating whether the interval has been
       cut off by the requested date range or not. For example, if looking at a
       month week-by-week, some weeks may be cut off by the month boundaries.
@@ -87,7 +84,6 @@ defmodule PlausibleWeb.Api.StatsController do
       "2021-11-01" => true,
       "2021-12-01" => false
     },
-    "imports_exist" => false,
     "interval" => "month",
     "labels" => ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"],
     "plot" => [0, 0, 0, 0],
@@ -207,7 +203,6 @@ defmodule PlausibleWeb.Api.StatsController do
       sample_percent: sample_percent,
       with_imported_switch: with_imported_switch_info(query, comparison_query),
       includes_imported: includes_imported?(query, comparison_query),
-      imports_exist: Plausible.Imported.complete_import_ids(site) != [],
       comparing_from: query.include.comparisons && Query.date_range(comparison_query).first,
       comparing_to: query.include.comparisons && Query.date_range(comparison_query).last,
       from: Query.date_range(query).first,
