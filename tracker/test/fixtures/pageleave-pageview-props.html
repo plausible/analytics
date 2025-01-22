@@ -11,6 +11,14 @@
 
 <body>
   <a id="navigate-away" href="/manual.html">Navigate away</a>
+  <button id="back-button-trigger">Back button</button>
 </body>
 
+<script>
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'back-button-trigger') {
+      window.history.back()
+    }
+  })
+</script>
 </html>

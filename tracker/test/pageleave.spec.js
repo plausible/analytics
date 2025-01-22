@@ -128,7 +128,7 @@ test.describe('pageleave extension', () => {
       action: () => page.goto('/pageleave-pageview-props.html'),
       expectedRequests: [{n: 'pageview', p: {author: 'John'}}]
     })
-    
+
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
       expectedRequests: [{n: 'pageleave', p: {author: 'John'}}]
@@ -148,9 +148,9 @@ test.describe('pageleave extension', () => {
         {n: 'pageview', p: {author: 'john'}}
       ]
     })
-    
+
     await pageleaveCooldown(page)
-    
+
     await expectPlausibleInAction(page, {
       action: () => page.click('#jane-post'),
       expectedRequests: [
@@ -167,6 +167,27 @@ test.describe('pageleave extension', () => {
         {n: 'pageleave', p: {author: 'jane'}},
         {n: 'pageview', p: {}}
       ]
+    })
+  })
+
+  test('sends a pageleave when plausible API is slow and user navigates away before response is received', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/pageleave.html'),
+      expectedRequests: [{n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave.html`}]
+    })
+
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await page.click('#to-pageleave-pageview-props')
+        await page.click('#back-button-trigger')
+      },
+      expectedRequests: [
+        {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/pageleave.html`},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave-pageview-props.html`, p: {author: 'John'}},
+        {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/pageleave-pageview-props.html`, p: {author: 'John'}},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave.html`}
+      ],
+      responseDelay: 1000
     })
   })
 })
