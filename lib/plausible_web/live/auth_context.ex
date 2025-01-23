@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.AuthContext do
 
   import Phoenix.Component
 
+  alias Plausible.Teams
   alias PlausibleWeb.UserAuth
 
   defmacro __using__(_) do
@@ -32,11 +33,17 @@ defmodule PlausibleWeb.Live.AuthContext do
         end
       end)
       |> assign_new(:my_team, fn context ->
-        case context.current_user do
-          nil -> nil
-          %{team_memberships: [%{team: team}]} -> team
-          %{team_memberships: []} -> nil
+        current_team = Teams.get(session["current_team_id"])
+
+        case {current_team, context.current_user} do
+          {nil, nil} -> nil
+          {%Teams.Team{}, _} -> current_team
+          {nil, %{team_memberships: [%{team: team} | _]}} -> team
+          {nil, %{team_memberships: []}} -> nil
         end
+      end)
+      |> assign_new(:current_team, fn context ->
+        context.my_team
       end)
 
     {:cont, socket}
