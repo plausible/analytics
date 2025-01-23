@@ -104,7 +104,11 @@ export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
 }
 
 export function hasGoalFilter(query) {
-  return getFiltersByKeyPrefix(query, 'goal').length > 0
+  const goalFilters = getFiltersByKeyPrefix(query, 'goal')
+
+  return goalFilters.some(([operation, _filterKey, _clauses]) => {
+    return operation !== FILTER_OPERATIONS.has_not_done
+  })
 }
 
 export function isRealTimeDashboard(query) {
