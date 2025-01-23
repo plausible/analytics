@@ -1179,31 +1179,31 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - for a Growth subscription" do
     setup [:create_user, :log_in, :create_site]
 
-    setup %{user: user, site: site} do
+    setup %{user: user} do
       subscribe_to_growth_plan(user)
-
-      populate_stats(site, [
-        build(:pageview,
-          "meta.key": ["url", "path", "author"],
-          "meta.value": ["one", "two", "three"]
-        )
-      ])
-
       :ok
     end
 
-    test "returns breakdown for internally used prop keys", %{conn: conn, site: site} do
-      [%{"visitors" => 1, "name" => "one"}] =
-        conn
-        |> get("/api/stats/#{site.domain}/custom-prop-values/url?period=day")
-        |> json_response(200)
-        |> Map.get("results")
+    for special_prop <- ["url", "path", "search_query", "form"] do
+      test "returns breakdown for the internally used #{special_prop} prop key", %{
+        site: site,
+        conn: conn
+      } do
+        populate_stats(site, [
+          build(:pageview,
+            "meta.key": [unquote(special_prop)],
+            "meta.value": ["some_value"]
+          )
+        ])
 
-      [%{"visitors" => 1, "name" => "two"}] =
-        conn
-        |> get("/api/stats/#{site.domain}/custom-prop-values/path?period=day")
-        |> json_response(200)
-        |> Map.get("results")
+        assert [%{"visitors" => 1, "name" => "some_value"}] =
+                 conn
+                 |> get(
+                   "/api/stats/#{site.domain}/custom-prop-values/#{unquote(special_prop)}?period=day"
+                 )
+                 |> json_response(200)
+                 |> Map.get("results")
+      end
     end
 
     test "returns 402 'upgrade required' for any other prop key", %{conn: conn, site: site} do
