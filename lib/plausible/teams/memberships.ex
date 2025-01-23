@@ -46,6 +46,26 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
+  def can_add_site?(team, user) do
+    case team_role(team, user) do
+      {:ok, role} when role in [:owner, :admin, :editor] ->
+        true
+
+      _ ->
+        false
+    end
+  end
+
+  def can_transfer_site?(team, user) do
+    case team_role(team, user) do
+      {:ok, role} when role in [:owner, :admin] ->
+        true
+
+      _ ->
+        false
+    end
+  end
+
   def site_role(_site, nil), do: {:error, :not_a_member}
 
   def site_role(site, user) do
