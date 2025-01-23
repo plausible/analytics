@@ -91,7 +91,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         |> get("/#{site.domain}")
         |> html_response(200)
 
-      assert text_of_attr(html, @react_container, "data-has-scroll-depth-enabled") == "false"
+      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "false"
 
       site = Repo.reload!(site)
       assert is_nil(site.scroll_depth_visible_at)
@@ -107,7 +107,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         |> get("/#{site.domain}")
         |> html_response(200)
 
-      assert text_of_attr(html, @react_container, "data-has-scroll-depth-enabled") == "true"
+      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
 
       site = Repo.reload!(site)
 
@@ -1131,7 +1131,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         |> get("/share/#{site.domain}/?auth=#{link.slug}")
         |> html_response(200)
 
-      assert text_of_attr(html, @react_container, "data-has-scroll-depth-enabled") == "false"
+      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "false"
 
       site = Repo.reload!(site)
       assert is_nil(site.scroll_depth_visible_at)
@@ -1147,7 +1147,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         |> get("/share/#{site.domain}/?auth=#{link.slug}")
         |> html_response(200)
 
-      assert text_of_attr(html, @react_container, "data-has-scroll-depth-enabled") == "true"
+      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
 
       site = Repo.reload!(site)
 

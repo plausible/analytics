@@ -59,7 +59,7 @@ defmodule PlausibleWeb.StatsController do
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
 
-    has_scroll_depth_enabled? =
+    scroll_depth_visible? =
       Plausible.Stats.ScrollDepth.check_feature_visible!(site, current_user)
 
     cond do
@@ -72,7 +72,7 @@ defmodule PlausibleWeb.StatsController do
           revenue_goals: list_revenue_goals(site),
           funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
-          has_scroll_depth_enabled: has_scroll_depth_enabled?,
+          scroll_depth_visible: scroll_depth_visible?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
@@ -350,7 +350,7 @@ defmodule PlausibleWeb.StatsController do
         shared_link = Plausible.Repo.preload(shared_link, site: :owner)
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
-        has_scroll_depth_enabled? =
+        scroll_depth_visible? =
           Plausible.Stats.ScrollDepth.check_feature_visible!(shared_link.site, current_user)
 
         conn
@@ -362,7 +362,7 @@ defmodule PlausibleWeb.StatsController do
           revenue_goals: list_revenue_goals(shared_link.site),
           funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
-          has_scroll_depth_enabled: has_scroll_depth_enabled?,
+          scroll_depth_visible: scroll_depth_visible?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),
