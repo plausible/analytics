@@ -80,12 +80,12 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert html_response(conn, 404) =~ "There's nothing here"
     end
 
-    test "site.engagement_metrics_enabled_at gets updated correctly", %{conn: conn} do
+    test "site.scroll_depth_visible_at gets updated correctly", %{conn: conn} do
       site = new_site(public: true)
 
       populate_stats(site, [build(:pageview)])
 
-      # No pageleaves yet - `engagement_metrics_enabled_at` will remain `nil`
+      # No pageleaves yet - `scroll_depth_visible_at` will remain `nil`
       html =
         conn
         |> get("/#{site.domain}")
@@ -94,14 +94,14 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(html, @react_container, "data-has-scroll-depth-enabled") == "false"
 
       site = Repo.reload!(site)
-      assert is_nil(site.engagement_metrics_enabled_at)
+      assert is_nil(site.scroll_depth_visible_at)
 
       populate_stats(site, [
         build(:pageview, user_id: 123),
         build(:pageleave, user_id: 123)
       ])
 
-      # Pageleaves exist now - `engagement_metrics_enabled_at` gets set to `utc_now`
+      # Pageleaves exist now - `scroll_depth_visible_at` gets set to `utc_now`
       html =
         conn
         |> get("/#{site.domain}")
@@ -113,7 +113,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert NaiveDateTime.diff(
                NaiveDateTime.utc_now(:second),
-               site.engagement_metrics_enabled_at,
+               site.scroll_depth_visible_at,
                :second
              ) <= 1
     end
@@ -224,7 +224,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :create_site, :log_in]
 
     setup %{site: site} = context do
-      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      Plausible.Sites.set_scroll_depth_visible_at(site)
       context
     end
 
@@ -683,7 +683,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :create_site]
 
     setup %{site: site} = context do
-      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      Plausible.Sites.set_scroll_depth_visible_at(site)
       context
     end
 
@@ -700,7 +700,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :create_site, :log_in]
 
     setup %{site: site} = context do
-      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      Plausible.Sites.set_scroll_depth_visible_at(site)
       context
     end
 
@@ -715,7 +715,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :create_site, :log_in]
 
     setup %{site: site} = context do
-      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      Plausible.Sites.set_scroll_depth_visible_at(site)
       context
     end
 
@@ -1121,11 +1121,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert response(conn, 404) =~ "nothing here"
     end
 
-    test "site.engagement_metrics_enabled_at gets updated correctly", %{conn: conn} do
+    test "site.scroll_depth_visible_at gets updated correctly", %{conn: conn} do
       site = insert(:site)
       link = insert(:shared_link, site: site)
 
-      # No pageleaves yet - `engagement_metrics_enabled_at` will remain `nil`
+      # No pageleaves yet - `scroll_depth_visible_at` will remain `nil`
       html =
         conn
         |> get("/share/#{site.domain}/?auth=#{link.slug}")
@@ -1134,14 +1134,14 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(html, @react_container, "data-has-scroll-depth-enabled") == "false"
 
       site = Repo.reload!(site)
-      assert is_nil(site.engagement_metrics_enabled_at)
+      assert is_nil(site.scroll_depth_visible_at)
 
       populate_stats(site, [
         build(:pageview, user_id: 123),
         build(:pageleave, user_id: 123)
       ])
 
-      # Pageleaves exist now - `engagement_metrics_enabled_at` gets set to `utc_now`
+      # Pageleaves exist now - `scroll_depth_visible_at` gets set to `utc_now`
       html =
         conn
         |> get("/share/#{site.domain}/?auth=#{link.slug}")
@@ -1153,7 +1153,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert NaiveDateTime.diff(
                NaiveDateTime.utc_now(:second),
-               site.engagement_metrics_enabled_at,
+               site.scroll_depth_visible_at,
                :second
              ) <= 1
     end

@@ -287,24 +287,24 @@ defmodule Plausible.Sites do
   end
 
   def maybe_enable_engagement_metrics(site) do
-    if is_nil(site.engagement_metrics_enabled_at) and
+    if is_nil(site.scroll_depth_visible_at) and
          Plausible.Stats.Clickhouse.has_pageleaves_last_30d?(site) do
-      set_engagement_metrics_enabled_at(site)
+      set_scroll_depth_visible_at(site)
     else
       {:ok, site}
     end
   end
 
-  def set_engagement_metrics_enabled_at(site) do
+  def set_scroll_depth_visible_at(site) do
     utc_now = NaiveDateTime.utc_now(:second)
 
     site
-    |> Ecto.Changeset.change(%{engagement_metrics_enabled_at: utc_now})
+    |> Ecto.Changeset.change(%{scroll_depth_visible_at: utc_now})
     |> Repo.update()
   end
 
   def has_engagement_metrics?(site) do
-    not is_nil(site.engagement_metrics_enabled_at)
+    not is_nil(site.scroll_depth_visible_at)
   end
 
   def has_goals?(site) do

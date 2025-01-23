@@ -1082,7 +1082,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> run_import()
 
       assert %NaiveDateTime{} =
-               Plausible.Repo.reload!(exported_site).engagement_metrics_enabled_at
+               Plausible.Repo.reload!(exported_site).scroll_depth_visible_at
 
       assert %SiteImport{
                start_date: start_date,
@@ -1177,7 +1177,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> Enum.find(&String.contains?(&1, "imported_pages"))
         |> File.read!()
 
-      assert is_nil(Plausible.Repo.reload!(exported_site).engagement_metrics_enabled_at)
+      assert is_nil(Plausible.Repo.reload!(exported_site).scroll_depth_visible_at)
 
       refute imported_pages_content =~ "scroll_depth"
     end

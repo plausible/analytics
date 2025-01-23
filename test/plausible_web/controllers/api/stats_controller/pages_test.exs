@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     setup %{site: site} = context do
-      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      Plausible.Sites.set_scroll_depth_visible_at(site)
       context
     end
 
@@ -654,7 +654,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "does not return scroll depth (in detailed mode) when site.engagement_metrics_enabled_at=nil",
+    test "does not return scroll depth (in detailed mode) when site.scroll_depth_visible_at=nil",
          %{conn: conn, user: user} do
       site = new_site(owner: user)
 

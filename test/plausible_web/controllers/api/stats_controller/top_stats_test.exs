@@ -481,7 +481,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     setup %{site: site} = context do
-      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      Plausible.Sites.set_scroll_depth_visible_at(site)
       context
     end
 
@@ -896,7 +896,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     setup [:create_user, :log_in, :create_site]
 
     setup %{site: site} = context do
-      Plausible.Sites.set_engagement_metrics_enabled_at(site)
+      Plausible.Sites.set_scroll_depth_visible_at(site)
       context
     end
 
@@ -1313,7 +1313,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    test "does not return scroll depth when site.engagement_metrics_enabled_at=nil", %{
+    test "does not return scroll depth when site.scroll_depth_visible_at=nil", %{
       conn: conn,
       user: user
     } do
