@@ -60,8 +60,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
   def create_site(conn, params) do
     user = conn.assigns.current_user
+    team = Plausible.Teams.get(params["team_id"])
 
-    case Sites.create(user, params) do
+    case Sites.create(user, params, team) do
       {:ok, %{site: site}} ->
         json(conn, site)
 
@@ -71,6 +72,20 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         |> json(%{
           error:
             "Your account has reached the limit of #{limit} sites. To unlock more sites, please upgrade your subscription."
+        })
+
+      {:error, _, :permission_denied, _} ->
+        conn
+        |> put_status(403)
+        |> json(%{
+          error: "You can't add sites to the selected team."
+        })
+
+      {:error, _, :multiple_teams, _} ->
+        conn
+        |> put_status(400)
+        |> json(%{
+          error: "You must select a team with 'team_id' parameter."
         })
 
       {:error, _, changeset, _} ->

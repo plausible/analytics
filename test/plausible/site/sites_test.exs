@@ -48,6 +48,48 @@ defmodule Plausible.SitesTest do
       assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
                Sites.create(user, params)
     end
+
+    test "fails for user owning more than one team without explicit pick" do
+      user = new_user()
+      _site1 = new_site(owner: user)
+      site2 = new_site()
+      add_member(site2.team, user: user, role: :owner)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:error, _, :multiple_teams, _} = Sites.create(user, params)
+    end
+
+    test "fails for user not being permitted to add sites in selected team" do
+      user = new_user()
+      site = new_site()
+      viewer_team = site.team
+      add_member(viewer_team, user: user, role: :viewer)
+      other_site = new_site()
+      other_team = other_site.team
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:error, _, :permission_denied, _} = Sites.create(user, params, viewer_team)
+      assert {:error, _, :permission_denied, _} = Sites.create(user, params, other_team)
+    end
+
+    test "succeeds for user being permitted to add sites in selected team" do
+      user = new_user()
+      viewer_site = new_site()
+      viewer_team = viewer_site.team
+      editor_site = new_site()
+      editor_team = editor_site.team
+
+      add_member(viewer_team, user: user, role: :viewer)
+      add_member(editor_team, user: user, role: :editor)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: site}} = Sites.create(user, params, editor_team)
+
+      assert site.team_id == editor_team.id
+    end
   end
 
   describe "stats_start_date" do

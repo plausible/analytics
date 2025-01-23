@@ -163,16 +163,25 @@ defmodule Plausible.Sites do
     )
   end
 
-  def create(user, params) do
+  def create(user, params, team \\ nil) do
     Ecto.Multi.new()
     |> Ecto.Multi.put(:site_changeset, Site.new(params))
     |> Ecto.Multi.run(:create_team, fn _repo, _context ->
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      cond do
+        team && Teams.Memberships.can_add_site?(team, user) ->
+          {:ok, Teams.with_subscription(team)}
 
-      {:ok, Plausible.Teams.with_subscription(team)}
+        is_nil(team) ->
+          with {:ok, team} <- Teams.get_or_create(user) do
+            {:ok, Teams.with_subscription(team)}
+          end
+
+        true ->
+          {:error, :permission_denied}
+      end
     end)
     |> Ecto.Multi.run(:ensure_can_add_new_site, fn _repo, %{create_team: team} ->
-      case Plausible.Teams.Billing.ensure_can_add_new_site(team) do
+      case Teams.Billing.ensure_can_add_new_site(team) do
         :ok -> {:ok, :proceed}
         error -> error
       end

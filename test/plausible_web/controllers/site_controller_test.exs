@@ -256,6 +256,21 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "can&#39;t be blank"
     end
 
+    test "fails to create site when not allowed to in selected team", %{conn: conn, user: user} do
+      site = new_site()
+      add_member(site.team, user: user, role: :viewer)
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert html_response(conn, 200) =~ "You are not permitted to add sites in the current team"
+    end
+
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
       refute team_of(user)
 
