@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import Modal from './modal'
 import { addFilter, revenueAvailable } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
-import { EVENT_PROPS_PREFIX, hasGoalFilter } from "../../util/filters"
+import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from "../../util/filters"
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
 import * as url from "../../util/url";
@@ -43,8 +43,8 @@ function PropsModal() {
     return [
       metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
       metrics.createEvents({ renderLabel: (_query) => "Events" }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(query) && metrics.createPercentage(),
       showRevenueMetrics && metrics.createAverageRevenue(),
       showRevenueMetrics && metrics.createTotalRevenue(),
     ].filter(metric => !!metric)

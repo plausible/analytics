@@ -76,11 +76,15 @@ export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
 // goals with the same currency. Used to decide whether to render
 // revenue metrics in a dashboard report or not.
 export function revenueAvailable(query: DashboardQuery, site: PlausibleSite) {
-  const revenueGoalsInFilter = site.revenueGoals.filter((rg) => {
+  const revenueGoalsInFilter = site.revenueGoals.filter((revenueGoal) => {
     const goalFilters: Filter[] = getFiltersByKeyPrefix(query, 'goal')
 
-    return goalFilters.some(([_op, _key, clauses]) => {
-      return clauses.includes(rg.display_name)
+    return goalFilters.some(([operation, _key, clauses]) => {
+      return (
+        [FILTER_OPERATIONS.is, FILTER_OPERATIONS.contains].includes(
+          operation
+        ) && clauses.includes(revenueGoal.display_name)
+      )
     })
   })
 

@@ -6,7 +6,7 @@ import * as api from '../../api';
 import usePrevious from '../../hooks/use-previous';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { getFiltersByKeyPrefix, hasGoalFilter } from "../../util/filters";
+import { getFiltersByKeyPrefix, hasConversionGoalFilter } from "../../util/filters";
 import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
@@ -50,7 +50,7 @@ function AllSources({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -86,7 +86,7 @@ function Channels({ onClick, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -131,7 +131,7 @@ function UTMSources({ tab, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 

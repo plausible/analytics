@@ -7,7 +7,7 @@ import * as api from '../../api';
 import { apiPath } from '../../util/url';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter, getFiltersByKeyPrefix } from '../../util/filters';
+import { hasConversionGoalFilter, getFiltersByKeyPrefix } from '../../util/filters';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router';
 import { useQueryContext } from '../../query-context';
@@ -33,7 +33,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
 	function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: {plot: true}}),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -72,7 +72,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
 	function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: {plot: true}}),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -111,7 +111,7 @@ function Cities({ query, site, afterFetchData }) {
 	function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: {plot: true}}),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 

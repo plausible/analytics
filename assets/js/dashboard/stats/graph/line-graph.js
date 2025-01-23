@@ -7,7 +7,7 @@ import { buildDataSet, METRIC_LABELS } from './graph-util'
 import dateFormatter from './date-formatter';
 import FadeIn from '../../fade-in';
 import classNames from 'classnames';
-import { hasGoalFilter } from '../../util/filters';
+import { hasConversionGoalFilter } from '../../util/filters';
 import { MetricFormatterShort } from '../reports/metric-formatter'
 
 const calculateMaximumY = function(dataset) {
@@ -32,7 +32,7 @@ class LineGraph extends React.Component {
   getGraphMetric() {
     let metric = this.props.graphData.metric
 
-    if (metric == 'visitors' && hasGoalFilter(this.props.query)) {
+    if (metric == 'visitors' && hasConversionGoalFilter(this.props.query)) {
       return 'conversions'
     } else {
       return metric

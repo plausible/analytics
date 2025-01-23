@@ -7,7 +7,7 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import GoalConversions, { specialTitleWhenGoalFilter, SPECIAL_GOALS } from './goal-conversions'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
-import { hasGoalFilter } from '../../util/filters'
+import { hasConversionGoalFilter } from '../../util/filters'
 import { useSiteContext } from '../../site-context'
 import { useQueryContext } from '../../query-context'
 import { useUserContext } from '../../user-context'
@@ -70,13 +70,13 @@ export default function Behaviours({ importedDataInView }) {
   }, [])
 
   useEffect(() => {
-    const justRemovedGoalFilter = !hasGoalFilter(query)
+    const justRemovedGoalFilter = !hasConversionGoalFilter(query)
     if (mode === PROPS && justRemovedGoalFilter && showingPropsForGoalFilter) {
       setShowingPropsForGoalFilter(false)
       setMode(CONVERSIONS)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasGoalFilter(query)])
+  }, [hasConversionGoalFilter(query)])
 
   useEffect(() => {
     setMode(defaultMode())

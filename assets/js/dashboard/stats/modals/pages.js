@@ -1,6 +1,6 @@
 import React, {useCallback} from "react";
 import Modal from './modal'
-import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
+import { hasConversionGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import { addFilter } from '../../query'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from '../reports/metrics'
@@ -33,7 +33,7 @@ function PagesModal() {
   }, [reportInfo.dimension])
 
   function chooseMetrics() {
-    if (hasGoalFilter(query)) {
+    if (hasConversionGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
         metrics.createVisitors({renderLabel: (_query) => 'Conversions', width: 'w-28'}),

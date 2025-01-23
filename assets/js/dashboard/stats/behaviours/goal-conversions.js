@@ -4,7 +4,7 @@ import ListReport from "../reports/list"
 import * as metrics from '../reports/metrics'
 import * as url from "../../util/url"
 import * as api from "../../api"
-import { EVENT_PROPS_PREFIX, getGoalFilter } from "../../util/filters"
+import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS } from "../../util/filters"
 import { useSiteContext } from "../../site-context"
 import { useQueryContext } from "../../query-context"
 import { customPropsRoute } from "../../router"
@@ -22,8 +22,8 @@ function getSpecialGoal(query) {
   if (!goalFilter) {
     return null
   }
-  const [_operation, _filterKey, clauses] = goalFilter
-  if (clauses.length == 1) {
+  const [operation, _filterKey, clauses] = goalFilter
+  if (operation === FILTER_OPERATIONS.is && clauses.length == 1) {
     return SPECIAL_GOALS[clauses[0]] || null
   }
   return null
