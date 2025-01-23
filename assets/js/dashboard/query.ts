@@ -80,7 +80,11 @@ export function revenueAvailable(query: DashboardQuery, site: PlausibleSite) {
     const goalFilters: Filter[] = getFiltersByKeyPrefix(query, 'goal')
 
     return goalFilters.some(([operation, _key, clauses]) => {
-      return [FILTER_OPERATIONS.is, FILTER_OPERATIONS.contains].includes(operation) && clauses.includes(revenueGoal.display_name)
+      return (
+        [FILTER_OPERATIONS.is, FILTER_OPERATIONS.contains].includes(
+          operation
+        ) && clauses.includes(revenueGoal.display_name)
+      )
     })
   })
 
