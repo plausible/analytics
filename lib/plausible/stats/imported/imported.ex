@@ -239,7 +239,8 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
-    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+    {events, page_regexes} =
+      Filters.Utils.split_goals_query_expressions(query.preloaded_goals.matching_toplevel_filters)
 
     Imported.Base.decide_tables(query)
     |> Enum.map(fn

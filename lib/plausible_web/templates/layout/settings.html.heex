@@ -13,7 +13,7 @@
       <div class="py-4 g:py-0 lg:col-span-3">
         <div class="mb-4 hidden lg:block">
           <h3 class="uppercase text-sm text-indigo-600 font-semibold">Account Settings</h3>
-          <p class="text-xs dark:text-gray-400 truncate"><%= @current_user.email %></p>
+          <p class="text-xs dark:text-gray-400 truncate">{@current_user.email}</p>
         </div>
 
         <.mobile_nav_dropdown
@@ -26,38 +26,38 @@
 
         <div class="hidden lg:block">
           <%= for %{key: key, value: value, icon: icon} <- options["Account Settings"]  do %>
-            <%= render("_settings_tab.html",
+            {render("_settings_tab.html",
               icon: icon,
               this_tab: value,
               text: key,
               conn: @conn,
               submenu?: false
-            ) %>
+            )}
           <% end %>
         </div>
 
         <div :if={Plausible.Teams.enabled?(@my_team)}>
           <div class="mb-4 mt-4 hidden lg:block">
             <h3 class="uppercase text-sm text-indigo-600 font-semibold">Team Settings</h3>
-            <p class="text-xs dark:text-gray-400 truncate"><%= @my_team.name %></p>
+            <p class="text-xs dark:text-gray-400 truncate">{@my_team.name}</p>
           </div>
 
           <div class="hidden lg:block">
             <%= for %{key: key, value: value, icon: icon} <- options["Team Settings"]  do %>
-              <%= render("_settings_tab.html",
+              {render("_settings_tab.html",
                 icon: icon,
                 this_tab: value,
                 text: key,
                 conn: @conn,
                 submenu?: false
-              ) %>
+              )}
             <% end %>
           </div>
         </div>
       </div>
 
       <div class="space-y-6 lg:col-span-9 lg:mt-4">
-        <%= @inner_content %>
+        {@inner_content}
       </div>
     </div>
   </div>

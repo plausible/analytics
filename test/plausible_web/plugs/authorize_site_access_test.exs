@@ -44,6 +44,19 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     assert html_response(conn, 404)
   end
 
+  test "returns 404 on hacky :domain input", %{conn: conn} do
+    opts = AuthorizeSiteAccess.init(:all_roles)
+
+    conn =
+      conn
+      |> bypass_through(PlausibleWeb.Router)
+      |> get("/plug-tests/%c0%ae/with-domain")
+      |> AuthorizeSiteAccess.call(opts)
+
+    assert conn.halted
+    assert html_response(conn, 404)
+  end
+
   test "rejects user completely unrelated to the site", %{conn: conn} do
     opts = AuthorizeSiteAccess.init(:all_roles)
 

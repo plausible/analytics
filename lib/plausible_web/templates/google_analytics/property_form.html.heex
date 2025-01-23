@@ -4,7 +4,7 @@
   </:title>
 
   <:subtitle>
-    Choose the property in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard.
+    Choose the property in your Google Analytics account that will be imported to the {@site.domain} dashboard.
   </:subtitle>
   <.form
     :let={f}
@@ -27,7 +27,7 @@
       />
 
       <p class="text-red-600 dark:text-red-700">
-        <%= @conn.assigns[:selected_property_error] %>
+        {@conn.assigns[:selected_property_error]}
       </p>
     </div>
 

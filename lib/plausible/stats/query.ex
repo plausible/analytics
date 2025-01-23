@@ -22,7 +22,9 @@ defmodule Plausible.Stats.Query do
             # Revenue metric specific metadata
             revenue_currencies: %{},
             revenue_warning: nil,
-            remove_unavailable_revenue_metrics: false
+            remove_unavailable_revenue_metrics: false,
+            site_id: nil,
+            site_native_stats_start_at: nil
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy}
@@ -34,7 +36,12 @@ defmodule Plausible.Stats.Query do
       query =
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
-        |> struct!(now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
+        |> struct!(
+          now: DateTime.utc_now(:second),
+          debug_metadata: debug_metadata,
+          site_id: site.id,
+          site_native_stats_start_at: site.native_stats_start_at
+        )
 
       on_ee do
         query = Plausible.Stats.Sampling.put_threshold(query, site, params)
@@ -102,8 +109,9 @@ defmodule Plausible.Stats.Query do
   """
   def remove_top_level_filters(query, prefixes) do
     new_filters =
-      Enum.reject(query.filters, fn [_, filter_key | _rest] ->
-        is_binary(filter_key) and Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
+      Enum.reject(query.filters, fn [_, dimension_or_filter_tree | _rest] ->
+        is_binary(dimension_or_filter_tree) and
+          Enum.any?(prefixes, &String.starts_with?(dimension_or_filter_tree, &1))
       end)
 
     query
@@ -172,10 +180,11 @@ defmodule Plausible.Stats.Query do
 
   @spec trace(%__MODULE__{}, [atom()]) :: %__MODULE__{}
   def trace(%__MODULE__{} = query, metrics) do
-    filter_keys =
+    filter_dimensions =
       query.filters
-      |> Enum.map(fn [_op, prop | _rest] -> prop end)
+      |> Plausible.Stats.Filters.dimensions_used_in_filters()
       |> Enum.sort()
+      |> Enum.uniq()
       |> Enum.join(";")
 
     metrics = metrics |> Enum.sort() |> Enum.join(";")
@@ -185,7 +194,7 @@ defmodule Plausible.Stats.Query do
       {"plausible.query.period", query.period},
       {"plausible.query.dimensions", query.dimensions |> Enum.join(";")},
       {"plausible.query.include_imported", query.include_imported},
-      {"plausible.query.filter_keys", filter_keys},
+      {"plausible.query.filter_keys", filter_dimensions},
       {"plausible.query.metrics", metrics}
     ])
 

@@ -4,6 +4,31 @@ defmodule Plausible.Goals.Filters do
   import Ecto.Query
   import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
 
+  alias Plausible.Stats.Filters
+
+  @doc """
+  Preloads goals data if needed for query-building and related work.
+  """
+  def preload_needed_goals(site, dimensions, filters) do
+    if Enum.member?(dimensions, "event:goal") or
+         Filters.filtering_on_dimension?(filters, "event:goal") do
+      goals = Plausible.Goals.for_site(site)
+
+      %{
+        # When grouping by event:goal, later pipeline needs to know which goals match filters exactly.
+        # This can affect both calculations whether all goals have the same revenue currency and
+        # whether we should skip imports.
+        matching_toplevel_filters: goals_matching_toplevel_filters(goals, filters),
+        all: goals
+      }
+    else
+      %{
+        all: [],
+        matching_toplevel_filters: []
+      }
+    end
+  end
+
   @doc """
   Translates an event:goal filter into SQL. Similarly to other `add_filter` clauses in
   `Plausible.Stats.SQL.WhereBuilder`, returns an `Ecto.Query.dynamic` expression.
@@ -26,7 +51,7 @@ defmodule Plausible.Goals.Filters do
 
     Enum.reduce(clauses, false, fn clause, dynamic_statement ->
       condition =
-        query.preloaded_goals
+        query.preloaded_goals.all
         |> filter_preloaded(filter, clause)
         |> build_condition(imported?)
 
@@ -34,9 +59,11 @@ defmodule Plausible.Goals.Filters do
     end)
   end
 
-  def preload_needed_goals(site, filters) do
-    goals = Plausible.Goals.for_site(site)
+  defp filter_preloaded(goals, filter, clause) do
+    Enum.filter(goals, fn goal -> matches?(goal, filter, clause) end)
+  end
 
+  defp goals_matching_toplevel_filters(goals, filters) do
     Enum.reduce(filters, goals, fn
       [_, "event:goal" | _] = filter, goals ->
         goals_matching_any_clause(goals, filter)
@@ -44,10 +71,6 @@ defmodule Plausible.Goals.Filters do
       _filter, goals ->
         goals
     end)
-  end
-
-  defp filter_preloaded(preloaded_goals, filter, clause) do
-    Enum.filter(preloaded_goals, fn goal -> matches?(goal, filter, clause) end)
   end
 
   defp goals_matching_any_clause(goals, [_, _, clauses | _] = filter) do

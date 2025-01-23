@@ -1,9 +1,9 @@
-import { getFiltersByKeyPrefix, hasGoalFilter } from '../../util/filters'
+import { getFiltersByKeyPrefix, hasConversionGoalFilter } from '../../util/filters'
 import { revenueAvailable } from '../../query'
 
 export function getGraphableMetrics(query, site) {
   const isRealtime = query.period === 'realtime'
-  const isGoalFilter = hasGoalFilter(query)
+  const isGoalFilter = hasConversionGoalFilter(query)
   const isPageFilter = getFiltersByKeyPrefix(query, "page").length > 0
 
   if (isRealtime && isGoalFilter) {

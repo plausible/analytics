@@ -6,10 +6,9 @@ import { FilterPill } from './filter-pill'
 import {
   cleanLabels,
   EVENT_PROPS_PREFIX,
-  FILTER_GROUP_TO_MODAL_TYPE,
-  plainFilterText,
-  styledFilterText
+  FILTER_GROUP_TO_MODAL_TYPE
 } from '../util/filters'
+import { styledFilterText, plainFilterText } from '../util/filter-text'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 

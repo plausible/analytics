@@ -265,7 +265,7 @@ defmodule Plausible.Ingestion.Event do
 
     update_session_attrs(event, %{
       referrer_source: Plausible.Ingestion.Source.resolve(event.request),
-      referrer: Plausible.Ingestion.Source.format_referrer(event.request.referrer),
+      referrer: Plausible.Ingestion.Source.format_referrer(event.request),
       click_id_param: get_click_id_param(event.request.query_params),
       utm_source: tagged_source,
       utm_medium: query_params["utm_medium"],

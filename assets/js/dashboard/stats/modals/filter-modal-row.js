@@ -1,6 +1,8 @@
 /** @format */
 
 import React, { useMemo } from 'react'
+import { TrashIcon } from '@heroicons/react/20/solid'
+import classNames from 'classnames'
 
 import FilterOperatorSelector from '../../components/filter-operator-selector'
 import Combobox from '../../components/combobox'
@@ -16,7 +18,14 @@ import { apiPath } from '../../util/url'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 
-export default function FilterModalRow({ filter, labels, onUpdate }) {
+export default function FilterModalRow({
+  filter,
+  labels,
+  canDelete,
+  showDelete,
+  onUpdate,
+  onDelete
+}) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   const [operation, filterKey, clauses] = filter
@@ -64,7 +73,12 @@ export default function FilterModalRow({ filter, labels, onUpdate }) {
   }
 
   return (
-    <div className="grid grid-cols-11 mt-1">
+    <div
+      className={classNames('grid mt-1', {
+        'grid-cols-12': canDelete,
+        'grid-cols-11': !canDelete
+      })}
+    >
       <div className="col-span-3">
         <FilterOperatorSelector
           forFilter={filterKey}
@@ -83,6 +97,17 @@ export default function FilterModalRow({ filter, labels, onUpdate }) {
           placeholder={`Select ${withIndefiniteArticle(formattedFilters[filterKey])}`}
         />
       </div>
+      {showDelete && (
+        <div className="col-span-1 flex flex-col mt-2">
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+          <a
+            className="ml-2 text-red-600 h-5 w-5 cursor-pointer"
+            onClick={onDelete}
+          >
+            <TrashIcon />
+          </a>
+        </div>
+      )}
     </div>
   )
 }

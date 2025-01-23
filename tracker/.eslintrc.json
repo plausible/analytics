@@ -19,8 +19,7 @@
       {
         "assertFunctionNames": [
           "expect",
-          "clickPageElementAndExpectEventRequests",
-          "expectCustomEvent"
+          "expectPlausibleInAction"
         ]
       }
     ]

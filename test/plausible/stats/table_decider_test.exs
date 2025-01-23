@@ -152,9 +152,10 @@ defmodule Plausible.Stats.TableDeciderTest do
     end
   end
 
-  defp make_query(filter_keys, dimensions \\ []) do
+  defp make_query(filter_dimensions, dimensions \\ []) do
     Query.from(build(:site), %{
-      "filters" => Enum.map(filter_keys, fn filter_key -> ["is", filter_key, []] end),
+      "filters" =>
+        Enum.map(filter_dimensions, fn filter_dimension -> ["is", filter_dimension, []] end),
       "dimensions" => dimensions
     })
   end

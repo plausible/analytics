@@ -13,7 +13,12 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     query =
       Query
-      |> struct!(now: now, debug_metadata: debug_metadata)
+      |> struct!(
+        now: now,
+        debug_metadata: debug_metadata,
+        site_id: site.id,
+        site_native_stats_start_at: site.native_stats_start_at
+      )
       |> put_period(site, params)
       |> put_timezone(site)
       |> put_dimensions(params)

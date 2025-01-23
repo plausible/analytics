@@ -56,8 +56,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <%= if @goal, do: edit_form(assigns) %>
-      <%= if is_nil(@goal), do: create_form(assigns) %>
+      {if @goal, do: edit_form(assigns)}
+      {if is_nil(@goal), do: create_form(assigns)}
     </div>
     """
   end
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def edit_form(assigns) do
     ~H"""
     <.form :let={f} for={@form} phx-submit="save-goal" phx-target={@myself}>
-      <.title>Edit Goal for <%= @domain %></.title>
+      <.title>Edit Goal for {@domain}</.title>
 
       <.custom_event_fields
         :if={@selected_tab == "custom_events"}
@@ -105,7 +105,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     >
       <.spinner class="spinner block absolute right-9 top-8" x-show="tabSelectionInProgress" />
 
-      <.title>Add Goal for <%= @domain %></.title>
+      <.title>Add Goal for {@domain}</.title>
 
       <.tabs selected_tab={@selected_tab} myself={@myself} />
 
@@ -145,7 +145,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         phx-target={@myself}
       >
         <span :if={@event_name_options_count > 1}>
-          Already sending custom events? We've found <%= @event_name_options_count %> custom events from the last 6 months that are not yet configured as goals. Click here to add them.
+          Already sending custom events? We've found {@event_name_options_count} custom events from the last 6 months that are not yet configured as goals. Click here to add them.
         </span>
         <span :if={@event_name_options_count == 1}>
           Already sending custom events? We've found 1 custom event from the last 6 months that is not yet configured as a goal. Click here to add it.
@@ -182,7 +182,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       />
 
       <.error :for={msg <- Enum.map(@f[:page_path].errors, &translate_error/1)}>
-        <%= msg %>
+        {msg}
       </.error>
 
       <.input
@@ -241,7 +241,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           />
 
           <.error :for={msg <- Enum.map(@f[:event_name].errors, &translate_error/1)}>
-            <%= msg %>
+            {msg}
           </.error>
         </div>
 

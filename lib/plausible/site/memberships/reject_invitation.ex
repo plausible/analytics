@@ -17,6 +17,12 @@ defmodule Plausible.Site.Memberships.RejectInvitation do
     end
   end
 
+  defp do_reject(%Teams.Invitation{} = team_invitation) do
+    Teams.Invitations.remove_team_invitation(team_invitation)
+
+    notify_team_invitation_rejected(team_invitation)
+  end
+
   defp do_reject(%Teams.GuestInvitation{} = guest_invitation) do
     Teams.Invitations.remove_guest_invitation(guest_invitation)
 
@@ -35,7 +41,12 @@ defmodule Plausible.Site.Memberships.RejectInvitation do
   end
 
   defp notify_guest_invitation_rejected(guest_invitation) do
-    PlausibleWeb.Email.invitation_rejected(guest_invitation)
+    PlausibleWeb.Email.guest_invitation_rejected(guest_invitation)
+    |> Plausible.Mailer.send()
+  end
+
+  defp notify_team_invitation_rejected(team_invitation) do
+    PlausibleWeb.Email.team_invitation_rejected(team_invitation)
     |> Plausible.Mailer.send()
   end
 end

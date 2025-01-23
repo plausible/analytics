@@ -26,8 +26,8 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp query_events(site, query) do
-    q = from(e in "events_v2", where: ^SQL.WhereBuilder.build(:events, site, query))
+  defp query_events(_site, query) do
+    q = from(e in "events_v2", where: ^SQL.WhereBuilder.build(:events, query))
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
@@ -36,8 +36,8 @@ defmodule Plausible.Stats.Base do
     q
   end
 
-  def query_sessions(site, query) do
-    q = from(s in "sessions_v2", where: ^SQL.WhereBuilder.build(:sessions, site, query))
+  def query_sessions(_site, query) do
+    q = from(s in "sessions_v2", where: ^SQL.WhereBuilder.build(:sessions, query))
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)

@@ -20,7 +20,7 @@ export default function FilterModalGroup({
     [filterGroup, rows]
   )
 
-  const showAddRow = filterGroup == 'props'
+  const showAddRow = ['props', 'goal'].includes(filterGroup)
   const showTitle = filterGroup != 'props'
 
   return (
@@ -42,7 +42,10 @@ export default function FilterModalGroup({
               key={id}
               filter={filter}
               labels={labels}
+              canDelete={showAddRow}
+              showDelete={rows.length > 1}
               onUpdate={(newFilter, labelUpdate) => onUpdateRowValue(id, newFilter, labelUpdate)}
+              onDelete={() => onDeleteRow(id)}
             />
           )
         )}

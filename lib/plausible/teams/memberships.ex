@@ -13,6 +13,13 @@ defmodule Plausible.Teams.Memberships do
     |> Repo.all()
   end
 
+  def owners_count(team) do
+    Repo.aggregate(
+      from(tm in Teams.Membership, where: tm.team_id == ^team.id and tm.role == :owner),
+      :count
+    )
+  end
+
   def team_role(team, user) do
     result =
       from(u in Auth.User,
@@ -143,6 +150,23 @@ defmodule Plausible.Teams.Memberships do
     )
 
     :ok
+  end
+
+  def get_team_membership(team, %Auth.User{} = user) do
+    get_team_membership(team, user.id)
+  end
+
+  def get_team_membership(team, user_id) do
+    query =
+      from(
+        tm in Teams.Membership,
+        where: tm.team_id == ^team.id and tm.user_id == ^user_id
+      )
+
+    case Repo.one(query) do
+      nil -> {:error, :membership_not_found}
+      membership -> {:ok, membership}
+    end
   end
 
   defp get_guest_membership(site_id, user_id) do

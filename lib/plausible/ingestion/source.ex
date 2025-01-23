@@ -86,7 +86,7 @@ defmodule Plausible.Ingestion.Source do
     source =
       cond do
         tagged_source -> tagged_source
-        has_referral?(request) -> parse(request.referrer)
+        has_valid_referral?(request) -> parse(request.referrer)
         true -> nil
       end
 
@@ -97,10 +97,7 @@ defmodule Plausible.Ingestion.Source do
     case RefInspector.parse(ref).source do
       :unknown ->
         uri = URI.parse(String.trim(ref))
-
-        if valid_referrer?(uri) do
-          format_referrer_host(uri)
-        end
+        format_referrer_host(uri)
 
       source ->
         source
@@ -116,30 +113,28 @@ defmodule Plausible.Ingestion.Source do
     end
   end
 
-  def format_referrer(nil), do: nil
-
-  def format_referrer(referrer) do
-    referrer_uri = URI.parse(referrer)
-
-    if valid_referrer?(referrer_uri) do
+  def format_referrer(request) do
+    if has_valid_referral?(request) do
+      referrer_uri = URI.parse(request.referrer)
       path = String.trim_trailing(referrer_uri.path || "", "/")
       format_referrer_host(referrer_uri) <> path
     end
   end
 
-  defp valid_referrer?(%URI{host: host, scheme: scheme})
-       when scheme in ["http", "https", "android-app"] and byte_size(host) > 0,
-       do: true
+  defp has_valid_referral?(%Request{referrer: nil}), do: false
 
-  defp valid_referrer?(_), do: false
-
-  defp has_referral?(%Request{referrer: nil}), do: false
-
-  defp has_referral?(%Request{referrer: referrer, uri: uri}) do
+  defp has_valid_referral?(%Request{referrer: referrer, uri: uri}) do
     referrer_uri = URI.parse(referrer)
 
-    Request.sanitize_hostname(referrer_uri.host) !== Request.sanitize_hostname(uri.host) and
-      referrer_uri.host !== "localhost"
+    valid_scheme? = referrer_uri.scheme in ["http", "https", "android-app"]
+    valid_host? = !is_nil(referrer_uri.host) && byte_size(referrer_uri.host) > 0
+
+    internal? =
+      Request.sanitize_hostname(referrer_uri.host) == Request.sanitize_hostname(uri.host)
+
+    local? = referrer_uri.host == "localhost"
+
+    valid_scheme? and valid_host? and not internal? and not local?
   end
 
   defp format_referrer_host(uri) do

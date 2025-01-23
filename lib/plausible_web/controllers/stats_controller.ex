@@ -205,10 +205,10 @@ defmodule PlausibleWeb.StatsController do
       !query.include_imported &&
         scroll_depth_enabled?(site, current_user) &&
         Plausible.Sites.has_engagement_metrics?(site) &&
-        Filters.filtering_on_dimension?(query, "event:page")
+        Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 
     {metrics, column_headers} =
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0) do
         {
           [:visitors, :events, :conversion_rate],
           [:date, :unique_conversions, :total_conversions, :conversion_rate]

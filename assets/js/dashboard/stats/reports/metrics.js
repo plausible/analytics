@@ -2,7 +2,7 @@
 
 import React from 'react'
 import MetricValue from './metric-value'
-import { hasGoalFilter } from '../../util/filters'
+import { hasConversionGoalFilter } from '../../util/filters'
 
 // Class representation of a metric.
 
@@ -79,7 +79,7 @@ export const createVisitors = (props) => {
       if (query.period === 'realtime') {
         return realtimeLabel
       }
-      if (query && hasGoalFilter(query)) {
+      if (query && hasConversionGoalFilter(query)) {
         return goalFilterLabel
       }
       return defaultLabel

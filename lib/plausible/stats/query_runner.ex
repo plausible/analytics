@@ -154,7 +154,7 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp dimension_label("event:goal", entry, query) do
-    {events, paths} = Filters.Utils.split_goals(query.preloaded_goals)
+    {events, paths} = Filters.Utils.split_goals(query.preloaded_goals.matching_toplevel_filters)
 
     goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
 

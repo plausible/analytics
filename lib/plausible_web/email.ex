@@ -299,29 +299,53 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def invitation_accepted(inviter_email, invitee_email, site) do
+  def guest_invitation_accepted(inviter_email, invitee_email, site) do
     priority_email()
     |> to(inviter_email)
-    |> tag("invitation-accepted")
+    |> tag("guest-invitation-accepted")
     |> subject(
       "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to #{site.domain}"
     )
-    |> render("invitation_accepted.html",
+    |> render("guest_invitation_accepted.html",
       invitee_email: invitee_email,
       site: site
     )
   end
 
-  def invitation_rejected(guest_invitation) do
+  def team_invitation_accepted(inviter_email, invitee_email, team) do
+    priority_email()
+    |> to(inviter_email)
+    |> tag("team-invitation-accepted")
+    |> subject(
+      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to \"#{team.name}\" team"
+    )
+    |> render("team_invitation_accepted.html",
+      invitee_email: invitee_email,
+      team: team
+    )
+  end
+
+  def guest_invitation_rejected(guest_invitation) do
     priority_email()
     |> to(guest_invitation.team_invitation.inviter.email)
-    |> tag("invitation-rejected")
+    |> tag("guest-invitation-rejected")
     |> subject(
       "[#{Plausible.product_name()}] #{guest_invitation.team_invitation.email} rejected your invitation to #{guest_invitation.site.domain}"
     )
-    |> render("invitation_rejected.html",
-      user: guest_invitation.team_invitation.inviter,
+    |> render("guest_invitation_rejected.html",
       guest_invitation: guest_invitation
+    )
+  end
+
+  def team_invitation_rejected(team_invitation) do
+    priority_email()
+    |> to(team_invitation.inviter.email)
+    |> tag("team-invitation-rejected")
+    |> subject(
+      "[#{Plausible.product_name()}] #{team_invitation.email} rejected your invitation to \"#{team_invitation.team.name}\" team"
+    )
+    |> render("team_invitation_rejected.html",
+      team_invitation: team_invitation
     )
   end
 
@@ -361,6 +385,19 @@ defmodule PlausibleWeb.Email do
     |> render("site_member_removed.html",
       user: guest_membership.team_membership.user,
       guest_membership: guest_membership
+    )
+  end
+
+  def team_member_removed(team_membership) do
+    priority_email()
+    |> to(team_membership.user.email)
+    |> tag("team-member-removed")
+    |> subject(
+      "[#{Plausible.product_name()}] Your access to \"#{team_membership.team.name}\" team has been revoked"
+    )
+    |> render("team_member_removed.html",
+      user: team_membership.user,
+      team_membership: team_membership
     )
   end
 
@@ -476,8 +513,13 @@ defmodule PlausibleWeb.Email do
   def priority_email(), do: priority_email(%{layout: "priority_email.html"})
 
   def priority_email(%{layout: layout}) do
-    base_email(%{layout: layout})
-    |> put_param("MessageStream", "priority")
+    email = base_email(%{layout: layout})
+
+    if Plausible.ee?() do
+      put_param(email, "MessageStream", "priority")
+    else
+      email
+    end
   end
 
   def base_email(), do: base_email(%{layout: "base_email.html"})
