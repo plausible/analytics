@@ -7,7 +7,10 @@ defmodule PlausibleWeb.InvitationController do
        [:owner, :editor, :admin] when action in [:remove_invitation]
 
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
-    case Plausible.Site.Memberships.accept_invitation(invitation_id, conn.assigns.current_user) do
+    current_user = conn.assigns.current_user
+    team = conn.assigns.current_team
+
+    case Plausible.Site.Memberships.accept_invitation(invitation_id, current_user, team) do
       {:ok, result} ->
         team = result.team
 

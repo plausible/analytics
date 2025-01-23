@@ -100,7 +100,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                  other_team
                )
 
-
       assert Repo.reload(site1).team_id == other_team.id
       assert_guest_membership(other_team, site1, current_owner, :editor)
       assert Repo.reload(site2).team_id == other_team.id
