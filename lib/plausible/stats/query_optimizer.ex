@@ -121,7 +121,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     # Note: Only works since event:hostname is only allowed as a top level filter
     hostname_filters =
       query.filters
-      |> Enum.filter(fn [_operation, filter_key | _rest] -> filter_key == "event:hostname" end)
+      |> Enum.filter(fn [_operation, dimension | _rest] -> dimension == "event:hostname" end)
 
     if length(hostname_filters) > 0 do
       extra_filters =
@@ -136,10 +136,10 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp hostname_filters_for_dimension(dimension, hostname_filters) do
     if Map.has_key?(@dimensions_hostname_map, dimension) do
-      filter_key = Map.get(@dimensions_hostname_map, dimension)
+      dimension = Map.get(@dimensions_hostname_map, dimension)
 
       hostname_filters
-      |> Enum.map(fn [operation, _filter_key | rest] -> [operation, filter_key | rest] end)
+      |> Enum.map(fn [operation, _dimension | rest] -> [operation, dimension | rest] end)
     else
       []
     end

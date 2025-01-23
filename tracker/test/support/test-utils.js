@@ -32,13 +32,16 @@ exports.metaKey = function() {
 
 // Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
 // list of requests as soon as the specified number of requests is made, or 3 seconds has passed.
-const mockManyRequests = function(page, path, numberOfRequests) {
+const mockManyRequests = function({ page, path, numberOfRequests, responseDelay }) {
   return new Promise((resolve, _reject) => {
     let requestList = []
     const requestTimeoutTimer = setTimeout(() => resolve(requestList), 3000)
 
-    page.route(path, (route, request) => {
+    page.route(path, async (route, request) => {
       requestList.push(request)
+      if (responseDelay) {
+        await delay(responseDelay)
+      }
       if (requestList.length === numberOfRequests) {
         clearTimeout(requestTimeoutTimer)
         resolve(requestList)
@@ -53,14 +56,14 @@ exports.mockManyRequests = mockManyRequests
 /**
  * A powerful utility function that makes it easy to assert on the event
  * requests that should or should not have been made after doing a page
- * action (e.g. navigating to the page, clicking a page element, etc). 
+ * action (e.g. navigating to the page, clicking a page element, etc).
  *
  * @param {Page} page - The Playwright Page object.
  * @param {Object} args - The object configuring the action and related expectations.
  * @param {Function} args.action - A function that returns a promise. The function is called
  *  without arguments, and is `await`ed. This is the action that should or should not trigger
  *  Plausible requests on the page.
- * @param {Array} [args.expectedRequests] - A list of partial JSON payloads that get matched 
+ * @param {Array} [args.expectedRequests] - A list of partial JSON payloads that get matched
  *  against the bodies of event requests made. An `expectedRequest` is considered as having
  *  occurred if all of its key-value pairs are found from the JSON body of an event request
  *  that was made. The default value is `[]`
@@ -73,18 +76,26 @@ exports.mockManyRequests = mockManyRequests
  *  is `expectedRequests.length + refutedRequests.length`.
  * @param {number} [args.expectedRequestCount] - When provided, expects the total amount of
  *  event requests made to match this number.
+ * @param {number} [args.responseDelay] - When provided, delays the response from the Plausible
+ *  API by the given number of milliseconds.
  */
 exports.expectPlausibleInAction = async function (page, {
   action,
   expectedRequests = [],
   refutedRequests = [],
   awaitedRequestCount,
-  expectedRequestCount
+  expectedRequestCount,
+  responseDelay
 }) {
   const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
   const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
-  
-  const plausibleRequestMockList = mockManyRequests(page, '/api/event', requestsToAwait)
+
+  const plausibleRequestMockList = mockManyRequests({
+    page,
+    path: '/api/event',
+    numberOfRequests: requestsToAwait,
+    responseDelay: responseDelay
+  })
   await action()
   const requestBodies = (await plausibleRequestMockList).map(r => r.postDataJSON())
 
@@ -113,7 +124,7 @@ exports.expectPlausibleInAction = async function (page, {
 
   const refutedBodySubsetsErrorMessage = `The following requests were made, but were not expected:\n\n${JSON.stringify(refutedButFoundRequestBodies, null, 4)}`
   expect(refutedButFoundRequestBodies, refutedBodySubsetsErrorMessage).toHaveLength(0)
-  
+
   expect(requestBodies.length).toBe(requestsToExpect)
 }
 
@@ -136,4 +147,8 @@ function areFlatObjectsEqual(obj1, obj2) {
   if (keys1.length !== keys2.length) return false;
 
   return keys1.every(key => obj2[key] === obj1[key])
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }

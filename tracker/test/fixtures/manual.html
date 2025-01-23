@@ -26,16 +26,16 @@
   <script>
     document.addEventListener('click', (e) => {
       if (e.target.id === 'pageview-trigger') {
-        window.plausible('pageview') 
+        window.plausible('pageview')
       }
       if (e.target.id === 'pageview-trigger-custom-url') {
         window.plausible('pageview', {u: 'https://example.com/custom/location'})
       }
       if (e.target.id === 'custom-event-trigger') {
-        window.plausible('CustomEvent') 
+        window.plausible('CustomEvent')
       }
       if (e.target.id === 'custom-event-trigger-custom-url') {
-        window.plausible('CustomEvent', {u: 'https://example.com/custom/location'}) 
+        window.plausible('CustomEvent', {u: 'https://example.com/custom/location'})
       }
     })
   </script>

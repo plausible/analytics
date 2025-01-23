@@ -125,13 +125,13 @@ defmodule Plausible.Stats.Filters.QueryParser do
       when operator in [:not, :has_done, :has_not_done],
       do: parse_filter(filter)
 
-  def parse_filter_second(_operator, filter), do: parse_filter_key(filter)
+  def parse_filter_second(_operator, filter), do: parse_filter_dimension(filter)
 
-  defp parse_filter_key([_operator, filter_key | _rest] = filter) do
-    parse_filter_key_string(filter_key, "Invalid filter '#{i(filter)}")
+  defp parse_filter_dimension([_operator, filter_dimension | _rest] = filter) do
+    parse_filter_dimension_string(filter_dimension, "Invalid filter '#{i(filter)}")
   end
 
-  defp parse_filter_key(filter), do: {:error, "Invalid filter '#{i(filter)}'."}
+  defp parse_filter_dimension(filter), do: {:error, "Invalid filter '#{i(filter)}'."}
 
   defp parse_filter_rest(operator, filter)
        when operator in [
@@ -154,11 +154,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
        when operator in [:not, :and, :or, :has_done, :has_not_done],
        do: {:ok, []}
 
-  defp parse_clauses_list([operator, filter_key, list | _rest] = filter) when is_list(list) do
+  defp parse_clauses_list([operator, dimension, list | _rest] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
     all_integers? = Enum.all?(list, &is_integer/1)
 
-    case {filter_key, all_strings?} do
+    case {dimension, all_strings?} do
       {"visit:city", false} when all_integers? ->
         {:ok, list}
 
@@ -173,7 +173,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       {"segment", _} when all_integers? ->
         {:ok, list}
 
-      {_, true} when filter_key !== "segment" ->
+      {_, true} when dimension !== "segment" ->
         {:ok, list}
 
       _ ->
@@ -321,10 +321,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_dimension_entry(key, error_message) do
     case {
       parse_time(key),
-      parse_filter_key_string(key)
+      parse_filter_dimension_string(key)
     } do
       {{:ok, time}, _} -> {:ok, time}
-      {_, {:ok, filter_key}} -> {:ok, filter_key}
+      {_, {:ok, dimension}} -> {:ok, dimension}
       _ -> {:error, error_message}
     end
   end
@@ -333,7 +333,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     case {
       parse_time(value),
       parse_metric(value),
-      parse_filter_key_string(value)
+      parse_filter_dimension_string(value)
     } do
       {{:ok, time}, _, _} -> {:ok, time}
       {_, {:ok, metric}, _} -> {:ok, metric}
@@ -385,31 +385,31 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp atomize_keys(value), do: value
 
-  defp parse_filter_key_string(filter_key, error_message \\ "") do
-    case filter_key do
+  defp parse_filter_dimension_string(dimension, error_message \\ "") do
+    case dimension do
       "event:props:" <> property_name ->
         if String.length(property_name) > 0 do
-          {:ok, filter_key}
+          {:ok, dimension}
         else
           {:error, error_message}
         end
 
       "event:" <> key ->
         if key in Filters.event_props() do
-          {:ok, filter_key}
+          {:ok, dimension}
         else
           {:error, error_message}
         end
 
       "visit:" <> key ->
         if key in Filters.visit_props() do
-          {:ok, filter_key}
+          {:ok, dimension}
         else
           {:error, error_message}
         end
 
       "segment" ->
-        {:ok, filter_key}
+        {:ok, dimension}
 
       _ ->
         {:error, error_message}
