@@ -92,8 +92,6 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp add_imports_meta(meta, _), do: meta
-
   defp add_metric_warnings_meta(meta, %QueryRunner{main_query: query}) do
     warnings = metric_warnings(query)
 
