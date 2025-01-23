@@ -17,7 +17,9 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
     end
 
     test "with dsn" do
-      sample_dsn = "https://foobarbaz@somehost.example.com/1"
+      sample_dsn =
+        Sentry.Config.validate!(dsn: "https://foobarbaz@somehost.example.com/1")
+        |> Keyword.fetch!(:dsn)
 
       assert EmailView.sentry_link("some-trace", sample_dsn) ==
                "https://somehost.example.com/organizations/sentry/issues/?query=some-trace"
