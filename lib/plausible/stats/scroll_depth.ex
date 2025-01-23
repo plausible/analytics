@@ -1,4 +1,8 @@
 defmodule Plausible.Stats.ScrollDepth do
+  @moduledoc """
+  Module to check whether the scroll depth metric is available and visible for a site.
+  """
+
   import Ecto.Query
   require Logger
 
@@ -13,6 +17,11 @@ defmodule Plausible.Stats.ScrollDepth do
     feature_available?(site, user) && not is_nil(site.scroll_depth_visible_at)
   end
 
+  @doc """
+  Checks whether the scroll depth feature is visible for a site and updates the site record if it is.
+
+  Note this function queries ClickHouse and may take a while to complete.
+  """
   def check_feature_visible!(site, user) do
     cond do
       not feature_available?(site, user) ->
