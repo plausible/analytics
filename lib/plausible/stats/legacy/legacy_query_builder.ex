@@ -26,8 +26,8 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_parsed_filters(params)
       |> preload_goals_and_revenue(site)
       |> put_order_by(params)
-      |> put_include_comparisons(site, params)
-      |> Query.put_imported_opts(site, params)
+      |> put_include(site, params)
+      |> Query.put_imported_opts(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, site, params)
@@ -205,9 +205,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
   end
 
-  defp put_include_comparisons(query, site, params) do
-    comparisons = parse_comparison_params(site, params)
-    struct!(query, include: Map.put(query.include, :comparisons, comparisons))
+  defp put_include(query, site, params) do
+    query
+    |> Query.set_include(:comparisons, parse_comparison_params(site, params))
+    |> Query.set_include(:imports, params["with_imported"] == "true")
   end
 
   @doc """

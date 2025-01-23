@@ -7,6 +7,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   @default_include %{
     imports: false,
+    # `include.imports_meta` can be true even when `include.imports`
+    # is false. Even if we don't want to include imported data, we
+    # might still want to know whether imported data can be toggled
+    # on/off on the dashboard.
+    imports_meta: false,
     time_labels: false,
     total_rows: false,
     comparisons: nil

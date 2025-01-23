@@ -6,7 +6,7 @@ defmodule Plausible.Stats.QueryRunner do
   Some secondary responsibilities are:
   1. Dealing with comparison queries and combining results with main
   2. Dealing with time-on-page
-  3. Passing total_rows from clickhouse to QueryResult meta
+  3. Getting total_rows from ClickHouse results
   """
 
   use Plausible
@@ -25,58 +25,54 @@ defmodule Plausible.Stats.QueryRunner do
   }
 
   defstruct [
-    :query,
     :site,
+    :main_query,
+    :main_results,
     :comparison_query,
     :comparison_results,
-    :main_results_list,
-    :ch_results,
-    :meta_extra,
-    :time_lookup,
-    :results_list
+    :total_rows,
+    :results
   ]
 
   def run(site, query) do
     optimized_query = QueryOptimizer.optimize(query)
 
-    run_results =
-      %__MODULE__{query: optimized_query, site: site}
-      |> execute_main_query()
-      |> add_comparison_query()
-      |> execute_comparison()
-      |> add_meta_extra()
-      |> add_time_lookup()
-      |> build_results_list()
-
-    QueryResult.from(run_results.results_list, site, optimized_query, run_results.meta_extra)
+    %__MODULE__{main_query: optimized_query, site: site}
+    |> execute_main_query()
+    |> add_comparison_query()
+    |> execute_comparison_query()
+    |> build_results_list()
+    |> QueryResult.from()
   end
 
-  defp execute_main_query(%__MODULE__{query: query, site: site} = run_results) do
+  defp execute_main_query(%__MODULE__{main_query: query, site: site} = runner) do
     {ch_results, time_on_page} = execute_query(query, site)
 
-    struct!(
-      run_results,
-      main_results_list: build_from_ch(ch_results, query, time_on_page),
-      ch_results: ch_results
-    )
+    main_results = build_from_ch(ch_results, query, time_on_page)
+
+    runner = struct!(runner, main_results: main_results)
+
+    if query.include.total_rows do
+      struct!(runner, total_rows: total_rows(ch_results))
+    else
+      runner
+    end
   end
 
-  defp add_comparison_query(
-         %__MODULE__{query: query, main_results_list: main_results_list} = run_results
-       )
+  defp add_comparison_query(%__MODULE__{main_query: query, main_results: main_results} = runner)
        when is_map(query.include.comparisons) do
     comparison_query =
       query
       |> Comparisons.get_comparison_query(query.include.comparisons)
-      |> Comparisons.add_comparison_filters(main_results_list)
+      |> Comparisons.add_comparison_filters(main_results)
 
-    struct!(run_results, comparison_query: comparison_query)
+    struct!(runner, comparison_query: comparison_query)
   end
 
-  defp add_comparison_query(run_results), do: run_results
+  defp add_comparison_query(runner), do: runner
 
-  defp execute_comparison(
-         %__MODULE__{comparison_query: comparison_query, site: site} = run_results
+  defp execute_comparison_query(
+         %__MODULE__{comparison_query: comparison_query, site: site} = runner
        ) do
     if comparison_query do
       {ch_results, time_on_page} = execute_query(comparison_query, site)
@@ -88,46 +84,33 @@ defmodule Plausible.Stats.QueryRunner do
           time_on_page
         )
 
-      struct!(run_results, comparison_results: comparison_results)
+      struct!(runner, comparison_results: comparison_results)
     else
-      run_results
+      runner
     end
   end
 
-  defp add_time_lookup(run_results) do
-    time_lookup =
-      if Time.time_dimension(run_results.query) && run_results.comparison_query do
-        Enum.zip(
-          Time.time_labels(run_results.query),
-          Time.time_labels(run_results.comparison_query)
-        )
-        |> Map.new()
-      else
-        %{}
-      end
-
-    struct!(run_results, time_lookup: time_lookup)
+  defp get_time_lookup(query, comparison_query) do
+    if Time.time_dimension(query) && comparison_query do
+      Enum.zip(
+        Time.time_labels(query),
+        Time.time_labels(comparison_query)
+      )
+      |> Map.new()
+    else
+      %{}
+    end
   end
 
-  defp add_meta_extra(%__MODULE__{query: query, ch_results: ch_results} = run_results) do
-    struct!(run_results,
-      meta_extra: %{
-        total_rows: if(query.include.total_rows, do: total_rows(ch_results), else: nil)
-      }
-    )
-  end
-
-  defp build_results_list(
-         %__MODULE__{query: query, main_results_list: main_results_list} = run_results
-       ) do
-    results_list =
+  defp build_results_list(%__MODULE__{main_query: query, main_results: main_results} = runner) do
+    results =
       case query.dimensions do
-        ["time:" <> _] -> main_results_list |> add_empty_timeseries_rows(run_results)
-        _ -> main_results_list
+        ["time:" <> _] -> main_results |> add_empty_timeseries_rows(runner)
+        _ -> main_results
       end
-      |> merge_with_comparison_results(run_results)
+      |> merge_with_comparison_results(runner)
 
-    struct!(run_results, results_list: results_list)
+    struct!(runner, results: results)
   end
 
   defp execute_query(query, site) do
@@ -191,7 +174,7 @@ defmodule Plausible.Stats.QueryRunner do
 
   # Special case: If comparison and single time dimension, add 0 rows - otherwise
   # comparisons would not be shown for timeseries with 0 values.
-  defp add_empty_timeseries_rows(results_list, %__MODULE__{query: query})
+  defp add_empty_timeseries_rows(results_list, %__MODULE__{main_query: query})
        when is_map(query.include.comparisons) do
     indexed_results = index_by_dimensions(results_list)
 
@@ -210,13 +193,13 @@ defmodule Plausible.Stats.QueryRunner do
 
   defp add_empty_timeseries_rows(results_list, _), do: results_list
 
-  defp merge_with_comparison_results(results_list, run_results) do
-    comparison_map = (run_results.comparison_results || []) |> index_by_dimensions()
-    time_lookup = run_results.time_lookup || %{}
+  defp merge_with_comparison_results(results_list, runner) do
+    comparison_map = (runner.comparison_results || []) |> index_by_dimensions()
+    time_lookup = get_time_lookup(runner.main_query, runner.comparison_query)
 
     Enum.map(
       results_list,
-      &add_comparison_results(&1, run_results.query, comparison_map, time_lookup)
+      &add_comparison_results(&1, runner.main_query, comparison_map, time_lookup)
     )
   end
 

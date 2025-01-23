@@ -286,7 +286,7 @@ defmodule Plausible.Stats.QueryTest do
     test "is false in realtime even when imported data from today exists", %{site: site} do
       insert(:site_import, site: site)
 
-      assert %{include_imported: false, skip_imported_reason: :unsupported_query} =
+      assert %{include_imported: false, skip_imported_reason: :out_of_range} =
                Query.from(site, %{"period" => "realtime", "with_imported" => "true"})
     end
 

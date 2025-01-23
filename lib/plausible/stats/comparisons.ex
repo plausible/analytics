@@ -175,21 +175,11 @@ defmodule Plausible.Stats.Comparisons do
 
   defp maybe_include_imported(query, source_query) do
     requested? = source_query.include.imports
+    skip_imported_reason = Query.get_skip_imported_reason(query)
 
-    case Query.ensure_include_imported(query, requested?) do
-      :ok ->
-        struct!(query,
-          include_imported: true,
-          skip_imported_reason: nil,
-          include: Map.put(query.include, :imports, true)
-        )
-
-      {:error, reason} ->
-        struct!(query,
-          include_imported: false,
-          skip_imported_reason: reason,
-          include: Map.put(query.include, :imports, requested?)
-        )
-    end
+    struct!(query,
+      include_imported: requested? and is_nil(skip_imported_reason),
+      skip_imported_reason: skip_imported_reason
+    )
   end
 end
