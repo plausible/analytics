@@ -16,6 +16,17 @@ defmodule Plausible.Teams do
     not is_nil(team) and FunWithFlags.enabled?(:teams, for: team)
   end
 
+  @spec get(pos_integer() | binary() | nil) :: Teams.Team.t() | nil
+  def get(nil), do: nil
+
+  def get(team_id) when is_integer(team_id) do
+    Repo.get(Teams.Team, team_id)
+  end
+
+  def get(team_identifier) when is_binary(team_identifier) do
+    Repo.get_by(Teams.Team, identifier: team_identifier)
+  end
+
   @spec get!(pos_integer() | binary()) :: Teams.Team.t()
   def get!(team_id) when is_integer(team_id) do
     Repo.get!(Teams.Team, team_id)

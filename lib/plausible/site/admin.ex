@@ -150,12 +150,15 @@ defmodule Plausible.SiteAdmin do
     {:error, "Please select at least one site from the list"}
   end
 
-  defp transfer_ownership_direct(_conn, sites, %{"email" => email}) do
+  defp transfer_ownership_direct(_conn, sites, %{"email" => email} = params) do
+    team = Plausible.Teams.get(params["team_id"])
+
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
          {:ok, _} <-
            Plausible.Site.Memberships.bulk_transfer_ownership_direct(
              sites,
-             new_owner
+             new_owner,
+             team
            ) do
       :ok
     else
@@ -167,6 +170,12 @@ defmodule Plausible.SiteAdmin do
 
       {:error, :no_plan} ->
         {:error, "The new owner does not have a subscription"}
+
+      {:error, :multiple_teams} ->
+        {:error, "The new owner owns more than one team"}
+
+      {:error, :permission_denied} ->
+        {:error, "The new owner can't add sites in the selected team"}
 
       {:error, {:over_plan_limits, limits}} ->
         {:error, "Plan limits exceeded for one of the sites: #{Enum.join(limits, ", ")}"}
