@@ -103,7 +103,7 @@ export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
   return false
 }
 
-export function hasGoalFilter(query) {
+export function hasConversionGoalFilter(query) {
   const goalFilters = getFiltersByKeyPrefix(query, 'goal')
 
   return goalFilters.some(([operation, _filterKey, _clauses]) => {

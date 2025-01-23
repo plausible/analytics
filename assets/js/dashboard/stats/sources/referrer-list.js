@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import * as api from '../../api';
 import * as url from '../../util/url';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter } from "../../util/filters";
+import { hasConversionGoalFilter } from "../../util/filters";
 import ListReport from '../reports/list';
 import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsupported-warning';
 import { useQueryContext } from '../../query-context';
@@ -56,7 +56,7 @@ export default function Referrers({ source }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 

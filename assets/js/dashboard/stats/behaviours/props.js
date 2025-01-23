@@ -5,7 +5,7 @@ import * as metrics from '../reports/metrics';
 import * as api from '../../api';
 import * as url from '../../util/url';
 import * as storage from "../../util/storage";
-import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters";
+import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasConversionGoalFilter } from "../../util/filters";
 import classNames from "classnames";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
@@ -95,8 +95,8 @@ export default function Properties({ afterFetchData }) {
     return [
       metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: { plot: true } }),
       metrics.createEvents({ renderLabel: (_query) => "Events", meta: { hiddenOnMobile: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(query) && metrics.createPercentage(),
       BUILD_EXTRA && metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
       BUILD_EXTRA && metrics.createAverageRevenue({ meta: { hiddenOnMobile: true } })
     ].filter(metric => !!metric)

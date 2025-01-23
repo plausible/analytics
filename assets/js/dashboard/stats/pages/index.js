@@ -6,7 +6,7 @@ import * as api from '../../api';
 import ListReport from './../reports/list';
 import * as metrics from './../reports/metrics';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
-import { hasGoalFilter } from '../../util/filters';
+import { hasConversionGoalFilter } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { entryPagesRoute, exitPagesRoute, topPagesRoute } from '../../router';
@@ -32,7 +32,7 @@ function EntryPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ defaultLabel: 'Unique Entrances', width: 'w-36', meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -71,7 +71,7 @@ function ExitPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ defaultLabel: 'Unique Exits', width: 'w-36', meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -110,7 +110,7 @@ function TopPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 

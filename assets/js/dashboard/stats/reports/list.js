@@ -14,7 +14,7 @@ import {
   cleanLabels,
   replaceFilterByPrefix,
   isRealTimeDashboard,
-  hasGoalFilter
+  hasConversionGoalFilter
 } from '../../util/filters'
 import { plainFilterText } from '../../util/filter-text'
 import { useQueryContext } from '../../query-context'
@@ -152,7 +152,7 @@ export default function ListReport({
   const [visible, setVisible] = useState(false)
 
   const isRealtime = isRealTimeDashboard(query)
-  const goalFilterApplied = hasGoalFilter(query)
+  const goalFilterApplied = hasConversionGoalFilter(query)
 
   const getData = useCallback(() => {
     if (!isRealtime) {

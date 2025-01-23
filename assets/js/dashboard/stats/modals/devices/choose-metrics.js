@@ -1,8 +1,8 @@
-import { hasGoalFilter, isRealTimeDashboard } from "../../../util/filters";
+import { hasConversionGoalFilter, isRealTimeDashboard } from "../../../util/filters";
 import * as metrics from '../../reports/metrics'
 
 export default function chooseMetrics(query) {
-  if (hasGoalFilter(query)) {
+  if (hasConversionGoalFilter(query)) {
     return [
       metrics.createTotalVisitors(),
       metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),
