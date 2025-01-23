@@ -75,10 +75,7 @@ defmodule Plausible.Stats.QueryResult do
           _ -> main_query.skip_imported_reason
         end
 
-      imports_warning =
-        if imports_skip_reason in Map.keys(@imports_warnings) do
-          @imports_warnings[imports_skip_reason]
-        end
+      imports_warning = @imports_warnings[imports_skip_reason]
 
       %{
         imports_included: imports_included,
