@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Dashboard shows comparisons for all reports
 - UTM Medium report and API shows (gclid) and (msclkid) for paid searches when no explicit utm medium present.
 - Support for `case_sensitive: false` modifiers in Stats API V2 filters for case-insensitive searches.
+- Add filter `is not` for goals in dashboard plausible/analytics#4983
 
 ### Removed
 

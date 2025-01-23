@@ -14,9 +14,9 @@ import {
   cleanLabels,
   replaceFilterByPrefix,
   isRealTimeDashboard,
-  hasGoalFilter,
-  plainFilterText
+  hasGoalFilter
 } from '../../util/filters'
+import { plainFilterText } from '../../util/filter-text'
 import { useQueryContext } from '../../query-context'
 
 const MAX_ITEMS = 9

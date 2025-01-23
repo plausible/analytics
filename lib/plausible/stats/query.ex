@@ -182,9 +182,9 @@ defmodule Plausible.Stats.Query do
   def trace(%__MODULE__{} = query, metrics) do
     filter_dimensions =
       query.filters
-      |> Enum.map(fn [_op, dimension | _rest] -> dimension end)
-      |> Enum.filter(&is_binary/1)
+      |> Plausible.Stats.Filters.dimensions_used_in_filters()
       |> Enum.sort()
+      |> Enum.uniq()
       |> Enum.join(";")
 
     metrics = metrics |> Enum.sort() |> Enum.join(";")

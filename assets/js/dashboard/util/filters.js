@@ -1,6 +1,5 @@
 /** @format */
 
-import React from 'react'
 import * as api from '../api'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
@@ -29,14 +28,18 @@ export const FILTER_OPERATIONS = {
   is: 'is',
   isNot: 'is_not',
   contains: 'contains',
-  contains_not: 'contains_not'
+  contains_not: 'contains_not',
+  has_not_done: 'has_not_done'
 }
 
 export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.is]: 'is',
   [FILTER_OPERATIONS.isNot]: 'is not',
   [FILTER_OPERATIONS.contains]: 'contains',
-  [FILTER_OPERATIONS.contains_not]: 'does not contain'
+  [FILTER_OPERATIONS.contains_not]: 'does not contain',
+  // :NOTE: Goal filters are displayed as "is not" in the UI, but in the backend they are wrapped with has_not_done.
+  // It is currently unclear if we'll do the same for other event filters in the future.
+  [FILTER_OPERATIONS.has_not_done]: 'is not'
 }
 
 export function supportsIsNot(filterName) {
@@ -47,6 +50,10 @@ export function supportsContains(filterName) {
   return !['screen']
     .concat(FILTER_MODAL_TO_FILTER_GROUP['location'])
     .includes(filterName)
+}
+
+export function supportsHasDoneNot(filterName) {
+  return filterName === 'goal'
 }
 
 export function isFreeChoiceFilterOperation(operation) {
@@ -104,48 +111,6 @@ export function isRealTimeDashboard(query) {
   return query?.period === 'realtime'
 }
 
-export function plainFilterText(query, [operation, filterKey, clauses]) {
-  const formattedFilter = formattedFilters[filterKey]
-
-  if (formattedFilter) {
-    return `${formattedFilter} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.map((value) => getLabel(query.labels, filterKey, value)).reduce((prev, curr) => `${prev} or ${curr}`)}`
-  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return `Property ${propKey} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.reduce((prev, curr) => `${prev} or ${curr}`)}`
-  }
-
-  throw new Error(`Unknown filter: ${filterKey}`)
-}
-
-export function styledFilterText(query, [operation, filterKey, clauses]) {
-  const formattedFilter = formattedFilters[filterKey]
-
-  if (formattedFilter) {
-    return (
-      <>
-        {formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
-        {clauses
-          .map((value) => (
-            <b key={value}>{getLabel(query.labels, filterKey, value)}</b>
-          ))
-          .reduce((prev, curr) => [prev, ' or ', curr])}{' '}
-      </>
-    )
-  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return (
-      <>
-        Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
-        {clauses
-          .map((label) => <b key={label}>{label}</b>)
-          .reduce((prev, curr) => [prev, ' or ', curr])}{' '}
-      </>
-    )
-  }
-
-  throw new Error(`Unknown filter: ${filterKey}`)
-}
-
 // Note: Currently only a single goal filter can be applied at a time.
 export function getGoalFilter(query) {
   return getFiltersByKeyPrefix(query, 'goal')[0] || null
@@ -194,20 +159,25 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
 const EVENT_FILTER_KEYS = new Set(['name', 'page', 'goal', 'hostname'])
 
 export function serializeApiFilters(filters) {
-  const apiFilters = filters.map(
-    ([operation, filterKey, clauses, ...modifiers]) => {
-      let apiFilterKey = `visit:${filterKey}`
-      if (
-        filterKey.startsWith(EVENT_PROPS_PREFIX) ||
-        EVENT_FILTER_KEYS.has(filterKey)
-      ) {
-        apiFilterKey = `event:${filterKey}`
-      }
-      return [operation, apiFilterKey, clauses, ...modifiers]
-    }
-  )
-
+  const apiFilters = filters.map(serializeFilter)
   return JSON.stringify(apiFilters)
+}
+
+function serializeFilter([operation, filterKey, clauses, ...modifiers]) {
+  let apiFilterKey = `visit:${filterKey}`
+  if (
+    filterKey.startsWith(EVENT_PROPS_PREFIX) ||
+    EVENT_FILTER_KEYS.has(filterKey)
+  ) {
+    apiFilterKey = `event:${filterKey}`
+  }
+  if (operation === FILTER_OPERATIONS.has_not_done) {
+    // :NOTE: Frontend does not support advanced query building that's used in the backend.
+    // As such we emulate the backend behavior for has_not_done goal filters
+    return ['has_not_done', ['is', apiFilterKey, clauses, ...modifiers]]
+  } else {
+    return [operation, apiFilterKey, clauses, ...modifiers]
+  }
 }
 
 export function fetchSuggestions(apiPath, query, input, additionalFilter) {
