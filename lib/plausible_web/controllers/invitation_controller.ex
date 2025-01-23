@@ -43,6 +43,11 @@ defmodule PlausibleWeb.InvitationController do
         |> put_flash(:error, "You already are a team member in another team")
         |> redirect(to: "/sites")
 
+      {:error, :permission_denied} ->
+        conn
+        |> put_flash(:error, "You can't add sites in the current team")
+        |> redirect(to: "/sites")
+
       {:error, :no_plan} ->
         conn
         |> put_flash(:error, "No existing subscription")
