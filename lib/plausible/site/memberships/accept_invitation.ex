@@ -33,7 +33,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           | Ecto.Changeset.t()
           | :no_plan
 
-  @type membership :: %Plausible.Teams.Membership{}
+  @type membership :: %Teams.Membership{}
 
   @spec bulk_transfer_ownership_direct([Site.t()], Auth.User.t()) ::
           {:ok, [membership]} | {:error, transfer_error()}
@@ -72,38 +72,28 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   defp transfer_ownership(site, new_owner) do
     site = Repo.preload(site, :team)
 
-    with :ok <-
-           Plausible.Teams.Invitations.ensure_transfer_valid(
-             site.team,
-             new_owner,
-             :owner
-           ),
-         {:ok, new_team} = Plausible.Teams.get_or_create(new_owner),
-         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, new_team),
-         :ok <- Plausible.Teams.Invitations.transfer_site(site, new_owner) do
+    with :ok <- Teams.Invitations.ensure_transfer_valid(site.team, new_owner, :owner),
+         {:ok, new_team} = Teams.get_or_create(new_owner),
+         :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team),
+         :ok <- Teams.Invitations.transfer_site(site, new_team) do
       site = site |> Repo.reload!() |> Repo.preload(ownership: :user)
 
       {:ok, site.ownership}
     end
   end
 
-  defp do_accept_ownership_transfer(site_transfer, user) do
+  defp do_accept_ownership_transfer(site_transfer, new_owner) do
     site = Repo.preload(site_transfer.site, :team)
 
-    with :ok <-
-           Plausible.Teams.Invitations.ensure_transfer_valid(
-             site.team,
-             user,
-             :owner
-           ),
-         {:ok, team} = Plausible.Teams.get_or_create(user),
-         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, team),
-         :ok <- Teams.Invitations.accept_site_transfer(site_transfer, user) do
+    with :ok <- Teams.Invitations.ensure_transfer_valid(site.team, new_owner, :owner),
+         {:ok, new_team} = Teams.get_or_create(new_owner),
+         :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team),
+         :ok <- Teams.Invitations.accept_site_transfer(site_transfer, new_team) do
       Teams.Invitations.send_transfer_accepted_email(site_transfer)
 
       site = site |> Repo.reload!() |> Repo.preload(ownership: :user)
 
-      {:ok, %{team: team, team_membership: site.ownership, site: site}}
+      {:ok, %{team: new_team, team_membership: site.ownership, site: site}}
     end
   end
 
