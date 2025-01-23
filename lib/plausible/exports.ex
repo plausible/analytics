@@ -418,13 +418,7 @@ defmodule Plausible.Exports do
     site = Plausible.Repo.get(Plausible.Site, site_id)
     current_user = current_user_id && Plausible.Repo.get(Plausible.Auth.User, current_user_id)
 
-    include_scroll_depth? =
-      if PlausibleWeb.StatsController.scroll_depth_enabled?(site, current_user) do
-        {:ok, site} = Plausible.Sites.maybe_enable_engagement_metrics(site)
-        Plausible.Sites.has_engagement_metrics?(site)
-      else
-        false
-      end
+    include_scroll_depth? = Plausible.Stats.ScrollDepth.check_feature_visible!(site, current_user)
 
     base_q =
       from(e in sampled("events_v2"),

@@ -60,12 +60,7 @@ defmodule PlausibleWeb.StatsController do
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
 
     has_scroll_depth_enabled? =
-      if scroll_depth_enabled?(site, current_user) do
-        {:ok, site} = Plausible.Sites.maybe_enable_engagement_metrics(site)
-        Plausible.Sites.has_engagement_metrics?(site)
-      else
-        false
-      end
+      Plausible.Stats.ScrollDepth.check_feature_visible!(site, current_user)
 
     cond do
       (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
@@ -77,7 +72,7 @@ defmodule PlausibleWeb.StatsController do
           revenue_goals: list_revenue_goals(site),
           funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
-          has_scroll_depth_enabled: has_engagement_metrics?,
+          has_scroll_depth_enabled: has_scroll_depth_enabled?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
@@ -203,9 +198,8 @@ defmodule PlausibleWeb.StatsController do
   defp csv_graph_metrics(query, site, current_user) do
     include_scroll_depth? =
       !query.include_imported &&
-        scroll_depth_enabled?(site, current_user) &&
-        Plausible.Sites.has_engagement_metrics?(site) &&
-        Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
+        Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) &&
+        Plausible.Stats.ScrollDepth.feature_visible?(site, current_user)
 
     {metrics, column_headers} =
       if Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0) do
@@ -349,11 +343,6 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def scroll_depth_enabled?(site, user) do
-    FunWithFlags.enabled?(:scroll_depth, for: user) ||
-      FunWithFlags.enabled?(:scroll_depth, for: site)
-  end
-
   defp render_shared_link(conn, shared_link) do
     cond do
       !shared_link.site.locked ->
@@ -362,12 +351,7 @@ defmodule PlausibleWeb.StatsController do
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
         has_scroll_depth_enabled? =
-          if scroll_depth_enabled?(shared_link.site, current_user) do
-            {:ok, site} = Plausible.Sites.maybe_enable_engagement_metrics(shared_link.site)
-            Plausible.Sites.has_engagement_metrics?(site)
-          else
-            false
-          end
+          Plausible.Stats.ScrollDepth.check_feature_visible!(shared_link.site, current_user)
 
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")

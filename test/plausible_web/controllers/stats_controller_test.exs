@@ -782,7 +782,7 @@ defmodule PlausibleWeb.StatsControllerTest do
              ]
     end
 
-    test "does not export scroll depth in visitors.csv if site.engagement_metrics_enabled=nil", %{
+    test "does not export scroll depth in visitors.csv if site.scroll_depth_visible_at=nil", %{
       conn: conn,
       user: user
     } do
