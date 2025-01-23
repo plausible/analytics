@@ -220,7 +220,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     for role <- @roles do
-      test "does not allow accepting invite by a member of another team (role: #{role})" do
+      test "does allow accepting invite by a member of another team (role: #{role})" do
         user = new_user()
         _site = new_site(owner: user)
         team = team_of(user)
@@ -229,7 +229,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
         invitation = invite_member(team, member, inviter: user, role: unquote(role))
 
-        assert {:error, :already_other_team_member} =
+        assert {:ok, _} =
                  AcceptInvitation.accept_invitation(invitation.invitation_id, member)
       end
     end
