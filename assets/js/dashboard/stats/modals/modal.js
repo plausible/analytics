@@ -1,6 +1,6 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { NavigateKeybind } from '../../keybinding'
+import { isModifierPressed, isTyping, Keybind } from "../../keybinding"
 import { rootRoute } from "../../router";
 import { useAppNavigate } from "../../navigation/use-app-navigate";
 
@@ -41,18 +41,11 @@ class Modal extends React.Component {
       return;
     }
 
-    this.close()
+    this.props.onClose()
   }
 
   handleResize() {
     this.setState({ viewport: window.innerWidth });
-  }
-
-  close() {
-    this.props.navigate({
-      path: rootRoute.path,
-      search: (search) => search,
-    })
   }
 
   /**
@@ -77,7 +70,7 @@ class Modal extends React.Component {
   render() {
     return createPortal(
       <>
-        <NavigateKeybind keyboardKey="Escape" type="keyup" navigateProps={{ path: rootRoute.path, search: (search) => search }} />
+        <Keybind keyboardKey="Escape" type="keyup" handler={this.props.onClose} target={document} shouldIgnoreWhen={[isModifierPressed, isTyping]} />
         <div className="modal is-open" onClick={this.props.onClick}>
           <div className="modal__overlay">
             <button className="modal__close"></button>
@@ -99,5 +92,6 @@ class Modal extends React.Component {
 
 export default function ModalWithRouting(props) {
   const navigate = useAppNavigate()
-  return <Modal {...props} navigate={navigate} />
+  const onClose = props.onClose ?? (() => navigate({ path: rootRoute.path, search: (s) => s }))
+  return <Modal {...props} onClose={onClose} />
 }
