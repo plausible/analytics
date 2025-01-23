@@ -5,7 +5,9 @@ defmodule Plausible.Site.Memberships do
 
   alias Plausible.Site.Memberships
 
-  defdelegate accept_invitation(invitation_id, user), to: Memberships.AcceptInvitation
+  defdelegate accept_invitation(invitation_id, user, team \\ nil),
+    to: Memberships.AcceptInvitation
+
   defdelegate reject_invitation(invitation_id, user), to: Memberships.RejectInvitation
   defdelegate remove_invitation(invitation_id, site), to: Memberships.RemoveInvitation
 
@@ -15,6 +17,6 @@ defmodule Plausible.Site.Memberships do
   defdelegate bulk_create_invitation(sites, inviter, invitee_email, role, opts),
     to: Memberships.CreateInvitation
 
-  defdelegate bulk_transfer_ownership_direct(sites, new_owner),
+  defdelegate bulk_transfer_ownership_direct(sites, new_owner, team \\ nil),
     to: Memberships.AcceptInvitation
 end
