@@ -218,8 +218,8 @@ defmodule PlausibleWeb.Api.StatsController do
     })
   end
 
-  defp with_imported_switch_info(%{} = meta) do
-    case {meta.imports_included, meta[:imports_skip_reason]} do
+  defp with_imported_switch_info(%Jason.OrderedObject{} = meta) do
+    case {meta[:imports_included], meta[:imports_skip_reason]} do
       {true, nil} ->
         %{visible: true, togglable: true, tooltip_msg: "Click to exclude imported data"}
 

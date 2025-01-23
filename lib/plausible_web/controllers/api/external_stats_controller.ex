@@ -378,16 +378,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     "The goal `#{goal}` is not configured for this site. "
   end
 
-  defp maybe_add_warning(payload, %{imports_skip_reason: :unsupported_query}) do
-    Map.put(
-      payload,
-      :warning,
-      "Imported stats are not included in the results because query parameters are not supported. " <>
-        "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
-    )
-  end
+  @imported_query_unsupported_warning "Imported stats are not included in the results because query parameters are not supported. For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
 
-  defp maybe_add_warning(payload, _), do: payload
+  defp maybe_add_warning(payload, %Jason.OrderedObject{} = meta) do
+    case meta[:imports_skip_reason] do
+      :unsupported_query -> Map.put(payload, :warning, @imported_query_unsupported_warning)
+      _ -> payload
+    end
+  end
 
   defp send_json_error_response(conn, {:error, {status, msg}}) do
     conn

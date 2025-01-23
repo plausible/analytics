@@ -23,7 +23,7 @@ defmodule Plausible.Stats.QueryResult do
     struct!(
       __MODULE__,
       results: results,
-      meta: meta(runner),
+      meta: meta(runner) |> Enum.sort_by(&elem(&1, 0)) |> Jason.OrderedObject.new(),
       query:
         Jason.OrderedObject.new(
           site_id: site.domain,
