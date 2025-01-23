@@ -46,6 +46,67 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert_team_membership(new_owner, site2.team, :owner)
     end
 
+    test "does not allow transferring ownership without selecting team for owner of more than one team" do
+      new_owner = new_user() |> subscribe_to_growth_plan()
+
+      other_site1 = new_site()
+      add_member(other_site1.team, user: new_owner, role: :owner)
+      other_site2 = new_site()
+      add_member(other_site2.team, user: new_owner, role: :owner)
+
+      current_owner = new_user()
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      assert {:error, :multiple_teams} =
+               AcceptInvitation.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 new_owner
+               )
+    end
+
+    test "does not allow transferring ownership to a team where user has no permission" do
+      other_owner = new_user() |> subscribe_to_growth_plan()
+      other_team = team_of(other_owner)
+      new_owner = new_user()
+      add_member(other_team, user: new_owner, role: :viewer)
+
+      current_owner = new_user()
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      assert {:error, :permission_denied} =
+               AcceptInvitation.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 new_owner,
+                 other_team
+               )
+    end
+
+    test "allows transferring ownership to a team where user has permission" do
+      other_owner = new_user() |> subscribe_to_growth_plan()
+      other_team = team_of(other_owner)
+      new_owner = new_user()
+      add_member(other_team, user: new_owner, role: :admin)
+
+      current_owner = new_user()
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      assert {:ok, _} =
+               AcceptInvitation.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 new_owner,
+                 other_team
+               )
+
+
+      assert Repo.reload(site1).team_id == other_team.id
+      assert_guest_membership(other_team, site1, current_owner, :editor)
+      assert Repo.reload(site2).team_id == other_team.id
+      assert_guest_membership(other_team, site2, current_owner, :editor)
+    end
+
     @tag :ee_only
     test "does not allow transferring ownership to a non-member user when at team members limit" do
       old_owner = new_user() |> subscribe_to_business_plan()
@@ -356,6 +417,56 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
         refute Repo.reload(transfer)
       end
+    end
+
+    test "does not allow transferring ownership without selecting team for owner of more than one team" do
+      old_owner = new_user() |> subscribe_to_business_plan()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: old_owner)
+
+      site1 = new_site()
+      add_member(site1.team, user: new_owner, role: :owner)
+      site2 = new_site()
+      add_member(site2.team, user: new_owner, role: :owner)
+
+      transfer = invite_transfer(site, new_owner, inviter: old_owner)
+
+      assert {:error, :multiple_teams} =
+               AcceptInvitation.accept_invitation(transfer.transfer_id, new_owner)
+    end
+
+    test "does not allow transferring ownership to a team where user has no permission" do
+      old_owner = new_user() |> subscribe_to_business_plan()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: old_owner)
+
+      another_site = new_site()
+      another_team = another_site.team
+      add_member(another_team, user: new_owner, role: :viewer)
+
+      transfer = invite_transfer(site, new_owner, inviter: old_owner)
+
+      assert {:error, :permission_denied} =
+               AcceptInvitation.accept_invitation(transfer.transfer_id, new_owner, another_team)
+    end
+
+    test "allows transferring ownership to a team where user has permission" do
+      old_owner = new_user() |> subscribe_to_business_plan()
+      new_owner = new_user()
+      site = new_site(owner: old_owner)
+
+      another_owner = new_user() |> subscribe_to_growth_plan()
+      another_site = new_site(owner: another_owner)
+      another_team = another_site.team
+      add_member(another_team, user: new_owner, role: :admin)
+
+      transfer = invite_transfer(site, new_owner, inviter: old_owner)
+
+      assert {:ok, _} =
+               AcceptInvitation.accept_invitation(transfer.transfer_id, new_owner, another_team)
+
+      assert_guest_membership(another_team, site, old_owner, :editor)
+      assert Repo.reload(site).team_id == another_team.id
     end
 
     @tag :ee_only
