@@ -277,7 +277,7 @@ defmodule Plausible.PropsTest do
         "meta.value": ["something", "12"]
       ),
       build(:event,
-        name: "WP Form Completion",
+        name: "WP Form Completions",
         "meta.key": ["path"],
         "meta.value": ["/contact"]
       )
