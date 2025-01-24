@@ -69,7 +69,13 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   def delete(_conn, %{data: user}) do
-    Plausible.Auth.delete_user(user)
+    case Plausible.Auth.delete_user(user) do
+      {:ok, :deleted} ->
+        :ok
+
+      {:error, :is_only_team_owner} ->
+        "The user is the only public team owner on one or more teams."
+    end
   end
 
   def index(_) do
