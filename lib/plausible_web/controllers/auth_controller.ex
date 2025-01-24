@@ -433,9 +433,18 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def delete_me(conn, params) do
-    Plausible.Auth.delete_user(conn.assigns[:current_user])
+    case Plausible.Auth.delete_user(conn.assigns[:current_user]) do
+      {:ok, :deleted} ->
+        logout(conn, params)
 
-    logout(conn, params)
+      {:error, :is_only_team_owner} ->
+        conn
+        |> put_flash(
+          :error,
+          "You can't delete your account when you are the only owner on a team."
+        )
+        |> redirect(to: Routes.settings_path(conn, :danger_zone))
+    end
   end
 
   def logout(conn, params) do
