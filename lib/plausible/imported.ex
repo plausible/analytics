@@ -52,8 +52,8 @@ defmodule Plausible.Imported do
   @spec imported_custom_props() :: [String.t()]
   def imported_custom_props do
     # NOTE: Keep up to date with `Plausible.Props.internal_keys/1`,
-    # but _ignore_ unsupported keys. Currently, `search_query` and
-    # `form` are not supported in imported queries.
+    # but _ignore_ unsupported keys. Currently, `search_query` is
+    # not supported in imported queries.
     Enum.map(~w(url path), &("event:props:" <> &1))
   end
 

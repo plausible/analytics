@@ -275,11 +275,6 @@ defmodule Plausible.PropsTest do
         name: "WP Search Queries",
         "meta.key": ["search_query", "result_count"],
         "meta.value": ["something", "12"]
-      ),
-      build(:event,
-        name: "WP Form Completion",
-        "meta.key": ["form"],
-        "meta.value": ["something"]
       )
     ])
 

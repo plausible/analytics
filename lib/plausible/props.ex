@@ -17,7 +17,7 @@ defmodule Plausible.Props do
   def max_prop_value_length, do: @max_prop_value_length
 
   # NOTE: Keep up to date with `Plausible.Imported.imported_custom_props/0`.
-  @internal_keys ~w(url path search_query form)
+  @internal_keys ~w(url path search_query)
 
   @doc """
   Lists prop keys used internally.
