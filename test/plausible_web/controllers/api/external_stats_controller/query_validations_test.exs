@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
         })
 
       assert json_response(conn, 400)["error"] =~
-               "Session metric(s) `bounce_rate` cannot be queried along with event dimensions."
+               "Session metric(s) `bounce_rate` cannot be queried along with event dimension(s) `event:name`"
     end
 
     test "session metrics cannot be used with event:props:* dimension", %{conn: conn, site: site} do
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
         })
 
       assert json_response(conn, 400)["error"] =~
-               "Session metric(s) `bounce_rate` cannot be queried along with event dimensions."
+               "Session metric(s) `bounce_rate` cannot be queried along with event dimension(s) `event:props:url`"
     end
 
     test "validates that metric views_per_visit cannot be used with event:page filter", %{
