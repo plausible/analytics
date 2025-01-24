@@ -7,6 +7,7 @@ defmodule Plausible.Auth do
   use Plausible.Repo
   alias Plausible.Auth
   alias Plausible.RateLimit
+  alias Plausible.Teams
 
   @rate_limits %{
     login_ip: %{
@@ -71,9 +72,9 @@ defmodule Plausible.Auth do
 
   def delete_user(user) do
     Repo.transaction(fn ->
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} ->
-          for site <- Plausible.Teams.owned_sites(team) do
+      case Teams.get_by_owner(user) do
+        {:ok, %{setup_complete: false} = team} ->
+          for site <- Teams.owned_sites(team) do
             Plausible.Site.Removal.run(site)
           end
 
@@ -84,13 +85,37 @@ defmodule Plausible.Auth do
           )
 
           Repo.delete!(team)
+          Repo.delete!(user)
 
-        _ ->
-          :skip
+        {:ok, team} ->
+          check_can_leave_team!(team)
+          Repo.delete!(user)
+
+        {:error, :multiple_teams} ->
+          check_can_leave_teams!(user)
+          Repo.delete!(user)
+
+        {:error, :no_team} ->
+          Repo.delete!(user)
       end
 
-      Repo.delete!(user)
+      :deleted
     end)
+  end
+
+  defp check_can_leave_teams!(user) do
+    user
+    |> Teams.Users.owned_teams()
+    |> Enum.reject(&(&1.setup_complete == false))
+    |> Enum.map(fn team ->
+      check_can_leave_team!(team)
+    end)
+  end
+
+  defp check_can_leave_team!(team) do
+    if Teams.Memberships.owners_count(team) <= 1 do
+      Repo.rollback(:is_only_team_owner)
+    end
   end
 
   on_ee do
@@ -108,7 +133,7 @@ defmodule Plausible.Auth do
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
   def create_api_key(user, name, key) do
     team =
-      case Plausible.Teams.get_by_owner(user) do
+      case Teams.get_by_owner(user) do
         {:ok, team} -> team
         _ -> nil
       end
