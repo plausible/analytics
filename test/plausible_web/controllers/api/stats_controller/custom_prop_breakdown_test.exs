@@ -1184,7 +1184,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       :ok
     end
 
-    for special_prop <- ["url", "path", "search_query"] do
+    for special_prop <- Plausible.Props.internal_keys() do
       test "returns breakdown for the internally used #{special_prop} prop key", %{
         site: site,
         conn: conn
