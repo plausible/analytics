@@ -1261,64 +1261,66 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
-    test "returns path breakdown for 404 goal", %{conn: conn, site: site} do
-      insert(:goal, event_name: "404", site: site)
-      site_import = insert(:site_import, site: site)
+    for goal_name <- Plausible.Imported.goals_with_path() do
+      test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(goal_name), site: site)
+        site_import = insert(:site_import, site: site)
 
-      populate_stats(site, site_import.id, [
-        build(:event,
-          name: "404",
-          "meta.key": ["path"],
-          "meta.value": ["/some/path/first.bin"]
-        ),
-        build(:imported_custom_events,
-          name: "404",
-          visitors: 2,
-          events: 5,
-          path: "/some/path/first.bin"
-        ),
-        build(:imported_custom_events,
-          name: "404",
-          visitors: 5,
-          events: 10,
-          path: "/some/path/second.bin"
-        ),
-        build(:imported_custom_events,
-          name: "view_search_results",
-          visitors: 100,
-          events: 200
-        ),
-        build(:imported_visitors, visitors: 9)
-      ])
-
-      filters =
-        Jason.encode!([
-          [:is, "event:goal", ["404"]]
+        populate_stats(site, site_import.id, [
+          build(:event,
+            name: unquote(goal_name),
+            "meta.key": ["path"],
+            "meta.value": ["/some/path/first.bin"]
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 2,
+            events: 5,
+            path: "/some/path/first.bin"
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 5,
+            events: 10,
+            path: "/some/path/second.bin"
+          ),
+          build(:imported_custom_events,
+            name: "view_search_results",
+            visitors: 100,
+            events: 200
+          ),
+          build(:imported_visitors, visitors: 9)
         ])
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/custom-prop-values/path?period=day&with_imported=true&filters=#{filters}"
-        )
+        filters =
+          Jason.encode!([
+            [:is, "event:goal", [unquote(goal_name)]]
+          ])
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "visitors" => 5,
-                 "name" => "/some/path/second.bin",
-                 "events" => 10,
-                 "conversion_rate" => 50.0
-               },
-               %{
-                 "visitors" => 3,
-                 "name" => "/some/path/first.bin",
-                 "events" => 6,
-                 "conversion_rate" => 30.0
-               }
-             ]
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/custom-prop-values/path?period=day&with_imported=true&filters=#{filters}"
+          )
+
+        assert json_response(conn, 200)["results"] == [
+                 %{
+                   "visitors" => 5,
+                   "name" => "/some/path/second.bin",
+                   "events" => 10,
+                   "conversion_rate" => 50.0
+                 },
+                 %{
+                   "visitors" => 3,
+                   "name" => "/some/path/first.bin",
+                   "events" => 6,
+                   "conversion_rate" => 30.0
+                 }
+               ]
+      end
     end
 
-    for goal_name <- ["Outbound Link: Click", "File Download", "Cloaked Link: Click"] do
+    for goal_name <- Plausible.Imported.goals_with_url() do
       test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)
         site_import = insert(:site_import, site: site)
