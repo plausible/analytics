@@ -84,6 +84,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         f={f}
         goal={@goal}
         suffix={@context_unique_id}
+        current_user={@current_user}
         site={@site}
       />
 
@@ -127,6 +128,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-show="!tabSelectionInProgress"
         f={f}
         suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        current_user={@current_user}
         site={@site}
         x-init="tabSelectionInProgress = false"
       />
@@ -156,6 +158,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   attr(:f, Phoenix.HTML.Form)
+  attr(:current_user, Plausible.Auth.User)
   attr(:site, Plausible.Site)
   attr(:suffix, :string)
   attr(:goal, Plausible.Goal, default: nil)
@@ -192,6 +195,17 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         type="text"
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
+      />
+
+      <.input
+        :if={Plausible.Stats.ScrollDepth.feature_visible?(@site, @current_user)}
+        label="Scroll Depth Threshold"
+        field={@f[:scroll_threshold]}
+        type="number"
+        value={if @goal && @goal.scroll_threshold > -1, do: @goal.scroll_threshold, else: nil}
+        min="0"
+        max="100"
+        step="1"
       />
     </div>
     """

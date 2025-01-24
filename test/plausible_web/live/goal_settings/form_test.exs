@@ -54,7 +54,8 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert input_names == [
                "display-page_path_input_modalseq0-tabseq1",
                "goal[page_path]",
-               "goal[display_name]"
+               "goal[display_name]",
+               "goal[scroll_threshold]"
              ]
     end
 
