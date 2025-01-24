@@ -8,6 +8,7 @@ defmodule Plausible.Goal do
   schema "goals" do
     field :event_name, :string
     field :page_path, :string
+    field :scroll_threshold, :integer, default: -1
     field :display_name, :string
 
     on_ee do
@@ -23,7 +24,7 @@ defmodule Plausible.Goal do
     timestamps()
   end
 
-  @fields [:id, :site_id, :event_name, :page_path, :display_name] ++
+  @fields [:id, :site_id, :event_name, :page_path, :scroll_threshold, :display_name] ++
             on_ee(do: [:currency], else: [])
 
   @max_event_name_length 120
@@ -39,9 +40,16 @@ defmodule Plausible.Goal do
     |> validate_event_name_and_page_path()
     |> maybe_put_display_name()
     |> unique_constraint(:event_name, name: :goals_event_name_unique)
-    |> unique_constraint(:page_path, name: :goals_page_path_unique)
+    |> unique_constraint([:page_path, :scroll_threshold],
+      name: :goals_page_path_and_scroll_threshold_unique
+    )
     |> unique_constraint(:display_name, name: :goals_site_id_display_name_index)
     |> validate_length(:event_name, max: @max_event_name_length)
+    |> validate_number(:scroll_threshold,
+      greater_than_or_equal_to: -1,
+      less_than_or_equal_to: 100,
+      message: "Should be -1 (missing) or in range [0, 100]"
+    )
     |> check_constraint(:event_name,
       name: :check_event_name_or_page_path,
       message: "cannot co-exist with page_path"
