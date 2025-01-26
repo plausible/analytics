@@ -1,6 +1,7 @@
 defmodule Plausible.TestUtils do
   use Plausible.Repo
   alias Plausible.Factory
+  alias Plausible.AssertMatches
 
   defmacro __using__(_) do
     quote do
@@ -286,6 +287,21 @@ defmodule Plausible.TestUtils do
     def maybe_fake_minio(_context) do
       :ok
     end
+  end
+
+  @doc "Helper for checking responses of API query tests in combination with `assert_matches`"
+  def response_query(site, overrides) do
+    %{
+      "metrics" => ["pageviews"],
+      "filters" => [],
+      "dimensions" => [],
+      "site_id" => site.domain,
+      "date_range" => [AssertMatches.expect_any(:string), AssertMatches.expect_any(:string)],
+      "order_by" => AssertMatches.expect_any(:list),
+      "pagination" => AssertMatches.expect_any(:map),
+      "include" => %{}
+    }
+    |> Map.merge(overrides)
   end
 
   defp secret_key_base() do

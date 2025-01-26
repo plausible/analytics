@@ -6,20 +6,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
-  def response_query(site, overrides) do
-    %{
-      "metrics" => ["pageviews"],
-      "filters" => [],
-      "dimensions" => [],
-      "site_id" => site.domain,
-      "date_range" => [expect_any(:string), expect_any(:string)],
-      "order_by" => expect_any(:list),
-      "pagination" => expect_any(:map),
-      "include" => %{}
-    }
-    |> Map.merge(overrides)
-  end
-
   test "aggregates a single metric", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),

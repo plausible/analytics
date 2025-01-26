@@ -26,13 +26,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
       conn1 = post(conn, "/api/v2/query", query_params)
 
-      assert json_response(conn1, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+      assert_matches json_response(conn1, 200), %{
+        "results" => [%{"metrics" => [1], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"]
+          })
+      }
 
       conn2 = post(conn, "/api/v2/query", Map.put(query_params, "include", %{"imports" => true}))
 
-      assert json_response(conn2, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
-      assert json_response(conn2, 200)["meta"]["imports_included"]
-      refute json_response(conn2, 200)["meta"]["imports_warning"]
+      assert_matches json_response(conn2, 200), %{
+        "results" => [%{"metrics" => [2], "dimensions" => []}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "filters correctly with 'is' operator", %{
@@ -70,9 +83,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [5, 7], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [5, 7], "dimensions" => []}],
+        "meta" => %{
+          "imports_included" => true
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["is", "event:page", ["/blog"]]],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "filters correctly with 'is' operator (case insensitive)", %{
@@ -110,9 +132,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [5, 7], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [5, 7], "dimensions" => []}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["is", "event:page", ["/blOG"], %{"case_sensitive" => false}]],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "filters correctly with 'contains' operator", %{
@@ -156,9 +185,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [4, 4], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [4, 4], "dimensions" => []}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["contains", "event:page", ["blog/post"]]],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "filters correctly with 'contains' operator (case insensitive)", %{
@@ -195,9 +231,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [7, 9], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [7, 9], "dimensions" => []}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["contains", "event:page", ["blog/POST"], %{"case_sensitive" => false}]],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "aggregates custom event goals with 'is' and 'contains' operators", %{
@@ -245,9 +288,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [5, 7]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [5, 7]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "filters" => [["is", "event:goal", ["Purchase"]]],
+            "include" => %{"imports" => true}
+          })
+      }
 
       conn =
         post(conn, "/api/v2/query", %{
@@ -260,9 +310,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [5, 7]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [5, 7]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "filters" => [["contains", "event:goal", ["Purch", "sign"]]],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "aggregates custom event goals with 'is' and 'contains' operators (case insensitive)", %{
@@ -310,9 +367,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [5, 7]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [5, 7]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "filters" => [["is", "event:goal", ["purchase"], %{"case_sensitive" => false}]],
+            "include" => %{"imports" => true}
+          })
+      }
 
       conn =
         post(conn, "/api/v2/query", %{
@@ -325,9 +389,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [5, 7]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [5, 7]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "filters" => [["contains", "event:goal", ["PURCH"], %{"case_sensitive" => false}]],
+            "include" => %{"imports" => true}
+          })
+      }
     end
   end
 
@@ -380,12 +451,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
         "include" => %{"imports" => true}
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["Direct / None"], "metrics" => [10, 11, 50, 0.0, 100.0]},
-             %{"dimensions" => ["site.com"], "metrics" => [3, 3, 3, 67.0, 40.0]},
-             %{"dimensions" => ["site.com/2"], "metrics" => [2, 2, 2, 100.0, 0.0]},
-             %{"dimensions" => ["site.com/1"], "metrics" => [1, 1, 1, 100.0, 0.0]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Direct / None"], "metrics" => [10, 11, 50, 0.0, 100.0]},
+        %{"dimensions" => ["site.com"], "metrics" => [3, 3, 3, 67.0, 40.0]},
+        %{"dimensions" => ["site.com/2"], "metrics" => [2, 2, 2, 100.0, 0.0]},
+        %{"dimensions" => ["site.com/1"], "metrics" => [1, 1, 1, 100.0, 0.0]}
+      ],
+      "meta" => %{"imports_included" => true},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors", "visits", "pageviews", "bounce_rate", "visit_duration"],
+          "dimensions" => ["visit:referrer"],
+          "include" => %{"imports" => true}
+        })
+    }
   end
 
   test "breaks down all metrics by visit:utm_source with imported data", %{conn: conn, site: site} do
@@ -437,13 +517,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
         "include" => %{"imports" => true}
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["SomeUTMSource"], "metrics" => [3, 3, 3, 67.0, 40.0]},
-             %{"dimensions" => ["SomeUTMSource-2"], "metrics" => [2, 2, 2, 100.0, 0.0]},
-             %{"dimensions" => ["SomeUTMSource-1"], "metrics" => [1, 1, 1, 100.0, 0.0]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["SomeUTMSource"], "metrics" => [3, 3, 3, 67.0, 40.0]},
+        %{"dimensions" => ["SomeUTMSource-2"], "metrics" => [2, 2, 2, 100.0, 0.0]},
+        %{"dimensions" => ["SomeUTMSource-1"], "metrics" => [1, 1, 1, 100.0, 0.0]}
+      ],
+      "meta" => %{"imports_included" => true},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors", "visits", "pageviews", "bounce_rate", "visit_duration"],
+          "dimensions" => ["visit:utm_source"],
+          "include" => %{"imports" => true}
+        })
+    }
   end
 
   test "pageviews breakdown by event:page - imported data having pageviews=0 and visitors=n should be bypassed",
@@ -486,11 +573,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
         "include" => %{"imports" => true}
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/"], "metrics" => [2]},
-             %{"dimensions" => ["/plausible.io"], "metrics" => [1]},
-             %{"dimensions" => ["/include-me"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["/"], "metrics" => [2]},
+        %{"dimensions" => ["/plausible.io"], "metrics" => [1]},
+        %{"dimensions" => ["/include-me"], "metrics" => [1]}
+      ],
+      "meta" => %{"imports_included" => true},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["pageviews"],
+          "dimensions" => ["event:page"],
+          "include" => %{"imports" => true}
+        })
+    }
   end
 
   describe "breakdown by visit:exit_page with" do
@@ -532,12 +628,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["/b"], "metrics" => [4]},
-               %{"dimensions" => ["/a"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/b"], "metrics" => [4]},
+          %{"dimensions" => ["/a"], "metrics" => [1]}
+        ],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visits"],
+            "dimensions" => ["visit:exit_page"],
+            "include" => %{"imports" => true}
+          })
+      }
     end
   end
 
@@ -570,9 +673,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [%{"dimensions" => ["Mobile"], "metrics" => [4, 6]}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["Mobile"], "metrics" => [4, 6]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "dimensions" => ["visit:device"],
+            "filters" => [
+              ["is", "visit:device", ["Mobile"]]
+            ],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
@@ -618,10 +731,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Purchase"], "metrics" => [5, 7, 0, 62.5]},
-               %{"dimensions" => ["Visit /test"], "metrics" => [3, 3, 3, 37.5]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["Purchase"], "metrics" => [5, 7, 0, 62.5]},
+          %{"dimensions" => ["Visit /test"], "metrics" => [3, 3, 3, 37.5]}
+        ],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events", "pageviews", "conversion_rate"],
+            "dimensions" => ["event:goal"],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "pageviews are returned as events for breakdown reports other than custom events", %{
@@ -716,13 +838,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
             "include" => %{"imports" => true}
           })
 
-        assert json_response(conn, 200)["results"] == [
-                 %{"dimensions" => ["https://two.com"], "metrics" => [5, 10, 50]},
-                 %{"dimensions" => ["https://one.com"], "metrics" => [3, 6, 30]}
-               ]
-
-        assert json_response(conn, 200)["meta"]["imports_included"]
-        refute json_response(conn, 200)["meta"]["imports_warning"]
+        assert_matches json_response(conn, 200), %{
+          "results" => [
+            %{"dimensions" => ["https://two.com"], "metrics" => [5, 10, 50]},
+            %{"dimensions" => ["https://one.com"], "metrics" => [3, 6, 30]}
+          ],
+          "meta" => %{"imports_included" => true},
+          "query" =>
+            response_query(site, %{
+              "metrics" => ["visitors", "events", "conversion_rate"],
+              "dimensions" => ["event:props:url"],
+              "filters" => [
+                ["is", "event:goal", [unquote(goal_name)]]
+              ],
+              "include" => %{"imports" => true}
+            })
+        }
       end
     end
 
@@ -769,13 +900,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
             "include" => %{"imports" => true}
           })
 
-        assert json_response(conn, 200)["results"] == [
-                 %{"dimensions" => ["/two"], "metrics" => [5, 10, 50]},
-                 %{"dimensions" => ["/one"], "metrics" => [3, 6, 30]}
-               ]
-
-        assert json_response(conn, 200)["meta"]["imports_included"]
-        refute json_response(conn, 200)["meta"]["imports_warning"]
+        assert_matches json_response(conn, 200), %{
+          "results" => [
+            %{"dimensions" => ["/two"], "metrics" => [5, 10, 50]},
+            %{"dimensions" => ["/one"], "metrics" => [3, 6, 30]}
+          ],
+          "meta" => %{"imports_included" => true},
+          "query" =>
+            response_query(site, %{
+              "metrics" => ["visitors", "events", "conversion_rate"],
+              "dimensions" => ["event:props:path"],
+              "filters" => [
+                ["is", "event:goal", [unquote(goal_name)]]
+              ],
+              "include" => %{"imports" => true}
+            })
+        }
       end
     end
 
@@ -812,9 +952,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["some phrase"], "metrics" => [1, 1, 100.0]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["some phrase"], "metrics" => [1, 1, 100.0]}],
+        "meta" => %{
+          "imports_included" => false,
+          "imports_skip_reason" => "unsupported_query",
+          "imports_warning" =>
+            expect_any(
+              :string,
+              &(&1 =~
+                  "Imported stats are not included in the results because query parameters are not supported.")
+            )
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events", "conversion_rate"],
+            "dimensions" => ["event:props:search_query"],
+            "filters" => [
+              ["is", "event:goal", ["WP Search Queries"]]
+            ],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "includes imported data for time:day dimension", %{
@@ -841,11 +1000,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2021-01-01"], "metrics" => [8]}
-             ]
-
-      assert json_response(conn, 200)["meta"] == %{"imports_included" => true}
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["2021-01-01"], "metrics" => [8]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "date_range" => ["2021-01-01T00:00:00+00:00", "2021-01-02T23:59:59+00:00"],
+            "dimensions" => ["time:day"],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "adds a warning when time:hour dimension", %{
@@ -872,16 +1037,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [2]},
-               %{"dimensions" => ["2021-01-01 23:00:00"], "metrics" => [1]}
-             ]
-
-      refute json_response(conn, 200)["meta"]["imports_included"]
-      assert json_response(conn, 200)["meta"]["imports_skip_reason"] == "unsupported_interval"
-
-      assert json_response(conn, 200)["meta"]["imports_warning"] =~
-               "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [2]},
+          %{"dimensions" => ["2021-01-01 23:00:00"], "metrics" => [1]}
+        ],
+        "meta" => %{
+          "imports_included" => false,
+          "imports_skip_reason" => "unsupported_interval",
+          "imports_warning" =>
+            "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "date_range" => ["2021-01-01T00:00:00+00:00", "2021-01-02T23:59:59+00:00"],
+            "dimensions" => ["time:hour"],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "adds a warning when query params are not supported for imported data", %{
@@ -913,15 +1087,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["large"], "metrics" => [1]}
-             ]
-
-      refute json_response(conn, 200)["meta"]["imports_included"]
-      assert json_response(conn, 200)["meta"]["imports_skip_reason"] == "unsupported_query"
-
-      assert json_response(conn, 200)["meta"]["imports_warning"] =~
-               "Imported stats are not included in the results because query parameters are not supported."
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["large"], "metrics" => [1]}],
+        "meta" => %{
+          "imports_included" => false,
+          "imports_skip_reason" => "unsupported_query",
+          "imports_warning" =>
+            expect_any(
+              :string,
+              &(&1 =~
+                  "Imported stats are not included in the results because query parameters are not supported.")
+            )
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:props:package"],
+            "filters" => [
+              ["is", "event:goal", ["Signup"]]
+            ],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
@@ -947,10 +1134,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["meta"] == %{
-               "imports_included" => false,
-               "imports_skip_reason" => "no_imported_data"
-             }
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["large"], "metrics" => [1]}],
+        "meta" => %{
+          "imports_included" => false,
+          "imports_skip_reason" => "no_imported_data"
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:props:package"],
+            "filters" => [
+              ["is", "event:goal", ["Signup"]]
+            ],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "does not add a warning when import is out of queried date range", %{
@@ -982,10 +1181,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["meta"] == %{
-               "imports_included" => false,
-               "imports_skip_reason" => "out_of_range"
-             }
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["large"], "metrics" => [1]}],
+        "meta" => %{
+          "imports_included" => false,
+          "imports_skip_reason" => "out_of_range"
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:props:package"],
+            "filters" => [
+              ["is", "event:goal", ["Signup"]]
+            ],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "applies multiple filters if the properties belong to the same table", %{
@@ -1017,9 +1228,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Google"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["Google"], "metrics" => [1]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["visit:source"],
+            "filters" => [
+              ["is", "visit:utm_medium", ["organic"]],
+              ["is", "visit:utm_term", ["one"]]
+            ],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "ignores imported data if filtered property belongs to a different table than the breakdown property",
@@ -1046,13 +1268,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert %{
-               "results" => [],
-               "meta" => meta
-             } = json_response(conn, 200)
-
-      refute json_response(conn, 200)["meta"]["imports_included"]
-      assert meta["imports_warning"] =~ "Imported stats are not included in the results"
+      assert_matches json_response(conn, 200), %{
+        "results" => [],
+        "meta" => %{
+          "imports_included" => false,
+          "imports_skip_reason" => "unsupported_query",
+          "imports_warning" =>
+            expect_any(:string, &(&1 =~ "Imported stats are not included in the results"))
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["visit:source"],
+            "filters" => [
+              ["is", "visit:device", ["Desktop"]]
+            ],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "imported country, region and city data",
@@ -1101,10 +1334,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
             "include" => %{"imports" => true}
           })
 
-        assert json_response(conn, 200)["results"] == [
-                 %{"dimensions" => [imports_value], "metrics" => [34]},
-                 %{"dimensions" => [stats_value], "metrics" => [2]}
-               ]
+        assert_matches json_response(conn, 200), %{
+          "results" => [
+            %{"dimensions" => [imports_value], "metrics" => [34]},
+            %{"dimensions" => [stats_value], "metrics" => [2]}
+          ],
+          "meta" => %{"imports_included" => true},
+          "query" =>
+            response_query(site, %{
+              "metrics" => ["visitors"],
+              "dimensions" => [dimension],
+              "include" => %{"imports" => true}
+            })
+        }
       end
     end
 
@@ -1137,9 +1379,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["London"], "metrics" => [35]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["London"], "metrics" => [35]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["visit:city_name"],
+            "include" => %{"imports" => true}
+          })
+      }
 
       conn =
         post(conn, "/api/v2/query", %{
@@ -1150,10 +1399,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["London", "United Kingdom"], "metrics" => [34]},
-               %{"dimensions" => ["London", "Canada"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["London", "United Kingdom"], "metrics" => [34]},
+          %{"dimensions" => ["London", "Canada"], "metrics" => [1]}
+        ],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["visit:city_name", "visit:country_name"],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "imported country and city names with complex conditions", %{
@@ -1217,11 +1475,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["London", "United Kingdom"], "metrics" => [34]},
-               %{"dimensions" => ["Tallinn", "Estonia"], "metrics" => [3]},
-               %{"dimensions" => ["Kärdla", "Estonia"], "metrics" => [2]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["London", "United Kingdom"], "metrics" => [34]},
+          %{"dimensions" => ["Tallinn", "Estonia"], "metrics" => [3]},
+          %{"dimensions" => ["Kärdla", "Estonia"], "metrics" => [2]}
+        ],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["visit:city_name", "visit:country_name"],
+            "filters" => [
+              [
+                "or",
+                [
+                  [
+                    "and",
+                    [
+                      ["is", "visit:city_name", ["London"]],
+                      ["not", ["is", "visit:country_name", ["Canada"]]]
+                    ]
+                  ],
+                  ["is", "visit:country_name", ["Estonia"]]
+                ]
+              ]
+            ],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "page breakdown with paginate_optimization (ideal case)", %{
@@ -1251,7 +1533,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "pagination" => %{"limit" => 1}
         })
 
-      assert json_response(conn, 200)["results"] == [%{"dimensions" => ["/99"], "metrics" => [2]}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["/99"], "metrics" => [2]}],
+        "meta" => %{"imports_included" => true},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "dimensions" => ["event:page"],
+            "include" => %{"imports" => true},
+            "pagination" => %{"limit" => 1, "offset" => 0}
+          })
+      }
     end
 
     test "page breakdown with paginate_optimization (lossy case)", %{
@@ -1319,11 +1611,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [2]}]
-      refute json_response(conn, 200)["meta"]["imports_included"]
-
-      assert json_response(conn, 200)["meta"]["imports_warning"] =~
-               "Imported stats are not included in the results"
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [2]}],
+        "meta" => %{
+          "imports_included" => false,
+          "imports_skip_reason" => "unsupported_query",
+          "imports_warning" =>
+            expect_any(
+              :string,
+              &(&1 =~
+                  "Imported stats are not included in the results because query parameters are not supported.")
+            )
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["has_done", ["is", "event:name", ["pageview"]]]],
+            "include" => %{"imports" => true}
+          })
+      }
     end
 
     test "imports are skipped when has_not_done filter is used", %{
@@ -1355,11 +1661,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      assert json_response(conn, 200)["results"] == []
-      refute json_response(conn, 200)["meta"]["imports_included"]
-
-      assert json_response(conn, 200)["meta"]["imports_warning"] =~
-               "Imported stats are not included in the results"
+      assert_matches json_response(conn, 200), %{
+        "results" => [],
+        "meta" => %{
+          "imports_included" => false,
+          "imports_skip_reason" => "unsupported_query",
+          "imports_warning" =>
+            expect_any(
+              :string,
+              &(&1 =~
+                  "Imported stats are not included in the results because query parameters are not supported.")
+            )
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:goal"],
+            "filters" => [["has_not_done", ["is", "event:name", ["pageview"]]]],
+            "include" => %{"imports" => true}
+          })
+      }
     end
   end
 end

@@ -40,11 +40,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
         "dimensions" => ["event:props:author"]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["Uku"], "metrics" => [3, 3, 37.5]},
-             %{"dimensions" => ["Marko"], "metrics" => [2, 3, 25.0]},
-             %{"dimensions" => ["(none)"], "metrics" => [1, 1, 12.5]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Uku"], "metrics" => [3, 3, 37.5]},
+        %{"dimensions" => ["Marko"], "metrics" => [2, 3, 25.0]},
+        %{"dimensions" => ["(none)"], "metrics" => [1, 1, 12.5]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "dimensions" => ["event:props:author"],
+          "filters" => [["is", "event:goal", ["Visit /blog**"]]]
+        })
+    }
   end
 
   test "returns conversion_rate alone in a goal filtered custom prop breakdown", %{
@@ -67,11 +76,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
         "filters" => [["is", "event:goal", ["Visit /blog**"]]]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Uku"], "metrics" => [50]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [%{"dimensions" => ["Uku"], "metrics" => [50]}],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["conversion_rate"],
+          "dimensions" => ["event:props:author"],
+          "filters" => [["is", "event:goal", ["Visit /blog**"]]]
+        })
+    }
   end
 
   test "returns conversion_rate in a goal filtered event:page breakdown", %{
@@ -98,10 +112,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
         "metrics" => ["visitors", "events", "group_conversion_rate"]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/en/register"], "metrics" => [2, 2, 66.7]},
-             %{"dimensions" => ["/it/register"], "metrics" => [1, 2, 50.0]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["/en/register"], "metrics" => [2, 2, 66.7]},
+        %{"dimensions" => ["/it/register"], "metrics" => [1, 2, 50.0]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors", "events", "group_conversion_rate"],
+          "dimensions" => ["event:page"],
+          "filters" => [["is", "event:goal", ["Signup"]]]
+        })
+    }
   end
 
   test "returns conversion_rate alone in a goal filtered event:page breakdown", %{
@@ -124,9 +147,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
         "dimensions" => ["event:page"]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/en/register"], "metrics" => [50.0]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [%{"dimensions" => ["/en/register"], "metrics" => [50.0]}],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["group_conversion_rate"],
+          "dimensions" => ["event:page"],
+          "filters" => [["is", "event:goal", ["Signup"]]]
+        })
+    }
   end
 
   test "returns conversion_rate in a multi-goal filtered visit:screen_size breakdown", %{
@@ -156,12 +186,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
         "filters" => [["is", "event:goal", ["AddToCart", "Purchase"]]]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Mobile"], "metrics" => [2, 2, 66.7]},
-             %{"dimensions" => ["Desktop"], "metrics" => [1, 2, 50]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Mobile"], "metrics" => [2, 2, 66.7]},
+        %{"dimensions" => ["Desktop"], "metrics" => [1, 2, 50]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors", "events", "group_conversion_rate"],
+          "dimensions" => ["visit:device"],
+          "filters" => [["is", "event:goal", ["AddToCart", "Purchase"]]]
+        })
+    }
   end
 
   test "returns conversion_rate alone in a goal filtered visit:screen_size breakdown", %{
@@ -184,10 +221,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
         "filters" => [["is", "event:goal", ["AddToCart"]]]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Mobile"], "metrics" => [50]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [%{"dimensions" => ["Mobile"], "metrics" => [50]}],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["conversion_rate"],
+          "dimensions" => ["visit:device"],
+          "filters" => [["is", "event:goal", ["AddToCart"]]]
+        })
+    }
   end
 end
