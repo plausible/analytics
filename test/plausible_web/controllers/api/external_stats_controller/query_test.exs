@@ -6,6 +6,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
+  def response_query(site, overrides) do
+    %{
+      "metrics" => ["pageviews"],
+      "filters" => [],
+      "dimensions" => [],
+      "site_id" => site.domain,
+      "date_range" => [expect_any(:string), expect_any(:string)],
+      "order_by" => expect_any(:list),
+      "pagination" => expect_any(:map),
+      "include" => %{}
+    }
+    |> Map.merge(overrides)
+  end
+
   test "aggregates a single metric", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
@@ -20,7 +34,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "date_range" => "all"
       })
 
-    assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+    assert_matches json_response(conn, 200), %{
+      "results" => [%{"metrics" => [3], "dimensions" => []}],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["pageviews"]
+        })
+    }
   end
 
   test "aggregate views_per_visit rounds to two decimal places", %{
@@ -42,7 +63,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "date_range" => "all"
       })
 
-    assert json_response(conn, 200)["results"] == [%{"metrics" => [1.67], "dimensions" => []}]
+    assert_matches json_response(conn, 200), %{
+      "results" => [%{"metrics" => [1.67], "dimensions" => []}],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["views_per_visit"]
+        })
+    }
   end
 
   test "aggregates all metrics in a single query", %{
@@ -69,9 +97,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"metrics" => [3, 2, 1.5, 2, 50, 750], "dimensions" => []}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [%{"metrics" => [3, 2, 1.5, 2, 50, 750], "dimensions" => []}],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => [
+            "pageviews",
+            "visits",
+            "views_per_visit",
+            "visitors",
+            "bounce_rate",
+            "visit_duration"
+          ]
+        })
+    }
   end
 
   describe "aggregation with filters" do
@@ -97,9 +137,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:source", ["Google"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:source", ["Google"]]]
+          })
+      }
     end
 
     test "does not count pageleave events towards the events metric in a simple aggregate query",
@@ -116,9 +162,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "metrics" => ["events"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [1], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["events"]
+          })
+      }
     end
 
     test "pageleave events do not affect bounce rate and visit duration", %{
@@ -137,9 +188,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "metrics" => ["bounce_rate", "visit_duration"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [100, 0], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [100, 0], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["bounce_rate", "visit_duration"]
+          })
+      }
     end
 
     test "can filter by channel", %{conn: conn, site: site} do
@@ -164,9 +220,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:channel", ["Organic Search"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:channel", ["Organic Search"]]]
+          })
+      }
     end
 
     test "can filter by no source/referrer", %{conn: conn, site: site} do
@@ -193,9 +255,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:source", ["Direct / None"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:source", ["Direct / None"]]]
+          })
+      }
     end
 
     test "can filter by referrer", %{conn: conn, site: site} do
@@ -220,9 +288,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:referrer", ["https://facebook.com"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:referrer", ["https://facebook.com"]]]
+          })
+      }
     end
 
     test "contains referrer filter", %{conn: conn, site: site} do
@@ -242,7 +316,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["contains", "visit:referrer", ["a.com"]]]
+          })
+      }
     end
 
     test "can filter by utm_medium", %{conn: conn, site: site} do
@@ -267,9 +349,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:utm_medium", ["social"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:utm_medium", ["social"]]]
+          })
+      }
     end
 
     test "can filter by utm_medium case insensitively", %{conn: conn, site: site} do
@@ -295,9 +383,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:utm_medium", ["sociaL"], %{"case_sensitive" => false}]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:utm_medium", ["sociaL"], %{"case_sensitive" => false}]]
+          })
+      }
     end
 
     test "can filter by is_not utm_medium case insensitively", %{conn: conn, site: site} do
@@ -323,9 +417,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is_not", "visit:utm_medium", ["sociaL"], %{"case_sensitive" => false}]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [1], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "filters" => [
+              ["is_not", "visit:utm_medium", ["sociaL"], %{"case_sensitive" => false}]
+            ]
+          })
+      }
     end
 
     test "can filter by utm_source", %{conn: conn, site: site} do
@@ -350,9 +452,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:utm_source", ["Twitter"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:utm_source", ["Twitter"]]]
+          })
+      }
     end
 
     test "can filter by utm_campaign", %{conn: conn, site: site} do
@@ -377,9 +485,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:utm_campaign", ["profile"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:utm_campaign", ["profile"]]]
+          })
+      }
     end
 
     test "can filter by device type", %{conn: conn, site: site} do
@@ -404,9 +518,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:device", ["Desktop"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:device", ["Desktop"]]]
+          })
+      }
     end
 
     test "can filter by browser", %{conn: conn, site: site} do
@@ -431,9 +551,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:browser", ["Chrome"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:browser", ["Chrome"]]]
+          })
+      }
     end
 
     test "can filter by browser version", %{conn: conn, site: site} do
@@ -459,9 +585,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:browser_version", ["56"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:browser_version", ["56"]]]
+          })
+      }
     end
 
     test "can filter by operating system", %{conn: conn, site: site} do
@@ -486,9 +618,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:os", ["Mac"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:os", ["Mac"]]]
+          })
+      }
     end
 
     test "can filter by operating system version", %{conn: conn, site: site} do
@@ -513,9 +651,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:os_version", ["10.5"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:os_version", ["10.5"]]]
+          })
+      }
     end
 
     test "can filter by country", %{conn: conn, site: site} do
@@ -540,9 +684,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:country", ["EE"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "visit:country", ["EE"]]]
+          })
+      }
     end
 
     test "can filter by page", %{
@@ -576,9 +726,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 2, 100, 750], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 2, 100, 750], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["is", "event:page", ["/blogpost"]]]
+          })
+      }
     end
 
     test "can filter by hostname", %{conn: conn, site: site} do
@@ -604,9 +760,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 2, 100, 0], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 2, 100, 0], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [["contains", "event:hostname", ["one.example.com", "example.com"]]]
+          })
+      }
     end
 
     test "filtering by event:name", %{conn: conn, site: site} do
@@ -638,7 +800,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 0], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 0], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["is", "event:name", ["Signup"]]]
+          })
+      }
     end
 
     test "filtering by a custom event goal", %{conn: conn, site: site} do
@@ -675,7 +845,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "filters" => [["is", "event:goal", ["Signup"]]]
+          })
+      }
     end
 
     test "filtering by a custom event goal (case insensitive)", %{conn: conn, site: site} do
@@ -712,7 +890,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "filters" => [["is", "event:goal", ["signup"], %{"case_sensitive" => false}]]
+          })
+      }
     end
 
     test "filtering by a revenue goal", %{conn: conn, site: site} do
@@ -745,7 +931,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "filters" => [["is", "event:goal", ["Purchase"]]]
+          })
+      }
     end
 
     test "filtering by a simple pageview goal", %{conn: conn, site: site} do
@@ -782,7 +976,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["is", "event:goal", ["Visit /register"]]]
+          })
+      }
     end
 
     test "filtering by a wildcard pageview goal", %{conn: conn, site: site} do
@@ -805,7 +1007,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["is", "event:goal", ["Visit /blog**"]]]
+          })
+      }
     end
 
     test "filtering by multiple custom event goals", %{conn: conn, site: site} do
@@ -829,7 +1039,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "filters" => [["is", "event:goal", ["Signup", "Purchase"]]]
+          })
+      }
     end
 
     test "filtering by multiple mixed goals", %{conn: conn, site: site} do
@@ -853,9 +1071,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 3, 2], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2, 3, 2], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events", "pageviews"],
+            "filters" => [["is", "event:goal", ["Signup", "Visit /**register"]]]
+          })
+      }
     end
 
     test "combining filters", %{conn: conn, site: site} do
@@ -888,9 +1112,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [1, 1, 0, 1500], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1, 1, 0, 1500], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "filters" => [
+              ["is", "event:page", ["/blogpost"]],
+              ["is", "visit:country", ["EE"]]
+            ]
+          })
+      }
     end
 
     test "contains page filter", %{conn: conn, site: site} do
@@ -910,7 +1143,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["contains", "event:page", ["/en/"]]]
+          })
+      }
     end
 
     test "contains page filter case insensitive", %{conn: conn, site: site} do
@@ -930,7 +1171,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["contains", "event:page", ["/En/"], %{"case_sensitive" => false}]]
+          })
+      }
     end
 
     test "contains_not page filter case insensitive", %{conn: conn, site: site} do
@@ -950,7 +1199,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["contains_not", "event:page", ["/En/"], %{"case_sensitive" => false}]]
+          })
+      }
     end
 
     test "contains_not page filter", %{conn: conn, site: site} do
@@ -970,7 +1227,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["contains_not", "event:page", ["/en/"]]]
+          })
+      }
     end
 
     test "contains with and/or/not filters", %{conn: conn, site: site} do
@@ -1004,7 +1269,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [
+              [
+                "or",
+                [
+                  [
+                    "and",
+                    [
+                      ["contains", "event:page", ["/en"]],
+                      ["not", ["contains", "event:page", ["/eng"]]]
+                    ]
+                  ],
+                  ["contains", "event:page", ["/gb"]]
+                ]
+              ]
+            ]
+          })
+      }
     end
 
     test "contains and member filter combined", %{conn: conn, site: site} do
@@ -1025,7 +1312,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["contains", "event:page", ["/en/", "/pl/"]]]
+          })
+      }
     end
 
     test "can escape pipe character in member + contains filter", %{conn: conn, site: site} do
@@ -1046,7 +1341,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["contains", "event:page", ["post|1", "/something-else"]]]
+          })
+      }
     end
 
     test "`matches` operator", %{conn: conn, site: site} do
@@ -1068,7 +1371,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["matches", "event:page", ["^/user/[0-9]+"]]]
+          })
+      }
     end
 
     test "`matches_not` operator", %{conn: conn, site: site} do
@@ -1090,7 +1401,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [["matches_not", "event:page", ["^/user/[0-9]+"]]]
+          })
+      }
     end
 
     test "`contains` and `contains_not` operator with custom properties", %{
@@ -1140,7 +1459,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [
+              ["contains", "event:props:tier", ["small"]],
+              ["contains_not", "event:props:value", ["b", "c"]]
+            ]
+          })
+      }
     end
 
     test "`contains` operator with custom properties case insensitive", %{
@@ -1181,7 +1511,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [4], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [4], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [
+              ["contains", "event:props:name", ["maLL"], %{"case_sensitive" => false}]
+            ]
+          })
+      }
     end
 
     test "`contains_not` operator with custom properties case insensitive", %{
@@ -1222,7 +1562,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [
+              ["contains_not", "event:props:name", ["maLL"], %{"case_sensitive" => false}]
+            ]
+          })
+      }
     end
 
     test "`matches` and `matches_not` operator with custom properties", %{
@@ -1272,7 +1622,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "filters" => [
+              ["matches", "event:props:tier", ["small.+"]],
+              ["matches_not", "event:props:value", ["b|c"]]
+            ]
+          })
+      }
     end
 
     test "handles filtering by visit:country", %{
@@ -1293,7 +1654,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:country", ["EE"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "filters" => [["is", "visit:country", ["EE"]]]
+          })
+      }
     end
 
     test "handles filtering by visit:country with contains", %{
@@ -1315,7 +1684,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["contains", "visit:country", ["E"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "filters" => [["contains", "visit:country", ["E"]]]
+          })
+      }
     end
 
     test "handles filtering by visit:city", %{
@@ -1337,7 +1714,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "visit:city", [588_409, 689_123]]]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [2], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "filters" => [["is", "visit:city", [588_409, 689_123]]]
+          })
+      }
     end
   end
 
@@ -1358,37 +1743,47 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "include" => %{"time_labels" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [1, 2, 1, 600, 0]},
-               %{"dimensions" => ["2021-01-01 23:00:00"], "metrics" => [1, 1, 1, 0, 100]}
-             ]
-
-      assert json_response(conn, 200)["meta"]["time_labels"] == [
-               "2021-01-01 00:00:00",
-               "2021-01-01 01:00:00",
-               "2021-01-01 02:00:00",
-               "2021-01-01 03:00:00",
-               "2021-01-01 04:00:00",
-               "2021-01-01 05:00:00",
-               "2021-01-01 06:00:00",
-               "2021-01-01 07:00:00",
-               "2021-01-01 08:00:00",
-               "2021-01-01 09:00:00",
-               "2021-01-01 10:00:00",
-               "2021-01-01 11:00:00",
-               "2021-01-01 12:00:00",
-               "2021-01-01 13:00:00",
-               "2021-01-01 14:00:00",
-               "2021-01-01 15:00:00",
-               "2021-01-01 16:00:00",
-               "2021-01-01 17:00:00",
-               "2021-01-01 18:00:00",
-               "2021-01-01 19:00:00",
-               "2021-01-01 20:00:00",
-               "2021-01-01 21:00:00",
-               "2021-01-01 22:00:00",
-               "2021-01-01 23:00:00"
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [1, 2, 1, 600, 0]},
+          %{"dimensions" => ["2021-01-01 23:00:00"], "metrics" => [1, 1, 1, 0, 100]}
+        ],
+        "meta" => %{
+          "time_labels" => [
+            "2021-01-01 00:00:00",
+            "2021-01-01 01:00:00",
+            "2021-01-01 02:00:00",
+            "2021-01-01 03:00:00",
+            "2021-01-01 04:00:00",
+            "2021-01-01 05:00:00",
+            "2021-01-01 06:00:00",
+            "2021-01-01 07:00:00",
+            "2021-01-01 08:00:00",
+            "2021-01-01 09:00:00",
+            "2021-01-01 10:00:00",
+            "2021-01-01 11:00:00",
+            "2021-01-01 12:00:00",
+            "2021-01-01 13:00:00",
+            "2021-01-01 14:00:00",
+            "2021-01-01 15:00:00",
+            "2021-01-01 16:00:00",
+            "2021-01-01 17:00:00",
+            "2021-01-01 18:00:00",
+            "2021-01-01 19:00:00",
+            "2021-01-01 20:00:00",
+            "2021-01-01 21:00:00",
+            "2021-01-01 22:00:00",
+            "2021-01-01 23:00:00"
+          ]
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews", "visits", "visit_duration", "bounce_rate"],
+            "date_range" => ["2021-01-01T00:00:00+00:00", "2021-01-01T23:59:59+00:00"],
+            "dimensions" => ["time:hour"],
+            "include" => %{"time_labels" => true}
+          })
+      }
     end
 
     test "shows last 7 days of visitors with time labels", %{conn: conn, site: site} do
@@ -1406,20 +1801,30 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "include" => %{"time_labels" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2021-01-01"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-07"], "metrics" => [1]}
-             ]
-
-      assert json_response(conn, 200)["meta"]["time_labels"] == [
-               "2021-01-01",
-               "2021-01-02",
-               "2021-01-03",
-               "2021-01-04",
-               "2021-01-05",
-               "2021-01-06",
-               "2021-01-07"
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2021-01-01"], "metrics" => [1]},
+          %{"dimensions" => ["2021-01-07"], "metrics" => [1]}
+        ],
+        "meta" => %{
+          "time_labels" => [
+            "2021-01-01",
+            "2021-01-02",
+            "2021-01-03",
+            "2021-01-04",
+            "2021-01-05",
+            "2021-01-06",
+            "2021-01-07"
+          ]
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "date_range" => ["2021-01-01T00:00:00+00:00", "2021-01-07T23:59:59+00:00"],
+            "dimensions" => ["time:day"],
+            "include" => %{"time_labels" => true}
+          })
+      }
     end
 
     test "shows weekly data with time labels", %{conn: conn, site: site} do
@@ -1438,17 +1843,27 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "include" => %{"time_labels" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2020-12-28"], "metrics" => [2]},
-               %{"dimensions" => ["2021-01-04"], "metrics" => [1]}
-             ]
-
-      assert json_response(conn, 200)["meta"]["time_labels"] == [
-               "2020-12-20",
-               "2020-12-21",
-               "2020-12-28",
-               "2021-01-04"
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2020-12-28"], "metrics" => [2]},
+          %{"dimensions" => ["2021-01-04"], "metrics" => [1]}
+        ],
+        "meta" => %{
+          "time_labels" => [
+            "2020-12-20",
+            "2020-12-21",
+            "2020-12-28",
+            "2021-01-04"
+          ]
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "date_range" => ["2020-12-20T00:00:00+00:00", "2021-01-07T23:59:59+00:00"],
+            "dimensions" => ["time:week"],
+            "include" => %{"time_labels" => true}
+          })
+      }
     end
 
     test "shows last 6 months of visitors", %{conn: conn, site: site} do
@@ -1467,11 +1882,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["time:month"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2020-08-01"], "metrics" => [1]},
-               %{"dimensions" => ["2020-12-01"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2020-08-01"], "metrics" => [1]},
+          %{"dimensions" => ["2020-12-01"], "metrics" => [1]},
+          %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "date_range" => ["2020-07-01T00:00:00+00:00", "2021-01-31T23:59:59+00:00"],
+            "dimensions" => ["time:month"]
+          })
+      }
     end
 
     test "shows last 12 months of visitors", %{conn: conn, site: site} do
@@ -1490,11 +1914,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["time:month"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2020-02-01"], "metrics" => [1]},
-               %{"dimensions" => ["2020-12-01"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2020-02-01"], "metrics" => [1]},
+          %{"dimensions" => ["2020-12-01"], "metrics" => [1]},
+          %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "date_range" => ["2020-01-01T00:00:00+00:00", "2021-01-01T23:59:59+00:00"],
+            "dimensions" => ["time:month"]
+          })
+      }
     end
 
     test "shows last 12 months of visitors with interval daily", %{conn: conn, site: site} do
@@ -1514,13 +1947,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "include" => %{"time_labels" => true}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2020-02-01"], "metrics" => [1]},
-               %{"dimensions" => ["2020-12-31"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
-             ]
-
-      assert length(json_response(conn, 200)["meta"]["time_labels"]) == 373
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2020-02-01"], "metrics" => [1]},
+          %{"dimensions" => ["2020-12-31"], "metrics" => [1]},
+          %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
+        ],
+        "meta" => %{
+          "time_labels" => expect_any(:list, &(length(&1) == 373))
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "date_range" => ["2020-01-01T00:00:00+00:00", "2021-01-07T23:59:59+00:00"],
+            "dimensions" => ["time:day"],
+            "include" => %{"time_labels" => true}
+          })
+      }
     end
 
     test "shows a custom range with daily interval", %{conn: conn, site: site} do
@@ -1538,10 +1981,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["time:day"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2021-01-01"], "metrics" => [2]},
-               %{"dimensions" => ["2021-01-02"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2021-01-01"], "metrics" => [2]},
+          %{"dimensions" => ["2021-01-02"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "date_range" => ["2021-01-01T00:00:00+00:00", "2021-01-02T23:59:59+00:00"],
+            "dimensions" => ["time:day"]
+          })
+      }
     end
 
     test "shows a custom range with monthly interval", %{conn: conn, site: site} do
@@ -1560,10 +2012,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["time:month"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2020-12-01"], "metrics" => [2, 1, 0, 300]},
-               %{"dimensions" => ["2021-01-01"], "metrics" => [2, 2, 100, 0]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2020-12-01"], "metrics" => [2, 1, 0, 300]},
+          %{"dimensions" => ["2021-01-01"], "metrics" => [2, 2, 100, 0]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+            "date_range" => ["2020-12-01T00:00:00+00:00", "2021-01-02T23:59:59+00:00"],
+            "dimensions" => ["time:month"]
+          })
+      }
     end
 
     test "timeseries with explicit order_by", %{conn: conn, site: site} do
@@ -1587,12 +2048,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "order_by" => [["pageviews", "desc"], ["time", "asc"]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2021-01-02"], "metrics" => [3]},
-               %{"dimensions" => ["2021-01-03"], "metrics" => [2]},
-               %{"dimensions" => ["2021-01-04"], "metrics" => [2]},
-               %{"dimensions" => ["2021-01-01"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2021-01-02"], "metrics" => [3]},
+          %{"dimensions" => ["2021-01-03"], "metrics" => [2]},
+          %{"dimensions" => ["2021-01-04"], "metrics" => [2]},
+          %{"dimensions" => ["2021-01-01"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "date_range" => ["2020-12-01T00:00:00+00:00", "2021-01-04T23:59:59+00:00"],
+            "dimensions" => ["time:day"],
+            "order_by" => [["pageviews", "desc"], ["time:day", "asc"]]
+          })
+      }
     end
 
     test "timeseries with quarter-hour timezone", %{conn: conn, user: user} do
@@ -1617,11 +2088,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["time:hour"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2021-01-02 10:00:00"], "metrics" => [1]},
-               %{"dimensions" => ["2021-01-02 11:00:00"], "metrics" => [4]},
-               %{"dimensions" => ["2021-01-02 12:00:00"], "metrics" => [2]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2021-01-02 10:00:00"], "metrics" => [1]},
+          %{"dimensions" => ["2021-01-02 11:00:00"], "metrics" => [4]},
+          %{"dimensions" => ["2021-01-02 12:00:00"], "metrics" => [2]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visits"],
+            "date_range" => ["2021-01-02T00:00:00+05:45", "2021-01-02T23:59:59+05:45"],
+            "dimensions" => ["time:hour"]
+          })
+      }
     end
   end
 
@@ -1649,12 +2129,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:source"]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Google"], "metrics" => [2]},
-             %{"dimensions" => ["Direct / None"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Google"], "metrics" => [2]},
+        %{"dimensions" => ["Direct / None"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:source"]
+        })
+    }
   end
 
   test "breakdown by visit:channel", %{conn: conn, site: site} do
@@ -1680,12 +2166,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:channel"]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Organic Search"], "metrics" => [2]},
-             %{"dimensions" => ["Direct"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Organic Search"], "metrics" => [2]},
+        %{"dimensions" => ["Direct"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:channel"]
+        })
+    }
   end
 
   test "breakdown by visit:country", %{conn: conn, site: site} do
@@ -1703,12 +2195,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:country"]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["EE"], "metrics" => [2]},
-             %{"dimensions" => ["US"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["EE"], "metrics" => [2]},
+        %{"dimensions" => ["US"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:country"]
+        })
+    }
   end
 
   for {dimension, attr} <- [
@@ -1750,7 +2248,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       # nobody landed on one.example.com from utm_param=ad
-      assert json_response(conn, 200)["results"] == []
+      assert_matches json_response(conn, 200), %{
+        "results" => [],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => [unquote(dimension)],
+            "filters" => [
+              ["is", "event:hostname", ["one.example.com"]],
+              ["is", "visit:entry_page_hostname", ["one.example.com"]]
+            ]
+          })
+      }
     end
   end
 
@@ -1802,13 +2312,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => [unquote(dimension)]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => [unquote(value1)], "metrics" => [3, 50]},
-               %{"dimensions" => [unquote(value2)], "metrics" => [2, 33.3]},
-               %{"dimensions" => [unquote(blank_value)], "metrics" => [1, 16.7]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => [unquote(value1)], "metrics" => [3, 50]},
+          %{"dimensions" => [unquote(value2)], "metrics" => [2, 33.3]},
+          %{"dimensions" => [unquote(blank_value)], "metrics" => [1, 16.7]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "date_range" => ["2021-01-01T00:00:00+00:00", "2021-01-01T23:59:59+00:00"],
+            "metrics" => ["visitors", "percentage"],
+            "dimensions" => [unquote(dimension)]
+          })
+      }
     end
   end
 
@@ -1836,13 +2353,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:os", "visit:os_version"]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Mac", "14"], "metrics" => [3]},
-             %{"dimensions" => ["Windows", "11"], "metrics" => [2]},
-             %{"dimensions" => ["(not set)", "14"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Mac", "14"], "metrics" => [3]},
+        %{"dimensions" => ["Windows", "11"], "metrics" => [2]},
+        %{"dimensions" => ["(not set)", "14"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:os", "visit:os_version"]
+        })
+    }
   end
 
   test "breakdown by visit:browser and visit:browser_version", %{conn: conn, site: site} do
@@ -1869,13 +2392,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:browser", "visit:browser_version"]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Chrome", "14"], "metrics" => [3]},
-             %{"dimensions" => ["Firefox", "11"], "metrics" => [2]},
-             %{"dimensions" => ["(not set)", "14"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Chrome", "14"], "metrics" => [3]},
+        %{"dimensions" => ["Firefox", "11"], "metrics" => [2]},
+        %{"dimensions" => ["(not set)", "14"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:browser", "visit:browser_version"]
+        })
+    }
   end
 
   test "explicit order_by", %{conn: conn, site: site} do
@@ -1896,14 +2425,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "order_by" => [["visitors", "asc"], ["visit:browser", "desc"], ["visit:os", "asc"]]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Windows", "Firefox"], "metrics" => [1]},
-             %{"dimensions" => ["Mac", "Chrome"], "metrics" => [1]},
-             %{"dimensions" => ["Windows", "Chrome"], "metrics" => [1]},
-             %{"dimensions" => ["Linux", "Firefox"], "metrics" => [2]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Windows", "Firefox"], "metrics" => [1]},
+        %{"dimensions" => ["Mac", "Chrome"], "metrics" => [1]},
+        %{"dimensions" => ["Windows", "Chrome"], "metrics" => [1]},
+        %{"dimensions" => ["Linux", "Firefox"], "metrics" => [2]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:os", "visit:browser"],
+          "order_by" => [["visitors", "asc"], ["visit:browser", "desc"], ["visit:os", "asc"]]
+        })
+    }
   end
 
   test "breakdown by event:page", %{conn: conn, site: site} do
@@ -1924,10 +2460,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["event:page"]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/"], "metrics" => [2]},
-             %{"dimensions" => ["/plausible.io"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["/"], "metrics" => [2]},
+        %{"dimensions" => ["/plausible.io"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:page"]
+        })
+    }
   end
 
   test "attempting to breakdown by event:hostname returns an error", %{conn: conn, site: site} do
@@ -1946,12 +2490,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["event:hostname"]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["a.example.com"], "metrics" => [3]},
-             %{"dimensions" => ["b.example.com"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["a.example.com"], "metrics" => [3]},
+        %{"dimensions" => ["b.example.com"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["pageviews"],
+          "dimensions" => ["event:hostname"]
+        })
+    }
   end
 
   describe "custom events" do
@@ -1978,12 +2528,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["event:name"]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["Signup"], "metrics" => [2]},
-               %{"dimensions" => ["pageview"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["Signup"], "metrics" => [2]},
+          %{"dimensions" => ["pageview"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:name"]
+          })
+      }
     end
 
     test "can breakdown by event:name with visitors and events metrics", %{conn: conn, site: site} do
@@ -2029,12 +2585,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["event:name"]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["pageview"], "metrics" => [2, 4]},
-               %{"dimensions" => ["404"], "metrics" => [1, 2]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["pageview"], "metrics" => [2, 4]},
+          %{"dimensions" => ["404"], "metrics" => [1, 2]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events"],
+            "dimensions" => ["event:name"]
+          })
+      }
     end
 
     test "can breakdown by event:name while filtering for something", %{conn: conn, site: site} do
@@ -2082,12 +2644,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["Signup"], "metrics" => [2]},
-               %{"dimensions" => ["pageview"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["Signup"], "metrics" => [2]},
+          %{"dimensions" => ["pageview"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:name"],
+            "filters" => [
+              ["is", "event:page", ["/pageA"]],
+              ["is", "visit:browser", ["Chrome"]]
+            ]
+          })
+      }
     end
 
     test "can breakdown by a visit:property when filtering by event:name", %{
@@ -2122,11 +2694,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["Google"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["Google"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["visit:source"],
+            "filters" => [
+              ["is", "event:name", ["Signup"]]
+            ]
+          })
+      }
     end
 
     test "can breakdown by event:name when filtering by event:page", %{conn: conn, site: site} do
@@ -2162,12 +2743,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["pageview"], "metrics" => [2]},
-               %{"dimensions" => ["Signup"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["pageview"], "metrics" => [2]},
+          %{"dimensions" => ["Signup"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:name"],
+            "filters" => [
+              ["contains", "event:page", ["/pageA"]]
+            ]
+          })
+      }
     end
 
     test "can breakdown by event:page when filtering by event:name", %{conn: conn, site: site} do
@@ -2205,12 +2795,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["/pageA"], "metrics" => [2]},
-               %{"dimensions" => ["/pageB"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/pageA"], "metrics" => [2]},
+          %{"dimensions" => ["/pageB"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:page"],
+            "filters" => [
+              ["is", "event:name", ["Signup"]]
+            ]
+          })
+      }
     end
 
     test "can filter event:page with a wildcard", %{
@@ -2235,12 +2834,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["/en/page2"], "metrics" => [2]},
-               %{"dimensions" => ["/en/page1"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/en/page2"], "metrics" => [2]},
+          %{"dimensions" => ["/en/page1"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:page"],
+            "filters" => [
+              ["contains", "event:page", ["/en/"]]
+            ]
+          })
+      }
     end
 
     test "can filter event:hostname with a contains", %{
@@ -2265,11 +2873,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["/a"], "metrics" => [3]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/a"], "metrics" => [3]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:page"],
+            "filters" => [
+              ["contains", "event:hostname", ["-m.example.com"]]
+            ]
+          })
+      }
     end
 
     test "breakdown by custom event property", %{conn: conn, site: site} do
@@ -2311,12 +2928,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["business"], "metrics" => [2]},
-               %{"dimensions" => ["personal"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["business"], "metrics" => [2]},
+          %{"dimensions" => ["personal"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:props:package"],
+            "filters" => [
+              ["is", "event:name", ["Purchase"]]
+            ]
+          })
+      }
     end
 
     test "breakdown by custom event property, with pageviews metric", %{conn: conn, site: site} do
@@ -2346,12 +2972,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["event:props:package"]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["business"], "metrics" => [2]},
-               %{"dimensions" => ["personal"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["business"], "metrics" => [2]},
+          %{"dimensions" => ["personal"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "dimensions" => ["event:props:package"]
+          })
+      }
     end
 
     test "breakdown by custom event property, with (none)", %{conn: conn, site: site} do
@@ -2401,13 +3033,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["is", "event:name", ["Purchase"]]]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["16"], "metrics" => [3]},
-               %{"dimensions" => ["14"], "metrics" => [2]},
-               %{"dimensions" => ["(none)"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["16"], "metrics" => [3]},
+          %{"dimensions" => ["14"], "metrics" => [2]},
+          %{"dimensions" => ["(none)"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => ["event:props:cost"],
+            "filters" => [["is", "event:name", ["Purchase"]]]
+          })
+      }
     end
   end
 
@@ -2478,12 +3117,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Chrome"], "metrics" => [2]},
-             %{"dimensions" => ["Safari"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Chrome"], "metrics" => [2]},
+        %{"dimensions" => ["Safari"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:browser"],
+          "filters" => [
+            ["is", "event:page", ["/plausible.io"]]
+          ]
+        })
+    }
   end
 
   test "event:page filter shows sources of sessions that have visited that page", %{
@@ -2536,12 +3184,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["Google"], "metrics" => [2]},
-               %{"dimensions" => ["Twitter"], "metrics" => [1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["Google"], "metrics" => [2]},
+          %{"dimensions" => ["Twitter"], "metrics" => [1]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors"],
+            "dimensions" => [dimension],
+            "filters" => [
+              ["is", "event:page", ["/plausible.io"]]
+            ]
+          })
+      }
     end
   end
 
@@ -2576,9 +3233,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == []
+    assert_matches json_response(conn, 200), %{
+      "results" => [],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:source"],
+          "filters" => [
+            ["is", "event:hostname", ["app.example.com"]],
+            ["is", "visit:entry_page_hostname", ["app.example.com"]]
+          ]
+        })
+    }
   end
 
   test "top sources for a custom goal and filtered by hostname (2)", %{conn: conn, site: site} do
@@ -2608,9 +3275,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["Facebook"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Facebook"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:source"],
+          "filters" => [
+            ["is", "event:hostname", ["app.example.com"]],
+            ["is", "visit:entry_page_hostname", ["app.example.com"]]
+          ]
+        })
+    }
   end
 
   test "event:page filter is interpreted as entry_page filter only for bounce_rate", %{
@@ -2658,9 +3337,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:browser"]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["Chrome"], "metrics" => [3, 50]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Chrome"], "metrics" => [3, 50]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors", "bounce_rate"],
+          "dimensions" => ["visit:browser"],
+          "filters" => [["is", "event:page", ["/plausible.io", "/important-page"]]]
+        })
+    }
   end
 
   test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
@@ -2694,11 +3382,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Google"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Google"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:source"],
+          "filters" => [
+            ["is", "event:goal", ["Visit /plausible.io"]]
+          ]
+        })
+    }
   end
 
   test "event:goal custom event filter for breakdown by visit source", %{conn: conn, site: site} do
@@ -2732,11 +3429,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Google"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Google"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:source"],
+          "filters" => [
+            ["is", "event:goal", ["Register"]]
+          ]
+        })
+    }
   end
 
   test "wildcard pageview goal filter for breakdown by event:page", %{conn: conn, site: site} do
@@ -2761,12 +3467,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["/en/register"], "metrics" => [2, 3]},
-             %{"dimensions" => ["/123/it/register"], "metrics" => [1, 1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["/en/register"], "metrics" => [2, 3]},
+        %{"dimensions" => ["/123/it/register"], "metrics" => [1, 1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors", "pageviews"],
+          "dimensions" => ["event:page"],
+          "filters" => [["is", "event:goal", ["Visit /**register"]]]
+        })
+    }
   end
 
   test "goal contains filter for goal breakdown", %{conn: conn, site: site} do
@@ -2794,13 +3507,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Onboarding conversion: Step 1"], "metrics" => [2]},
-             %{"dimensions" => ["Onboarding conversion: Step 2"], "metrics" => [1]},
-             %{"dimensions" => ["Visit /conversion"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Onboarding conversion: Step 1"], "metrics" => [2]},
+        %{"dimensions" => ["Onboarding conversion: Step 2"], "metrics" => [1]},
+        %{"dimensions" => ["Visit /conversion"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"],
+          "filters" => [["contains", "event:goal", ["conversion"]]]
+        })
+    }
   end
 
   test "goal contains filter for goal breakdown (case insensitive)", %{conn: conn, site: site} do
@@ -2828,12 +3548,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Onboarding conversion: Step 1"], "metrics" => [2]},
-             %{"dimensions" => ["Onboarding conversion: Step 2"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Onboarding conversion: Step 1"], "metrics" => [2]},
+        %{"dimensions" => ["Onboarding conversion: Step 2"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:goal"],
+          "filters" => [["contains", "event:goal", ["step"], %{"case_sensitive" => false}]]
+        })
+    }
   end
 
   test "mixed multi-goal filter for breakdown by visit:country", %{conn: conn, site: site} do
@@ -2858,12 +3585,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["EE"], "metrics" => [2, 1, 2]},
-             %{"dimensions" => ["US"], "metrics" => [1, 1, 1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["EE"], "metrics" => [2, 1, 2]},
+        %{"dimensions" => ["US"], "metrics" => [1, 1, 1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors", "pageviews", "events"],
+          "dimensions" => ["visit:country"],
+          "filters" => [["is", "event:goal", ["Signup", "Visit /**register"]]]
+        })
+    }
   end
 
   test "event:goal custom event filter for breakdown by event page", %{conn: conn, site: site} do
@@ -2895,12 +3629,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["/en/register"], "metrics" => [2]},
-             %{"dimensions" => ["/it/register"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["/en/register"], "metrics" => [2]},
+        %{"dimensions" => ["/it/register"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:page"],
+          "filters" => [["is", "event:goal", ["Register"]]]
+        })
+    }
   end
 
   test "IN filter for event:page", %{conn: conn, site: site} do
@@ -2934,12 +3675,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["/plausible.io"], "metrics" => [2]},
-             %{"dimensions" => ["/important-page"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["/plausible.io"], "metrics" => [2]},
+        %{"dimensions" => ["/important-page"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:page"],
+          "filters" => [["is", "event:page", ["/plausible.io", "/important-page"]]]
+        })
+    }
   end
 
   test "IN filter for visit:browser", %{conn: conn, site: site} do
@@ -2977,12 +3725,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["/plausible.io"], "metrics" => [2]},
-             %{"dimensions" => ["/important-page"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["/plausible.io"], "metrics" => [2]},
+        %{"dimensions" => ["/important-page"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:page"],
+          "filters" => [["is", "visit:browser", ["Chrome", "Safari"]]]
+        })
+    }
   end
 
   test "IN filter for visit:entry_page", %{conn: conn, site: site} do
@@ -3016,11 +3771,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    results = json_response(conn, 200)["results"]
-
-    assert length(results) == 2
-    assert %{"dimensions" => ["/plausible.io"], "metrics" => [100]} in results
-    assert %{"dimensions" => ["/important-page"], "metrics" => [100]} in results
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["/plausible.io"], "metrics" => [100]},
+        %{"dimensions" => ["/important-page"], "metrics" => [100]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["bounce_rate"],
+          "dimensions" => ["event:page"],
+          "filters" => [["is", "event:page", ["/plausible.io", "/important-page"]]]
+        })
+    }
   end
 
   test "IN filter for event:name", %{conn: conn, site: site} do
@@ -3054,12 +3817,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Signup"], "metrics" => [2]},
-             %{"dimensions" => ["Login"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Signup"], "metrics" => [2]},
+        %{"dimensions" => ["Login"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["event:name"],
+          "filters" => [["is", "event:name", ["Signup", "Login"]]]
+        })
+    }
   end
 
   test "IN filter for event:name case insensitive", %{conn: conn, site: site} do
@@ -3092,11 +3862,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => [], "metrics" => [3]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => [], "metrics" => [3]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => [],
+          "filters" => [["is", "event:name", ["signup", "LOGIN"], %{"case_sensitive" => false}]]
+        })
+    }
   end
 
   test "IN filter for event:props:*", %{conn: conn, site: site} do
@@ -3138,12 +3915,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Chrome"], "metrics" => [2]},
-             %{"dimensions" => ["Safari"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Chrome"], "metrics" => [2]},
+        %{"dimensions" => ["Safari"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:browser"],
+          "filters" => [["is", "event:props:browser", ["Chrome", "Safari"]]]
+        })
+    }
   end
 
   test "Multiple event:props:* filters", %{conn: conn, site: site} do
@@ -3194,11 +3978,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Safari"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Safari"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:browser"],
+          "filters" => [
+            ["is", "event:props:browser", ["CHROME", "sAFari"], %{"case_sensitive" => false}],
+            ["is_not", "event:props:browser", ["Chrome"], %{"case_sensitive" => false}],
+            ["is", "event:props:prop", ["target_value"]]
+          ]
+        })
+    }
   end
 
   test "IN filter for event:props:* including (none) value", %{conn: conn, site: site} do
@@ -3236,12 +4031,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "filters" => [["is", "event:props:browser", ["Chrome", "(none)"]]]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Chrome"], "metrics" => [2]},
-             %{"dimensions" => ["Safari"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Chrome"], "metrics" => [2]},
+        %{"dimensions" => ["Safari"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:browser"],
+          "filters" => [["is", "event:props:browser", ["Chrome", "(none)"]]]
+        })
+    }
   end
 
   test "can use a is_not filter", %{conn: conn, site: site} do
@@ -3263,12 +4065,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Safari"], "metrics" => [2]},
-             %{"dimensions" => ["Edge"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Safari"], "metrics" => [2]},
+        %{"dimensions" => ["Edge"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:browser"],
+          "filters" => [["is_not", "visit:browser", ["Chrome"]]]
+        })
+    }
   end
 
   describe "metrics" do
@@ -3315,12 +4124,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["visit:source"]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["Google"], "metrics" => [2, 2, 3, 4, 50, 300]},
-               %{"dimensions" => ["Twitter"], "metrics" => [1, 1, 1, 1, 100, 0]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["Google"], "metrics" => [2, 2, 3, 4, 50, 300]},
+          %{"dimensions" => ["Twitter"], "metrics" => [1, 1, 1, 1, 100, 0]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => [
+              "visitors",
+              "visits",
+              "pageviews",
+              "events",
+              "bounce_rate",
+              "visit_duration"
+            ],
+            "dimensions" => ["visit:source"]
+          })
+      }
     end
 
     test "metrics=bounce_rate does not add visits to the response", %{conn: conn, site: site} do
@@ -3352,12 +4174,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "order_by" => [["visit:entry_page", "asc"]]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["/entry-page-1"], "metrics" => [0]},
-               %{"dimensions" => ["/entry-page-2"], "metrics" => [100]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/entry-page-1"], "metrics" => [0]},
+          %{"dimensions" => ["/entry-page-2"], "metrics" => [100]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["bounce_rate"],
+            "dimensions" => ["visit:entry_page"],
+            "order_by" => [["visit:entry_page", "asc"]]
+          })
+      }
     end
 
     test "all metrics for breakdown by event prop", %{conn: conn, site: site} do
@@ -3395,12 +4224,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "order_by" => [["event:page", "desc"]]
         })
 
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["/plausible.io"], "metrics" => [2, 2, 2, 2, 100, 0]},
-               %{"dimensions" => ["/"], "metrics" => [2, 2, 2, 2, 50, 300]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/plausible.io"], "metrics" => [2, 2, 2, 2, 100, 0]},
+          %{"dimensions" => ["/"], "metrics" => [2, 2, 2, 2, 50, 300]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => [
+              "visitors",
+              "visits",
+              "pageviews",
+              "events",
+              "bounce_rate",
+              "visit_duration"
+            ],
+            "dimensions" => ["event:page"],
+            "order_by" => [["event:page", "desc"]]
+          })
+      }
     end
   end
 
@@ -3448,12 +4291,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Safari"], "metrics" => [2]},
-             %{"dimensions" => ["Chrome"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Safari"], "metrics" => [2]},
+        %{"dimensions" => ["Chrome"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "dimensions" => ["visit:browser"],
+          "filters" => [
+            ["is", "event:name", ["Purchase"]],
+            ["is", "event:props:package", ["business"]]
+          ]
+        })
+    }
   end
 
   test "multiple breakdown timeseries with sources", %{conn: conn, site: site} do
@@ -3487,13 +4340,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["time", "visit:source"]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["2021-01-01", "Google"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-02", "Google"], "metrics" => [2]},
-             %{"dimensions" => ["2021-01-02", "Direct / None"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-03", "Direct / None"], "metrics" => [2]},
-             %{"dimensions" => ["2021-01-03", "Twitter"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["2021-01-01", "Google"], "metrics" => [1]},
+        %{"dimensions" => ["2021-01-02", "Google"], "metrics" => [2]},
+        %{"dimensions" => ["2021-01-02", "Direct / None"], "metrics" => [1]},
+        %{"dimensions" => ["2021-01-03", "Direct / None"], "metrics" => [2]},
+        %{"dimensions" => ["2021-01-03", "Twitter"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["visitors"],
+          "date_range" => ["2021-01-01T00:00:00+00:00", "2021-01-03T23:59:59+00:00"],
+          "dimensions" => ["time:day", "visit:source"]
+        })
+    }
   end
 
   test "filtering by visit:country_name, visit:region_name, visit:city_name", %{
@@ -3546,10 +4408,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:country_name", "visit:region_name", "visit:city_name"]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["Estonia", "Harjumaa", "Tallinn"], "metrics" => [1]},
-             %{"dimensions" => ["United Kingdom", "London", "London"], "metrics" => [1]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [
+        %{"dimensions" => ["Estonia", "Harjumaa", "Tallinn"], "metrics" => [1]},
+        %{"dimensions" => ["United Kingdom", "London", "London"], "metrics" => [1]}
+      ],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["pageviews"],
+          "dimensions" => ["visit:country_name", "visit:region_name", "visit:city_name"],
+          "filters" => [
+            ["is", "visit:country_name", ["Estonia", "United Kingdom"]],
+            ["is_not", "visit:region_name", ["Tartumaa"]],
+            ["contains", "visit:city_name", ["n"]]
+          ]
+        })
+    }
   end
 
   test "bounce rate calculation handles invalid session data gracefully", %{
@@ -3598,9 +4473,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["event:page"]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/"], "metrics" => [0]}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [%{"dimensions" => ["/"], "metrics" => [0]}],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["bounce_rate"],
+          "dimensions" => ["event:page"]
+        })
+    }
   end
 
   describe "using the returned query object in a new POST request" do
@@ -3621,13 +4502,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all"
         })
 
-      assert %{"results" => results1, "query" => query} = json_response(conn1, 200)
-      assert results1 == [%{"metrics" => [3], "dimensions" => []}]
+      response1 = json_response(conn1, 200)
 
-      conn2 = post(conn, "/api/v2/query", query)
+      assert_matches response1, %{
+        "results" => [%{"metrics" => [3], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"]
+          })
+      }
 
-      assert %{"results" => results2} = json_response(conn2, 200)
-      assert results2 == [%{"metrics" => [3], "dimensions" => []}]
+      conn2 = post(conn, "/api/v2/query", response1["query"])
+
+      assert_matches json_response(conn2, 200), %{
+        "results" => [%{"metrics" => [3], "dimensions" => []}],
+        "meta" => %{},
+        "query" => response1["query"]
+      }
     end
   end
 
@@ -3659,18 +4551,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "pagination" => %{"limit" => 10}
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/1"], "metrics" => [1]},
-               %{"dimensions" => ["/2"], "metrics" => [1]},
-               %{"dimensions" => ["/3"], "metrics" => [1]},
-               %{"dimensions" => ["/4"], "metrics" => [1]},
-               %{"dimensions" => ["/5"], "metrics" => [1]},
-               %{"dimensions" => ["/6"], "metrics" => [1]},
-               %{"dimensions" => ["/7"], "metrics" => [1]},
-               %{"dimensions" => ["/8"], "metrics" => [1]}
-             ]
-
-      assert json_response(conn, 200)["meta"]["total_rows"] == 8
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/1"], "metrics" => [1]},
+          %{"dimensions" => ["/2"], "metrics" => [1]},
+          %{"dimensions" => ["/3"], "metrics" => [1]},
+          %{"dimensions" => ["/4"], "metrics" => [1]},
+          %{"dimensions" => ["/5"], "metrics" => [1]},
+          %{"dimensions" => ["/6"], "metrics" => [1]},
+          %{"dimensions" => ["/7"], "metrics" => [1]},
+          %{"dimensions" => ["/8"], "metrics" => [1]}
+        ],
+        "meta" => %{
+          "total_rows" => 8
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["pageviews"],
+            "dimensions" => ["event:page"],
+            "order_by" => [["event:page", "asc"]],
+            "include" => %{"total_rows" => true},
+            "pagination" => %{"limit" => 10, "offset" => 0}
+          })
+      }
     end
 
     test "pagination with offset", %{conn: conn, site: site} do
@@ -3728,9 +4631,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
-          "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
-          "metrics" => ["scroll_depth"]
+          "metrics" => ["scroll_depth"],
+          "filters" => [["is", "event:page", ["/"]]]
         })
 
       assert json_response(conn, 400)["error"] =~ "Invalid metric \"scroll_depth\""
@@ -3749,14 +4652,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
-          "metrics" => ["scroll_depth"]
+          "metrics" => ["scroll_depth"],
+          "filters" => [["is", "event:page", ["/"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [70], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [70], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "filters" => [["is", "event:page", ["/"]]]
+          })
+      }
     end
 
     test "can query scroll_depth with page + custom prop filter", %{conn: conn, site: site} do
@@ -3783,17 +4692,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "filters" => [["is", "event:page", ["/"]], ["is", "event:props:author", ["john"]]],
           "date_range" => "all",
-          "metrics" => ["scroll_depth"]
+          "metrics" => ["scroll_depth"],
+          "filters" => [["is", "event:page", ["/"]], ["is", "event:props:author", ["john"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [60], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [60], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "filters" => [["is", "event:page", ["/"]], ["is", "event:props:author", ["john"]]]
+          })
+      }
     end
 
-    test "scroll depth is 0 when no pageleave data in range", %{conn: conn, site: site} do
+    test "scroll depth is nil when no pageleave data in range", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
@@ -3806,23 +4721,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "metrics" => ["visitors", "scroll_depth"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [1, nil], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [1, nil], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "scroll_depth"],
+            "filters" => [["is", "event:page", ["/"]]]
+          })
+      }
     end
 
-    test "scroll depth is 0 when no data at all in range", %{conn: conn, site: site} do
+    test "scroll depth is nil when no data at all in range", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
-          "metrics" => ["scroll_depth"]
+          "metrics" => ["scroll_depth"],
+          "filters" => [["is", "event:page", ["/"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [nil], "dimensions" => []}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"metrics" => [nil], "dimensions" => []}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "filters" => [["is", "event:page", ["/"]]]
+          })
+      }
     end
 
     test "scroll_depth metric in a time:day breakdown", %{conn: conn, site: site} do
@@ -3847,16 +4774,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["scroll_depth"],
           "date_range" => "all",
+          "metrics" => ["scroll_depth"],
           "dimensions" => ["time:day"],
           "filters" => [["is", "event:page", ["/"]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["2020-01-01"], "metrics" => [40]},
-               %{"dimensions" => ["2020-01-02"], "metrics" => [20]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["2020-01-01"], "metrics" => [40]},
+          %{"dimensions" => ["2020-01-02"], "metrics" => [20]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "dimensions" => ["time:day"],
+            "filters" => [["is", "event:page", ["/"]]]
+          })
+      }
     end
 
     test "breakdown by event:page with scroll_depth metric", %{conn: conn, site: site} do
@@ -3881,15 +4817,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["scroll_depth"],
           "date_range" => "all",
+          "metrics" => ["scroll_depth"],
           "dimensions" => ["event:page"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/blog"], "metrics" => [60]},
-               %{"dimensions" => ["/another"], "metrics" => [25]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/blog"], "metrics" => [60]},
+          %{"dimensions" => ["/another"], "metrics" => [25]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "dimensions" => ["event:page"]
+          })
+      }
     end
 
     test "can sort by scroll_depth in event:page breakdown", %{conn: conn, site: site} do
@@ -3914,16 +4858,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["scroll_depth"],
           "date_range" => "all",
-          "order_by" => [["scroll_depth", "asc"]],
-          "dimensions" => ["event:page"]
+          "metrics" => ["scroll_depth"],
+          "dimensions" => ["event:page"],
+          "order_by" => [["scroll_depth", "asc"]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/another"], "metrics" => [25]},
-               %{"dimensions" => ["/blog"], "metrics" => [60]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/another"], "metrics" => [25]},
+          %{"dimensions" => ["/blog"], "metrics" => [60]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "dimensions" => ["event:page"],
+            "order_by" => [["scroll_depth", "asc"]]
+          })
+      }
     end
 
     test "breakdown by event:page + visit:source with scroll_depth metric", %{
@@ -4001,17 +4954,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
+          "date_range" => "all",
           "metrics" => ["scroll_depth"],
           "order_by" => [["scroll_depth", "asc"]],
-          "date_range" => "all",
           "dimensions" => ["event:page", "visit:source"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/blog", "Twitter"], "metrics" => [20]},
-               %{"dimensions" => ["/another", "Twitter"], "metrics" => [24]},
-               %{"dimensions" => ["/blog", "Google"], "metrics" => [40]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/blog", "Twitter"], "metrics" => [20]},
+          %{"dimensions" => ["/another", "Twitter"], "metrics" => [24]},
+          %{"dimensions" => ["/blog", "Google"], "metrics" => [40]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "order_by" => [["scroll_depth", "asc"]],
+            "dimensions" => ["event:page", "visit:source"]
+          })
+      }
     end
 
     test "breakdown by event:page + time:day with scroll_depth metric", %{conn: conn, site: site} do
@@ -4070,17 +5032,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["scroll_depth"],
           "date_range" => "all",
+          "metrics" => ["scroll_depth"],
           "dimensions" => ["event:page", "time:day"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/blog", "2020-01-01"], "metrics" => [40]},
-               %{"dimensions" => ["/another", "2020-01-01"], "metrics" => [25]},
-               %{"dimensions" => ["/another", "2020-01-02"], "metrics" => [24]},
-               %{"dimensions" => ["/blog", "2020-01-02"], "metrics" => [20]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["/blog", "2020-01-01"], "metrics" => [40]},
+          %{"dimensions" => ["/another", "2020-01-01"], "metrics" => [25]},
+          %{"dimensions" => ["/another", "2020-01-02"], "metrics" => [24]},
+          %{"dimensions" => ["/blog", "2020-01-02"], "metrics" => [20]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "dimensions" => ["event:page", "time:day"]
+          })
+      }
     end
 
     test "breakdown by a custom prop with a page filter", %{conn: conn, site: site} do
@@ -4142,17 +5112,27 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["scroll_depth"],
-          "order_by" => [["scroll_depth", "desc"]],
           "date_range" => "all",
+          "metrics" => ["scroll_depth"],
           "filters" => [["matches", "event:page", ["/blog.*"]]],
-          "dimensions" => ["event:props:author"]
+          "dimensions" => ["event:props:author"],
+          "order_by" => [["scroll_depth", "desc"]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["(none)"], "metrics" => [91]},
-               %{"dimensions" => ["john"], "metrics" => [43]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{"dimensions" => ["(none)"], "metrics" => [91]},
+          %{"dimensions" => ["john"], "metrics" => [43]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["scroll_depth"],
+            "filters" => [["matches", "event:page", ["/blog.*"]]],
+            "dimensions" => ["event:props:author"],
+            "order_by" => [["scroll_depth", "desc"]]
+          })
+      }
     end
   end
 
@@ -4179,9 +5159,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "filters" => [["is", "visit:utm_medium", ["social"], %{"case_sensitive" => false}]]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
-           ]
+    assert_matches json_response(conn, 200), %{
+      "results" => [%{"metrics" => [2, 1, 0, 1500], "dimensions" => []}],
+      "meta" => %{},
+      "query" =>
+        response_query(site, %{
+          "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+          "filters" => [["is", "visit:utm_medium", ["social"], %{"case_sensitive" => false}]]
+        })
+    }
   end
 
   describe "revenue metrics" do
@@ -4225,20 +5211,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["event:goal"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Signup"], "metrics" => [nil, nil]}
-             ]
-
-      assert json_response(conn, 200)["meta"]["metric_warnings"] == %{
-               "average_revenue" => %{
-                 "code" => "no_revenue_goals_matching",
-                 "warning" => "Revenue metrics are null as there are no matching revenue goals."
-               },
-               "total_revenue" => %{
-                 "code" => "no_revenue_goals_matching",
-                 "warning" => "Revenue metrics are null as there are no matching revenue goals."
-               }
-             }
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => ["Signup"], "metrics" => [nil, nil]}],
+        "meta" => %{
+          "metric_warnings" => %{
+            "average_revenue" => %{
+              "code" => "no_revenue_goals_matching",
+              "warning" => "Revenue metrics are null as there are no matching revenue goals."
+            },
+            "total_revenue" => %{
+              "code" => "no_revenue_goals_matching",
+              "warning" => "Revenue metrics are null as there are no matching revenue goals."
+            }
+          }
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["average_revenue", "total_revenue"],
+            "dimensions" => ["event:goal"]
+          })
+      }
     end
 
     test "not filtering or grouping by goals leads to warnings", %{conn: conn, site: site} do
@@ -4249,20 +5241,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "metrics" => ["average_revenue", "total_revenue"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [nil, nil]}
-             ]
-
-      assert json_response(conn, 200)["meta"]["metric_warnings"] == %{
-               "average_revenue" => %{
-                 "code" => "no_revenue_goals_matching",
-                 "warning" => "Revenue metrics are null as there are no matching revenue goals."
-               },
-               "total_revenue" => %{
-                 "code" => "no_revenue_goals_matching",
-                 "warning" => "Revenue metrics are null as there are no matching revenue goals."
-               }
-             }
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [nil, nil]}],
+        "meta" => %{
+          "metric_warnings" => %{
+            "average_revenue" => %{
+              "code" => "no_revenue_goals_matching",
+              "warning" => "Revenue metrics are null as there are no matching revenue goals."
+            },
+            "total_revenue" => %{
+              "code" => "no_revenue_goals_matching",
+              "warning" => "Revenue metrics are null as there are no matching revenue goals."
+            }
+          }
+        },
+        "query" => response_query(site, %{"metrics" => ["average_revenue", "total_revenue"]})
+      }
     end
 
     test "filtering by revenue goals with same currency", %{conn: conn, site: site} do
@@ -4312,28 +5306,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "dimensions" => [],
-                 "metrics" => [
-                   4,
-                   %{
-                     "currency" => "USD",
-                     "long" => "$67.07",
-                     "short" => "$67.1",
-                     "value" => 67.066
-                   },
-                   %{
-                     "currency" => "USD",
-                     "long" => "$201.20",
-                     "short" => "$201.2",
-                     "value" => 201.2
-                   }
-                 ]
-               }
-             ]
-
-      assert "metric_warnings" not in json_response(conn, 200)["meta"]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{
+            "dimensions" => [],
+            "metrics" => [
+              4,
+              %{
+                "currency" => "USD",
+                "long" => "$67.07",
+                "short" => "$67.1",
+                "value" => 67.066
+              },
+              %{
+                "currency" => "USD",
+                "long" => "$201.20",
+                "short" => "$201.2",
+                "value" => 201.2
+              }
+            ]
+          }
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["events", "average_revenue", "total_revenue"],
+            "filters" => [["is", "event:goal", ["Signup", "Purchase", "Payment"]]]
+          })
+      }
     end
 
     test "filtering by revenue goals with different currencies", %{conn: conn, site: site} do
@@ -4383,25 +5383,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "dimensions" => [],
-                 "metrics" => [nil, nil]
-               }
-             ]
-
-      assert json_response(conn, 200)["meta"]["metric_warnings"] == %{
-               "average_revenue" => %{
-                 "code" => "no_single_revenue_currency",
-                 "warning" =>
-                   "Revenue metrics are null as there are multiple currencies for the selected event:goals."
-               },
-               "total_revenue" => %{
-                 "code" => "no_single_revenue_currency",
-                 "warning" =>
-                   "Revenue metrics are null as there are multiple currencies for the selected event:goals."
-               }
-             }
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [nil, nil]}],
+        "meta" => %{
+          "metric_warnings" => %{
+            "average_revenue" => %{
+              "code" => "no_single_revenue_currency",
+              "warning" =>
+                "Revenue metrics are null as there are multiple currencies for the selected event:goals."
+            },
+            "total_revenue" => %{
+              "code" => "no_single_revenue_currency",
+              "warning" =>
+                "Revenue metrics are null as there are multiple currencies for the selected event:goals."
+            }
+          }
+        },
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["average_revenue", "total_revenue"],
+            "filters" => [["is", "event:goal", ["Subscription", "Payment"]]]
+          })
+      }
     end
 
     test "breakdown by revenue goals", %{conn: conn, site: site} do
@@ -4449,62 +5452,68 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["event:goal"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "dimensions" => ["Purchase"],
-                 "metrics" => [
-                   %{
-                     "currency" => "USD",
-                     "long" => "$100.30",
-                     "short" => "$100.3",
-                     "value" => 100.3
-                   },
-                   %{
-                     "currency" => "USD",
-                     "long" => "$100.30",
-                     "short" => "$100.3",
-                     "value" => 100.3
-                   }
-                 ]
-               },
-               %{
-                 "dimensions" => ["Subscription"],
-                 "metrics" => [
-                   %{
-                     "currency" => "EUR",
-                     "long" => "€100.00",
-                     "short" => "€100.0",
-                     "value" => 100.0
-                   },
-                   %{
-                     "currency" => "EUR",
-                     "long" => "€100.00",
-                     "short" => "€100.0",
-                     "value" => 100.0
-                   }
-                 ]
-               },
-               %{
-                 "dimensions" => ["Payment"],
-                 "metrics" => [
-                   %{
-                     "currency" => "USD",
-                     "long" => "$50.45",
-                     "short" => "$50.4",
-                     "value" => 50.45
-                   },
-                   %{
-                     "currency" => "USD",
-                     "long" => "$100.90",
-                     "short" => "$100.9",
-                     "value" => 100.9
-                   }
-                 ]
-               },
-               %{"dimensions" => ["Signup"], "metrics" => [nil, nil]}
-             ]
-
-      assert "metric_warnings" not in json_response(conn, 200)["meta"]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{
+            "dimensions" => ["Purchase"],
+            "metrics" => [
+              %{
+                "currency" => "USD",
+                "long" => "$100.30",
+                "short" => "$100.3",
+                "value" => 100.3
+              },
+              %{
+                "currency" => "USD",
+                "long" => "$100.30",
+                "short" => "$100.3",
+                "value" => 100.3
+              }
+            ]
+          },
+          %{
+            "dimensions" => ["Subscription"],
+            "metrics" => [
+              %{
+                "currency" => "EUR",
+                "long" => "€100.00",
+                "short" => "€100.0",
+                "value" => 100.0
+              },
+              %{
+                "currency" => "EUR",
+                "long" => "€100.00",
+                "short" => "€100.0",
+                "value" => 100.0
+              }
+            ]
+          },
+          %{
+            "dimensions" => ["Payment"],
+            "metrics" => [
+              %{
+                "currency" => "USD",
+                "long" => "$50.45",
+                "short" => "$50.4",
+                "value" => 50.45
+              },
+              %{
+                "currency" => "USD",
+                "long" => "$100.90",
+                "short" => "$100.9",
+                "value" => 100.9
+              }
+            ]
+          },
+          %{"dimensions" => ["Signup"], "metrics" => [nil, nil]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["average_revenue", "total_revenue"],
+            "dimensions" => ["event:goal"]
+          })
+      }
     end
 
     test "breakdown by revenue goals + filtering", %{conn: conn, site: site} do
@@ -4553,28 +5562,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["event:goal"]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "dimensions" => ["Purchase"],
-                 "metrics" => [
-                   %{
-                     "currency" => "USD",
-                     "long" => "$100.30",
-                     "short" => "$100.3",
-                     "value" => 100.3
-                   },
-                   %{
-                     "currency" => "USD",
-                     "long" => "$100.30",
-                     "short" => "$100.3",
-                     "value" => 100.3
-                   }
-                 ]
-               },
-               %{"dimensions" => ["Signup"], "metrics" => [nil, nil]}
-             ]
-
-      assert "metric_warnings" not in json_response(conn, 200)["meta"]
+      assert_matches json_response(conn, 200), %{
+        "results" => [
+          %{
+            "dimensions" => ["Purchase"],
+            "metrics" => [
+              %{
+                "currency" => "USD",
+                "long" => "$100.30",
+                "short" => "$100.3",
+                "value" => 100.3
+              },
+              %{
+                "currency" => "USD",
+                "long" => "$100.30",
+                "short" => "$100.3",
+                "value" => 100.3
+              }
+            ]
+          },
+          %{"dimensions" => ["Signup"], "metrics" => [nil, nil]}
+        ],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["average_revenue", "total_revenue"],
+            "filters" => [["is", "event:goal", ["Signup", "Purchase"]]],
+            "dimensions" => ["event:goal"]
+          })
+      }
     end
   end
 
@@ -4608,9 +5624,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["has_done", ["is", "event:name", ["Conversion"]]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [2, 3, 11, 8]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [2, 3, 11, 8]}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "visits", "events", "pageviews"],
+            "filters" => [["has_done", ["is", "event:name", ["Conversion"]]]]
+          })
+      }
     end
 
     test "has_done returns all events by users who match condition if no further filters are provided",
@@ -4634,9 +5656,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["has_done", ["is", "event:name", ["Purchase"]]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [3, 6, 2]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [3, 6, 2]}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "events", "pageviews"],
+            "filters" => [["has_done", ["is", "event:name", ["Purchase"]]]]
+          })
+      }
     end
 
     test "has_done event:page filter", %{conn: conn, site: site} do
@@ -4675,9 +5703,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["has_done", ["contains", "event:page", ["/blog/"]]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [2, 3]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [2, 3]}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["has_done", ["contains", "event:page", ["/blog/"]]]]
+          })
+      }
     end
 
     test "has_not_done event:page filter", %{conn: conn, site: site} do
@@ -4716,9 +5750,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "filters" => [["has_not_done", ["contains", "event:page", ["/blog/"]]]]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [1, 1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [1, 1]}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [["has_not_done", ["contains", "event:page", ["/blog/"]]]]
+          })
+      }
     end
 
     test "has_done with complex event:props and event:name filters", %{conn: conn, site: site} do
@@ -4779,9 +5819,32 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [4, 3]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [4, 3]}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [
+              [
+                "has_done",
+                [
+                  "or",
+                  [
+                    ["is", "event:name", ["Purchase"]],
+                    [
+                      "and",
+                      [
+                        ["is", "event:name", ["Signup"]],
+                        ["is", "event:props:paid", ["true"]]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          })
+      }
     end
 
     test "has_done event:goal filter", %{conn: conn, site: site} do
@@ -4810,9 +5873,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [2, 4]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [2, 4]}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [
+              ["has_done", ["is", "event:goal", ["Conversion"]]],
+              ["is", "event:name", ["pageview"]]
+            ]
+          })
+      }
     end
 
     test "has_not_done event:goal filter", %{conn: conn, site: site} do
@@ -4841,9 +5913,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           ]
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [1, 1]}
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [1, 1]}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["visitors", "pageviews"],
+            "filters" => [
+              ["has_not_done", ["is", "event:goal", ["Conversion"]]],
+              ["is", "event:name", ["pageview"]]
+            ]
+          })
+      }
     end
 
     test "visit filters are not allowed with has_done/has_not_done filters", %{
@@ -4965,12 +6046,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "metrics" => ["events"]
         })
 
-      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [3]}]
-
-      # response shows what filters the segment was resolved to
-      assert json_response(conn, 200)["query"]["filters"] == [
-               ["and", [["is", "event:name", ["Signup"]]]]
-             ]
+      assert_matches json_response(conn, 200), %{
+        "results" => [%{"dimensions" => [], "metrics" => [3]}],
+        "meta" => %{},
+        "query" =>
+          response_query(site, %{
+            "metrics" => ["events"],
+            "filters" => [["and", [["is", "event:name", ["Signup"]]]]]
+          })
+      }
     end
   end
 end
