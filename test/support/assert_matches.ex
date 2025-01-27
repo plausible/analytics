@@ -15,9 +15,9 @@ defmodule Plausible.AssertMatches do
 
   """
   def assert_matches(data, expected) do
-    {equivelent?, left, right} = check_matches(data, expected)
+    {equivalent?, left, right} = check_matches(data, expected)
 
-    if not equivelent? do
+    if not equivalent? do
       raise ExUnit.AssertionError,
         left: left,
         right: right,
@@ -43,8 +43,8 @@ defmodule Plausible.AssertMatches do
         match_maps(value, expected)
 
       {a, b} when is_tuple(a) and is_tuple(b) ->
-        {equivelent?, left, right} = match_lists(Tuple.to_list(a), Tuple.to_list(b))
-        {equivelent?, List.to_tuple(left), List.to_tuple(right)}
+        {equivalent?, left, right} = match_lists(Tuple.to_list(a), Tuple.to_list(b))
+        {equivalent?, List.to_tuple(left), List.to_tuple(right)}
 
       {value, expected} ->
         {value == expected, value, expected}
@@ -56,9 +56,9 @@ defmodule Plausible.AssertMatches do
   defp match_lists(left, []), do: {false, left, []}
 
   defp match_lists([left | left_rest], [right | right_rest]) do
-    {equivelent?, left_acc, right_acc} = match_lists(left_rest, right_rest)
+    {equivalent?, left_acc, right_acc} = match_lists(left_rest, right_rest)
     {eq, l, r} = check_matches(left, right)
-    {equivelent? and eq, [l | left_acc], [r | right_acc]}
+    {equivalent? and eq, [l | left_acc], [r | right_acc]}
   end
 
   defp match_maps(left, expected) do
@@ -72,12 +72,12 @@ defmodule Plausible.AssertMatches do
   defp match_maps([], _, _), do: {true, %{}, %{}}
 
   defp match_maps([key | keys], left, expected) do
-    {equivelent?, left_result, right_result} = match_maps(keys, left, expected)
+    {equivalent?, left_result, right_result} = match_maps(keys, left, expected)
 
     case {left, expected} do
       {%{^key => left_value}, %{^key => right_value}} ->
         {eq, l, r} = check_matches(left_value, right_value)
-        {equivelent? and eq, Map.put(left_result, key, l), Map.put(right_result, key, r)}
+        {equivalent? and eq, Map.put(left_result, key, l), Map.put(right_result, key, r)}
 
       {%{^key => left_value}, _} ->
         {false, Map.put(left_result, key, left_value), right_result}
