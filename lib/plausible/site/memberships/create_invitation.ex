@@ -50,7 +50,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   end
 
   defp do_invite(site, inviter, invitee_email, role, opts \\ []) do
-    with site <- Repo.preload(site, [:owner, :team]),
+    with site <- Repo.preload(site, [:owners, :team]),
          :ok <-
            Teams.Invitations.check_invitation_permissions(
              site,
