@@ -98,7 +98,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 123),
-        build(:pageleave, user_id: 123)
+        build(:pageleave, user_id: 123, scroll_depth: 20)
       ])
 
       # Pageleaves exist now - `scroll_depth_visible_at` gets set to `utc_now`
@@ -1118,7 +1118,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 123),
-        build(:pageleave, user_id: 123)
+        build(:pageleave, user_id: 123, scroll_depth: 20)
       ])
 
       # Pageleaves exist now - `scroll_depth_visible_at` gets set to `utc_now`
