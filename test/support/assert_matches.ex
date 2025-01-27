@@ -67,6 +67,7 @@ defmodule Plausible.AssertMatches do
     keys =
       Map.keys(left)
       |> Enum.concat(Map.keys(expected))
+      |> Enum.uniq()
 
     match_maps(keys, left, expected)
   end
