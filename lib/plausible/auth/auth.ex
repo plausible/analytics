@@ -132,17 +132,12 @@ defmodule Plausible.Auth do
   @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
   def create_api_key(user, name, key) do
-    team =
-      case Teams.get_by_owner(user) do
-        {:ok, team} -> team
-        _ -> nil
-      end
-
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
 
-    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(team),
-         do: Repo.insert(changeset)
+    with :ok <- check_stats_api_available(user) do
+      Repo.insert(changeset)
+    end
   end
 
   @spec delete_api_key(Auth.User.t(), integer()) :: :ok | {:error, :not_found}
@@ -170,6 +165,21 @@ defmodule Plausible.Auth do
       {:ok, found}
     else
       {:error, :invalid_api_key}
+    end
+  end
+
+  defp check_stats_api_available(user) do
+    case Plausible.Teams.get_by_owner(user) do
+      {:ok, team} ->
+        Plausible.Billing.Feature.StatsAPI.check_availability(team)
+
+      {:error, :no_team} ->
+        Plausible.Billing.Feature.StatsAPI.check_availability(nil)
+
+      {:error, :multiple_teams} ->
+        # NOTE: Loophole to allow creating API keys when user is a member
+        # on multiple teams.
+        :ok
     end
   end
 
