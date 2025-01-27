@@ -30,7 +30,7 @@
     data-revenue-goals={Jason.encode!(@revenue_goals)}
     data-funnels={Jason.encode!(@funnels)}
     data-has-props={to_string(@has_props)}
-    data-scroll-depth-visible={to_string(@has_scroll_depth_visible)}
+    data-scroll-depth-visible={to_string(@scroll_depth_visible)}
     data-logged-in={to_string(!!@conn.assigns[:current_user])}
     data-stats-begin={@stats_start_date}
     data-native-stats-begin={@native_stats_start_date}
