@@ -40,17 +40,17 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
     from(r in query,
       inner_join: t in assoc(r, :team),
-      inner_join: o in assoc(t, :owner),
+      inner_join: o in assoc(t, :owners),
       or_where: ilike(r.paddle_plan_id, ^search_term),
       or_where: ilike(o.email, ^search_term) or ilike(o.name, ^search_term),
-      preload: [team: {t, owner: o}]
+      preload: [team: {t, owners: o}]
     )
   end
 
   def custom_show_query(_conn, _schema, query) do
     from(ep in query,
       inner_join: t in assoc(ep, :team),
-      inner_join: o in assoc(t, :owner),
+      inner_join: o in assoc(t, :owners),
       select: %{ep | user_id: o.id}
     )
   end
@@ -68,7 +68,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
     ]
   end
 
-  defp get_user_email(plan), do: plan.team.owner.email
+  defp get_user_email(plan), do: List.first(plan.team.owners).email
 
   def create_changeset(schema, attrs) do
     attrs = sanitize_attrs(attrs)

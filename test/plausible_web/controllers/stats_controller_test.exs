@@ -287,8 +287,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     } do
       {:ok, site} = Plausible.Props.allow(site, ["author"])
 
-      site = Repo.preload(site, :owner)
-      subscribe_to_growth_plan(site.owner)
+      [owner | _] = Repo.preload(site, :owners).owners
+      subscribe_to_growth_plan(owner)
 
       populate_stats(site, [
         build(:pageview, "meta.key": ["author"], "meta.value": ["a"]),
@@ -315,8 +315,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     } do
       {:ok, site} = Plausible.Props.allow(site, ["author"])
 
-      site = Repo.preload(site, :owner)
-      subscribe_to_growth_plan(site.owner)
+      [owner | _] = Repo.preload(site, :owners).owners
+      subscribe_to_growth_plan(owner)
 
       populate_stats(site, [
         build(:pageview, "meta.key": ["author"], "meta.value": ["a"])

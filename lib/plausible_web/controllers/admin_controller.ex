@@ -15,7 +15,7 @@ defmodule PlausibleWeb.AdminController do
         {:ok, team} ->
           team
           |> Teams.with_subscription()
-          |> Plausible.Repo.preload(:owner)
+          |> Plausible.Repo.preload(:owners)
 
         {:error, :no_team} ->
           nil
@@ -177,7 +177,7 @@ defmodule PlausibleWeb.AdminController do
 
       sites_link =
         Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-          custom_search: team.owner.email
+          custom_search: List.first(team.owners).email
         )
 
       """

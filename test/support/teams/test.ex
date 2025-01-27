@@ -20,9 +20,11 @@ defmodule Plausible.Teams.Test do
   def new_site(args \\ []) do
     args =
       if user = args[:owner] do
+        {owner, args} = Keyword.pop(args, :owner)
         {:ok, team} = Teams.get_or_create(user)
 
         args
+        |> Keyword.put(:owners, [owner])
         |> Keyword.put(:team, team)
       else
         user = new_user()
@@ -299,11 +301,13 @@ defmodule Plausible.Teams.Test do
   end
 
   def assert_team_attached(site, team_id \\ nil) do
-    assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owner])
+    assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owners])
 
-    assert membership = assert_team_membership(site.owner, team)
+    for owner <- site.owners do
+      assert membership = assert_team_membership(owner, team)
 
-    assert membership.team_id == team.id
+      assert membership.team_id == team.id
+    end
 
     if team_id do
       assert team.id == team_id

@@ -36,15 +36,6 @@ defmodule Plausible.Teams do
     Repo.get_by!(Teams.Team, identifier: team_identifier)
   end
 
-  @spec get_owner(Teams.Team.t()) ::
-          {:ok, Auth.User.t()} | {:error, :no_owner | :multiple_owners}
-  def get_owner(team) do
-    case Repo.preload(team, :owner).owner do
-      nil -> {:error, :no_owner}
-      owner_user -> {:ok, owner_user}
-    end
-  end
-
   @spec on_trial?(Teams.Team.t() | nil) :: boolean()
   on_ee do
     def on_trial?(nil), do: false

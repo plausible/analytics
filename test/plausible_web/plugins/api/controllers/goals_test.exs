@@ -53,8 +53,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       conn: conn
     } do
-      site = Plausible.Repo.preload(site, :owner)
-      subscribe_to_growth_plan(site.owner)
+      [owner | _] = Plausible.Repo.preload(site, :owners).owners
+      subscribe_to_growth_plan(owner)
 
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
@@ -79,8 +79,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       conn: conn
     } do
-      site = Plausible.Repo.preload(site, :owner)
-      subscribe_to_growth_plan(site.owner)
+      [owner | _] = Plausible.Repo.preload(site, :owners).owners
+      subscribe_to_growth_plan(owner)
 
       url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
