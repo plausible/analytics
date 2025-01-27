@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D825CFDB.js"></script>
+    <script src="dist/sidebar_items-E4BF67AB.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -306,7 +306,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
       </div>
 
 <p>Returns the pre-configured S3 bucket for CSV exports.</p><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:plausible</span><span class="p">,</span><span class="w"> </span><span class="nc">Plausible.S3</span><span class="p">,</span><span class="w">
-  </span><span class="ss">exports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="0186705683-1">(</span><span class="s">&quot;S3_EXPORTS_BUCKET&quot;</span><span class="p" data-group-id="0186705683-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">exports_bucket</span><span class="p" data-group-id="6075618981-1">(</span><span class="p" data-group-id="6075618981-1">)</span><span class="w">
+  </span><span class="ss">exports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="2910485073-1">(</span><span class="s">&quot;S3_EXPORTS_BUCKET&quot;</span><span class="p" data-group-id="2910485073-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">exports_bucket</span><span class="p" data-group-id="6734191382-1">(</span><span class="p" data-group-id="6734191382-1">)</span><span class="w">
 </span><span class="s">&quot;test-exports&quot;</span></code></pre>
   </section>
 </section>
@@ -336,8 +336,8 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
 
       </div>
 
-<p>Returns <code class="inline">access_key_id</code> and <code class="inline">secret_access_key</code> to be used by ClickHouse during imports from S3.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">import_clickhouse_credentials</span><span class="p" data-group-id="9949120956-1">(</span><span class="p" data-group-id="9949120956-1">)</span><span class="w">
-</span><span class="p" data-group-id="9949120956-2">%{</span><span class="ss">access_key_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">secret_access_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p" data-group-id="9949120956-2">}</span></code></pre>
+<p>Returns <code class="inline">access_key_id</code> and <code class="inline">secret_access_key</code> to be used by ClickHouse during imports from S3.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">import_clickhouse_credentials</span><span class="p" data-group-id="1434711832-1">(</span><span class="p" data-group-id="1434711832-1">)</span><span class="w">
+</span><span class="p" data-group-id="1434711832-2">%{</span><span class="ss">access_key_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">secret_access_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p" data-group-id="1434711832-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="import_presign_upload/2">
@@ -357,9 +357,9 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
 
   <section class="docstring">
 
-<p>Presigns an upload for an imported file.</p><p>In the current implementation the bucket always goes into the path component.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">upload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">import_presign_upload</span><span class="p" data-group-id="1397263135-1">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="c">_filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;imported_browsers.csv&quot;</span><span class="p" data-group-id="1397263135-1">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="no">true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">ends_with?</span><span class="p" data-group-id="1397263135-2">(</span><span class="n">upload</span><span class="o">.</span><span class="n">s3_url</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/test-imports/123/imported_browsers.csv&quot;</span><span class="p" data-group-id="1397263135-2">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="no">true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">contains?</span><span class="p" data-group-id="1397263135-3">(</span><span class="n">upload</span><span class="o">.</span><span class="n">presigned_url</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;&quot;</span><span class="p" data-group-id="1397263135-3">)</span></code></pre>
+<p>Presigns an upload for an imported file.</p><p>In the current implementation the bucket always goes into the path component.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">upload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">import_presign_upload</span><span class="p" data-group-id="5005450853-1">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="c">_filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;imported_browsers.csv&quot;</span><span class="p" data-group-id="5005450853-1">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="no">true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">ends_with?</span><span class="p" data-group-id="5005450853-2">(</span><span class="n">upload</span><span class="o">.</span><span class="n">s3_url</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/test-imports/123/imported_browsers.csv&quot;</span><span class="p" data-group-id="5005450853-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="no">true</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">contains?</span><span class="p" data-group-id="5005450853-3">(</span><span class="n">upload</span><span class="o">.</span><span class="n">presigned_url</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;&quot;</span><span class="p" data-group-id="5005450853-3">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="imports_bucket/0">
@@ -386,7 +386,7 @@ The URL expires in 300 seconds, which should be enough for a redirect.</p><p>In 
       </div>
 
 <p>Returns the pre-configured S3 bucket for CSV imports.</p><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:plausible</span><span class="p">,</span><span class="w"> </span><span class="nc">Plausible.S3</span><span class="p">,</span><span class="w">
-  </span><span class="ss">imports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="3450822924-1">(</span><span class="s">&quot;S3_IMPORTS_BUCKET&quot;</span><span class="p" data-group-id="3450822924-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">imports_bucket</span><span class="p" data-group-id="3146515745-1">(</span><span class="p" data-group-id="3146515745-1">)</span><span class="w">
+  </span><span class="ss">imports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="1642518429-1">(</span><span class="s">&quot;S3_IMPORTS_BUCKET&quot;</span><span class="p" data-group-id="1642518429-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">imports_bucket</span><span class="p" data-group-id="4164188014-1">(</span><span class="p" data-group-id="4164188014-1">)</span><span class="w">
 </span><span class="s">&quot;test-imports&quot;</span></code></pre>
   </section>
 </section>
