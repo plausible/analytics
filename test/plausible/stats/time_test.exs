@@ -232,4 +232,27 @@ defmodule Plausible.Stats.TimeTest do
              ]
     end
   end
+
+  test "foobar" do
+    n = %{z: 2}
+
+    assert_matches %{
+                     a: ^any(:integer, &(&1 > 2)),
+                     b: ^any(:string, ~r/baz/),
+                     d: [_ | _],
+                     e: ^~r/invalid/,
+                     f: ^n.z,
+                     g: ^(&is_float/1),
+                     h: ^exact(%{foo: :bar})
+                   } = %{
+                     a: 1,
+                     b: "twofer",
+                     c: :other,
+                     d: [1, 2, 3],
+                     e: "another string",
+                     f: 1,
+                     g: 4.2,
+                     h: %{foo: :bar, other: "stuff"}
+                   }
+  end
 end
