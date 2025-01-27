@@ -333,7 +333,7 @@ defmodule Plausible.Teams.Invitations do
     site =
       Repo.preload(site, [
         :team,
-        :owner,
+        :owners,
         guest_memberships: [team_membership: :user],
         guest_invitations: [team_invitation: :inviter]
       ])
@@ -390,19 +390,21 @@ defmodule Plausible.Teams.Invitations do
     Repo.delete_all(from gm in Teams.GuestMembership, where: gm.id in ^old_guest_ids)
     :ok = Teams.Memberships.prune_guests(prior_team)
 
-    {:ok, prior_owner} = Teams.get_owner(prior_team)
+    prior_owners = Repo.preload(prior_team, :owners).owners
 
-    {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)
+    for prior_owner <- prior_owners do
+      {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)
 
-    if prior_owner_team_membership.role == :guest do
-      {:ok, _} =
-        prior_owner_team_membership
-        |> Teams.GuestMembership.changeset(site, :editor)
-        |> Repo.insert(
-          on_conflict: [set: [updated_at: now, role: :editor]],
-          conflict_target: [:team_membership_id, :site_id],
-          returning: true
-        )
+      if prior_owner_team_membership.role == :guest do
+        {:ok, _} =
+          prior_owner_team_membership
+          |> Teams.GuestMembership.changeset(site, :editor)
+          |> Repo.insert(
+            on_conflict: [set: [updated_at: now, role: :editor]],
+            conflict_target: [:team_membership_id, :site_id],
+            returning: true
+          )
+      end
     end
 
     on_ee do
