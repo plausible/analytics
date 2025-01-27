@@ -6,7 +6,7 @@ defmodule Plausible.Stats.Aggregate do
   """
 
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer}
+  alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer}
 
   def aggregate(site, query, metrics) do
     Query.trace(query, metrics)
@@ -16,19 +16,20 @@ defmodule Plausible.Stats.Aggregate do
       |> Query.set(metrics: metrics, remove_unavailable_revenue_metrics: true)
       |> QueryOptimizer.optimize()
 
-    query_result = QueryRunner.run(site, query)
+    %QueryResult{results: [entry], meta: meta} = QueryRunner.run(site, query)
 
-    [entry] = query_result.results
+    results =
+      query.metrics
+      |> Enum.with_index()
+      |> Enum.map(fn {metric, index} ->
+        {
+          metric,
+          metric_map(entry, index, metric)
+        }
+      end)
+      |> Enum.into(%{})
 
-    query.metrics
-    |> Enum.with_index()
-    |> Enum.map(fn {metric, index} ->
-      {
-        metric,
-        metric_map(entry, index, metric)
-      }
-    end)
-    |> Enum.into(%{})
+    %{results: results, meta: meta}
   end
 
   def metric_map(

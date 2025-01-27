@@ -1592,8 +1592,6 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert Enum.find(imports, &(&1.id == import_id))
 
-      site = Plausible.Imported.load_import_data(site)
-
       assert eventually(fn ->
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
                {count == 22, count}

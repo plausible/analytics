@@ -231,11 +231,9 @@ defmodule Plausible.Sites do
   end
 
   def stats_start_date(%Site{} = site) do
-    site = Plausible.Imported.load_import_data(site)
-
     start_date =
       [
-        site.earliest_import_start_date,
+        Plausible.Imported.earliest_import_start_date(site),
         native_stats_start_date(site)
       ]
       |> Enum.reject(&is_nil/1)

@@ -60,7 +60,7 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   def query_imported(table, site, query) do
-    import_ids = site.complete_import_ids
+    import_ids = Imported.complete_import_ids(site)
     # Assumption: dates in imported table are in user-local timezone.
     %{first: date_from, last: date_to} = Query.date_range(query)
 

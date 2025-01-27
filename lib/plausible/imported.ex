@@ -67,35 +67,39 @@ defmodule Plausible.Imported do
     @goals_with_path
   end
 
-  @spec load_import_data(Site.t()) :: Site.t()
-  def load_import_data(%{import_data_loaded: true} = site), do: site
+  @spec earliest_import_start_date(Site.t()) :: Date.t() | nil
+  def earliest_import_start_date(site) do
+    site
+    |> get_completed_imports()
+    |> Enum.map(& &1.start_date)
+    |> Enum.min(Date, fn -> nil end)
+  end
 
-  def load_import_data(site) do
-    complete_import_ids = list_complete_import_ids(site)
-    dates = get_imports_date_range(site)
+  @spec latest_import_end_date(Site.t()) :: Date.t() | nil
+  def latest_import_end_date(site) do
+    site
+    |> get_completed_imports()
+    |> Enum.map(& &1.end_date)
+    |> Enum.max(Date, fn -> nil end)
+  end
 
-    %{
-      site
-      | import_data_loaded: true,
-        earliest_import_start_date: dates.start_date,
-        latest_import_end_date: dates.end_date,
-        complete_import_ids: complete_import_ids
-    }
+  @spec complete_import_ids(Site.t()) :: [non_neg_integer()]
+  def complete_import_ids(site) do
+    imports = get_completed_imports(site)
+    has_legacy? = Enum.any?(imports, fn %{legacy: legacy?} -> legacy? end)
+    ids = Enum.map(imports, fn %{id: id} -> id end)
+
+    # account for legacy imports as well
+    if has_legacy? do
+      [0 | ids]
+    else
+      ids
+    end
   end
 
   @spec get_import(Site.t(), non_neg_integer()) :: SiteImport.t() | nil
   def get_import(site, import_id) do
     Repo.get_by(SiteImport, id: import_id, site_id: site.id)
-  end
-
-  @spec get_legacy_import(Site.t()) :: SiteImport.t() | nil
-  def get_legacy_import(site) do
-    from(i in SiteImport,
-      where: i.site_id == ^site.id and i.legacy == true,
-      order_by: [desc: i.updated_at],
-      limit: 1
-    )
-    |> Repo.one()
   end
 
   defdelegate listen(), to: Imported.Importer
@@ -121,42 +125,6 @@ defmodule Plausible.Imported do
 
   defp maybe_filter_by_status(query, status) do
     where(query, [i], i.status == ^status)
-  end
-
-  @spec list_complete_import_ids(Site.t()) :: [non_neg_integer()]
-  def list_complete_import_ids(site) do
-    ids =
-      from(i in SiteImport,
-        where: i.site_id == ^site.id and i.status == ^SiteImport.completed(),
-        select: {i.legacy, i.id},
-        limit: @max_complete_imports
-      )
-      |> Repo.all()
-
-    has_legacy? = Enum.any?(ids, fn {legacy?, _} -> legacy? end)
-    ids = Enum.map(ids, &elem(&1, 1))
-
-    # account for legacy imports as well
-    if has_legacy? do
-      [0 | ids]
-    else
-      ids
-    end
-  end
-
-  @spec get_imports_date_range(Site.t()) :: %{
-          start_date: Date.t() | nil,
-          end_date: Date.t() | nil
-        }
-  def get_imports_date_range(site) do
-    dates =
-      from(i in SiteImport,
-        where: i.site_id == ^site.id and i.status == ^SiteImport.completed(),
-        select: %{start_date: min(i.start_date), end_date: max(i.end_date)}
-      )
-      |> Repo.one()
-
-    dates || %{start_date: nil, end_date: nil}
   end
 
   @spec delete_imports_for_site(Site.t()) :: :ok
@@ -241,5 +209,11 @@ defmodule Plausible.Imported do
 
   defp in_range?(date, range) do
     Date.before?(range.first, date) && Date.after?(range.last, date)
+  end
+
+  defp get_completed_imports(site) do
+    site
+    |> Repo.preload(:completed_imports)
+    |> Map.fetch!(:completed_imports)
   end
 end
