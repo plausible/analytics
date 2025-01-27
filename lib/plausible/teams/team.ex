@@ -39,6 +39,8 @@ defmodule Plausible.Teams.Team do
 
     has_one :ownership, Plausible.Teams.Membership, where: [role: :owner]
     has_one :owner, through: [:ownership, :user]
+    has_many :ownerships, Plausible.Teams.Membership, where: [role: :owner]
+    has_many :owners, through: [:ownerships, :user]
 
     timestamps()
   end

@@ -94,15 +94,7 @@ defmodule PlausibleWeb.Email do
     |> render("trial_one_week_reminder.html", user: user)
   end
 
-  def trial_upgrade_email(user, day, usage) do
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} -> team
-        _ -> nil
-      end
-
-    suggested_plan = Plausible.Billing.Plans.suggest(team, usage.total)
-
+  def trial_upgrade_email(user, day, usage, suggested_plan) do
     base_email()
     |> to(user)
     |> tag("trial-upgrade-email")
