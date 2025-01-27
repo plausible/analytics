@@ -33,9 +33,9 @@ defmodule Plausible.SiteAdmin do
 
     from(r in query,
       as: :site,
-      inner_join: o in assoc(r, :owner),
+      inner_join: o in assoc(r, :owners),
       inner_join: t in assoc(r, :team),
-      preload: [owner: o, team: t, guest_memberships: [team_membership: :user]],
+      preload: [owners: o, team: t, guest_memberships: [team_membership: :user]],
       or_where: ilike(r.domain, ^search_term),
       or_where: ilike(o.email, ^search_term),
       or_where: ilike(o.name, ^search_term),
@@ -78,7 +78,7 @@ defmodule Plausible.SiteAdmin do
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
       timezone: nil,
       public: nil,
-      owner: %{value: &get_owner/1},
+      owners: %{value: &get_owners/1},
       other_members: %{value: &get_other_members/1},
       limits: %{
         value: fn site ->
@@ -186,20 +186,22 @@ defmodule Plausible.SiteAdmin do
     Calendar.strftime(date, "%b %-d, %Y")
   end
 
-  defp get_owner(site) do
-    owner = site.owner
+  defp get_owners(site) do
+    owners = Repo.preload(site, :owners).owners
 
-    if owner do
-      escaped_name = Phoenix.HTML.html_escape(owner.name) |> Phoenix.HTML.safe_to_string()
-      escaped_email = Phoenix.HTML.html_escape(owner.email) |> Phoenix.HTML.safe_to_string()
+    owners_html =
+      Enum.map(owners, fn owner ->
+        escaped_name = Phoenix.HTML.html_escape(owner.name) |> Phoenix.HTML.safe_to_string()
+        escaped_email = Phoenix.HTML.html_escape(owner.email) |> Phoenix.HTML.safe_to_string()
 
-      {:safe,
-       """
-        <a href="/crm/auth/user/#{owner.id}">#{escaped_name}</a>
-        <br/><br/>
-        #{escaped_email}
-       """}
-    end
+        """
+         <a href="/crm/auth/user/#{owner.id}">#{escaped_name}</a>
+         <br/><br/>
+         #{escaped_email}
+        """
+      end)
+
+    {:safe, Enum.join(owners_html, "<br/><br/>")}
   end
 
   defp get_other_members(site) do
