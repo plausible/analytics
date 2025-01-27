@@ -221,12 +221,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export" do
-    setup [:create_user, :create_site, :log_in]
-
-    setup %{site: site} = context do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-      context
-    end
+    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
 
     test "exports all the necessary CSV files", %{conn: conn, site: site} do
       conn = get(conn, "/" <> site.domain <> "/export")
@@ -680,12 +675,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - via shared link" do
-    setup [:create_user, :create_site]
-
-    setup %{site: site} = context do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-      context
-    end
+    setup [:create_user, :create_site, :set_scroll_depth_visible_at]
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       link = insert(:shared_link, site: site)
@@ -697,12 +687,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - for past 6 months" do
-    setup [:create_user, :create_site, :log_in]
-
-    setup %{site: site} = context do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-      context
-    end
+    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
 
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
@@ -712,12 +697,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - with path filter" do
-    setup [:create_user, :create_site, :log_in]
-
-    setup %{site: site} = context do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-      context
-    end
+    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
 
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)

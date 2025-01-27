@@ -5,12 +5,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/pages" do
-    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
-
-    setup %{site: site} = context do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-      context
-    end
+    setup [
+      :create_user,
+      :log_in,
+      :create_site,
+      :create_legacy_site_import,
+      :set_scroll_depth_visible_at
+    ]
 
     test "returns top pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [

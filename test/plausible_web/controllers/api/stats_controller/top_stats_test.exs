@@ -478,12 +478,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - with imported data" do
-    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
-
-    setup %{site: site} = context do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-      context
-    end
+    setup [
+      :create_user,
+      :log_in,
+      :create_site,
+      :create_legacy_site_import,
+      :set_scroll_depth_visible_at
+    ]
 
     test "returns divisible metrics as 0 when no stats exist", %{
       site: site,
@@ -893,12 +894,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - filters" do
-    setup [:create_user, :log_in, :create_site]
-
-    setup %{site: site} = context do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-      context
-    end
+    setup [:create_user, :log_in, :create_site, :set_scroll_depth_visible_at]
 
     test "returns graph_metric key for top stats with a page filter", %{
       conn: conn,
