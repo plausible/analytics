@@ -143,7 +143,7 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def invite(%Plausible.Site{} = site, invitee_email, role, inviter) do
-    site = Teams.load_for_site(site)
+    site = Repo.preload(site, :team)
 
     if role == :owner do
       create_site_transfer(
