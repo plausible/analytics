@@ -597,7 +597,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metrics(query) do
     with :ok <- validate_list(query.metrics, &validate_metric(&1, query)) do
-      validate_no_metrics_filters_conflict(query)
+      TableDecider.validate_no_metrics_dimensions_conflict(query)
     end
   end
 
@@ -635,27 +635,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_metric(_, _), do: :ok
-
-  defp validate_no_metrics_filters_conflict(query) do
-    {_event_metrics, sessions_metrics, _other_metrics} =
-      TableDecider.partition_metrics(query.metrics, query)
-
-    if Enum.empty?(sessions_metrics) or
-         not event_dimensions_not_allowing_session_metrics?(query.dimensions) do
-      :ok
-    else
-      {:error,
-       "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event dimensions."}
-    end
-  end
-
-  defp event_dimensions_not_allowing_session_metrics?(dimensions) do
-    Enum.any?(dimensions, fn
-      "event:page" -> false
-      "event:" <> _ -> true
-      _ -> false
-    end)
-  end
 
   defp validate_include(query) do
     time_dimension? = Enum.any?(query.dimensions, &Time.time_dimension?/1)
