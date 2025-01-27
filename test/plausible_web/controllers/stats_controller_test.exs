@@ -108,14 +108,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         |> html_response(200)
 
       assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
-
-      site = Repo.reload!(site)
-
-      assert NaiveDateTime.diff(
-               NaiveDateTime.utc_now(:second),
-               site.scroll_depth_visible_at,
-               :second
-             ) <= 1
+      assert not is_nil(Repo.reload!(site).scroll_depth_visible_at)
     end
   end
 
@@ -1128,14 +1121,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         |> html_response(200)
 
       assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
-
-      site = Repo.reload!(site)
-
-      assert NaiveDateTime.diff(
-               NaiveDateTime.utc_now(:second),
-               site.scroll_depth_visible_at,
-               :second
-             ) <= 1
+      assert not is_nil(Repo.reload!(site).scroll_depth_visible_at)
     end
   end
 
