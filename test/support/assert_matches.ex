@@ -1,4 +1,6 @@
 defmodule Plausible.AssertMatches do
+  @moduledoc false
+
   @doc """
   Custom assertion function that allows for flexible matching of expected results.
 
