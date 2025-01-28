@@ -1,5 +1,5 @@
 /* eslint-disable playwright/no-skipped-test */
-const { pageleaveCooldown, expectPlausibleInAction } = require('./support/test-utils')
+const { pageleaveCooldown, expectPlausibleInAction, ignoreEngagementRequests } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
@@ -9,7 +9,8 @@ test.describe('scroll depth', () => {
   test('sends scroll_depth in the pageleave payload when navigating to the next page', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/scroll-depth.html'),
-      expectedRequests: [{n: 'pageview'}]
+      expectedRequests: [{n: 'pageview'}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
 
     await page.evaluate(() => window.scrollBy(0, 300))
@@ -17,14 +18,16 @@ test.describe('scroll depth', () => {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth.html`, sd: 20}]
+      expectedRequests: [{n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth.html`, sd: 20}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 
   test('sends scroll depth on hash navigation', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/scroll-depth-hash.html'),
-      expectedRequests: [{n: 'pageview'}]
+      expectedRequests: [{n: 'pageview'}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
 
     await expectPlausibleInAction(page, {
@@ -32,7 +35,8 @@ test.describe('scroll depth', () => {
       expectedRequests: [
         {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html`, sd: 100},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`}
-      ]
+      ],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
 
     await pageleaveCooldown(page)
@@ -42,14 +46,16 @@ test.describe('scroll depth', () => {
       expectedRequests: [
         {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`, sd: 34},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#home`}
-      ]
+      ],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 
   test('document height gets reevaluated after window load', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/scroll-depth-slow-window-load.html'),
-      expectedRequests: [{n: 'pageview'}]
+      expectedRequests: [{n: 'pageview'}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
 
     // Wait for the image to be loaded
@@ -59,27 +65,31 @@ test.describe('scroll depth', () => {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-slow-window-load.html`, sd: 24}]
+      expectedRequests: [{n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-slow-window-load.html`, sd: 24}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 
   test('dynamically loaded content affects documentHeight', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/scroll-depth-dynamic-content-load.html'),
-      expectedRequests: [{n: 'pageview'}]
+      expectedRequests: [{n: 'pageview'}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
-    
+
     // The link appears dynamically after 500ms.
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-dynamic-content-load.html`, sd: 14}]
+      expectedRequests: [{n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-dynamic-content-load.html`, sd: 14}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 
   test('document height gets reevaluated on scroll', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/scroll-depth-content-onscroll.html'),
-      expectedRequests: [{n: 'pageview'}]
+      expectedRequests: [{n: 'pageview'}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
 
     // During the first 3 seconds, the script periodically updates document height
@@ -89,7 +99,7 @@ test.describe('scroll depth', () => {
 
     // scroll to the bottom of the page
     await page.evaluate(() => window.scrollBy(0, document.body.scrollHeight))
-    
+
     // Wait until documentHeight gets increased by the fixture JS
     await page.waitForSelector('#more-content')
 
@@ -97,7 +107,8 @@ test.describe('scroll depth', () => {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-content-onscroll.html`, sd: 80}]
+      expectedRequests: [{n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-content-onscroll.html`, sd: 80}],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 })
