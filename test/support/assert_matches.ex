@@ -68,7 +68,11 @@ defmodule Plausible.AssertMatches do
 
         {:^, _meta, [pinned]}, acc ->
           pinned = Plausible.AssertMatches.Internal.transform_predicate(pinned)
-          pinned_var = Macro.unique_var(:match, __MODULE__)
+
+          pinned_var =
+            Macro.unique_var(:match, __MODULE__)
+            |> Macro.update_meta(&Keyword.put(&1, :assert_match, true))
+
           {pinned_var, [{pinned_var, pinned} | acc]}
 
         other, acc ->
@@ -81,6 +85,19 @@ defmodule Plausible.AssertMatches do
           ^var -> {:_, [], __MODULE__}
           other -> other
         end)
+      end)
+
+    var_pattern =
+      Macro.postwalk(var_pattern, fn
+        {name, meta, module} = var when is_atom(name) and is_atom(module) ->
+          if meta[:assert_match] do
+            var
+          else
+            {:_, [], __MODULE__}
+          end
+
+        other ->
+          other
       end)
 
     predicate_pattern =
