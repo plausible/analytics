@@ -3,23 +3,33 @@ defmodule Plausible.PromEx do
 
   alias PromEx.Plugins
 
+  @plugins [
+    Plugins.Application,
+    Plugins.Beam,
+    Plugins.PhoenixLiveView,
+    {Plugins.Phoenix, router: PlausibleWeb.Router, endpoint: PlausibleWeb.Endpoint},
+    {Plugins.Ecto,
+      repos: [
+        Plausible.Repo,
+        Plausible.ClickhouseRepo,
+        Plausible.IngestRepo,
+        Plausible.AsyncInsertRepo
+      ]},
+    Plausible.PromEx.Plugins.PlausibleMetrics
+  ]
+
   @impl true
-  def plugins do
-    [
-      Plugins.Application,
-      Plugins.Beam,
-      Plugins.PhoenixLiveView,
-      {Plugins.Phoenix, router: PlausibleWeb.Router, endpoint: PlausibleWeb.Endpoint},
-      {Plugins.Ecto,
-       repos: [
-         Plausible.Repo,
-         Plausible.ClickhouseRepo,
-         Plausible.IngestRepo,
-         Plausible.AsyncInsertRepo
-       ]},
-      Plugins.Oban,
-      Plausible.PromEx.Plugins.PlausibleMetrics
-    ]
+  if Mix.env() in [:test, :ce_test] do
+    # PromEx tries to query Oban's DB tables in order to retrieve metrics.
+    # During tests, however, this is pointless as Oban is in manual mode,
+    # and that leads to connection ownership clashes.
+    def plugins do
+      @plugins
+    end
+  else
+    def plugins do
+      [Plugins.Oban | @plugins]
+    end
   end
 
   @impl true
