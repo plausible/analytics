@@ -8,8 +8,9 @@ import { SecondsSinceLastLoad } from '../util/seconds-since-last-load'
 import { useQueryContext } from '../query-context'
 import { useSiteContext } from '../site-context'
 import { useLastLoadContext } from '../last-load-context'
+import classNames from 'classnames'
 
-export default function CurrentVisitors({ tooltipBoundary }) {
+export default function CurrentVisitors({ className = '', tooltipBoundary }) {
   const { query } = useQueryContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
@@ -33,11 +34,7 @@ export default function CurrentVisitors({ tooltipBoundary }) {
     updateCount()
   }, [query, updateCount])
 
-  if (
-    site.flags.saved_segments
-      ? currentVisitors !== null
-      : currentVisitors !== null && query.filters.length === 0
-  ) {
+  if (currentVisitors !== null && query.filters.length === 0) {
     return (
       <Tooltip
         info={
@@ -56,7 +53,10 @@ export default function CurrentVisitors({ tooltipBoundary }) {
       >
         <AppNavigationLink
           search={(prev) => ({ ...prev, period: 'realtime' })}
-          className="h-9 flex items-center ml-1 mr-auto text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300"
+          className={classNames(
+            'h-9 flex items-center text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300',
+            className
+          )}
         >
           <svg
             className="inline-block w-2 mr-1 text-green-500 fill-current"

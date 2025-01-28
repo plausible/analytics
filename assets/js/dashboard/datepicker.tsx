@@ -263,7 +263,11 @@ function QueryPeriodsMenu({
   )
 }
 
-export default function QueryPeriodPicker() {
+export default function QueryPeriodPicker({
+  className
+}: {
+  className?: string
+}) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
@@ -352,7 +356,7 @@ export default function QueryPeriodPicker() {
   }, [closeMenu, query])
 
   return (
-    <div className="flex ml-auto pl-2">
+    <div className={classNames('flex shrink-0', className)}>
       <MovePeriodArrows />
       <ToggleDropdownButton
         withDropdownIndicator

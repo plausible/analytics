@@ -1,6 +1,7 @@
 /** @format */
 
 import React, {
+  CSSProperties,
   DetailedHTMLProps,
   forwardRef,
   HTMLAttributes,
@@ -13,6 +14,24 @@ import {
   AppNavigationLink,
   AppNavigationTarget
 } from '../navigation/use-app-navigate'
+import { NavigateOptions } from 'react-router-dom'
+
+export const DropdownSubtitle = ({
+  children,
+  className
+}: {
+  children: ReactNode
+  className?: string
+}) => (
+  <div
+    className={classNames(
+      'text-xs px-4 pt-2 pb-1 font-bold uppercase text-indigo-500 dark:text-indigo-400',
+      className
+    )}
+  >
+    {children}
+  </div>
+)
 
 export const ToggleDropdownButton = forwardRef<
   HTMLDivElement,
@@ -23,6 +42,7 @@ export const ToggleDropdownButton = forwardRef<
     currentOption: ReactNode
     children: ReactNode
     onClick: () => void
+    style?: CSSProperties
     dropdownContainerProps: DetailedHTMLProps<
       HTMLAttributes<HTMLButtonElement>,
       HTMLButtonElement
@@ -37,6 +57,7 @@ export const ToggleDropdownButton = forwardRef<
       children,
       onClick,
       dropdownContainerProps,
+      style,
       ...props
     },
     ref
@@ -53,7 +74,7 @@ export const ToggleDropdownButton = forwardRef<
     }[variant]
 
     return (
-      <div className={className} ref={ref}>
+      <div className={className} ref={ref} style={style}>
         <button
           onClick={onClick}
           className={classNames(sharedButtonClass, buttonClass)}
@@ -129,15 +150,19 @@ export const DropdownNavigationLink = ({
   children,
   active,
   className,
+  navigateOptions,
   ...props
 }: AppNavigationTarget & {
   active?: boolean
   children: ReactNode
   className?: string
   onClick?: () => void
+  onMouseEnter?: () => void
+  navigateOptions?: NavigateOptions
 }) => (
   <AppNavigationLink
     {...props}
+    {...navigateOptions}
     className={classNames(
       className,
       { 'font-bold': !!active },
