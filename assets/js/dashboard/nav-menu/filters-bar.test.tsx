@@ -37,15 +37,26 @@ test('user can see expected filters and clear them one by one or all together', 
   }
   const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
 
-  render(<FiltersBar />, {
-    wrapper: (props) => (
-      <TestContextProviders
-        routerProps={{ initialEntries: [startUrl] }}
-        siteOptions={{ domain }}
-        {...props}
-      />
-    )
-  })
+  render(
+    <FiltersBar
+      elements={{
+        topBar: {
+          getBoundingClientRect: jest.fn().mockReturnValue(600)
+        } as unknown as HTMLElement,
+        leftSection: { getBoundingClientRect: jest.fn().mockReturnValue(200) },
+        rightSection: { getBoundingClientRect: jest.fn().mockReturnValue(300) }
+      }}
+    />,
+    {
+      wrapper: (props) => (
+        <TestContextProviders
+          routerProps={{ initialEntries: [startUrl] }}
+          siteOptions={{ domain }}
+          {...props}
+        />
+      )
+    }
+  )
 
   const queryFilterPills = () =>
     screen.queryAllByRole('link', { hidden: false, name: /.* is .*/i })
@@ -56,7 +67,7 @@ test('user can see expected filters and clear them one by one or all together', 
   await userEvent.click(
     screen.getByRole('button', {
       hidden: false,
-      name: 'Show rest of the filters'
+      name: 'Show more'
     })
   )
 
@@ -90,10 +101,8 @@ describe(`${handleVisibility.name}`, () => {
     const setVisibility = jest.fn()
     const input = {
       setVisibility,
-      topBarWidth: 1000,
-      actionsWidth: 100,
-      seeMorePresent: false,
-      seeMoreWidth: 50,
+      leftoverWidth: 1000,
+      seeMoreWidth: 100,
       pillWidths: [200, 200, 200, 200],
       pillGap: 25
     }
@@ -105,9 +114,7 @@ describe(`${handleVisibility.name}`, () => {
     })
 
     handleVisibility({
-      ...input,
-      seeMorePresent: true,
-      actionsWidth: input.actionsWidth + input.seeMoreWidth
+      ...input
     })
     expect(setVisibility).toHaveBeenCalledTimes(2)
     expect(setVisibility).toHaveBeenLastCalledWith({
@@ -115,7 +122,7 @@ describe(`${handleVisibility.name}`, () => {
       visibleCount: 4
     })
 
-    handleVisibility({ ...input, topBarWidth: 999 })
+    handleVisibility({ ...input, leftoverWidth: 999 })
     expect(setVisibility).toHaveBeenCalledTimes(3)
     expect(setVisibility).toHaveBeenLastCalledWith({
       width: 675,
@@ -123,15 +130,30 @@ describe(`${handleVisibility.name}`, () => {
     })
   })
 
-  it('can shrink to 0 width', () => {
+  it('handles 1 filter correctly', () => {
     const setVisibility = jest.fn()
     const input = {
       setVisibility,
-      topBarWidth: 300,
-      actionsWidth: 100,
-      seeMorePresent: true,
+      leftoverWidth: 300,
       seeMoreWidth: 50,
       pillWidths: [250],
+      pillGap: 25
+    }
+    handleVisibility(input)
+    expect(setVisibility).toHaveBeenCalledTimes(1)
+    expect(setVisibility).toHaveBeenLastCalledWith({
+      width: 275,
+      visibleCount: 1
+    })
+  })
+
+  it('handles 2 filters correctly, shrinking to 0 width', () => {
+    const setVisibility = jest.fn()
+    const input = {
+      setVisibility,
+      leftoverWidth: 300,
+      seeMoreWidth: 50,
+      pillWidths: [250, 200],
       pillGap: 25
     }
     handleVisibility(input)
