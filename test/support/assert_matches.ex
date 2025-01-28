@@ -28,11 +28,11 @@ defmodule Plausible.AssertMatches do
     * shorthand version of the above, `~r/regex pattern/`
     * any artibrary one argument function returning a boolean, like `&is_float/1`
       or `&(&1 < 40 or &1 > 300)`
-    * exact(expression) where expression is compared using equality, so that can
-      enforce full equality inside a pattern, like: `exact(%{foo: 2})` which will
+    * exactly(expression) where expression is compared using equality, so that can
+      enforce full equality inside a pattern, like: `exactly(%{foo: 2})` which will
       fail if the value is something like `%{foo: 2, other: "something}`
     * any other arbitrary expression which is compared the way as if it was wrapped
-      with exact * this allows "interpolating" values from schemas and maps without
+      with `exactly()`; this allows "interpolating" values from schemas and maps without
       rebinding like `user.id` (instead of having to rebind to `user_id` first)
 
   Usage example:
@@ -46,7 +46,7 @@ defmodule Plausible.AssertMatches do
                       e: ^~r/invalid/,
                       f: ^n.z,
                       g: ^(&is_float/1),
-                      h: ^exact(%{foo: :bar})
+                      h: ^exactly(%{foo: :bar})
                     } = %{
                       a: 1,
                       b: "twofer",
@@ -147,9 +147,9 @@ defmodule Plausible.AssertMatches do
       end
     end
 
-    def transform_predicate({:exact, _, [value]}) do
+    def transform_predicate({:exactly, _, [value]}) do
       quote do
-        Plausible.AssertMatches.Internal.exact(unquote(value))
+        Plausible.AssertMatches.Internal.exactly(unquote(value))
       end
     end
 
@@ -170,7 +170,7 @@ defmodule Plausible.AssertMatches do
 
     def transform_predicate(other), do: other
 
-    def strip_prefix({{:., _, [_prefix, f]}, _, args}) when f in [:any, :regex, :exact] do
+    def strip_prefix({{:., _, [_prefix, f]}, _, args}) when f in [:any, :regex, :exactly] do
       {f, [], args}
     end
 
@@ -205,7 +205,7 @@ defmodule Plausible.AssertMatches do
       end
     end
 
-    def exact(expr) do
+    def exactly(expr) do
       fn value ->
         value == expr
       end
