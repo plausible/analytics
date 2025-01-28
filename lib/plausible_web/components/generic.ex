@@ -295,7 +295,7 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <.unstyled_link
-      id={@id}
+        id={@id}
         class={@class}
         new_tab={@new_tab}
         href={@href}
