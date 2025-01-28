@@ -10,7 +10,8 @@ defmodule Plausible.Session.CacheStore do
 
   def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1)
 
-  def on_event(%{name: "pageleave"} = event, _, prev_user_id, _) do
+  def on_event(%{name: name} = event, _, prev_user_id, _)
+      when name in ["pageleave", "engagement"] do
     # The `pageleave` event is currently experimental. In a real use case we would
     # probably want to update the session as well (e.g. `is_bounce` or `duration`).
 
