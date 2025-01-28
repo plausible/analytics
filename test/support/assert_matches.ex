@@ -2,6 +2,61 @@ defmodule Plausible.AssertMatches do
   @doc """
   Pattern match assertions wrapper macro extending it with checks expressed
   directly within the pattern.
+
+  The idea here is that the pin (^) operator does not only rebind existing
+  binding in the scope but also allows embedding basically any other expression
+  to match against the given part of the pattern. Normal pattern matching is
+  also supported and both can be mixed. The only caveat so far is that when
+  normal patterns fail, only they are listed in the error even if there are
+  potentially failing expressions. However, once the normal pattern is fixed,
+  they surface.
+
+  Currently, the following expressions can be pinned:
+
+    * `any(:atom)`
+    * `any(:string)`
+    * `any(:binary)`
+    * `any(:integer)`
+    * `any(:float)`
+    * `any(:boolean)`
+    * `any(:map)`
+    * `any(:list)`
+    * all above variants of any with a one argument predicate function accepting
+      value and returning a boolean, like: `any(:integer, & &1 > 20)`
+    * a special case of `any(:string, ~r/regex pattern/)` checking that value is
+      a string and matches a pattern
+    * shorthand version of the above, `~r/regex pattern/`
+    * any artibrary one argument function returning a boolean, like `&is_float/1`
+      or `&(&1 < 40 or &1 > 300)`
+    * exact(expression) where expression is compared using equality, so that can
+      enforce full equality inside a pattern, like: `exact(%{foo: 2})` which will
+      fail if the value is something like `%{foo: 2, other: "something}`
+    * any other arbitrary expression which is compared the way as if it was wrapped
+      with exact * this allows "interpolating" values from schemas and maps without
+      rebinding like `user.id` (instead of having to rebind to `user_id` first)
+
+  Usage example:
+
+      n = %{z: 2}
+
+      assert_matches %{
+                      a: ^any(:integer, &(&1 > 2)),
+                      b: ^any(:string, ~r/baz/),
+                      d: [_ | _],
+                      e: ^~r/invalid/,
+                      f: ^n.z,
+                      g: ^(&is_float/1),
+                      h: ^exact(%{foo: :bar})
+                    } = %{
+                      a: 1,
+                      b: "twofer",
+                      c: :other,
+                      d: [1, 2, 3],
+                      e: "another string",
+                      f: 1,
+                      g: 4.2,
+                      h: %{foo: :bar, other: "stuff"}
+                    }
   """
 
   defmacro assert_matches({:=, meta, [pattern, value]}) do
