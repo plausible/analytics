@@ -4,6 +4,7 @@
 import React from 'react'
 import { Transition } from '@headlessui/react'
 import { Cog8ToothIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import classNames from 'classnames'
 
 function Favicon({ domain, className }) {
   return (
@@ -236,7 +237,12 @@ export default class SiteSwitcher extends React.Component {
       : 'cursor-default'
 
     return (
-      <div className="relative inline-block text-left mr-2 sm:mr-4">
+      <div
+        className={classNames(
+          'relative inline-block text-left shrink-0',
+          this.props.className
+        )}
+      >
         <button
           ref={this.siteSwitcherButton}
           className={`inline-flex items-center rounded-md h-9 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}
@@ -263,7 +269,7 @@ export default class SiteSwitcher extends React.Component {
           leaveTo="opacity-0 scale-95"
         >
           <div
-            className="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg"
+            className="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg z-10"
             ref={(node) => (this.dropDownNode = node)}
           >
             <div className="rounded-md bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">

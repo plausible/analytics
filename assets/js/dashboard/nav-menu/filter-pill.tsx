@@ -1,49 +1,87 @@
 /** @format */
 
 import React, { ReactNode } from 'react'
-import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { filterRoute } from '../router'
+import {
+  AppNavigationLink,
+  AppNavigationTarget
+} from '../navigation/use-app-navigate'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
+
+/**
+ * This value is added as a margin to each individual filter pill
+ * to prevent "overflow: hidden;" style of parent container
+ * from cutting off the drop shadow of the pill
+ * (which otherwise falls outside the bounding box)
+ */
+export const BUFFER_FOR_SHADOW_PX = 4
+
+export type FilterPillProps = {
+  className?: string
+  plainText: string
+  interactive:
+    | {
+        onRemoveClick?: () => void
+        navigationTarget: AppNavigationTarget
+      }
+    | false
+  children: ReactNode
+  actions?: ReactNode
+}
+
+const PillContent = ({ children }: { children?: ReactNode }) => (
+  <span className="inline-block max-w-2xs md:max-w-xs truncate">
+    {children}
+  </span>
+)
 
 export function FilterPill({
   className,
   plainText,
   children,
-  modalToOpen,
-  onRemoveClick
-}: {
-  className?: string
-  plainText: string
-  modalToOpen: string
-  children: ReactNode
-  onRemoveClick: () => void
-}) {
+  interactive,
+  actions
+}: FilterPillProps) {
+  const contentClassName = 'flex w-full h-full items-center py-2 pl-3 last:pr-3'
+
   return (
-    <div
-      className={classNames(
-        'flex h-9 shadow rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm items-center',
-        className
-      )}
-    >
-      <AppNavigationLink
-        title={`Edit filter: ${plainText}`}
-        className="flex w-full h-full items-center py-2 pl-3"
-        path={filterRoute.path}
-        params={{ field: modalToOpen }}
-        search={(search) => search}
+    <div className={className}>
+      <div
+        style={{ margin: BUFFER_FOR_SHADOW_PX }}
+        className={classNames(
+          'flex h-9 shadow rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm items-center',
+          className
+        )}
       >
-        <span className="inline-block max-w-2xs md:max-w-xs truncate">
-          {children}
-        </span>
-      </AppNavigationLink>
-      <button
-        title={`Remove filter: ${plainText}`}
-        className="flex items-center h-full px-2 mr-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
-        onClick={() => onRemoveClick()}
-      >
-        <XMarkIcon className="w-4 h-4" />
-      </button>
+        {interactive ? (
+          <>
+            <AppNavigationLink
+              className={contentClassName}
+              title={`Edit filter: ${plainText}`}
+              {...interactive.navigationTarget}
+            >
+              <PillContent>{children}</PillContent>
+            </AppNavigationLink>
+            {!!interactive.onRemoveClick && (
+              <button
+                title={`Remove filter: ${plainText}`}
+                className="flex items-center h-full px-2 mr-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
+                onClick={interactive.onRemoveClick}
+              >
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            )}
+            {actions}
+          </>
+        ) : (
+          <>
+            <div className={contentClassName} title={plainText}>
+              <PillContent>{children}</PillContent>
+            </div>
+            {actions}
+          </>
+        )}
+      </div>
     </div>
   )
 }

@@ -26,6 +26,8 @@ describe('parseSiteFromDataset', () => {
       data-embedded=""
       data-is-dbip="false"
       data-current-user-role="owner"
+      data-current-user-id="1"
+      data-members='{"1":"Test User"}'
       data-flags="{}"
       data-valid-intervals-by-period='{"12mo":["day","week","month"],"30d":["day","week"],"6mo":["day","week","month"],"7d":["hour","day"],"all":["week","month"],"custom":["day","week","month"],"day":["minute","hour"],"month":["day","week"],"realtime":["minute"],"year":["day","week","month"]}'
       {...attrs}
@@ -61,7 +63,8 @@ describe('parseSiteFromDataset', () => {
       realtime: ['minute'],
       year: ['day', 'week', 'month']
     },
-    shared: false
+    shared: false,
+    members: {"1": "Test User"}
   }
 
   it('parses from dom string map correctly', () => {

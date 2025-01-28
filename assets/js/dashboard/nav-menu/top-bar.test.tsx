@@ -30,6 +30,15 @@ beforeAll(() => {
         disconnect: jest.fn()
       }) as unknown as IntersectionObserver
   )
+  global.ResizeObserver = jest.fn(
+    () =>
+      ({
+        observe: jest.fn(),
+        unobserve: jest.fn(),
+        disconnect: jest.fn()
+      }) as unknown as ResizeObserver
+  )
+
   mockAPI = new MockAPI().start()
 })
 
@@ -71,18 +80,18 @@ test('user can open and close filters dropdown', async () => {
     )
   })
 
-  const toggleFilters = screen.getByRole('button', { name: /Filter/ })
+  const toggleFilters = screen.getByRole('button', { name: /Add filter/ })
   await userEvent.click(toggleFilters)
   expect(screen.queryAllByRole('link').map((el) => el.textContent)).toEqual([
     'Page',
+    'Hostname',
     'Source',
+    'UTM tags',
     'Location',
     'Screen size',
     'Browser',
     'Operating System',
-    'UTM tags',
-    'Goal',
-    'Hostname'
+    'Goal'
   ])
   await userEvent.click(toggleFilters)
   expect(screen.queryAllByRole('menuitem')).toEqual([])

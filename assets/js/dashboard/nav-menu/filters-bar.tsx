@@ -1,38 +1,41 @@
 /** @format */
 
-import { EllipsisHorizontalIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import { EllipsisHorizontalIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import React, { useRef, useState, useLayoutEffect, useEffect } from 'react'
-import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { useOnClickOutside } from '../util/use-on-click-outside'
 import {
   DropdownMenuWrapper,
   ToggleDropdownButton
 } from '../components/dropdown'
-import { FilterPillsList, PILL_X_GAP } from './filter-pills-list'
+import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
+import { AppNavigationLink } from '../navigation/use-app-navigate'
+import { BUFFER_FOR_SHADOW_PX } from './filter-pill'
+import { isSegmentFilter } from '../filtering/segments'
+import { useSegmentExpandedContext } from '../segments/segment-expanded-context'
+import { useSiteContext } from '../site-context'
 
-const SEE_MORE_GAP_PX = 16
+const BUFFER_RIGHT_PX = 16 - BUFFER_FOR_SHADOW_PX - PILL_X_GAP
+const BUFFER_LEFT_PX = 16 - BUFFER_FOR_SHADOW_PX
 const SEE_MORE_WIDTH_PX = 36
+const SEE_MORE_RIGHT_MARGIN_PX = BUFFER_FOR_SHADOW_PX + PILL_X_GAP
+const SEE_MORE_LEFT_MARGIN_PX = BUFFER_FOR_SHADOW_PX
 
 export const handleVisibility = ({
   setVisibility,
-  topBarWidth,
-  actionsWidth,
-  seeMorePresent,
+  leftoverWidth,
   seeMoreWidth,
   pillWidths,
   pillGap
 }: {
   setVisibility: (v: VisibilityState) => void
-  topBarWidth: number | null
-  actionsWidth: number | null
+  leftoverWidth: number | null
   pillWidths: (number | null)[] | null
-  seeMorePresent: boolean
   seeMoreWidth: number
   pillGap: number
 }): void => {
-  if (topBarWidth === null || actionsWidth === null || pillWidths === null) {
+  if (leftoverWidth === null || pillWidths === null) {
     return
   }
 
@@ -52,22 +55,14 @@ export const handleVisibility = ({
     return { visibleCount, lastValidWidth }
   }
 
-  const fits = fitToWidth(topBarWidth - actionsWidth)
+  const fits = fitToWidth(leftoverWidth)
 
-  // Check if possible to fit one more if "See more" is removed
-  if (seeMorePresent && fits.visibleCount === pillWidths.length - 1) {
-    const maybeFitsMore = fitToWidth(topBarWidth - actionsWidth + seeMoreWidth)
-    if (maybeFitsMore.visibleCount === pillWidths.length) {
-      return setVisibility({
-        width: maybeFitsMore.lastValidWidth,
-        visibleCount: maybeFitsMore.visibleCount
-      })
-    }
-  }
+  const seeMoreWillBePresent =
+    fits.visibleCount < pillWidths.length || pillWidths.length > 1
 
   // Check if the appearance of "See more" would cause overflow
-  if (!seeMorePresent && fits.visibleCount < pillWidths.length) {
-    const maybeFitsLess = fitToWidth(topBarWidth - actionsWidth - seeMoreWidth)
+  if (seeMoreWillBePresent) {
+    const maybeFitsLess = fitToWidth(leftoverWidth - seeMoreWidth)
     if (maybeFitsLess.visibleCount < fits.visibleCount) {
       return setVisibility({
         width: maybeFitsLess.lastValidWidth,
@@ -82,22 +77,33 @@ export const handleVisibility = ({
   })
 }
 
-const getElementWidthOrNull = <T extends HTMLElement>(element: T | null) =>
-  element === null ? null : element.getBoundingClientRect().width
+const getElementWidthOrNull = <
+  T extends Pick<HTMLElement, 'getBoundingClientRect'>
+>(
+  element: T | null
+) => (element === null ? null : element.getBoundingClientRect().width)
 
 type VisibilityState = {
   width: number
   visibleCount: number
 }
 
-export const FiltersBar = () => {
+interface FiltersBarProps {
+  elements: {
+    topBar: HTMLElement | null
+    leftSection: Pick<HTMLElement, 'getBoundingClientRect'> | null
+    rightSection: Pick<HTMLElement, 'getBoundingClientRect'> | null
+  }
+}
+
+export const FiltersBar = ({ elements }: FiltersBarProps) => {
+  const site = useSiteContext()
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
-  const actionsRef = useRef<HTMLDivElement>(null)
   const seeMoreRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { query } = useQueryContext()
-
+  const { expandedSegment } = useSegmentExpandedContext()
   const [opened, setOpened] = useState(false)
 
   useEffect(() => {
@@ -113,7 +119,9 @@ export const FiltersBar = () => {
   })
 
   useLayoutEffect(() => {
-    const resizeObserver = new ResizeObserver((_entries) => {
+    const { topBar, leftSection, rightSection } = elements
+
+    const resizeObserver = new ResizeObserver(() => {
       const pillWidths = pillsRef.current
         ? Array.from(pillsRef.current.children).map((el) =>
             getElementWidthOrNull(el as HTMLElement)
@@ -123,96 +131,148 @@ export const FiltersBar = () => {
         setVisibility,
         pillWidths,
         pillGap: PILL_X_GAP,
-        topBarWidth: getElementWidthOrNull(containerRef.current),
-        actionsWidth: getElementWidthOrNull(actionsRef.current),
-        seeMorePresent: !!seeMoreRef.current,
-        seeMoreWidth: SEE_MORE_WIDTH_PX + SEE_MORE_GAP_PX
+        leftoverWidth:
+          topBar && leftSection && rightSection
+            ? getElementWidthOrNull(topBar)! -
+              getElementWidthOrNull(leftSection)! -
+              getElementWidthOrNull(rightSection)! -
+              BUFFER_LEFT_PX -
+              BUFFER_RIGHT_PX
+            : null,
+        seeMoreWidth:
+          SEE_MORE_LEFT_MARGIN_PX + SEE_MORE_WIDTH_PX + SEE_MORE_RIGHT_MARGIN_PX
       })
     })
 
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current)
+    if (containerRef.current && topBar) {
+      resizeObserver.observe(topBar)
     }
 
     return () => {
       resizeObserver.disconnect()
     }
-  }, [query.filters])
+  }, [query.filters, elements])
 
   if (!query.filters.length) {
-    return null
+    // functions as spacer between elements.leftSection and elements.rightSection
+    return <div className="w-4" />
   }
+
+  const moreThanOnePill = query.filters.length > 1
+  const canClear = moreThanOnePill
+  const canSaveAsSegment = moreThanOnePill && !expandedSegment
 
   return (
     <div
+      style={{ paddingRight: BUFFER_RIGHT_PX, paddingLeft: BUFFER_LEFT_PX }}
       className={classNames(
-        'flex w-full mt-4',
+        'flex w-full items-center',
         visibility === null && 'invisible' // hide until we've calculated the positions
       )}
       ref={containerRef}
     >
-      <FilterPillsList
-        ref={pillsRef}
-        direction="horizontal"
-        slice={{
-          type: 'hide-outside',
-          start: 0,
-          end: visibility?.visibleCount
+      <div
+        style={{
+          marginTop: -BUFFER_FOR_SHADOW_PX,
+          marginBottom: -BUFFER_FOR_SHADOW_PX
         }}
-        className="pb-1 overflow-hidden"
-        style={{ width: visibility?.width ?? '100%' }}
-      />
-      <div className="flex items-center gap-x-4 pb-1" ref={actionsRef}>
-        {visibility !== null &&
-          visibility.visibleCount !== query.filters.length && (
-            <ToggleDropdownButton
-              className={classNames('w-9 md:relative')}
-              ref={seeMoreRef}
-              dropdownContainerProps={{
-                ['title']: opened
-                  ? 'Hide rest of the filters'
-                  : 'Show rest of the filters',
-                ['aria-controls']: 'more-filters-menu',
-                ['aria-expanded']: opened
-              }}
-              onClick={() => setOpened((opened) => !opened)}
-              currentOption={
-                <EllipsisHorizontalIcon className="h-full w-full" />
-              }
-            >
-              {opened && typeof visibility.visibleCount === 'number' ? (
-                <DropdownMenuWrapper
-                  id={'more-filters-menu'}
-                  className="md:left-auto md:w-auto"
-                  innerContainerClassName="p-4"
-                >
-                  <FilterPillsList
+        className="flex items-center"
+      >
+        <AppliedFilterPillsList
+          ref={pillsRef}
+          direction="horizontal"
+          slice={{
+            type: 'invisible-outside',
+            start: 0,
+            end: visibility?.visibleCount
+          }}
+          className="overflow-hidden"
+          style={{ width: visibility?.width ?? '100%' }}
+        />
+      </div>
+      {visibility !== null &&
+        (query.filters.length !== visibility.visibleCount || canClear) && (
+          <ToggleDropdownButton
+            style={{
+              width: SEE_MORE_WIDTH_PX,
+              marginLeft: SEE_MORE_LEFT_MARGIN_PX,
+              marginRight: SEE_MORE_RIGHT_MARGIN_PX
+            }}
+            className="md:relative"
+            ref={seeMoreRef}
+            dropdownContainerProps={{
+              ['title']: opened ? 'Show less' : 'Show more',
+              ['aria-controls']: 'more-filters-menu',
+              ['aria-expanded']: opened
+            }}
+            onClick={() => setOpened((opened) => !opened)}
+            currentOption={<EllipsisHorizontalIcon className="h-full w-full" />}
+          >
+            {opened ? (
+              <DropdownMenuWrapper
+                id="more-filters-menu"
+                className="md:right-auto"
+                innerContainerClassName="flex flex-col p-4 gap-y-2"
+              >
+                {query.filters.length !== visibility.visibleCount && (
+                  <AppliedFilterPillsList
+                    style={{ margin: -BUFFER_FOR_SHADOW_PX }}
                     direction="vertical"
                     slice={{
                       type: 'no-render-outside',
                       start: visibility.visibleCount
                     }}
                   />
-                </DropdownMenuWrapper>
-              ) : null}
-            </ToggleDropdownButton>
-          )}
-        <ClearAction />
-      </div>
+                )}
+                {canClear && <ClearAll />}
+                {!!site.flags.saved_segments && canSaveAsSegment && (
+                  <SaveSelectionAsSegment
+                    disabled={
+                      query.filters.some(isSegmentFilter)
+                        ? { reason: "Can't save segment's containing segments" }
+                        : undefined
+                    }
+                  />
+                )}
+              </DropdownMenuWrapper>
+            ) : null}
+          </ToggleDropdownButton>
+        )}
     </div>
   )
 }
 
-export const ClearAction = () => (
+const ClearAll = () => (
   <AppNavigationLink
     title="Clear all filters"
-    className="w-9 text-gray-500 hover:text-indigo-700 dark:hover:text-indigo-500 flex items-center justify-center"
+    className={classNames(
+      'self-start button h-9 !px-3 !py-2 flex !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
+    )}
     search={(search) => ({
       ...search,
       filters: null,
       labels: null
     })}
   >
-    <XMarkIcon className="w-4 h-4" />
+    Clear all filters
+  </AppNavigationLink>
+)
+
+const SaveSelectionAsSegment = ({
+  disabled
+}: {
+  disabled?: { reason: string }
+}) => (
+  <AppNavigationLink
+    title="Clear all filters"
+    className={classNames(
+      'self-start button h-9 !px-3 !py-2 flex whitespace-nowrap',
+      disabled && 'cursor-not-allowed !bg-gray-300 dark:!bg-gray-950'
+    )}
+    aria-disabled={disabled ? true : undefined}
+    search={(s) => s}
+    state={disabled ? undefined : { expandedSegment: null, modal: 'create' }}
+  >
+    Save as segment
   </AppNavigationLink>
 )
