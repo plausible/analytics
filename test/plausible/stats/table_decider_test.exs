@@ -181,7 +181,7 @@ defmodule Plausible.Stats.TableDeciderTest do
   end
 
   defp make_query(filter_dimensions \\ [], dimensions \\ []) do
-    Query.from(build(:site), %{
+    Query.from(build(:site, id: :rand.uniform(100_000)), %{
       "filters" =>
         Enum.map(filter_dimensions, fn filter_dimension -> ["is", filter_dimension, []] end),
       "dimensions" => dimensions
@@ -189,7 +189,7 @@ defmodule Plausible.Stats.TableDeciderTest do
   end
 
   defp make_query_full_filters(filters) do
-    Query.from(build(:site), %{
+    Query.from(build(:site, id: :rand.uniform(100_000)), %{
       "dimensions" => [],
       "filters" => filters
     })

@@ -11,7 +11,7 @@ import {
 } from './filters'
 
 export function styledFilterText(
-  query: DashboardQuery,
+  query: Pick<DashboardQuery, 'labels'>,
   [operation, filterKey, clauses]: Filter
 ) {
   if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
@@ -43,7 +43,10 @@ export function styledFilterText(
   )
 }
 
-export function plainFilterText(query: DashboardQuery, filter: Filter) {
+export function plainFilterText(
+  query: Pick<DashboardQuery, 'labels'>,
+  filter: Filter
+) {
   return reactNodeToString(styledFilterText(query, filter))
 }
 

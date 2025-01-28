@@ -24,6 +24,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
+      |> resolve_segments(site)
       |> preload_goals_and_revenue(site)
       |> put_order_by(params)
       |> put_include(site, params)
@@ -34,6 +35,17 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
 
     query
+  end
+
+  defp resolve_segments(query, site) do
+    with {:ok, preloaded_segments} <-
+           Plausible.Segments.Filters.preload_needed_segments(site, query.filters),
+         {:ok, filters} <-
+           Plausible.Segments.Filters.resolve_segments(query.filters, preloaded_segments) do
+      struct!(query,
+        filters: filters
+      )
+    end
   end
 
   defp preload_goals_and_revenue(query, site) do
