@@ -234,7 +234,7 @@ function Filters() {
         {({ open }) => (
           <>
             <div>
-              <Menu.Button onClick={trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded whitespace-nowrap w-fit">
+              <Menu.Button onClick={trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded whitespace-nowrap">
                 {renderDropdownButton()}
               </Menu.Button>
             </div>
