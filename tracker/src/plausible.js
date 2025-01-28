@@ -114,10 +114,7 @@
     payload.h = 1
     {{/if}}
 
-    if (navigator.sendBeacon) {
-      var blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
-      navigator.sendBeacon(endpoint, blob)
-    }
+    sendRequest(endpoint, payload)
   }
 
   function registerPageLeaveListener() {

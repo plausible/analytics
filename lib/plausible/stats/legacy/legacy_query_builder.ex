@@ -24,16 +24,28 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
+      |> resolve_segments(site)
       |> preload_goals_and_revenue(site)
       |> put_order_by(params)
-      |> put_include_comparisons(site, params)
-      |> Query.put_imported_opts(site, params)
+      |> put_include(site, params)
+      |> Query.put_imported_opts(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, site, params)
     end
 
     query
+  end
+
+  defp resolve_segments(query, site) do
+    with {:ok, preloaded_segments} <-
+           Plausible.Segments.Filters.preload_needed_segments(site, query.filters),
+         {:ok, filters} <-
+           Plausible.Segments.Filters.resolve_segments(query.filters, preloaded_segments) do
+      struct!(query,
+        filters: filters
+      )
+    end
   end
 
   defp preload_goals_and_revenue(query, site) do
@@ -205,9 +217,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
   end
 
-  defp put_include_comparisons(query, site, params) do
-    comparisons = parse_comparison_params(site, params)
-    struct!(query, include: Map.put(query.include, :comparisons, comparisons))
+  defp put_include(query, site, params) do
+    query
+    |> Query.set_include(:comparisons, parse_comparison_params(site, params))
+    |> Query.set_include(:imports, params["with_imported"] == "true")
   end
 
   @doc """

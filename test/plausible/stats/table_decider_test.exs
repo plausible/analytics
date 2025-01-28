@@ -152,8 +152,36 @@ defmodule Plausible.Stats.TableDeciderTest do
     end
   end
 
-  defp make_query(filter_dimensions, dimensions \\ []) do
-    Query.from(build(:site), %{
+  describe "validate_no_metrics_dimensions_conflict" do
+    for {metrics, dimensions, expected} <- [
+          {[], [], :ok},
+          {[:bounce_rate], [], :ok},
+          {[:scroll_depth], [], :ok},
+          {[:bounce_rate], ["visit:exit_page"], :ok},
+          {[:scroll_depth], ["event:name"], :ok},
+          {[:scroll_depth], ["visit:device"], :ok},
+          {[:bounce_rate, :scroll_depth], ["event:name"],
+           {:error,
+            "Session metric(s) `bounce_rate` cannot be queried along with event dimension(s) `event:name`"}},
+          {[:visit_duration], ["event:props:foo"],
+           {:error,
+            "Session metric(s) `visit_duration` cannot be queried along with event dimension(s) `event:props:foo`"}},
+          {[:bounce_rate, :scroll_depth], ["visit:exit_page"],
+           {:error,
+            "Event metric(s) `scroll_depth` cannot be queried along with session dimension(s) `visit:exit_page`"}},
+          {[:bounce_rate, :scroll_depth], ["event:page"], :ok}
+        ] do
+      test "metrics #{inspect(metrics)} and dimensions #{inspect(dimensions)}" do
+        query =
+          make_query() |> Query.set(metrics: unquote(metrics), dimensions: unquote(dimensions))
+
+        assert validate_no_metrics_dimensions_conflict(query) == unquote(expected)
+      end
+    end
+  end
+
+  defp make_query(filter_dimensions \\ [], dimensions \\ []) do
+    Query.from(build(:site, id: :rand.uniform(100_000)), %{
       "filters" =>
         Enum.map(filter_dimensions, fn filter_dimension -> ["is", filter_dimension, []] end),
       "dimensions" => dimensions
@@ -161,7 +189,7 @@ defmodule Plausible.Stats.TableDeciderTest do
   end
 
   defp make_query_full_filters(filters) do
-    Query.from(build(:site), %{
+    Query.from(build(:site, id: :rand.uniform(100_000)), %{
       "dimensions" => [],
       "filters" => filters
     })

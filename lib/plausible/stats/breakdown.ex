@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer, Comparisons}
+  alias Plausible.Stats.{Query, QueryRunner, QueryResult, QueryOptimizer, Comparisons}
 
   def breakdown(
         site,
@@ -37,8 +37,12 @@ defmodule Plausible.Stats.Breakdown do
       )
       |> QueryOptimizer.optimize()
 
-    QueryRunner.run(site, query_with_metrics)
-    |> build_breakdown_result(query_with_metrics, metrics)
+    %QueryResult{results: results, meta: meta} = QueryRunner.run(site, query_with_metrics)
+
+    %{
+      results: build_breakdown_result(results, query_with_metrics, metrics),
+      meta: meta
+    }
   end
 
   def formatted_date_ranges(query) do
@@ -62,10 +66,10 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  defp build_breakdown_result(query_result, query, metrics) do
+  defp build_breakdown_result(results, query, metrics) do
     dimension_keys = query.dimensions |> Enum.map(&result_key/1)
 
-    query_result.results
+    results
     |> Enum.map(fn entry ->
       comparison_map =
         if entry[:comparison] do

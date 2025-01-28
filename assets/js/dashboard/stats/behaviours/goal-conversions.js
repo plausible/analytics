@@ -15,6 +15,7 @@ export const SPECIAL_GOALS = {
   'Cloaked Link: Click': { title: 'Cloaked Links', prop: 'url' },
   'File Download': { title: 'File Downloads', prop: 'url' },
   'WP Search Queries': { title: 'WordPress Search Queries', prop: 'search_query' },
+  'WP Form Completions': { title: 'WordPress Form Completions', prop: 'path' },
 }
 
 function getSpecialGoal(query) {

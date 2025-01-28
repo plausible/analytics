@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.{Query, Compare, Comparisons, Metrics, Filters}
+  alias Plausible.Stats.{Query, Metrics, Filters}
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
@@ -20,28 +20,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
-      results =
+      query =
         if params["compare"] == "previous_period" do
-          comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
-
-          [prev_result, curr_result] =
-            Plausible.ClickhouseRepo.parallel_tasks([
-              fn -> Plausible.Stats.aggregate(site, comparison_query, metrics) end,
-              fn -> Plausible.Stats.aggregate(site, query, metrics) end
-            ])
-
-          Enum.map(curr_result, fn {metric, %{value: current_val}} ->
-            %{value: prev_val} = prev_result[metric]
-            change = Compare.calculate_change(metric, prev_val, current_val)
-
-            {metric, %{value: current_val, change: change}}
-          end)
-          |> Enum.into(%{})
+          Query.set_include(query, :comparisons, %{mode: "previous_period"})
         else
-          Plausible.Stats.aggregate(site, query, metrics)
+          query
         end
 
-      payload = maybe_add_warning(%{results: results}, query)
+      %{results: results, meta: meta} = Plausible.Stats.aggregate(site, query, metrics)
+
+      payload = maybe_add_warning(%{results: results}, meta)
 
       json(conn, payload)
     else
@@ -61,8 +49,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          {:ok, limit} <- validate_or_default_limit(params),
          :ok <- ensure_custom_props_access(site, query) do
       page = String.to_integer(Map.get(params, "page", "1"))
-      results = Plausible.Stats.breakdown(site, query, metrics, {limit, page})
-      payload = maybe_add_warning(%{results: results}, query)
+
+      %{results: results, meta: meta} =
+        Plausible.Stats.breakdown(site, query, metrics, {limit, page})
+
+      payload = maybe_add_warning(%{results: results}, meta)
 
       json(conn, payload)
     else
@@ -387,18 +378,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     "The goal `#{goal}` is not configured for this site. "
   end
 
-  defp maybe_add_warning(payload, %{skip_imported_reason: reason})
-       when reason in [nil, :not_requested, :no_imported_data, :out_of_range, :manual_exclusion] do
-    payload
-  end
+  @imported_query_unsupported_warning "Imported stats are not included in the results because query parameters are not supported. For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
 
-  defp maybe_add_warning(payload, %{skip_imported_reason: :unsupported_query}) do
-    Map.put(
-      payload,
-      :warning,
-      "Imported stats are not included in the results because query parameters are not supported. " <>
-        "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
-    )
+  defp maybe_add_warning(payload, %Jason.OrderedObject{} = meta) do
+    case meta[:imports_skip_reason] do
+      :unsupported_query -> Map.put(payload, :warning, @imported_query_unsupported_warning)
+      _ -> payload
+    end
   end
 
   defp send_json_error_response(conn, {:error, {status, msg}}) do

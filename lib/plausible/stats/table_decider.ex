@@ -21,6 +21,39 @@ defmodule Plausible.Stats.TableDecider do
     |> Enum.any?(&(dimension_partitioner(query, &1) == :event))
   end
 
+  @doc """
+  Validates whether metrics and dimensions are compatible with each other.
+
+  During query building we split query into two: event and session queries. However dimensions need to be
+  present in both queries and hence must be compatible.
+
+  Used during query parsing
+  """
+  def validate_no_metrics_dimensions_conflict(query) do
+    %{event: event_only_metrics, session: session_only_metrics} =
+      partition(query.metrics, query, &metric_partitioner/2)
+
+    %{event: event_only_dimensions, session: session_only_dimensions} =
+      partition(query.dimensions, query, &dimension_partitioner/2)
+
+    cond do
+      # event:page is a special case handled in QueryOptimizer.split_sessions_query
+      event_only_dimensions == ["event:page"] ->
+        :ok
+
+      not empty?(session_only_metrics) and not empty?(event_only_dimensions) ->
+        {:error,
+         "Session metric(s) #{i(session_only_metrics)} cannot be queried along with event dimension(s) #{i(event_only_dimensions)}"}
+
+      not empty?(event_only_metrics) and not empty?(session_only_dimensions) ->
+        {:error,
+         "Event metric(s) #{i(event_only_metrics)} cannot be queried along with session dimension(s) #{i(session_only_dimensions)}"}
+
+      true ->
+        :ok
+    end
+  end
+
   def partition_metrics(metrics, query) do
     %{
       event: event_only_metrics,
@@ -103,5 +136,9 @@ defmodule Plausible.Stats.TableDecider do
       key = partitioner.(query, value)
       Map.put(acc, key, Map.fetch!(acc, key) ++ [value])
     end)
+  end
+
+  defp i(list) when is_list(list) do
+    Enum.map_join(list, ", ", &"`#{&1}`")
   end
 end

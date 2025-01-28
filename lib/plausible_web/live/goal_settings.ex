@@ -17,7 +17,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
       |> assign_new(:site, fn %{current_user: current_user} ->
         current_user
         |> Plausible.Sites.get_for_user!(domain, [:owner, :admin, :super_admin])
-        |> Plausible.Imported.load_import_data()
       end)
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)
