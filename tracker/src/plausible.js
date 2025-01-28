@@ -88,16 +88,6 @@
       if (++count === 15) {clearInterval(interval)}
     }, 200)
 
-    // Only register visibilitychange listener only after initial page load
-    document.addEventListener('visibilitychange', function() {
-      // Avoid sending redundant engagement events if user has not scrolled the page
-      // Note that `currentPageMaxEngagementScrollDepth` default of -1 ensures that at least one
-      // engagement event is sent
-      if (document.visibilityState === 'hidden' && currentPageMaxEngagementScrollDepth < maxScrollDepthPx) {
-        currentPageMaxEngagementScrollDepth = maxScrollDepthPx
-        triggerEngagement()
-      }
-    })
   })
 
   document.addEventListener('scroll', function() {
@@ -118,7 +108,11 @@
   }
 
   function triggerEngagement() {
-    if (!currentPageLeaveIgnored) {
+    // Avoid sending redundant engagement events if user has not scrolled the page
+    // Note that `currentPageMaxEngagementScrollDepth` default of -1 ensures that at least one
+    // engagement event is sent
+    if (!currentPageLeaveIgnored && currentPageMaxEngagementScrollDepth < maxScrollDepthPx) {
+      currentPageMaxEngagementScrollDepth = maxScrollDepthPx
       triggerEngagementEvent('engagement')
     }
 
@@ -143,6 +137,13 @@
   function registerPageLeaveListener() {
     if (!listeningPageLeave) {
       window.addEventListener('pagehide', triggerPageLeave)
+
+      // Only register visibilitychange listener only after initial page load and pageview
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+          triggerEngagement()
+        }
+      })
       listeningPageLeave = true
     }
   }
@@ -294,7 +295,8 @@
 
       {{#if pageleave}}
       if (isSPANavigation && listeningPageLeave) {
-        triggerPageLeave();
+        triggerPageLeave()
+        triggerEngagement()
         currentDocumentHeight = getDocumentHeight()
         maxScrollDepthPx = getCurrentScrollDepthPx()
       }

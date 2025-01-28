@@ -137,6 +137,31 @@ exports.ignoreEngagementRequests = function(requestPostData) {
   return requestPostData.n === 'engagement'
 }
 
+exports.ignorePageleaveRequests = function(requestPostData) {
+  return requestPostData.n === 'pageleave'
+}
+
+async function toggleTabVisibility(page, hide) {
+  await page.evaluate((hide) => {
+    Object.defineProperty(document, 'visibilityState', { value: hide ? 'hidden' : 'visible', writable: true })
+    Object.defineProperty(document, 'hidden', { value: hide, writable: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  }, hide)
+}
+
+exports.hideCurrentTab = async function(page) {
+  return toggleTabVisibility(page, true)
+}
+
+exports.showCurrentTab = async function(page) {
+  return toggleTabVisibility(page, false)
+}
+
+exports.hideAndShowCurrentTab = async function(page) {
+  await exports.hideCurrentTab(page)
+  await exports.showCurrentTab(page)
+}
+
 function includesSubset(body, subset) {
   return Object.keys(subset).every((key) => {
     if (typeof subset[key] === 'object') {
