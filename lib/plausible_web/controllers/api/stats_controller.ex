@@ -364,13 +364,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_goal_top_stats(site, query) do
     metrics =
-      [:total_visitors, :visitors, :events, :conversion_rate] ++ @revenue_metrics
+      [:visitors, :events, :conversion_rate] ++ @revenue_metrics
 
     %{results: results, meta: meta} = Stats.aggregate(site, query, metrics)
 
     top_stats =
       [
-        top_stats_entry(results, "Unique visitors", :total_visitors),
         top_stats_entry(results, "Unique conversions", :visitors),
         top_stats_entry(results, "Total conversions", :events),
         on_ee do
