@@ -7,6 +7,18 @@ defmodule Plausible.Teams.Memberships do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  def all_members(team) do
+    query =
+      from tm in Teams.Membership,
+        inner_join: u in assoc(tm, :user),
+        where: tm.team_id == ^team.id,
+        where: tm.role != :guest,
+        order_by: [asc: u.id],
+        preload: [user: u]
+
+    Repo.all(query)
+  end
+
   def all_pending_site_transfers(email) do
     email
     |> pending_site_transfers_query()
