@@ -51,7 +51,7 @@ defmodule Plausible.AssertMatches do
 
             {true,
              Macro.postwalk(pattern, fn
-               ^escaped_var -> "__#{Macro.to_string(escaped_predicate)}__"
+               ^escaped_var -> escaped_predicate
                other -> other
              end)}
           else
