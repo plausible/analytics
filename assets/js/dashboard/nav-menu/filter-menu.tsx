@@ -1,21 +1,17 @@
 /** @format */
 
-import React, { useMemo, useRef, useState } from 'react'
-import {
-  DropdownLinkGroup,
-  DropdownMenuWrapper,
-  DropdownNavigationLink,
-  DropdownSubtitle,
-  ToggleDropdownButton
-} from '../components/dropdown'
+import React, { useMemo, useRef } from 'react'
 import {
   FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup
 } from '../util/filters'
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
-import { useOnClickOutside } from '../util/use-on-click-outside'
 import { PlusIcon } from '@heroicons/react/20/solid'
+import { Popover, Transition } from '@headlessui/react'
+import { popover } from '../components/popover'
+import classNames from 'classnames'
+import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 
 export function getFilterListItems({
@@ -51,77 +47,128 @@ export function getFilterListItems({
 }
 
 export const FilterMenu = () => {
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const [opened, setOpened] = useState(false)
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
-
-  useOnClickOutside({
-    ref: dropdownRef,
-    active: opened,
-    handler: () => setOpened(false)
-  })
-
+  const ref = useRef<HTMLDivElement>(null)
   return (
-    <ToggleDropdownButton
-      ref={dropdownRef}
-      variant="ghost"
+    <Popover
       className="shrink-0 md:relative"
-      dropdownContainerProps={{
-        ['aria-controls']: 'filter-menu',
-        ['aria-expanded']: opened
-      }}
-      onClick={() => setOpened((opened) => !opened)}
-      currentOption={
-        <div className="flex items-center gap-1 ">
-          <PlusIcon className="block h-4 w-4" />
-          Add filter
-        </div>
-      }
+      ref={ref}
+      data-no-clear-filters-on-escape={true}
     >
-      {opened && (
-        <DropdownMenuWrapper id="filter-menu" className="md:left-auto md:w-80">
+      {({ close }) => (
+        <>
           <Keybind
             keyboardKey="Escape"
-            shouldIgnoreWhen={[isModifierPressed, isTyping]}
             type="keyup"
             handler={(event) => {
+              // ;(event as unknown as Record<string, unknown>).hi = true
               event.stopPropagation()
-              setOpened(false)
+              event.preventDefault()
+              // console.log(`Inner ${open}`, event)
+              // if (open) {
+              //   handler()
+              // }
+              // // return true
             }}
-            target={dropdownRef.current}
+            target={ref.current}
+            shouldIgnoreWhen={[isModifierPressed, isTyping]}
           />
 
-          <DropdownLinkGroup className="flex flex-row">
-            {columns.map((filterGroups, index) => (
-              <div key={index} className="flex flex-col w-1/2">
-                {filterGroups.map(({ title, modals }) => (
-                  <div key={title}>
-                    <DropdownSubtitle className="pb-1">
-                      {title}
-                    </DropdownSubtitle>
-                    {modals
-                      .filter((m) => !!m)
-                      .map((modalKey) => (
-                        <DropdownNavigationLink
-                          className={'text-xs'}
-                          onClick={() => setOpened(false)}
-                          active={false}
-                          key={modalKey}
-                          path={filterRoute.path}
-                          params={{ field: modalKey }}
-                          search={(search) => search}
-                        >
-                          {formatFilterGroup(modalKey)}
-                        </DropdownNavigationLink>
-                      ))}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </DropdownLinkGroup>
-        </DropdownMenuWrapper>
+          <Popover.Button
+            className={classNames(
+              'flex items-center gap-1',
+              'h-9 px-3',
+              'rounded text-sm leading-tight',
+              'text-gray-500 hover:text-gray-800 hover:bg-gray-200 dark:hover:text-gray-200 dark:hover:bg-gray-900'
+            )}
+          >
+            <PlusIcon className="block h-4 w-4" />
+            <span className="truncate block font-medium">Add filter</span>
+          </Popover.Button>
+          <Transition
+            {...popover.transition.props}
+            className={classNames(
+              'mt-2',
+              popover.transition.classNames.fullwidth,
+              'md:left-auto md:w-80'
+            )}
+          >
+            <Popover.Panel
+              className={classNames(
+                popover.panel.classNames.roundedSheet,
+                'flex'
+              )}
+            >
+              <StopEscapePropagation
+                // open={open}
+                target={ref.current}
+                // handler={close}
+              />
+              {columns.map((filterGroups, index) => (
+                <div key={index} className="flex flex-col w-1/2">
+                  {filterGroups.map(({ title, modals }) => (
+                    <div key={title}>
+                      <div className="pb-1 px-4 pt-2 text-xs font-bold uppercase text-indigo-500 dark:text-indigo-400">
+                        {title}
+                      </div>
+                      {modals
+                        .filter((m) => !!m)
+                        .map((modalKey) => (
+                          <AppNavigationLink
+                            className={classNames(
+                              'flex',
+                              'px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100',
+                              'text-xs'
+                            )}
+                            onClick={() => close()}
+                            key={modalKey}
+                            path={filterRoute.path}
+                            params={{ field: modalKey }}
+                            search={(s) => s}
+                          >
+                            {formatFilterGroup(modalKey)}
+                          </AppNavigationLink>
+                        ))}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </Popover.Panel>
+          </Transition>
+        </>
       )}
-    </ToggleDropdownButton>
+    </Popover>
+  )
+}
+
+const StopEscapePropagation = ({
+  // open,
+  // handler,
+  target
+}: {
+  // open: boolean
+  // handler: () => void
+  target: HTMLDivElement | null
+}) => {
+  // useEffect(() => {}, [])
+  // return null
+  return (
+    <Keybind
+      keyboardKey="Escape"
+      type="keyup"
+      handler={(event) => {
+        // ;(event as unknown as Record<string, unknown>).hi = true
+        event.stopPropagation()
+        event.preventDefault()
+        // console.log(`Inner ${open}`, event)
+        // if (open) {
+        //   handler()
+        // }
+        // // return true
+      }}
+      target={target}
+      shouldIgnoreWhen={[isModifierPressed, isTyping]}
+    />
   )
 }
