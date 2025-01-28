@@ -131,6 +131,40 @@ defmodule Plausible.Segments do
     end
   end
 
+  def update_goal_in_segments(%Plausible.Goal{} = stale_goal, %Plausible.Goal{} = updated_goal) do
+    goal_filter_regex =
+      ~s(.*?\(\\["is",\s*"event:goal",\s*\\[.*?"#{stale_goal.display_name}".*?\\]\\]\).*?)
+
+    segments_to_update =
+      from(
+        s in Segment,
+        select: {
+          s.id,
+          type(s.segment_data, :string),
+          # NB: This will only match the first instance. If there is more than one matching goal in the segment,
+          # only the first gets updated.
+          fragment("regexp_match(?['filters']::text, ?)", s.segment_data, ^goal_filter_regex)
+        }
+      )
+
+    for {id, segment_data, [match]} <- Repo.all(segments_to_update) do
+      updated_match =
+        String.replace(
+          match,
+          "\"#{stale_goal.display_name}\"",
+          "\"#{updated_goal.display_name}\""
+        )
+
+      updated_segment_data = String.replace(segment_data, match, updated_match) |> Jason.decode!()
+
+      Repo.update_all(from(s in Segment, where: s.id == ^id),
+        set: [segment_data: updated_segment_data]
+      )
+    end
+
+    :ok
+  end
+
   def delete_one(user_id, %Plausible.Site{} = site, site_role, segment_id) do
     with {:ok, segment} <- get_one(user_id, site, site_role, segment_id) do
       cond do
