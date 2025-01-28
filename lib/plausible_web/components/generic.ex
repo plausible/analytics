@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <div
-     id={@id}
+      id={@id}
       x-data="dropdown"
       x-on:keydown.escape.prevent.stop="close($refs.button)"
       class="relative inline-block text-left"

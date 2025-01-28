@@ -9,12 +9,12 @@ defmodule Plausible.PromEx do
     Plugins.PhoenixLiveView,
     {Plugins.Phoenix, router: PlausibleWeb.Router, endpoint: PlausibleWeb.Endpoint},
     {Plugins.Ecto,
-      repos: [
-        Plausible.Repo,
-        Plausible.ClickhouseRepo,
-        Plausible.IngestRepo,
-        Plausible.AsyncInsertRepo
-      ]},
+     repos: [
+       Plausible.Repo,
+       Plausible.ClickhouseRepo,
+       Plausible.IngestRepo,
+       Plausible.AsyncInsertRepo
+     ]},
     Plausible.PromEx.Plugins.PlausibleMetrics
   ]
 
