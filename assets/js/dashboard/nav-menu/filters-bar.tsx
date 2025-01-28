@@ -165,17 +165,25 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
       )}
       ref={containerRef}
     >
-      <AppliedFilterPillsList
-        ref={pillsRef}
-        direction="horizontal"
-        slice={{
-          type: 'invisible-outside',
-          start: 0,
-          end: visibility?.visibleCount
+      <div
+        style={{
+          marginTop: -BUFFER_FOR_SHADOW_PX,
+          marginBottom: -BUFFER_FOR_SHADOW_PX
         }}
-        className="overflow-hidden"
-        style={{ width: visibility?.width ?? '100%' }}
-      />
+        className="flex items-center"
+      >
+        <AppliedFilterPillsList
+          ref={pillsRef}
+          direction="horizontal"
+          slice={{
+            type: 'invisible-outside',
+            start: 0,
+            end: visibility?.visibleCount
+          }}
+          className="overflow-hidden"
+          style={{ width: visibility?.width ?? '100%' }}
+        />
+      </div>
       {visibility !== null &&
         (query.filters.length !== visibility.visibleCount || canClear) && (
           <ToggleDropdownButton
