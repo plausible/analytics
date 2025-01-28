@@ -7,34 +7,6 @@ test.describe('scroll depth (pageleave events)', () => {
   test.skip(({browserName}) => browserName === 'webkit', 'Not testable on Webkit')
 
   sharedTests('pageleave', ignoreEngagementRequests)
-
-  test('sends scroll depth on hash navigation', async ({ page }) => {
-    await expectPlausibleInAction(page, {
-      action: () => page.goto('/scroll-depth-hash.html'),
-      expectedRequests: [{n: 'pageview'}],
-      shouldIgnoreRequest: ignoreEngagementRequests
-    })
-
-    await expectPlausibleInAction(page, {
-      action: () => page.click('#about-link'),
-      expectedRequests: [
-        {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html`, sd: 100},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`}
-      ],
-      shouldIgnoreRequest: ignoreEngagementRequests
-    })
-
-    await pageleaveCooldown(page)
-
-    await expectPlausibleInAction(page, {
-      action: () => page.click('#home-link'),
-      expectedRequests: [
-        {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`, sd: 34},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#home`}
-      ],
-      shouldIgnoreRequest: ignoreEngagementRequests
-    })
-  })
 })
 
 test.describe('scroll depth (engagement events)', () => {
@@ -97,6 +69,34 @@ function sharedTests(expectedEvent, ignoreRequests) {
       action: () => page.click('#navigate-away'),
       expectedRequests: [{n: expectedEvent, u: `${LOCAL_SERVER_ADDR}/scroll-depth.html`, sd: 20}],
       shouldIgnoreRequest: ignoreRequests
+    })
+  })
+
+  test('sends scroll depth on hash navigation', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/scroll-depth-hash.html'),
+      expectedRequests: [{n: 'pageview'}],
+      shouldIgnoreRequest: ignoreEngagementRequests
+    })
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#about-link'),
+      expectedRequests: [
+        {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html`, sd: 100},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`}
+      ],
+      shouldIgnoreRequest: ignoreEngagementRequests
+    })
+
+    await pageleaveCooldown(page)
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#home-link'),
+      expectedRequests: [
+        {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`, sd: 34},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#home`}
+      ],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 
