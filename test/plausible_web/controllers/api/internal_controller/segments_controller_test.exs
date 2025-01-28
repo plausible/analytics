@@ -355,16 +355,16 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           })
           |> json_response(200)
 
-        assert %{
-                 "name" => "Some segment",
-                 "type" => "#{unquote(type)}",
-                 "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
-                 "owner_id" => user.id
-               } == Map.drop(response, ["id", "inserted_at", "updated_at"])
+        assert_matches %{
+                         "id" => ^any(:integer),
+                         "name" => "Some segment",
+                         "type" => ^"#{unquote(type)}",
+                         "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
+                         "owner_id" => ^user.id,
+                         "inserted_at" => ^any(:string),
+                         "updated_at" => ^any(:string)
+                       } = response
 
-        assert is_integer(response["id"])
-        assert is_binary(response["inserted_at"])
-        assert is_binary(response["updated_at"])
         assert response["inserted_at"] == response["updated_at"]
 
         verify_segment_in_db(%Plausible.Segments.Segment{
