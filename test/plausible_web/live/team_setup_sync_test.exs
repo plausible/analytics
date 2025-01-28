@@ -22,34 +22,37 @@ defmodule PlausibleWeb.Live.TeamSetupSyncTest do
     } do
       site = new_site(owner: user)
       guest = add_guest(site, role: :viewer)
-      guest2 = build(:user)
+
+      assert team |> Ecto.assoc(:team_invitations) |> Repo.aggregate(:count) == 0
+      refute Repo.reload!(team).setup_complete
+
+      extra_guests = build_list(2, :user)
 
       {:ok, lv, _html} = live(conn, @url)
 
       type_into_input(lv, "team[name]", "New Team Name")
-
       type_into_combo(lv, "team-member-candidates", guest.email)
       select_combo_option(lv, 1)
 
-      type_into_combo(lv, "team-member-candidates", guest2.email)
-      select_combo_option(lv, 0)
+      for g <- extra_guests do
+        type_into_combo(lv, "team-member-candidates", g.email)
+        select_combo_option(lv, 0)
+      end
 
       lv |> element(~s|button[phx-click="setup-team"]|) |> render_click()
 
-      [i1, i2] = team |> Ecto.assoc(:team_invitations) |> Repo.all() |> Enum.sort_by(& &1.id)
+      assert team |> Ecto.assoc(:team_invitations) |> Repo.aggregate(:count) == 3
 
-      assert i1.email == guest.email
-      assert i2.email == guest2.email
+      for %{email: email} <- Enum.reverse([guest | extra_guests]) do
+        assert_email_delivered_with(
+          to: [nil: email],
+          subject: @subject_prefix <> "You've been invited to \"New Team Name\" team"
+        )
+      end
 
-      assert_email_delivered_with(
-        to: [nil: guest.email],
-        subject: @subject_prefix <> "You've been invited to \"New Team Name\" team"
-      )
-
-      assert_email_delivered_with(
-        to: [nil: guest2.email],
-        subject: @subject_prefix <> "You've been invited to \"New Team Name\" team"
-      )
+      team = Repo.reload!(team)
+      assert team.setup_complete
+      assert team.name == "New Team Name"
     end
   end
 

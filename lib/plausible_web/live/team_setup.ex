@@ -5,13 +5,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   use PlausibleWeb, :live_view
 
+  alias Plausible.Auth.User
   alias Plausible.Repo
   alias Plausible.Teams
-  alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Teams.Invitations.Candidates
-  alias Plausible.Auth.User
-
+  alias Plausible.Teams.Management.Layout
+  alias PlausibleWeb.Live.Components.ComboBox
   alias PlausibleWeb.Router.Helpers, as: Routes
+
+  import PlausibleWeb.Live.Components.Team
 
   def mount(params, _session, socket) do
     my_team = socket.assigns.my_team
@@ -33,13 +35,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
               {user.email, "#{user.name} <#{user.email}>"}
             end)
 
-          candidates_selected = %{}
           team_name_changeset = Teams.Team.name_changeset(my_team)
+
+          layout =
+            Layout.init(my_team, socket.assigns.current_user)
 
           assign(socket,
             all_candidates: all_candidates,
             team_name_changeset: team_name_changeset,
-            candidates_selected: candidates_selected
+            team_layout: layout
           )
 
         {false, _, _} ->
@@ -48,11 +52,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
           |> redirect(to: Routes.site_path(socket, :index))
       end
 
-    {:ok, socket}
-  end
+    socket =
+      if my_team do
+        {:ok, my_role} = Teams.Memberships.team_role(my_team, socket.assigns.current_user)
+        assign(socket, my_role: my_role)
+      else
+        socket
+      end
 
-  def handle_params(_params, _uri, socket) do
-    {:noreply, socket}
+    {:ok, socket}
   end
 
   def render(assigns) do
@@ -81,7 +89,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
             creatable
             creatable_prompt="Send invitation to email:"
             placeholder="Select existing member or type email address to invite"
-            options={reject_already_selected(@all_candidates, @candidates_selected)}
+            options={reject_already_selected(@all_candidates, @team_layout)}
             on_selection_made={
               fn email, _by_id ->
                 send(self(), {:candidate_selected, %{email: email, role: :viewer}})
@@ -90,7 +98,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
             suggest_fun={
               fn input, _options ->
                 exclude_emails =
-                  Enum.map(@candidates_selected, fn {{email, _}, _} -> email end)
+                  Enum.map(@team_layout, fn {email, _} -> email end)
 
                 @my_team
                 |> Candidates.search_site_guests(input, exclude: exclude_emails)
@@ -101,11 +109,16 @@ defmodule PlausibleWeb.Live.TeamSetup do
         </div>
       </.form>
 
-      <.member user={@current_user} role={:owner} you?={true} />
-
-      <%= for {{email, name}, role} <- @candidates_selected do %>
-        <.member user={%User{email: email, name: name}} role={role} />
-      <% end %>
+      <.member
+        :for={{email, entry} <- Layout.sorted_for_display(@team_layout)}
+        :if={entry.queued_op != :delete}
+        user={%User{email: entry.email, name: entry.name}}
+        role={entry.role}
+        label={entry.label}
+        my_role={@my_role}
+        disabled={@current_user.email == email}
+        remove_disabled={not Layout.removable?(@team_layout, email)}
+      />
 
       <:footer>
         <.button phx-click="setup-team" type="submit" mt?={false} class="w-full">
@@ -116,126 +129,45 @@ defmodule PlausibleWeb.Live.TeamSetup do
     """
   end
 
-  attr :user, User, required: true
-  attr :you?, :boolean, default: false
-  attr :role, :atom, default: nil
-
-  def member(assigns) do
-    ~H"""
-    <div class="member mt-4">
-      <div class="flex items-center gap-x-5">
-        <img src={User.profile_img_url(@user)} class="w-7 rounded-full" />
-        <span class="text-sm">
-          {@user.name}
-          <span
-            :if={@you?}
-            class="ml-1 dark:bg-indigo-600 dark:text-gray-200 bg-gray-100 text-gray-500 text-xs px-1 rounded"
-          >
-            You
-          </span>
-
-          <br /><span class="text-gray-500 text-xs">{@user.email}</span>
-        </span>
-        <div class="flex-1 text-right">
-          <.dropdown class="relative">
-            <:button class="role bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-              {@role |> to_string() |> String.capitalize()}
-              <Heroicons.chevron_down mini class="size-4 mt-0.5" />
-            </:button>
-            <:menu class="dropdown-items max-w-60">
-              <.dropdown_item
-                href="#"
-                disabled={@you? or @role == :admin}
-                phx-click="update-role"
-                phx-value-role={:admin}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-              >
-                <div>Admin</div>
-                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-                  Manage all team settings
-                </div>
-              </.dropdown_item>
-
-              <.dropdown_item
-                href="#"
-                disabled={@you? or @role == :editor}
-                phx-click="update-role"
-                phx-value-role={:editor}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-              >
-                <div>Editor</div>
-                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-                  Create and view new sites
-                </div>
-              </.dropdown_item>
-
-              <.dropdown_item
-                href="#"
-                disabled={@you? or @role == :viewer}
-                phx-click="update-role"
-                phx-value-role={:viewer}
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-              >
-                <div>Viewer</div>
-                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-                  Can only view all sites under your team
-                </div>
-              </.dropdown_item>
-
-              <.dropdown_divider />
-              <.dropdown_item
-                href="#"
-                disabled={@you?}
-                phx-click="remove-member"
-                phx-value-email={@user.email}
-                phx-value-name={@user.name}
-              >
-                <div class="text-red-600 hover:text-red-600 dark:text-red-500 hover:dark:text-red-400">
-                  Remove member
-                </div>
-                <div class="text-gray-500 dark:text-gray-400 text-xs/5">
-                  Remove member from your team
-                </div>
-              </.dropdown_item>
-            </:menu>
-          </.dropdown>
-        </div>
-      </div>
-    </div>
-    """
-  end
-
   def handle_info(
         {:candidate_selected, %{email: email, role: role}},
-        %{assigns: %{my_team: team, candidates_selected: candidates, current_user: current_user}} =
+        %{assigns: %{my_team: team, team_layout: layout}} =
           socket
       ) do
+    email = String.trim(email)
+    existing_entry = Layout.get(layout, email)
+    existing_guest = Candidates.get_site_guest(team, email)
+
     socket =
-      case Candidates.get_site_guest(team, email) do
-        %User{} = user ->
-          assign(
+      cond do
+        existing_entry && existing_entry.queued_op == :delete ->
+          assign(socket, layout: Layout.update_role(layout, email, role))
+
+        existing_entry ->
+          put_flash(
             socket,
-            :candidates_selected,
-            Map.put(candidates, {user.email, user.name}, role)
+            :error,
+            "Make sure the e-mail is valid and is not taken already in your team layout"
           )
 
-        nil ->
-          if valid_email?(email) and email != current_user.email do
-            assign(
-              socket,
-              :candidates_selected,
-              Map.put(candidates, {email, "Invited User"}, role)
-            )
-          else
-            put_live_flash(
-              socket,
-              :error,
-              "Sorry, e-mail '#{email}' is invalid. Please type the address again."
-            )
-          end
+        valid_email?(email) && existing_guest ->
+          assign(
+            socket,
+            team_layout: Layout.schedule_send(layout, email, role, name: existing_guest.name)
+          )
+
+        valid_email?(email) ->
+          assign(
+            socket,
+            team_layout: Layout.schedule_send(layout, email, role)
+          )
+
+        true ->
+          put_flash(
+            socket,
+            :error,
+            "Sorry, e-mail '#{email}' is invalid. Please type the address again"
+          )
       end
 
     {:noreply, socket}
@@ -259,54 +191,74 @@ defmodule PlausibleWeb.Live.TeamSetup do
     end
   end
 
-  def handle_event("update-role", %{"name" => name, "email" => email, "role" => role}, socket) do
-    updated_candidates =
-      Map.put(socket.assigns.candidates_selected, {email, name}, String.to_existing_atom(role))
+  @roles Plausible.Teams.Membership.roles() -- [:guest]
+  @roles_cast_map Enum.into(@roles, %{}, fn role -> {to_string(role), role} end)
 
-    {:noreply, assign(socket, candidates_selected: updated_candidates)}
+  def handle_event(
+        "update-role",
+        %{"email" => email, "role" => role},
+        %{assigns: %{team_layout: layout}} = socket
+      ) do
+    layout = Layout.update_role(layout, email, Map.fetch!(@roles_cast_map, role))
+
+    {:noreply, assign(socket, team_layout: layout)}
   end
 
-  def handle_event("remove-member", %{"name" => name, "email" => email}, socket) do
-    updated_candidates = Map.delete(socket.assigns.candidates_selected, {email, name})
-    {:noreply, assign(socket, candidates_selected: updated_candidates)}
+  def handle_event(
+        "remove-member",
+        %{"email" => email},
+        %{assigns: %{team_layout: layout}} = socket
+      ) do
+    socket =
+      case Layout.verify_removable(layout, email) do
+        :ok ->
+          assign(socket, team_layout: Layout.schedule_delete(layout, email))
+
+        {:error, _} ->
+          socket
+      end
+
+    {:noreply, socket}
   end
 
-  def handle_event("setup-team", %{}, socket) do
-    candidates = socket.assigns.candidates_selected
-    team = socket.assigns.my_team
+  def handle_event(
+        "setup-team",
+        %{},
+        %{assigns: %{team_layout: layout, current_user: current_user, my_team: my_team}} = socket
+      ) do
+    my_team
+    |> Teams.Team.setup_changeset()
+    |> Repo.update!()
 
-    case Teams.setup_team(team, candidates) do
-      {:ok, _invitations} ->
-        socket =
+    result =
+      Layout.persist(layout, %{current_user: current_user, my_team: my_team})
+
+    socket =
+      case result do
+        {:ok, _} ->
           socket
           |> put_flash(:success, "Your team is now setup")
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
-        {:noreply, socket}
-
-      {:error, {:over_limit, limit}} ->
-        socket =
-          socket
-          |> put_live_flash(
+        {:error, {:over_limit, limit}} ->
+          put_flash(
+            socket,
             :error,
             "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit."
           )
+      end
 
-        {:noreply, socket}
-    end
+    {:noreply, socket}
   end
 
   defp valid_email?(email) do
     String.contains?(email, "@") and String.contains?(email, ".")
   end
 
-  defp reject_already_selected(candidates, candidates_selected) do
+  defp reject_already_selected(candidates, layout) do
     candidates
     |> Enum.reject(fn {email, _} ->
-      Enum.find(candidates_selected, fn
-        {{^email, _}, _} -> true
-        _ -> false
-      end)
+      not is_nil(Layout.get(layout, email))
     end)
   end
 end

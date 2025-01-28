@@ -1,12 +1,11 @@
 defmodule PlausibleWeb.Live.TeamSetupTest do
   use PlausibleWeb.ConnCase, async: true
-
-  alias Plausible.Teams
   use Plausible.Teams.Test
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
+  alias Plausible.Teams
   alias Plausible.Repo
 
   @url "/team/setup"
@@ -27,7 +26,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     test "does not redirect to /team/general if dev mode", %{conn: conn, user: user} do
       {:ok, team} = Teams.get_or_create(user)
       team |> Teams.Team.setup_changeset() |> Repo.update!()
-      assert {:ok, _, _} = live(conn, @url <> "?dev=1")
+      assert {:ok, lv, _} = live(conn, @url <> "?dev=1")
+      _ = render(lv)
     end
   end
 
@@ -35,16 +35,20 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     setup [:create_user, :log_in, :create_team]
 
     test "renders form", %{conn: conn} do
-      {:ok, _, html} = live(conn, @url)
+      {:ok, lv, html} = live(conn, @url)
       assert element_exists?(html, ~s|input#team_name[name="team[name]"]|)
       assert element_exists?(html, ~s|input[name="team-member-candidate"]|)
       assert element_exists?(html, ~s|button[phx-click="setup-team"]|)
+
+      _ = render(lv)
     end
 
     test "changing team name, updates team name in db", %{conn: conn, team: team} do
       {:ok, lv, _html} = live(conn, @url)
       type_into_input(lv, "team[name]", "New Team Name")
       assert Repo.reload!(team).name == "New Team Name"
+
+      _ = render(lv)
     end
 
     test "existing guest is suggested from combobox dropdown", %{conn: conn, user: user} do
@@ -61,15 +65,17 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
         |> render()
         |> find(".member")
 
-      assert text(member1_row) =~ user.name
-      assert text(member1_row) =~ "You"
-      assert text(member1_row) =~ user.email
+      assert text(member2_row) =~ user.name
+      assert text(member2_row) =~ "You"
+      assert text(member2_row) =~ user.email
 
-      assert text(member2_row) =~ guest.name
-      assert text(member2_row) =~ guest.email
+      assert text(member1_row) =~ guest.name
+      assert text(member1_row) =~ guest.email
 
-      assert member1_row |> find(".role") |> text() =~ "Owner"
-      assert member2_row |> find(".role") |> text() =~ "Viewer"
+      assert member2_row |> find(".role") |> text() =~ "Owner"
+      assert member1_row |> find(".role") |> text() =~ "Viewer"
+
+      _ = render(lv)
     end
 
     test "team member is added from input", %{conn: conn, user: user} do
@@ -85,15 +91,17 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
         |> render()
         |> find(".member")
 
-      assert text(member1_row) =~ user.name
-      assert text(member1_row) =~ "You"
-      assert text(member1_row) =~ user.email
+      assert text(member1_row) =~ "Invited User"
+      assert text(member1_row) =~ new_member_email
 
-      assert text(member2_row) =~ "Invited User"
-      assert text(member2_row) =~ new_member_email
+      assert text(member2_row) =~ user.name
+      assert text(member2_row) =~ "You"
+      assert text(member2_row) =~ user.email
 
-      assert member1_row |> find(".role") |> text() =~ "Owner"
-      assert member2_row |> find(".role") |> text() =~ "Viewer"
+      assert member1_row |> find(".role") |> text() =~ "Viewer"
+      assert member2_row |> find(".role") |> text() =~ "Owner"
+
+      _ = render(lv)
     end
 
     test "arbitrary invalid e-mail attempt", %{conn: conn} do
@@ -105,23 +113,27 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       select_combo_option(lv, 0)
 
       assert lv |> render() |> text() =~
-               "Sorry, e-mail 'invalid' is invalid. Please type the address again."
+               "Sorry, e-mail 'invalid' is invalid. Please type the address again"
+
+      _ = render(lv)
     end
 
     test "owner's own e-mail attempt", %{conn: conn, user: user} do
       {:ok, lv, _html} = live(conn, @url)
       type_into_combo(lv, "team-member-candidates", user.email)
 
-      refute lv |> render |> text() =~ "Sorry"
+      refute lv |> render |> text() =~ "Make sure the e-mail is valid and is not taken"
 
       select_combo_option(lv, 0)
 
       assert lv |> render() |> text() =~
-               "Sorry, e-mail '#{user.email}' is invalid. Please type the address again."
+               "Make sure the e-mail is valid and is not taken"
+
+      _ = render(lv)
     end
 
     test "owner's role dropdown consists of inactive options", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, @url)
+      {:ok, lv, html} = live(conn, @url)
 
       assert html
              |> find(".member")
@@ -130,6 +142,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
              |> Enum.all?(fn el ->
                text_of_attr(el, "data-ui-state") == "disabled"
              end)
+
+      _ = render(lv)
     end
 
     test "candidate's role dropdown allows changing role", %{conn: conn} do
@@ -143,15 +157,17 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       |> element(~s|.member a[phx-click="update-role"][phx-value-role="admin"]|)
       |> render_click()
 
-      member2_row = lv |> render() |> find(".member:nth-of-type(2) .role") |> text()
+      member2_row = lv |> render() |> find(".member:nth-of-type(1) .role") |> text()
       assert member2_row =~ "Admin"
 
       lv
       |> element(~s|.member a[phx-click="update-role"][phx-value-role="viewer"]|)
       |> render_click()
 
-      member2_row = lv |> render() |> find(".member:nth-of-type(2) .role") |> text()
+      member2_row = lv |> render() |> find(".member:nth-of-type(1) .role") |> text()
       assert member2_row =~ "Viewer"
+
+      _ = render(lv)
     end
 
     test "member candidate suggestion disappears when selected", %{conn: conn, user: user} do
@@ -169,12 +185,12 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       select_combo_option(lv, 1)
 
-      _ = render(lv)
-
       refute lv
              |> render()
              |> find("#dropdown-team-member-candidates")
              |> text() =~ guest.email
+
+      _ = render(lv)
     end
 
     test "member candidate can be removed", %{conn: conn, user: user} do
@@ -189,7 +205,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert lv
              |> render()
-             |> find(".member:nth-of-type(2)")
+             |> find(".member:nth-of-type(1)")
              |> text() =~ guest.email
 
       lv
@@ -200,10 +216,13 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
              |> render()
              |> find(".member")
              |> text() =~ guest.email
+
+      _ = render(lv)
     end
   end
 
   describe "/team/setup - full integration" do
+    # see PlausibleWeb.Live.TeamSetupSyncTest for Bamboo integration test
     setup [:create_user, :log_in, :create_team]
 
     test "setting up team above plan member limits", %{
@@ -231,6 +250,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert team |> Ecto.assoc(:team_invitations) |> Repo.aggregate(:count) == 0
 
       assert lv |> render() |> text() =~ "Your account is limited to 3 team members"
+
+      _ = render(lv)
     end
   end
 
