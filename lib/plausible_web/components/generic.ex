@@ -274,6 +274,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string)
   attr(:class, :string, default: "")
+  attr(:id, :string, default: nil)
   attr(:new_tab, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global, include: ~w(method))
@@ -294,6 +295,7 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <.unstyled_link
+      id={@id}
         class={@class}
         new_tab={@new_tab}
         href={@href}

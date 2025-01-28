@@ -31,13 +31,14 @@ defmodule PlausibleWeb.Live.Components.Team do
           <br /><span class="text-gray-500 text-xs">{@user.email}</span>
         </span>
         <div class="flex-1 text-right">
-          <.dropdown class="relative">
+          <.dropdown class="relative" id={"role-dropdown-#{@user.email}"}>
             <:button class="role bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
               {@role |> to_string() |> String.capitalize()}
               <Heroicons.chevron_down mini class="size-4 mt-0.5" />
             </:button>
             <:menu class="dropdown-items max-w-60">
               <.role_item
+                id={"#{@user.email}-#{@role}"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:owner}
@@ -47,6 +48,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 Manage the team without restrictions
               </.role_item>
               <.role_item
+                id={"#{@user.email}-#{@role}"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:admin}
@@ -56,6 +58,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 Manage all team settings
               </.role_item>
               <.role_item
+                id={"#{@user.email}-#{@role}"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:editor}
@@ -65,6 +68,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 Create and view new sites
               </.role_item>
               <.role_item
+                id={"#{@user.email}-#{@role}"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:billing}
@@ -74,6 +78,7 @@ defmodule PlausibleWeb.Live.Components.Team do
                 Manage subscription
               </.role_item>
               <.role_item
+                id={"#{@user.email}-#{@role}"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:viewer}
@@ -84,6 +89,7 @@ defmodule PlausibleWeb.Live.Components.Team do
               </.role_item>
               <.dropdown_divider />
               <.dropdown_item
+                id={"#{@user.email}-#{@role}-remove"}
                 href="#"
                 disabled={@disabled or @remove_disabled}
                 phx-click="remove-member"
