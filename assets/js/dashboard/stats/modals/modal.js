@@ -70,7 +70,7 @@ class Modal extends React.Component {
   render() {
     return createPortal(
       <>
-        <Keybind keyboardKey="Escape" type="keyup" handler={this.props.onClose} target={document} shouldIgnoreWhen={[isModifierPressed, isTyping]} />
+        <Keybind keyboardKey="Escape" type="keyup" handler={this.props.onClose} targetRef="document" shouldIgnoreWhen={[isModifierPressed, isTyping]} />
         <div className="modal is-open" onClick={this.props.onClick}>
           <div className="modal__overlay">
             <button className="modal__close"></button>

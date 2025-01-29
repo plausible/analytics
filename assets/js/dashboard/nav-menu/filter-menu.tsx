@@ -12,7 +12,7 @@ import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { isModifierPressed, isTyping, Keybind } from '../keybinding'
+import { BlurMenuButtonOnEscape } from '../keybinding'
 
 export function getFilterListItems({
   propsAvailable
@@ -49,33 +49,17 @@ export function getFilterListItems({
 export const FilterMenu = () => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLButtonElement>(null)
   return (
     <Popover
       className="shrink-0 md:relative"
-      ref={ref}
       data-no-clear-filters-on-escape={true}
     >
       {({ close }) => (
         <>
-          <Keybind
-            keyboardKey="Escape"
-            type="keyup"
-            handler={(event) => {
-              // ;(event as unknown as Record<string, unknown>).hi = true
-              event.stopPropagation()
-              event.preventDefault()
-              // console.log(`Inner ${open}`, event)
-              // if (open) {
-              //   handler()
-              // }
-              // // return true
-            }}
-            target={ref.current}
-            shouldIgnoreWhen={[isModifierPressed, isTyping]}
-          />
-
+          <BlurMenuButtonOnEscape targetRef={ref} />
           <Popover.Button
+            ref={ref}
             className={classNames(
               'flex items-center gap-1',
               'h-9 px-3',
@@ -100,11 +84,6 @@ export const FilterMenu = () => {
                 'flex'
               )}
             >
-              <StopEscapePropagation
-                // open={open}
-                target={ref.current}
-                // handler={close}
-              />
               {columns.map((filterGroups, index) => (
                 <div key={index} className="flex flex-col w-1/2">
                   {filterGroups.map(({ title, modals }) => (
@@ -139,36 +118,5 @@ export const FilterMenu = () => {
         </>
       )}
     </Popover>
-  )
-}
-
-const StopEscapePropagation = ({
-  // open,
-  // handler,
-  target
-}: {
-  // open: boolean
-  // handler: () => void
-  target: HTMLDivElement | null
-}) => {
-  // useEffect(() => {}, [])
-  // return null
-  return (
-    <Keybind
-      keyboardKey="Escape"
-      type="keyup"
-      handler={(event) => {
-        // ;(event as unknown as Record<string, unknown>).hi = true
-        event.stopPropagation()
-        event.preventDefault()
-        // console.log(`Inner ${open}`, event)
-        // if (open) {
-        //   handler()
-        // }
-        // // return true
-      }}
-      target={target}
-      shouldIgnoreWhen={[isModifierPressed, isTyping]}
-    />
   )
 }

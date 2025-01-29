@@ -1,5 +1,5 @@
 /* @format */
-import React, { ReactNode, useCallback, useEffect } from 'react'
+import React, { ReactNode, RefObject, useCallback, useEffect } from 'react'
 import {
   AppNavigationTarget,
   useAppNavigate
@@ -65,7 +65,7 @@ type KeybindOptions = {
   type: KeyboardEventType
   handler: (event: KeyboardEvent) => void
   shouldIgnoreWhen?: Array<(event: KeyboardEvent) => boolean>
-  target?: Document | HTMLElement | null
+  targetRef?: 'document' | RefObject<HTMLElement> | null
 }
 
 function useKeybind({
@@ -73,7 +73,7 @@ function useKeybind({
   type,
   handler,
   shouldIgnoreWhen = [],
-  target
+  targetRef
 }: KeybindOptions) {
   const wrappedHandler = useCallback(
     (event: KeyboardEvent) => {
@@ -85,22 +85,23 @@ function useKeybind({
   ) as EventListener
 
   useEffect(() => {
+    const element = targetRef === 'document' ? document : targetRef?.current
     const registerKeybind = (t: HTMLElement | Document) =>
       t.addEventListener(type, wrappedHandler)
 
     const deregisterKeybind = (t: HTMLElement | Document) =>
       t.removeEventListener(type, wrappedHandler)
 
-    if (target) {
-      registerKeybind(target)
+    if (element) {
+      registerKeybind(element)
     }
 
     return () => {
-      if (target) {
-        deregisterKeybind(target)
+      if (element) {
+        deregisterKeybind(element)
       }
     }
-  }, [target, type, wrappedHandler])
+  }, [targetRef, type, wrappedHandler])
 }
 
 export function Keybind(opts: KeybindOptions) {
@@ -129,7 +130,7 @@ export function NavigateKeybind({
       type={type}
       handler={handler}
       shouldIgnoreWhen={[isModifierPressed, isTyping]}
-      target={document}
+      targetRef="document"
     />
   )
 }
@@ -139,5 +140,29 @@ export function KeybindHint({ children }: { children: ReactNode }) {
     <kbd className="rounded border border-gray-200 dark:border-gray-600 px-2 font-mono font-normal text-xs text-gray-400">
       {children}
     </kbd>
+  )
+}
+
+export function BlurMenuButtonOnEscape({
+  targetRef: targetRef
+}: {
+  targetRef: RefObject<HTMLElement>
+}) {
+  return (
+    <Keybind
+      keyboardKey="Escape"
+      type="keyup"
+      handler={(event) => {
+        const t = event.target as HTMLElement | null
+        if (typeof t?.blur === 'function') {
+          if (t === targetRef.current) {
+            t.blur()
+            event.stopPropagation()
+          }
+        }
+      }}
+      targetRef={targetRef}
+      shouldIgnoreWhen={[isModifierPressed, isTyping]}
+    />
   )
 }
