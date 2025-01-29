@@ -31,6 +31,5 @@ defmodule Plausible.Teams.Membership do
     |> put_change(:role, role)
     |> put_assoc(:team, team)
     |> put_assoc(:user, user)
-    |> unique_constraint(:user_id, name: :one_team_per_user)
   end
 end
