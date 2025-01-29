@@ -412,8 +412,8 @@ defmodule Plausible.BillingTest do
       assert Repo.reload!(api_key).hourly_request_limit == 10_000
     end
 
-    test "if user's grace period has ended, upgrading will unlock sites and remove grace period" do
-      grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+    test "if teams's grace period has ended, upgrading will unlock sites and remove grace period" do
+      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
       user = new_user(team: [grace_period: grace_period])
 
       subscribe_to_growth_plan(user)

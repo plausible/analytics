@@ -1,9 +1,9 @@
-defmodule Plausible.Auth.GracePeriod do
+defmodule Plausible.Teams.GracePeriod do
   @moduledoc """
   This embedded schema stores information about the account locking grace
   period.
 
-  Users are given this 7-day grace period to upgrade their account after
+  Teams are given this 7-day grace period to upgrade their account after
   outgrowing their subscriptions. The actual account locking happens in
   background with `Plausible.Workers.LockSites`.
 
@@ -29,7 +29,7 @@ defmodule Plausible.Auth.GracePeriod do
 
   @spec start_changeset(Teams.Team.t()) :: Ecto.Changeset.t()
   @doc """
-  Starts a account locking grace period of 7 days by changing the User struct.
+  Starts a account locking grace period of 7 days by changing the Team struct.
   """
   def start_changeset(%Teams.Team{} = team) do
     grace_period = %__MODULE__{
@@ -43,7 +43,7 @@ defmodule Plausible.Auth.GracePeriod do
 
   @spec start_manual_lock_changeset(Teams.Team.t()) :: Ecto.Changeset.t()
   @doc """
-  Starts a manual account locking grace period by changing the User struct.
+  Starts a manual account locking grace period by changing the Team struct.
   Manual locking means the grace period can only be removed manually from the
   CRM.
   """
@@ -59,7 +59,7 @@ defmodule Plausible.Auth.GracePeriod do
 
   @spec end_changeset(Teams.Team.t()) :: Ecto.Changeset.t()
   @doc """
-  Ends an existing grace period by `setting users.grace_period.is_over` to true.
+  Ends an existing grace period by setting `teams.grace_period.is_over` to true.
   This means the grace period has expired.
   """
   def end_changeset(%Teams.Team{} = team) do
@@ -68,7 +68,7 @@ defmodule Plausible.Auth.GracePeriod do
 
   @spec remove_changeset(Teams.Team.t()) :: Ecto.Changeset.t()
   @doc """
-  Removes the grace period from the User completely.
+  Removes the grace period from the Team completely.
   """
   def remove_changeset(%Teams.Team{} = team) do
     Ecto.Changeset.change(team, grace_period: nil)
@@ -76,8 +76,8 @@ defmodule Plausible.Auth.GracePeriod do
 
   @spec active?(Teams.Team.t() | nil) :: boolean()
   @doc """
-  Returns whether the grace period is still active for a User. Defaults to
-  false if the user is nil or there is no grace period.
+  Returns whether the grace period is still active for a Team. Defaults to
+  false if the team is nil or there is no grace period.
   """
   def active?(team)
 
@@ -93,8 +93,8 @@ defmodule Plausible.Auth.GracePeriod do
 
   @spec expired?(Teams.Team.t() | nil) :: boolean()
   @doc """
-  Returns whether the grace period has already expired for a User. Defaults to
-  false if the user is nil or there is no grace period.
+  Returns whether the grace period has already expired for a Team. Defaults to
+  false if the team is nil or there is no grace period.
   """
   def expired?(team) do
     if team && team.grace_period, do: !active?(team), else: false
