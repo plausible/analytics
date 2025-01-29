@@ -250,15 +250,6 @@ export default function QueryPeriodPicker({
     )
   }, [])
 
-  const toggleCompareMenuCalendar = useCallback(() => {
-    setMenuVisible((prevState) => {
-      const s =
-        prevState === 'compare-menu-calendar' ? null : 'compare-menu-calendar'
-      console.log({ prevState, s })
-      return s
-    })
-  }, [])
-
   const customRangeLink: LinkItem = useMemo(
     () => [
       ['Custom Range', 'C'],
@@ -294,43 +285,12 @@ export default function QueryPeriodPicker({
   })
 
   useEffect(() => {
-    console.log('running close')
     closeMenu()
   }, [closeMenu, query])
 
   return (
     <div className={classNames('flex shrink-0', className)}>
       <MovePeriodArrows />
-      {menuVisible === 'datemenu-calendar' && (
-        <DateRangeCalendar
-          onCloseWithSelection={(selection) =>
-            navigate({ search: getSearchToApplyCustomDates(selection) })
-          }
-          minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
-          defaultDates={
-            query.to && query.from
-              ? [formatISO(query.from), formatISO(query.to)]
-              : undefined
-          }
-        />
-      )}
-      {menuVisible === 'compare-menu-calendar' && (
-        <DateRangeCalendar
-          onCloseWithSelection={(selection) =>
-            navigate({
-              search: getSearchToApplyCustomComparisonDates(selection)
-            })
-          }
-          minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
-          defaultDates={
-            query.compare_from && query.compare_to
-              ? [formatISO(query.compare_from), formatISO(query.compare_to)]
-              : undefined
-          }
-        />
-      )}
       <ToggleDropdownButton
         withDropdownIndicator
         className="min-w-36 md:relative lg:w-48"
@@ -345,6 +305,23 @@ export default function QueryPeriodPicker({
         {menuVisible === 'datemenu' && (
           <QueryPeriodsMenu groups={datePeriodGroups} closeMenu={closeMenu} />
         )}
+
+        {menuVisible === 'datemenu-calendar' && (
+          <DateRangeCalendar
+            id="calendar"
+            onCloseWithSelection={(selection) =>
+              navigate({ search: getSearchToApplyCustomDates(selection) })
+            }
+            minDate={site.statsBegin}
+            maxDate={formatISO(nowForSite(site))}
+            defaultDates={
+              query.to && query.from
+                ? [formatISO(query.from), formatISO(query.to)]
+                : undefined
+            }
+            onCloseWithNoSelection={() => setMenuVisible(null)}
+          />
+        )}
       </ToggleDropdownButton>
       {isComparisonEnabled(query.comparison) && (
         <>
@@ -352,91 +329,127 @@ export default function QueryPeriodPicker({
             <span className="hidden md:inline px-1">vs.</span>
           </div>
           <Menu as="div" className="min-w-36 md:relative lg:w-48">
-            <BlurMenuButtonOnEscape targetRef={compareDropdownRef} />
-            <Menu.Button
-              className={classNames(
-                'flex items-center rounded text-sm leading-tight px-2 py-2 h-9',
-                'w-full justify-between bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900'
-              )}
-              ref={compareDropdownRef}
-            >
-              {query.comparison === ComparisonMode.custom &&
-              query.compare_from &&
-              query.compare_to
-                ? formatDateRange(site, query.compare_from, query.compare_to)
-                : COMPARISON_MODES[query.comparison]}
-            </Menu.Button>
-            <Transition
-              {...popover.transition.props}
-              className={classNames(
-                'mt-2',
-                popover.transition.classNames.fullwidth,
-                'md:left-auto md:w-56'
-              )}
-            >
-              <Menu.Items className={popover.panel.classNames.roundedSheet}>
-                {[
-                  ComparisonMode.off,
-                  ComparisonMode.previous_period,
-                  ComparisonMode.year_over_year
-                ].map((comparisonMode) => (
-                  <Menu.Item
-                    key={comparisonMode}
-                    disabled={query.comparison === comparisonMode}
-                  >
-                    <AppNavigationLink
-                      className={linkstyle}
-                      // active={query.comparison === comparisonMode}
-                      search={(search) => ({
-                        ...search,
-                        ...clearedComparisonSearch,
-                        comparison: comparisonMode
-                      })}
-                    >
-                      {COMPARISON_MODES[comparisonMode]}
-                    </AppNavigationLink>
-                  </Menu.Item>
-                ))}
-                <Menu.Item>
-                  <AppNavigationLink
-                    className={linkstyle}
-                    search={(s) => s}
-                    onClick={toggleCompareMenuCalendar}
-                  >
-                    {COMPARISON_MODES[ComparisonMode.custom]}
-                  </AppNavigationLink>
-                </Menu.Item>
-                {query.comparison !== ComparisonMode.custom && (
-                  <>
-                    <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
-                    <Menu.Item disabled={query.match_day_of_week === true}>
-                      <AppNavigationLink
-                        className={linkstyle}
-                        search={(s) => ({ ...s, match_day_of_week: true })}
-                      >
-                        {
-                          COMPARISON_MATCH_MODE_LABELS[
-                            ComparisonMatchMode.MatchDayOfWeek
+            {({ close }) => (
+              <>
+                <BlurMenuButtonOnEscape targetRef={compareDropdownRef} />
+                <Menu.Button
+                  className={classNames(
+                    'flex items-center rounded text-sm leading-tight px-2 py-2 h-9',
+                    'w-full justify-between bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900'
+                  )}
+                  ref={compareDropdownRef}
+                >
+                  {query.comparison === ComparisonMode.custom &&
+                  query.compare_from &&
+                  query.compare_to
+                    ? formatDateRange(
+                        site,
+                        query.compare_from,
+                        query.compare_to
+                      )
+                    : COMPARISON_MODES[query.comparison!]}
+                </Menu.Button>
+                {menuVisible === 'compare-menu-calendar' && (
+                  <DateRangeCalendar
+                    id="compare-menu-calendar"
+                    onCloseWithSelection={(selection) =>
+                      navigate({
+                        search: getSearchToApplyCustomComparisonDates(selection)
+                      })
+                    }
+                    minDate={site.statsBegin}
+                    maxDate={formatISO(nowForSite(site))}
+                    defaultDates={
+                      query.compare_from && query.compare_to
+                        ? [
+                            formatISO(query.compare_from),
+                            formatISO(query.compare_to)
                           ]
-                        }
-                      </AppNavigationLink>
-                    </Menu.Item>
-                    <Menu.Item disabled={query.match_day_of_week === false}>
-                      <AppNavigationLink
-                        className={linkstyle}
-                        search={(s) => ({ ...s, match_day_of_week: false })}
-                      >
-                        {
-                          COMPARISON_MATCH_MODE_LABELS[
-                            ComparisonMatchMode.MatchExactDate
-                          ]
-                        }
-                      </AppNavigationLink>
-                    </Menu.Item>
-                  </>
+                        : undefined
+                    }
+                    onCloseWithNoSelection={() => setMenuVisible(null)}
+                  />
                 )}
-              </Menu.Items>
-            </Transition>
+                <Transition
+                  {...popover.transition.props}
+                  className={classNames(
+                    'mt-2',
+                    popover.transition.classNames.fullwidth,
+                    'md:left-auto md:w-56'
+                  )}
+                >
+                  <Menu.Items className={popover.panel.classNames.roundedSheet}>
+                    {[
+                      ComparisonMode.off,
+                      ComparisonMode.previous_period,
+                      ComparisonMode.year_over_year
+                    ].map((comparisonMode) => (
+                      <Menu.Item
+                        key={comparisonMode}
+                        disabled={query.comparison === comparisonMode}
+                      >
+                        <AppNavigationLink
+                          className={linkstyle}
+                          search={(search) => ({
+                            ...search,
+                            ...clearedComparisonSearch,
+                            comparison: comparisonMode
+                          })}
+                        >
+                          {COMPARISON_MODES[comparisonMode]}
+                        </AppNavigationLink>
+                      </Menu.Item>
+                    ))}
+                    <Menu.Item>
+                      <AppNavigationLink
+                        className={linkstyle}
+                        search={(s) => s}
+                        onClick={(e) => {
+                          // custom handler is needed to prevent
+                          // the calendar from immediately closing
+                          // due to Menu.Button grabbing focus
+                          setMenuVisible('compare-menu-calendar')
+                          e.stopPropagation()
+                          e.preventDefault()
+                          close()
+                        }}
+                      >
+                        {COMPARISON_MODES[ComparisonMode.custom]}
+                      </AppNavigationLink>
+                    </Menu.Item>
+                    {query.comparison !== ComparisonMode.custom && (
+                      <>
+                        <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
+                        <Menu.Item disabled={query.match_day_of_week === true}>
+                          <AppNavigationLink
+                            className={linkstyle}
+                            search={(s) => ({ ...s, match_day_of_week: true })}
+                          >
+                            {
+                              COMPARISON_MATCH_MODE_LABELS[
+                                ComparisonMatchMode.MatchDayOfWeek
+                              ]
+                            }
+                          </AppNavigationLink>
+                        </Menu.Item>
+                        <Menu.Item disabled={query.match_day_of_week === false}>
+                          <AppNavigationLink
+                            className={linkstyle}
+                            search={(s) => ({ ...s, match_day_of_week: false })}
+                          >
+                            {
+                              COMPARISON_MATCH_MODE_LABELS[
+                                ComparisonMatchMode.MatchExactDate
+                              ]
+                            }
+                          </AppNavigationLink>
+                        </Menu.Item>
+                      </>
+                    )}
+                  </Menu.Items>
+                </Transition>
+              </>
+            )}
           </Menu>
         </>
       )}

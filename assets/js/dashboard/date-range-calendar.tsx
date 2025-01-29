@@ -3,12 +3,14 @@ import React, { useEffect, useRef } from 'react'
 import DatePicker from 'react-flatpickr'
 
 export function DateRangeCalendar({
+  id,
   minDate,
   maxDate,
   defaultDates,
   onCloseWithNoSelection,
   onCloseWithSelection
 }: {
+  id: string
   minDate?: string
   maxDate?: string
   defaultDates?: [string, string]
@@ -19,7 +21,6 @@ export function DateRangeCalendar({
 
   useEffect(() => {
     const calendar = calendarRef.current
-    console.log('calendar', calendar)
     if (calendar) {
       calendar.flatpickr.open()
     }
@@ -32,7 +33,7 @@ export function DateRangeCalendar({
   return (
     <div className="h-0 w-0">
       <DatePicker
-        // id="calendar"
+        id={id}
         options={{
           mode: 'range',
           maxDate,
