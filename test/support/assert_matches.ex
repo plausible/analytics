@@ -17,10 +17,16 @@ defmodule Plausible.AssertMatches do
     * `any(:string)`
     * `any(:binary)`
     * `any(:integer)`
+    * `any(:pos_integer)`
+    * `any(:number)`
     * `any(:float)`
     * `any(:boolean)`
     * `any(:map)`
     * `any(:list)`
+    * `any(:tuple)`
+    * `any(:iso8601_date)`
+    * `any(:iso8601_datetime)`
+    * `any(:iso8601_naive_datetime)`
     * all above variants of any with a one argument predicate function accepting
       value and returning a boolean, like: `any(:integer, & &1 > 20)`
     * a special case of `any(:string, ~r/regex pattern/)` checking that value is
@@ -344,10 +350,45 @@ defmodule Plausible.AssertMatches do
     def any(:string), do: &is_binary/1
     def any(:binary), do: &is_binary/1
     def any(:integer), do: &is_integer/1
+    def any(:number), do: &is_number/1
     def any(:float), do: &is_float/1
     def any(:boolean), do: &is_boolean/1
     def any(:map), do: &is_map/1
     def any(:list), do: &is_list/1
+    def any(:tuple), do: &is_tuple/1
+
+    def any(:pos_integer) do
+      fn value ->
+        is_integer(value) and value > 0
+      end
+    end
+
+    def any(:iso8601_date) do
+      fn value ->
+        case Date.from_iso8601(value) do
+          {:ok, _} -> true
+          _ -> false
+        end
+      end
+    end
+
+    def any(:iso8601_datetime) do
+      fn value ->
+        case DateTime.from_iso8601(value) do
+          {:ok, _} -> true
+          _ -> false
+        end
+      end
+    end
+
+    def any(:iso8601_naive_datetime) do
+      fn value ->
+        case NaiveDateTime.from_iso8601(value) do
+          {:ok, _} -> true
+          _ -> false
+        end
+      end
+    end
 
     def any(:string, %Regex{} = regex) do
       fn value ->
