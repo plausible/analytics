@@ -1770,7 +1770,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert [unique_conversions, total_conversions, conversion_rate] = top_stats
 
       assert %{"name" => "Unique conversions", "value" => 1} = unique_conversions
-      # TODO: make it possible to query total conversions from pageleave events
       assert %{"name" => "Total conversions", "value" => 0} = total_conversions
       assert %{"name" => "Conversion rate", "value" => 50.0} = conversion_rate
     end
@@ -1818,7 +1817,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert [unique_conversions, total_conversions, conversion_rate] = top_stats
 
       assert %{"name" => "Unique conversions", "value" => 3} = unique_conversions
-      # TODO: make it possible to query total conversions from pageleave events
       assert %{"name" => "Total conversions", "value" => 2} = total_conversions
       assert %{"name" => "Conversion rate", "value" => 60.0} = conversion_rate
     end
@@ -1858,7 +1856,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert [unique_conversions, total_conversions, conversion_rate] = top_stats
 
       assert %{"name" => "Unique conversions", "value" => 2} = unique_conversions
-      # TODO: make it possible to query total conversions from pageleave events
       assert %{"name" => "Total conversions", "value" => 2} = total_conversions
       assert %{"name" => "Conversion rate", "value" => 66.7} = conversion_rate
     end

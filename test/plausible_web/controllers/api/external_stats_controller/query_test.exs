@@ -4199,7 +4199,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["Visit /blog"], "metrics" => [2, 2, 100.0]},
-               # TODO: make it possible to query total conversions from pageleave events
                %{"dimensions" => ["Scroll /blog 25"], "metrics" => [1, 0, 50.0]}
              ]
     end

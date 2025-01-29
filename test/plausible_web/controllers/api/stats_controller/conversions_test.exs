@@ -129,7 +129,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2020-01-01")
 
-      # TODO: make it possible to query `events` metric
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Scroll 50 /blog/**",
