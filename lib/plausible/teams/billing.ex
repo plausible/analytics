@@ -35,6 +35,13 @@ defmodule Plausible.Teams.Billing do
   @typep last_30_days_usage() :: %{:last_30_days => usage_cycle()}
   @typep monthly_pageview_usage() :: cycles_usage() | last_30_days_usage()
 
+  def grandfathered_team?(nil), do: false
+
+  def grandfathered_team?(team) do
+    # timestamps were originally rewritten from owner.inserted_at
+    Date.before?(team.inserted_at, @limit_sites_since)
+  end
+
   def get_subscription(nil), do: nil
 
   def get_subscription(%Teams.Team{subscription: %Subscription{} = subscription}),
@@ -183,9 +190,7 @@ defmodule Plausible.Teams.Billing do
   end
 
   def site_limit(team) do
-    {:ok, user} = Teams.get_owner(team)
-
-    if Timex.before?(user.inserted_at, @limit_sites_since) do
+    if grandfathered_team?(team) do
       :unlimited
     else
       get_site_limit_from_plan(team)

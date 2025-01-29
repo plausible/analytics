@@ -67,6 +67,23 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Plausible.Teams.Billing.site_limit(team) == 10
     end
+
+    test "grandfathered site limit should be unlimited when accepting transfer invitations" do
+      # must be before ~D[2021-05-05]
+      owner = new_user(team: [inserted_at: ~N[2021-01-01 00:00:00]])
+      # plan with site_limit: 10
+      subscribe_to_plan(owner, "857097")
+      _site = for _ <- 1..10, do: new_site(owner: owner)
+
+      other_owner = new_user()
+      other_site = new_site(owner: other_owner)
+      invite_transfer(other_site, owner, inviter: other_owner)
+
+      team = owner |> team_of()
+
+      assert Plausible.Teams.Billing.site_limit(team) == :unlimited
+      assert Plausible.Teams.Invitations.ensure_can_take_ownership(other_site, team) == :ok
+    end
   end
 
   test "site_usage/1 returns the amount of sites the user owns" do
