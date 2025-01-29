@@ -36,13 +36,11 @@ export default function ComparisonPeriodMenu({
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
-  const [menuVisible, setMenuVisible] = useState<
-    'datemenu-calendar' | 'compare-menu-calendar' | null
-  >(null)
+  const [menuVisible, setMenuVisible] = useState<boolean>(false)
   const compareMenuButtonRef = useRef<HTMLButtonElement>(null)
 
   const closeMenu = useCallback(() => {
-    setMenuVisible(null)
+    setMenuVisible(false)
   }, [])
 
   useEffect(() => {
@@ -71,7 +69,7 @@ export default function ComparisonPeriodMenu({
   }
   return (
     <Menu as="div" className={className}>
-      {({ close }) => (
+      {({ close: closeDropdown }) => (
         <>
           <BlurMenuButtonOnEscape targetRef={compareMenuButtonRef} />
           <Menu.Button
@@ -85,7 +83,7 @@ export default function ComparisonPeriodMenu({
               : COMPARISON_MODES[query.comparison!]}
             <DateMenuChevron />
           </Menu.Button>
-          {menuVisible === 'compare-menu-calendar' && (
+          {menuVisible && (
             <DateRangeCalendar
               id="compare-menu-calendar"
               onCloseWithSelection={(selection) =>
@@ -100,7 +98,7 @@ export default function ComparisonPeriodMenu({
                   ? [formatISO(query.compare_from), formatISO(query.compare_to)]
                   : undefined
               }
-              onCloseWithNoSelection={() => setMenuVisible(null)}
+              onCloseWithNoSelection={() => setMenuVisible(false)}
             />
           )}
           <Transition
@@ -141,10 +139,10 @@ export default function ComparisonPeriodMenu({
                     // custom handler is needed to prevent
                     // the calendar from immediately closing
                     // due to Menu.Button grabbing focus
-                    setMenuVisible('compare-menu-calendar')
+                    setMenuVisible(true)
                     e.stopPropagation()
                     e.preventDefault()
-                    close()
+                    closeDropdown()
                   }}
                 >
                   {COMPARISON_MODES[ComparisonMode.custom]}

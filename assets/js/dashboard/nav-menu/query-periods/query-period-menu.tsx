@@ -10,8 +10,7 @@ import {
   isModifierPressed,
   isTyping,
   Keybind,
-  KeybindHint,
-  NavigateKeybind
+  KeybindHint
 } from '../../keybinding'
 import {
   AppNavigationLink,
@@ -23,7 +22,6 @@ import {
   DisplaySelectedPeriod,
   getCompareLinkItem,
   getSearchToApplyCustomDates,
-  QueryPeriod,
   last6MonthsLinkItem,
   getDatePeriodGroups,
   LinkItem
@@ -43,15 +41,14 @@ export function QueryPeriodMenu({ className }: { className?: string }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
-  const [menuVisible, setMenuVisible] = useState<
-    'datemenu-calendar' | 'compare-menu-calendar' | null
-  >(null)
+  const [menuVisible, setMenuVisible] = useState<boolean>(false)
+
   const periodMenuButtonRef = useRef<HTMLButtonElement>(null)
 
   const dashboardRouteMatch = useMatch(rootRoute.path)
 
   const closeMenu = useCallback(() => {
-    setMenuVisible(null)
+    setMenuVisible(false)
   }, [])
 
   const buttonGroups = useMemo(() => {
@@ -70,7 +67,7 @@ export function QueryPeriodMenu({ className }: { className?: string }) {
 
   return (
     <Menu as="div" className={className}>
-      {({ close }) => {
+      {({ close: closeDropdown }) => {
         const groups = buttonGroups
           .slice(0, buttonGroups.length - 1)
           .concat([
@@ -80,15 +77,15 @@ export function QueryPeriodMenu({ className }: { className?: string }) {
                 ['Custom Range', 'C'],
                 {
                   search: (s) => s,
-                  isActive: ({ query }) => query.period === QueryPeriod.custom,
+                  isActive: () => false,
                   onClick: (e) => {
                     // custom handler is needed to prevent
                     // the calendar from immediately closing
                     // due to Menu.Button grabbing focus
-                    setMenuVisible('datemenu-calendar')
+                    setMenuVisible(true)
                     e.preventDefault()
                     e.stopPropagation()
-                    close()
+                    closeDropdown()
                   }
                 }
               ]
@@ -108,33 +105,25 @@ export function QueryPeriodMenu({ className }: { className?: string }) {
                 {groups.concat([[last6MonthsLinkItem]]).flatMap((group) =>
                   group
                     .filter(([[_name, keyboardKey]]) => !!keyboardKey)
-                    .map(
-                      ([
-                        [_name, keyboardKey],
-                        { search, onClick, isActive }
-                      ]) =>
-                        onClick || isActive({ site, query }) ? (
-                          <Keybind
-                            key={keyboardKey}
-                            keyboardKey={keyboardKey}
-                            type="keydown"
-                            handler={(e) => {
-                              if (onClick) {
-                                onClick(e)
-                              }
-                            }}
-                            shouldIgnoreWhen={[isModifierPressed, isTyping]}
-                            targetRef="document"
-                          />
-                        ) : (
-                          <NavigateKeybind
-                            key={keyboardKey}
-                            keyboardKey={keyboardKey}
-                            type="keydown"
-                            navigateProps={{ search }}
-                          />
-                        )
-                    )
+                    .map(([[_name, keyboardKey], { search, onClick }]) => (
+                      <Keybind
+                        key={keyboardKey}
+                        keyboardKey={keyboardKey}
+                        type="keydown"
+                        handler={(e) => {
+                          if (typeof search === 'function') {
+                            navigate({ search })
+                          }
+                          if (typeof onClick === 'function') {
+                            onClick(e)
+                          } else {
+                            closeDropdown()
+                          }
+                        }}
+                        shouldIgnoreWhen={[isModifierPressed, isTyping]}
+                        targetRef="document"
+                      />
+                    ))
                 )}
               </>
             )}
@@ -146,7 +135,7 @@ export function QueryPeriodMenu({ className }: { className?: string }) {
               <DisplaySelectedPeriod />
               <DateMenuChevron />
             </Menu.Button>
-            {menuVisible === 'datemenu-calendar' && (
+            {menuVisible && (
               <DateRangeCalendar
                 id="calendar"
                 onCloseWithSelection={(selection) =>
@@ -159,7 +148,7 @@ export function QueryPeriodMenu({ className }: { className?: string }) {
                     ? [formatISO(query.from), formatISO(query.to)]
                     : undefined
                 }
-                onCloseWithNoSelection={() => setMenuVisible(null)}
+                onCloseWithNoSelection={() => setMenuVisible(false)}
               />
             )}
 
