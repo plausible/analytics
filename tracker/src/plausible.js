@@ -27,6 +27,23 @@
     {{/if}}
   }
 
+  function triggerEventsForAttributes(attributes) {
+    attributes.forEach(attribute => {
+      const elements = document.querySelectorAll(`[${attribute}]`);
+  
+      elements.forEach(element => {
+        const attributeValue = element.getAttribute(attribute);
+        const eventValue = `${attribute}-${attributeValue}`;
+        
+        trigger('phx-event', {
+          props: {
+            event: attribute,
+            value: attributeValue
+          }
+        });
+      });
+    });
+  }
 
   function trigger(eventName, options) {
     {{#unless local}}
@@ -173,6 +190,14 @@
 
     ['phx:page-loading-start', 'phx:page-loading-stop'].map((name) => {
       window.addEventListener(name, info => trigger('phx-event', {props: {event: name, detail: new URLSearchParams(info.detail || {}).toString()}}));
+
+      const attributes = [
+        'data-moon-react-assets-id',
+        'data-moon-icons-react-id',
+        'data-moon-elixir-assets-id',
+        'data-moon-icons-id'
+      ];
+      triggerEventsForAttributes(attributes); 
     });
 
     // form submit event
@@ -182,7 +207,7 @@
     if (window.liveSocket)
       window.liveSocket.socket.logger = (kind, msg, data) => {
         if ((kind === 'push') && !msg.includes("phoenix heartbeat")){
-          trigger('phx-push', {props: {msg, ...(window.analyticsParams || {}), ...data}});
+          trigger('phx-push', {props: {msg, ...data}});
         } 
       }
     else
