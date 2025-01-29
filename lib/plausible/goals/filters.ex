@@ -106,31 +106,28 @@ defmodule Plausible.Goals.Filters do
 
   defp build_condition(filtered_goals, imported?) do
     Enum.reduce(filtered_goals, false, fn goal, dynamic_statement ->
-      cond do
-        is_nil(goal) ->
-          dynamic([e], ^dynamic_statement)
-
-        Plausible.Goal.type(goal) == :event ->
-          dynamic([e], e.name == ^goal.event_name or ^dynamic_statement)
-
-        Plausible.Goal.type(goal) == :scroll ->
-          dynamic([e], ^page_scroll_goal_condition(goal) or ^dynamic_statement)
-
-        Plausible.Goal.type(goal) == :page ->
-          dynamic([e], ^pageview_goal_condition(goal, imported?) or ^dynamic_statement)
+      if is_nil(goal) do
+        dynamic([e], ^dynamic_statement)
+      else
+        type = Plausible.Goal.type(goal)
+        dynamic([e], ^goal_condition(type, goal, imported?) or ^dynamic_statement)
       end
     end)
   end
 
-  defp page_scroll_goal_condition(goal) do
-    pathname_condition = page_path_condition(goal.page_path, _imported = false)
+  defp goal_condition(:event, goal, _) do
+    dynamic([e], e.name == ^goal.event_name)
+  end
+
+  defp goal_condition(:scroll, goal, _) do
+    pathname_condition = page_path_condition(goal.page_path, _imported? = false)
     name_condition = dynamic([e], e.name == "pageleave")
     scroll_condition = dynamic([e], e.scroll_depth >= ^goal.scroll_threshold)
 
     dynamic([e], ^pathname_condition and ^name_condition and ^scroll_condition)
   end
 
-  defp pageview_goal_condition(goal, imported?) do
+  defp goal_condition(:page, goal, imported?) do
     pathname_condition = page_path_condition(goal.page_path, imported?)
     name_condition = if imported?, do: true, else: dynamic([e], e.name == "pageview")
 
