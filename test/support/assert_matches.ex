@@ -1,5 +1,5 @@
 defmodule Plausible.AssertMatches do
-  @doc """
+  @moduledoc """
   Pattern match assertions wrapper macro extending it with checks expressed
   directly within the pattern.
 
@@ -71,6 +71,7 @@ defmodule Plausible.AssertMatches do
                     }
   """
 
+  @doc @moduledoc
   defmacro assert_matches({:=, meta, [pattern, value]}) do
     {base_strict_pattern, strict_vars} = build_base_strict_pattern(pattern)
 
