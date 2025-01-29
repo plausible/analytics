@@ -54,7 +54,7 @@ function PagesModal() {
       metrics.createTimeOnPage()
     ]
 
-    return site.flags.scroll_depth ? [...defaultMetrics, metrics.createScrollDepth()] : defaultMetrics
+    return site.scrollDepthVisible ? [...defaultMetrics, metrics.createScrollDepth()] : defaultMetrics
   }
 
   return (

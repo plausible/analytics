@@ -389,16 +389,16 @@ defmodule PlausibleWeb.Api.StatsController do
     page_filter? =
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 
-    scroll_depth_enabled? = scroll_depth_enabled?(site, current_user)
+    include_scroll_depth? = Plausible.Stats.ScrollDepth.feature_visible?(site, current_user)
 
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
       cond do
-        page_filter? && scroll_depth_enabled? && query.include_imported ->
+        page_filter? && include_scroll_depth? && query.include_imported ->
           metrics ++ [:scroll_depth]
 
-        page_filter? && scroll_depth_enabled? ->
+        page_filter? && include_scroll_depth? ->
           metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
 
         page_filter? && query.include_imported ->
@@ -851,7 +851,7 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
-    include_scroll_depth? = scroll_depth_enabled?(site, current_user)
+    include_scroll_depth? = Plausible.Stats.ScrollDepth.feature_visible?(site, current_user)
 
     extra_metrics =
       cond do
@@ -1662,10 +1662,5 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp toplevel_goal_filter?(query) do
     Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0)
-  end
-
-  def scroll_depth_enabled?(site, user) do
-    FunWithFlags.enabled?(:scroll_depth, for: user) ||
-      FunWithFlags.enabled?(:scroll_depth, for: site)
   end
 end

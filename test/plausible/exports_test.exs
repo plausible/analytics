@@ -6,8 +6,10 @@ defmodule Plausible.ExportsTest do
   # for e2e export->import tests please see Plausible.Imported.CSVImporterTest
 
   describe "export_queries/2" do
-    test "returns named ecto queries" do
-      queries = Plausible.Exports.export_queries(_site_id = 1, nil)
+    setup [:create_user, :create_site]
+
+    test "returns named ecto queries", %{site: site} do
+      queries = Plausible.Exports.export_queries(site.id, nil)
       assert queries |> Map.values() |> Enum.all?(&match?(%Ecto.Query{}, &1))
 
       assert Map.keys(queries) == [
@@ -24,9 +26,9 @@ defmodule Plausible.ExportsTest do
              ]
     end
 
-    test "with date range" do
+    test "with date range", %{site: site} do
       queries =
-        Plausible.Exports.export_queries(_site_id = 1, nil,
+        Plausible.Exports.export_queries(site.id, nil,
           date_range: Date.range(~D[2023-01-01], ~D[2024-03-12])
         )
 
@@ -44,8 +46,8 @@ defmodule Plausible.ExportsTest do
              ]
     end
 
-    test "with custom extension" do
-      queries = Plausible.Exports.export_queries(_site_id = 1, nil, extname: ".ch")
+    test "with custom extension", %{site: site} do
+      queries = Plausible.Exports.export_queries(site.id, nil, extname: ".ch")
 
       assert Map.keys(queries) == [
                "imported_browsers.ch",

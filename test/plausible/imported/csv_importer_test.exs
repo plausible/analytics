@@ -587,80 +587,28 @@ defmodule Plausible.Imported.CSVImporterTest do
         process_csv.("fixture/markosaric_com_sessions_v2_2024_04_01_2024_04_30_dump.csv")
       ])
 
-      # export archive to s3
-      on_ee do
-        assert {:ok, _job} =
-                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
-      else
-        assert {:ok, %{args: %{"local_path" => local_path}}} =
-                 Plausible.Exports.schedule_local_export(exported_site.id, user.email)
-      end
+      initial_context = %{
+        user: user,
+        tmp_dir: tmp_dir,
+        exported_site: exported_site,
+        imported_site: imported_site
+      }
 
-      assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
+      %{site_import: site_import} =
+        initial_context
+        |> export_archive()
+        |> assert_email_notification()
+        |> download_archive()
+        |> unzip_archive()
+        |> upload_csvs()
+        |> run_import()
 
-      assert %{success: 1} =
-               Oban.drain_queue(queue: :notify_exported_analytics, with_safety: false)
-
-      # check mailbox
-      assert_receive {:delivered_email, email}, _within = :timer.seconds(5)
-      assert email.to == [{user.name, user.email}]
-
-      assert email.html_body =~
-               ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export">here</a>]
-
-      assert email.text_body =~
-               ~r[Please click here \(http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export\) to start the download process.]
-
-      # download archive
-      on_ee do
-        ExAws.request!(
-          ExAws.S3.download_file(
-            Plausible.S3.exports_bucket(),
-            to_string(exported_site.id),
-            Path.join(tmp_dir, "plausible-export.zip")
-          )
-        )
-      else
-        File.rename!(local_path, Path.join(tmp_dir, "plausible-export.zip"))
-      end
-
-      # unzip archive
-      {:ok, files} =
-        :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
-
-      # upload csvs
-      uploads =
-        Enum.map(files, fn file ->
-          on_ee do
-            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(imported_site.id, file)
-            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
-            ExAws.request!(ExAws.S3.put_object(bucket, key, File.read!(file)))
-            %{"filename" => Path.basename(file), "s3_url" => s3_url}
-          else
-            %{"filename" => Path.basename(file), "local_path" => file}
-          end
-        end)
-
-      # run importer
-      date_range = CSVImporter.date_range(uploads)
-
-      {:ok, _job} =
-        CSVImporter.new_import(imported_site, user,
-          start_date: date_range.first,
-          end_date: date_range.last,
-          uploads: uploads,
-          storage: on_ee(do: "s3", else: "local")
-        )
-
-      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
-
-      # validate import
       assert %SiteImport{
                start_date: ~D[2024-04-01],
                end_date: ~D[2024-04-30],
                source: :csv,
                status: :completed
-             } = Repo.get_by!(SiteImport, site_id: imported_site.id)
+             } = site_import
 
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
       assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 1745
@@ -1088,7 +1036,11 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_site = new_site(owner: user)
       imported_site = new_site(owner: user)
 
-      t0 = ~N[2020-01-01 00:00:00]
+      t0 =
+        NaiveDateTime.utc_now(:second)
+        |> NaiveDateTime.add(-5, :day)
+        |> NaiveDateTime.beginning_of_day()
+
       [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
 
       stats =
@@ -1114,72 +1066,36 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       populate_stats(exported_site, stats)
 
-      # export archive to s3
-      on_ee do
-        assert {:ok, _job} =
-                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
-      else
-        assert {:ok, %{args: %{"local_path" => local_path}}} =
-                 Plausible.Exports.schedule_local_export(exported_site.id, user.email)
-      end
+      initial_context = %{
+        user: user,
+        tmp_dir: tmp_dir,
+        exported_site: exported_site,
+        imported_site: imported_site
+      }
 
-      assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
+      %{site_import: site_import} =
+        initial_context
+        |> export_archive()
+        |> download_archive()
+        |> unzip_archive()
+        |> upload_csvs()
+        |> run_import()
 
-      # download archive
-      on_ee do
-        ExAws.request!(
-          ExAws.S3.download_file(
-            Plausible.S3.exports_bucket(),
-            to_string(exported_site.id),
-            Path.join(tmp_dir, "plausible-export.zip")
-          )
-        )
-      else
-        File.rename!(local_path, Path.join(tmp_dir, "plausible-export.zip"))
-      end
+      assert %NaiveDateTime{} =
+               Plausible.Repo.reload!(exported_site).scroll_depth_visible_at
 
-      # unzip archive
-      {:ok, files} =
-        :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
-
-      # upload csvs
-      uploads =
-        Enum.map(files, fn file ->
-          on_ee do
-            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(imported_site.id, file)
-            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
-            content = File.read!(file)
-            ExAws.request!(ExAws.S3.put_object(bucket, key, content))
-            %{"filename" => Path.basename(file), "s3_url" => s3_url}
-          else
-            %{
-              "filename" => Path.basename(file),
-              "local_path" => file
-            }
-          end
-        end)
-
-      # run importer
-      date_range = CSVImporter.date_range(uploads)
-
-      {:ok, _job} =
-        CSVImporter.new_import(imported_site, user,
-          start_date: date_range.first,
-          end_date: date_range.last,
-          uploads: uploads,
-          storage: on_ee(do: "s3", else: "local")
-        )
-
-      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
-
-      # validate import
       assert %SiteImport{
-               start_date: ~D[2020-01-01],
-               end_date: ~D[2020-01-02],
+               start_date: start_date,
+               end_date: end_date,
                source: :csv,
                status: :completed
-             } = Repo.get_by!(SiteImport, site_id: imported_site.id)
+             } = site_import
 
+      expected_start_date = t0 |> NaiveDateTime.to_date()
+      expected_end_date = t0 |> NaiveDateTime.to_date() |> Date.add(1)
+
+      assert start_date == expected_start_date
+      assert end_date == expected_end_date
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
       assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 9
 
@@ -1196,13 +1112,18 @@ defmodule Plausible.Imported.CSVImporterTest do
         )
         |> Plausible.IngestRepo.all()
 
-      assert %{date: ~D[2020-01-01], page: "/", scroll_depth: 20, pageleave_visitors: 1} in imported_data
+      assert %{date: expected_start_date, page: "/", scroll_depth: 20, pageleave_visitors: 1} in imported_data
 
-      assert %{date: ~D[2020-01-01], page: "/another", scroll_depth: 50, pageleave_visitors: 2} in imported_data
+      assert %{
+               date: expected_start_date,
+               page: "/another",
+               scroll_depth: 50,
+               pageleave_visitors: 2
+             } in imported_data
 
-      assert %{date: ~D[2020-01-01], page: "/blog", scroll_depth: 180, pageleave_visitors: 3} in imported_data
+      assert %{date: expected_start_date, page: "/blog", scroll_depth: 180, pageleave_visitors: 3} in imported_data
 
-      assert %{date: ~D[2020-01-02], page: "/blog", scroll_depth: nil, pageleave_visitors: 0} in imported_data
+      assert %{date: expected_end_date, page: "/blog", scroll_depth: nil, pageleave_visitors: 0} in imported_data
 
       # assert via stats queries that scroll_depth from imported
       # data matches the scroll_depth from native data
@@ -1228,6 +1149,138 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert query_scroll_depth_per_page.(conn, exported_site) == expected_results
       assert query_scroll_depth_per_page.(conn, imported_site) == expected_results
     end
+
+    @tag :tmp_dir
+    test "does not include scroll depth without existing pageleave data", %{
+      user: user,
+      tmp_dir: tmp_dir
+    } do
+      exported_site = new_site(owner: user)
+
+      populate_stats(exported_site, [build(:pageview, timestamp: ~N[2021-01-01 00:00:00])])
+
+      context = %{
+        user: user,
+        tmp_dir: tmp_dir,
+        exported_site: exported_site,
+        imported_site: new_site(owner: user)
+      }
+
+      %{exported_files: exported_files} =
+        context
+        |> export_archive()
+        |> download_archive()
+        |> unzip_archive()
+
+      imported_pages_content =
+        exported_files
+        |> Enum.find(&String.contains?(&1, "imported_pages"))
+        |> File.read!()
+
+      assert is_nil(Plausible.Repo.reload!(exported_site).scroll_depth_visible_at)
+
+      refute imported_pages_content =~ "scroll_depth"
+    end
+  end
+
+  defp export_archive(%{user: user, exported_site: exported_site} = context) do
+    context =
+      on_ee do
+        assert {:ok, _job} =
+                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
+
+        context
+      else
+        assert {:ok, %{args: %{"local_path" => local_path}}} =
+                 Plausible.Exports.schedule_local_export(exported_site.id, user.email)
+
+        Map.put(context, :local_path, local_path)
+      end
+
+    Oban.drain_queue(queue: :analytics_exports, with_safety: false)
+
+    context
+  end
+
+  defp assert_email_notification(%{user: user, exported_site: exported_site} = context) do
+    assert %{success: 1} =
+             Oban.drain_queue(queue: :notify_exported_analytics, with_safety: false)
+
+    assert_receive {:delivered_email, email}, _within = :timer.seconds(5)
+    assert email.to == [{user.name, user.email}]
+
+    assert email.html_body =~
+             ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export">here</a>]
+
+    assert email.text_body =~
+             ~r[Please click here \(http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export\) to start the download process.]
+
+    context
+  end
+
+  defp download_archive(%{tmp_dir: tmp_dir} = context) do
+    on_ee do
+      ExAws.request!(
+        ExAws.S3.download_file(
+          Plausible.S3.exports_bucket(),
+          to_string(context.exported_site.id),
+          Path.join(tmp_dir, "plausible-export.zip")
+        )
+      )
+    else
+      File.rename!(context.local_path, Path.join(tmp_dir, "plausible-export.zip"))
+    end
+
+    context
+  end
+
+  defp unzip_archive(%{tmp_dir: tmp_dir} = context) do
+    assert {:ok, files} =
+             :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
+
+    Map.put(context, :exported_files, files)
+  end
+
+  defp upload_csvs(%{exported_files: files} = context) do
+    uploads =
+      Enum.map(files, fn file ->
+        on_ee do
+          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(context.imported_site.id, file)
+          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+          content = File.read!(file)
+          ExAws.request!(ExAws.S3.put_object(bucket, key, content))
+          %{"filename" => Path.basename(file), "s3_url" => s3_url}
+        else
+          %{
+            "filename" => Path.basename(file),
+            "local_path" => file
+          }
+        end
+      end)
+
+    Map.put(context, :uploaded_file_refs, uploads)
+  end
+
+  defp run_import(
+         %{uploaded_file_refs: uploads, imported_site: imported_site, user: user} = context
+       ) do
+    date_range = CSVImporter.date_range(uploads)
+
+    {:ok, _job} =
+      CSVImporter.new_import(imported_site, user,
+        start_date: date_range.first,
+        end_date: date_range.last,
+        uploads: uploads,
+        storage: on_ee(do: "s3", else: "local")
+      )
+
+    assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
+
+    site_import = Repo.get_by!(SiteImport, site_id: imported_site.id)
+
+    assert %SiteImport{source: :csv, status: :completed} = site_import
+
+    Map.put(context, :site_import, site_import)
   end
 
   defp clean_buckets(_context) do

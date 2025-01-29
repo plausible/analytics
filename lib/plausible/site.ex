@@ -21,6 +21,7 @@ defmodule Plausible.Site do
     field :conversions_enabled, :boolean, default: true
     field :props_enabled, :boolean, default: true
     field :funnels_enabled, :boolean, default: true
+    field :scroll_depth_visible_at, :naive_datetime
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
