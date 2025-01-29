@@ -46,76 +46,72 @@ export function getFilterListItems({
   ]
 }
 
-export const FilterMenu = () => {
+const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
   const buttonRef = useRef<HTMLButtonElement>(null)
   return (
-    <Popover
-      className="shrink-0 md:relative"
-      data-no-clear-filters-on-escape={true}
-    >
-      {({ close }) => (
-        <>
-          <BlurMenuButtonOnEscape targetRef={buttonRef} />
-          <Popover.Button
-            ref={buttonRef}
-            className={classNames(
-              popover.toggleButton.classNames.rounded,
-              popover.toggleButton.classNames.ghost,
-              'justify-center gap-1 px-3'
-            )}
-          >
-            <PlusIcon className="block h-4 w-4" />
-            <span className="truncate block font-medium">Add filter</span>
-          </Popover.Button>
-          <Transition
-            {...popover.transition.props}
-            className={classNames(
-              'mt-2',
-              popover.transition.classNames.fullwidth,
-              'md:left-auto md:w-80'
-            )}
-          >
-            <Popover.Panel
-              className={classNames(
-                popover.panel.classNames.roundedSheet,
-                'flex'
-              )}
-            >
-              {columns.map((filterGroups, index) => (
-                <div key={index} className="flex flex-col w-1/2">
-                  {filterGroups.map(({ title, modals }) => (
-                    <div key={title}>
-                      <div className="text-xs pb-1 px-4 pt-2 font-bold uppercase text-indigo-500 dark:text-indigo-400">
-                        {title}
-                      </div>
-                      {modals
-                        .filter((m) => !!m)
-                        .map((modalKey) => (
-                          <AppNavigationLink
-                            className={classNames(
-                              popover.items.classNames.navigationLink,
-                              popover.items.classNames.hoverLink,
-                              'text-xs'
-                            )}
-                            onClick={() => close()}
-                            key={modalKey}
-                            path={filterRoute.path}
-                            params={{ field: modalKey }}
-                            search={(s) => s}
-                          >
-                            {formatFilterGroup(modalKey)}
-                          </AppNavigationLink>
-                        ))}
-                    </div>
-                  ))}
+    <>
+      <BlurMenuButtonOnEscape targetRef={buttonRef} />
+      <Popover.Button
+        ref={buttonRef}
+        className={classNames(
+          popover.toggleButton.classNames.rounded,
+          popover.toggleButton.classNames.ghost,
+          'justify-center gap-1 px-3'
+        )}
+      >
+        <PlusIcon className="block h-4 w-4" />
+        <span className="truncate block font-medium">Add filter</span>
+      </Popover.Button>
+      <Transition
+        {...popover.transition.props}
+        className={classNames(
+          'mt-2',
+          popover.transition.classNames.fullwidth,
+          'md:left-auto md:w-80'
+        )}
+      >
+        <Popover.Panel
+          className={classNames(popover.panel.classNames.roundedSheet, 'flex')}
+        >
+          {columns.map((filterGroups, index) => (
+            <div key={index} className="flex flex-col w-1/2">
+              {filterGroups.map(({ title, modals }) => (
+                <div key={title}>
+                  <div className="text-xs pb-1 px-4 pt-2 font-bold uppercase text-indigo-500 dark:text-indigo-400">
+                    {title}
+                  </div>
+                  {modals
+                    .filter((m) => !!m)
+                    .map((modalKey) => (
+                      <AppNavigationLink
+                        className={classNames(
+                          popover.items.classNames.navigationLink,
+                          popover.items.classNames.hoverLink,
+                          'text-xs'
+                        )}
+                        onClick={() => closeDropdown()}
+                        key={modalKey}
+                        path={filterRoute.path}
+                        params={{ field: modalKey }}
+                        search={(s) => s}
+                      >
+                        {formatFilterGroup(modalKey)}
+                      </AppNavigationLink>
+                    ))}
                 </div>
               ))}
-            </Popover.Panel>
-          </Transition>
-        </>
-      )}
-    </Popover>
+            </div>
+          ))}
+        </Popover.Panel>
+      </Transition>
+    </>
   )
 }
+
+export const FilterMenu = () => (
+  <Popover className="shrink-0 md:relative">
+    {({ close }) => <FilterMenuItems closeDropdown={close} />}
+  </Popover>
+)
