@@ -436,7 +436,9 @@ defmodule Plausible.Teams.Invitations do
       if active_subscription? and plan != :free_10k do
         team
         |> Teams.Billing.quota_usage(pending_ownership_site_ids: [site.id])
-        |> Billing.Quota.ensure_within_plan_limits(plan)
+        |> Billing.Quota.ensure_within_plan_limits(plan,
+          skip_site_limit_check?: Teams.Billing.grandfathered_team?(team)
+        )
       else
         {:error, :no_plan}
       end

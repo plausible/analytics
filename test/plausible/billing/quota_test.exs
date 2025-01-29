@@ -70,7 +70,7 @@ defmodule Plausible.Billing.QuotaTest do
 
     test "grandfathered site limit should be unlimited when accepting transfer invitations" do
       # must be before ~D[2021-05-05]
-      owner = new_user(inserted_at: ~N[2021-01-01 00:00:00])
+      owner = new_user(team: [inserted_at: ~N[2021-01-01 00:00:00]])
       # plan with site_limit: 10
       subscribe_to_plan(owner, "857097")
       _site = for _ <- 1..10, do: new_site(owner: owner)
