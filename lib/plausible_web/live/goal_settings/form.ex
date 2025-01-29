@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
       <.input
         :if={Plausible.Stats.ScrollDepth.feature_visible?(@site, @current_user)}
-        label="Scroll Depth Threshold"
+        label="Scroll Depth Threshold (optional)"
         field={@f[:scroll_threshold]}
         type="number"
         value={if @goal && @goal.scroll_threshold > -1, do: @goal.scroll_threshold, else: nil}
