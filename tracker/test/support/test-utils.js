@@ -32,13 +32,16 @@ exports.metaKey = function() {
 
 // Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
 // list of requests as soon as the specified number of requests is made, or 3 seconds has passed.
-const mockManyRequests = function({ page, path, numberOfRequests, responseDelay }) {
+const mockManyRequests = function({ page, path, numberOfRequests, responseDelay, shouldIgnoreRequest }) {
   return new Promise((resolve, _reject) => {
     let requestList = []
     const requestTimeoutTimer = setTimeout(() => resolve(requestList), 3000)
 
     page.route(path, async (route, request) => {
-      requestList.push(request)
+      const postData = request.postDataJSON()
+      if (!shouldIgnoreRequest || !shouldIgnoreRequest(postData)) {
+        requestList.push(postData)
+      }
       if (responseDelay) {
         await delay(responseDelay)
       }
@@ -85,7 +88,8 @@ exports.expectPlausibleInAction = async function (page, {
   refutedRequests = [],
   awaitedRequestCount,
   expectedRequestCount,
-  responseDelay
+  responseDelay,
+  shouldIgnoreRequest
 }) {
   const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
   const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
@@ -93,11 +97,12 @@ exports.expectPlausibleInAction = async function (page, {
   const plausibleRequestMockList = mockManyRequests({
     page,
     path: '/api/event',
-    numberOfRequests: requestsToAwait,
-    responseDelay: responseDelay
+    responseDelay,
+    shouldIgnoreRequest,
+    numberOfRequests: requestsToAwait
   })
   await action()
-  const requestBodies = (await plausibleRequestMockList).map(r => r.postDataJSON())
+  const requestBodies = await plausibleRequestMockList
 
   const expectedButNotFoundBodySubsets = []
 
@@ -126,6 +131,35 @@ exports.expectPlausibleInAction = async function (page, {
   expect(refutedButFoundRequestBodies, refutedBodySubsetsErrorMessage).toHaveLength(0)
 
   expect(requestBodies.length).toBe(requestsToExpect)
+}
+
+exports.ignoreEngagementRequests = function(requestPostData) {
+  return requestPostData.n === 'engagement'
+}
+
+exports.ignorePageleaveRequests = function(requestPostData) {
+  return requestPostData.n === 'pageleave'
+}
+
+async function toggleTabVisibility(page, hide) {
+  await page.evaluate((hide) => {
+    Object.defineProperty(document, 'visibilityState', { value: hide ? 'hidden' : 'visible', writable: true })
+    Object.defineProperty(document, 'hidden', { value: hide, writable: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  }, hide)
+}
+
+exports.hideCurrentTab = async function(page) {
+  return toggleTabVisibility(page, true)
+}
+
+exports.showCurrentTab = async function(page) {
+  return toggleTabVisibility(page, false)
+}
+
+exports.hideAndShowCurrentTab = async function(page) {
+  await exports.hideCurrentTab(page)
+  await exports.showCurrentTab(page)
 }
 
 function includesSubset(body, subset) {

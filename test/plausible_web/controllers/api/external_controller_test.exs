@@ -1335,6 +1335,15 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert pageleave.scroll_depth == 255
     end
+
+    test "ingests valid scroll_depth for a engagement event", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: 25})
+
+      event = get_events(site) |> Enum.find(&(&1.name == "engagement"))
+
+      assert event.scroll_depth == 25
+    end
   end
 
   describe "acquisition channel tests" do

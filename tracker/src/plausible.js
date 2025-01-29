@@ -41,6 +41,7 @@
   var currentPageLeaveIgnored
   var currentPageLeaveURL = location.href
   var currentPageLeaveProps = {}
+  var currentPageMaxEngagementScrollDepth = -1
 
   // Multiple pageviews might be sent by the same script when the page
   // uses client-side routing (e.g. hash or history-based). This flag
@@ -86,6 +87,7 @@
       currentDocumentHeight = getDocumentHeight()
       if (++count === 15) {clearInterval(interval)}
     }, 200)
+
   })
 
   document.addEventListener('scroll', function() {
@@ -98,12 +100,27 @@
   })
 
   function triggerPageLeave() {
-    if (pageLeaveSending || currentPageLeaveIgnored) {return}
-    pageLeaveSending = true
-    setTimeout(function () {pageLeaveSending = false}, 500)
+    if (!pageLeaveSending && !currentPageLeaveIgnored) {
+      pageLeaveSending = true
+      setTimeout(function () {pageLeaveSending = false}, 500)
+      triggerEngagementEvent('pageleave')
+    }
+  }
 
+  function triggerEngagement() {
+    // Avoid sending redundant engagement events if user has not scrolled the page
+    // Note that `currentPageMaxEngagementScrollDepth` default of -1 ensures that at least one
+    // engagement event is sent
+    if (!currentPageLeaveIgnored && currentPageMaxEngagementScrollDepth < maxScrollDepthPx) {
+      currentPageMaxEngagementScrollDepth = maxScrollDepthPx
+      triggerEngagementEvent('engagement')
+    }
+
+  }
+
+  function triggerEngagementEvent(name) {
     var payload = {
-      n: 'pageleave',
+      n: name,
       sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
       d: dataDomain,
       u: currentPageLeaveURL,
@@ -120,6 +137,13 @@
   function registerPageLeaveListener() {
     if (!listeningPageLeave) {
       window.addEventListener('pagehide', triggerPageLeave)
+
+      // Only register visibilitychange listener only after initial page load and pageview
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+          triggerEngagement()
+        }
+      })
       listeningPageLeave = true
     }
   }
@@ -215,6 +239,7 @@
       currentPageLeaveIgnored = false
       currentPageLeaveURL = payload.u
       currentPageLeaveProps = payload.p
+      currentPageMaxEngagementScrollDepth = -1
       registerPageLeaveListener()
     }
     {{/if}}
@@ -270,7 +295,8 @@
 
       {{#if pageleave}}
       if (isSPANavigation && listeningPageLeave) {
-        triggerPageLeave();
+        triggerPageLeave()
+        triggerEngagement()
         currentDocumentHeight = getDocumentHeight()
         maxScrollDepthPx = getCurrentScrollDepthPx()
       }
