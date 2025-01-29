@@ -5,12 +5,12 @@ import SiteSwitcher from '../site-switcher'
 import { useSiteContext } from '../site-context'
 import { useUserContext } from '../user-context'
 import CurrentVisitors from '../stats/current-visitors'
-import QueryPeriodPicker from '../datepicker'
 import Filters from '../filters'
 import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
 import { FilterMenu } from './filter-menu'
 import { FiltersBar } from './filters-bar'
+import { QueryPeriodsPicker } from './query-periods/query-periods-picker'
 
 export function TopBar({
   showCurrentVisitors
@@ -63,7 +63,7 @@ export function TopBar({
               </div>
               <div className="flex gap-x-4 shrink-0" ref={rightActionsRef}>
                 <FilterMenu />
-                <QueryPeriodPicker />
+                <QueryPeriodsPicker />
               </div>
             </>
           ) : (
@@ -83,7 +83,7 @@ export function TopBar({
                 )}
                 <Filters />
               </div>
-              <QueryPeriodPicker className="ml-auto pl-2" />
+              <QueryPeriodsPicker className="ml-auto pl-2" />
             </>
           )}
         </div>

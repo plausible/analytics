@@ -3,7 +3,7 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import DatePicker from './datepicker'
+import DatePicker from './nav-menu/query-periods/datepicker'
 import { TestContextProviders } from '../../test-utils/app-context-providers'
 import { stringifySearch } from './util/url-search-params'
 import { useNavigate } from 'react-router-dom'

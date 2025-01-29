@@ -12,6 +12,7 @@ test('renders with default dates in view, respects max and min dates', async () 
 
   render(
     <DateRangeCalendar
+      id="calendar"
       minDate="2024-09-10"
       maxDate="2024-09-25"
       defaultDates={['2024-09-12', '2024-09-19']}
