@@ -324,7 +324,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       for _ <- 1..51, do: new_site(owner: user)
 
-      Ecto.Changeset.change(user, %{inserted_at: ~N[2021-05-04 00:00:00]})
+      Ecto.Changeset.change(team_of(user), %{inserted_at: ~N[2021-05-04 00:00:00]})
       |> Repo.update()
 
       conn =
