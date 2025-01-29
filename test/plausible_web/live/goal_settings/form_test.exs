@@ -54,8 +54,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert input_names == [
                "display-page_path_input_modalseq0-tabseq1",
                "goal[page_path]",
-               "goal[display_name]",
-               "goal[scroll_threshold]"
+               "goal[display_name]"
              ]
     end
 
@@ -87,6 +86,26 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
                "goal[page_path]",
                "goal[display_name]"
              ]
+    end
+
+    test "renders scroll_threshold input in pageview goal form if scroll_depth feature visible for site/user",
+         %{conn: conn, site: site} do
+      Plausible.Sites.set_scroll_depth_visible_at(site)
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/a#pageview-tab/) |> render_click()
+      html = render(lv)
+      input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
+      assert "goal[scroll_threshold]" in input_names
+    end
+
+    test "does not render scroll_threshold input in pageview goal form if scroll_depth feature not visible for site/user",
+         %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      lv |> element(~s/a#pageview-tab/) |> render_click()
+      html = render(lv)
+      input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
+      refute "goal[scroll_threshold]" in input_names
     end
 
     test "renders error on empty submission", %{conn: conn, site: site} do
