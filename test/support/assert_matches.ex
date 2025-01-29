@@ -72,71 +72,13 @@ defmodule Plausible.AssertMatches do
   """
 
   defmacro assert_matches({:=, meta, [pattern, value]}) do
-    {base_strict_pattern, strict_vars} =
-      Macro.postwalk(pattern, [], fn
-        {:^, _, [{:strict_map, _, _}]} = pin, acc ->
-          pinned_var = Macro.unique_var(:match, __MODULE__)
+    {base_strict_pattern, strict_vars} = build_base_strict_pattern(pattern)
 
-          pin = Macro.update_meta(pin, &Keyword.put(&1, :match_var, pinned_var))
-
-          {pin, [pinned_var | acc]}
-
-        {:^, _, _}, acc ->
-          {{:_, [], __MODULE__}, acc}
-
-        other, acc ->
-          {other, acc}
-      end)
-
-    base_strict_pattern =
-      base_strict_pattern
-      |> Macro.postwalk(fn
-        {:^, _, [{name, meta, module}]} = pin when is_atom(name) and is_atom(module) ->
-          if meta[:match_var] do
-            pin
-          else
-            {:_, [], __MODULE__}
-          end
-
-        other ->
-          other
-      end)
-      |> Macro.postwalk(fn
-        {name, meta, module} = var when is_atom(name) and is_atom(module) ->
-          if meta[:match_var] do
-            var
-          else
-            {:_, [], __MODULE__}
-          end
-
-        other ->
-          other
-      end)
+    base_strict_pattern = clear_bindings_except(base_strict_pattern, :match_var)
 
     strict_patterns =
       Enum.map(strict_vars, fn strict_var ->
-        Macro.postwalk(base_strict_pattern, [], fn
-          {:^, meta, [{:strict_map, _, [pinned]}]}, acc ->
-            if meta[:match_var] == strict_var do
-              {:%{}, _, map_pattern_values} = pinned
-              map_pattern_keys = map_pattern_values |> Enum.map(&elem(&1, 0)) |> Enum.sort()
-              {strict_var, [{strict_var, map_pattern_keys} | acc]}
-            else
-              {
-                Macro.postwalk(pinned, fn
-                  {:^, _, _} ->
-                    {:_, [], __MODULE__}
-
-                  other ->
-                    other
-                end),
-                acc
-              }
-            end
-
-          other, acc ->
-            {other, acc}
-        end)
+        build_strict_pattern(base_strict_pattern, strict_var)
       end)
 
     strict_pattern_matches =
@@ -146,71 +88,9 @@ defmodule Plausible.AssertMatches do
         end
       end)
 
-    strict_pattern_checks =
-      strict_patterns
-      |> Enum.map(fn {strict_pattern, [{strict_var, map_pattern_keys}]} ->
-        quote bind_quoted: [
-                pattern: Macro.escape(pattern),
-                value: value,
-                strict_pattern: Macro.escape(strict_pattern),
-                var: strict_var,
-                escaped_var: Macro.escape(strict_var),
-                pattern_keys: map_pattern_keys
-              ] do
-          var_keys = var |> Map.keys() |> Enum.sort()
+    strict_pattern_checks = build_strict_pattern_checks(strict_patterns, pattern, value)
 
-          if pattern_keys != var_keys do
-            missing_keys = var_keys -- pattern_keys
-
-            map_pattern_values =
-              Enum.map(pattern_keys ++ missing_keys, fn key ->
-                map_value =
-                  if key in missing_keys do
-                    :__MISSING_KEY__
-                  else
-                    {:_, [], __MODULE__}
-                  end
-
-                {key, map_value}
-              end)
-
-            error_pattern =
-              Macro.postwalk(strict_pattern, fn
-                ^escaped_var -> {:%{}, [], map_pattern_values}
-                other -> other
-              end)
-
-            raise ExUnit.AssertionError,
-              message: "match (=) failed",
-              left: error_pattern,
-              right: value,
-              expr: {:assert_matches, [], [{:=, [], [pattern, Macro.escape(value)]}]},
-              context: {:match, []}
-          end
-        end
-      end)
-
-    {var_pattern, pins} =
-      Macro.postwalk(pattern, [], fn
-        {:^, _meta, [{pinned, _, module}]} = normal_pin, acc
-        when is_atom(pinned) and is_atom(module) ->
-          {normal_pin, acc}
-
-        {:^, _meta, [{:strict_map, _, [pinned]}]}, acc ->
-          {pinned, acc}
-
-        {:^, _meta, [pinned]}, acc ->
-          pinned = Plausible.AssertMatches.Internal.transform_predicate(pinned)
-
-          pinned_var =
-            Macro.unique_var(:match, __MODULE__)
-            |> Macro.update_meta(&Keyword.put(&1, :assert_match, true))
-
-          {pinned_var, [{pinned_var, pinned} | acc]}
-
-        other, acc ->
-          {other, acc}
-      end)
+    {var_pattern, pins} = build_var_pattern(pattern)
 
     clean_pattern =
       Enum.reduce(pins, var_pattern, fn {var, _predicate}, pattern ->
@@ -220,66 +100,9 @@ defmodule Plausible.AssertMatches do
         end)
       end)
 
-    var_pattern =
-      var_pattern
-      |> Macro.postwalk(fn
-        {:^, _, [{name, meta, module}]} = pin when is_atom(name) and is_atom(module) ->
-          if meta[:assert_match] do
-            pin
-          else
-            {:_, [], __MODULE__}
-          end
+    var_pattern = clear_bindings_except(var_pattern, :assert_match)
 
-        other ->
-          other
-      end)
-      |> Macro.postwalk(fn
-        {name, meta, module} = var when is_atom(name) and is_atom(module) ->
-          if meta[:assert_match] do
-            var
-          else
-            {:_, [], __MODULE__}
-          end
-
-        other ->
-          other
-      end)
-
-    predicate_pattern =
-      quote bind_quoted: [
-              var_pattern: Macro.escape(var_pattern),
-              escaped_pins: Macro.escape(pins),
-              pins: pins
-            ] do
-        escaped_pins
-        |> Enum.zip(pins)
-        |> Enum.reduce({false, var_pattern}, fn {{escaped_var, escaped_predicate},
-                                                 {var, predicate}},
-                                                {errors?, pattern} ->
-          result =
-            if is_function(predicate, 1) do
-              not predicate.(var)
-            else
-              predicate != var
-            end
-
-          if result do
-            escaped_predicate = Plausible.AssertMatches.Internal.strip_prefix(escaped_predicate)
-
-            {true,
-             Macro.postwalk(pattern, fn
-               ^escaped_var -> escaped_predicate
-               other -> other
-             end)}
-          else
-            {errors?,
-             Macro.postwalk(pattern, fn
-               ^escaped_var -> {:_, [], __MODULE__}
-               other -> other
-             end)}
-          end
-        end)
-      end
+    predicate_pattern = build_predicate_pattern(var_pattern, pins)
 
     quote do
       value = unquote(value)
@@ -304,6 +127,178 @@ defmodule Plausible.AssertMatches do
         end
       end
     end
+  end
+
+  defp build_base_strict_pattern(pattern) do
+    Macro.postwalk(pattern, [], fn
+      {:^, _, [{:strict_map, _, _}]} = pin, acc ->
+        pinned_var = Macro.unique_var(:match, __MODULE__)
+
+        pin = Macro.update_meta(pin, &Keyword.put(&1, :match_var, pinned_var))
+
+        {pin, [pinned_var | acc]}
+
+      {:^, _, _}, acc ->
+        {{:_, [], __MODULE__}, acc}
+
+      other, acc ->
+        {other, acc}
+    end)
+  end
+
+  defp build_strict_pattern(base_strict_pattern, strict_var) do
+    Macro.postwalk(base_strict_pattern, [], fn
+      {:^, meta, [{:strict_map, _, [pinned]}]}, acc ->
+        if meta[:match_var] == strict_var do
+          {:%{}, _, map_pattern_values} = pinned
+          map_pattern_keys = map_pattern_values |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+          {strict_var, [{strict_var, map_pattern_keys} | acc]}
+        else
+          {
+            Macro.postwalk(pinned, fn
+              {:^, _, _} ->
+                {:_, [], __MODULE__}
+
+              other ->
+                other
+            end),
+            acc
+          }
+        end
+
+      other, acc ->
+        {other, acc}
+    end)
+  end
+
+  defp build_strict_pattern_checks(strict_patterns, pattern, value) do
+    strict_patterns
+    |> Enum.map(fn {strict_pattern, [{strict_var, map_pattern_keys}]} ->
+      quote bind_quoted: [
+              pattern: Macro.escape(pattern),
+              value: value,
+              strict_pattern: Macro.escape(strict_pattern),
+              var: strict_var,
+              escaped_var: Macro.escape(strict_var),
+              pattern_keys: map_pattern_keys
+            ] do
+        var_keys = var |> Map.keys() |> Enum.sort()
+
+        if pattern_keys != var_keys do
+          missing_keys = var_keys -- pattern_keys
+
+          map_pattern_values =
+            Enum.map(pattern_keys ++ missing_keys, fn key ->
+              map_value =
+                if key in missing_keys do
+                  :__MISSING_KEY__
+                else
+                  {:_, [], __MODULE__}
+                end
+
+              {key, map_value}
+            end)
+
+          error_pattern =
+            Macro.postwalk(strict_pattern, fn
+              ^escaped_var -> {:%{}, [], map_pattern_values}
+              other -> other
+            end)
+
+          raise ExUnit.AssertionError,
+            message: "match (=) failed",
+            left: error_pattern,
+            right: value,
+            expr: {:assert_matches, [], [{:=, [], [pattern, Macro.escape(value)]}]},
+            context: {:match, []}
+        end
+      end
+    end)
+  end
+
+  defp build_predicate_pattern(var_pattern, pins) do
+    quote bind_quoted: [
+            var_pattern: Macro.escape(var_pattern),
+            escaped_pins: Macro.escape(pins),
+            pins: pins
+          ] do
+      escaped_pins
+      |> Enum.zip(pins)
+      |> Enum.reduce({false, var_pattern}, fn {{escaped_var, escaped_predicate}, {var, predicate}},
+                                              {errors?, pattern} ->
+        result =
+          if is_function(predicate, 1) do
+            not predicate.(var)
+          else
+            predicate != var
+          end
+
+        if result do
+          escaped_predicate = Plausible.AssertMatches.Internal.strip_prefix(escaped_predicate)
+
+          {true,
+           Macro.postwalk(pattern, fn
+             ^escaped_var -> escaped_predicate
+             other -> other
+           end)}
+        else
+          {errors?,
+           Macro.postwalk(pattern, fn
+             ^escaped_var -> {:_, [], __MODULE__}
+             other -> other
+           end)}
+        end
+      end)
+    end
+  end
+
+  defp build_var_pattern(pattern) do
+    Macro.postwalk(pattern, [], fn
+      {:^, _meta, [{pinned, _, module}]} = normal_pin, acc
+      when is_atom(pinned) and is_atom(module) ->
+        {normal_pin, acc}
+
+      {:^, _meta, [{:strict_map, _, [pinned]}]}, acc ->
+        {pinned, acc}
+
+      {:^, _meta, [pinned]}, acc ->
+        pinned = Plausible.AssertMatches.Internal.transform_predicate(pinned)
+
+        pinned_var =
+          Macro.unique_var(:match, __MODULE__)
+          |> Macro.update_meta(&Keyword.put(&1, :assert_match, true))
+
+        {pinned_var, [{pinned_var, pinned} | acc]}
+
+      other, acc ->
+        {other, acc}
+    end)
+  end
+
+  defp clear_bindings_except(pattern, except_meta) do
+    pattern
+    |> Macro.postwalk(fn
+      {:^, _, [{name, meta, module}]} = pin when is_atom(name) and is_atom(module) ->
+        if meta[except_meta] do
+          pin
+        else
+          {:_, [], __MODULE__}
+        end
+
+      other ->
+        other
+    end)
+    |> Macro.postwalk(fn
+      {name, meta, module} = var when is_atom(name) and is_atom(module) ->
+        if meta[except_meta] do
+          var
+        else
+          {:_, [], __MODULE__}
+        end
+
+      other ->
+        other
+    end)
   end
 
   defmodule Internal do
@@ -375,7 +370,7 @@ defmodule Plausible.AssertMatches do
     def any(:iso8601_datetime) do
       fn value ->
         case DateTime.from_iso8601(value) do
-          {:ok, _} -> true
+          {:ok, _, _} -> true
           _ -> false
         end
       end
