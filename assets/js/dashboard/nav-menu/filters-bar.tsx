@@ -9,6 +9,7 @@ import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { BUFFER_FOR_SHADOW_PX } from './filter-pill'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
+import { BlurMenuButtonOnEscape } from '../keybinding'
 
 const BUFFER_RIGHT_PX = 16 - BUFFER_FOR_SHADOW_PX - PILL_X_GAP
 const BUFFER_LEFT_PX = 16 - BUFFER_FOR_SHADOW_PX
@@ -95,6 +96,7 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { query } = useQueryContext()
+  const seeMoreRef = useRef<HTMLButtonElement>(null)
 
   useLayoutEffect(() => {
     const { topBar, leftSection, rightSection } = elements
@@ -169,10 +171,13 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
       {visibility !== null &&
         (query.filters.length !== visibility.visibleCount || canClear) && (
           <Popover className="md:relative">
+            <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
             <Popover.Button
+              ref={seeMoreRef}
               className={classNames(
-                'flex items-center justify-center rounded text-sm leading-tight',
-                'w-full bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900'
+                popover.toggleButton.classNames.rounded,
+                popover.toggleButton.classNames.shadow,
+                'justify-center'
               )}
               style={{
                 height: SEE_MORE_WIDTH_PX,

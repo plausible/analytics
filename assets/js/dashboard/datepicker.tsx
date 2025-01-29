@@ -41,7 +41,7 @@ import {
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from './router'
 import { Menu, Transition } from '@headlessui/react'
-import { MenuSeparator, popover } from './components/popover'
+import { popover } from './components/popover'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 const ArrowKeybind = ({
@@ -190,30 +190,6 @@ export default function QueryPeriodPicker({
     setMenuVisible(null)
   }, [])
 
-  // const toggleDateMenu = useCallback(() => {
-  //   setMenuVisible((prevState) =>
-  //     prevState === 'datemenu' ? null : 'datemenu'
-  //   )
-  // }, [])
-
-  // const toggleDateMenuCalendar = useCallback(() => {
-  //   setMenuVisible((prevState) =>
-  //     prevState === 'datemenu-calendar' ? null : 'datemenu-calendar'
-  //   )
-  // }, [])
-
-  // const customRangeLink: LinkItem = useMemo(
-  //   () => [
-  //     ['Custom Range', 'C'],
-  //     {
-  //       search: (s) => s,
-  //       isActive: ({ query }) => query.period === QueryPeriod.custom,
-  //       onClick: toggleDateMenuCalendar
-  //     }
-  //   ],
-  //   [toggleDateMenuCalendar]
-  // )
-
   const buttonGroups = useMemo(() => {
     const groups = getDatePeriodGroups(site)
     return groups
@@ -308,7 +284,7 @@ export default function QueryPeriodPicker({
               <BlurMenuButtonOnEscape targetRef={periodMenuButtonRef} />
               <Menu.Button
                 ref={periodMenuButtonRef}
-                className={datemenuButtonClassname}
+                className={datemenuButtonClassName}
               >
                 <DisplaySelectedPeriod />
                 <DateMenuChevron />
@@ -386,7 +362,7 @@ export default function QueryPeriodPicker({
               <>
                 <BlurMenuButtonOnEscape targetRef={compareMenuButtonRef} />
                 <Menu.Button
-                  className={datemenuButtonClassname}
+                  className={datemenuButtonClassName}
                   ref={compareMenuButtonRef}
                 >
                   {query.comparison === ComparisonMode.custom &&
@@ -508,11 +484,16 @@ export default function QueryPeriodPicker({
   )
 }
 
-const datemenuButtonClassname = classNames(
-  'flex items-center rounded text-sm leading-tight px-2 py-2 h-9',
-  'w-full justify-between bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900'
+const datemenuButtonClassName = classNames(
+  popover.toggleButton.classNames.rounded,
+  popover.toggleButton.classNames.shadow,
+  'justify-between px-2 w-full'
 )
 
 const DateMenuChevron = () => (
   <ChevronDownIcon className="hidden lg:inline-block h-4 w-4 md:h-5 md:w-5 ml-1 md:ml-2 text-gray-500" />
+)
+
+const MenuSeparator = () => (
+  <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
 )

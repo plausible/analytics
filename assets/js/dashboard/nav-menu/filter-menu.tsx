@@ -49,7 +49,7 @@ export function getFilterListItems({
 export const FilterMenu = () => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
-  const ref = useRef<HTMLButtonElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   return (
     <Popover
       className="shrink-0 md:relative"
@@ -57,14 +57,13 @@ export const FilterMenu = () => {
     >
       {({ close }) => (
         <>
-          <BlurMenuButtonOnEscape targetRef={ref} />
+          <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
-            ref={ref}
+            ref={buttonRef}
             className={classNames(
-              'flex items-center gap-1',
-              'h-9 px-3',
-              'rounded text-sm leading-tight',
-              'text-gray-500 hover:text-gray-800 hover:bg-gray-200 dark:hover:text-gray-200 dark:hover:bg-gray-900'
+              popover.toggleButton.classNames.rounded,
+              popover.toggleButton.classNames.ghost,
+              'justify-center gap-1 px-3'
             )}
           >
             <PlusIcon className="block h-4 w-4" />
@@ -88,7 +87,7 @@ export const FilterMenu = () => {
                 <div key={index} className="flex flex-col w-1/2">
                   {filterGroups.map(({ title, modals }) => (
                     <div key={title}>
-                      <div className="pb-1 px-4 pt-2 text-xs font-bold uppercase text-indigo-500 dark:text-indigo-400">
+                      <div className="text-xs pb-1 px-4 pt-2 font-bold uppercase text-indigo-500 dark:text-indigo-400">
                         {title}
                       </div>
                       {modals
@@ -96,8 +95,8 @@ export const FilterMenu = () => {
                         .map((modalKey) => (
                           <AppNavigationLink
                             className={classNames(
-                              'flex',
-                              'px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100',
+                              popover.items.classNames.navigationLink,
+                              popover.items.classNames.hoverLink,
                               'text-xs'
                             )}
                             onClick={() => close()}

@@ -1,5 +1,4 @@
 /** @format */
-import React from 'react'
 import { TransitionClasses } from '@headlessui/react'
 import classNames from 'classnames'
 
@@ -25,7 +24,13 @@ const panel = {
 }
 
 const toggleButton = {
-  classNames: {}
+  classNames: {
+    rounded: 'flex items-center rounded text-sm leading-tight h-9',
+    shadow:
+      'bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900',
+    ghost:
+      'text-gray-500 hover:text-gray-800 hover:bg-gray-200 dark:hover:text-gray-200 dark:hover:bg-gray-900'
+  }
 }
 
 const items = {
@@ -59,7 +64,3 @@ export const popover = {
   transition,
   items
 }
-
-export const MenuSeparator = () => (
-  <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
-)
