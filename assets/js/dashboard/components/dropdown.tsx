@@ -131,19 +131,12 @@ export const DropdownMenuWrapper = forwardRef<
 })
 
 export const DropdownLinkGroup = ({
-  className,
-  children,
-  ...props
+  children
 }: DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>) => (
-  <div
-    {...props}
-    className={classNames(
-      className,
-      'py-1 border-gray-200 dark:border-gray-500 border-b last:border-none'
-    )}
-  >
+  <>
     {children}
-  </div>
+    <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
+  </>
 )
 
 export const DropdownNavigationLink = ({
