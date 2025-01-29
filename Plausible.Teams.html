@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-521DEB25.js"></script>
+    <script src="dist/sidebar_items-2DA7A7B4.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -380,7 +380,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">accept_traffic_until(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L230" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L236" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -426,7 +426,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">end_grace_period(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L206" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L212" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -472,7 +472,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">get_by_owner(user_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L158" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L161" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -480,6 +480,13 @@ Pages
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_by_owner(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()) ::
+  {:ok, <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()} | {:error, :no_team | :multiple_teams}</pre>
+
+      </div>
 
 
   </section>
@@ -492,7 +499,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">get_or_create(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L146" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L147" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -500,6 +507,13 @@ Pages
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_or_create(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
+  {:ok, <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()} | {:error, :multiple_teams}</pre>
+
+      </div>
 
 <p>Get or create user's team.</p><p>If the user has no non-guest membership yet, an implicit &quot;My Team&quot; team is
 created with them as an owner.</p><p>If the user already has an owner membership in an existing team,
@@ -562,7 +576,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">last_subscription_join_query()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L257" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L263" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -582,7 +596,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">last_subscription_query()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L263" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L269" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -622,7 +636,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">maybe_reset_next_upgrade_override(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L218" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L224" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -748,7 +762,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">remove_grace_period(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L212" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L218" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -768,7 +782,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">setup_team(team, candidates)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L270" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L276" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -788,7 +802,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">start_grace_period(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L194" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L200" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -808,7 +822,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">start_manual_lock_grace_period(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L200" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L206" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -828,7 +842,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">start_trial(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L188" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L194" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -874,7 +888,7 @@ is returned.</p>
     </a>
     <h1 class="signature" translate="no">update_accept_traffic_until(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L182" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams.ex#L188" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
