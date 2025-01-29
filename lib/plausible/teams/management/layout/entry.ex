@@ -5,7 +5,7 @@ defmodule Plausible.Teams.Management.Layout.Entry do
   """
   alias Plausible.Teams
 
-  defstruct [:email, :name, :role, :type, :label, :meta, :queued_op]
+  defstruct [:email, :name, :role, :type, :meta, :queued_op]
 
   @type t() :: %__MODULE__{}
 
@@ -22,7 +22,6 @@ defmodule Plausible.Teams.Management.Layout.Entry do
       email: invitation.email,
       role: invitation.role,
       type: :invitation_sent,
-      label: "Invitation Sent",
       meta: invitation
     }
     |> Map.merge(Enum.into(attrs, %{}))
@@ -34,7 +33,6 @@ defmodule Plausible.Teams.Management.Layout.Entry do
       email: pending.email,
       role: pending.role,
       type: :invitation_pending,
-      label: "Invitation Pending",
       meta: pending
     }
     |> Map.merge(Enum.into(attrs, %{}))

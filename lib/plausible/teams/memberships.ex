@@ -12,7 +12,6 @@ defmodule Plausible.Teams.Memberships do
       from tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
         where: tm.team_id == ^team.id,
-        where: tm.role != :guest,
         order_by: [asc: u.id],
         preload: [user: u]
 

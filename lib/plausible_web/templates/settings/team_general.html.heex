@@ -28,7 +28,7 @@
     </:subtitle>
     {live_render(@conn, PlausibleWeb.Live.TeamManagement,
       id: "team-setup",
-      session: %{}
+      session: %{"mode" => "team-management"}
     )}
   </.tile>
 </.settings_tiles>

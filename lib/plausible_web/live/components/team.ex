@@ -3,9 +3,11 @@ defmodule PlausibleWeb.Live.Components.Team do
   Shared component base for listing team members/invitations
   alongside with the role dropdown.
   """
-  use Phoenix.Component
+  use Phoenix.Component, global_prefixes: ~w(x-)
   import PlausibleWeb.Components.Generic
+
   alias Plausible.Auth.User
+  alias Phoenix.LiveView.JS
 
   attr :user, User, required: true
   attr :label, :string, default: nil
@@ -16,9 +18,18 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   def member(assigns) do
     ~H"""
-    <div class="member mt-4">
+    <div
+      class={[(@role == :guest && "guest") || "member", "mt-4"]}
+      id={"member-row-#{:erlang.phash2(@user.email)}"}
+      data-role-changed={
+        JS.show(
+          transition: {"duration-500", "opacity-0 shadow-2xl -translate-y-6", "opacity-100 shadow"},
+          time: 400
+        )
+      }
+    >
       <div class="flex items-center gap-x-5">
-        <img src={User.profile_img_url(@user)} class="w-7 rounded-full" />
+        <img src={User.profile_img_url(@user)} class="w-7 rounded-full bg-gray-300" />
         <span class="text-sm">
           {@user.name}
           <span
@@ -38,58 +49,63 @@ defmodule PlausibleWeb.Live.Components.Team do
             </:button>
             <:menu class="dropdown-items max-w-60">
               <.role_item
-                id={"#{@user.email}-#{@role}"}
+                user={@user}
+                id={"option-#{:erlang.phash2(@user.email)}-owner"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:owner}
                 disabled={@disabled or @role == :owner}
-                phx-click="update-role"
+                dispatch_animation?={@role == :guest}
               >
                 Manage the team without restrictions
               </.role_item>
               <.role_item
-                id={"#{@user.email}-#{@role}"}
+                user={@user}
+                id={"option-#{:erlang.phash2(@user.email)}-admin"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:admin}
                 disabled={@disabled or @role == :admin}
-                phx-click="update-role"
+                dispatch_animation?={@role == :guest}
               >
                 Manage all team settings
               </.role_item>
               <.role_item
-                id={"#{@user.email}-#{@role}"}
+                user={@user}
+                id={"option-#{:erlang.phash2(@user.email)}-editor"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:editor}
                 disabled={@disabled or @role == :editor}
-                phx-click="update-role"
+                dispatch_animation?={@role == :guest}
               >
                 Create and view new sites
               </.role_item>
               <.role_item
-                id={"#{@user.email}-#{@role}"}
+                user={@user}
+                id={"option-#{:erlang.phash2(@user.email)}-billing"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:billing}
                 disabled={@disabled or @role == :billing}
-                phx-click="update-role"
+                dispatch_animation?={@role == :guest}
               >
                 Manage subscription
               </.role_item>
               <.role_item
-                id={"#{@user.email}-#{@role}"}
+                user={@user}
+                id={"option-#{:erlang.phash2(@user.email)}-viewer"}
                 phx-value-email={@user.email}
                 phx-value-name={@user.name}
                 role={:viewer}
                 disabled={@disabled or @role == :viewer}
-                phx-click="update-role"
+                dispatch_animation?={@role == :guest}
               >
                 View all sites under your team
               </.role_item>
               <.dropdown_divider />
               <.dropdown_item
-                id={"#{@user.email}-#{@role}-remove"}
+                id={"#{:erlang.phash2(@user.email)}-remove"}
                 href="#"
                 disabled={@disabled or @remove_disabled}
                 phx-click="remove-member"
@@ -116,12 +132,42 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   attr :role, :atom, required: true
   attr :disabled, :boolean, default: false
+  attr :dispatch_animation?, :boolean, default: false
   slot :inner_block, required: true
   attr :rest, :global
+  attr :user, :map, default: %{email: nil}
+  attr(:id, :string, default: nil)
 
   def role_item(assigns) do
+    click =
+      cond do
+        phx_click = assigns.rest[:"phx-click"] ->
+          phx_click
+
+        assigns.dispatch_animation? ->
+          JS.hide(
+            transition: {"duration-500", "opacity-100", "opacity-0"},
+            to: "#member-row-#{:erlang.phash2(assigns.user.email)}",
+            time: 500
+          )
+          |> JS.push("update-role")
+
+        true ->
+          "update-role"
+      end
+
+    assigns = assign(assigns, :click, click)
+
     ~H"""
-    <.dropdown_item href="#" phx-value-role={@role} disabled={@disabled} {@rest}>
+    <.dropdown_item
+      x-on:click.prevent
+      id={@id}
+      href="#"
+      phx-click={@click}
+      phx-value-role={@role}
+      disabled={@disabled}
+      {@rest}
+    >
       <div>{@role |> Atom.to_string() |> String.capitalize()}</div>
       <div class="text-gray-500 dark:text-gray-400 text-xs/5">
         {render_slot(@inner_block)}

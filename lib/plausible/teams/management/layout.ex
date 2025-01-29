@@ -13,16 +13,16 @@ defmodule Plausible.Teams.Management.Layout do
 
   @type t() :: %{String.t() => Entry.t()}
 
-  @spec init(Teams.Team.t(), User.t()) :: t()
-  def init(%Teams.Team{} = team, %User{} = current_user) do
+  @spec init(Teams.Team.t()) :: t()
+  def init(%Teams.Team{} = team) do
     invitations_sent = Teams.Invitations.find_team_invitations(team)
     all_members = Teams.Memberships.all_members(team)
-    build_by_email(invitations_sent ++ all_members, current_user)
+    build_by_email(invitations_sent ++ all_members)
   end
 
-  @spec build_by_email([Teams.Invitation.t() | Teams.Membership.t()], User.t()) ::
+  @spec build_by_email([Teams.Invitation.t() | Teams.Membership.t()]) ::
           t()
-  def build_by_email(entities, %User{} = current_user) do
+  def build_by_email(entities) do
     Enum.reduce(entities, %{}, fn
       %Teams.Invitation{id: existing} = invitation, acc when is_integer(existing) ->
         put(acc, invitation)
@@ -34,15 +34,26 @@ defmodule Plausible.Teams.Management.Layout do
         put(
           acc,
           membership.user.email,
-          Entry.new(membership,
-            label:
-              if(is_integer(current_user.id) and current_user.id == membership.user.id,
-                do: "You",
-                else: "Team Member"
-              )
-          )
+          Entry.new(membership)
         )
     end)
+  end
+
+  @spec active_size(t()) :: non_neg_integer()
+  def active_size(layout) do
+    Enum.count(layout, fn {_, entry} -> entry.queued_op != :delete end)
+  end
+
+  @spec has_guests?(t()) :: boolean()
+  def has_guests?(layout) do
+    not is_nil(
+      Enum.find(
+        layout,
+        fn
+          {_, entry} -> entry.role == :guest and entry.queued_op != :delete
+        end
+      )
+    )
   end
 
   @spec put(t(), Entry.t() | Teams.Invitation.t() | Teams.Membership.t()) :: t()
@@ -96,14 +107,17 @@ defmodule Plausible.Teams.Management.Layout do
   def sorted_for_display(layout) do
     Enum.sort_by(layout, fn {email, entry} ->
       primary_criterion =
-        case entry.type do
-          :invitation_pending -> 0
-          :invitation_sent -> 1
-          :membership -> 2
+        case entry do
+          %{role: :guest, type: :invitation_pending} -> 10
+          %{role: :guest, type: :invitation_sent} -> 11
+          %{role: :guest, type: :membership} -> 12
+          %{type: :invitation_pending} -> 0
+          %{type: :invitation_sent} -> 1
+          %{type: :membership} -> 2
         end
 
-      secondary_criterion = String.first(entry.name)
-      tertiary_criterion = String.first(email)
+      secondary_criterion = entry.name
+      tertiary_criterion = email
       {primary_criterion, secondary_criterion, tertiary_criterion}
     end)
   end
@@ -113,6 +127,10 @@ defmodule Plausible.Teams.Management.Layout do
   def persist(layout, context) do
     result =
       Repo.transaction(fn ->
+        context.my_team
+        |> Teams.Team.setup_changeset()
+        |> Repo.update!()
+
         layout
         |> sorted_for_persistence()
         |> Enum.reduce([], fn {_, entry}, acc ->

@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Live.TeamSetupTest do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase, async: false
   use Plausible.Teams.Test
+  use Bamboo.Test, shared: true
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
@@ -9,6 +10,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   alias Plausible.Repo
 
   @url "/team/setup"
+  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "/team/setup - edge cases" do
     setup [:create_user, :log_in]
@@ -31,14 +33,13 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
   end
 
-  describe "/team/setup - functional details" do
+  describe "/team/setup - main differences from team management" do
     setup [:create_user, :log_in, :create_team]
 
     test "renders form", %{conn: conn} do
       {:ok, lv, html} = live(conn, @url)
-      assert element_exists?(html, ~s|input#team_name[name="team[name]"]|)
-      assert element_exists?(html, ~s|input[name="team-member-candidate"]|)
-      assert element_exists?(html, ~s|button[phx-click="setup-team"]|)
+      assert element_exists?(html, ~s|input#update-team-form_name[name="team[name]"]|)
+      assert element_exists?(html, ~s|button[phx-click="save-team-layout"]|)
 
       _ = render(lv)
     end
@@ -50,229 +51,231 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       _ = render(lv)
     end
-
-    test "existing guest is suggested from combobox dropdown", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-      guest = add_guest(site, role: :viewer)
-
-      {:ok, lv, _html} = live(conn, @url)
-
-      type_into_combo(lv, "team-member-candidates", guest.email)
-      select_combo_option(lv, 1)
-
-      [member1_row, member2_row] =
-        lv
-        |> render()
-        |> find(".member")
-
-      assert text(member2_row) =~ user.name
-      assert text(member2_row) =~ "You"
-      assert text(member2_row) =~ user.email
-
-      assert text(member1_row) =~ guest.name
-      assert text(member1_row) =~ guest.email
-
-      assert member2_row |> find(".role") |> text() =~ "Owner"
-      assert member1_row |> find(".role") |> text() =~ "Viewer"
-
-      _ = render(lv)
-    end
-
-    test "team member is added from input", %{conn: conn, user: user} do
-      new_member_email = build(:user).email
-
-      {:ok, lv, _html} = live(conn, @url)
-
-      type_into_combo(lv, "team-member-candidates", new_member_email)
-      select_combo_option(lv, 0)
-
-      [member1_row, member2_row] =
-        lv
-        |> render()
-        |> find(".member")
-
-      assert text(member1_row) =~ "Invited User"
-      assert text(member1_row) =~ new_member_email
-
-      assert text(member2_row) =~ user.name
-      assert text(member2_row) =~ "You"
-      assert text(member2_row) =~ user.email
-
-      assert member1_row |> find(".role") |> text() =~ "Viewer"
-      assert member2_row |> find(".role") |> text() =~ "Owner"
-
-      _ = render(lv)
-    end
-
-    test "arbitrary invalid e-mail attempt", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, @url)
-      type_into_combo(lv, "team-member-candidates", "invalid")
-
-      refute lv |> render |> text() =~ "Sorry"
-
-      select_combo_option(lv, 0)
-
-      assert lv |> render() |> text() =~
-               "Sorry, e-mail 'invalid' is invalid. Please type the address again"
-
-      _ = render(lv)
-    end
-
-    test "owner's own e-mail attempt", %{conn: conn, user: user} do
-      {:ok, lv, _html} = live(conn, @url)
-      type_into_combo(lv, "team-member-candidates", user.email)
-
-      refute lv |> render |> text() =~ "Make sure the e-mail is valid and is not taken"
-
-      select_combo_option(lv, 0)
-
-      assert lv |> render() |> text() =~
-               "Make sure the e-mail is valid and is not taken"
-
-      _ = render(lv)
-    end
-
-    test "owner's role dropdown consists of inactive options", %{conn: conn} do
-      {:ok, lv, html} = live(conn, @url)
-
-      assert html
-             |> find(".member")
-             |> Enum.take(1)
-             |> find(".dropdown-items > *:not([^role=separator])")
-             |> Enum.all?(fn el ->
-               text_of_attr(el, "data-ui-state") == "disabled"
-             end)
-
-      _ = render(lv)
-    end
-
-    test "candidate's role dropdown allows changing role", %{conn: conn} do
-      new_member_email = build(:user).email
-      {:ok, lv, _html} = live(conn, @url)
-
-      type_into_combo(lv, "team-member-candidates", new_member_email)
-      select_combo_option(lv, 0)
-
-      lv
-      |> element(~s|.member a[phx-click="update-role"][phx-value-role="admin"]|)
-      |> render_click()
-
-      member2_row = lv |> render() |> find(".member:nth-of-type(1) .role") |> text()
-      assert member2_row =~ "Admin"
-
-      lv
-      |> element(~s|.member a[phx-click="update-role"][phx-value-role="viewer"]|)
-      |> render_click()
-
-      member2_row = lv |> render() |> find(".member:nth-of-type(1) .role") |> text()
-      assert member2_row =~ "Viewer"
-
-      _ = render(lv)
-    end
-
-    test "member candidate suggestion disappears when selected", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-      guest = add_guest(site, role: :viewer)
-
-      {:ok, lv, _html} = live(conn, @url)
-
-      type_into_combo(lv, "team-member-candidates", guest.email)
-
-      assert lv
-             |> render()
-             |> find("#dropdown-team-member-candidates")
-             |> text() =~ guest.email
-
-      select_combo_option(lv, 1)
-
-      refute lv
-             |> render()
-             |> find("#dropdown-team-member-candidates")
-             |> text() =~ guest.email
-
-      _ = render(lv)
-    end
-
-    test "member candidate can be removed", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-
-      guest = add_guest(site, role: :viewer)
-
-      {:ok, lv, _html} = live(conn, @url)
-
-      type_into_combo(lv, "team-member-candidates", guest.email)
-      select_combo_option(lv, 1)
-
-      assert lv
-             |> render()
-             |> find(".member:nth-of-type(1)")
-             |> text() =~ guest.email
-
-      lv
-      |> element(~s|.member a[phx-click="remove-member"][phx-value-email="#{guest.email}"]|)
-      |> render_click()
-
-      refute lv
-             |> render()
-             |> find(".member")
-             |> text() =~ guest.email
-
-      _ = render(lv)
-    end
   end
 
   describe "/team/setup - full integration" do
-    # see PlausibleWeb.Live.TeamSetupSyncTest for Bamboo integration test
     setup [:create_user, :log_in, :create_team]
 
-    test "setting up team above plan member limits", %{
+    test "renders member, enqueues invitation, delivers it", %{conn: conn, user: user, team: team} do
+      {lv, html} = get_child_lv(conn, with_html?: true)
+      member_row1 = find(html, "#member-list .member:nth-of-type(1)") |> text()
+      assert member_row1 =~ "#{user.name}"
+      assert member_row1 =~ "#{user.email}"
+      assert member_row1 =~ "You"
+
+      add_invite(lv, "new@example.com", "admin")
+
+      html = render(lv)
+
+      member_row1 = find(html, "#member-list .member:nth-of-type(1)") |> text()
+      assert member_row1 =~ "new@example.com"
+      assert member_row1 =~ "Invited User"
+      assert member_row1 =~ "Invitation Pending"
+
+      member_row2 = find(html, "#member-list .member:nth-of-type(2)") |> text()
+      assert member_row2 =~ "#{user.name}"
+      assert member_row2 =~ "#{user.email}"
+
+      save_layout(lv)
+
+      assert_redirect(lv, "/settings/team/general")
+
+      assert_email_delivered_with(
+        to: [nil: "new@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+      )
+    end
+
+    test "allows updating pending invitation role in place", %{conn: conn, team: team} do
+      lv = get_child_lv(conn)
+      add_invite(lv, "new@example.com", "admin")
+
+      html = render(lv)
+
+      assert text_of_element(html, "#member-list .member:nth-of-type(1) button") == "Admin"
+      assert text_of_element(html, "#member-list .member:nth-of-type(2) button") == "Owner"
+
+      change_role(lv, 1, "viewer")
+      html = render(lv)
+
+      assert text_of_element(html, "#member-list .member:nth-of-type(1) button") == "Viewer"
+
+      save_layout(lv)
+
+      assert_email_delivered_with(
+        to: [nil: "new@example.com"],
+        subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
+      )
+    end
+
+    test "allows updating membership role in place", %{conn: conn, team: team} do
+      member2 = add_member(team, role: :admin)
+      {lv, html} = get_child_lv(conn, with_html?: true)
+
+      assert text_of_element(html, "#member-list .member:nth-of-type(1) button") == "Owner"
+      assert text_of_element(html, "#member-list .member:nth-of-type(2) button") == "Admin"
+
+      change_role(lv, 2, "viewer")
+      html = render(lv)
+
+      assert text_of_element(html, "#member-list .member:nth-of-type(2) button") == "Viewer"
+
+      save_layout(lv)
+
+      assert_no_emails_delivered()
+
+      assert_team_membership(member2, team, :viewer)
+    end
+
+    test "allows updating guest membership so it moves sections", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
+
+      lv = get_child_lv(conn)
+
+      html = render(lv)
+
+      assert length(find(html, "#member-list .member")) == 1
+
+      assert text_of_element(html, "#guest-list .guest:first-of-type button") == "Guest"
+
+      change_role(lv, 1, "viewer", "#guest-list .guest")
+      html = render(lv)
+
+      assert length(find(html, "#member-list .member")) == 2
+      refute element_exists?(html, "#guest-list")
+    end
+
+    test "fails to save layout with limits breached", %{conn: conn} do
+      lv = get_child_lv(conn)
+      add_invite(lv, "new1@example.com", "admin")
+      add_invite(lv, "new2@example.com", "admin")
+      add_invite(lv, "new3@example.com", "admin")
+      add_invite(lv, "new4@example.com", "admin")
+
+      refute lv |> render() |> text() =~ "Your account is limited to 3 team members"
+
+      save_layout(lv)
+
+      assert lv |> render() |> text() =~ "Your account is limited to 3 team members"
+    end
+
+    test "allows removing any type of entry", %{
       conn: conn,
       user: user,
       team: team
     } do
+      member2 = add_member(team, role: :admin)
+      _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
+
       site = new_site(owner: user)
-      guest = add_guest(site, role: :viewer)
 
-      extra_guests = build_list(3, :user)
+      guest =
+        add_guest(site,
+          role: :viewer,
+          user: new_user(name: "Mr Guest", email: "guest@example.com")
+        )
 
-      {:ok, lv, _html} = live(conn, @url)
+      lv = get_child_lv(conn)
+      add_invite(lv, "pending@example.com", "admin")
 
-      type_into_combo(lv, "team-member-candidates", guest.email)
-      select_combo_option(lv, 1)
+      html = render(lv)
 
-      for g <- extra_guests do
-        type_into_combo(lv, "team-member-candidates", g.email)
-        select_combo_option(lv, 0)
-      end
+      assert html |> find("#member-list .member") |> Enum.count() == 4
+      assert html |> find("#guest-list .guest") |> Enum.count() == 1
 
-      lv |> element(~s|button[phx-click="setup-team"]|) |> render_click()
+      pending = find(html, "#member-list .member:nth-of-type(1)") |> text()
+      sent = find(html, "#member-list .member:nth-of-type(2)") |> text()
+      owner = find(html, "#member-list .member:nth-of-type(3)") |> text()
+      admin = find(html, "#member-list .member:nth-of-type(4)") |> text()
 
-      assert team |> Ecto.assoc(:team_invitations) |> Repo.aggregate(:count) == 0
+      guest_member = find(html, "#guest-list .guest:first-of-type") |> text()
 
-      assert lv |> render() |> text() =~ "Your account is limited to 3 team members"
+      assert pending =~ "Invitation Pending"
+      assert sent =~ "Invitation Sent"
+      assert owner =~ "You"
+      assert admin =~ "Team Member"
+      assert guest_member =~ "Guest"
 
-      _ = render(lv)
+      remove_member(lv, 1)
+      # next becomes first
+      remove_member(lv, 1)
+      # last becomes second
+      remove_member(lv, 2)
+
+      # remove guest
+      remove_member(lv, 1, "#guest-list .guest")
+
+      html = render(lv) |> text()
+
+      refute html =~ "Invitation Pending"
+      refute html =~ "Invitation Sent"
+      refute html =~ "Team Member"
+      refute html =~ "Guest"
+
+      save_layout(lv)
+
+      assert_email_delivered_with(
+        to: [nil: guest.email],
+        subject: @subject_prefix <> "Your access to \"#{team.name}\" team has been revoked"
+      )
+
+      assert_email_delivered_with(
+        to: [nil: member2.email],
+        subject: @subject_prefix <> "Your access to \"#{team.name}\" team has been revoked"
+      )
+
+      assert_no_emails_delivered()
     end
   end
 
   defp type_into_input(lv, id, text) do
     lv
-    |> element("form")
+    |> element("form#update-team-form")
     |> render_change(%{id => text})
   end
 
-  defp type_into_combo(lv, id, text) do
+  defp add_invite(lv, email, role) do
     lv
-    |> element("input##{id}")
-    |> render_change(%{
-      "_target" => ["display-#{id}"],
-      "display-#{id}" => "#{text}"
+    |> element(~s|#input-role-picker a[phx-value-role="#{role}"]|)
+    |> render_click()
+
+    lv
+    |> element("#team-layout-form")
+    |> render_submit(%{
+      "input-email" => email
     })
   end
 
-  defp select_combo_option(lv, index) do
+  defp save_layout(lv) do
     lv
-    |> element(~s/li#dropdown-team-member-candidates-option-#{index} a/)
+    |> element("button#save-layout")
+    |> render_click()
+  end
+
+  defp change_role(lv, index, role, main_selector \\ "#member-list .member") do
+    lv
+    |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-value-role="#{role}"]|)
+    |> render_click()
+  end
+
+  defp get_child_lv(conn, opts \\ []) do
+    {:ok, lv, _} = live(conn, @url)
+    assert lv = find_live_child(lv, "team-management-setup")
+
+    if Keyword.get(opts, :with_html?) do
+      {lv, render(lv)}
+    else
+      lv
+    end
+  end
+
+  defp remove_member(lv, index, main_selector \\ "#member-list .member") do
+    lv
+    |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-click="remove-member"]|)
     |> render_click()
   end
 end
