@@ -137,7 +137,9 @@ defmodule Plausible.Segments do
         %Plausible.Goal{} = updated_goal
       ) do
     goal_filter_regex =
-      ~s(.*?\\["is",\s*"event:goal",\s*\\[.*?"#{stale_goal.display_name}".*?\\]\\].*?)
+      ~s(.*?\\["is",\s*"event:goal",\s*\\[.*?"#{Regex.escape(stale_goal.display_name)}".*?\\]\\].*?)
+
+    IO.inspect(stale_goal)
 
     segments_to_update =
       from(
