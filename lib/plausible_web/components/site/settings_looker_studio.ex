@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Components.Site.SettingsLookerStudio do
+  @moduledoc false
   use PlausibleWeb, :component
   use Plausible
 
