@@ -1,6 +1,7 @@
 /** @format */
-
+import React from 'react'
 import { TransitionClasses } from '@headlessui/react'
+import classNames from 'classnames'
 
 const TRANSITION_CONFIG: TransitionClasses = {
   enter: 'transition ease-out duration-100',
@@ -23,7 +24,42 @@ const panel = {
   }
 }
 
-export const popover = {
-  panel,
-  transition
+const toggleButton = {
+  classNames: {}
 }
+
+const items = {
+  classNames: {
+    navigationLink: classNames(
+      'flex items-center justify-between',
+      'px-4 py-2 text-sm leading-tight'
+    ),
+    disabledLink: classNames(
+      'data-[headlessui-state=disabled]:font-bold',
+      'data-[headlessui-state=disabled]:cursor-default'
+    ),
+    activeLink: classNames(
+      'data-[headlessui-state=active]:bg-gray-100',
+      'data-[headlessui-state=active]:text-gray-900',
+      'dark:data-[headlessui-state=active]:bg-gray-900',
+      'dark:data-[headlessui-state=active]:text-gray-100'
+    ),
+    hoverLink: classNames(
+      'hover:bg-gray-100',
+      'hover:text-gray-900',
+      'dark:hover:bg-gray-900',
+      'dark:hover:text-gray-100'
+    )
+  }
+}
+
+export const popover = {
+  toggleButton,
+  panel,
+  transition,
+  items
+}
+
+export const MenuSeparator = () => (
+  <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
+)

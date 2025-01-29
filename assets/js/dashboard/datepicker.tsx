@@ -38,17 +38,11 @@ import {
   COMPARISON_MATCH_MODE_LABELS,
   ComparisonMatchMode
 } from './query-time-periods'
-import { useOnClickOutside } from './util/use-on-click-outside'
-import {
-  DropdownLinkGroup,
-  DropdownMenuWrapper,
-  DropdownNavigationLink,
-  ToggleDropdownButton
-} from './components/dropdown'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from './router'
 import { Menu, Transition } from '@headlessui/react'
-import { popover } from './components/popover'
+import { MenuSeparator, popover } from './components/popover'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 const ArrowKeybind = ({
   keyboardKey
@@ -170,48 +164,10 @@ function MovePeriodArrows() {
   )
 }
 
-function QueryPeriodsMenu({
-  groups,
-  closeMenu
-}: {
-  groups: LinkItem[][]
-  closeMenu: () => void
-}) {
-  const site = useSiteContext()
-  const { query } = useQueryContext()
-  return (
-    <DropdownMenuWrapper
-      id="datemenu"
-      data-testid="datemenu"
-      innerContainerClassName="date-options"
-      className="md:left-auto md:w-56"
-    >
-      {groups.map((group, index) => (
-        <DropdownLinkGroup key={index} className="date-options-group">
-          {group.map(
-            ([[label, keyboardKey], { search, isActive, onClick }]) => (
-              <DropdownNavigationLink
-                key={label}
-                active={isActive({ site, query })}
-                search={search}
-                onClick={onClick || closeMenu}
-              >
-                {label}
-                {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}
-              </DropdownNavigationLink>
-            )
-          )}
-        </DropdownLinkGroup>
-      ))}
-    </DropdownMenuWrapper>
-  )
-}
-
-const linkstyle = classNames(
-  'flex items-center justify-between',
-  `px-4 py-2 text-sm leading-tight`,
-  `data-[headlessui-state=active]:bg-gray-100 data-[headlessui-state=active]:text-gray-900 dark:data-[headlessui-state=active]:bg-gray-900 dark:data-[headlessui-state=active]:text-gray-100`,
-  `data-[headlessui-state=disabled]:font-bold data-[headlessui-state=disabled]:cursor-default`
+const linkClassName = classNames(
+  popover.items.classNames.navigationLink,
+  popover.items.classNames.activeLink,
+  popover.items.classNames.disabledLink
 )
 
 export default function QueryPeriodPicker({
@@ -223,14 +179,10 @@ export default function QueryPeriodPicker({
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
   const [menuVisible, setMenuVisible] = useState<
-    | 'datemenu'
-    | 'datemenu-calendar'
-    | 'compare-menu'
-    | 'compare-menu-calendar'
-    | null
+    'datemenu-calendar' | 'compare-menu-calendar' | null
   >(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const compareDropdownRef = useRef<HTMLButtonElement>(null)
+  const periodMenuButtonRef = useRef<HTMLButtonElement>(null)
+  const compareMenuButtonRef = useRef<HTMLButtonElement>(null)
 
   const dashboardRouteMatch = useMatch(rootRoute.path)
 
@@ -238,91 +190,192 @@ export default function QueryPeriodPicker({
     setMenuVisible(null)
   }, [])
 
-  const toggleDateMenu = useCallback(() => {
-    setMenuVisible((prevState) =>
-      prevState === 'datemenu' ? null : 'datemenu'
-    )
-  }, [])
+  // const toggleDateMenu = useCallback(() => {
+  //   setMenuVisible((prevState) =>
+  //     prevState === 'datemenu' ? null : 'datemenu'
+  //   )
+  // }, [])
 
-  const toggleDateMenuCalendar = useCallback(() => {
-    setMenuVisible((prevState) =>
-      prevState === 'datemenu-calendar' ? null : 'datemenu-calendar'
-    )
-  }, [])
+  // const toggleDateMenuCalendar = useCallback(() => {
+  //   setMenuVisible((prevState) =>
+  //     prevState === 'datemenu-calendar' ? null : 'datemenu-calendar'
+  //   )
+  // }, [])
 
-  const customRangeLink: LinkItem = useMemo(
-    () => [
-      ['Custom Range', 'C'],
-      {
-        search: (s) => s,
-        isActive: ({ query }) => query.period === QueryPeriod.custom,
-        onClick: toggleDateMenuCalendar
-      }
-    ],
-    [toggleDateMenuCalendar]
-  )
+  // const customRangeLink: LinkItem = useMemo(
+  //   () => [
+  //     ['Custom Range', 'C'],
+  //     {
+  //       search: (s) => s,
+  //       isActive: ({ query }) => query.period === QueryPeriod.custom,
+  //       onClick: toggleDateMenuCalendar
+  //     }
+  //   ],
+  //   [toggleDateMenuCalendar]
+  // )
+
+  const buttonGroups = useMemo(() => {
+    const groups = getDatePeriodGroups(site)
+    return groups
+  }, [site])
+
   const compareLink: LinkItem = useMemo(
     () => getCompareLinkItem({ site, query }),
     [site, query]
   )
 
-  const datePeriodGroups = useMemo(() => {
-    const groups = getDatePeriodGroups(site)
-    // add Custom Range link to the last group
-    groups[groups.length - 1].push(customRangeLink)
-
-    if (COMPARISON_DISABLED_PERIODS.includes(query.period)) {
-      return groups
-    }
-    // maybe add Compare link as another group to the very end
-    return groups.concat([[compareLink]])
-  }, [site, query, customRangeLink, compareLink])
-
-  useOnClickOutside({
-    ref: dropdownRef,
-    active: menuVisible === 'datemenu',
-    handler: closeMenu
-  })
-
   useEffect(() => {
+    // periodMenuButtonRef.current?.click()
+    // compareMenuButtonRef.current?.click()
     closeMenu()
   }, [closeMenu, query])
 
   return (
     <div className={classNames('flex shrink-0', className)}>
       <MovePeriodArrows />
-      <ToggleDropdownButton
-        withDropdownIndicator
-        className="min-w-36 md:relative lg:w-48"
-        currentOption={<DisplaySelectedPeriod />}
-        ref={dropdownRef}
-        onClick={toggleDateMenu}
-        dropdownContainerProps={{
-          ['aria-controls']: 'datemenu',
-          ['aria-expanded']: menuVisible === 'datemenu'
-        }}
-      >
-        {menuVisible === 'datemenu' && (
-          <QueryPeriodsMenu groups={datePeriodGroups} closeMenu={closeMenu} />
-        )}
+      <Menu as="div" className="min-w-36 md:relative lg:w-48">
+        {({ close }) => {
+          const groups = buttonGroups
+            .slice(0, buttonGroups.length - 1)
+            .concat([
+              // add Custom Range link to the last group
+              buttonGroups[buttonGroups.length - 1].concat([
+                [
+                  ['Custom Range', 'C'],
+                  {
+                    search: (s) => s,
+                    isActive: ({ query }) =>
+                      query.period === QueryPeriod.custom,
+                    onClick: (e) => {
+                      // custom handler is needed to prevent
+                      // the calendar from immediately closing
+                      // due to Menu.Button grabbing focus
+                      setMenuVisible('datemenu-calendar')
+                      e.preventDefault()
+                      e.stopPropagation()
+                      close()
+                    }
+                  }
+                ]
+              ])
+            ])
+            // maybe add Compare link as another group to the very end
+            .concat(
+              COMPARISON_DISABLED_PERIODS.includes(query.period)
+                ? []
+                : [[compareLink]]
+            )
 
-        {menuVisible === 'datemenu-calendar' && (
-          <DateRangeCalendar
-            id="calendar"
-            onCloseWithSelection={(selection) =>
-              navigate({ search: getSearchToApplyCustomDates(selection) })
-            }
-            minDate={site.statsBegin}
-            maxDate={formatISO(nowForSite(site))}
-            defaultDates={
-              query.to && query.from
-                ? [formatISO(query.from), formatISO(query.to)]
-                : undefined
-            }
-            onCloseWithNoSelection={() => setMenuVisible(null)}
-          />
-        )}
-      </ToggleDropdownButton>
+          return (
+            <>
+              {!!dashboardRouteMatch && (
+                <>
+                  {groups.concat([[last6MonthsLinkItem]]).flatMap((group) =>
+                    group
+                      .filter(([[_name, keyboardKey]]) => !!keyboardKey)
+                      .map(
+                        ([
+                          [_name, keyboardKey],
+                          { search, onClick, isActive }
+                        ]) =>
+                          onClick || isActive({ site, query }) ? (
+                            <Keybind
+                              key={keyboardKey}
+                              keyboardKey={keyboardKey}
+                              type="keydown"
+                              handler={(e) => {
+                                if (onClick) {
+                                  onClick(e)
+                                }
+                              }}
+                              shouldIgnoreWhen={[isModifierPressed, isTyping]}
+                              targetRef="document"
+                            />
+                          ) : (
+                            <NavigateKeybind
+                              key={keyboardKey}
+                              keyboardKey={keyboardKey}
+                              type="keydown"
+                              navigateProps={{ search }}
+                            />
+                          )
+                      )
+                  )}
+                  <ArrowKeybind keyboardKey="ArrowRight" />
+                  <ArrowKeybind keyboardKey="ArrowLeft" />
+                </>
+              )}
+              <BlurMenuButtonOnEscape targetRef={periodMenuButtonRef} />
+              <Menu.Button
+                ref={periodMenuButtonRef}
+                className={datemenuButtonClassname}
+              >
+                <DisplaySelectedPeriod />
+                <DateMenuChevron />
+              </Menu.Button>
+              {menuVisible === 'datemenu-calendar' && (
+                <DateRangeCalendar
+                  id="calendar"
+                  onCloseWithSelection={(selection) =>
+                    navigate({ search: getSearchToApplyCustomDates(selection) })
+                  }
+                  minDate={site.statsBegin}
+                  maxDate={formatISO(nowForSite(site))}
+                  defaultDates={
+                    query.to && query.from
+                      ? [formatISO(query.from), formatISO(query.to)]
+                      : undefined
+                  }
+                  onCloseWithNoSelection={() => setMenuVisible(null)}
+                />
+              )}
+
+              <Transition
+                {...popover.transition.props}
+                className={classNames(
+                  'mt-2',
+                  popover.transition.classNames.fullwidth,
+                  'md:left-auto md:w-56'
+                )}
+              >
+                <Menu.Items className={popover.panel.classNames.roundedSheet}>
+                  {groups.map((group, index) => (
+                    <React.Fragment key={index}>
+                      {group.map(
+                        ([
+                          [label, keyboardKey],
+                          { search, isActive, onClick }
+                        ]) => (
+                          <Menu.Item
+                            disabled={isActive({ site, query })}
+                            key={label}
+                          >
+                            <AppNavigationLink
+                              className={linkClassName}
+                              search={search}
+                              onClick={
+                                onClick &&
+                                ((e) => onClick(e as unknown as Event))
+                              }
+                            >
+                              {label}
+                              {!!keyboardKey && (
+                                <KeybindHint>{keyboardKey}</KeybindHint>
+                              )}
+                            </AppNavigationLink>
+                          </Menu.Item>
+                        )
+                      )}
+                      {index < groups.length - 1 && <MenuSeparator />}
+                    </React.Fragment>
+                  ))}
+                </Menu.Items>
+              </Transition>
+            </>
+          )
+        }}
+      </Menu>
+
       {isComparisonEnabled(query.comparison) && (
         <>
           <div className="my-auto px-1 text-sm font-medium text-gray-800 dark:text-gray-200">
@@ -331,13 +384,10 @@ export default function QueryPeriodPicker({
           <Menu as="div" className="min-w-36 md:relative lg:w-48">
             {({ close }) => (
               <>
-                <BlurMenuButtonOnEscape targetRef={compareDropdownRef} />
+                <BlurMenuButtonOnEscape targetRef={compareMenuButtonRef} />
                 <Menu.Button
-                  className={classNames(
-                    'flex items-center rounded text-sm leading-tight px-2 py-2 h-9',
-                    'w-full justify-between bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900'
-                  )}
-                  ref={compareDropdownRef}
+                  className={datemenuButtonClassname}
+                  ref={compareMenuButtonRef}
                 >
                   {query.comparison === ComparisonMode.custom &&
                   query.compare_from &&
@@ -348,6 +398,7 @@ export default function QueryPeriodPicker({
                         query.compare_to
                       )
                     : COMPARISON_MODES[query.comparison!]}
+                  <DateMenuChevron />
                 </Menu.Button>
                 {menuVisible === 'compare-menu-calendar' && (
                   <DateRangeCalendar
@@ -389,7 +440,7 @@ export default function QueryPeriodPicker({
                         disabled={query.comparison === comparisonMode}
                       >
                         <AppNavigationLink
-                          className={linkstyle}
+                          className={linkClassName}
                           search={(search) => ({
                             ...search,
                             ...clearedComparisonSearch,
@@ -402,7 +453,7 @@ export default function QueryPeriodPicker({
                     ))}
                     <Menu.Item>
                       <AppNavigationLink
-                        className={linkstyle}
+                        className={linkClassName}
                         search={(s) => s}
                         onClick={(e) => {
                           // custom handler is needed to prevent
@@ -419,10 +470,10 @@ export default function QueryPeriodPicker({
                     </Menu.Item>
                     {query.comparison !== ComparisonMode.custom && (
                       <>
-                        <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
+                        <MenuSeparator />
                         <Menu.Item disabled={query.match_day_of_week === true}>
                           <AppNavigationLink
-                            className={linkstyle}
+                            className={linkClassName}
                             search={(s) => ({ ...s, match_day_of_week: true })}
                           >
                             {
@@ -434,7 +485,7 @@ export default function QueryPeriodPicker({
                         </Menu.Item>
                         <Menu.Item disabled={query.match_day_of_week === false}>
                           <AppNavigationLink
-                            className={linkstyle}
+                            className={linkClassName}
                             search={(s) => ({ ...s, match_day_of_week: false })}
                           >
                             {
@@ -453,37 +504,15 @@ export default function QueryPeriodPicker({
           </Menu>
         </>
       )}
-      {!!dashboardRouteMatch && (
-        <>
-          <ArrowKeybind keyboardKey="ArrowLeft" />
-          <ArrowKeybind keyboardKey="ArrowRight" />
-          {datePeriodGroups
-            .concat([[last6MonthsLinkItem]])
-            .flatMap((group) =>
-              group
-                .filter(([[_name, keyboardKey]]) => !!keyboardKey)
-                .map(([[_name, keyboardKey], { search, onClick, isActive }]) =>
-                  onClick || isActive({ site, query }) ? (
-                    <Keybind
-                      key={keyboardKey}
-                      keyboardKey={keyboardKey}
-                      type="keydown"
-                      handler={onClick || closeMenu}
-                      shouldIgnoreWhen={[isModifierPressed, isTyping]}
-                      targetRef="document"
-                    />
-                  ) : (
-                    <NavigateKeybind
-                      key={keyboardKey}
-                      keyboardKey={keyboardKey}
-                      type="keydown"
-                      navigateProps={{ search }}
-                    />
-                  )
-                )
-            )}
-        </>
-      )}
     </div>
   )
 }
+
+const datemenuButtonClassname = classNames(
+  'flex items-center rounded text-sm leading-tight px-2 py-2 h-9',
+  'w-full justify-between bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900'
+)
+
+const DateMenuChevron = () => (
+  <ChevronDownIcon className="hidden lg:inline-block h-4 w-4 md:h-5 md:w-5 ml-1 md:ml-2 text-gray-500" />
+)

@@ -1,5 +1,5 @@
 /* @format */
-import { useEffect } from 'react'
+import { EventHandler, MouseEventHandler, useEffect } from 'react'
 import {
   clearedComparisonSearch,
   clearedDateSearch,
@@ -244,7 +244,7 @@ export type LinkItem = [
       site: PlausibleSite
       query: DashboardQuery
     }) => boolean
-    onClick?: () => void
+    onClick?: (event: Event) => void
   }
 ]
 
