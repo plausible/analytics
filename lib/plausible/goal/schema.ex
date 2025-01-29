@@ -38,6 +38,7 @@ defmodule Plausible.Goal do
     |> cast_assoc(:site)
     |> update_leading_slash()
     |> validate_event_name_and_page_path()
+    |> validate_page_path_for_scroll_goal()
     |> maybe_put_display_name()
     |> unique_constraint(:event_name, name: :goals_event_name_unique)
     |> unique_constraint([:page_path, :scroll_threshold],
@@ -96,6 +97,18 @@ defmodule Plausible.Goal do
         changeset
         |> add_error(:event_name, event_name_error)
         |> add_error(:page_path, page_path_error)
+    end
+  end
+
+  defp validate_page_path_for_scroll_goal(changeset) do
+    scroll_threshold = get_field(changeset, :scroll_threshold)
+    page_path = get_field(changeset, :page_path)
+
+    if scroll_threshold > -1 and is_nil(page_path) do
+      changeset
+      |> add_error(:scroll_threshold, "page_path field missing for page scroll goal")
+    else
+      changeset
     end
   end
 

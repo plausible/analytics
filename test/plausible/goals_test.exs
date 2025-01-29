@@ -54,6 +54,16 @@ defmodule Plausible.GoalsTest do
              Goals.create(site, %{"page_path" => "/blog/post-2", "scroll_threshold" => 50})
   end
 
+  test "create/2 validates page path exists for scroll goals" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{"event_name" => "Signup", "scroll_threshold" => 50})
+
+    assert {"page_path field missing for page scroll goal", _} =
+             changeset.errors[:scroll_threshold]
+  end
+
   test "create/2 validates uniqueness across page_path and scroll_threshold" do
     site = new_site()
 
