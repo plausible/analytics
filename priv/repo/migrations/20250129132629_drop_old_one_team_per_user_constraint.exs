@@ -10,6 +10,11 @@ defmodule Plausible.Repo.Migrations.DropOldOneTeamPerUserConstraint do
            where: "role != 'guest'",
            name: :one_team_per_user
          )
+
+    # Might be redundant but redoing it anyway, just to be safe
+    execute """
+    UPDATE team_memberships SET is_autocreated = true WHERE role = 'owner'
+    """
   end
 
   def down do
