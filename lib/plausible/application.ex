@@ -24,6 +24,7 @@ defmodule Plausible.Application do
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         {Plausible.RateLimit, clean_period: :timer.minutes(10)},
         Plausible.Ingestion.Counters,
+        Plausible.Ingestion.ScrollDepthVisibleAt,
         {Finch, name: Plausible.Finch, pools: finch_pool_config()},
         {Phoenix.PubSub, name: Plausible.PubSub},
         Plausible.Session.Salts,

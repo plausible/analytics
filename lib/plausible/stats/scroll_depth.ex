@@ -33,9 +33,9 @@ defmodule Plausible.Stats.ScrollDepth do
       is_nil(site.scroll_depth_visible_at) ->
         visible? = has_scroll_data_last_30d?(site)
 
-        if visible? do
-          Plausible.Sites.set_scroll_depth_visible_at(site)
-        end
+        # if visible? do
+        #   Plausible.Sites.set_scroll_depth_visible_at(site)
+        # end
 
         visible?
     end
