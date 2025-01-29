@@ -131,13 +131,18 @@ defmodule Plausible.Segments do
     end
   end
 
-  def update_goal_in_segments(%Plausible.Goal{} = stale_goal, %Plausible.Goal{} = updated_goal) do
+  def update_goal_in_segments(
+        %Plausible.Site{} = site,
+        %Plausible.Goal{} = stale_goal,
+        %Plausible.Goal{} = updated_goal
+      ) do
     goal_filter_regex =
       ~s(.*?\\["is",\s*"event:goal",\s*\\[.*?"#{stale_goal.display_name}".*?\\]\\].*?)
 
     segments_to_update =
       from(
         s in Segment,
+        where: s.site_id == ^site.id,
         where: fragment("?['filters']::text ~ ?", s.segment_data, ^goal_filter_regex)
       )
 
