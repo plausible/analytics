@@ -5,7 +5,7 @@
     search_console_domains={@search_console_domains}
   />
 
-  <PlausibleWeb.Components.Settings.settings_looker_studio />
+  <PlausibleWeb.Components.Site.SettingsLookerStudio.render />
 
   <.tile :if={@has_plugins_tokens? || @conn.query_params["new_token"]}>
     <:title>

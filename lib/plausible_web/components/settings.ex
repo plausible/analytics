@@ -5,5 +5,4 @@ defmodule PlausibleWeb.Components.Settings do
   use PlausibleWeb, :component
 
   embed_templates("../templates/site/settings_search_console.html")
-  embed_templates("../templates/site/settings_looker_studio.html")
 end
