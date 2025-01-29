@@ -35,6 +35,12 @@ defmodule Plausible.AssertMatches do
       with `exactly()`; this allows "interpolating" values from schemas and maps without
       rebinding like `user.id` (instead of having to rebind to `user_id` first)
 
+  There's also a special pin type, `strict_map(...)` which can wrap around any map
+  in the pattern. It's enforcing that the pattern has enumerated all the keys
+  present in the respective map in the pattern matched value. All the above mentioned
+  pin expressions can be also used inside `strict_map(...)` and `strict_map()` pins
+  can be nested.
+
   Usage example:
 
       n = %{z: 2}
@@ -60,23 +66,14 @@ defmodule Plausible.AssertMatches do
   """
 
   defmacro assert_matches({:=, meta, [pattern, value]}) do
-    {strict_pattern, strict_pins} =
+    {base_strict_pattern, strict_vars} =
       Macro.postwalk(pattern, [], fn
-        {:^, _meta, [{:strict_map, _, [pinned]}]}, acc ->
-          pinned_clean =
-            Macro.postwalk(pinned, fn
-              {:^, _, _} ->
-                {:_, [], __MODULE__}
+        {:^, _, [{:strict_map, _, _}]} = pin, acc ->
+          pinned_var = Macro.unique_var(:match, __MODULE__)
 
-              other ->
-                other
-            end)
+          pin = Macro.update_meta(pin, &Keyword.put(&1, :match_var, pinned_var))
 
-          pinned_var =
-            Macro.unique_var(:match, __MODULE__)
-            |> Macro.update_meta(&Keyword.put(&1, :strict_match, true))
-
-          {pinned_var, [{pinned_var, pinned_clean} | acc]}
+          {pin, [pinned_var | acc]}
 
         {:^, _, _}, acc ->
           {{:_, [], __MODULE__}, acc}
@@ -85,35 +82,107 @@ defmodule Plausible.AssertMatches do
           {other, acc}
       end)
 
-    strict_checked_pattern =
-      quote bind_quoted: [
-              strict_pattern: Macro.escape(strict_pattern),
-              escaped_pins: Macro.escape(strict_pins),
-              pins: Enum.map(strict_pins, &elem(&1, 0))
-            ] do
-        escaped_pins
-        |> Enum.zip(pins)
-        |> Enum.reduce({false, strict_pattern}, fn {{escaped_var, escaped_map}, var},
-                                                   {errors?, pattern} ->
-          {:%{}, _, map_pattern_values} = escaped_map
-          map_pattern_keys = map_pattern_values |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+    base_strict_pattern =
+      base_strict_pattern
+      |> Macro.postwalk(fn
+        {:^, _, [{name, meta, module}]} = pin when is_atom(name) and is_atom(module) ->
+          if meta[:match_var] do
+            pin
+          else
+            {:_, [], __MODULE__}
+          end
+
+        other ->
+          other
+      end)
+      |> Macro.postwalk(fn
+        {name, meta, module} = var when is_atom(name) and is_atom(module) ->
+          if meta[:match_var] do
+            var
+          else
+            {:_, [], __MODULE__}
+          end
+
+        other ->
+          other
+      end)
+
+    strict_patterns =
+      Enum.map(strict_vars, fn strict_var ->
+        Macro.postwalk(base_strict_pattern, [], fn
+          {:^, meta, [{:strict_map, _, [pinned]}]}, acc ->
+            if meta[:match_var] == strict_var do
+              {:%{}, _, map_pattern_values} = pinned
+              map_pattern_keys = map_pattern_values |> Enum.map(&elem(&1, 0)) |> Enum.sort()
+              {strict_var, [{strict_var, map_pattern_keys} | acc]}
+            else
+              {
+                Macro.postwalk(pinned, fn
+                  {:^, _, _} ->
+                    {:_, [], __MODULE__}
+
+                  other ->
+                    other
+                end),
+                acc
+              }
+            end
+
+          other, acc ->
+            {other, acc}
+        end)
+      end)
+
+    strict_pattern_matches =
+      Enum.map(strict_patterns, fn {strict_pattern, _} ->
+        quote do
+          assert unquote(strict_pattern) = unquote(value)
+        end
+      end)
+
+    strict_pattern_checks =
+      strict_patterns
+      |> Enum.map(fn {strict_pattern, [{strict_var, map_pattern_keys}]} ->
+        quote bind_quoted: [
+                pattern: Macro.escape(pattern),
+                value: value,
+                strict_pattern: Macro.escape(strict_pattern),
+                var: strict_var,
+                escaped_var: Macro.escape(strict_var),
+                pattern_keys: map_pattern_keys
+              ] do
           var_keys = var |> Map.keys() |> Enum.sort()
 
-          if map_pattern_keys != var_keys do
-            {true,
-             Macro.postwalk(pattern, fn
-               ^escaped_var -> {:strict_map, [], [escaped_map]}
-               other -> other
-             end)}
-          else
-            {errors?,
-             Macro.postwalk(pattern, fn
-               ^escaped_var -> escaped_map
-               other -> other
-             end)}
+          if pattern_keys != var_keys do
+            missing_keys = var_keys -- pattern_keys
+
+            map_pattern_values =
+              Enum.map(pattern_keys ++ missing_keys, fn key ->
+                map_value =
+                  if key in missing_keys do
+                    :__MISSING_KEY__
+                  else
+                    {:_, [], __MODULE__}
+                  end
+
+                {key, map_value}
+              end)
+
+            error_pattern =
+              Macro.postwalk(strict_pattern, fn
+                ^escaped_var -> {:%{}, [], map_pattern_values}
+                other -> other
+              end)
+
+            raise ExUnit.AssertionError,
+              message: "match (=) failed",
+              left: error_pattern,
+              right: value,
+              expr: {:assert_matches, [], [{:=, [], [pattern, Macro.escape(value)]}]},
+              context: {:match, []}
           end
-        end)
-      end
+        end
+      end)
 
     {var_pattern, pins} =
       Macro.postwalk(pattern, [], fn
@@ -146,7 +215,8 @@ defmodule Plausible.AssertMatches do
       end)
 
     var_pattern =
-      Macro.postwalk(var_pattern, fn
+      var_pattern
+      |> Macro.postwalk(fn
         {:^, _, [{name, meta, module}]} = pin when is_atom(name) and is_atom(module) ->
           if meta[:assert_match] do
             pin
@@ -208,22 +278,8 @@ defmodule Plausible.AssertMatches do
     quote do
       value = unquote(value)
       assert unquote(clean_pattern) = value
-      assert unquote(strict_pattern) = value
-
-      if unquote(length(strict_pins)) > 0 do
-        {strict_errors?, strict_pattern} = unquote(strict_checked_pattern)
-
-        if strict_errors? do
-          raise ExUnit.AssertionError,
-            message: "match (=) failed",
-            left: strict_pattern,
-            right: value,
-            expr:
-              {:assert_matches, unquote(meta),
-               [{:=, [], [unquote(Macro.escape(pattern)), Macro.escape(value)]}]},
-            context: {:match, []}
-        end
-      end
+      unquote(strict_pattern_matches)
+      unquote(strict_pattern_checks)
 
       assert unquote(var_pattern) = value
 

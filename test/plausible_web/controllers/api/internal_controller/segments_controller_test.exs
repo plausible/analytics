@@ -359,7 +359,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                          "id" => ^any(:integer),
                          "name" => "Some segment",
                          "type" => ^"#{unquote(type)}",
-                         "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
+                         "segment_data" =>
+                           ^strict_map(%{"filters" => [["is", "visit:entry_page", ["/blog"]]]}),
                          "owner_id" => ^user.id,
                          "inserted_at" => ^any(:string),
                          "updated_at" => ^any(:string)
