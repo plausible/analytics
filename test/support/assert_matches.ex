@@ -88,7 +88,10 @@ defmodule Plausible.AssertMatches do
         end
       end)
 
-    strict_pattern_checks = build_strict_pattern_checks(strict_patterns, pattern, value)
+    strict_pattern_checks =
+      Enum.map(strict_patterns, fn {strict_pattern, [{strict_var, map_pattern_keys}]} ->
+        build_strict_pattern_check(strict_pattern, strict_var, map_pattern_keys, pattern, value)
+      end)
 
     {var_pattern, pins} = build_var_pattern(pattern)
 
@@ -171,49 +174,39 @@ defmodule Plausible.AssertMatches do
     end)
   end
 
-  defp build_strict_pattern_checks(strict_patterns, pattern, value) do
-    strict_patterns
-    |> Enum.map(fn {strict_pattern, [{strict_var, map_pattern_keys}]} ->
-      quote bind_quoted: [
-              pattern: Macro.escape(pattern),
-              value: value,
-              strict_pattern: Macro.escape(strict_pattern),
-              var: strict_var,
-              escaped_var: Macro.escape(strict_var),
-              pattern_keys: map_pattern_keys
-            ] do
-        var_keys = var |> Map.keys() |> Enum.sort()
+  defp build_strict_pattern_check(strict_pattern, strict_var, map_pattern_keys, pattern, value) do
+    quote bind_quoted: [
+            pattern: Macro.escape(pattern),
+            value: value,
+            strict_pattern: Macro.escape(strict_pattern),
+            var: strict_var,
+            escaped_var: Macro.escape(strict_var),
+            pattern_keys: map_pattern_keys
+          ] do
+      var_keys = var |> Map.keys() |> Enum.sort()
 
-        if pattern_keys != var_keys do
-          missing_keys = var_keys -- pattern_keys
+      if pattern_keys != var_keys do
+        missing_keys = var_keys -- pattern_keys
 
-          map_pattern_values =
-            Enum.map(pattern_keys ++ missing_keys, fn key ->
-              map_value =
-                if key in missing_keys do
-                  :__MISSING_KEY__
-                else
-                  {:_, [], __MODULE__}
-                end
+        map_pattern_values =
+          pattern_keys
+          |> Enum.map(&{&1, {:_, [], __MODULE__}})
+          |> Enum.concat(Enum.map(missing_keys, &{&1, :_MISSING_KEY__}))
 
-              {key, map_value}
-            end)
+        error_pattern =
+          Macro.postwalk(strict_pattern, fn
+            ^escaped_var -> {:%{}, [], map_pattern_values}
+            other -> other
+          end)
 
-          error_pattern =
-            Macro.postwalk(strict_pattern, fn
-              ^escaped_var -> {:%{}, [], map_pattern_values}
-              other -> other
-            end)
-
-          raise ExUnit.AssertionError,
-            message: "match (=) failed",
-            left: error_pattern,
-            right: value,
-            expr: {:assert_matches, [], [{:=, [], [pattern, Macro.escape(value)]}]},
-            context: {:match, []}
-        end
+        raise ExUnit.AssertionError,
+          message: "match (=) failed",
+          left: error_pattern,
+          right: value,
+          expr: {:assert_matches, [], [{:=, [], [pattern, Macro.escape(value)]}]},
+          context: {:match, []}
       end
-    end)
+    end
   end
 
   defp build_predicate_pattern(var_pattern, pins) do
