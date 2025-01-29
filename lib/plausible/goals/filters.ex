@@ -122,7 +122,9 @@ defmodule Plausible.Goals.Filters do
   defp goal_condition(:scroll, goal, _) do
     pathname_condition = page_path_condition(goal.page_path, _imported? = false)
     name_condition = dynamic([e], e.name == "pageleave")
-    scroll_condition = dynamic([e], e.scroll_depth >= ^goal.scroll_threshold)
+
+    scroll_condition =
+      dynamic([e], e.scroll_depth <= 100 and e.scroll_depth >= ^goal.scroll_threshold)
 
     dynamic([e], ^pathname_condition and ^name_condition and ^scroll_condition)
   end

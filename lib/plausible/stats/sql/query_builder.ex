@@ -162,7 +162,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
                   WHEN ?[goal_index] = 'page' THEN
                       ? = 'pageview' AND match(?, ?[goal_index])
                   ELSE
-                      ? = 'pageleave' AND match(?, ?[goal_index]) AND ? >= ?[goal_index]
+                      ? = 'pageleave' AND match(?, ?[goal_index]) AND ? <= 100 AND ? >= ?[goal_index]
                 end
               ,
               ?
@@ -182,6 +182,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
           e.name,
           e.pathname,
           type(^goal_page_regexes, {:array, :string}),
+          e.scroll_depth,
           e.scroll_depth,
           type(^goal_scroll_thresholds, {:array, :integer}),
           # Array of indices getting filtered

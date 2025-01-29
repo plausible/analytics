@@ -132,6 +132,74 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
   end
 
   describe "page scroll goals" do
+    test "a scroll depth of 255 (missing) is not considered a conversion (page scroll goal filter)",
+         %{
+           conn: conn,
+           site: site
+         } do
+      insert(:goal,
+        site: site,
+        page_path: "/blog",
+        scroll_threshold: 90,
+        display_name: "Scroll /blog 90"
+      )
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00],
+          scroll_depth: 255
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "filters" => [["is", "event:goal", ["Scroll /blog 90"]]],
+          "date_range" => "all"
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [0]}
+             ]
+    end
+
+    test "a scroll depth of 255 (missing) is not considered a conversion (page scroll goal breakdown)",
+         %{
+           conn: conn,
+           site: site
+         } do
+      insert(:goal,
+        site: site,
+        page_path: "/blog",
+        scroll_threshold: 90,
+        display_name: "Scroll /blog 90"
+      )
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00],
+          scroll_depth: 255
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == []
+    end
+
     test "returns page scroll goals and pageview goals in breakdown with page filter", %{
       conn: conn,
       site: site
