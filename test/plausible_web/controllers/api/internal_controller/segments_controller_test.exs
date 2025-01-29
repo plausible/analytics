@@ -355,7 +355,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           })
           |> json_response(200)
 
-        assert_matches %{
+        assert_matches ^strict_map(%{
                          "id" => ^any(:integer),
                          "name" => "Some segment",
                          "type" => ^"#{unquote(type)}",
@@ -363,7 +363,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                          "owner_id" => ^user.id,
                          "inserted_at" => ^any(:string),
                          "updated_at" => ^any(:string)
-                       } = response
+                       }) = response
 
         assert response["inserted_at"] == response["updated_at"]
 
