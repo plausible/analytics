@@ -7,7 +7,10 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   describe "GET /api/stats/:domain/conversions" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns mixed conversions in ordered by count", %{conn: conn, site: site} do
+    test "returns mixed pageview and custom event goal conversions ordered by count", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/"),
@@ -25,7 +28,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           name: "Signup",
           "meta.key": ["variant"],
           "meta.value": ["B"]
-        )
+        ),
+        build(:event, name: "Signup")
       ])
 
       insert(:goal, %{site: site, page_path: "/register"})
@@ -36,15 +40,108 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Signup",
-                 "visitors" => 2,
-                 "events" => 3,
-                 "conversion_rate" => 33.3
+                 "visitors" => 3,
+                 "events" => 4,
+                 "conversion_rate" => 42.9
                },
                %{
                  "name" => "Visit /register",
                  "visitors" => 2,
                  "events" => 2,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 28.6
+               }
+             ]
+    end
+
+    test "returns page scroll goals ordered by count", %{conn: conn, site: site} do
+      populate_stats(site, [
+        # user 1: /blog -> /another -> blog/posts/1
+        build(:pageview, user_id: 1, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 1,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:01:00],
+          scroll_depth: 20
+        ),
+        build(:pageview, user_id: 1, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
+        build(:pageleave,
+          user_id: 1,
+          pathname: "/another",
+          timestamp: ~N[2020-01-01 00:02:00],
+          scroll_depth: 100
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/blog/posts/1",
+          timestamp: ~N[2020-01-01 00:02:00]
+        ),
+        build(:pageleave,
+          user_id: 1,
+          pathname: "/blog/posts/1",
+          timestamp: ~N[2020-01-01 00:03:00],
+          scroll_depth: 55
+        ),
+        # user 2: /blog -> /blog/posts/1 -> /blog/posts/2
+        build(:pageview, user_id: 2, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 2,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:01:00],
+          scroll_depth: 60
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/blog/posts/1",
+          timestamp: ~N[2020-01-01 00:02:00]
+        ),
+        build(:pageleave,
+          user_id: 2,
+          pathname: "/blog/posts/1",
+          timestamp: ~N[2020-01-01 00:03:00],
+          scroll_depth: 100
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/blog/posts/2",
+          timestamp: ~N[2020-01-01 00:02:00]
+        ),
+        build(:pageleave,
+          user_id: 2,
+          pathname: "/blog/posts/2",
+          timestamp: ~N[2020-01-01 00:03:00],
+          scroll_depth: 100
+        )
+      ])
+
+      insert(:goal, %{
+        site: site,
+        page_path: "/blog/**",
+        scroll_threshold: 50,
+        display_name: "Scroll 50 /blog/**"
+      })
+
+      insert(:goal, %{
+        site: site,
+        page_path: "/blog/posts/1",
+        scroll_threshold: 75,
+        display_name: "Scroll 75 /blog/posts/1"
+      })
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2020-01-01")
+
+      # TODO: make it possible to query `events` metric
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Scroll 50 /blog/**",
+                 "visitors" => 2,
+                 "events" => 0,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "name" => "Scroll 75 /blog/posts/1",
+                 "visitors" => 1,
+                 "events" => 0,
+                 "conversion_rate" => 50.0
                }
              ]
     end

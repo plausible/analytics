@@ -18,7 +18,6 @@ defmodule Plausible.Stats.QueryRunner do
     QueryOptimizer,
     QueryResult,
     Legacy,
-    Filters,
     SQL,
     Util,
     Time
@@ -137,15 +136,11 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp dimension_label("event:goal", entry, query) do
-    {events, paths} = Filters.Utils.split_goals(query.preloaded_goals.matching_toplevel_filters)
-
     goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
 
-    # Closely coupled logic with SQL.Expression.event_goal_join/2
-    cond do
-      goal_index < 0 -> Enum.at(events, -goal_index - 1) |> Plausible.Goal.display_name()
-      goal_index > 0 -> Enum.at(paths, goal_index - 1) |> Plausible.Goal.display_name()
-    end
+    query.preloaded_goals.matching_toplevel_filters
+    |> Enum.at(goal_index - 1)
+    |> Plausible.Goal.display_name()
   end
 
   defp dimension_label("time:" <> _ = time_dimension, entry, query) do

@@ -62,9 +62,14 @@ defmodule Plausible.Goal do
     goal.display_name
   end
 
-  @spec type(t()) :: :event | :page
-  def type(%{event_name: event_name}) when is_binary(event_name), do: :event
-  def type(%{page_path: page_path}) when is_binary(page_path), do: :page
+  @spec type(t()) :: :event | :scroll | :page
+  def type(goal) do
+    cond do
+      is_binary(goal.event_name) -> :event
+      is_binary(goal.page_path) && goal.scroll_threshold > -1 -> :scroll
+      is_binary(goal.page_path) -> :page
+    end
+  end
 
   defp update_leading_slash(changeset) do
     case get_field(changeset, :page_path) do

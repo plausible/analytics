@@ -106,33 +106,44 @@ defmodule Plausible.Goals.Filters do
 
   defp build_condition(filtered_goals, imported?) do
     Enum.reduce(filtered_goals, false, fn goal, dynamic_statement ->
-      case goal do
-        nil ->
+      cond do
+        is_nil(goal) ->
           dynamic([e], ^dynamic_statement)
 
-        %Plausible.Goal{event_name: event_name} when is_binary(event_name) ->
-          dynamic([e], e.name == ^event_name or ^dynamic_statement)
+        Plausible.Goal.type(goal) == :event ->
+          dynamic([e], e.name == ^goal.event_name or ^dynamic_statement)
 
-        %Plausible.Goal{page_path: page_path} when is_binary(page_path) ->
-          dynamic([e], ^page_filter_condition(page_path, imported?) or ^dynamic_statement)
+        Plausible.Goal.type(goal) == :scroll ->
+          dynamic([e], ^page_scroll_goal_condition(goal) or ^dynamic_statement)
+
+        Plausible.Goal.type(goal) == :page ->
+          dynamic([e], ^pageview_goal_condition(goal, imported?) or ^dynamic_statement)
       end
     end)
   end
 
-  defp page_filter_condition(page_path, imported?) do
+  defp page_scroll_goal_condition(goal) do
+    pathname_condition = page_path_condition(goal.page_path, _imported = false)
+    name_condition = dynamic([e], e.name == "pageleave")
+    scroll_condition = dynamic([e], e.scroll_depth >= ^goal.scroll_threshold)
+
+    dynamic([e], ^pathname_condition and ^name_condition and ^scroll_condition)
+  end
+
+  defp pageview_goal_condition(goal, imported?) do
+    pathname_condition = page_path_condition(goal.page_path, imported?)
+    name_condition = if imported?, do: true, else: dynamic([e], e.name == "pageview")
+
+    dynamic([e], ^pathname_condition and ^name_condition)
+  end
+
+  defp page_path_condition(page_path, imported?) do
     db_field = page_path_db_field(imported?)
 
-    page_condition =
-      if String.contains?(page_path, "*") do
-        dynamic([e], fragment("match(?, ?)", field(e, ^db_field), ^page_regex(page_path)))
-      else
-        dynamic([e], field(e, ^db_field) == ^page_path)
-      end
-
-    if imported? do
-      dynamic([e], ^page_condition)
+    if String.contains?(page_path, "*") do
+      dynamic([e], fragment("match(?, ?)", field(e, ^db_field), ^page_regex(page_path)))
     else
-      dynamic([e], ^page_condition and e.name == "pageview")
+      dynamic([e], field(e, ^db_field) == ^page_path)
     end
   end
 

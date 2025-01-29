@@ -8,7 +8,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Filters, Query, QueryOptimizer, TableDecider, SQL}
+  alias Plausible.Stats.{Query, QueryOptimizer, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
 
   require Plausible.Stats.SQL.Expression
@@ -139,18 +139,61 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   defp dimension_group_by(q, _table, query, "event:goal" = dimension) do
-    {events, page_regexes} =
-      Filters.Utils.split_goals_query_expressions(query.preloaded_goals.matching_toplevel_filters)
+    %{
+      indices: goal_indices,
+      types: goal_types,
+      event_names: goal_event_names,
+      page_regexes: goal_page_regexes,
+      scroll_thresholds: goal_scroll_thresholds
+    } =
+      query.preloaded_goals.matching_toplevel_filters
+      |> Plausible.Goals.decompose()
 
     from(e in q,
-      join: goal in Expression.event_goal_join(events, page_regexes),
+      where:
+        fragment(
+          """
+          notEmpty(
+            arrayFilter(
+              goal_index ->
+                CASE
+                  WHEN ?[goal_index] = 'event' THEN
+                      ? = ?[goal_index]
+                  WHEN ?[goal_index] = 'page' THEN
+                      ? = 'pageview' AND match(?, ?[goal_index])
+                  ELSE
+                      ? = 'pageleave' AND match(?, ?[goal_index]) AND ? >= ?[goal_index]
+                end
+              ,
+              ?
+            ) as indices
+          )
+          """,
+          # CASE 1 - custom event goals
+          type(^goal_types, {:array, :string}),
+          e.name,
+          type(^goal_event_names, {:array, :string}),
+          # CASE 2 - pageview goals
+          type(^goal_types, {:array, :string}),
+          e.name,
+          e.pathname,
+          type(^goal_page_regexes, {:array, :string}),
+          # CASE 3 - page scroll goals
+          e.name,
+          e.pathname,
+          type(^goal_page_regexes, {:array, :string}),
+          e.scroll_depth,
+          type(^goal_scroll_thresholds, {:array, :integer}),
+          # Array of indices getting filtered
+          type(^goal_indices, {:array, :integer})
+        ),
+      join: goal in fragment("indices"),
       hints: "ARRAY",
       on: true,
       select_merge: %{
         ^shortname(query, dimension) => fragment("?", goal)
       },
-      group_by: goal,
-      where: goal != 0 and (e.name == "pageview" or goal < 0)
+      group_by: goal
     )
   end
 

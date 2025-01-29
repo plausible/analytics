@@ -5,7 +5,6 @@ defmodule Plausible.Stats.Imported do
   import Ecto.Query
   import Plausible.Stats.Imported.SQL.Expression
 
-  alias Plausible.Stats.Filters
   alias Plausible.Stats.Imported
   alias Plausible.Stats.Query
   alias Plausible.Stats.SQL.QueryBuilder
@@ -239,8 +238,14 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
-    {events, page_regexes} =
-      Filters.Utils.split_goals_query_expressions(query.preloaded_goals.matching_toplevel_filters)
+    %{
+      indices: goal_indices,
+      types: goal_types,
+      event_names: goal_event_names,
+      page_regexes: goal_page_regexes
+    } =
+      query.preloaded_goals.matching_toplevel_filters
+      |> Plausible.Goals.decompose()
 
     Imported.Base.decide_tables(query)
     |> Enum.map(fn
@@ -248,7 +253,15 @@ defmodule Plausible.Stats.Imported do
         Imported.Base.query_imported("imported_custom_events", site, query)
         |> where([i], i.visitors > 0)
         |> select_merge_as([i], %{
-          dim0: fragment("-indexOf(?, ?)", type(^events, {:array, :string}), i.name)
+          dim0:
+            type(
+              fragment(
+                "indexOf(?, ?)",
+                type(^goal_event_names, {:array, :string}),
+                i.name
+              ),
+              :integer
+            )
         })
         |> select_imported_metrics(metrics)
         |> group_by([], selected_as(:dim0))
@@ -260,9 +273,18 @@ defmodule Plausible.Stats.Imported do
         |> where(
           [i],
           fragment(
-            "notEmpty(multiMatchAllIndices(?, ?) as indices)",
+            """
+            notEmpty(
+              arrayFilter(
+                goal_idx -> ?[goal_idx] = 'page' AND match(?, ?[goal_idx]),
+                ?
+              ) as indices
+            )
+            """,
+            type(^goal_types, {:array, :string}),
             i.page,
-            type(^page_regexes, {:array, :string})
+            type(^goal_page_regexes, {:array, :string}),
+            type(^goal_indices, {:array, :integer})
           )
         )
         |> join(:inner, [_i], index in fragment("indices"), hints: "ARRAY", on: true)

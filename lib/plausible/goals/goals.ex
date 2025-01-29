@@ -6,6 +6,7 @@ defmodule Plausible.Goals do
   import Ecto.Query
 
   alias Plausible.Goal
+  alias Plausible.Stats.Filters
   alias Ecto.Multi
 
   @spec get(Plausible.Site.t(), pos_integer()) :: nil | Plausible.Goal.t()
@@ -285,6 +286,28 @@ defmodule Plausible.Goals do
 
     Repo.delete_all(q)
     :ok
+  end
+
+  @type goal_decomposition() :: %{
+          indices: [non_neg_integer()],
+          types: [String.t()],
+          event_names: [String.t()],
+          page_regexes: [String.t()],
+          scroll_thresholds: [non_neg_integer()]
+        }
+
+  @spec decompose([Plausible.Goal.t()]) :: goal_decomposition()
+  def decompose(goals) do
+    %{
+      indices: Enum.with_index(goals, 1) |> Enum.map(fn {_goal, idx} -> idx end),
+      types: Enum.map(goals, &to_string(Plausible.Goal.type(&1))),
+      event_names: Enum.map(goals, &to_string(&1.event_name)),
+      page_regexes:
+        Enum.map(goals, fn goal ->
+          if goal.page_path, do: Filters.Utils.page_regex(goal.page_path), else: ""
+        end),
+      scroll_thresholds: Enum.map(goals, & &1.scroll_threshold)
+    }
   end
 
   defp insert_goal(site, params, upsert?) do

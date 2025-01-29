@@ -4156,6 +4156,169 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     end
   end
 
+  describe "page scroll goals" do
+    test "returns page scroll goals and pageview goals in breakdown with page filter", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, page_path: "/blog")
+
+      insert(:goal,
+        site: site,
+        page_path: "/blog",
+        scroll_threshold: 25,
+        display_name: "Scroll /blog 25"
+      )
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00],
+          scroll_depth: 10
+        ),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00],
+          scroll_depth: 30
+        ),
+        build(:pageview)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "filters" => [["is", "event:page", ["/blog"]]],
+          "date_range" => "all",
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Visit /blog"], "metrics" => [2, 2, 100.0]},
+               # TODO: make it possible to query total conversions from pageleave events
+               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [1, 0, 50.0]}
+             ]
+    end
+
+    test "custom props in combination with page scroll goals", %{
+      conn: conn,
+      site: site
+    } do
+      for threshold <- [25, 50, 75] do
+        insert(:goal,
+          site: site,
+          page_path: "/blog**",
+          scroll_threshold: threshold,
+          display_name: "Scroll /blog #{threshold}"
+        )
+      end
+
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/john-post",
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview,
+          user_id: 12,
+          pathname: "/blog/john-post",
+          timestamp: ~N[2021-01-01 00:00:00],
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageleave,
+          user_id: 12,
+          pathname: "/blog/john-post",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 30,
+          "meta.key": ["author"],
+          "meta.value": ["john"]
+        ),
+        build(:pageview,
+          user_id: 34,
+          pathname: "/blog/jane-post",
+          timestamp: ~N[2021-01-01 00:00:00],
+          "meta.key": ["author"],
+          "meta.value": ["jane"]
+        ),
+        build(:pageleave,
+          user_id: 34,
+          pathname: "/blog/jane-post",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 50,
+          "meta.key": ["author"],
+          "meta.value": ["jane"]
+        ),
+        build(:pageview,
+          user_id: 56,
+          pathname: "/blog/jane-post",
+          timestamp: ~N[2021-01-01 00:00:00],
+          "meta.key": ["author"],
+          "meta.value": ["jane"]
+        ),
+        build(:pageleave,
+          user_id: 56,
+          pathname: "/blog/jane-post",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 75,
+          "meta.key": ["author"],
+          "meta.value": ["jane"]
+        )
+      ])
+
+      # Double-dimension breakdown
+      conn1 =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "date_range" => "all",
+          "dimensions" => ["event:goal", "event:props:author"]
+        })
+
+      assert json_response(conn1, 200)["results"] == [
+               %{"dimensions" => ["Scroll /blog 25", "jane"], "metrics" => [2, 0, 50.0]},
+               %{"dimensions" => ["Scroll /blog 50", "jane"], "metrics" => [2, 0, 50.0]},
+               %{"dimensions" => ["Scroll /blog 25", "john"], "metrics" => [1, 0, 25.0]},
+               %{"dimensions" => ["Scroll /blog 75", "jane"], "metrics" => [1, 0, 25.0]}
+             ]
+
+      # Breakdown by event:props:author with a page scroll goal filter
+      conn2 =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["Scroll /blog 25"]]],
+          "dimensions" => ["event:props:author"]
+        })
+
+      assert json_response(conn2, 200)["results"] == [
+               %{"dimensions" => ["jane"], "metrics" => [2, 0, 50.0]},
+               %{"dimensions" => ["john"], "metrics" => [1, 0, 25.0]}
+             ]
+
+      # Breaks down page scroll goals with a custom prop filter
+      conn3 =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "date_range" => "all",
+          "filters" => [["is", "event:props:author", ["jane"]]],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn3, 200)["results"] == [
+               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [2, 0, 50.0]},
+               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [2, 0, 50.0]},
+               %{"dimensions" => ["Scroll /blog 75"], "metrics" => [1, 0, 25.0]}
+             ]
+    end
+  end
+
   test "can filter by utm_medium case insensitively", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
