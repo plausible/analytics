@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, { useRef, useMemo } from 'react'
 import { formatISO, nowForSite } from '../../util/date'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
@@ -16,7 +16,7 @@ import {
   AppNavigationLink,
   useAppNavigate
 } from '../../navigation/use-app-navigate'
-import { DateRangeCalendar } from './date-range-calendar'
+import { DateRangeCalendarProps } from './date-range-calendar'
 import {
   COMPARISON_DISABLED_PERIODS,
   DisplaySelectedPeriod,
@@ -24,7 +24,8 @@ import {
   getSearchToApplyCustomDates,
   last6MonthsLinkItem,
   getDatePeriodGroups,
-  LinkItem
+  LinkItem,
+  QueryPeriod
 } from '../../query-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
@@ -119,7 +120,7 @@ function QueryPeriodMenuKeybinds({
   )
 }
 
-const QueryPeriodMenuButton = () => {
+export const QueryPeriodMenuButton = () => {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   return (
@@ -134,22 +135,17 @@ const QueryPeriodMenuButton = () => {
 }
 
 export const QueryPeriodMenu = ({
-  closeDropdown
+  closeDropdown,
+  showCalendar
 }: {
   closeDropdown: () => void
+  showCalendar: (
+    props: Omit<DateRangeCalendarProps, 'id' | 'onCloseWithNoSelection'>
+  ) => void
 }) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const [menuVisible, setMenuVisible] = useState<boolean>(false)
   const navigate = useAppNavigate()
-
-  const closeMenu = useCallback(() => {
-    setMenuVisible(false)
-  }, [])
-
-  useEffect(() => {
-    closeMenu()
-  }, [closeMenu, query])
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -161,14 +157,20 @@ export const QueryPeriodMenu = ({
           ['Custom Range', 'C'],
           {
             search: (s) => s,
-            isActive: () => false,
-            onEvent: (e) => {
-              // custom handler is needed to prevent
-              // the calendar from immediately closing
-              // due to Menu.Button grabbing focus
-              setMenuVisible(true)
-              e.preventDefault()
-              e.stopPropagation()
+            isActive: ({ query }) => query.period === QueryPeriod.custom,
+            onEvent: () => {
+              showCalendar({
+                onCloseWithSelection: (selection) =>
+                  navigate({
+                    search: getSearchToApplyCustomDates(selection)
+                  }),
+                minDate: site.statsBegin,
+                maxDate: formatISO(nowForSite(site)),
+                defaultDates:
+                  query.from && query.to
+                    ? [formatISO(query.from), formatISO(query.to)]
+                    : undefined
+              })
               closeDropdown()
             }
           }
@@ -178,28 +180,11 @@ export const QueryPeriodMenu = ({
         ? []
         : [[compareLink]]
     })
-  }, [site, query, setMenuVisible, closeDropdown])
+  }, [site, query, navigate, showCalendar, closeDropdown])
 
   return (
     <>
-      <QueryPeriodMenuButton />
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
-      {menuVisible && (
-        <DateRangeCalendar
-          id="calendar"
-          onCloseWithSelection={(selection) =>
-            navigate({ search: getSearchToApplyCustomDates(selection) })
-          }
-          minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
-          defaultDates={
-            query.to && query.from
-              ? [formatISO(query.from), formatISO(query.to)]
-              : undefined
-          }
-          onCloseWithNoSelection={() => setMenuVisible(false)}
-        />
-      )}
       <QueryPeriodMenuItems groups={groups} />
     </>
   )

@@ -249,7 +249,7 @@ export type LinkItem = [
 ]
 
 /**
- * Gets menu items with their respective navigation logic.
+ * This function gets menu items with their respective navigation logic.
  * Used to render both menu items and keybind listeners.
  * `onEvent` is passed to all default items, but not extra items.
  */

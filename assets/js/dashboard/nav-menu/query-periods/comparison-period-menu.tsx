@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { formatDateRange, formatISO, nowForSite } from '../../util/date'
 import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
@@ -11,7 +11,7 @@ import {
   AppNavigationLink,
   useAppNavigate
 } from '../../navigation/use-app-navigate'
-import { DateRangeCalendar } from './date-range-calendar'
+import { DateRangeCalendarProps } from './date-range-calendar'
 import {
   COMPARISON_MODES,
   ComparisonMode,
@@ -30,23 +30,21 @@ import {
 } from './shared-menu-items'
 
 export const ComparisonPeriodMenuItems = ({
-  closeDropdown
+  closeDropdown,
+  showCalendar
 }: {
   closeDropdown: () => void
+  showCalendar: (
+    props: Omit<DateRangeCalendarProps, 'id' | 'onCloseWithNoSelection'>
+  ) => void
 }) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
-  const [menuVisible, setMenuVisible] = useState<boolean>(false)
-
-  const closeMenu = useCallback(() => {
-    setMenuVisible(false)
-  }, [])
 
   useEffect(() => {
-    closeMenu()
     closeDropdown()
-  }, [closeMenu, closeDropdown, query])
+  }, [closeDropdown, query])
 
   if (!isComparisonEnabled(query.comparison)) {
     return null
@@ -54,24 +52,6 @@ export const ComparisonPeriodMenuItems = ({
 
   return (
     <>
-      {menuVisible && (
-        <DateRangeCalendar
-          id="compare-menu-calendar"
-          onCloseWithSelection={(selection) =>
-            navigate({
-              search: getSearchToApplyCustomComparisonDates(selection)
-            })
-          }
-          minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
-          defaultDates={
-            query.compare_from && query.compare_to
-              ? [formatISO(query.compare_from), formatISO(query.compare_to)]
-              : undefined
-          }
-          onCloseWithNoSelection={() => setMenuVisible(false)}
-        />
-      )}
       <Transition
         {...popover.transition.props}
         className={classNames(
@@ -104,13 +84,25 @@ export const ComparisonPeriodMenuItems = ({
             data-selected={query.comparison === ComparisonMode.custom}
             className={linkClassName}
             search={(s) => s}
-            onClick={(e) => {
+            onClick={() => {
               // custom handler is needed to prevent
               // the calendar from immediately closing
               // due to Menu.Button grabbing focus
-              setMenuVisible(true)
-              e.stopPropagation()
-              e.preventDefault()
+              showCalendar({
+                onCloseWithSelection: (selection) =>
+                  navigate({
+                    search: getSearchToApplyCustomComparisonDates(selection)
+                  }),
+                minDate: site.statsBegin,
+                maxDate: formatISO(nowForSite(site)),
+                defaultDates:
+                  query.compare_from && query.compare_to
+                    ? [
+                        formatISO(query.compare_from),
+                        formatISO(query.compare_to)
+                      ]
+                    : undefined
+              })
               closeDropdown()
             }}
           >
