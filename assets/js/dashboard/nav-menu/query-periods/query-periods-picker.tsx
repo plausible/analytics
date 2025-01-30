@@ -58,18 +58,15 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
     <div className={classNames('flex shrink-0', className)}>
       <MovePeriodArrows className={isComparing ? 'hidden md:flex' : ''} />
       <Popover className="min-w-36 md:relative lg:w-48">
-        {({ close }) => (
+        {({ close, open }) => (
           <>
             <QueryPeriodMenuButton />
             <QueryPeriodMenu
+              dropdownIsOpen={open}
+              calendarIsOpen={!!calendar}
               closeDropdown={close}
-              toggleCalendar={() => {
-                if (calendar === 'main') {
-                  setCalendar(null)
-                } else {
-                  setCalendar('main')
-                }
-              }}
+              openCalendar={() => setCalendar('main')}
+              closeCalendar={() => setCalendar(null)}
             />
           </>
         )}
@@ -103,18 +100,15 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
             <span className="hidden md:inline px-1">vs.</span>
           </div>
           <Popover className="min-w-36 md:relative lg:w-48">
-            {({ close }) => (
+            {({ close, open }) => (
               <>
                 <ComparisonPeriodMenuButton />
                 <ComparisonPeriodMenuItems
+                  dropdownIsOpen={open}
+                  calendarIsOpen={!!calendar}
                   closeDropdown={close}
-                  toggleCalendar={() => {
-                    if (calendar === 'compare') {
-                      setCalendar(null)
-                    } else {
-                      setCalendar('compare')
-                    }
-                  }}
+                  openCalendar={() => setCalendar('compare')}
+                  closeCalendar={() => setCalendar(null)}
                 />
               </>
             )}

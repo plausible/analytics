@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useEffect, useRef } from 'react'
+import React, { useRef } from 'react'
 import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
@@ -20,22 +20,26 @@ import { popover } from '../../components/popover'
 import {
   datemenuButtonClassName,
   DateMenuChevron,
+  DropdownItemsProps,
   linkClassName,
-  MenuSeparator
+  MenuSeparator,
+  useCloseCalendarOnDropdownOpen
 } from './shared-menu-items'
 
 export const ComparisonPeriodMenuItems = ({
+  dropdownIsOpen,
   closeDropdown,
-  toggleCalendar
-}: {
-  closeDropdown: () => void
-  toggleCalendar: () => void
-}) => {
+  openCalendar,
+  closeCalendar,
+  calendarIsOpen
+}: DropdownItemsProps) => {
   const { query } = useQueryContext()
 
-  useEffect(() => {
-    closeDropdown()
-  }, [closeDropdown, query])
+  useCloseCalendarOnDropdownOpen({
+    dropdownIsOpen,
+    calendarIsOpen,
+    closeCalendar
+  })
 
   if (!isComparisonEnabled(query.comparison)) {
     return null
@@ -79,7 +83,7 @@ export const ComparisonPeriodMenuItems = ({
               // custom handler is needed to prevent
               // the calendar from immediately closing
               // due to Menu.Button grabbing focus
-              toggleCalendar()
+              openCalendar()
               closeDropdown()
             }}
           >

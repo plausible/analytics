@@ -1,6 +1,6 @@
 /** @format */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import classNames from 'classnames'
 import { popover } from '../../components/popover'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
@@ -25,3 +25,26 @@ export const DateMenuChevron = () => (
 export const MenuSeparator = () => (
   <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
 )
+
+export interface DropdownItemsProps {
+  dropdownIsOpen: boolean
+  calendarIsOpen: boolean
+  closeDropdown: () => void
+  openCalendar: () => void
+  closeCalendar: () => void
+}
+
+export const useCloseCalendarOnDropdownOpen = ({
+  dropdownIsOpen,
+  calendarIsOpen,
+  closeCalendar
+}: Pick<
+  DropdownItemsProps,
+  'dropdownIsOpen' | 'calendarIsOpen' | 'closeCalendar'
+>) => {
+  useEffect(() => {
+    if (dropdownIsOpen && calendarIsOpen) {
+      closeCalendar()
+    }
+  }, [dropdownIsOpen, calendarIsOpen, closeCalendar])
+}

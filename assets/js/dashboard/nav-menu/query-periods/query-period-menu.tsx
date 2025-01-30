@@ -31,8 +31,10 @@ import { popover } from '../../components/popover'
 import {
   datemenuButtonClassName,
   DateMenuChevron,
+  DropdownItemsProps,
   linkClassName,
-  MenuSeparator
+  MenuSeparator,
+  useCloseCalendarOnDropdownOpen
 } from './shared-menu-items'
 
 function QueryPeriodMenuItems({ groups }: { groups: LinkItem[][] }) {
@@ -139,13 +141,19 @@ export const QueryPeriodMenuButton = () => {
 
 export const QueryPeriodMenu = ({
   closeDropdown,
-  toggleCalendar
-}: {
-  closeDropdown: () => void
-  toggleCalendar: () => void
-}) => {
+  openCalendar,
+  closeCalendar,
+  dropdownIsOpen,
+  calendarIsOpen
+}: DropdownItemsProps) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
+
+  useCloseCalendarOnDropdownOpen({
+    dropdownIsOpen,
+    calendarIsOpen,
+    closeCalendar
+  })
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -159,8 +167,12 @@ export const QueryPeriodMenu = ({
             search: (s) => s,
             isActive: ({ query }) => query.period === QueryPeriod.custom,
             onEvent: () => {
-              toggleCalendar()
-              closeDropdown()
+              if (calendarIsOpen) {
+                closeCalendar()
+              } else {
+                openCalendar()
+                closeDropdown()
+              }
             }
           }
         ]
@@ -169,7 +181,7 @@ export const QueryPeriodMenu = ({
         ? []
         : [[compareLink]]
     })
-  }, [site, query, toggleCalendar, closeDropdown])
+  }, [site, query, calendarIsOpen, closeCalendar, openCalendar, closeDropdown])
 
   return (
     <>
