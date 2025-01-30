@@ -131,7 +131,12 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   @impl true
   def update(assigns, socket) do
-    preload? = Map.get(assigns, :preload?, true)
+    preload? =
+      if Mix.env() in [:test, :ce_test] do
+        true
+      else
+        Map.get(assigns, :preload?, true)
+      end
 
     socket =
       assign(socket,
