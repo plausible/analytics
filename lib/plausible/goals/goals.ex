@@ -288,10 +288,15 @@ defmodule Plausible.Goals do
     :ok
   end
 
+  # :TODO: Move to Plausible.Stats.Goals
+
+  @match_all_ch_regex ".*"
+
   @type goal_decomposition() :: %{
           indices: [non_neg_integer()],
           types: [String.t()],
-          event_names: [String.t()],
+          event_names_imports: [String.t()],
+          event_names_by_type: [String.t()],
           page_regexes: [String.t()],
           scroll_thresholds: [non_neg_integer()]
         }
@@ -301,10 +306,25 @@ defmodule Plausible.Goals do
     %{
       indices: Enum.with_index(goals, 1) |> Enum.map(fn {_goal, idx} -> idx end),
       types: Enum.map(goals, &to_string(Plausible.Goal.type(&1))),
-      event_names: Enum.map(goals, &to_string(&1.event_name)),
+      # :TRICKY: This will contain "" for non-event goals
+      event_names_imports: Enum.map(goals, &to_string(&1.event_name)),
+      event_names_by_type:
+        Enum.map(goals, fn goal ->
+          case Plausible.Goal.type(goal) do
+            :event -> goal.event_name
+            :page -> "pageview"
+            :scroll -> "pageleave"
+          end
+        end),
+      # :TRICKY: event goals are considered to match everything for the sake of efficient queries in query_builder.ex
+      # See also Plausible.Stats.SQL.Expression#event_goal_join
       page_regexes:
         Enum.map(goals, fn goal ->
-          if goal.page_path, do: Filters.Utils.page_regex(goal.page_path), else: ""
+          case Plausible.Goal.type(goal) do
+            :event -> @match_all_ch_regex
+            :page -> Filters.Utils.page_regex(goal.page_path)
+            :scroll -> Filters.Utils.page_regex(goal.page_path)
+          end
         end),
       scroll_thresholds: Enum.map(goals, & &1.scroll_threshold)
     }

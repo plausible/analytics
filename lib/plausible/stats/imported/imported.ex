@@ -238,12 +238,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
-    %{
-      indices: goal_indices,
-      types: goal_types,
-      event_names: goal_event_names,
-      page_regexes: goal_page_regexes
-    } =
+    goal_join_data =
       query.preloaded_goals.matching_toplevel_filters
       |> Plausible.Goals.decompose()
 
@@ -254,13 +249,10 @@ defmodule Plausible.Stats.Imported do
         |> where([i], i.visitors > 0)
         |> select_merge_as([i], %{
           dim0:
-            type(
-              fragment(
-                "indexOf(?, ?)",
-                type(^goal_event_names, {:array, :string}),
-                i.name
-              ),
-              :integer
+            fragment(
+              "indexOf(?, ?)",
+              type(^goal_join_data.event_names_imports, {:array, :string}),
+              i.name
             )
         })
         |> select_imported_metrics(metrics)
@@ -281,16 +273,16 @@ defmodule Plausible.Stats.Imported do
               ) as indices
             )
             """,
-            type(^goal_types, {:array, :string}),
+            type(^goal_join_data.types, {:array, :string}),
             i.page,
-            type(^goal_page_regexes, {:array, :string}),
-            type(^goal_indices, {:array, :integer})
+            type(^goal_join_data.page_regexes, {:array, :string}),
+            type(^goal_join_data.indices, {:array, :integer})
           )
         )
         |> join(:inner, [_i], index in fragment("indices"), hints: "ARRAY", on: true)
         |> group_by([_i, index], index)
         |> select_merge_as([_i, index], %{
-          dim0: type(fragment("?", index), :integer)
+          dim0: fragment("CAST(?, 'UInt64')", index)
         })
         |> select_imported_metrics(metrics)
     end)
