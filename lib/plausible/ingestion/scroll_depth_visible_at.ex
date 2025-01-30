@@ -1,41 +1,30 @@
 defmodule Plausible.Ingestion.ScrollDepthVisibleAt do
   @moduledoc """
-  GenServer that updates the `scroll_depth_visible_at` column for a site when needed.
+  Module that updates the `scroll_depth_visible_at` column for a site when needed.
 
   This is called in a hot loop in ingestion, so it:
-  1. Only updates the database once per site (if SiteCache doesn't know about visibility yet)
+  1. Only updates the database once per site async (if SiteCache doesn't know about visibility yet)
   2. Does not retry the update if it fails, to be retried on server restart
   """
 
-  use GenServer
   require Logger
   alias Plausible.Repo
 
   import Ecto.Query
 
-  def start_link(opts \\ []) do
-    opts = Keyword.merge(opts, name: __MODULE__)
-    GenServer.start_link(__MODULE__, opts, opts)
+  def init() do
+    :ets.new(__MODULE__, [
+      :named_table,
+      :set,
+      :public,
+      {:read_concurrency, true},
+      {:write_concurrency, true}
+    ])
   end
 
   def mark_scroll_depth_visible(site_id) do
-    GenServer.cast(__MODULE__, {:update_site, site_id})
-  end
-
-  @impl true
-  def init(_opts) do
-    {:ok, MapSet.new()}
-  end
-
-  @impl true
-  def handle_cast({:update_site, site_id}, touched_sites) do
-    # When receiving multiple update requests for a site, only process the first one
-    if MapSet.member?(touched_sites, site_id) do
-      {:noreply, touched_sites}
-    else
+    if :ets.insert_new(__MODULE__, {site_id}) do
       Task.start(fn -> attempt_update_repo(site_id) end)
-
-      {:noreply, MapSet.put(touched_sites, site_id)}
     end
   end
 

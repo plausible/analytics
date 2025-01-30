@@ -24,7 +24,6 @@ defmodule Plausible.Application do
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         {Plausible.RateLimit, clean_period: :timer.minutes(10)},
         Plausible.Ingestion.Counters,
-        Plausible.Ingestion.ScrollDepthVisibleAt,
         {Finch, name: Plausible.Finch, pools: finch_pool_config()},
         {Phoenix.PubSub, name: Plausible.PubSub},
         Plausible.Session.Salts,
@@ -121,6 +120,7 @@ defmodule Plausible.Application do
     setup_geolocation()
     Location.load_all()
     Plausible.Ingestion.Source.init()
+    Plausible.Ingestion.ScrollDepthVisibleAt.init()
     Plausible.Geo.await_loader()
 
     Supervisor.start_link(List.flatten(children), opts)
