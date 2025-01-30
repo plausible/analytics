@@ -109,7 +109,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      type_into_input(lv, "filter_text", "firs")
+      type_into_input(lv, "filter_text", "first")
       html = render(lv)
 
       assert html =~ "first.example.com"

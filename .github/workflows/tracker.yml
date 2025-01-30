@@ -13,7 +13,7 @@ concurrency:
 jobs:
   test:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
