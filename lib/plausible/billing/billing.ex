@@ -140,6 +140,27 @@ defmodule Plausible.Billing do
         Teams.get!(team_id)
 
       {:user_id, user_id} ->
+        # FIXME: This is very problematic for a number of reasons.
+        #
+        # Given a guest or non-owner member user initiates the new subscription payment
+        # and becomes an owner of an existing team already with a subscription in between,
+        # this will result in assigning this new subscription to the newly owned team,
+        # effectively "shadowing" any old one.
+        #
+        # This also applies to teams where user has "autocreated" membership.
+        #
+        # Autocreated or not, defaulting to a team where user is already an owner
+        # in this case is not desirable as the payment is started with an assumption
+        # that a team doesn't exist.
+        #
+        # Always defaulting to creating a new team is an option but requires
+        # clearing any existing "autocreated" flag on any other membership then.
+        #
+        # Yet another possibility is to _always_ require team to exist before initiating
+        # the payment. This is not optimal though. Or maybe it is? As at this stage
+        # we intend to support multiple teams membership (and, by extension, ownership),
+        # it shouldn't be a problem to provisin the team before the procedure. Even
+        # if user backs out, they can remove the team if they change their mind, eventually.
         user = Repo.get!(Auth.User, user_id)
         {:ok, team} = Teams.get_or_create(user)
         team
