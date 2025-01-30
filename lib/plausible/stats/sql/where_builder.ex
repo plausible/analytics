@@ -113,7 +113,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp add_filter(:events, query, [_, "event:goal" | _rest] = filter) do
-    Plausible.Goals.Filters.add_filter(query, filter)
+    Plausible.Stats.Goals.add_filter(query, filter)
   end
 
   defp add_filter(:events, _query, [_, "event:page" | _rest] = filter) do

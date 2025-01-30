@@ -1,5 +1,7 @@
-defmodule Plausible.Goals.Filters do
-  @moduledoc false
+defmodule Plausible.Stats.Goals do
+  @moduledoc """
+  Stats code related to filtering and grouping by goals.
+  """
 
   import Ecto.Query
   import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
