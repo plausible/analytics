@@ -39,6 +39,7 @@ const items = {
       'flex items-center justify-between',
       'px-4 py-2 text-sm leading-tight'
     ),
+    selectedOption: classNames('data-[selected=true]:font-bold'),
     disabledLink: classNames(
       'data-[headlessui-state=disabled]:font-bold',
       'data-[headlessui-state=disabled]:cursor-default'
@@ -53,7 +54,16 @@ const items = {
       'hover:bg-gray-100',
       'hover:text-gray-900',
       'dark:hover:bg-gray-900',
-      'dark:hover:text-gray-100'
+      'dark:hover:text-gray-100',
+
+      'focus-within:bg-gray-100',
+      'focus-within:text-gray-900',
+      'dark:focus-within:bg-gray-900',
+      'dark:focus-within:text-gray-100'
+    ),
+    roundedStartEnd: classNames(
+      'first-of-type:rounded-t-md',
+      'last-of-type:rounded-b-md'
     )
   }
 }

@@ -20,7 +20,7 @@ import {
   COMPARISON_MATCH_MODE_LABELS,
   ComparisonMatchMode
 } from '../../query-time-periods'
-import { Menu, Transition } from '@headlessui/react'
+import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../../components/popover'
 import {
   datemenuButtonClassName,
@@ -29,7 +29,11 @@ import {
   MenuSeparator
 } from './shared-menu-items'
 
-export const ComparisonPeriodMenuItems = () => {
+export const ComparisonPeriodMenuItems = ({
+  closeDropdown
+}: {
+  closeDropdown: () => void
+}) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
@@ -41,11 +45,13 @@ export const ComparisonPeriodMenuItems = () => {
 
   useEffect(() => {
     closeMenu()
-  }, [closeMenu, query])
+    closeDropdown()
+  }, [closeMenu, closeDropdown, query])
 
   if (!isComparisonEnabled(query.comparison)) {
     return null
   }
+
   return (
     <>
       {menuVisible && (
@@ -74,97 +80,101 @@ export const ComparisonPeriodMenuItems = () => {
           'md:left-auto md:w-56'
         )}
       >
-        <Menu.Items className={popover.panel.classNames.roundedSheet}>
+        <Popover.Panel className={popover.panel.classNames.roundedSheet}>
           {[
             ComparisonMode.off,
             ComparisonMode.previous_period,
             ComparisonMode.year_over_year
           ].map((comparisonMode) => (
-            <Menu.Item
+            <AppNavigationLink
               key={comparisonMode}
-              disabled={query.comparison === comparisonMode}
+              data-selected={query.comparison === comparisonMode}
+              className={linkClassName}
+              search={(search) => ({
+                ...search,
+                ...clearedComparisonSearch,
+                comparison: comparisonMode
+              })}
+              onClick={closeDropdown}
             >
-              <AppNavigationLink
-                className={linkClassName}
-                search={(search) => ({
-                  ...search,
-                  ...clearedComparisonSearch,
-                  comparison: comparisonMode
-                })}
-              >
-                {COMPARISON_MODES[comparisonMode]}
-              </AppNavigationLink>
-            </Menu.Item>
+              {COMPARISON_MODES[comparisonMode]}
+            </AppNavigationLink>
           ))}
-          <Menu.Item>
-            {({ close: closeDropdown }) => (
-              <AppNavigationLink
-                className={linkClassName}
-                search={(s) => s}
-                onClick={(e) => {
-                  // custom handler is needed to prevent
-                  // the calendar from immediately closing
-                  // due to Menu.Button grabbing focus
-                  setMenuVisible(true)
-                  e.stopPropagation()
-                  e.preventDefault()
-                  closeDropdown()
-                }}
-              >
-                {COMPARISON_MODES[ComparisonMode.custom]}
-              </AppNavigationLink>
-            )}
-          </Menu.Item>
+          <AppNavigationLink
+            data-selected={query.comparison === ComparisonMode.custom}
+            className={linkClassName}
+            search={(s) => s}
+            onClick={(e) => {
+              // custom handler is needed to prevent
+              // the calendar from immediately closing
+              // due to Menu.Button grabbing focus
+              setMenuVisible(true)
+              e.stopPropagation()
+              e.preventDefault()
+              closeDropdown()
+            }}
+          >
+            {COMPARISON_MODES[ComparisonMode.custom]}
+          </AppNavigationLink>
           {query.comparison !== ComparisonMode.custom && (
             <>
               <MenuSeparator />
-              <Menu.Item disabled={query.match_day_of_week === true}>
-                <AppNavigationLink
-                  className={linkClassName}
-                  search={(s) => ({ ...s, match_day_of_week: true })}
-                >
-                  {
-                    COMPARISON_MATCH_MODE_LABELS[
-                      ComparisonMatchMode.MatchDayOfWeek
-                    ]
-                  }
-                </AppNavigationLink>
-              </Menu.Item>
-              <Menu.Item disabled={query.match_day_of_week === false}>
-                <AppNavigationLink
-                  className={linkClassName}
-                  search={(s) => ({ ...s, match_day_of_week: false })}
-                >
-                  {
-                    COMPARISON_MATCH_MODE_LABELS[
-                      ComparisonMatchMode.MatchExactDate
-                    ]
-                  }
-                </AppNavigationLink>
-              </Menu.Item>
+              <AppNavigationLink
+                data-selected={query.match_day_of_week === true}
+                className={linkClassName}
+                search={(s) => ({ ...s, match_day_of_week: true })}
+                onClick={closeDropdown}
+              >
+                {
+                  COMPARISON_MATCH_MODE_LABELS[
+                    ComparisonMatchMode.MatchDayOfWeek
+                  ]
+                }
+              </AppNavigationLink>
+              <AppNavigationLink
+                data-selected={query.match_day_of_week === false}
+                className={linkClassName}
+                search={(s) => ({ ...s, match_day_of_week: false })}
+                onClick={closeDropdown}
+              >
+                {
+                  COMPARISON_MATCH_MODE_LABELS[
+                    ComparisonMatchMode.MatchExactDate
+                  ]
+                }
+              </AppNavigationLink>
             </>
           )}
-        </Menu.Items>
+        </Popover.Panel>
       </Transition>
     </>
   )
 }
 
 export const ComparisonPeriodMenuButton = () => {
-  const site = useSiteContext()
-  const { query } = useQueryContext()
-  const ref = useRef<HTMLButtonElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   return (
     <>
-      <BlurMenuButtonOnEscape targetRef={ref} />
-      <Menu.Button className={datemenuButtonClassName} ref={ref}>
-        {query.comparison === ComparisonMode.custom &&
-        query.compare_from &&
-        query.compare_to
-          ? formatDateRange(site, query.compare_from, query.compare_to)
-          : COMPARISON_MODES[query.comparison!]}
+      <BlurMenuButtonOnEscape targetRef={buttonRef} />
+      <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
+        <CurrentComparison />
         <DateMenuChevron />
-      </Menu.Button>
+      </Popover.Button>
     </>
   )
+}
+
+const CurrentComparison = () => {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
+
+  if (!isComparisonEnabled(query.comparison)) {
+    return null
+  }
+
+  return query.comparison === ComparisonMode.custom &&
+    query.compare_from &&
+    query.compare_to
+    ? formatDateRange(site, query.compare_from, query.compare_to)
+    : COMPARISON_MODES[query.comparison]
 }

@@ -10,7 +10,7 @@ import {
   ComparisonPeriodMenuButton,
   ComparisonPeriodMenuItems
 } from './comparison-period-menu'
-import { Menu } from '@headlessui/react'
+import { Menu, Popover } from '@headlessui/react'
 
 export function QueryPeriodsPicker({ className }: { className?: string }) {
   const { query } = useQueryContext()
@@ -27,10 +27,14 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
           <div className="my-auto px-1 text-sm font-medium text-gray-800 dark:text-gray-200">
             <span className="hidden md:inline px-1">vs.</span>
           </div>
-          <Menu as="div" className="min-w-36 md:relative lg:w-48">
-            <ComparisonPeriodMenuButton />
-            <ComparisonPeriodMenuItems />
-          </Menu>
+          <Popover as="div" className="min-w-36 md:relative lg:w-48">
+            {({ close }) => (
+              <>
+                <ComparisonPeriodMenuButton />
+                <ComparisonPeriodMenuItems closeDropdown={close} />
+              </>
+            )}
+          </Popover>
         </>
       )}
     </div>
