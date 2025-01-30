@@ -26,11 +26,17 @@ defmodule PlausibleWeb.AuthPlug do
           |> Plug.Conn.get_session("current_team_id")
           |> Plausible.Teams.get()
 
+        current_team_owner? =
+          case current_team && Plausible.Teams.Memberships.team_role(current_team, user) do
+            {:ok, :owner} -> true
+            _ -> false
+          end
+
         my_team =
-          case {current_team, user} do
-            {%Teams.Team{}, _} -> current_team
-            {nil, %{team_memberships: [%{team: team} | _]}} -> team
-            {nil, %{team_memberships: []}} -> nil
+          case {current_team_owner?, current_team, user} do
+            {true, %Teams.Team{}, _} -> current_team
+            {_, nil, %{team_memberships: [%{team: team} | _]}} -> team
+            {_, nil, %{team_memberships: []}} -> nil
           end
 
         Plausible.OpenTelemetry.add_user_attributes(user)

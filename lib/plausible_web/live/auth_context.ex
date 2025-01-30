@@ -35,11 +35,18 @@ defmodule PlausibleWeb.Live.AuthContext do
       |> assign_new(:my_team, fn context ->
         current_team = Teams.get(session["current_team_id"])
 
-        case {current_team, context.current_user} do
-          {nil, nil} -> nil
-          {%Teams.Team{}, _} -> current_team
-          {nil, %{team_memberships: [%{team: team} | _]}} -> team
-          {nil, %{team_memberships: []}} -> nil
+        current_team_owner? =
+          case current_team &&
+                 Plausible.Teams.Memberships.team_role(current_team, context.current_user) do
+            {:ok, :owner} -> true
+            _ -> false
+          end
+
+        case {current_team_owner?, current_team, context.current_user} do
+          {_, nil, nil} -> nil
+          {true, %Teams.Team{}, _} -> current_team
+          {_, nil, %{team_memberships: [%{team: team} | _]}} -> team
+          {_, nil, %{team_memberships: []}} -> nil
         end
       end)
       |> assign_new(:current_team, fn context ->
