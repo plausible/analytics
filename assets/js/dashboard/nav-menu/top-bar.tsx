@@ -33,7 +33,7 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
       <div id="stats-container-top" ref={ref} />
       <div
         className={classNames(
-          'relative top-0 py-1 sm:py-2 z-10',
+          'relative top-0 py-2 sm:py-3 z-10',
           !site.embedded &&
             !inView &&
             'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-850'
