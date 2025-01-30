@@ -238,9 +238,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
-    goal_join_data =
-      query.preloaded_goals.matching_toplevel_filters
-      |> Plausible.Goals.decompose()
+    goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
 
     Imported.Base.decide_tables(query)
     |> Enum.map(fn

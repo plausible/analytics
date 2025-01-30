@@ -139,9 +139,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   defp dimension_group_by(q, :events, query, "event:goal" = dimension) do
-    goal_join_data =
-      query.preloaded_goals.matching_toplevel_filters
-      |> Plausible.Goals.decompose()
+    goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
 
     from(e in q,
       join: goal in Expression.event_goal_join(goal_join_data),
