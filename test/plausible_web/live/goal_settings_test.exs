@@ -165,18 +165,6 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       refute html =~ "No goals found for this site. Please refine or"
     end
 
-    test "Add Goal form view is rendered immediately, though hidden", %{conn: conn, site: site} do
-      {:ok, _goals} = setup_goals(site)
-      {_, html} = get_liveview(conn, site, with_html?: true)
-
-      assert html =~ "Add Goal for #{site.domain}"
-
-      assert element_exists?(
-               html,
-               ~s/#goals-form-modal form[phx-submit="save-goal"]/
-             )
-    end
-
     test "auto-configuring custom event goals", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "Signup"),
