@@ -101,6 +101,8 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   """
 
+  @test_preload_override? Mix.env() in [:test, :ce_test]
+
   use PlausibleWeb, :live_component
 
   alias Phoenix.LiveView
@@ -131,12 +133,11 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   @impl true
   def update(assigns, socket) do
-    preload? =
-      if Mix.env() in [:test, :ce_test] do
-        true
-      else
-        Map.get(assigns, :preload?, true)
-      end
+    # NOTE: This is a workaround for @test_preload_override? being computed
+    # at build time, where Mix.env() is available. Otherwise, dialyzer
+    # complains.
+    preload_override? = :erlang.phash2(1, 1) == 0 and @test_preload_override?
+    preload? = preload_override? || Map.get(assigns, :preload?, true)
 
     socket =
       assign(socket,
