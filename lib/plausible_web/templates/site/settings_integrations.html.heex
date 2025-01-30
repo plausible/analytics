@@ -1,11 +1,13 @@
+<% use Plausible %>
+
 <.settings_tiles>
-  <PlausibleWeb.Components.Settings.settings_search_console
+  <PlausibleWeb.Components.Site.SettingsIntegrations.settings_search_console
     conn={@conn}
     site={@site}
     search_console_domains={@search_console_domains}
   />
 
-  <PlausibleWeb.Components.Site.SettingsLookerStudio.render />
+  <PlausibleWeb.Components.Site.SettingsIntegrations.settings_looker_studio :if={ee?()} />
 
   <.tile :if={@has_plugins_tokens? || @conn.query_params["new_token"]}>
     <:title>
