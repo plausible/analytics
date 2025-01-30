@@ -14,11 +14,9 @@ beforeAll(() => {
   const mockResizeObserver = jest.fn(
     (handleEntries) =>
       ({
-        observe: jest
-          .fn()
-          .mockImplementation((entry) =>
-            handleEntries([entry], null as unknown as ResizeObserver)
-          ),
+        observe: jest.fn().mockImplementation((entry) => {
+          handleEntries([entry], null as unknown as ResizeObserver)
+        }),
         unobserve: jest.fn(),
         disconnect: jest.fn()
       }) as unknown as ResizeObserver
@@ -80,7 +78,7 @@ test('user can see expected filters and clear them one by one or all together', 
   await userEvent.click(
     screen.getByRole('button', {
       hidden: false,
-      name: 'Show more'
+      name: 'See more'
     })
   )
 

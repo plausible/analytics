@@ -3,18 +3,18 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import DatePicker from './nav-menu/query-periods/datepicker'
-import { TestContextProviders } from '../../test-utils/app-context-providers'
-import { stringifySearch } from './util/url-search-params'
+import { TestContextProviders } from '../../../../test-utils/app-context-providers'
+import { stringifySearch } from '../../util/url-search-params'
 import { useNavigate } from 'react-router-dom'
-import { getRouterBasepath } from './router'
+import { getRouterBasepath } from '../../router'
+import { QueryPeriodsPicker } from './query-periods-picker'
 
 const domain = 'picking-query-dates.test'
 const periodStorageKey = `period__${domain}`
 
 test('if no period is stored, loads with default value of "Last 30 days", all expected options are present', async () => {
   expect(localStorage.getItem(periodStorageKey)).toBe(null)
-  render(<DatePicker />, {
+  render(<QueryPeriodsPicker />, {
     wrapper: (props) => (
       <TestContextProviders siteOptions={{ domain }} {...props} />
     )
@@ -42,7 +42,7 @@ test('if no period is stored, loads with default value of "Last 30 days", all ex
 })
 
 test('user can select a new period and its value is stored', async () => {
-  render(<DatePicker />, {
+  render(<QueryPeriodsPicker />, {
     wrapper: (props) => (
       <TestContextProviders siteOptions={{ domain }} {...props} />
     )
@@ -58,7 +58,7 @@ test('user can select a new period and its value is stored', async () => {
 test('period "all" is respected, and Compare option is not present for it in menu', async () => {
   localStorage.setItem(periodStorageKey, 'all')
 
-  render(<DatePicker />, {
+  render(<QueryPeriodsPicker />, {
     wrapper: (props) => (
       <TestContextProviders siteOptions={{ domain }} {...props} />
     )
@@ -78,7 +78,7 @@ test.each([
   async (searchRecord, buttonText) => {
     const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
 
-    render(<DatePicker />, {
+    render(<QueryPeriodsPicker />, {
       wrapper: (props) => (
         <TestContextProviders
           siteOptions={{ domain }}
@@ -104,7 +104,7 @@ test.each([
   async (searchRecord, buttonText) => {
     const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch(searchRecord)}`
 
-    render(<DatePicker />, {
+    render(<QueryPeriodsPicker />, {
       wrapper: (props) => (
         <TestContextProviders
           siteOptions={{ domain }}
@@ -127,7 +127,7 @@ test.each([
     localStorage.setItem(periodStorageKey, storedPeriod)
     const startUrl = `${getRouterBasepath({ domain, shared: false })}${stringifySearch({ period: queryPeriod })}`
 
-    render(<DatePicker />, {
+    render(<QueryPeriodsPicker />, {
       wrapper: (props) => (
         <TestContextProviders
           siteOptions={{ domain, shared: false }}
@@ -154,7 +154,7 @@ test('going back resets the stored query period to previous value', async () => 
   }
   render(
     <>
-      <DatePicker />
+      <QueryPeriodsPicker />
       <BrowserBackButton />
     </>,
     {

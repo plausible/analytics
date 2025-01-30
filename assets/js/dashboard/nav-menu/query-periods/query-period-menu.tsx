@@ -49,7 +49,10 @@ function QueryPeriodMenuItems({ groups }: { groups: LinkItem[][] }) {
           'md:left-auto md:w-56'
         )}
       >
-        <Popover.Panel className={popover.panel.classNames.roundedSheet}>
+        <Popover.Panel
+          className={popover.panel.classNames.roundedSheet}
+          data-testid="datemenu"
+        >
           {groups.map((group, index) => (
             <React.Fragment key={index}>
               {group.map(

@@ -185,6 +185,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
           <Popover className="md:relative">
             <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
             <Popover.Button
+              title="See more"
               ref={seeMoreRef}
               className={classNames(
                 popover.toggleButton.classNames.rounded,

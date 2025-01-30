@@ -33,10 +33,6 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
   }, [query])
 
   useEffect(() => {
-    console.log(calendar)
-  }, [calendar])
-
-  useEffect(() => {
     const closeCalendarOnClickOutside = (event: PointerEvent) => {
       if (
         activeCalendarWrapperRef.current &&
