@@ -335,7 +335,7 @@ defmodule Plausible.Stats.SQL.Expression do
         arrayIntersect(
           multiMatchAllIndices(?, ?),
           arrayMap(
-            (expected_name, threshold, index) -> if(expected_name = ? and ? between threshold and 254, index, -1),
+            (expected_name, threshold, index) -> if(expected_name = ? and ? between threshold and 100, index, -1),
             ?,
             ?,
             ?
