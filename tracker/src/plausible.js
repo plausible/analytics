@@ -207,7 +207,7 @@
     if (window.liveSocket)
       window.liveSocket.socket.logger = (kind, msg, data) => {
         if ((kind === 'push') && !msg.includes("phoenix heartbeat")){
-          trigger('phx-push', {props: {msg, ...data}});
+          trigger('phx-push', {props: {msg, ...(window.analyticsParams || {}), ...data}});
         } 
       }
     else
