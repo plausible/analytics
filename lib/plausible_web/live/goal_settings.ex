@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
 
-      <.live_component :let={modal_unique_id} module={Modal} id="goals-form-modal">
+      <.live_component :let={modal_unique_id} module={Modal} preload?={false} id="goals-form-modal">
         <.live_component
           module={PlausibleWeb.Live.GoalSettings.Form}
           id={"goals-form-#{modal_unique_id}"}
