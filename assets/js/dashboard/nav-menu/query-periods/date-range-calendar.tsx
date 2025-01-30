@@ -19,20 +19,7 @@ export function DateRangeCalendar({
   onCloseWithNoSelection,
   onCloseWithSelection
 }: DateRangeCalendarProps) {
-  // const calendarRef = useRef<DatePicker>(null)
-
-  // useEffect(() => {
-  //   const calendar = calendarRef.current
-  //   if (calendar) {
-  //     calendar.flatpickr.open()
-  //   }
-
-  //   return () => {
-  //     calendar?.flatpickr?.destroy()
-  //   }
-  // }, [])
-  const hideInputFieldClassName = 'invisible h-0 w-0 p-0 m-0 border-0'
-
+  const hideInputFieldClassName = '!invisible !h-0 !w-0 !p-0 !m-0 !border-0'
   return (
     <DatePicker
       className={hideInputFieldClassName}
@@ -45,9 +32,7 @@ export function DateRangeCalendar({
         minDate,
         defaultDate: defaultDates,
         showMonths: 1
-        // static: true
       }}
-      // ref={calendarRef}
       onClose={
         onCloseWithSelection || onCloseWithNoSelection
           ? ([selectionStart, selectionEnd]) => {

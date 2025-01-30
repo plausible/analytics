@@ -1,22 +1,17 @@
 /** @format */
 
 import React, { useEffect, useRef } from 'react'
-import { formatDateRange, formatISO, nowForSite } from '../../util/date'
+import { formatDateRange } from '../../util/date'
 import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { BlurMenuButtonOnEscape } from '../../keybinding'
-import {
-  AppNavigationLink,
-  useAppNavigate
-} from '../../navigation/use-app-navigate'
-import { DateRangeCalendarProps } from './date-range-calendar'
+import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import {
   COMPARISON_MODES,
   ComparisonMode,
   isComparisonEnabled,
-  getSearchToApplyCustomComparisonDates,
   COMPARISON_MATCH_MODE_LABELS,
   ComparisonMatchMode
 } from '../../query-time-periods'
@@ -31,16 +26,12 @@ import {
 
 export const ComparisonPeriodMenuItems = ({
   closeDropdown,
-  showCalendar
+  toggleCalendar
 }: {
   closeDropdown: () => void
-  showCalendar: (
-    props: Omit<DateRangeCalendarProps, 'id' | 'onCloseWithNoSelection'>
-  ) => void
+  toggleCalendar: () => void
 }) => {
-  const site = useSiteContext()
   const { query } = useQueryContext()
-  const navigate = useAppNavigate()
 
   useEffect(() => {
     closeDropdown()
@@ -88,21 +79,7 @@ export const ComparisonPeriodMenuItems = ({
               // custom handler is needed to prevent
               // the calendar from immediately closing
               // due to Menu.Button grabbing focus
-              showCalendar({
-                onCloseWithSelection: (selection) =>
-                  navigate({
-                    search: getSearchToApplyCustomComparisonDates(selection)
-                  }),
-                minDate: site.statsBegin,
-                maxDate: formatISO(nowForSite(site)),
-                defaultDates:
-                  query.compare_from && query.compare_to
-                    ? [
-                        formatISO(query.compare_from),
-                        formatISO(query.compare_to)
-                      ]
-                    : undefined
-              })
+              toggleCalendar()
               closeDropdown()
             }}
           >

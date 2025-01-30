@@ -1,9 +1,10 @@
 /** @format */
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import {
+  getSearchToApplyCustomComparisonDates,
   getSearchToApplyCustomDates,
   isComparisonEnabled
 } from '../../query-time-periods'
@@ -14,10 +15,7 @@ import {
   ComparisonPeriodMenuItems
 } from './comparison-period-menu'
 import { Popover } from '@headlessui/react'
-import {
-  DateRangeCalendar,
-  DateRangeCalendarProps
-} from './date-range-calendar'
+import { DateRangeCalendar } from './date-range-calendar'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { useSiteContext } from '../../site-context'
 import { formatISO, nowForSite } from '../../util/date'
@@ -26,10 +24,7 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const isComparing = isComparisonEnabled(query.comparison)
-  const [calendar, setCalendar] = useState<
-    | null
-    | (Omit<DateRangeCalendarProps, 'id'> & { position: 'main' | 'compare' })
-  >(null)
+  const [calendar, setCalendar] = useState<null | 'main' | 'compare'>(null)
   const navigate = useAppNavigate()
   // const getShowCalendar = useCallback(
   //   (position: 'main' | 'compare') =>
@@ -50,26 +45,8 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
   }, [query])
 
   useEffect(() => {
-    console.log(calendar?.position)
+    console.log(calendar)
   }, [calendar])
-
-  const mainCalendarProps: DateRangeCalendarProps = {
-    id: 'calendar',
-    onCloseWithSelection: (selection) =>
-      navigate({
-        search: getSearchToApplyCustomDates(selection)
-      }),
-    minDate: site.statsBegin,
-    maxDate: formatISO(nowForSite(site)),
-    defaultDates:
-      query.from && query.to
-        ? [formatISO(query.from), formatISO(query.to)]
-        : undefined,
-    onCloseWithNoSelection: () => setCalendar(null)
-  }
-  const openMainCalendar = useCallback(() => {
-    setCalendar({ position: 'main' })
-  }, [])
 
   return (
     <div className={classNames('flex shrink-0', className)}>
@@ -81,10 +58,10 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
             <QueryPeriodMenu
               closeDropdown={close}
               toggleCalendar={() => {
-                if (calendar?.position === 'main') {
+                if (calendar === 'main') {
                   setCalendar(null)
                 } else {
-                  openMainCalendar()
+                  setCalendar('main')
                 }
               }}
             />
@@ -92,8 +69,23 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
         )}
       </Popover>
       <div className={calendarPositionClassName}>
-        {calendar?.position === 'main' && (
-          <DateRangeCalendar {...mainCalendarProps} />
+        {calendar === 'main' && (
+          <DateRangeCalendar
+            id="calendar"
+            onCloseWithSelection={(selection) =>
+              navigate({
+                search: getSearchToApplyCustomDates(selection)
+              })
+            }
+            minDate={site.statsBegin}
+            maxDate={formatISO(nowForSite(site))}
+            defaultDates={
+              query.from && query.to
+                ? [formatISO(query.from), formatISO(query.to)]
+                : undefined
+            }
+            onCloseWithNoSelection={() => setCalendar(null)}
+          />
         )}
       </div>
       {isComparing && (
@@ -107,20 +99,45 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
                 <ComparisonPeriodMenuButton />
                 <ComparisonPeriodMenuItems
                   closeDropdown={close}
-                  showCalendar={(props) =>
-                    setCalendar({
-                      ...props,
-                      position: 'compare',
-                      onCloseWithNoSelection: () => setCalendar(null)
-                    })
-                  }
+                  toggleCalendar={() => {
+                    if (calendar === 'compare') {
+                      setCalendar(null)
+                    } else {
+                      setCalendar('compare')
+                    }
+                  }}
+                  // showCalendar={(props) =>
+                  //   setCalendar({
+                  //     ...props,
+                  //     position: 'compare',
+                  //     onCloseWithNoSelection: () => setCalendar(null)
+                  //   })
+                  // }
                 />
               </>
             )}
           </Popover>
           <div className={calendarPositionClassName}>
-            {calendar?.position === 'compare' && (
-              <DateRangeCalendar id="calendar" {...calendar} />
+            {calendar === 'compare' && (
+              <DateRangeCalendar
+                id="calendar"
+                onCloseWithSelection={(selection) =>
+                  navigate({
+                    search: getSearchToApplyCustomComparisonDates(selection)
+                  })
+                }
+                minDate={site.statsBegin}
+                maxDate={formatISO(nowForSite(site))}
+                defaultDates={
+                  query.compare_from && query.compare_to
+                    ? [
+                        formatISO(query.compare_from),
+                        formatISO(query.compare_to)
+                      ]
+                    : undefined
+                }
+                onCloseWithNoSelection={() => setCalendar(null)}
+              />
             )}
           </div>
         </>
