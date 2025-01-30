@@ -30,7 +30,7 @@ defmodule Plausible.Ingestion.ScrollDepthVisibleAt do
 
   defp attempt_update_repo(site_id) do
     Repo.update_all(
-      from(s in Plausible.Site, where: s.id == ^site_id),
+      from(s in Plausible.Site, where: s.id == ^site_id and is_nil(s.scroll_depth_visible_at)),
       set: [
         scroll_depth_visible_at: DateTime.utc_now()
       ]
