@@ -40,16 +40,6 @@ const items = {
       'px-4 py-2 text-sm leading-tight'
     ),
     selectedOption: classNames('data-[selected=true]:font-bold'),
-    disabledLink: classNames(
-      'data-[headlessui-state=disabled]:font-bold',
-      'data-[headlessui-state=disabled]:cursor-default'
-    ),
-    activeLink: classNames(
-      'data-[headlessui-state=active]:bg-gray-100',
-      'data-[headlessui-state=active]:text-gray-900',
-      'dark:data-[headlessui-state=active]:bg-gray-900',
-      'dark:data-[headlessui-state=active]:text-gray-100'
-    ),
     hoverLink: classNames(
       'hover:bg-gray-100',
       'hover:text-gray-900',

@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import {
@@ -26,19 +26,7 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
   const isComparing = isComparisonEnabled(query.comparison)
   const [calendar, setCalendar] = useState<null | 'main' | 'compare'>(null)
   const navigate = useAppNavigate()
-  // const getShowCalendar = useCallback(
-  //   (position: 'main' | 'compare') =>
-  //     (
-  //       props: Omit<DateRangeCalendarProps, 'id' | 'onCloseWithNoSelection'>
-  //     ) => {
-  //       setCalendar({
-  //         ...props,
-  //         position,
-  //         onCloseWithNoSelection: () => setCalendar(null)
-  //       })
-  //     },
-  //   []
-  // )
+  const activeCalendarWrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setCalendar(null)
@@ -46,6 +34,28 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
 
   useEffect(() => {
     console.log(calendar)
+  }, [calendar])
+
+  useEffect(() => {
+    const closeCalendarOnClickOutside = (event: PointerEvent) => {
+      if (
+        activeCalendarWrapperRef.current &&
+        event.target &&
+        !activeCalendarWrapperRef.current.contains(event.target as HTMLElement)
+      ) {
+        setCalendar(null)
+      }
+    }
+
+    if (calendar) {
+      document.addEventListener('pointerdown', closeCalendarOnClickOutside)
+    } else {
+      document.removeEventListener('pointerdown', closeCalendarOnClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('pointerdown', closeCalendarOnClickOutside)
+    }
   }, [calendar])
 
   return (
@@ -68,8 +78,11 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
           </>
         )}
       </Popover>
-      <div className={calendarPositionClassName}>
-        {calendar === 'main' && (
+      {calendar === 'main' && (
+        <div
+          className={calendarPositionClassName}
+          ref={activeCalendarWrapperRef}
+        >
           <DateRangeCalendar
             id="calendar"
             onCloseWithSelection={(selection) =>
@@ -86,8 +99,8 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
             }
             onCloseWithNoSelection={() => setCalendar(null)}
           />
-        )}
-      </div>
+        </div>
+      )}
       {isComparing && (
         <>
           <div className="my-auto px-1 text-sm font-medium text-gray-800 dark:text-gray-200">
@@ -106,19 +119,15 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
                       setCalendar('compare')
                     }
                   }}
-                  // showCalendar={(props) =>
-                  //   setCalendar({
-                  //     ...props,
-                  //     position: 'compare',
-                  //     onCloseWithNoSelection: () => setCalendar(null)
-                  //   })
-                  // }
                 />
               </>
             )}
           </Popover>
-          <div className={calendarPositionClassName}>
-            {calendar === 'compare' && (
+          {calendar === 'compare' && (
+            <div
+              className={calendarPositionClassName}
+              ref={activeCalendarWrapperRef}
+            >
               <DateRangeCalendar
                 id="calendar"
                 onCloseWithSelection={(selection) =>
@@ -138,8 +147,8 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
                 }
                 onCloseWithNoSelection={() => setCalendar(null)}
               />
-            )}
-          </div>
+            </div>
+          )}
         </>
       )}
     </div>

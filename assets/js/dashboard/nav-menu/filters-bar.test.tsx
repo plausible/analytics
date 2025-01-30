@@ -39,12 +39,25 @@ test('user can see expected filters and clear them one by one or all together', 
 
   render(
     <FiltersBar
-      elements={{
-        topBar: {
-          getBoundingClientRect: jest.fn().mockReturnValue(600)
-        } as unknown as HTMLElement,
-        leftSection: { getBoundingClientRect: jest.fn().mockReturnValue(200) },
-        rightSection: { getBoundingClientRect: jest.fn().mockReturnValue(300) }
+      accessors={{
+        topBar: jest.fn(
+          () =>
+            ({
+              getBoundingClientRect: jest.fn().mockReturnValue(600)
+            }) as unknown as HTMLElement
+        ),
+        leftSection: jest.fn(
+          () =>
+            ({
+              getBoundingClientRect: jest.fn().mockReturnValue(200)
+            }) as unknown as HTMLElement
+        ),
+        rightSection: jest.fn(
+          () =>
+            ({
+              getBoundingClientRect: jest.fn().mockReturnValue(300)
+            }) as unknown as HTMLElement
+        )
       }}
     />,
     {

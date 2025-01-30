@@ -9,9 +9,7 @@ export const linkClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
   popover.items.classNames.hoverLink,
-  popover.items.classNames.roundedStartEnd,
-  popover.items.classNames.activeLink,
-  popover.items.classNames.disabledLink
+  popover.items.classNames.roundedStartEnd
 )
 
 export const datemenuButtonClassName = classNames(

@@ -83,15 +83,25 @@ type VisibilityState = {
   visibleCount: number
 }
 
+type ElementAccessor = (
+  filtersBarElement: HTMLElement | null
+) => HTMLElement | null | undefined
+
+/**
+ * The accessors are paths to other elements that FiltersBar needs to measure:
+ * they depend on the structure of the parent and are thus passed as props.
+ * Passing these with refs would be more reactive, but the main layout effect
+ * didn't trigger then as expected.
+ */
 interface FiltersBarProps {
-  elements: {
-    topBar: HTMLElement | null
-    leftSection: Pick<HTMLElement, 'getBoundingClientRect'> | null
-    rightSection: Pick<HTMLElement, 'getBoundingClientRect'> | null
+  accessors: {
+    topBar: ElementAccessor
+    leftSection: ElementAccessor
+    rightSection: ElementAccessor
   }
 }
 
-export const FiltersBar = ({ elements }: FiltersBarProps) => {
+export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
@@ -99,12 +109,14 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
   const seeMoreRef = useRef<HTMLButtonElement>(null)
 
   useLayoutEffect(() => {
-    const { topBar, leftSection, rightSection } = elements
+    const topBar = accessors.topBar(containerRef.current)
+    const leftSection = accessors.leftSection(containerRef.current)
+    const rightSection = accessors.rightSection(containerRef.current)
 
     const resizeObserver = new ResizeObserver(() => {
       const pillWidths = pillsRef.current
         ? Array.from(pillsRef.current.children).map((el) =>
-            getElementWidthOrNull(el as HTMLElement)
+            getElementWidthOrNull(el)
           )
         : null
       handleVisibility({
@@ -131,7 +143,7 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [query.filters, elements])
+  }, [accessors, query.filters])
 
   if (!query.filters.length) {
     // functions as spacer between elements.leftSection and elements.rightSection
@@ -165,7 +177,7 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
             end: visibility?.visibleCount
           }}
           className="overflow-hidden"
-          style={{ width: visibility?.width ?? '100%' }}
+          style={{ width: visibility?.width ?? 0 }}
         />
       </div>
       {visibility !== null &&

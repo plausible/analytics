@@ -49,12 +49,10 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
   const site = useSiteContext()
   const user = useUserContext()
   const { saved_segments } = site.flags
-  const topBarRef = useRef<HTMLDivElement>(null)
   const leftActionsRef = useRef<HTMLDivElement>(null)
-  const rightActionsRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div className="flex items-center w-full" ref={topBarRef}>
+    <div className="flex items-center w-full">
       {saved_segments ? (
         <>
           <div
@@ -67,19 +65,24 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
               currentUserRole={user.role}
             />
             {showCurrentVisitors && (
-              <CurrentVisitors tooltipBoundary={leftActionsRef.current} />
+              <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />
             )}
           </div>
           <div className="flex w-full">
             <FiltersBar
-              elements={{
-                topBar: topBarRef.current,
-                leftSection: leftActionsRef.current,
-                rightSection: rightActionsRef.current
+              accessors={{
+                topBar: (filtersBarElement) =>
+                  filtersBarElement?.parentElement?.parentElement,
+                leftSection: (filtersBarElement) =>
+                  filtersBarElement?.parentElement?.parentElement
+                    ?.firstElementChild as HTMLElement,
+                rightSection: (filtersBarElement) =>
+                  filtersBarElement?.parentElement?.parentElement
+                    ?.lastElementChild as HTMLElement
               }}
             />
           </div>
-          <div className="flex gap-x-4 shrink-0" ref={rightActionsRef}>
+          <div className="flex gap-x-4 shrink-0">
             <FilterMenu />
             <QueryPeriodsPicker />
           </div>
@@ -96,7 +99,7 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
             {showCurrentVisitors && (
               <CurrentVisitors
                 className="ml-1 mr-auto"
-                tooltipBoundary={leftActionsRef.current}
+                tooltipBoundaryRef={leftActionsRef}
               />
             )}
             <Filters />
