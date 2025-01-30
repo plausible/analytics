@@ -62,7 +62,9 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         )}
       >
         <PlusIcon className="block h-4 w-4" />
-        <span className="truncate block font-medium">Add filter</span>
+        <span className={popover.toggleButton.classNames.truncatedText}>
+          Add filter
+        </span>
       </Popover.Button>
       <Transition
         {...popover.transition.props}

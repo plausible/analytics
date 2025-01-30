@@ -17,12 +17,12 @@ import {
 } from '../../navigation/use-app-navigate'
 import {
   COMPARISON_DISABLED_PERIODS,
-  DisplaySelectedPeriod,
   getCompareLinkItem,
   last6MonthsLinkItem,
   getDatePeriodGroups,
   LinkItem,
-  QueryPeriod
+  QueryPeriod,
+  getCurrentPeriodDisplayName
 } from '../../query-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
@@ -121,13 +121,16 @@ function QueryPeriodMenuKeybinds({
 }
 
 export const QueryPeriodMenuButton = () => {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
-
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
-        <DisplaySelectedPeriod />
+        <span className={popover.toggleButton.classNames.truncatedText}>
+          {getCurrentPeriodDisplayName({ query, site })}
+        </span>
         <DateMenuChevron />
       </Popover.Button>
     </>

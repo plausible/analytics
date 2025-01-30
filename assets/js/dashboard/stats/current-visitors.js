@@ -10,7 +10,10 @@ import { useSiteContext } from '../site-context'
 import { useLastLoadContext } from '../last-load-context'
 import classNames from 'classnames'
 
-export default function CurrentVisitors({ className = '', tooltipBoundaryRef }) {
+export default function CurrentVisitors({
+  className = '',
+  tooltipBoundaryRef
+}) {
   const { query } = useQueryContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()

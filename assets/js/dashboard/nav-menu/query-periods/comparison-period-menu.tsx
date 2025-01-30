@@ -1,7 +1,6 @@
 /** @format */
 
 import React, { useEffect, useRef } from 'react'
-import { formatDateRange } from '../../util/date'
 import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
@@ -13,7 +12,8 @@ import {
   ComparisonMode,
   isComparisonEnabled,
   COMPARISON_MATCH_MODE_LABELS,
-  ComparisonMatchMode
+  ComparisonMatchMode,
+  getCurrentComparisonPeriodDisplayName
 } from '../../query-time-periods'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../../components/popover'
@@ -121,29 +121,19 @@ export const ComparisonPeriodMenuItems = ({
 }
 
 export const ComparisonPeriodMenuButton = () => {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
+
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
       <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
-        <CurrentComparison />
+        <span className={popover.toggleButton.classNames.truncatedText}>
+          {getCurrentComparisonPeriodDisplayName({ site, query })}
+        </span>
         <DateMenuChevron />
       </Popover.Button>
     </>
   )
-}
-
-const CurrentComparison = () => {
-  const site = useSiteContext()
-  const { query } = useQueryContext()
-
-  if (!isComparisonEnabled(query.comparison)) {
-    return null
-  }
-
-  return query.comparison === ComparisonMode.custom &&
-    query.compare_from &&
-    query.compare_to
-    ? formatDateRange(site, query.compare_from, query.compare_to)
-    : COMPARISON_MODES[query.comparison]
 }

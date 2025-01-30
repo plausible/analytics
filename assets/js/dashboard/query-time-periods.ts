@@ -5,7 +5,7 @@ import {
   clearedDateSearch,
   DashboardQuery
 } from './query'
-import { PlausibleSite, useSiteContext } from './site-context'
+import { PlausibleSite } from './site-context'
 import {
   formatDateRange,
   formatDay,
@@ -24,7 +24,6 @@ import {
 } from './util/date'
 import { AppNavigationTarget } from './navigation/use-app-navigate'
 import { getDomainScopedStorageKey, getItem, setItem } from './util/storage'
-import { useQueryContext } from './query-context'
 
 export enum QueryPeriod {
   'realtime' = 'realtime',
@@ -549,9 +548,13 @@ export function getDashboardTimeSettings({
   }
 }
 
-export function DisplaySelectedPeriod() {
-  const { query } = useQueryContext()
-  const site = useSiteContext()
+export function getCurrentPeriodDisplayName({
+  query,
+  site
+}: {
+  query: DashboardQuery
+  site: PlausibleSite
+}) {
   if (query.period === 'day') {
     if (isToday(site, query.date)) {
       return 'Today'
@@ -589,4 +592,21 @@ export function DisplaySelectedPeriod() {
     return formatDateRange(site, query.from, query.to)
   }
   return 'Realtime'
+}
+
+export function getCurrentComparisonPeriodDisplayName({
+  query,
+  site
+}: {
+  query: DashboardQuery
+  site: PlausibleSite
+}) {
+  if (!query.comparison) {
+    return null
+  }
+  return query.comparison === ComparisonMode.custom &&
+    query.compare_from &&
+    query.compare_to
+    ? formatDateRange(site, query.compare_from, query.compare_to)
+    : COMPARISON_MODES[query.comparison]
 }
