@@ -1,6 +1,13 @@
 /** @format */
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  memo
+} from 'react'
 import { formatISO, nowForSite } from '../../util/date'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
@@ -37,120 +44,12 @@ import {
   MenuSeparator
 } from './shared-menu-items'
 
-export function QueryPeriodMenuItems({
-  closeDropdown
-}: {
-  closeDropdown: () => void
-}) {
+function QueryPeriodMenuItems({ groups }: { groups: LinkItem[][] }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const navigate = useAppNavigate()
-  const [menuVisible, setMenuVisible] = useState<boolean>(false)
-
-  const periodMenuButtonRef = useRef<HTMLButtonElement>(null)
-
-  const dashboardRouteMatch = useMatch(rootRoute.path)
-
-  const closeMenu = useCallback(() => {
-    setMenuVisible(false)
-  }, [])
-
-  const buttonGroups = useMemo(() => {
-    const groups = getDatePeriodGroups(site)
-    return groups
-  }, [site])
-
-  const compareLink: LinkItem = useMemo(
-    () => getCompareLinkItem({ site, query }),
-    [site, query]
-  )
-
-  useEffect(() => {
-    closeMenu()
-  }, [closeMenu, query])
-
-  const groups = buttonGroups
-    .slice(0, buttonGroups.length - 1)
-    .concat([
-      // add Custom Range link to the last group
-      buttonGroups[buttonGroups.length - 1].concat([
-        [
-          ['Custom Range', 'C'],
-          {
-            search: (s) => s,
-            isActive: () => false,
-            onClick: (e) => {
-              // custom handler is needed to prevent
-              // the calendar from immediately closing
-              // due to Menu.Button grabbing focus
-              setMenuVisible(true)
-              e.preventDefault()
-              e.stopPropagation()
-              closeDropdown()
-            }
-          }
-        ]
-      ])
-    ])
-    // maybe add Compare link as another group to the very end
-    .concat(
-      COMPARISON_DISABLED_PERIODS.includes(query.period) ? [] : [[compareLink]]
-    )
 
   return (
     <>
-      {!!dashboardRouteMatch && (
-        <>
-          {groups.concat([[last6MonthsLinkItem]]).flatMap((group) =>
-            group
-              .filter(([[_name, keyboardKey]]) => !!keyboardKey)
-              .map(([[_name, keyboardKey], { search, onClick }]) => (
-                <Keybind
-                  key={keyboardKey}
-                  keyboardKey={keyboardKey}
-                  type="keydown"
-                  handler={(e) => {
-                    if (typeof search === 'function') {
-                      navigate({ search })
-                    }
-                    if (typeof onClick === 'function') {
-                      onClick(e)
-                    } else {
-                      closeDropdown()
-                    }
-                  }}
-                  shouldIgnoreWhen={[isModifierPressed, isTyping]}
-                  targetRef="document"
-                />
-              ))
-          )}
-        </>
-      )}
-      <BlurMenuButtonOnEscape targetRef={periodMenuButtonRef} />
-      <Menu.Button
-        ref={periodMenuButtonRef}
-        className={datemenuButtonClassName}
-      >
-        <DisplaySelectedPeriod />
-        <DateMenuChevron />
-      </Menu.Button>
-      {menuVisible && (
-        <DateRangeCalendar
-          id="calendar"
-          onCloseWithSelection={(selection) =>
-            navigate({ search: getSearchToApplyCustomDates(selection) })
-          }
-          minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
-          defaultDates={
-            query.to && query.from
-              ? [formatISO(query.from), formatISO(query.to)]
-              : undefined
-          }
-          onCloseWithNoSelection={() => setMenuVisible(false)}
-        />
-      )}
-
       <Transition
         {...popover.transition.props}
         className={classNames(
@@ -163,14 +62,12 @@ export function QueryPeriodMenuItems({
           {groups.map((group, index) => (
             <React.Fragment key={index}>
               {group.map(
-                ([[label, keyboardKey], { search, isActive, onClick }]) => (
+                ([[label, keyboardKey], { search, isActive, onEvent }]) => (
                   <Menu.Item disabled={isActive({ site, query })} key={label}>
                     <AppNavigationLink
                       className={linkClassName}
                       search={search}
-                      onClick={
-                        onClick && ((e) => onClick(e as unknown as Event))
-                      }
+                      onClick={onEvent && ((e) => onEvent(e))}
                     >
                       {label}
                       {!!keyboardKey && (
@@ -189,4 +86,134 @@ export function QueryPeriodMenuItems({
   )
 }
 
-export const QueryPeriodMenu = Menu
+function QueryPeriodMenuKeybinds({
+  closeDropdown,
+  groups
+}: {
+  groups: LinkItem[][]
+  closeDropdown: () => void
+}) {
+  const dashboardRouteMatch = useMatch(rootRoute.path)
+  const navigate = useAppNavigate()
+
+  if (!dashboardRouteMatch) {
+    return null
+  }
+  return (
+    <>
+      {groups.concat([[last6MonthsLinkItem]]).flatMap((group) =>
+        group
+          .filter(([[_name, keyboardKey]]) => !!keyboardKey)
+          .map(([[_name, keyboardKey], { search, onEvent }]) => (
+            <Keybind
+              key={keyboardKey}
+              keyboardKey={keyboardKey}
+              type="keydown"
+              handler={(e) => {
+                if (typeof search === 'function') {
+                  navigate({ search })
+                }
+                if (typeof onEvent === 'function') {
+                  onEvent(e)
+                } else {
+                  closeDropdown()
+                }
+              }}
+              shouldIgnoreWhen={[isModifierPressed, isTyping]}
+              targetRef="document"
+            />
+          ))
+      )}
+    </>
+  )
+}
+
+const QueryPeriodMenuButton = () => {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  return (
+    <>
+      <BlurMenuButtonOnEscape targetRef={buttonRef} />
+      <Menu.Button ref={buttonRef} className={datemenuButtonClassName}>
+        <DisplaySelectedPeriod />
+        <DateMenuChevron />
+      </Menu.Button>
+    </>
+  )
+}
+
+/**
+ * This menu is memoised to prevent too frequent rerenders when
+ * headless UI Menu render props change.
+ */
+export const MemoisedQueryPeriodMenu = memo(
+  ({ closeDropdown }: { closeDropdown: () => void }) => {
+    const site = useSiteContext()
+    const { query } = useQueryContext()
+    const [menuVisible, setMenuVisible] = useState<boolean>(false)
+    const navigate = useAppNavigate()
+
+    const closeMenu = useCallback(() => {
+      setMenuVisible(false)
+    }, [])
+
+    useEffect(() => {
+      closeMenu()
+    }, [closeMenu, query])
+
+    const groups = useMemo(() => {
+      const compareLink = getCompareLinkItem({ site, query })
+      return getDatePeriodGroups({
+        site,
+        extraItemsInLastGroup: [
+          [
+            ['Custom Range', 'C'],
+            {
+              search: (s) => s,
+              isActive: () => false,
+              onEvent: (e) => {
+                // custom handler is needed to prevent
+                // the calendar from immediately closing
+                // due to Menu.Button grabbing focus
+                setMenuVisible(true)
+                e.preventDefault()
+                e.stopPropagation()
+                closeDropdown()
+              }
+            }
+          ]
+        ],
+        extraGroups: COMPARISON_DISABLED_PERIODS.includes(query.period)
+          ? []
+          : [[compareLink]]
+      })
+    }, [site, query, setMenuVisible, closeDropdown])
+
+    return (
+      <>
+        <QueryPeriodMenuButton />
+        <QueryPeriodMenuKeybinds
+          closeDropdown={closeDropdown}
+          groups={groups}
+        />
+        {menuVisible && (
+          <DateRangeCalendar
+            id="calendar"
+            onCloseWithSelection={(selection) =>
+              navigate({ search: getSearchToApplyCustomDates(selection) })
+            }
+            minDate={site.statsBegin}
+            maxDate={formatISO(nowForSite(site))}
+            defaultDates={
+              query.to && query.from
+                ? [formatISO(query.from), formatISO(query.to)]
+                : undefined
+            }
+            onCloseWithNoSelection={() => setMenuVisible(false)}
+          />
+        )}
+        <QueryPeriodMenuItems groups={groups} />
+      </>
+    )
+  }
+)

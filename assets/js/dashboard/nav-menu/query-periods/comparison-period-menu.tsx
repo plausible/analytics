@@ -1,4 +1,5 @@
-/* @format */
+/** @format */
+
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { formatDateRange, formatISO, nowForSite } from '../../util/date'
 import { clearedComparisonSearch } from '../../query'
@@ -28,39 +29,17 @@ import {
   MenuSeparator
 } from './shared-menu-items'
 
-export function ComparisonPeriodMenuItems({
-  closeDropdown
-}: {
-  closeDropdown: () => void
-}) {
+export const ComparisonPeriodMenuItems = () => {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
-  const compareMenuButtonRef = useRef<HTMLButtonElement>(null)
 
   const closeMenu = useCallback(() => {
     setMenuVisible(false)
   }, [])
 
   useEffect(() => {
-    // periodMenuButtonRef.current?.dispatchEvent(
-    //   new KeyboardEvent('keyup', {
-    //     key: 'Escape',
-    //     code: 'Escape',
-    //     keyCode: 27,
-    //     which: 27
-    //   })
-    // )
-    // compareMenuButtonRef.current?.dispatchEvent(
-    //   new KeyboardEvent('keyup', {
-    //     key: 'Escape',
-    //     code: 'Escape',
-    //     keyCode: 27,
-    //     which: 27
-    //   })
-    // )
-    // compareMenuButtonRef.current?.click()
     closeMenu()
   }, [closeMenu, query])
 
@@ -69,18 +48,6 @@ export function ComparisonPeriodMenuItems({
   }
   return (
     <>
-      <BlurMenuButtonOnEscape targetRef={compareMenuButtonRef} />
-      <Menu.Button
-        className={datemenuButtonClassName}
-        ref={compareMenuButtonRef}
-      >
-        {query.comparison === ComparisonMode.custom &&
-        query.compare_from &&
-        query.compare_to
-          ? formatDateRange(site, query.compare_from, query.compare_to)
-          : COMPARISON_MODES[query.comparison!]}
-        <DateMenuChevron />
-      </Menu.Button>
       {menuVisible && (
         <DateRangeCalendar
           id="compare-menu-calendar"
@@ -130,21 +97,23 @@ export function ComparisonPeriodMenuItems({
             </Menu.Item>
           ))}
           <Menu.Item>
-            <AppNavigationLink
-              className={linkClassName}
-              search={(s) => s}
-              onClick={(e) => {
-                // custom handler is needed to prevent
-                // the calendar from immediately closing
-                // due to Menu.Button grabbing focus
-                setMenuVisible(true)
-                e.stopPropagation()
-                e.preventDefault()
-                closeDropdown()
-              }}
-            >
-              {COMPARISON_MODES[ComparisonMode.custom]}
-            </AppNavigationLink>
+            {({ close: closeDropdown }) => (
+              <AppNavigationLink
+                className={linkClassName}
+                search={(s) => s}
+                onClick={(e) => {
+                  // custom handler is needed to prevent
+                  // the calendar from immediately closing
+                  // due to Menu.Button grabbing focus
+                  setMenuVisible(true)
+                  e.stopPropagation()
+                  e.preventDefault()
+                  closeDropdown()
+                }}
+              >
+                {COMPARISON_MODES[ComparisonMode.custom]}
+              </AppNavigationLink>
+            )}
           </Menu.Item>
           {query.comparison !== ComparisonMode.custom && (
             <>
@@ -181,4 +150,21 @@ export function ComparisonPeriodMenuItems({
   )
 }
 
-export const ComparisonPeriodMenu = Menu
+export const ComparisonPeriodMenuButton = () => {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
+  const ref = useRef<HTMLButtonElement>(null)
+  return (
+    <>
+      <BlurMenuButtonOnEscape targetRef={ref} />
+      <Menu.Button className={datemenuButtonClassName} ref={ref}>
+        {query.comparison === ComparisonMode.custom &&
+        query.compare_from &&
+        query.compare_to
+          ? formatDateRange(site, query.compare_from, query.compare_to)
+          : COMPARISON_MODES[query.comparison!]}
+        <DateMenuChevron />
+      </Menu.Button>
+    </>
+  )
+}
