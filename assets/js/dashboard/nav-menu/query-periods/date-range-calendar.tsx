@@ -1,5 +1,5 @@
 /* @format */
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import DatePicker from 'react-flatpickr'
 
 export interface DateRangeCalendarProps {
@@ -19,50 +19,50 @@ export function DateRangeCalendar({
   onCloseWithNoSelection,
   onCloseWithSelection
 }: DateRangeCalendarProps) {
-  const calendarRef = useRef<DatePicker>(null)
+  // const calendarRef = useRef<DatePicker>(null)
 
-  useEffect(() => {
-    const calendar = calendarRef.current
-    if (calendar) {
-      calendar.flatpickr.open()
-    }
+  // useEffect(() => {
+  //   const calendar = calendarRef.current
+  //   if (calendar) {
+  //     calendar.flatpickr.open()
+  //   }
 
-    return () => {
-      calendar?.flatpickr?.destroy()
-    }
-  }, [])
+  //   return () => {
+  //     calendar?.flatpickr?.destroy()
+  //   }
+  // }, [])
+  const hideInputFieldClassName = 'invisible h-0 w-0 p-0 m-0 border-0'
 
   return (
-    <div className="h-0 w-0">
-      <DatePicker
-        id={id}
-        options={{
-          mode: 'range',
-          maxDate,
-          minDate,
-          defaultDate: defaultDates,
-          showMonths: 1,
-          static: true,
-          animate: true
-        }}
-        ref={calendarRef}
-        onClose={
-          onCloseWithSelection || onCloseWithNoSelection
-            ? ([selectionStart, selectionEnd]) => {
-                if (selectionStart && selectionEnd) {
-                  if (onCloseWithSelection) {
-                    onCloseWithSelection([selectionStart, selectionEnd])
-                  }
-                } else {
-                  if (onCloseWithNoSelection) {
-                    onCloseWithNoSelection()
-                  }
+    <DatePicker
+      className={hideInputFieldClassName}
+      id={id}
+      options={{
+        animate: false,
+        inline: true,
+        mode: 'range',
+        maxDate,
+        minDate,
+        defaultDate: defaultDates,
+        showMonths: 1
+        // static: true
+      }}
+      // ref={calendarRef}
+      onClose={
+        onCloseWithSelection || onCloseWithNoSelection
+          ? ([selectionStart, selectionEnd]) => {
+              if (selectionStart && selectionEnd) {
+                if (onCloseWithSelection) {
+                  onCloseWithSelection([selectionStart, selectionEnd])
+                }
+              } else {
+                if (onCloseWithNoSelection) {
+                  onCloseWithNoSelection()
                 }
               }
-            : undefined
-        }
-        className="invisible"
-      />
-    </div>
+            }
+          : undefined
+      }
+    />
   )
 }

@@ -1,7 +1,6 @@
 /** @format */
 
 import React, { useRef, useMemo } from 'react'
-import { formatISO, nowForSite } from '../../util/date'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
@@ -16,12 +15,10 @@ import {
   AppNavigationLink,
   useAppNavigate
 } from '../../navigation/use-app-navigate'
-import { DateRangeCalendarProps } from './date-range-calendar'
 import {
   COMPARISON_DISABLED_PERIODS,
   DisplaySelectedPeriod,
   getCompareLinkItem,
-  getSearchToApplyCustomDates,
   last6MonthsLinkItem,
   getDatePeriodGroups,
   LinkItem,
@@ -136,16 +133,13 @@ export const QueryPeriodMenuButton = () => {
 
 export const QueryPeriodMenu = ({
   closeDropdown,
-  showCalendar
+  toggleCalendar
 }: {
   closeDropdown: () => void
-  showCalendar: (
-    props: Omit<DateRangeCalendarProps, 'id' | 'onCloseWithNoSelection'>
-  ) => void
+  toggleCalendar: () => void
 }) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const navigate = useAppNavigate()
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -159,18 +153,7 @@ export const QueryPeriodMenu = ({
             search: (s) => s,
             isActive: ({ query }) => query.period === QueryPeriod.custom,
             onEvent: () => {
-              showCalendar({
-                onCloseWithSelection: (selection) =>
-                  navigate({
-                    search: getSearchToApplyCustomDates(selection)
-                  }),
-                minDate: site.statsBegin,
-                maxDate: formatISO(nowForSite(site)),
-                defaultDates:
-                  query.from && query.to
-                    ? [formatISO(query.from), formatISO(query.to)]
-                    : undefined
-              })
+              toggleCalendar()
               closeDropdown()
             }
           }
@@ -180,7 +163,7 @@ export const QueryPeriodMenu = ({
         ? []
         : [[compareLink]]
     })
-  }, [site, query, navigate, showCalendar, closeDropdown])
+  }, [site, query, toggleCalendar, closeDropdown])
 
   return (
     <>

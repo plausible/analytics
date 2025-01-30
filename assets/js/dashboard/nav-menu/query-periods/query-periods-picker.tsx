@@ -3,7 +3,10 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
-import { isComparisonEnabled } from '../../query-time-periods'
+import {
+  getSearchToApplyCustomDates,
+  isComparisonEnabled
+} from '../../query-time-periods'
 import { MovePeriodArrows } from './move-period-arrows'
 import { QueryPeriodMenu, QueryPeriodMenuButton } from './query-period-menu'
 import {
@@ -15,15 +18,19 @@ import {
   DateRangeCalendar,
   DateRangeCalendarProps
 } from './date-range-calendar'
+import { useAppNavigate } from '../../navigation/use-app-navigate'
+import { useSiteContext } from '../../site-context'
+import { formatISO, nowForSite } from '../../util/date'
 
 export function QueryPeriodsPicker({ className }: { className?: string }) {
+  const site = useSiteContext()
   const { query } = useQueryContext()
   const isComparing = isComparisonEnabled(query.comparison)
   const [calendar, setCalendar] = useState<
     | null
     | (Omit<DateRangeCalendarProps, 'id'> & { position: 'main' | 'compare' })
   >(null)
-
+  const navigate = useAppNavigate()
   // const getShowCalendar = useCallback(
   //   (position: 'main' | 'compare') =>
   //     (
@@ -46,6 +53,24 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
     console.log(calendar?.position)
   }, [calendar])
 
+  const mainCalendarProps: DateRangeCalendarProps = {
+    id: 'calendar',
+    onCloseWithSelection: (selection) =>
+      navigate({
+        search: getSearchToApplyCustomDates(selection)
+      }),
+    minDate: site.statsBegin,
+    maxDate: formatISO(nowForSite(site)),
+    defaultDates:
+      query.from && query.to
+        ? [formatISO(query.from), formatISO(query.to)]
+        : undefined,
+    onCloseWithNoSelection: () => setCalendar(null)
+  }
+  const openMainCalendar = useCallback(() => {
+    setCalendar({ position: 'main' })
+  }, [])
+
   return (
     <div className={classNames('flex shrink-0', className)}>
       <MovePeriodArrows className={isComparing ? 'hidden md:flex' : ''} />
@@ -53,22 +78,24 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
         {({ close }) => (
           <>
             <QueryPeriodMenuButton />
-            {calendar?.position === 'main' && (
-              <DateRangeCalendar id="calendar" {...calendar} />
-            )}
             <QueryPeriodMenu
               closeDropdown={close}
-              showCalendar={(props) =>
-                setCalendar({
-                  ...props,
-                  position: 'main',
-                  onCloseWithNoSelection: () => setCalendar(null)
-                })
-              }
+              toggleCalendar={() => {
+                if (calendar?.position === 'main') {
+                  setCalendar(null)
+                } else {
+                  openMainCalendar()
+                }
+              }}
             />
           </>
         )}
       </Popover>
+      <div className={calendarPositionClassName}>
+        {calendar?.position === 'main' && (
+          <DateRangeCalendar {...mainCalendarProps} />
+        )}
+      </div>
       {isComparing && (
         <>
           <div className="my-auto px-1 text-sm font-medium text-gray-800 dark:text-gray-200">
@@ -78,9 +105,6 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
             {({ close }) => (
               <>
                 <ComparisonPeriodMenuButton />
-                {calendar?.position === 'compare' && (
-                  <DateRangeCalendar id="calendar" {...calendar} />
-                )}
                 <ComparisonPeriodMenuItems
                   closeDropdown={close}
                   showCalendar={(props) =>
@@ -94,8 +118,18 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
               </>
             )}
           </Popover>
+          <div className={calendarPositionClassName}>
+            {calendar?.position === 'compare' && (
+              <DateRangeCalendar id="calendar" {...calendar} />
+            )}
+          </div>
         </>
       )}
     </div>
   )
 }
+
+const calendarPositionClassName = classNames(
+  'w-0 m-0 p-0 m-0 self-end md:relative', // 0px * 0px point of reference for calendar position
+  '*:!top-auto *:!right-0 *:!absolute *:!mt-2' // positions calendar relative to the point
+)
