@@ -137,6 +137,25 @@ defmodule Plausible.Teams do
     end
   end
 
+  @spec force_create_my_team(Auth.User.t()) :: Teams.Team.t()
+  def force_create_my_team(user) do
+    {:ok, team} =
+      Repo.transaction(fn ->
+        Repo.update_all(
+          from(tm in Teams.Membership,
+            where: tm.user_id == ^user.id,
+            where: tm.is_autocreated == true
+          ),
+          set: [is_autocreated: false]
+        )
+
+        {:ok, team} = create_my_team(user)
+        team
+      end)
+
+    team
+  end
+
   @spec get_by_owner(Auth.User.t() | pos_integer()) ::
           {:ok, Teams.Team.t()} | {:error, :no_team | :multiple_teams}
   def get_by_owner(user_id) when is_integer(user_id) do
