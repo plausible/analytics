@@ -117,13 +117,13 @@ defmodule Plausible.GoalsTest do
     assert goal2.display_name == "Homepage"
   end
 
-  test "update/2 also updates any segments the goal is a part of" do
+  test "update/2 also updates all segments the goal is a part of" do
     user = new_user()
     site = new_site(owner: user)
     {:ok, goal1} = Goals.create(site, %{"event_name" => "Signup"})
     {:ok, _goal2} = Goals.create(site, %{"event_name" => "Signup from nav"})
 
-    {:ok, segment} =
+    {:ok, segment1} =
       Plausible.Segments.insert_one(user.id, site, :editor, %{
         "type" => "site",
         "segment_data" => %{
@@ -133,17 +133,33 @@ defmodule Plausible.GoalsTest do
             ["is", "event:props:variant", ["A"]]
           ]
         },
-        "name" => "Segment name"
+        "name" => "Site segment"
+      })
+
+    {:ok, segment2} =
+      Plausible.Segments.insert_one(user.id, site, :editor, %{
+        "type" => "personal",
+        "segment_data" => %{
+          "filters" => [
+            ["is", "event:goal", ["Signup"]]
+          ]
+        },
+        "name" => "Personal segment"
       })
 
     Goals.update(goal1, %{"display_name" => "SIGNUP"})
-    updated_segment = Repo.reload!(segment)
 
-    assert updated_segment.segment_data == %{
+    assert Repo.reload!(segment1).segment_data == %{
              "filters" => [
                ["is", "event:page", ["/blog"]],
                ["is", "event:goal", ["Signup from nav", "SIGNUP"]],
                ["is", "event:props:variant", ["A"]]
+             ]
+           }
+
+    assert Repo.reload!(segment2).segment_data == %{
+             "filters" => [
+               ["is", "event:goal", ["SIGNUP"]]
              ]
            }
   end
