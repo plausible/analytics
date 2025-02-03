@@ -39,6 +39,16 @@ import {
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 
+const HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_NAME = 'data-headlessui-state'
+const HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_VALUE = 'open'
+
+function isMenuOpen(element: HTMLElement | null) {
+  return (
+    element?.getAttribute(HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_NAME) ===
+    HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_VALUE
+  )
+}
+
 function QueryPeriodMenuKeybinds({
   closeDropdown,
   groups
@@ -91,8 +101,14 @@ export const QueryPeriodMenu = ({
   closeDropdown,
   dropdownIsOpen
 }: PopoverMenuProps) => {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [currentMode, setCurrentMode] = useState<'menu' | 'calendar'>('menu')
+
+  useEffect(() => {
+    closeDropdown()
+  }, [closeDropdown, query])
 
   useEffect(() => {
     if (!dropdownIsOpen) {
@@ -108,33 +124,47 @@ export const QueryPeriodMenu = ({
 
   const toggleDropdown = useCallback(
     (mode: 'menu' | 'calendar') => {
-      const openDropdown = () => {
-        const s = buttonRef.current?.getAttribute('data-headlessui-state')
-        console.log({ s, dropdownIsOpen })
-        if (!dropdownIsOpen) {
+      // const openDropdown = () => {
+      //   const menuExpanded = isMenuOpen(buttonRef.current)
+      //   if (!menuExpanded) {
+      //     buttonRef.current?.click()
+      //   }
+      // }
+
+      if (mode === currentMode) {
+        closeDropdown()
+        setCurrentMode('menu')
+      } else {
+        setCurrentMode(mode)
+        if (mode === 'calendar' && !isMenuOpen(buttonRef.current)) {
           buttonRef.current?.click()
         }
       }
 
-      setCurrentMode((prevMode) => {
-        if (prevMode === mode) {
-          closeDropdown()
-          return 'menu'
-        }
-        if (mode === 'calendar') {
-          openDropdown()
-        }
-        return mode
-      })
+      // setCurrentMode((prevMode) => {
+      //   if (prevMode === mode) {
+      //     // closeDropdown()
+      //     return 'menu'
+      //   }
+      //   if (mode === 'calendar') {
+      //     // openDropdown()
+      //   }
+      //   return mode
+      // })
     },
-    [closeDropdown, dropdownIsOpen]
+    [closeDropdown, currentMode]
   )
 
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
+      <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
+        <span className={popover.toggleButton.classNames.truncatedText}>
+          {getCurrentPeriodDisplayName({ query, site })}
+        </span>
+        <DateMenuChevron />
+      </Popover.Button>
       <QueryPeriodMenuInner
-        ref={buttonRef}
         closeDropdown={closeDropdown}
         toggleDropdown={toggleDropdown}
         dropdownState={state}
@@ -143,22 +173,19 @@ export const QueryPeriodMenu = ({
   )
 }
 
-const QueryPeriodMenuInner = React.forwardRef<
-  HTMLButtonElement,
-  {
-    dropdownState: DropdownState
-    closeDropdown: () => void
-    toggleDropdown: (t: 'menu' | 'calendar') => void
-  }
->(({ dropdownState, closeDropdown, toggleDropdown }, ref) => {
+const QueryPeriodMenuInner = ({
+  dropdownState,
+  closeDropdown,
+  toggleDropdown
+}: {
+  dropdownState: DropdownState
+  closeDropdown: () => void
+  toggleDropdown: (t: 'menu' | 'calendar') => void
+}) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    closeDropdown()
-  }, [closeDropdown, query])
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -183,12 +210,6 @@ const QueryPeriodMenuInner = React.forwardRef<
 
   return (
     <>
-      <Popover.Button ref={ref} className={datemenuButtonClassName}>
-        <span className={popover.toggleButton.classNames.truncatedText}>
-          {getCurrentPeriodDisplayName({ query, site })}
-        </span>
-        <DateMenuChevron />
-      </Popover.Button>
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
       <Transition
         {...popover.transition.props}
@@ -252,4 +273,4 @@ const QueryPeriodMenuInner = React.forwardRef<
       </Transition>
     </>
   )
-})
+}
