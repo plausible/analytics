@@ -922,6 +922,20 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "Google Search Console integration"
       assert resp =~ "google-integration"
     end
+
+    @tag :ee_only
+    test "renders looker studio integration section", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/integrations")
+      resp = html_response(conn, 200)
+      assert resp =~ "Google Looker Studio Connector"
+    end
+
+    @tag :ce_build_only
+    test "does not render looker studio integration section", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/integrations")
+      resp = html_response(conn, 200)
+      refute resp =~ "Google Looker Studio Connector"
+    end
   end
 
   describe "GET /:domain/integrations (search-console)" do
