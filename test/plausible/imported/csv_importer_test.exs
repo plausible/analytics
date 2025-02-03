@@ -1088,6 +1088,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                start_date: start_date,
                end_date: end_date,
                source: :csv,
+               has_scroll_depth: true,
                status: :completed
              } = site_import
 
@@ -1166,11 +1167,15 @@ defmodule Plausible.Imported.CSVImporterTest do
         imported_site: new_site(owner: user)
       }
 
-      %{exported_files: exported_files} =
+      %{exported_files: exported_files, site_import: site_import} =
         context
         |> export_archive()
         |> download_archive()
         |> unzip_archive()
+        |> upload_csvs()
+        |> run_import()
+
+      assert %SiteImport{has_scroll_depth: false} = site_import
 
       imported_pages_content =
         exported_files
