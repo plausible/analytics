@@ -5,48 +5,48 @@ const { LOCAL_SERVER_ADDR } = require('./support/server')
 test.describe('engagement events', () => {
   test('sends a pageleave when navigating to the next page', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => page.goto('/pageleave.html'),
+      action: () => page.goto('/engagement.html'),
       expectedRequests: [{n: 'pageview'}],
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave.html`}]
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}]
     })
   })
 
   test('sends an event and a pageview on hash-based SPA navigation', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => page.goto('/pageleave-hash.html'),
+      action: () => page.goto('/engagement-hash.html'),
       expectedRequests: [{n: 'pageview'}],
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#hash-nav'),
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave-hash.html`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave-hash.html#some-hash`}
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html`},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`}
       ]
     })
   })
 
   test('sends an event and a pageview on history-based SPA navigation', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => page.goto('/pageleave.html'),
+      action: () => page.goto('/engagement.html'),
       expectedRequests: [{n: 'pageview'}],
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#history-nav'),
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave.html`},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/another-page`}
       ]
     })
   })
 
   test('sends an event with the manually overridden URL', async ({ page }) => {
-    await page.goto('/pageleave-manual.html')
+    await page.goto('/engagement-manual.html')
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#pageview-trigger-custom-url'),
@@ -60,7 +60,7 @@ test.describe('engagement events', () => {
   })
 
   test('does not send an event when pageview was not sent in manual mode', async ({ page }) => {
-    await page.goto('/pageleave-manual.html')
+    await page.goto('/engagement-manual.html')
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
@@ -69,10 +69,10 @@ test.describe('engagement events', () => {
   })
 
   test('script.exclusions.hash.pageleave.js sends an event only from URLs where a pageview was sent', async ({ page }) => {
-    const pageBaseURL = `${LOCAL_SERVER_ADDR}/pageleave-hash-exclusions.html`
+    const pageBaseURL = `${LOCAL_SERVER_ADDR}/engagement-hash-exclusions.html`
 
     await expectPlausibleInAction(page, {
-      action: () => page.goto('/pageleave-hash-exclusions.html'),
+      action: () => page.goto('/engagement-hash-exclusions.html'),
       expectedRequests: [{n: 'pageview'}],
     })
 
@@ -107,7 +107,7 @@ test.describe('engagement events', () => {
   })
 
   test('sends an event with the same props as pageview (manual extension)', async ({ page }) => {
-    await page.goto('/pageleave-manual.html')
+    await page.goto('/engagement-manual.html')
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#pageview-trigger-custom-props'),
@@ -122,7 +122,7 @@ test.describe('engagement events', () => {
 
   test('sends an event with the same props as pageview (pageview-props extension)', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => page.goto('/pageleave-pageview-props.html'),
+      action: () => page.goto('/engagement-pageview-props.html'),
       expectedRequests: [{n: 'pageview', p: {author: 'John'}}],
     })
 
@@ -134,7 +134,7 @@ test.describe('engagement events', () => {
 
   test('sends an event with the same props as pageview (hash navigation / pageview-props extension)', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => page.goto('/pageleave-hash-pageview-props.html'),
+      action: () => page.goto('/engagement-hash-pageview-props.html'),
       expectedRequests: [{n: 'pageview', p: {}}],
     })
 
@@ -169,8 +169,8 @@ test.describe('engagement events', () => {
 
   test('sends an event when plausible API is slow and user navigates away before response is received', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => page.goto('/pageleave.html'),
-      expectedRequests: [{n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave.html`}],
+      action: () => page.goto('/engagement.html'),
+      expectedRequests: [{n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
     })
 
     await expectPlausibleInAction(page, {
@@ -179,10 +179,10 @@ test.describe('engagement events', () => {
         await page.click('#back-button-trigger')
       },
       expectedRequests: [
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave.html`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave-pageview-props.html`, p: {author: 'John'}},
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave-pageview-props.html`, p: {author: 'John'}},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave.html`}
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John'}},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John'}},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html`}
       ],
       responseDelay: 1000
     })
