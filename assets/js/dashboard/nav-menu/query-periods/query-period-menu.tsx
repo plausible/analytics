@@ -37,7 +37,8 @@ import {
   MenuSeparator,
   useDropdownWithCalendar,
   DropdownWithCalendarState,
-  DropdownState
+  DropdownState,
+  calendarPositionClassName
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
@@ -88,11 +89,10 @@ export const QueryPeriodMenu = (props: PopoverMenuProps) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
 
-  const { buttonRef, closeDropdown, toggleDropdown, dropdownState } =
-    useDropdownWithCalendar({
-      ...props,
-      query
-    })
+  const { buttonRef, ...rest } = useDropdownWithCalendar({
+    ...props,
+    query
+  })
 
   return (
     <>
@@ -103,16 +103,13 @@ export const QueryPeriodMenu = (props: PopoverMenuProps) => {
         </span>
         <DateMenuChevron />
       </Popover.Button>
-      <QueryPeriodMenuInner
-        closeDropdown={closeDropdown}
-        toggleDropdown={toggleDropdown}
-        dropdownState={dropdownState}
-      />
+      <QueryPeriodMenuInner {...rest} />
     </>
   )
 }
 
 const QueryPeriodMenuInner = ({
+  panelRef,
   dropdownState,
   closeDropdown,
   toggleDropdown
@@ -156,9 +153,10 @@ const QueryPeriodMenuInner = ({
         )}
       >
         <Popover.Panel
+          ref={panelRef}
           className={
             dropdownState === DropdownState.CALENDAR
-              ? '*:!top-auto *:!right-0 *:!absolute'
+              ? calendarPositionClassName
               : popover.panel.classNames.roundedSheet
           }
           data-testid="datemenu"

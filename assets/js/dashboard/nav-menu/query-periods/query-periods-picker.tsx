@@ -6,10 +6,7 @@ import { useQueryContext } from '../../query-context'
 import { isComparisonEnabled } from '../../query-time-periods'
 import { MovePeriodArrows } from './move-period-arrows'
 import { QueryPeriodMenu } from './query-period-menu'
-import {
-  ComparisonPeriodMenuButton,
-  ComparisonPeriodMenuItems
-} from './comparison-period-menu'
+import { ComparisonPeriodMenu } from './comparison-period-menu'
 import { Popover } from '@headlessui/react'
 
 export function QueryPeriodsPicker({ className }: { className?: string }) {
@@ -31,13 +28,10 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
           </div>
           <Popover className="min-w-36 md:relative lg:w-48">
             {({ close, open }) => (
-              <>
-                <ComparisonPeriodMenuButton />
-                <ComparisonPeriodMenuItems
-                  dropdownIsOpen={open}
-                  closeDropdown={close}
-                />
-              </>
+              <ComparisonPeriodMenu
+                dropdownIsOpen={open}
+                closeDropdown={close}
+              />
             )}
           </Popover>
         </>

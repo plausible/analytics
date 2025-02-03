@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React from 'react'
 import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
@@ -26,36 +26,24 @@ import {
   DateMenuChevron,
   PopoverMenuProps,
   linkClassName,
-  MenuSeparator
+  MenuSeparator,
+  useDropdownWithCalendar,
+  DropdownWithCalendarState,
+  DropdownState,
+  calendarPositionClassName
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 
 export const ComparisonPeriodMenuItems = ({
-  dropdownIsOpen,
-  closeDropdown
-}: PopoverMenuProps) => {
+  panelRef,
+  dropdownState,
+  closeDropdown,
+  toggleDropdown
+}: Omit<DropdownWithCalendarState, 'buttonRef'>) => {
   const site = useSiteContext()
   const navigate = useAppNavigate()
   const { query } = useQueryContext()
-  const [calendarIsOpen, setCalendarIsOpen] = useState(false)
-  const closeCalendar = useCallback(() => setCalendarIsOpen(false), [])
-  const openCalendar = useCallback(() => setCalendarIsOpen(true), [])
-
-  useEffect(() => {
-    if (!dropdownIsOpen) {
-      closeCalendar()
-    }
-    return closeCalendar
-  }, [dropdownIsOpen, closeCalendar])
-
-  const panelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (calendarIsOpen && panelRef.current?.focus) {
-      panelRef.current.focus()
-    }
-  }, [calendarIsOpen])
 
   if (!isComparisonEnabled(query.comparison)) {
     return null
@@ -67,18 +55,20 @@ export const ComparisonPeriodMenuItems = ({
       className={classNames(
         'mt-2',
         popover.transition.classNames.fullwidth,
-        calendarIsOpen ? 'md:left-auto' : 'md:left-auto md:w-56'
+        dropdownState === DropdownState.CALENDAR
+          ? 'md:left-auto'
+          : 'md:left-auto md:w-56'
       )}
     >
       <Popover.Panel
         ref={panelRef}
         className={
-          calendarIsOpen
-            ? '*:!top-auto *:!right-0 *:!absolute'
+          dropdownState === DropdownState.CALENDAR
+            ? calendarPositionClassName
             : popover.panel.classNames.roundedSheet
         }
       >
-        {calendarIsOpen && (
+        {dropdownState === DropdownState.CALENDAR && (
           <DateRangeCalendar
             id="calendar"
             onCloseWithSelection={(selection) => {
@@ -96,7 +86,7 @@ export const ComparisonPeriodMenuItems = ({
             }
           />
         )}
-        {!calendarIsOpen && (
+        {dropdownState === DropdownState.MENU && (
           <>
             {[
               ComparisonMode.off,
@@ -122,7 +112,7 @@ export const ComparisonPeriodMenuItems = ({
               className={linkClassName}
               search={(s) => s}
               onClick={() => {
-                openCalendar()
+                toggleDropdown('calendar')
               }}
             >
               {COMPARISON_MODES[ComparisonMode.custom]}
@@ -163,10 +153,13 @@ export const ComparisonPeriodMenuItems = ({
   )
 }
 
-export const ComparisonPeriodMenuButton = () => {
+export const ComparisonPeriodMenu = (props: PopoverMenuProps) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const { buttonRef, ...rest } = useDropdownWithCalendar({
+    ...props,
+    query
+  })
 
   return (
     <>
@@ -177,6 +170,7 @@ export const ComparisonPeriodMenuButton = () => {
         </span>
         <DateMenuChevron />
       </Popover.Button>
+      <ComparisonPeriodMenuItems {...rest} />
     </>
   )
 }

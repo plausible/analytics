@@ -25,6 +25,8 @@ export const datemenuButtonClassName = classNames(
   'justify-between px-2 w-full'
 )
 
+export const calendarPositionClassName = '*:!top-auto *:!right-0 *:!absolute'
+
 export const DateMenuChevron = () => (
   <ChevronDownIcon className="hidden lg:inline-block h-4 w-4 md:h-5 md:w-5 ml-1 md:ml-2 text-gray-500" />
 )
@@ -49,6 +51,7 @@ export interface DropdownWithCalendarState {
   toggleDropdown: (mode: 'menu' | 'calendar') => void
   dropdownState: DropdownState
   buttonRef: RefObject<HTMLButtonElement>
+  panelRef: RefObject<HTMLDivElement>
 }
 
 export const useDropdownWithCalendar = ({
@@ -57,6 +60,7 @@ export const useDropdownWithCalendar = ({
   dropdownIsOpen
 }: PopoverMenuProps & { query: DashboardQuery }): DropdownWithCalendarState => {
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const [currentMode, setCurrentMode] = useState<'menu' | 'calendar'>('menu')
 
   // closes dropdown when query changes
@@ -84,13 +88,29 @@ export const useDropdownWithCalendar = ({
         setCurrentMode('menu')
       } else {
         setCurrentMode(mode)
-        if (mode === 'calendar' && !dropdownIsOpen) {
-          buttonRef.current?.click()
+        if (
+          mode === 'calendar' &&
+          !dropdownIsOpen &&
+          typeof buttonRef.current?.click === 'function'
+        ) {
+          buttonRef.current.click()
+        }
+        if (
+          mode === 'calendar' &&
+          typeof panelRef.current?.focus === 'function'
+        ) {
+          panelRef.current.focus()
         }
       }
     },
     [closeDropdown, currentMode, dropdownIsOpen]
   )
 
-  return { buttonRef, dropdownState: state, closeDropdown, toggleDropdown }
+  return {
+    panelRef,
+    buttonRef,
+    dropdownState: state,
+    closeDropdown,
+    toggleDropdown
+  }
 }
