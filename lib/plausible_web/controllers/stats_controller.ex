@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Filters, Query}
+  alias Plausible.Stats.{Filters, Query, ScrollDepth}
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -59,9 +59,6 @@ defmodule PlausibleWeb.StatsController do
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
 
-    scroll_depth_visible? =
-      Plausible.Stats.ScrollDepth.check_feature_visible!(site, current_user)
-
     cond do
       (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
         conn
@@ -72,7 +69,7 @@ defmodule PlausibleWeb.StatsController do
           revenue_goals: list_revenue_goals(site),
           funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
-          scroll_depth_visible: scroll_depth_visible?,
+          scroll_depth_visible: ScrollDepth.feature_visible?(site, current_user),
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
@@ -350,9 +347,6 @@ defmodule PlausibleWeb.StatsController do
         shared_link = Plausible.Repo.preload(shared_link, site: :owner)
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
-        scroll_depth_visible? =
-          Plausible.Stats.ScrollDepth.check_feature_visible!(shared_link.site, current_user)
-
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
@@ -362,7 +356,7 @@ defmodule PlausibleWeb.StatsController do
           revenue_goals: list_revenue_goals(shared_link.site),
           funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
-          scroll_depth_visible: scroll_depth_visible?,
+          scroll_depth_visible: ScrollDepth.feature_visible?(shared_link.site, current_user),
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),
