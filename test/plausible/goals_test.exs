@@ -99,8 +99,7 @@ defmodule Plausible.GoalsTest do
     assert {:error, changeset} =
              Goals.create(site, %{"page_path" => "foo bar", "display_name" => "two"})
 
-    assert {"has already been taken", _} =
-             changeset.errors[:page_path]
+    assert {"has already been taken", _} = changeset.errors[:page_path]
   end
 
   test "create/2 fails to create the same custom event goal twice" do
