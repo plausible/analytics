@@ -296,7 +296,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
 
         CheckUsage.perform(nil, usage_stub)
-        assert user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        assert user |> team_of() |> Repo.reload() |> Plausible.Teams.GracePeriod.active?()
 
         usage_stub =
           Plausible.Teams.Billing
@@ -308,7 +308,7 @@ defmodule Plausible.Workers.CheckUsageTest do
           end)
 
         CheckUsage.perform(nil, usage_stub)
-        refute user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        refute user |> team_of() |> Repo.reload() |> Plausible.Teams.GracePeriod.active?()
       end
     end
   end
@@ -457,7 +457,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
 
         CheckUsage.perform(nil, usage_stub)
-        assert user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        assert user |> team_of() |> Repo.reload() |> Plausible.Teams.GracePeriod.active?()
       end
     end
   end

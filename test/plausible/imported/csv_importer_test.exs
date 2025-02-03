@@ -1065,6 +1065,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> Enum.map(fn event -> Map.put(event, :hostname, "csv.test") end)
 
       populate_stats(exported_site, stats)
+      Plausible.Sites.set_scroll_depth_visible_at(exported_site)
 
       initial_context = %{
         user: user,
@@ -1080,9 +1081,6 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> unzip_archive()
         |> upload_csvs()
         |> run_import()
-
-      assert %NaiveDateTime{} =
-               Plausible.Repo.reload!(exported_site).scroll_depth_visible_at
 
       assert %SiteImport{
                start_date: start_date,

@@ -130,7 +130,8 @@ defmodule Plausible.Ingestion.Event do
       put_user_id: &put_user_id/2,
       validate_clickhouse_event: &validate_clickhouse_event/2,
       register_session: &register_session/2,
-      write_to_buffer: &write_to_buffer/2
+      write_to_buffer: &write_to_buffer/2,
+      register_scroll_depth_visible: &register_scroll_depth_visible/2
     ]
   end
 
@@ -402,6 +403,15 @@ defmodule Plausible.Ingestion.Event do
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event, _context) do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
     emit_telemetry_buffered(event)
+    event
+  end
+
+  defp register_scroll_depth_visible(%__MODULE__{clickhouse_event: ev} = event, _context) do
+    if is_nil(event.site.scroll_depth_visible_at) and ev.name in ["pageleave", "engagement"] and
+         not is_nil(ev.scroll_depth) and ev.scroll_depth >= 0 and ev.scroll_depth <= 100 do
+      Plausible.Ingestion.ScrollDepthVisibleAt.mark_scroll_depth_visible(event.site.id)
+    end
+
     event
   end
 

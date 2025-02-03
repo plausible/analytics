@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   use Plausible.ClickhouseRepo
   use Plausible.Teams.Test
 
+  alias Plausible.Repo
+
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
   @user_agent_mobile "Mozilla/5.0 (Linux; Android 6.0; U007 Pro Build/MRA58K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/44.0.2403.119 Mobile Safari/537.36"
   @user_agent_tablet "Mozilla/5.0 (Linux; U; Android 4.2.2; it-it; Surfing TAB B 9.7 3G Build/JDQ39) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
@@ -1291,6 +1293,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
 
       assert pageleave.scroll_depth == 255
+      assert not scroll_depth_visible_at_set?(site)
     end
 
     test "sd field is ignored if name is not pageleave", %{conn: conn, site: site} do
@@ -1298,6 +1301,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       post(conn, "/api/event", %{n: "custom_e", u: "https://test.com", d: site.domain, sd: 10})
 
       assert [%{scroll_depth: 0}, %{scroll_depth: 0}] = get_events(site)
+      assert not scroll_depth_visible_at_set?(site)
     end
 
     test "ingests valid scroll_depth for a pageleave", %{conn: conn, site: site} do
@@ -1307,6 +1311,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
 
       assert pageleave.scroll_depth == 25
+      assert scroll_depth_visible_at_set?(site)
     end
 
     test "ingests scroll_depth as 100 when sd > 100", %{conn: conn, site: site} do
@@ -1316,6 +1321,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
 
       assert pageleave.scroll_depth == 100
+      assert scroll_depth_visible_at_set?(site)
     end
 
     test "ingests scroll_depth as 255 when sd is a string", %{conn: conn, site: site} do
@@ -1325,6 +1331,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
 
       assert pageleave.scroll_depth == 255
+      assert not scroll_depth_visible_at_set?(site)
     end
 
     test "ingests scroll_depth as 255 when sd is a negative integer", %{conn: conn, site: site} do
@@ -1334,6 +1341,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
 
       assert pageleave.scroll_depth == 255
+      assert not scroll_depth_visible_at_set?(site)
     end
 
     test "ingests valid scroll_depth for a engagement event", %{conn: conn, site: site} do
@@ -1343,6 +1351,23 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       event = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
       assert event.scroll_depth == 25
+      assert scroll_depth_visible_at_set?(site)
+    end
+
+    test "does not update scroll_depth_visible_at twice", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: 25})
+      Plausible.Event.WriteBuffer.flush()
+
+      site1 = Repo.reload!(site)
+      assert not is_nil(site1.scroll_depth_visible_at)
+
+      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: 50})
+      Plausible.Event.WriteBuffer.flush()
+
+      site2 = Repo.reload!(site)
+      assert not is_nil(site2.scroll_depth_visible_at)
+      assert site1.scroll_depth_visible_at == site2.scroll_depth_visible_at
     end
   end
 
@@ -3583,5 +3608,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         order_by: [desc: e.timestamp]
       )
     )
+  end
+
+  defp scroll_depth_visible_at_set?(site) do
+    site = Repo.reload!(site)
+    not is_nil(site.scroll_depth_visible_at)
   end
 end

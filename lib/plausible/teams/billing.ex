@@ -149,7 +149,7 @@ defmodule Plausible.Teams.Billing do
       trial_over? and not subscription_active? ->
         {:needs_to_upgrade, :no_active_subscription}
 
-      Plausible.Auth.GracePeriod.expired?(team) ->
+      Teams.GracePeriod.expired?(team) ->
         {:needs_to_upgrade, :grace_period_ended}
 
       true ->

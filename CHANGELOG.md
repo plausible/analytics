@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Filters appear in the search bar as ?f=is,page,/docs,/blog&f=... instead of ?filters=((is,page,(/docs,/blog)),...) for Plausible links sent on various platforms to work reliably.
 - Details modal search inputs are now case-insensitive.
 - Improved report performance in cases where site has a lot of unique pathnames
+- Plausible script now uses `fetch` with keepalive flag as default over `XMLHttpRequest`. This will ensure more reliable tracking. Reminder to use `compat` script variant if tracking Internet Explorer is required.
 
 ### Fixed
 

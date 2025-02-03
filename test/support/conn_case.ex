@@ -24,6 +24,7 @@ defmodule PlausibleWeb.ConnCase do
       import Phoenix.ConnTest
       alias PlausibleWeb.Router.Helpers, as: Routes
       import Plausible.Factory
+      import Plausible.AssertMatches
 
       # The default endpoint for testing
       @endpoint PlausibleWeb.Endpoint
