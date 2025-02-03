@@ -81,56 +81,66 @@ function QueryPeriodMenuKeybinds({
   )
 }
 
+export enum DropdownState {
+  CLOSED = 'CLOSED',
+  MENU = 'MENU',
+  CALENDAR = 'CALENDAR'
+}
+
 export const QueryPeriodMenu = ({
   closeDropdown,
   dropdownIsOpen
 }: PopoverMenuProps) => {
+  const [currentMode, setCurrentMode] = useState<'menu' | 'calendar' | null>(
+    null
+  )
+
+  const state: DropdownState = dropdownIsOpen
+    ? currentMode === 'calendar'
+      ? DropdownState.CALENDAR
+      : DropdownState.MENU
+    : DropdownState.CLOSED
+
+  const toggleDropdown = (mode: 'menu' | 'calendar') => {
+    setCurrentMode((prevMode) => (prevMode === mode ? null : mode))
+  }
+
+  return (
+    <QueryPeriodMenuInner
+      closeDropdown={closeDropdown}
+      toggleDropdown={toggleDropdown}
+      dropdownState={state}
+    />
+  )
+}
+
+const QueryPeriodMenuInner = ({
+  dropdownState,
+  closeDropdown,
+  toggleDropdown
+}: {
+  dropdownState: DropdownState
+  closeDropdown: () => void
+  toggleDropdown: (t: 'menu' | 'calendar') => void
+}) => {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const site = useSiteContext()
   const { query } = useQueryContext()
-
-  const [calendarIsOpen, setCalendarIsOpen] = useState(false)
   const navigate = useAppNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!dropdownIsOpen) {
-      setCalendarIsOpen(false)
-    }
-  }, [dropdownIsOpen])
-
-  useEffect(() => {
-    if (calendarIsOpen && !dropdownIsOpen) {
-      console.log({ calendarIsOpen, dropdownIsOpen })
-      buttonRef.current?.click()
-    }
-  }, [dropdownIsOpen, calendarIsOpen])
-
-  useEffect(() => {
-    if (calendarIsOpen && panelRef.current?.focus) {
-      panelRef.current.focus()
-    }
-  }, [calendarIsOpen])
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
     return getDatePeriodGroups({
       site,
-      onEvent: () => closeDropdown(),
+      onEvent: closeDropdown,
       extraItemsInLastGroup: [
         [
           ['Custom Range', 'C'],
           {
             search: (s) => s,
             isActive: ({ query }) => query.period === QueryPeriod.custom,
-            onEvent: () =>
-              setCalendarIsOpen((current) => {
-                const closing = !current
-                // if (closing) {
-                //   closeDropdown()
-                // }
-                return closing
-              })
+            onEvent: () => toggleDropdown('calendar')
           }
         ]
       ],
@@ -138,7 +148,7 @@ export const QueryPeriodMenu = ({
         ? []
         : [[compareLink]]
     })
-  }, [site, query, closeDropdown])
+  }, [site, query, toggleDropdown, closeDropdown])
 
   return (
     <>
@@ -155,26 +165,27 @@ export const QueryPeriodMenu = ({
         className={classNames(
           'mt-2',
           popover.transition.classNames.fullwidth,
-          calendarIsOpen ? 'md-left-auto' : 'md:left-auto md:w-56'
+          dropdownState === DropdownState.CALENDAR
+            ? 'md-left-auto'
+            : 'md:left-auto md:w-56'
         )}
       >
         <Popover.Panel
           ref={panelRef}
           className={
-            calendarIsOpen
+            dropdownState === DropdownState.CALENDAR
               ? '*:!top-auto *:!right-0 *:!absolute'
               : popover.panel.classNames.roundedSheet
           }
           data-testid="datemenu"
         >
-          {calendarIsOpen && (
+          {dropdownState === DropdownState.CALENDAR && (
             <DateRangeCalendar
               id="calendar"
               onCloseWithSelection={(selection) => {
                 navigate({
                   search: getSearchToApplyCustomDates(selection)
                 })
-                closeDropdown()
               }}
               minDate={site.statsBegin}
               maxDate={formatISO(nowForSite(site))}
@@ -185,7 +196,7 @@ export const QueryPeriodMenu = ({
               }
             />
           )}
-          {!calendarIsOpen &&
+          {dropdownState === DropdownState.MENU &&
             groups.map((group, index) => (
               <React.Fragment key={index}>
                 {group.map(
