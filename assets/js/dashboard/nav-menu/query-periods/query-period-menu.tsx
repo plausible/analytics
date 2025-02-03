@@ -91,9 +91,14 @@ export const QueryPeriodMenu = ({
   closeDropdown,
   dropdownIsOpen
 }: PopoverMenuProps) => {
-  const [currentMode, setCurrentMode] = useState<'menu' | 'calendar' | null>(
-    null
-  )
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [currentMode, setCurrentMode] = useState<'menu' | 'calendar'>('menu')
+
+  useEffect(() => {
+    if (!dropdownIsOpen) {
+      setCurrentMode('menu')
+    }
+  }, [dropdownIsOpen])
 
   const state: DropdownState = dropdownIsOpen
     ? currentMode === 'calendar'
@@ -101,33 +106,59 @@ export const QueryPeriodMenu = ({
       : DropdownState.MENU
     : DropdownState.CLOSED
 
-  const toggleDropdown = (mode: 'menu' | 'calendar') => {
-    setCurrentMode((prevMode) => (prevMode === mode ? null : mode))
-  }
+  const toggleDropdown = useCallback(
+    (mode: 'menu' | 'calendar') => {
+      const openDropdown = () => {
+        const s = buttonRef.current?.getAttribute('data-headlessui-state')
+        console.log({ s, dropdownIsOpen })
+        if (!dropdownIsOpen) {
+          buttonRef.current?.click()
+        }
+      }
+
+      setCurrentMode((prevMode) => {
+        if (prevMode === mode) {
+          closeDropdown()
+          return 'menu'
+        }
+        if (mode === 'calendar') {
+          openDropdown()
+        }
+        return mode
+      })
+    },
+    [closeDropdown, dropdownIsOpen]
+  )
 
   return (
-    <QueryPeriodMenuInner
-      closeDropdown={closeDropdown}
-      toggleDropdown={toggleDropdown}
-      dropdownState={state}
-    />
+    <>
+      <BlurMenuButtonOnEscape targetRef={buttonRef} />
+      <QueryPeriodMenuInner
+        ref={buttonRef}
+        closeDropdown={closeDropdown}
+        toggleDropdown={toggleDropdown}
+        dropdownState={state}
+      />
+    </>
   )
 }
 
-const QueryPeriodMenuInner = ({
-  dropdownState,
-  closeDropdown,
-  toggleDropdown
-}: {
-  dropdownState: DropdownState
-  closeDropdown: () => void
-  toggleDropdown: (t: 'menu' | 'calendar') => void
-}) => {
-  const buttonRef = useRef<HTMLButtonElement>(null)
+const QueryPeriodMenuInner = React.forwardRef<
+  HTMLButtonElement,
+  {
+    dropdownState: DropdownState
+    closeDropdown: () => void
+    toggleDropdown: (t: 'menu' | 'calendar') => void
+  }
+>(({ dropdownState, closeDropdown, toggleDropdown }, ref) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    closeDropdown()
+  }, [closeDropdown, query])
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -152,8 +183,7 @@ const QueryPeriodMenuInner = ({
 
   return (
     <>
-      <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
+      <Popover.Button ref={ref} className={datemenuButtonClassName}>
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentPeriodDisplayName({ query, site })}
         </span>
@@ -222,4 +252,4 @@ const QueryPeriodMenuInner = ({
       </Transition>
     </>
   )
-}
+})
