@@ -1,9 +1,16 @@
 /** @format */
 
-import React from 'react'
+import React, {
+  RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 import classNames from 'classnames'
 import { popover } from '../../components/popover'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { DashboardQuery } from '../../query'
 
 export const linkClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -29,4 +36,61 @@ export const MenuSeparator = () => (
 export interface PopoverMenuProps {
   dropdownIsOpen: boolean
   closeDropdown: () => void
+}
+
+export enum DropdownState {
+  CLOSED = 'CLOSED',
+  MENU = 'MENU',
+  CALENDAR = 'CALENDAR'
+}
+
+export interface DropdownWithCalendarState {
+  closeDropdown: () => void
+  toggleDropdown: (mode: 'menu' | 'calendar') => void
+  dropdownState: DropdownState
+  buttonRef: RefObject<HTMLButtonElement>
+}
+
+export const useDropdownWithCalendar = ({
+  query,
+  closeDropdown,
+  dropdownIsOpen
+}: PopoverMenuProps & { query: DashboardQuery }): DropdownWithCalendarState => {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [currentMode, setCurrentMode] = useState<'menu' | 'calendar'>('menu')
+
+  // closes dropdown when query changes
+  useEffect(() => {
+    closeDropdown()
+  }, [closeDropdown, query])
+
+  // resets dropdown to default mode 'menu' on close
+  useEffect(() => {
+    if (!dropdownIsOpen) {
+      setCurrentMode('menu')
+    }
+  }, [dropdownIsOpen])
+
+  const state: DropdownState = dropdownIsOpen
+    ? currentMode === 'calendar'
+      ? DropdownState.CALENDAR
+      : DropdownState.MENU
+    : DropdownState.CLOSED
+
+  const toggleDropdown = useCallback(
+    (mode: 'menu' | 'calendar') => {
+      if (mode === currentMode) {
+        closeDropdown()
+        setCurrentMode('menu')
+      } else {
+        setCurrentMode(mode)
+        if (mode === 'calendar' && !dropdownIsOpen) {
+          buttonRef.current?.click()
+        }
+      }
+    },
+    [closeDropdown, currentMode, dropdownIsOpen]
+  )
+
+  return { buttonRef, dropdownState: state, closeDropdown, toggleDropdown }
 }

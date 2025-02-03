@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useRef, useMemo, useEffect, useCallback, useState } from 'react'
+import React, { useMemo } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
@@ -34,20 +34,13 @@ import {
   DateMenuChevron,
   PopoverMenuProps,
   linkClassName,
-  MenuSeparator
+  MenuSeparator,
+  useDropdownWithCalendar,
+  DropdownWithCalendarState,
+  DropdownState
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
-
-// const HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_NAME = 'data-headlessui-state'
-// const HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_VALUE = 'open'
-
-// function isMenuOpen(element: HTMLElement | null) {
-//   return (
-//     element?.getAttribute(HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_NAME) ===
-//     HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_VALUE
-//   )
-// }
 
 function QueryPeriodMenuKeybinds({
   closeDropdown,
@@ -91,69 +84,15 @@ function QueryPeriodMenuKeybinds({
   )
 }
 
-export enum DropdownState {
-  CLOSED = 'CLOSED',
-  MENU = 'MENU',
-  CALENDAR = 'CALENDAR'
-}
-
-export const QueryPeriodMenu = ({
-  closeDropdown,
-  dropdownIsOpen
-}: PopoverMenuProps) => {
+export const QueryPeriodMenu = (props: PopoverMenuProps) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const [currentMode, setCurrentMode] = useState<'menu' | 'calendar'>('menu')
 
-  useEffect(() => {
-    closeDropdown()
-  }, [closeDropdown, query])
-
-  useEffect(() => {
-    if (!dropdownIsOpen) {
-      setCurrentMode('menu')
-    }
-  }, [dropdownIsOpen])
-
-  const state: DropdownState = dropdownIsOpen
-    ? currentMode === 'calendar'
-      ? DropdownState.CALENDAR
-      : DropdownState.MENU
-    : DropdownState.CLOSED
-
-  const toggleDropdown = useCallback(
-    (mode: 'menu' | 'calendar') => {
-      // const openDropdown = () => {
-      //   const menuExpanded = isMenuOpen(buttonRef.current)
-      //   if (!menuExpanded) {
-      //     buttonRef.current?.click()
-      //   }
-      // }
-
-      if (mode === currentMode) {
-        closeDropdown()
-        setCurrentMode('menu')
-      } else {
-        setCurrentMode(mode)
-        if (mode === 'calendar' && !dropdownIsOpen) {
-          buttonRef.current?.click()
-        }
-      }
-
-      // setCurrentMode((prevMode) => {
-      //   if (prevMode === mode) {
-      //     // closeDropdown()
-      //     return 'menu'
-      //   }
-      //   if (mode === 'calendar') {
-      //     // openDropdown()
-      //   }
-      //   return mode
-      // })
-    },
-    [closeDropdown, currentMode, dropdownIsOpen]
-  )
+  const { buttonRef, closeDropdown, toggleDropdown, dropdownState } =
+    useDropdownWithCalendar({
+      ...props,
+      query
+    })
 
   return (
     <>
@@ -167,7 +106,7 @@ export const QueryPeriodMenu = ({
       <QueryPeriodMenuInner
         closeDropdown={closeDropdown}
         toggleDropdown={toggleDropdown}
-        dropdownState={state}
+        dropdownState={dropdownState}
       />
     </>
   )
@@ -177,15 +116,10 @@ const QueryPeriodMenuInner = ({
   dropdownState,
   closeDropdown,
   toggleDropdown
-}: {
-  dropdownState: DropdownState
-  closeDropdown: () => void
-  toggleDropdown: (t: 'menu' | 'calendar') => void
-}) => {
+}: Omit<DropdownWithCalendarState, 'buttonRef'>) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
-  const panelRef = useRef<HTMLDivElement>(null)
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -222,7 +156,6 @@ const QueryPeriodMenuInner = ({
         )}
       >
         <Popover.Panel
-          ref={panelRef}
           className={
             dropdownState === DropdownState.CALENDAR
               ? '*:!top-auto *:!right-0 *:!absolute'
@@ -237,6 +170,7 @@ const QueryPeriodMenuInner = ({
                 navigate({
                   search: getSearchToApplyCustomDates(selection)
                 })
+                closeDropdown()
               }}
               minDate={site.statsBegin}
               maxDate={formatISO(nowForSite(site))}
