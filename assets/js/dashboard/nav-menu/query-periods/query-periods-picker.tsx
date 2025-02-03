@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { isComparisonEnabled } from '../../query-time-periods'
@@ -15,24 +15,13 @@ import { Popover } from '@headlessui/react'
 export function QueryPeriodsPicker({ className }: { className?: string }) {
   const { query } = useQueryContext()
   const isComparing = isComparisonEnabled(query.comparison)
-  const [calendar, setCalendar] = useState<null | 'main'>(null)
-
-  useEffect(() => {
-    setCalendar(null)
-  }, [query])
 
   return (
     <div className={classNames('flex shrink-0', className)}>
       <MovePeriodArrows className={isComparing ? 'hidden md:flex' : ''} />
       <Popover className="min-w-36 md:relative lg:w-48">
         {({ close, open }) => (
-          <QueryPeriodMenu
-            dropdownIsOpen={open}
-            calendarIsOpen={!!calendar}
-            closeDropdown={close}
-            openCalendar={() => setCalendar('main')}
-            closeCalendar={() => setCalendar(null)}
-          />
+          <QueryPeriodMenu dropdownIsOpen={open} closeDropdown={close} />
         )}
       </Popover>
       {isComparing && (

@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useRef, useMemo, useEffect, useCallback } from 'react'
+import React, { useRef, useMemo, useEffect, useCallback, useState } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
@@ -32,10 +32,9 @@ import { popover } from '../../components/popover'
 import {
   datemenuButtonClassName,
   DateMenuChevron,
-  DropdownItemsProps,
+  PopoverMenuProps,
   linkClassName,
   MenuSeparator
-  // useCloseCalendarOnDropdownOpen
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
@@ -44,10 +43,9 @@ function QueryPeriodMenuItems({
   groups,
   calendarIsOpen,
   closeDropdown
-}: { groups: LinkItem[][] } & Pick<
-  DropdownItemsProps,
-  'calendarIsOpen' | 'closeDropdown'
->) {
+}: { groups: LinkItem[][] } & Pick<PopoverMenuProps, 'closeDropdown'> & {
+    calendarIsOpen: boolean
+  }) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
@@ -60,70 +58,64 @@ function QueryPeriodMenuItems({
   }, [calendarIsOpen])
 
   return (
-    <>
-      <Transition
-        {...popover.transition.props}
-        className={classNames(
-          'mt-2',
-          popover.transition.classNames.fullwidth,
-          calendarIsOpen ? 'md-left-auto' : 'md:left-auto md:w-56'
-        )}
+    <Transition
+      {...popover.transition.props}
+      className={classNames(
+        'mt-2',
+        popover.transition.classNames.fullwidth,
+        calendarIsOpen ? 'md-left-auto' : 'md:left-auto md:w-56'
+      )}
+    >
+      <Popover.Panel
+        ref={panelRef}
+        className={
+          calendarIsOpen
+            ? '*:!top-auto *:!right-0 *:!absolute'
+            : popover.panel.classNames.roundedSheet
+        }
+        data-testid="datemenu"
       >
-        <Popover.Panel
-          ref={panelRef}
-          className={
-            calendarIsOpen
-              ? '*:!top-auto *:!right-0 *:!absolute'
-              : popover.panel.classNames.roundedSheet
-          }
-          data-testid="datemenu"
-        >
-          {calendarIsOpen && (
-            <DateRangeCalendar
-              id="calendar"
-              onCloseWithSelection={(selection) => {
-                navigate({
-                  search: getSearchToApplyCustomDates(selection)
-                })
-                closeDropdown()
-              }}
-              minDate={site.statsBegin}
-              maxDate={formatISO(nowForSite(site))}
-              defaultDates={
-                query.from && query.to
-                  ? [formatISO(query.from), formatISO(query.to)]
-                  : undefined
-              }
-              onCloseWithNoSelection={() => {
-                closeDropdown()
-              }}
-            />
-          )}
-          {!calendarIsOpen &&
-            groups.map((group, index) => (
-              <React.Fragment key={index}>
-                {group.map(
-                  ([[label, keyboardKey], { search, isActive, onEvent }]) => (
-                    <AppNavigationLink
-                      key={label}
-                      data-selected={isActive({ site, query })}
-                      className={linkClassName}
-                      search={search}
-                      onClick={onEvent && ((e) => onEvent(e))}
-                    >
-                      {label}
-                      {!!keyboardKey && (
-                        <KeybindHint>{keyboardKey}</KeybindHint>
-                      )}
-                    </AppNavigationLink>
-                  )
-                )}
-                {index < groups.length - 1 && <MenuSeparator />}
-              </React.Fragment>
-            ))}
-        </Popover.Panel>
-      </Transition>
-    </>
+        {calendarIsOpen && (
+          <DateRangeCalendar
+            id="calendar"
+            onCloseWithSelection={(selection) => {
+              navigate({
+                search: getSearchToApplyCustomDates(selection)
+              })
+              console.log('here')
+              closeDropdown()
+            }}
+            minDate={site.statsBegin}
+            maxDate={formatISO(nowForSite(site))}
+            defaultDates={
+              query.from && query.to
+                ? [formatISO(query.from), formatISO(query.to)]
+                : undefined
+            }
+          />
+        )}
+        {!calendarIsOpen &&
+          groups.map((group, index) => (
+            <React.Fragment key={index}>
+              {group.map(
+                ([[label, keyboardKey], { search, isActive, onEvent }]) => (
+                  <AppNavigationLink
+                    key={label}
+                    data-selected={isActive({ site, query })}
+                    className={linkClassName}
+                    search={search}
+                    onClick={onEvent && ((e) => onEvent(e))}
+                  >
+                    {label}
+                    {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}
+                  </AppNavigationLink>
+                )
+              )}
+              {index < groups.length - 1 && <MenuSeparator />}
+            </React.Fragment>
+          ))}
+      </Popover.Panel>
+    </Transition>
   )
 }
 
@@ -171,14 +163,15 @@ function QueryPeriodMenuKeybinds({
 
 export const QueryPeriodMenu = ({
   closeDropdown,
-  openCalendar,
-  closeCalendar,
-  dropdownIsOpen,
-  calendarIsOpen
-}: DropdownItemsProps) => {
+  dropdownIsOpen
+}: PopoverMenuProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const site = useSiteContext()
   const { query } = useQueryContext()
+
+  const [calendarIsOpen, setCalendarIsOpen] = useState(false)
+  const closeCalendar = useCallback(() => setCalendarIsOpen(false), [])
+  const openCalendar = useCallback(() => setCalendarIsOpen(true), [])
 
   useEffect(() => {
     if (!dropdownIsOpen) {
@@ -190,10 +183,11 @@ export const QueryPeriodMenu = ({
     if (calendarIsOpen) {
       closeDropdown()
     } else {
+      openCalendar()
       if (!dropdownIsOpen) {
+        console.log('hi')
         buttonRef.current?.click()
       }
-      openCalendar()
     }
   }, [dropdownIsOpen, calendarIsOpen, openCalendar, closeDropdown])
 

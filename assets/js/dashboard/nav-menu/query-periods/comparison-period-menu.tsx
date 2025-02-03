@@ -24,7 +24,7 @@ import { popover } from '../../components/popover'
 import {
   datemenuButtonClassName,
   DateMenuChevron,
-  DropdownItemsProps,
+  PopoverMenuProps,
   linkClassName,
   MenuSeparator
 } from './shared-menu-items'
@@ -34,7 +34,7 @@ import { formatISO, nowForSite } from '../../util/date'
 export const ComparisonPeriodMenuItems = ({
   dropdownIsOpen,
   closeDropdown
-}: Pick<DropdownItemsProps, 'closeDropdown' | 'dropdownIsOpen'>) => {
+}: PopoverMenuProps) => {
   const site = useSiteContext()
   const navigate = useAppNavigate()
   const { query } = useQueryContext()
@@ -94,9 +94,6 @@ export const ComparisonPeriodMenuItems = ({
                 ? [formatISO(query.compare_from), formatISO(query.compare_to)]
                 : undefined
             }
-            onCloseWithNoSelection={() => {
-              closeDropdown()
-            }}
           />
         )}
         {!calendarIsOpen && (

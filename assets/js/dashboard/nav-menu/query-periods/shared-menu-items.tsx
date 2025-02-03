@@ -26,10 +26,7 @@ export const MenuSeparator = () => (
   <div className="my-1 border-gray-200 dark:border-gray-500 border-b" />
 )
 
-export interface DropdownItemsProps {
+export interface PopoverMenuProps {
   dropdownIsOpen: boolean
-  calendarIsOpen: boolean
   closeDropdown: () => void
-  openCalendar: () => void
-  closeCalendar: () => void
 }
