@@ -164,7 +164,7 @@ defmodule Plausible.Stats.Goals do
     dynamic([e], e.name == ^goal.event_name)
   end
 
-  defp goal_condition(:scroll, goal, _) do
+  defp goal_condition(:scroll, goal, _imported? = false) do
     pathname_condition = page_path_condition(goal.page_path, _imported? = false)
     name_condition = dynamic([e], e.name == "pageleave")
 

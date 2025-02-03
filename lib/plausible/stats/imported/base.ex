@@ -191,6 +191,7 @@ defmodule Plausible.Stats.Imported.Base do
       |> Enum.map(fn
         :event -> "imported_custom_events"
         :page -> "imported_pages"
+        :scroll -> nil
       end)
 
     case Enum.uniq(table_candidates ++ filter_goal_table_candidates) do
