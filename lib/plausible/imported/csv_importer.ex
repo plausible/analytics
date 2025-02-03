@@ -5,6 +5,7 @@ defmodule Plausible.Imported.CSVImporter do
   """
 
   use Plausible.Imported.Importer
+  import Ecto.Query, only: [from: 2]
 
   @impl true
   def name(), do: :csv
@@ -52,6 +53,26 @@ defmodule Plausible.Imported.CSVImporter do
     e in [ArgumentError, Ch.Error] ->
       # see Plausible.Imported.Importer for more details on transient vs permanent errors
       {:error, Exception.message(e)}
+  end
+
+  def on_success(site_import, _extra_data) do
+    has_scroll_depth? =
+      Plausible.ClickhouseRepo.exists?(
+        from(i in "imported_pages",
+          where: i.site_id == ^site_import.site_id,
+          where: i.import_id == ^site_import.id,
+          where: not is_nil(i.scroll_depth),
+          select: 1
+        )
+      )
+
+    if has_scroll_depth? do
+      site_import
+      |> Ecto.Changeset.change(%{has_scroll_depth: true})
+      |> Plausible.Repo.update!()
+    end
+
+    :ok
   end
 
   defp import_s3(ch, site_import, uploads) do
