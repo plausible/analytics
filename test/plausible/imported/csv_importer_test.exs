@@ -1172,6 +1172,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       imported_pages_content =
         exported_files
+        |> Enum.map(&to_string/1)
         |> Enum.find(&String.contains?(&1, "imported_pages"))
         |> File.read!()
 
@@ -1226,7 +1227,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         )
       )
     else
-      File.rename!(context.local_path, Path.join(tmp_dir, "plausible-export.zip"))
+      File.cp!(context.local_path, Path.join(tmp_dir, "plausible-export.zip"))
+      File.rm!(context.local_path)
     end
 
     context
@@ -1234,7 +1236,9 @@ defmodule Plausible.Imported.CSVImporterTest do
 
   defp unzip_archive(%{tmp_dir: tmp_dir} = context) do
     assert {:ok, files} =
-             :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
+             :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")),
+               cwd: to_charlist(tmp_dir)
+             )
 
     Map.put(context, :exported_files, files)
   end
