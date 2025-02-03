@@ -35,7 +35,7 @@
   }
 
   {{#if pageleave}}
-  // :NOTE: Tracking pageleave events is currently experimental.
+  // :NOTE: Tracking engagement events is currently experimental.
 
   var currentEngagementIgnored
   var currentEngagementURL = location.href
