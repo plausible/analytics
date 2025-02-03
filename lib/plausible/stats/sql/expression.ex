@@ -196,7 +196,7 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  # TODO: make it possible to query events from pageleave events (total conversions for page scroll goals)
+  # TO DO: make it possible to query events from pageleave events (total conversions for page scroll goals)
   def event_metric(:events) do
     wrap_alias([e], %{
       events: fragment("toUInt64(round(countIf(? != 'pageleave') * any(_sample_factor)))", e.name)
