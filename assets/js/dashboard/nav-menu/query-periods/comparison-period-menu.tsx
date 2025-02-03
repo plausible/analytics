@@ -43,9 +43,10 @@ export const ComparisonPeriodMenuItems = ({
   const openCalendar = useCallback(() => setCalendarIsOpen(true), [])
 
   useEffect(() => {
-    if (dropdownIsOpen) {
+    if (!dropdownIsOpen) {
       closeCalendar()
     }
+    return closeCalendar
   }, [dropdownIsOpen, closeCalendar])
 
   const panelRef = useRef<HTMLDivElement>(null)

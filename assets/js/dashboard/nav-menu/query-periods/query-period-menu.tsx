@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useRef, useMemo, useEffect } from 'react'
+import React, { useRef, useMemo, useEffect, useCallback } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
@@ -81,11 +81,12 @@ function QueryPeriodMenuItems({
           {calendarIsOpen && (
             <DateRangeCalendar
               id="calendar"
-              onCloseWithSelection={(selection) =>
+              onCloseWithSelection={(selection) => {
                 navigate({
                   search: getSearchToApplyCustomDates(selection)
                 })
-              }
+                closeDropdown()
+              }}
               minDate={site.statsBegin}
               maxDate={formatISO(nowForSite(site))}
               defaultDates={
@@ -185,6 +186,17 @@ export const QueryPeriodMenu = ({
     }
   }, [dropdownIsOpen, closeCalendar])
 
+  const toggleCalendar = useCallback(() => {
+    if (calendarIsOpen) {
+      closeDropdown()
+    } else {
+      if (!dropdownIsOpen) {
+        buttonRef.current?.click()
+      }
+      openCalendar()
+    }
+  }, [dropdownIsOpen, calendarIsOpen, openCalendar, closeDropdown])
+
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
     return getDatePeriodGroups({
@@ -196,13 +208,7 @@ export const QueryPeriodMenu = ({
           {
             search: (s) => s,
             isActive: ({ query }) => query.period === QueryPeriod.custom,
-            onEvent: () => {
-              if (calendarIsOpen) {
-                closeDropdown()
-              } else {
-                openCalendar()
-              }
-            }
+            onEvent: toggleCalendar
           }
         ]
       ],
@@ -210,7 +216,7 @@ export const QueryPeriodMenu = ({
         ? []
         : [[compareLink]]
     })
-  }, [site, query, calendarIsOpen, openCalendar, closeDropdown])
+  }, [site, query, toggleCalendar, closeDropdown])
 
   return (
     <>
@@ -225,7 +231,6 @@ export const QueryPeriodMenu = ({
       <QueryPeriodMenuItems
         groups={groups}
         calendarIsOpen={calendarIsOpen}
-        // closeCalendar={closeCalendar}
         closeDropdown={closeDropdown}
       />
     </>

@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import classNames from 'classnames'
 import { popover } from '../../components/popover'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
@@ -32,19 +32,4 @@ export interface DropdownItemsProps {
   closeDropdown: () => void
   openCalendar: () => void
   closeCalendar: () => void
-}
-
-export const useCloseCalendarOnDropdownOpen = ({
-  dropdownIsOpen,
-  calendarIsOpen,
-  closeCalendar
-}: Pick<
-  DropdownItemsProps,
-  'dropdownIsOpen' | 'calendarIsOpen' | 'closeCalendar'
->) => {
-  useEffect(() => {
-    if (dropdownIsOpen && calendarIsOpen) {
-      closeCalendar()
-    }
-  }, [dropdownIsOpen, calendarIsOpen, closeCalendar])
 }
