@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { isComparisonEnabled } from '../../query-time-periods'
 import { MovePeriodArrows } from './move-period-arrows'
-import { QueryPeriodMenu, QueryPeriodMenuButton } from './query-period-menu'
+import { QueryPeriodMenu } from './query-period-menu'
 import {
   ComparisonPeriodMenuButton,
   ComparisonPeriodMenuItems
@@ -26,16 +26,13 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
       <MovePeriodArrows className={isComparing ? 'hidden md:flex' : ''} />
       <Popover className="min-w-36 md:relative lg:w-48">
         {({ close, open }) => (
-          <>
-            <QueryPeriodMenuButton />
-            <QueryPeriodMenu
-              dropdownIsOpen={open}
-              calendarIsOpen={!!calendar}
-              closeDropdown={close}
-              openCalendar={() => setCalendar('main')}
-              closeCalendar={() => setCalendar(null)}
-            />
-          </>
+          <QueryPeriodMenu
+            dropdownIsOpen={open}
+            calendarIsOpen={!!calendar}
+            closeDropdown={close}
+            openCalendar={() => setCalendar('main')}
+            closeCalendar={() => setCalendar(null)}
+          />
         )}
       </Popover>
       {isComparing && (

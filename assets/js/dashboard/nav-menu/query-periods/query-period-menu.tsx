@@ -168,23 +168,6 @@ function QueryPeriodMenuKeybinds({
   )
 }
 
-export const QueryPeriodMenuButton = () => {
-  const site = useSiteContext()
-  const { query } = useQueryContext()
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  return (
-    <>
-      <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
-        <span className={popover.toggleButton.classNames.truncatedText}>
-          {getCurrentPeriodDisplayName({ query, site })}
-        </span>
-        <DateMenuChevron />
-      </Popover.Button>
-    </>
-  )
-}
-
 export const QueryPeriodMenu = ({
   closeDropdown,
   openCalendar,
@@ -192,13 +175,16 @@ export const QueryPeriodMenu = ({
   dropdownIsOpen,
   calendarIsOpen
 }: DropdownItemsProps) => {
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const site = useSiteContext()
   const { query } = useQueryContext()
+
   useEffect(() => {
     if (!dropdownIsOpen) {
       closeCalendar()
     }
   }, [dropdownIsOpen, closeCalendar])
+
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
     return getDatePeriodGroups({
@@ -228,6 +214,13 @@ export const QueryPeriodMenu = ({
 
   return (
     <>
+      <BlurMenuButtonOnEscape targetRef={buttonRef} />
+      <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
+        <span className={popover.toggleButton.classNames.truncatedText}>
+          {getCurrentPeriodDisplayName({ query, site })}
+        </span>
+        <DateMenuChevron />
+      </Popover.Button>
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
       <QueryPeriodMenuItems
         groups={groups}
