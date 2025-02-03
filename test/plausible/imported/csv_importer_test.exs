@@ -1172,7 +1172,6 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       imported_pages_content =
         exported_files
-        |> Enum.map(&to_string/1)
         |> Enum.find(&String.contains?(&1, "imported_pages"))
         |> File.read!()
 
@@ -1239,7 +1238,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                cwd: to_charlist(tmp_dir)
              )
 
-    Map.put(context, :exported_files, files)
+    Map.put(context, :exported_files, Enum.map(files, &to_string/1))
   end
 
   defp upload_csvs(%{exported_files: files} = context) do
