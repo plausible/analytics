@@ -143,6 +143,11 @@ export function KeybindHint({ children }: { children: ReactNode }) {
   )
 }
 
+/**
+ * Rendering this component captures the Escape key on targetRef.current,
+ * blurring the element on Escape, and stopping the event from propagating.
+ * Needed to prevent other Escape handlers that may exist from running.
+ */
 export function BlurMenuButtonOnEscape({
   targetRef: targetRef
 }: {

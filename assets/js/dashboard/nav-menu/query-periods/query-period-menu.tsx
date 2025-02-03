@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useRef, useMemo } from 'react'
+import React, { useRef, useMemo, useEffect } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
@@ -22,7 +22,8 @@ import {
   getDatePeriodGroups,
   LinkItem,
   QueryPeriod,
-  getCurrentPeriodDisplayName
+  getCurrentPeriodDisplayName,
+  getSearchToApplyCustomDates
 } from '../../query-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
@@ -33,13 +34,30 @@ import {
   DateMenuChevron,
   DropdownItemsProps,
   linkClassName,
-  MenuSeparator,
-  useCloseCalendarOnDropdownOpen
+  MenuSeparator
+  // useCloseCalendarOnDropdownOpen
 } from './shared-menu-items'
+import { DateRangeCalendar } from './date-range-calendar'
+import { formatISO, nowForSite } from '../../util/date'
 
-function QueryPeriodMenuItems({ groups }: { groups: LinkItem[][] }) {
+function QueryPeriodMenuItems({
+  groups,
+  calendarIsOpen,
+  closeDropdown
+}: { groups: LinkItem[][] } & Pick<
+  DropdownItemsProps,
+  'calendarIsOpen' | 'closeDropdown'
+>) {
   const site = useSiteContext()
   const { query } = useQueryContext()
+  const navigate = useAppNavigate()
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (calendarIsOpen && panelRef.current?.focus) {
+      panelRef.current.focus()
+    }
+  }, [calendarIsOpen])
 
   return (
     <>
@@ -48,32 +66,60 @@ function QueryPeriodMenuItems({ groups }: { groups: LinkItem[][] }) {
         className={classNames(
           'mt-2',
           popover.transition.classNames.fullwidth,
-          'md:left-auto md:w-56'
+          calendarIsOpen ? 'md-left-auto' : 'md:left-auto md:w-56'
         )}
       >
         <Popover.Panel
-          className={popover.panel.classNames.roundedSheet}
+          ref={panelRef}
+          className={
+            calendarIsOpen
+              ? '*:!top-auto *:!right-0 *:!absolute'
+              : popover.panel.classNames.roundedSheet
+          }
           data-testid="datemenu"
         >
-          {groups.map((group, index) => (
-            <React.Fragment key={index}>
-              {group.map(
-                ([[label, keyboardKey], { search, isActive, onEvent }]) => (
-                  <AppNavigationLink
-                    key={label}
-                    data-selected={isActive({ site, query })}
-                    className={linkClassName}
-                    search={search}
-                    onClick={onEvent && ((e) => onEvent(e))}
-                  >
-                    {label}
-                    {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}
-                  </AppNavigationLink>
-                )
-              )}
-              {index < groups.length - 1 && <MenuSeparator />}
-            </React.Fragment>
-          ))}
+          {calendarIsOpen && (
+            <DateRangeCalendar
+              id="calendar"
+              onCloseWithSelection={(selection) =>
+                navigate({
+                  search: getSearchToApplyCustomDates(selection)
+                })
+              }
+              minDate={site.statsBegin}
+              maxDate={formatISO(nowForSite(site))}
+              defaultDates={
+                query.from && query.to
+                  ? [formatISO(query.from), formatISO(query.to)]
+                  : undefined
+              }
+              onCloseWithNoSelection={() => {
+                closeDropdown()
+              }}
+            />
+          )}
+          {!calendarIsOpen &&
+            groups.map((group, index) => (
+              <React.Fragment key={index}>
+                {group.map(
+                  ([[label, keyboardKey], { search, isActive, onEvent }]) => (
+                    <AppNavigationLink
+                      key={label}
+                      data-selected={isActive({ site, query })}
+                      className={linkClassName}
+                      search={search}
+                      onClick={onEvent && ((e) => onEvent(e))}
+                    >
+                      {label}
+                      {!!keyboardKey && (
+                        <KeybindHint>{keyboardKey}</KeybindHint>
+                      )}
+                    </AppNavigationLink>
+                  )
+                )}
+                {index < groups.length - 1 && <MenuSeparator />}
+              </React.Fragment>
+            ))}
         </Popover.Panel>
       </Transition>
     </>
@@ -148,13 +194,11 @@ export const QueryPeriodMenu = ({
 }: DropdownItemsProps) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
-
-  useCloseCalendarOnDropdownOpen({
-    dropdownIsOpen,
-    calendarIsOpen,
-    closeCalendar
-  })
-
+  useEffect(() => {
+    if (!dropdownIsOpen) {
+      closeCalendar()
+    }
+  }, [dropdownIsOpen, closeCalendar])
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
     return getDatePeriodGroups({
@@ -168,10 +212,9 @@ export const QueryPeriodMenu = ({
             isActive: ({ query }) => query.period === QueryPeriod.custom,
             onEvent: () => {
               if (calendarIsOpen) {
-                closeCalendar()
+                closeDropdown()
               } else {
                 openCalendar()
-                closeDropdown()
               }
             }
           }
@@ -181,12 +224,17 @@ export const QueryPeriodMenu = ({
         ? []
         : [[compareLink]]
     })
-  }, [site, query, calendarIsOpen, closeCalendar, openCalendar, closeDropdown])
+  }, [site, query, calendarIsOpen, openCalendar, closeDropdown])
 
   return (
     <>
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
-      <QueryPeriodMenuItems groups={groups} />
+      <QueryPeriodMenuItems
+        groups={groups}
+        calendarIsOpen={calendarIsOpen}
+        // closeCalendar={closeCalendar}
+        closeDropdown={closeDropdown}
+      />
     </>
   )
 }
