@@ -328,6 +328,61 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
              ]
     end
 
+    test "returns group_conversion_rate for a page scroll goal filter in source breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal,
+        site: site,
+        page_path: "/blog",
+        scroll_threshold: 50,
+        display_name: "Scroll /blog 50"
+      )
+
+      populate_stats(site, [
+        build(:pageview, referrer_source: "Twitter"),
+        build(:pageview,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00],
+          referrer_source: "Google"
+        ),
+        build(:pageleave,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 30,
+          referrer_source: "Google"
+        ),
+        build(:pageview,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00],
+          referrer_source: "Twitter"
+        ),
+        build(:pageleave,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 50,
+          referrer_source: "Twitter"
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "group_conversion_rate"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["Scroll /blog 50"]]],
+          "dimensions" => ["visit:source"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Twitter"], "metrics" => [1, 0, 50.0]}
+             ]
+    end
+
     test "breakdown by event:props:author with a page scroll goal filter", %{
       conn: conn,
       site: site
