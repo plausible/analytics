@@ -148,8 +148,7 @@ defmodule Plausible.MixProject do
       {:odgn_json_pointer, "~> 3.0.1"},
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]},
-      {:phoenix_storybook, "~> 0.8"},
-      {:unzip, "~> 0.12", only: [:test, :ce_test]}
+      {:phoenix_storybook, "~> 0.8"}
     ]
   end
 

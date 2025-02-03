@@ -1233,13 +1233,8 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   defp unzip_archive(%{tmp_dir: tmp_dir} = context) do
-    {:ok, unzip} =
-      tmp_dir
-      |> Path.join("plausible-export.zip")
-      |> Unzip.LocalFile.open()
-      |> Unzip.new()
-
-    files = unzip |> Unzip.list_entries() |> Enum.map(& &1.file_name)
+    assert {:ok, files} =
+             :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
 
     Map.put(context, :exported_files, files)
   end
