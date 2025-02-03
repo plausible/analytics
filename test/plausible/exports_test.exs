@@ -140,7 +140,9 @@ defmodule Plausible.ExportsTest do
       end
 
       assert {:error, :einval} =
-               :zip.unzip(to_charlist(Path.join(tmp_dir, "failed.zip")), cwd: to_charlist(tmp_dir))
+               :zip.unzip(to_charlist(Path.join(tmp_dir, "failed.zip")),
+                 cwd: to_charlist(tmp_dir)
+               )
     end
   end
 end
