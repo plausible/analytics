@@ -1,9 +1,153 @@
+<% use Plausible %>
+
 <.settings_tiles>
-  <PlausibleWeb.Components.Settings.settings_search_console
-    conn={@conn}
-    site={@site}
-    search_console_domains={@search_console_domains}
-  />
+  <.tile docs="google-search-console-integration">
+    <:title>
+      Google Search Console Integration
+    </:title>
+    <:subtitle>
+      <p>
+        You can integrate with Google Search Console to get all of your important search results stats such as keyword phrases people find your site with.
+      </p>
+    </:subtitle>
+    <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
+      <%= if @site.google_auth do %>
+        <.input
+          name="account"
+          label="Linked Google account"
+          value={@site.google_auth.email}
+          disabled="disabled"
+          width="w-1/2"
+        />
+
+        <.button_link
+          theme="danger"
+          href={Routes.site_path(@conn, :delete_google_auth, @site.domain)}
+          method="delete"
+        >
+          Unlink Google Account
+        </.button_link>
+
+        <%= case @search_console_domains do %>
+          <% {:ok, domains} -> %>
+            <%= if @site.google_auth.property && !(@site.google_auth.property in domains) do %>
+              <.notice class="mt-4 mb-4">
+                Your Google account does not have access to your currently configured property, {@site.google_auth.property}. Please select a verified property from the list below.
+              </.notice>
+            <% else %>
+              <p class="text-sm mt-4">
+                Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain,
+                <.styled_link
+                  href="https://plausible.io/docs/google-search-console-integration"
+                  new_tab={true}
+                >
+                  set it up and verify
+                </.styled_link>
+                on Search Console first.
+              </p>
+            <% end %>
+
+            <.form
+              :let={f}
+              for={Plausible.Site.GoogleAuth.changeset(@site.google_auth)}
+              class="max-w-xs"
+              action={"/#{URI.encode_www_form(@site.domain)}/settings/google"}
+            >
+              <div class="inline-block relative w-full">
+                <.input
+                  options={domains}
+                  type="select"
+                  field={f[:property]}
+                  prompt="(Choose property)"
+                  class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:rounded-md"
+                />
+              </div>
+
+              <.button type="submit">Save</.button>
+            </.form>
+          <% {:error, error} -> %>
+            <.notice title="Integration Error" theme={:red} class="mt-8">
+              <%= case error do %>
+                <% "invalid_grant" -> %>
+                  Invalid Grant error returned from Google.
+                  <.styled_link
+                    new_tab={true}
+                    href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error"
+                  >
+                    See here on how to fix it
+                  </.styled_link>
+                <% "google_auth_error" -> %>
+                  Your Search Console account hasn't been connected successfully. Please unlink your Google account and try linking it again.
+                <% _ -> %>
+                  Something went wrong, but looks temporary. If the problem persists, try re-linking your Google account.
+              <% end %>
+            </.notice>
+        <% end %>
+      <% else %>
+        <PlausibleWeb.Components.Google.button
+          id="search-console-connect"
+          to={Plausible.Google.API.search_console_authorize_url(@site.id)}
+        />
+        <div class="mt-8 text-sm">
+          NB: You also need to set up your site on
+          <.styled_link href="https://search.google.com/search-console/about" new_tab={true}>
+            Google Search Console
+          </.styled_link>
+          for the integration to work.
+          <.styled_link
+            href="https://plausible.io/docs/google-search-console-integration"
+            new_tab={true}
+          >
+            Read the docs
+          </.styled_link>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="my-8 text-center text-lg">
+        <svg
+          class="block mx-auto mb-4 w-6 h-6 text-yellow-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          >
+          </path>
+        </svg>
+        <p>
+          An extra step is needed to set up your {Plausible.product_name()} for the Google Search Console integration.
+          Find instructions
+          <.styled_link href="https://github.com/plausible/community-edition/wiki/google-integration">
+            here
+          </.styled_link>
+        </p>
+      </div>
+    <% end %>
+  </.tile>
+
+  <.tile :if={ee?()} docs="looker-studio">
+    <:title>
+      Google Looker Studio Connector
+    </:title>
+    <:subtitle>
+      <p>
+        You can use our Looker Studio connector to build custom reports with your Plausible data.
+      </p>
+    </:subtitle>
+
+    <div class="mt-4 text-sm">
+      Plausible Looker Studio Connector adds powerful reporting features that help turn Plausible
+      into an even better replacement for Google Analytics.
+      <.styled_link href="https://plausible.io/docs/looker-studio" new_tab={true}>
+        Read the docs
+      </.styled_link>
+    </div>
+  </.tile>
 
   <.tile :if={@has_plugins_tokens? || @conn.query_params["new_token"]}>
     <:title>
