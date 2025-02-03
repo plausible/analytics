@@ -174,9 +174,13 @@ defmodule Plausible.Stats.Goals do
     dynamic([e], ^pathname_condition and ^name_condition and ^scroll_condition)
   end
 
-  defp goal_condition(:page, goal, imported?) do
-    pathname_condition = page_path_condition(goal.page_path, imported?)
-    name_condition = if imported?, do: true, else: dynamic([e], e.name == "pageview")
+  defp goal_condition(:page, goal, _imported? = true) do
+    page_path_condition(goal.page_path, _imported? = true)
+  end
+
+  defp goal_condition(:page, goal, _imported? = false) do
+    name_condition = dynamic([e], e.name == "pageview")
+    pathname_condition = page_path_condition(goal.page_path, _imported? = false)
 
     dynamic([e], ^pathname_condition and ^name_condition)
   end
