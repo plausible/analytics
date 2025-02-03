@@ -31,7 +31,6 @@ defmodule Plausible.Site.Cache do
     domain_changed_from
     ingest_rate_limit_scale_seconds
     ingest_rate_limit_threshold
-    scroll_depth_visible_at
    )a
 
   @impl true

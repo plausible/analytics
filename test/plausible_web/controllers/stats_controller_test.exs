@@ -85,6 +85,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       populate_stats(site, [build(:pageview)])
 
+      # No pageleaves yet - `scroll_depth_visible_at` will remain `nil`
       html =
         conn
         |> get("/#{site.domain}")
@@ -92,8 +93,15 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "false"
 
-      Plausible.Sites.set_scroll_depth_visible_at(site)
+      site = Repo.reload!(site)
+      assert is_nil(site.scroll_depth_visible_at)
 
+      populate_stats(site, [
+        build(:pageview, user_id: 123),
+        build(:pageleave, user_id: 123, scroll_depth: 20)
+      ])
+
+      # Pageleaves exist now - `scroll_depth_visible_at` gets set to `utc_now`
       html =
         conn
         |> get("/#{site.domain}")
@@ -1090,6 +1098,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       site = insert(:site)
       link = insert(:shared_link, site: site)
 
+      # No pageleaves yet - `scroll_depth_visible_at` will remain `nil`
       html =
         conn
         |> get("/share/#{site.domain}/?auth=#{link.slug}")
@@ -1097,8 +1106,15 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "false"
 
-      Plausible.Sites.set_scroll_depth_visible_at(site)
+      site = Repo.reload!(site)
+      assert is_nil(site.scroll_depth_visible_at)
 
+      populate_stats(site, [
+        build(:pageview, user_id: 123),
+        build(:pageleave, user_id: 123, scroll_depth: 20)
+      ])
+
+      # Pageleaves exist now - `scroll_depth_visible_at` gets set to `utc_now`
       html =
         conn
         |> get("/share/#{site.domain}/?auth=#{link.slug}")
