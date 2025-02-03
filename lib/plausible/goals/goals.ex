@@ -64,9 +64,9 @@ defmodule Plausible.Goals do
            {:ok, updated_goal} <- Repo.update(changeset),
            :ok <- Plausible.Segments.update_goal_in_segments(site, goal, updated_goal) do
         on_ee do
-          {:ok, Repo.preload(updated_goal, :funnels)}
+          Repo.preload(updated_goal, :funnels)
         else
-          {:ok, updated_goal}
+          updated_goal
         end
       end
     end)
