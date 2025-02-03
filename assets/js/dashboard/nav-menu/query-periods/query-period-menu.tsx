@@ -39,15 +39,15 @@ import {
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 
-const HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_NAME = 'data-headlessui-state'
-const HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_VALUE = 'open'
+// const HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_NAME = 'data-headlessui-state'
+// const HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_VALUE = 'open'
 
-function isMenuOpen(element: HTMLElement | null) {
-  return (
-    element?.getAttribute(HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_NAME) ===
-    HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_VALUE
-  )
-}
+// function isMenuOpen(element: HTMLElement | null) {
+//   return (
+//     element?.getAttribute(HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_NAME) ===
+//     HEADLESS_UI_POPOVER_OPEN_ATTRIBUTE_VALUE
+//   )
+// }
 
 function QueryPeriodMenuKeybinds({
   closeDropdown,
@@ -136,7 +136,7 @@ export const QueryPeriodMenu = ({
         setCurrentMode('menu')
       } else {
         setCurrentMode(mode)
-        if (mode === 'calendar' && !isMenuOpen(buttonRef.current)) {
+        if (mode === 'calendar' && !dropdownIsOpen) {
           buttonRef.current?.click()
         }
       }
@@ -152,7 +152,7 @@ export const QueryPeriodMenu = ({
       //   return mode
       // })
     },
-    [closeDropdown, currentMode]
+    [closeDropdown, currentMode, dropdownIsOpen]
   )
 
   return (
