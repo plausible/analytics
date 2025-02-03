@@ -1,16 +1,8 @@
-const { expectPlausibleInAction, pageleaveCooldown, ignoreEngagementRequests, ignorePageleaveRequests } = require('./support/test-utils')
+const { expectPlausibleInAction, engagementCooldown } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
-test.describe('pageleave extension (pageleave events)', () => {
-  sharedTests('pageleave', ignoreEngagementRequests)
-})
-
-test.describe('pageleave extension (engagement events)', () => {
-  sharedTests('engagement', ignorePageleaveRequests)
-})
-
-function sharedTests(expectedEvent, ignoreRequests) {
+test.describe('engagement events', () => {
   test('sends a pageleave when navigating to the next page', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/pageleave.html'),
@@ -19,8 +11,7 @@ function sharedTests(expectedEvent, ignoreRequests) {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: expectedEvent, u: `${LOCAL_SERVER_ADDR}/pageleave.html`}],
-      shouldIgnoreRequest: ignoreRequests
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave.html`}]
     })
   })
 
@@ -33,10 +24,9 @@ function sharedTests(expectedEvent, ignoreRequests) {
     await expectPlausibleInAction(page, {
       action: () => page.click('#hash-nav'),
       expectedRequests: [
-        {n: expectedEvent, u: `${LOCAL_SERVER_ADDR}/pageleave-hash.html`},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave-hash.html`},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave-hash.html#some-hash`}
-      ],
-      shouldIgnoreRequest: ignoreRequests
+      ]
     })
   })
 
@@ -49,10 +39,9 @@ function sharedTests(expectedEvent, ignoreRequests) {
     await expectPlausibleInAction(page, {
       action: () => page.click('#history-nav'),
       expectedRequests: [
-        {n: expectedEvent, u: `${LOCAL_SERVER_ADDR}/pageleave.html`},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave.html`},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/another-page`}
-      ],
-      shouldIgnoreRequest: ignoreRequests
+      ]
     })
   })
 
@@ -66,8 +55,7 @@ function sharedTests(expectedEvent, ignoreRequests) {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: expectedEvent, u: 'https://example.com/custom/location'}],
-      shouldIgnoreRequest: ignoreRequests
+      expectedRequests: [{n: 'engagement', u: 'https://example.com/custom/location'}]
     })
   })
 
@@ -76,8 +64,7 @@ function sharedTests(expectedEvent, ignoreRequests) {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      refutedRequests: [{n: expectedEvent}],
-      shouldIgnoreRequest: ignoreRequests
+      refutedRequests: [{n: 'engagement'}]
     })
   })
 
@@ -93,32 +80,29 @@ function sharedTests(expectedEvent, ignoreRequests) {
     // pageleave event is sent from the initial page URL
     await expectPlausibleInAction(page, {
       action: () => page.click('#ignored-hash-link'),
-      expectedRequests: [{n: expectedEvent, u: pageBaseURL, h: 1}],
-      shouldIgnoreRequest: ignoreRequests
+      expectedRequests: [{n: 'engagement', u: pageBaseURL, h: 1}]
     })
 
-    await pageleaveCooldown(page)
+    await engagementCooldown(page)
 
     // Navigate from ignored page to a tracked page ->
     // no pageleave from the current page, pageview on the next page
     await expectPlausibleInAction(page, {
       action: () => page.click('#hash-link-1'),
       expectedRequests: [{n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1}],
-      refutedRequests: [{n: expectedEvent}],
-      shouldIgnoreRequest: ignoreRequests
+      refutedRequests: [{n: 'engagement'}]
     })
 
-    await pageleaveCooldown(page)
+    await engagementCooldown(page)
 
     // Navigate from a tracked page to another tracked page ->
     // pageleave with the last page URL, pageview with the new URL
     await expectPlausibleInAction(page, {
       action: () => page.click('#hash-link-2'),
       expectedRequests: [
-        {n: expectedEvent, u: `${pageBaseURL}#hash1`, h: 1},
+        {n: 'engagement', u: `${pageBaseURL}#hash1`, h: 1},
         {n: 'pageview', u: `${pageBaseURL}#hash2`, h: 1}
-      ],
-      shouldIgnoreRequest: ignoreRequests
+      ]
     })
   })
 
@@ -132,8 +116,7 @@ function sharedTests(expectedEvent, ignoreRequests) {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: expectedEvent, p: {author: 'John'}}],
-      shouldIgnoreRequest: ignoreRequests
+      expectedRequests: [{n: 'engagement', p: {author: 'John'}}]
     })
   })
 
@@ -145,8 +128,7 @@ function sharedTests(expectedEvent, ignoreRequests) {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: expectedEvent, p: {author: 'John'}}],
-      shouldIgnoreRequest: ignoreRequests
+      expectedRequests: [{n: 'engagement', p: {author: 'John'}}]
     })
   })
 
@@ -159,32 +141,29 @@ function sharedTests(expectedEvent, ignoreRequests) {
     await expectPlausibleInAction(page, {
       action: () => page.click('#john-post'),
       expectedRequests: [
-        {n: expectedEvent, p: {}},
+        {n: 'engagement', p: {}},
         {n: 'pageview', p: {author: 'john'}}
-      ],
-      shouldIgnoreRequest: ignoreRequests
+      ]
     })
 
-    await pageleaveCooldown(page)
+    await engagementCooldown(page)
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#jane-post'),
       expectedRequests: [
-        {n: expectedEvent, p: {author: 'john'}},
+        {n: 'engagement', p: {author: 'john'}},
         {n: 'pageview', p: {author: 'jane'}}
-      ],
-      shouldIgnoreRequest: ignoreRequests
+      ]
     })
 
-    await pageleaveCooldown(page)
+    await engagementCooldown(page)
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#home'),
       expectedRequests: [
-        {n: expectedEvent, p: {author: 'jane'}},
+        {n: 'engagement', p: {author: 'jane'}},
         {n: 'pageview', p: {}}
-      ],
-      shouldIgnoreRequest: ignoreRequests
+      ]
     })
   })
 
@@ -200,13 +179,13 @@ function sharedTests(expectedEvent, ignoreRequests) {
         await page.click('#back-button-trigger')
       },
       expectedRequests: [
-        {n: expectedEvent, u: `${LOCAL_SERVER_ADDR}/pageleave.html`},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave.html`},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave-pageview-props.html`, p: {author: 'John'}},
-        {n: expectedEvent, u: `${LOCAL_SERVER_ADDR}/pageleave-pageview-props.html`, p: {author: 'John'}},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/pageleave-pageview-props.html`, p: {author: 'John'}},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/pageleave.html`}
       ],
-      responseDelay: 1000,
-      shouldIgnoreRequest: ignoreRequests
+      responseDelay: 1000
     })
   })
-}
+
+})

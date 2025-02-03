@@ -1,9 +1,9 @@
 const { expect, Page } = require("@playwright/test");
 
-// Since pageleave events in the Plausible script are throttled to 500ms, we
+// Since engagement events in the Plausible script are throttled to 300ms, we
 // often need to wait for an artificial timeout before navigating in tests.
-exports.pageleaveCooldown = async function(page) {
-  return page.waitForTimeout(600)
+exports.engagementCooldown = async function(page) {
+  return page.waitForTimeout(400)
 }
 
 // Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
