@@ -1227,8 +1227,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         )
       )
     else
-      File.cp!(context.local_path, Path.join(tmp_dir, "plausible-export.zip"))
-      File.rm!(context.local_path)
+      Plausible.File.mv!(context.local_path, Path.join(tmp_dir, "plausible-export.zip"))
     end
 
     context
