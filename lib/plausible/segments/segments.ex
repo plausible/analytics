@@ -136,6 +136,8 @@ defmodule Plausible.Segments do
         %Plausible.Goal{} = stale_goal,
         %Plausible.Goal{} = updated_goal
       ) do
+    # Looks for a pattern like ["is", "event:goal", [...<goal_name>...]] in the filters structure.
+    # Added a bunch of whitespace matchers to make sure it's tolerant of valid JSON formatting
     goal_filter_regex =
       ~s(.*?\\[\s*"is",\s*"event:goal",\s*\\[.*?"#{Regex.escape(stale_goal.display_name)}".*?\\]\s*\\].*?)
 
