@@ -168,8 +168,12 @@ defmodule Plausible.Segments do
 
       updated_segment_data = Map.put(segment.segment_data, "filters", updated_filters)
 
-      Segment.changeset(segment, %{segment_data: updated_segment_data})
-      |> Repo.update!()
+      from(
+        s in Segment,
+        where: s.id == ^segment.id,
+        update: [set: [segment_data: ^updated_segment_data]]
+      )
+      |> Repo.update_all([])
     end
 
     :ok
