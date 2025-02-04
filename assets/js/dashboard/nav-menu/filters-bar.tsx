@@ -3,19 +3,22 @@
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import classNames from 'classnames'
 import React, { useRef, useState, useLayoutEffect } from 'react'
-import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
+import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { BUFFER_FOR_SHADOW_PX } from './filter-pill'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
 
-const BUFFER_RIGHT_PX = 16 - BUFFER_FOR_SHADOW_PX - PILL_X_GAP
-const BUFFER_LEFT_PX = 16 - BUFFER_FOR_SHADOW_PX
+// Component structure is
+// `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
+// where `..` represents an ideally equal length.
+// The following calculations guarantee that.
+const BUFFER_RIGHT_PX = 16 - PILL_X_GAP_PX
+const BUFFER_LEFT_PX = 16
 const SEE_MORE_WIDTH_PX = 36
-const SEE_MORE_RIGHT_MARGIN_PX = BUFFER_FOR_SHADOW_PX + PILL_X_GAP
-const SEE_MORE_LEFT_MARGIN_PX = BUFFER_FOR_SHADOW_PX
+const SEE_MORE_RIGHT_MARGIN_PX = PILL_X_GAP_PX
+const SEE_MORE_LEFT_MARGIN_PX = 0
 
 export const handleVisibility = ({
   setVisibility,
@@ -122,7 +125,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
       handleVisibility({
         setVisibility,
         pillWidths,
-        pillGap: PILL_X_GAP,
+        pillGap: PILL_X_GAP_PX,
         leftoverWidth:
           topBar && leftSection && rightSection
             ? getElementWidthOrNull(topBar)! -
@@ -161,13 +164,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
       )}
       ref={containerRef}
     >
-      <div
-        style={{
-          marginTop: -BUFFER_FOR_SHADOW_PX,
-          marginBottom: -BUFFER_FOR_SHADOW_PX
-        }}
-        className="flex items-center"
-      >
+      <div className="flex items-center">
         <AppliedFilterPillsList
           ref={pillsRef}
           direction="horizontal"
@@ -217,7 +214,6 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
               >
                 {query.filters.length !== visibility.visibleCount && (
                   <AppliedFilterPillsList
-                    style={{ margin: -BUFFER_FOR_SHADOW_PX }}
                     direction="vertical"
                     slice={{
                       type: 'no-render-outside',

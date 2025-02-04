@@ -13,8 +13,8 @@ import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { filterRoute } from '../router'
 
-export const PILL_X_GAP = 8
-export const PILL_Y_GAP = 0
+export const PILL_X_GAP_PX = 16
+export const PILL_Y_GAP_PX = 8
 
 type SliceStartEnd = {
   /** The beginning index of the specified portion of the array. If start is undefined, then the slice begins at index 0. */
@@ -108,22 +108,32 @@ export const FilterPillsList = React.forwardRef<
   HTMLDivElement,
   FilterPillsListProps
 >(({ className, style, direction, pills }, ref) => {
+  // this padding allows pill dropshadows to be visible
+  // even when overflow:hidden is given to pill parent container
+  // box-content guarantees width given as style to apply to available space
+  const innerClassName = 'p-1 box-content'
+  // this hides the padding of the inner component to ease placement
+  const wrapperClassName = '-m-1'
   return (
-    <div
-      ref={ref}
-      className={classNames(
-        'flex',
-        {
-          'flex-row': direction === 'horizontal',
-          'flex-col items-start': direction === 'vertical'
-        },
-        className
-      )}
-      style={{ columnGap: PILL_X_GAP, rowGap: PILL_Y_GAP, ...style }}
-    >
-      {pills.map((options, index) => (
-        <FilterPill key={index} {...options} />
-      ))}
+    <div className={wrapperClassName}>
+      <div
+        ref={ref}
+        className={classNames(
+          'flex',
+          {
+            'flex-row': direction === 'horizontal',
+            'flex-col items-start': direction === 'vertical'
+          },
+          innerClassName,
+          className
+        )}
+        // gaps given as style to be able to use their numeric values in calculations
+        style={{ columnGap: PILL_X_GAP_PX, rowGap: PILL_Y_GAP_PX, ...style }}
+      >
+        {pills.map((options, index) => (
+          <FilterPill key={index} {...options} />
+        ))}
+      </div>
     </div>
   )
 })
