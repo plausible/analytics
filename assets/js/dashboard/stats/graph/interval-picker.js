@@ -8,6 +8,7 @@ import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { useMatch } from 'react-router-dom';
 import { rootRoute } from '../../router';
+import { popover } from '../../components/popover';
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -146,12 +147,7 @@ export function IntervalPicker({ onIntervalUpdate }) {
           <Transition
             as={Fragment}
             show={open}
-            enter="transition ease-out duration-100"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
+            {...popover.transition.props}
           >
             <Menu.Items
               className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
