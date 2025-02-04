@@ -362,6 +362,22 @@ defmodule PlausibleWeb.Api.StatsController do
     %{top_stats: top_stats, meta: meta, sample_percent: 100}
   end
 
+  on_ee do
+    @goal_top_stats [
+      %{key: :visitors, name: "Unique conversions"},
+      %{key: :events, name: "Total conversions"},
+      %{key: :average_revenue, name: "Average revenue"},
+      %{key: :total_revenue, name: "Total revenue"},
+      %{key: :conversion_rate, name: "Conversion rate"}
+    ]
+  else
+    @goal_top_stats [
+      %{key: :visitors, name: "Unique conversions"},
+      %{key: :events, name: "Total conversions"},
+      %{key: :conversion_rate, name: "Conversion rate"}
+    ]
+  end
+
   defp fetch_goal_top_stats(site, query) do
     metrics =
       [:visitors, :events, :conversion_rate] ++ @revenue_metrics
@@ -369,21 +385,23 @@ defmodule PlausibleWeb.Api.StatsController do
     %{results: results, meta: meta} = Stats.aggregate(site, query, metrics)
 
     top_stats =
-      [
-        top_stats_entry(results, "Unique conversions", :visitors),
-        top_stats_entry(results, "Total conversions", :events),
-        on_ee do
-          top_stats_entry(results, "Average revenue", :average_revenue)
-        end,
-        on_ee do
-          top_stats_entry(results, "Total revenue", :total_revenue)
-        end,
-        top_stats_entry(results, "Conversion rate", :conversion_rate)
-      ]
+      @goal_top_stats
+      |> Enum.map(&top_stats_entry(results, meta, &1))
       |> Enum.reject(&is_nil/1)
 
     %{top_stats: top_stats, meta: meta, sample_percent: 100}
   end
+
+  @other_top_stats [
+    %{key: :visitors, name: "Unique visitors"},
+    %{key: :visits, name: "Total visits"},
+    %{key: :pageviews, name: "Total pageviews"},
+    %{key: :views_per_visit, name: "Views per visit"},
+    %{key: :bounce_rate, name: "Bounce rate"},
+    %{key: :visit_duration, name: "Visit duration"},
+    %{key: :time_on_page, name: "Time on page"},
+    %{key: :scroll_depth, name: "Scroll depth"}
+  ]
 
   defp fetch_other_top_stats(site, query, current_user) do
     page_filter? =
@@ -414,35 +432,29 @@ defmodule PlausibleWeb.Api.StatsController do
     %{results: results, meta: meta} = Stats.aggregate(site, query, metrics)
 
     top_stats =
-      [
-        top_stats_entry(results, "Unique visitors", :visitors),
-        top_stats_entry(results, "Total visits", :visits),
-        top_stats_entry(results, "Total pageviews", :pageviews),
-        top_stats_entry(results, "Views per visit", :views_per_visit),
-        top_stats_entry(results, "Bounce rate", :bounce_rate),
-        top_stats_entry(results, "Visit duration", :visit_duration),
-        top_stats_entry(results, "Time on page", :time_on_page,
-          formatter: fn
-            nil -> 0
-            value -> value
-          end
-        ),
-        top_stats_entry(results, "Scroll depth", :scroll_depth)
-      ]
-      |> Enum.filter(& &1)
+      @other_top_stats
+      |> Enum.map(&top_stats_entry(results, meta, &1))
+      |> Enum.reject(&is_nil/1)
 
     sample_percent = results[:sample_percent][:value]
 
     %{top_stats: top_stats, meta: meta, sample_percent: sample_percent}
   end
 
-  defp top_stats_entry(current_results, name, key, opts \\ []) do
-    if current_results[key] do
-      formatter = Keyword.get(opts, :formatter, & &1)
-      value = get_in(current_results, [key, :value])
+  defp top_stats_entry(current_results, meta, stat) do
+    if current_results[stat.key] do
+      formatter =
+        if stat.key == :time_on_page do
+          &if is_nil(&1), do: 0, else: &1
+        else
+          & &1
+        end
 
-      %{name: name, value: formatter.(value), graph_metric: key}
-      |> maybe_put_comparison(current_results, key, formatter)
+      value = get_in(current_results, [stat.key, :value])
+
+      %{name: stat.name, value: formatter.(value), graph_metric: stat.key}
+      |> maybe_put_comparison(current_results, stat.key, formatter)
+      |> maybe_put_metric_warning(meta, stat.key)
     end
   end
 
@@ -458,6 +470,15 @@ defmodule PlausibleWeb.Api.StatsController do
       entry
     end
   end
+
+  defp maybe_put_metric_warning(entry, meta, :scroll_depth) do
+    case meta[:metric_warnings][:scroll_depth] do
+      nil -> entry
+      warning -> Map.put(entry, :warning_code, warning.code)
+    end
+  end
+
+  defp maybe_put_metric_warning(entry, _, _), do: entry
 
   def sources(conn, params) do
     site = conn.assigns[:site]
