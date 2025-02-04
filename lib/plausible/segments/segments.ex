@@ -39,7 +39,13 @@ defmodule Plausible.Segments do
 
   @spec get_many(Plausible.Site.t(), list(pos_integer()), Keyword.t()) ::
           {:ok, [Segment.t()]}
-  def get_many(%Plausible.Site{} = site, segment_ids, opts) when is_list(segment_ids) do
+  def get_many(%Plausible.Site{} = _site, segment_ids, _opts)
+      when segment_ids == [] do
+    {:ok, []}
+  end
+
+  def get_many(%Plausible.Site{} = site, segment_ids, opts)
+      when is_list(segment_ids) do
     fields = Keyword.get(opts, :fields, [:id])
 
     query =
