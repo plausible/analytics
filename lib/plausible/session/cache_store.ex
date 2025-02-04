@@ -10,13 +10,12 @@ defmodule Plausible.Session.CacheStore do
 
   def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1)
 
-  def on_event(%{name: name} = event, _, prev_user_id, _)
-      when name in ["pageleave", "engagement"] do
-    # The `pageleave` event is currently experimental. In a real use case we would
-    # probably want to update the session as well (e.g. `is_bounce` or `duration`).
+  def on_event(%{name: "engagement"} = event, _, prev_user_id, _) do
+    # The `test/plausible/ingestion/event_test.exs` event is currently experimental.
+    # In a real use case we would probably want to update the session as well (e.g. `is_bounce` or `duration`).
 
     # However, for now we're only interested in finding out the success rate of
-    # pageleave events. So these events will simply be inserted into the events
+    # engagement events. So these events will simply be inserted into the events
     # table with the session ID found from the cache. If there's no session, the
     # event will be dropped.
     found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
@@ -24,7 +23,7 @@ defmodule Plausible.Session.CacheStore do
     if found_session do
       {:ok, found_session}
     else
-      {:error, :no_session_for_pageleave}
+      {:error, :no_session_for_engagement}
     end
   end
 

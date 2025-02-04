@@ -1385,7 +1385,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -1435,7 +1435,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -1485,7 +1485,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],

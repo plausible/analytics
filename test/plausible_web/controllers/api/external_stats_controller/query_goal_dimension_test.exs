@@ -146,7 +146,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:00],
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:00],
@@ -215,14 +215,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:00],
           scroll_depth: 10
         ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:00],
@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["john"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog/john-post",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -287,7 +287,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog/jane-post",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -302,7 +302,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           pathname: "/blog/jane-post",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -347,7 +347,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           timestamp: ~N[2021-01-01 00:00:00],
           referrer_source: "Google"
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -360,7 +360,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           timestamp: ~N[2021-01-01 00:00:00],
           referrer_source: "Twitter"
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -409,7 +409,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["john"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog/john-post",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -424,7 +424,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog/jane-post",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -439,7 +439,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           pathname: "/blog/jane-post",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -490,7 +490,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["john"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog/john-post",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -505,7 +505,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog/jane-post",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -520,7 +520,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
           "meta.key": ["author"],
           "meta.value": ["jane"]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           pathname: "/blog/jane-post",
           timestamp: ~N[2021-01-01 00:00:10],

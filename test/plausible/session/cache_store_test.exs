@@ -262,13 +262,13 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.events == 2
   end
 
-  test "does not update session counters on pageleave event", %{buffer: buffer} do
+  test "does not update session counters on engagement event", %{buffer: buffer} do
     now = Timex.now()
     pageview = build(:pageview, timestamp: Timex.shift(now, seconds: -10))
-    pageleave = %{pageview | name: "pageleave", timestamp: now}
+    engagement = %{pageview | name: "engagement", timestamp: now}
 
     CacheStore.on_event(pageview, %{}, nil, buffer)
-    CacheStore.on_event(pageleave, %{}, nil, buffer)
+    CacheStore.on_event(engagement, %{}, nil, buffer)
     assert_receive({:buffer, :insert, [[session]]})
 
     assert session.is_bounce == true
