@@ -1,22 +1,18 @@
 /** @format */
 
-import React, { useMemo, useRef, useState } from 'react'
-import {
-  DropdownLinkGroup,
-  DropdownMenuWrapper,
-  DropdownNavigationLink,
-  DropdownSubtitle,
-  ToggleDropdownButton
-} from '../components/dropdown'
+import React, { useMemo, useRef } from 'react'
 import {
   FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup
 } from '../util/filters'
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
-import { useOnClickOutside } from '../util/use-on-click-outside'
 import { PlusIcon } from '@heroicons/react/20/solid'
-import { isModifierPressed, isTyping, Keybind } from '../keybinding'
+import { Popover, Transition } from '@headlessui/react'
+import { popover } from '../components/popover'
+import classNames from 'classnames'
+import { AppNavigationLink } from '../navigation/use-app-navigate'
+import { BlurMenuButtonOnEscape } from '../keybinding'
 
 export function getFilterListItems({
   propsAvailable
@@ -50,78 +46,74 @@ export function getFilterListItems({
   ]
 }
 
-export const FilterMenu = () => {
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const [opened, setOpened] = useState(false)
+const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
-
-  useOnClickOutside({
-    ref: dropdownRef,
-    active: opened,
-    handler: () => setOpened(false)
-  })
-
+  const buttonRef = useRef<HTMLButtonElement>(null)
   return (
-    <ToggleDropdownButton
-      ref={dropdownRef}
-      variant="ghost"
-      className="shrink-0 md:relative"
-      dropdownContainerProps={{
-        ['aria-controls']: 'filter-menu',
-        ['aria-expanded']: opened
-      }}
-      onClick={() => setOpened((opened) => !opened)}
-      currentOption={
-        <div className="flex items-center gap-1 ">
-          <PlusIcon className="block h-4 w-4" />
+    <>
+      <BlurMenuButtonOnEscape targetRef={buttonRef} />
+      <Popover.Button
+        ref={buttonRef}
+        className={classNames(
+          popover.toggleButton.classNames.rounded,
+          popover.toggleButton.classNames.ghost,
+          'justify-center gap-1 px-3'
+        )}
+      >
+        <PlusIcon className="block h-4 w-4" />
+        <span className={popover.toggleButton.classNames.truncatedText}>
           Add filter
-        </div>
-      }
-    >
-      {opened && (
-        <DropdownMenuWrapper id="filter-menu" className="md:left-auto md:w-80">
-          <Keybind
-            keyboardKey="Escape"
-            shouldIgnoreWhen={[isModifierPressed, isTyping]}
-            type="keyup"
-            handler={(event) => {
-              event.stopPropagation()
-              setOpened(false)
-            }}
-            target={dropdownRef.current}
-          />
-
-          <DropdownLinkGroup className="flex flex-row">
-            {columns.map((filterGroups, index) => (
-              <div key={index} className="flex flex-col w-1/2">
-                {filterGroups.map(({ title, modals }) => (
-                  <div key={title}>
-                    <DropdownSubtitle className="pb-1">
-                      {title}
-                    </DropdownSubtitle>
-                    {modals
-                      .filter((m) => !!m)
-                      .map((modalKey) => (
-                        <DropdownNavigationLink
-                          className={'text-xs'}
-                          onClick={() => setOpened(false)}
-                          active={false}
-                          key={modalKey}
-                          path={filterRoute.path}
-                          params={{ field: modalKey }}
-                          search={(search) => search}
-                        >
-                          {formatFilterGroup(modalKey)}
-                        </DropdownNavigationLink>
-                      ))}
+        </span>
+      </Popover.Button>
+      <Transition
+        {...popover.transition.props}
+        className={classNames(
+          'mt-2',
+          popover.transition.classNames.fullwidth,
+          'md:left-auto md:w-80'
+        )}
+      >
+        <Popover.Panel
+          className={classNames(popover.panel.classNames.roundedSheet, 'flex')}
+        >
+          {columns.map((filterGroups, index) => (
+            <div key={index} className="flex flex-col w-1/2">
+              {filterGroups.map(({ title, modals }) => (
+                <div key={title}>
+                  <div className="text-xs pb-1 px-4 pt-2 font-bold uppercase text-indigo-500 dark:text-indigo-400">
+                    {title}
                   </div>
-                ))}
-              </div>
-            ))}
-          </DropdownLinkGroup>
-        </DropdownMenuWrapper>
-      )}
-    </ToggleDropdownButton>
+                  {modals
+                    .filter((m) => !!m)
+                    .map((modalKey) => (
+                      <AppNavigationLink
+                        className={classNames(
+                          popover.items.classNames.navigationLink,
+                          popover.items.classNames.hoverLink,
+                          'text-xs'
+                        )}
+                        onClick={() => closeDropdown()}
+                        key={modalKey}
+                        path={filterRoute.path}
+                        params={{ field: modalKey }}
+                        search={(s) => s}
+                      >
+                        {formatFilterGroup(modalKey)}
+                      </AppNavigationLink>
+                    ))}
+                </div>
+              ))}
+            </div>
+          ))}
+        </Popover.Panel>
+      </Transition>
+    </>
   )
 }
+
+export const FilterMenu = () => (
+  <Popover className="shrink-0 md:relative">
+    {({ close }) => <FilterMenuItems closeDropdown={close} />}
+  </Popover>
+)

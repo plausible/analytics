@@ -1,17 +1,15 @@
 /** @format */
 
-import { EllipsisHorizontalIcon } from '@heroicons/react/20/solid'
+import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import classNames from 'classnames'
-import React, { useRef, useState, useLayoutEffect, useEffect } from 'react'
-import { useOnClickOutside } from '../util/use-on-click-outside'
-import {
-  DropdownMenuWrapper,
-  ToggleDropdownButton
-} from '../components/dropdown'
+import React, { useRef, useState, useLayoutEffect } from 'react'
 import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { BUFFER_FOR_SHADOW_PX } from './filter-pill'
+import { Popover, Transition } from '@headlessui/react'
+import { popover } from '../components/popover'
+import { BlurMenuButtonOnEscape } from '../keybinding'
 
 const BUFFER_RIGHT_PX = 16 - BUFFER_FOR_SHADOW_PX - PILL_X_GAP
 const BUFFER_LEFT_PX = 16 - BUFFER_FOR_SHADOW_PX
@@ -85,42 +83,40 @@ type VisibilityState = {
   visibleCount: number
 }
 
+type ElementAccessor = (
+  filtersBarElement: HTMLElement | null
+) => HTMLElement | null | undefined
+
+/**
+ * The accessors are paths to other elements that FiltersBar needs to measure:
+ * they depend on the structure of the parent and are thus passed as props.
+ * Passing these with refs would be more reactive, but the main layout effect
+ * didn't trigger then as expected.
+ */
 interface FiltersBarProps {
-  elements: {
-    topBar: HTMLElement | null
-    leftSection: Pick<HTMLElement, 'getBoundingClientRect'> | null
-    rightSection: Pick<HTMLElement, 'getBoundingClientRect'> | null
+  accessors: {
+    topBar: ElementAccessor
+    leftSection: ElementAccessor
+    rightSection: ElementAccessor
   }
 }
 
-export const FiltersBar = ({ elements }: FiltersBarProps) => {
+export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
-  const seeMoreRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { query } = useQueryContext()
-
-  const [opened, setOpened] = useState(false)
-
-  useEffect(() => {
-    if (visibility?.visibleCount === query.filters.length) {
-      setOpened(false)
-    }
-  }, [visibility?.visibleCount, query.filters.length])
-
-  useOnClickOutside({
-    ref: seeMoreRef,
-    active: opened,
-    handler: () => setOpened(false)
-  })
+  const seeMoreRef = useRef<HTMLButtonElement>(null)
 
   useLayoutEffect(() => {
-    const { topBar, leftSection, rightSection } = elements
+    const topBar = accessors.topBar(containerRef.current)
+    const leftSection = accessors.leftSection(containerRef.current)
+    const rightSection = accessors.rightSection(containerRef.current)
 
     const resizeObserver = new ResizeObserver(() => {
       const pillWidths = pillsRef.current
         ? Array.from(pillsRef.current.children).map((el) =>
-            getElementWidthOrNull(el as HTMLElement)
+            getElementWidthOrNull(el)
           )
         : null
       handleVisibility({
@@ -147,7 +143,7 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [query.filters, elements])
+  }, [accessors, query.filters])
 
   if (!query.filters.length) {
     // functions as spacer between elements.leftSection and elements.rightSection
@@ -181,32 +177,43 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
             end: visibility?.visibleCount
           }}
           className="overflow-hidden"
-          style={{ width: visibility?.width ?? '100%' }}
+          style={{ width: visibility?.width ?? 0 }}
         />
       </div>
       {visibility !== null &&
         (query.filters.length !== visibility.visibleCount || canClear) && (
-          <ToggleDropdownButton
-            style={{
-              width: SEE_MORE_WIDTH_PX,
-              marginLeft: SEE_MORE_LEFT_MARGIN_PX,
-              marginRight: SEE_MORE_RIGHT_MARGIN_PX
-            }}
-            className="md:relative"
-            ref={seeMoreRef}
-            dropdownContainerProps={{
-              ['title']: opened ? 'Show less' : 'Show more',
-              ['aria-controls']: 'more-filters-menu',
-              ['aria-expanded']: opened
-            }}
-            onClick={() => setOpened((opened) => !opened)}
-            currentOption={<EllipsisHorizontalIcon className="h-full w-full" />}
-          >
-            {opened ? (
-              <DropdownMenuWrapper
-                id="more-filters-menu"
-                className="md:right-auto"
-                innerContainerClassName="flex flex-col p-4 gap-y-2"
+          <Popover className="md:relative">
+            <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
+            <Popover.Button
+              title="See more"
+              ref={seeMoreRef}
+              className={classNames(
+                popover.toggleButton.classNames.rounded,
+                popover.toggleButton.classNames.shadow,
+                'justify-center'
+              )}
+              style={{
+                height: SEE_MORE_WIDTH_PX,
+                width: SEE_MORE_WIDTH_PX,
+                marginLeft: SEE_MORE_LEFT_MARGIN_PX,
+                marginRight: SEE_MORE_RIGHT_MARGIN_PX
+              }}
+            >
+              <EllipsisHorizontalIcon className="block h-5 w-5" />
+            </Popover.Button>
+            <Transition
+              {...popover.transition.props}
+              className={classNames(
+                'mt-2',
+                popover.transition.classNames.fullwidth,
+                'md:right-auto'
+              )}
+            >
+              <Popover.Panel
+                className={classNames(
+                  popover.panel.classNames.roundedSheet,
+                  'flex flex-col p-4 gap-y-2'
+                )}
               >
                 {query.filters.length !== visibility.visibleCount && (
                   <AppliedFilterPillsList
@@ -219,9 +226,9 @@ export const FiltersBar = ({ elements }: FiltersBarProps) => {
                   />
                 )}
                 {canClear && <ClearAction />}
-              </DropdownMenuWrapper>
-            ) : null}
-          </ToggleDropdownButton>
+              </Popover.Panel>
+            </Transition>
+          </Popover>
         )}
     </div>
   )

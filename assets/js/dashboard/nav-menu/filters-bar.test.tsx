@@ -14,11 +14,9 @@ beforeAll(() => {
   const mockResizeObserver = jest.fn(
     (handleEntries) =>
       ({
-        observe: jest
-          .fn()
-          .mockImplementation((entry) =>
-            handleEntries([entry], null as unknown as ResizeObserver)
-          ),
+        observe: jest.fn().mockImplementation((entry) => {
+          handleEntries([entry], null as unknown as ResizeObserver)
+        }),
         unobserve: jest.fn(),
         disconnect: jest.fn()
       }) as unknown as ResizeObserver
@@ -39,12 +37,25 @@ test('user can see expected filters and clear them one by one or all together', 
 
   render(
     <FiltersBar
-      elements={{
-        topBar: {
-          getBoundingClientRect: jest.fn().mockReturnValue(600)
-        } as unknown as HTMLElement,
-        leftSection: { getBoundingClientRect: jest.fn().mockReturnValue(200) },
-        rightSection: { getBoundingClientRect: jest.fn().mockReturnValue(300) }
+      accessors={{
+        topBar: jest.fn(
+          () =>
+            ({
+              getBoundingClientRect: jest.fn().mockReturnValue(600)
+            }) as unknown as HTMLElement
+        ),
+        leftSection: jest.fn(
+          () =>
+            ({
+              getBoundingClientRect: jest.fn().mockReturnValue(200)
+            }) as unknown as HTMLElement
+        ),
+        rightSection: jest.fn(
+          () =>
+            ({
+              getBoundingClientRect: jest.fn().mockReturnValue(300)
+            }) as unknown as HTMLElement
+        )
       }}
     />,
     {
@@ -67,7 +78,7 @@ test('user can see expected filters and clear them one by one or all together', 
   await userEvent.click(
     screen.getByRole('button', {
       hidden: false,
-      name: 'Show more'
+      name: 'See more'
     })
   )
 

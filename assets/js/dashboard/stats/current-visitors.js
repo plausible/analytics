@@ -10,7 +10,10 @@ import { useSiteContext } from '../site-context'
 import { useLastLoadContext } from '../last-load-context'
 import classNames from 'classnames'
 
-export default function CurrentVisitors({ className = '', tooltipBoundary }) {
+export default function CurrentVisitors({
+  className = '',
+  tooltipBoundaryRef
+}) {
   const { query } = useQueryContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
@@ -49,7 +52,7 @@ export default function CurrentVisitors({ className = '', tooltipBoundary }) {
             </p>
           </div>
         }
-        boundary={tooltipBoundary}
+        boundary={tooltipBoundaryRef.current}
       >
         <AppNavigationLink
           search={(prev) => ({ ...prev, period: 'realtime' })}
