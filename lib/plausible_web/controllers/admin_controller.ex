@@ -7,19 +7,39 @@ defmodule PlausibleWeb.AdminController do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  def usage(conn, params) do
-    user_id = String.to_integer(params["user_id"])
+  def usage(conn, %{"user_id" => user_id} = params) do
+    user_id = String.to_integer(user_id)
 
-    team =
+    team_id =
       case Teams.get_by_owner(user_id) do
         {:ok, team} ->
           team
           |> Teams.with_subscription()
           |> Plausible.Repo.preload(:owners)
+          |> Map.fetch!(:id)
 
         {:error, :no_team} ->
-          nil
+          0
+
+        {:error, :multiple_teams} ->
+          0
       end
+
+    params =
+      params
+      |> Map.delete("user_id")
+      |> Map.put("team_id", to_string(team_id))
+
+    usage(conn, params)
+  end
+
+  def usage(conn, params) do
+    team_id = String.to_integer(params["team_id"])
+
+    team =
+      team_id
+      |> Teams.get()
+      |> Plausible.Repo.preload(:owners)
 
     usage = Teams.Billing.quota_usage(team, with_features: true)
 
