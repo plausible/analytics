@@ -1742,6 +1742,123 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       refute "Average revenue" in metrics
       refute "Total revenue" in metrics
     end
+
+    test "page scroll goal filter", %{conn: conn, site: site} do
+      insert(:goal, site: site, page_path: "/blog", scroll_threshold: 50)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 123, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 123,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 60
+        ),
+        build(:pageview, user_id: 456, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 456,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 40
+        )
+      ])
+
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      assert [unique_conversions, total_conversions, conversion_rate] = top_stats
+
+      assert %{"name" => "Unique conversions", "value" => 1} = unique_conversions
+      assert %{"name" => "Total conversions", "value" => 0} = total_conversions
+      assert %{"name" => "Conversion rate", "value" => 50.0} = conversion_rate
+    end
+
+    test "goal is page scroll OR custom event", %{conn: conn, site: site} do
+      insert(:goal, site: site, page_path: "/blog", scroll_threshold: 50)
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:pageview, user_id: 123, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event,
+          user_id: 123,
+          pathname: "/blog",
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:05]
+        ),
+        build(:pageleave,
+          user_id: 123,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 60
+        ),
+        build(:pageview, user_id: 456, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 456,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 40
+        ),
+        build(:pageview, user_id: 789, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 789,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 100
+        ),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:00])
+      ])
+
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog", "Signup"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      assert [unique_conversions, total_conversions, conversion_rate] = top_stats
+
+      assert %{"name" => "Unique conversions", "value" => 3} = unique_conversions
+      assert %{"name" => "Total conversions", "value" => 2} = total_conversions
+      assert %{"name" => "Conversion rate", "value" => 60.0} = conversion_rate
+    end
+
+    test "goal is page scroll OR pageview goal", %{conn: conn, site: site} do
+      insert(:goal,
+        site: site,
+        page_path: "/blog**",
+        scroll_threshold: 50,
+        display_name: "Scroll 50 /blog**"
+      )
+
+      insert(:goal, site: site, page_path: "/blog")
+
+      populate_stats(site, [
+        build(:pageview, user_id: 123, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 123,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 60
+        ),
+        build(:pageview, user_id: 456, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 456,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 40
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:00])
+      ])
+
+      filters = Jason.encode!([[:is, "event:goal", ["Visit /blog", "Scroll 50 /blog**"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      assert [unique_conversions, total_conversions, conversion_rate] = top_stats
+
+      assert %{"name" => "Unique conversions", "value" => 2} = unique_conversions
+      assert %{"name" => "Total conversions", "value" => 2} = total_conversions
+      assert %{"name" => "Conversion rate", "value" => 66.7} = conversion_rate
+    end
   end
 
   describe "GET /api/stats/top-stats - with comparisons" do
