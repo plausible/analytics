@@ -9,10 +9,9 @@ defmodule Plausible.Imported do
 
   import Ecto.Query
 
-  alias Plausible.Imported
+  alias Plausible.{Site, Repo, Imported}
   alias Plausible.Imported.SiteImport
-  alias Plausible.Repo
-  alias Plausible.Site
+  alias Plausible.Stats.Query
 
   require Plausible.Imported.SiteImport
 
@@ -95,6 +94,17 @@ defmodule Plausible.Imported do
     else
       ids
     end
+  end
+
+  @spec completed_imports_in_query_range(Site.t(), Query.t()) :: [SiteImport.t()]
+  def completed_imports_in_query_range(%Site{} = site, %Query{} = query) do
+    date_range = Query.date_range(query)
+
+    site
+    |> get_completed_imports()
+    |> Enum.filter(fn site_import ->
+      site_import.start_date <= date_range.last && site_import.end_date >= date_range.first
+    end)
   end
 
   @spec get_import(Site.t(), non_neg_integer()) :: SiteImport.t() | nil
