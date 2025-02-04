@@ -6,17 +6,35 @@ defmodule Plausible.Teams.TeamAdmin do
   use Plausible
   use Plausible.Repo
 
-  alias Plausible.Teams
   alias Plausible.Billing.Subscription
+  alias Plausible.Teams
 
   require Plausible.Billing.Subscription.Status
 
-  def custom_index_query(_conn, _schema, query) do
+  def custom_index_query(conn, _schema, query) do
+    search =
+      (conn.params["custom_search"] || "")
+      |> String.trim()
+      |> String.replace("%", "\%")
+      |> String.replace("_", "\_")
+
+    search_term = "%#{search}%"
+
+    member_query =
+      from t in Plausible.Teams.Team,
+        left_join: tm in assoc(t, :team_memberships),
+        left_join: u in assoc(tm, :user),
+        where: t.id == parent_as(:team).id,
+        where: ilike(u.email, ^search_term) or ilike(u.name, ^search_term),
+        select: 1
+
     from(t in query,
       as: :team,
       left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
       on: true,
-      preload: [:owners, team_memberships: :user, subscription: s]
+      preload: [:owners, team_memberships: :user, subscription: s],
+      or_where: ilike(t.name, ^search_term),
+      or_where: exists(member_query)
     )
   end
 
@@ -36,8 +54,65 @@ defmodule Plausible.Teams.TeamAdmin do
     ]
   end
 
+  def form_fields(_) do
+    [
+      name: nil,
+      trial_expiry_date: %{
+        help_text: "Change will also update Accept Traffic Until date"
+      },
+      allow_next_upgrade_override: nil,
+      accept_traffic_until: %{
+        help_text: "Change will take up to 15 minutes to propagate"
+      }
+    ]
+  end
+
+  def resource_actions(_) do
+    [
+      unlock: %{
+        name: "Unlock",
+        action: fn _, team -> unlock(team) end
+      },
+      lock: %{
+        name: "Lock",
+        action: fn _, team -> lock(team) end
+      }
+    ]
+  end
+
+  def delete(_conn, %{data: _team}) do
+    # TODO: Implement custom team removal
+    "Cannot remove the team for now"
+  end
+
+  defp lock(team) do
+    if team.grace_period do
+      Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
+      Plausible.Teams.end_grace_period(team)
+      {:ok, team}
+    else
+      {:error, team, "No active grace period on this team"}
+    end
+  end
+
+  defp unlock(team) do
+    if team.grace_period do
+      Plausible.Teams.remove_grace_period(team)
+      Plausible.Billing.SiteLocker.set_lock_status_for(team, false)
+      {:ok, team}
+    else
+      {:error, team, "No active grace period on this team"}
+    end
+  end
+
   defp team_name(team) do
-    "#{team.name} (#{team.owners |> Enum.map(& &1.email) |> Enum.join(", ")})"
+    owners = Enum.map_join(team.owners, ", ", & &1.email)
+
+    if team.name == "My Team" do
+      owners
+    else
+      "#{team.name} #{owners}"
+    end
   end
 
   defp grace_period_status(team) do
@@ -103,8 +178,7 @@ defmodule Plausible.Teams.TeamAdmin do
   defp get_other_members(team) do
     team.team_memberships
     |> Enum.reject(&(&1.role == :owner))
-    |> Enum.map(fn tm -> tm.user.email <> "(#{tm.role})" end)
-    |> Enum.join(", ")
+    |> Enum.map_join(", ", fn tm -> tm.user.email <> " (#{tm.role})" end)
   end
 
   defp format_date(nil), do: "--"

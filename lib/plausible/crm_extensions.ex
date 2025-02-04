@@ -28,6 +28,25 @@ defmodule Plausible.CrmExtensions do
       ]
     end
 
+    def javascripts(%{assigns: %{context: "teams", resource: "team", entry: %{} = team}}) do
+      [
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
+          (async () => {
+            const response = await fetch("/crm/teams/team/#{team.id}/usage?embed=true")
+            const usageHTML = await response.text()
+            const cardBody = document.querySelector(".card-body")
+            if (cardBody) {
+              const usageDOM = document.createElement("div")
+              usageDOM.innerHTML = usageHTML
+              cardBody.prepend(usageDOM)
+            }
+          })()
+        </script>
+        """)
+      ]
+    end
+
     def javascripts(%{assigns: %{context: "sites", resource: "site", entry: %{domain: domain}}}) do
       base_url = PlausibleWeb.Endpoint.url()
 
@@ -188,7 +207,7 @@ defmodule Plausible.CrmExtensions do
     end
 
     def javascripts(%{assigns: %{context: context}})
-        when context in ["sites", "billing"] do
+        when context in ["teams", "sites", "billing"] do
       [
         Phoenix.HTML.raw("""
         <script type="text/javascript">
