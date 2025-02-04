@@ -1363,9 +1363,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
   end
 
   describe "page scroll goals" do
+    setup :create_site_import
+
     test "rejects imported data with warning when page scroll goal is filtered by", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       insert(:goal,
         site: site,
@@ -1375,8 +1378,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       )
 
       insert(:goal, site: site, page_path: "/blog**")
-
-      site_import = insert(:site_import, site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -1416,7 +1417,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
     test "rejects imported data with warning when page scroll goal is filtered by (IN filter)", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       insert(:goal,
         site: site,
@@ -1426,8 +1428,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       )
 
       insert(:goal, site: site, page_path: "/blog**")
-
-      site_import = insert(:site_import, site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
@@ -1467,7 +1467,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
     test "ignores imported data for page scroll goal conversions in goal breakdown", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
       insert(:goal,
         site: site,
@@ -1477,8 +1478,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       )
 
       insert(:goal, site: site, page_path: "/blog**")
-
-      site_import = insert(:site_import, site: site)
 
       populate_stats(site, site_import.id, [
         build(:pageview,
