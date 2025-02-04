@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.35.1">
+    <meta name="project" content="Plausible v0.0.1">
+
+
+    <title>Plausible.Stats.Goals — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-P45HOAC7.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-BE12A004.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-PVRIOB7F.js"></script>
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Plausible</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+    <span translate="no">Plausible.Stats.Goals</span> 
+    <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+  </h1>
+
+
+    <section id="moduledoc">
+<p>Stats code related to filtering and grouping by goals.</p>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:goal_join_data/0" data-no-tooltip translate="no">goal_join_data()</a>
+
+      </div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_filter/3" data-no-tooltip translate="no">add_filter(query, filter, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Translates an event:goal filter into SQL. Similarly to other <code class="inline">add_filter</code> clauses in
+<a href="Plausible.Stats.SQL.WhereBuilder.html"><code class="inline">Plausible.Stats.SQL.WhereBuilder</code></a>, returns an <code class="inline">Ecto.Query.dynamic</code> expression.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#goal_join_data/1" data-no-tooltip translate="no">goal_join_data(query)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns data needed to perform a GROUP BY on goals in an ecto query.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#page_path_db_field/1" data-no-tooltip translate="no">page_path_db_field(imported?)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#preload_needed_goals/3" data-no-tooltip translate="no">preload_needed_goals(site, dimensions, filters)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Preloads goals data if needed for query-building and related work.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:goal_join_data/0">
+
+  <div class="detail-header">
+    <a href="#t:goal_join_data/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">goal_join_data()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L64" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> goal_join_data() :: %{
+  indices: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()],
+  types: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()],
+  event_names_imports: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()],
+  event_names_by_type: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()],
+  page_regexes: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()],
+  scroll_thresholds: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()]
+}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="add_filter/3">
+
+    <span id="add_filter/2"></span>
+
+  <div class="detail-header">
+    <a href="#add_filter/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">add_filter(query, filter, opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L50" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Translates an event:goal filter into SQL. Similarly to other <code class="inline">add_filter</code> clauses in
+<a href="Plausible.Stats.SQL.WhereBuilder.html"><code class="inline">Plausible.Stats.SQL.WhereBuilder</code></a>, returns an <code class="inline">Ecto.Query.dynamic</code> expression.</p><p>Compared to other dimensions, filtering by goals works differently. First, we expect
+all goals to be preloaded into the query - this list of goals is what actually gets
+filtered by <code class="inline">operator</code> and <code class="inline">clauses</code>.</p><p>With the resulting filtered list of goals, we build conditions for whether that goal
+was completed or not, and join those conditions with a logical OR.</p><h3 id="add_filter/3-options" class="section-heading">
+  <a href="#add_filter/3-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h3>
+<ul><li><code class="inline">imported?</code> - when <code class="inline">true</code>, builds conditions on the <code class="inline">page</code> db field rather than
+<code class="inline">pathname</code>, and also skips the <code class="inline">e.name == &quot;pageview&quot;</code> check.</li></ul>
+  </section>
+</section>
+<section class="detail" id="goal_join_data/1">
+
+  <div class="detail-header">
+    <a href="#goal_join_data/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">goal_join_data(query)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L77" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> goal_join_data(<a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>()) :: <a href="#t:goal_join_data/0">goal_join_data</a>()</pre>
+
+      </div>
+
+<p>Returns data needed to perform a GROUP BY on goals in an ecto query.</p>
+  </section>
+</section>
+<section class="detail" id="page_path_db_field/1">
+
+  <div class="detail-header">
+    <a href="#page_path_db_field/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">page_path_db_field(imported?)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L198" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="preload_needed_goals/3">
+
+  <div class="detail-header">
+    <a href="#preload_needed_goals/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">preload_needed_goals(site, dimensions, filters)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/goals.ex#L14" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Preloads goals data if needed for query-building and related work.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+      <p>
+
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
+
+            <a href="Plausible.epub" title="ePub version">
+              Download ePub version
+            </a>
+
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.35.1) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true})</script>
+
+  </body>
+</html>

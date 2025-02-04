@@ -193,6 +193,7 @@ Plausible.Stats.FilterSuggestions.html
 Plausible.Stats.Filters.html
 Plausible.Stats.Funnel.html
 Plausible.Stats.Goal.Revenue.html
+Plausible.Stats.Goals.html
 Plausible.Stats.Imported.Base.html
 Plausible.Stats.Imported.SQL.Expression.html
 Plausible.Stats.Imported.SQL.WhereBuilder.html
@@ -456,8 +457,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-358A5D3C.js
-dist/sidebar_items-4CCF5CC2.js
+dist/search_data-81F2EF00.js
+dist/sidebar_items-BE12A004.js
 index.html
 readme.html
 search.html
