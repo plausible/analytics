@@ -1,17 +1,12 @@
-/* eslint-disable playwright/no-skipped-test */
 const { pageleaveCooldown, expectPlausibleInAction, ignoreEngagementRequests, ignorePageleaveRequests, hideCurrentTab, hideAndShowCurrentTab } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
 test.describe('scroll depth (pageleave events)', () => {
-  test.skip(({browserName}) => browserName === 'webkit', 'Not testable on Webkit')
-
   sharedTests('pageleave', ignoreEngagementRequests)
 })
 
 test.describe('scroll depth (engagement events)', () => {
-  test.skip(({browserName}) => browserName === 'webkit', 'Not testable on Webkit')
-
   sharedTests('engagement', ignorePageleaveRequests)
 
   test('sends scroll depth when minimizing the tab', async ({ page }) => {

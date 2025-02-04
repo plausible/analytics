@@ -1,17 +1,12 @@
-/* eslint-disable playwright/no-skipped-test */
 const { expectPlausibleInAction, pageleaveCooldown, ignoreEngagementRequests, ignorePageleaveRequests } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
 test.describe('pageleave extension (pageleave events)', () => {
-  test.skip(({browserName}) => browserName === 'webkit', 'Not testable on Webkit')
-
   sharedTests('pageleave', ignoreEngagementRequests)
 })
 
 test.describe('pageleave extension (engagement events)', () => {
-  test.skip(({browserName}) => browserName === 'webkit', 'Not testable on Webkit')
-
   sharedTests('engagement', ignorePageleaveRequests)
 })
 

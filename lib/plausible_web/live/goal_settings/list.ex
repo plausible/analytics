@@ -99,7 +99,14 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
     """
   end
 
-  def pageview_description(goal) do
+  defp page_scroll_description(goal) do
+    case pageview_description(goal) do
+      "" -> "Scroll > #{goal.scroll_threshold}"
+      path -> "Scroll > #{goal.scroll_threshold} on #{path}"
+    end
+  end
+
+  defp pageview_description(goal) do
     path = goal.page_path
 
     case goal.display_name do
@@ -108,13 +115,23 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
     end
   end
 
-  def custom_event_description(goal) do
+  defp custom_event_description(goal) do
     if goal.display_name == goal.event_name, do: "", else: "#{goal.event_name}"
   end
 
-  def goal_description(assigns) do
+  defp goal_description(assigns) do
     ~H"""
-    <span :if={@goal.page_path} class="block truncate text-gray-400 dark:text-gray-600">
+    <span
+      :if={@goal.page_path && @goal.scroll_threshold > -1}
+      class="block truncate text-gray-400 dark:text-gray-600"
+    >
+      {page_scroll_description(@goal)}
+    </span>
+
+    <span
+      :if={@goal.page_path && @goal.scroll_threshold == -1}
+      class="block truncate text-gray-400 dark:text-gray-600"
+    >
       {pageview_description(@goal)}
     </span>
 

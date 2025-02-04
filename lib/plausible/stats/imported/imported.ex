@@ -5,7 +5,6 @@ defmodule Plausible.Stats.Imported do
   import Ecto.Query
   import Plausible.Stats.Imported.SQL.Expression
 
-  alias Plausible.Stats.Filters
   alias Plausible.Stats.Imported
   alias Plausible.Stats.Query
   alias Plausible.Stats.SQL.QueryBuilder
@@ -239,8 +238,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
-    {events, page_regexes} =
-      Filters.Utils.split_goals_query_expressions(query.preloaded_goals.matching_toplevel_filters)
+    goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
 
     Imported.Base.decide_tables(query)
     |> Enum.map(fn
@@ -248,7 +246,12 @@ defmodule Plausible.Stats.Imported do
         Imported.Base.query_imported("imported_custom_events", site, query)
         |> where([i], i.visitors > 0)
         |> select_merge_as([i], %{
-          dim0: fragment("-indexOf(?, ?)", type(^events, {:array, :string}), i.name)
+          dim0:
+            fragment(
+              "indexOf(?, ?)",
+              type(^goal_join_data.event_names_imports, {:array, :string}),
+              i.name
+            )
         })
         |> select_imported_metrics(metrics)
         |> group_by([], selected_as(:dim0))
@@ -260,15 +263,24 @@ defmodule Plausible.Stats.Imported do
         |> where(
           [i],
           fragment(
-            "notEmpty(multiMatchAllIndices(?, ?) as indices)",
+            """
+            notEmpty(
+              arrayFilter(
+                goal_idx -> ?[goal_idx] = 'page' AND match(?, ?[goal_idx]),
+                ?
+              ) as indices
+            )
+            """,
+            type(^goal_join_data.types, {:array, :string}),
             i.page,
-            type(^page_regexes, {:array, :string})
+            type(^goal_join_data.page_regexes, {:array, :string}),
+            type(^goal_join_data.indices, {:array, :integer})
           )
         )
         |> join(:inner, [_i], index in fragment("indices"), hints: "ARRAY", on: true)
         |> group_by([_i, index], index)
         |> select_merge_as([_i, index], %{
-          dim0: type(fragment("?", index), :integer)
+          dim0: fragment("CAST(?, 'UInt64')", index)
         })
         |> select_imported_metrics(metrics)
     end)
