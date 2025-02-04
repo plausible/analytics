@@ -616,17 +616,17 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
       ])
 
       conn =
@@ -682,7 +682,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     } do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00],
@@ -727,7 +727,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           pathname: "/native-and-imported",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/native-and-imported",
           timestamp: ~N[2020-01-01 00:01:00],
@@ -738,7 +738,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           pathname: "/native-only",
           timestamp: ~N[2020-01-01 00:01:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/native-only",
           timestamp: ~N[2020-01-01 00:02:00],

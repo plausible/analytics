@@ -102,11 +102,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "does not count pageleave events towards the events metric in a simple aggregate query",
+    test "does not count engagement events towards the events metric in a simple aggregate query",
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 234, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 234, timestamp: ~N[2021-01-01 00:00:01])
+        build(:engagement, user_id: 234, timestamp: ~N[2021-01-01 00:00:01])
       ])
 
       conn =
@@ -121,13 +121,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "pageleave events do not affect bounce rate and visit duration", %{
+    test "engagement events do not affect bounce rate and visit duration", %{
       conn: conn,
       site: site
     } do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:03])
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:03])
       ])
 
       conn =
@@ -3739,11 +3739,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     test "can query scroll_depth metric with a page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:10]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
         build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
+        build(:engagement, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
       ])
 
       conn =
@@ -3762,14 +3762,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     test "can query scroll_depth with page + custom prop filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
         build(:pageview,
           "meta.key": ["author"],
           "meta.value": ["john"],
           user_id: 123,
           timestamp: ~N[2021-01-01 00:00:10]
         ),
-        build(:pageleave,
+        build(:engagement,
           "meta.key": ["author"],
           "meta.value": ["john"],
           user_id: 123,
@@ -3777,7 +3777,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           scroll_depth: 60
         ),
         build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
+        build(:engagement, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
       ])
 
       conn =
@@ -3793,7 +3793,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "scroll depth is 0 when no pageleave data in range", %{conn: conn, site: site} do
+    test "scroll depth is 0 when no engagement data in range", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
@@ -3831,13 +3831,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, timestamp: t0),
-        build(:pageleave, user_id: 12, timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 34, timestamp: t0),
-        build(:pageleave, user_id: 34, timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, timestamp: t2),
-        build(:pageleave, user_id: 34, timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, timestamp: NaiveDateTime.add(t0, 1, :day)),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           timestamp: NaiveDateTime.add(t1, 1, :day),
           scroll_depth: 20
@@ -3865,17 +3865,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
       ])
 
       conn =
@@ -3898,17 +3898,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
       ])
 
       conn =
@@ -3937,7 +3937,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Google",
           user_id: 12,
           pathname: "/blog",
@@ -3950,7 +3950,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Google",
           user_id: 34,
           pathname: "/blog",
@@ -3963,7 +3963,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(2, :minute)
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Google",
           user_id: 34,
           pathname: "/blog",
@@ -3976,7 +3976,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Twitter",
           user_id: 56,
           pathname: "/blog",
@@ -3989,7 +3989,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/another",
           timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(1, :minute)
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Twitter",
           user_id: 56,
           pathname: "/another",
@@ -4017,49 +4017,49 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     test "breakdown by event:page + time:day with scroll_depth metric", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:01:00],
           scroll_depth: 20
         ),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/another",
           timestamp: ~N[2020-01-01 00:02:00],
           scroll_depth: 24
         ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:01:00],
           scroll_depth: 17
         ),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/another",
           timestamp: ~N[2020-01-01 00:02:00],
           scroll_depth: 26
         ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-01 00:02:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:03:00],
           scroll_depth: 60
         ),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: ~N[2020-01-02 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           pathname: "/blog",
           timestamp: ~N[2020-01-02 00:01:00],
           scroll_depth: 20
         ),
         build(:pageview, user_id: 56, pathname: "/another", timestamp: ~N[2020-01-02 00:01:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           pathname: "/another",
           timestamp: ~N[2020-01-02 00:02:00],
@@ -4086,7 +4086,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     test "breakdown by a custom prop with a page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00], pathname: "/blog"),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           timestamp: ~N[2021-01-01 00:01:00],
           pathname: "/blog",
@@ -4099,7 +4099,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "meta.value": ["john"],
           pathname: "/blog/john-post"
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           timestamp: ~N[2021-01-01 00:03:00],
           "meta.key": ["author"],
@@ -4114,7 +4114,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "meta.value": ["john"],
           pathname: "/another-blog/john-post"
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           timestamp: ~N[2021-01-01 00:03:00],
           "meta.key": ["author"],
@@ -4129,7 +4129,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "meta.value": ["john"],
           pathname: "/blog/john-post"
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 456,
           timestamp: ~N[2021-01-01 00:03:00],
           "meta.key": ["author"],

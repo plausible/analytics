@@ -973,11 +973,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     test "returns scroll_depth with a page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:10]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
         build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
+        build(:engagement, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
       ])
 
       filters = Jason.encode!([[:is, "event:page", ["/"]]])
@@ -1000,11 +1000,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:10]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
         build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80),
+        build(:engagement, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80),
         build(:imported_pages,
           page: "/",
           date: ~D[2021-01-01],
@@ -1748,14 +1748,14 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 123, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
           scroll_depth: 60
         ),
         build(:pageview, user_id: 456, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 456,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -1786,21 +1786,21 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           name: "Signup",
           timestamp: ~N[2021-01-01 00:00:05]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
           scroll_depth: 60
         ),
         build(:pageview, user_id: 456, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 456,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
           scroll_depth: 40
         ),
         build(:pageview, user_id: 789, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 789,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
@@ -1833,14 +1833,14 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 123, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],
           scroll_depth: 60
         ),
         build(:pageview, user_id: 456, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 456,
           pathname: "/blog",
           timestamp: ~N[2021-01-01 00:00:10],

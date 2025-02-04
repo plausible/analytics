@@ -681,7 +681,7 @@ defmodule Plausible.Billing.QuotaTest do
              } = Plausible.Teams.Billing.monthly_pageview_usage(team)
     end
 
-    test "pageleave events are not counted towards monthly pageview usage" do
+    test "engagement events are not counted towards monthly pageview usage" do
       user = new_user()
       site = new_site(owner: user)
       team = team_of(user)
@@ -690,7 +690,7 @@ defmodule Plausible.Billing.QuotaTest do
       populate_stats(site, [
         build(:event, timestamp: Timex.shift(now, days: -8), name: "custom"),
         build(:pageview, user_id: 199, timestamp: Timex.shift(now, days: -5, minutes: -2)),
-        build(:pageleave, user_id: 199, timestamp: Timex.shift(now, days: -5))
+        build(:engagement, user_id: 199, timestamp: Timex.shift(now, days: -5))
       ])
 
       assert %{

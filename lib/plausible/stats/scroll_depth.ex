@@ -47,7 +47,7 @@ defmodule Plausible.Stats.ScrollDepth do
         from(e in "events_v2",
           where:
             e.site_id == ^site.id and
-              e.name == "pageleave" and
+              e.name == "engagement" and
               e.timestamp >= fragment("toStartOfDay(now() - toIntervalDay(30))") and
               e.scroll_depth > 0 and e.scroll_depth <= 100
         )
