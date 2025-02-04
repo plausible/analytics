@@ -34,8 +34,11 @@ defmodule Plausible.GoalsTest do
 
   test "create/2 fails to create the same pageview goal twice" do
     site = new_site()
-    {:ok, _} = Goals.create(site, %{"page_path" => "foo bar"})
-    assert {:error, changeset} = Goals.create(site, %{"page_path" => "foo bar"})
+    {:ok, _} = Goals.create(site, %{"page_path" => "foo bar", "display_name" => "one"})
+
+    assert {:error, changeset} =
+             Goals.create(site, %{"page_path" => "foo bar", "display_name" => "two"})
+
     assert {"has already been taken", _} = changeset.errors[:page_path]
   end
 
