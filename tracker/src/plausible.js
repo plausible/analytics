@@ -11,6 +11,7 @@
   {{/if}}
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
   var dataDomain = scriptEl.getAttribute('data-domain')
+  var allowFetch = scriptEl.hasAttribute('data-allow-fetch')
 
   function onIgnoredEvent(eventName, reason, options) {
     if (reason) console.warn('Ignoring Event: ' + reason);
@@ -247,7 +248,23 @@
   }
 
   function sendRequest(endpoint, payload, options) {
-    {{#if compat}}
+    {{#if pageleave}}
+    if (allowFetch && window.fetch) {
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        keepalive: true,
+        body: JSON.stringify(payload)
+      }).then(function(response) {
+        options && options.callback && options.callback({status: response.status})
+      })
+
+      return
+    }
+    {{/if}}
+
     var request = new XMLHttpRequest();
     request.open('POST', endpoint, true);
     request.setRequestHeader('Content-Type', 'text/plain');
@@ -259,20 +276,7 @@
         options && options.callback && options.callback({status: request.status})
       }
     }
-    {{else}}
-    if (window.fetch) {
-      fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain'
-        },
-        keepalive: true,
-        body: JSON.stringify(payload)
-      }).then(function(response) {
-        options && options.callback && options.callback({status: response.status})
-      })
-    }
-    {{/if}}
+
   }
 
   var queue = (window.plausible && window.plausible.q) || []
