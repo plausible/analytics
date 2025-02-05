@@ -212,42 +212,53 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert_no_emails_delivered()
     end
-  end
 
-  describe "to be revisited" do
-    setup [:create_user, :log_in, :create_team, :setup_team]
-
-    test "guest->owner promotion is currently not supported by the underlying services",
+    test "guest->owner promotion",
          %{
            conn: conn,
-           user: user
+           user: user,
+           team: team
          } do
       site = new_site(owner: user)
-      add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
+
+      member2 =
+        add_guest(site,
+          role: :viewer,
+          user: new_user(name: "Mr Guest", email: "guest@example.com")
+        )
 
       lv = get_liveview(conn)
 
       change_role(lv, 1, "owner", "#guest-list .guest")
       html = render(lv)
 
-      assert html =~ "This operation is not supported"
+      refute html =~ "Error!"
+
+      assert_team_membership(user, team, :owner)
+      assert_team_membership(member2, team, :owner)
     end
 
-    test "multiple-owners situation is currently not supported by the underlying services",
+    test "multiple-owners",
          %{
            conn: conn,
-           team: team
+           team: team,
+           user: user
          } do
-      add_member(team, role: :admin)
+      member2 = add_member(team, role: :admin)
 
       lv = get_liveview(conn)
 
       change_role(lv, 2, "owner")
       html = render(lv)
 
-      assert html =~ "This operation is not supported"
-    end
+      refute html =~ "Error!"
 
+      assert_team_membership(user, team, :owner)
+      assert_team_membership(member2, team, :owner)
+    end
+  end
+
+  describe "to be revisited" do
     @tag :capture_log
     test "billing role is currently not supported by the underlying services",
          %{

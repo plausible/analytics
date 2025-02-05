@@ -314,10 +314,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
           :error,
           "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
         )
-
-      {{:error, :permission_denied}, _} ->
-        socket
-        |> put_live_flash(:error, "This operation is not supported")
     end
   end
 
