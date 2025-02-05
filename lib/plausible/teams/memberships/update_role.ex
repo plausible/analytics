@@ -15,7 +15,7 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
     with :ok <- check_valid_role(new_role),
          {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
          {:ok, current_user_role} <- Memberships.team_role(team, current_user),
-         granting_to_self? = team_membership.user_id == user_id,
+         granting_to_self? = team_membership.user_id == current_user.id,
          :ok <-
            check_can_grant_role(
              current_user_role,

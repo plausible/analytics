@@ -389,8 +389,6 @@ defmodule PlausibleWeb.Router do
 
     get "/team/general", SettingsController, :team_general
     post "/team/general/name", SettingsController, :update_team_name
-    put "/team/memberships/u/:id/role/:new_role", TeamController, :update_member_role
-    delete "/team/memberships/u/:id", TeamController, :remove_member
     post "/team/invitations/:invitation_id/accept", InvitationController, :accept_invitation
     post "/team/invitations/:invitation_id/reject", InvitationController, :reject_invitation
     delete "/team/invitations/:invitation_id", InvitationController, :remove_team_invitation
