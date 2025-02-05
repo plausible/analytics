@@ -36,6 +36,7 @@ defmodule Plausible.SiteAdmin do
       inner_join: o in assoc(r, :owners),
       inner_join: t in assoc(r, :team),
       preload: [owners: o, team: t, guest_memberships: [team_membership: :user]],
+      or_where: ilike(t.name, ^search_term),
       or_where: ilike(r.domain, ^search_term),
       or_where: ilike(o.email, ^search_term),
       or_where: ilike(o.name, ^search_term),
@@ -78,6 +79,7 @@ defmodule Plausible.SiteAdmin do
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
       timezone: nil,
       public: nil,
+      team: %{value: &get_team/1},
       owners: %{value: &get_owners/1},
       other_members: %{value: &get_other_members/1},
       limits: %{
@@ -186,17 +188,36 @@ defmodule Plausible.SiteAdmin do
     Calendar.strftime(date, "%b %-d, %Y")
   end
 
-  defp get_owners(site) do
-    owners = Repo.preload(site, :owners).owners
+  defp get_team(site) do
+    team_name =
+      case site.owners do
+        [owner] ->
+          if site.team.name == "My Team" do
+            owner.name
+          else
+            site.team.name
+          end
 
+        [_ | _] ->
+          site.team.name
+      end
+      |> html_escape()
+
+    """
+    <a href="/crm/teams/team/#{site.team.id}">#{team_name}</a>
+    """
+    |> Phoenix.HTML.raw()
+  end
+
+  defp get_owners(site) do
     owners_html =
-      Enum.map(owners, fn owner ->
-        escaped_name = Phoenix.HTML.html_escape(owner.name) |> Phoenix.HTML.safe_to_string()
-        escaped_email = Phoenix.HTML.html_escape(owner.email) |> Phoenix.HTML.safe_to_string()
+      Enum.map(site.owners, fn owner ->
+        escaped_name = html_escape(owner.name)
+        escaped_email = html_escape(owner.email)
 
         """
          <a href="/crm/auth/user/#{owner.id}">#{escaped_name}</a>
-         <br/><br/>
+         <br/>
          #{escaped_email}
         """
       end)
@@ -206,8 +227,16 @@ defmodule Plausible.SiteAdmin do
 
   defp get_other_members(site) do
     site.guest_memberships
-    |> Enum.map(fn m -> m.team_membership.user.email <> "(#{member_role(m.role)})" end)
-    |> Enum.join(", ")
+    |> Enum.map_join(", ", fn m ->
+      id = m.team_membership.user.id
+      email = html_escape(m.team_membership.user.email)
+      role = html_escape(m.role)
+
+      """
+      <a href="/auth/user/#{id}">#{email} (#{role})</a>
+      """
+    end)
+    |> Phoenix.HTML.raw()
   end
 
   def get_struct_fields(module) do
@@ -221,6 +250,9 @@ defmodule Plausible.SiteAdmin do
   def create_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
   def update_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
 
-  defp member_role(:editor), do: :admin
-  defp member_role(other), do: other
+  def html_escape(string) do
+    string
+    |> Phoenix.HTML.html_escape()
+    |> Phoenix.HTML.safe_to_string()
+  end
 end

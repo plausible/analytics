@@ -51,6 +51,8 @@ defmodule Plausible.Auth.User do
     has_one :google_auth, Plausible.Site.GoogleAuth
     has_one :owner_membership, Plausible.Teams.Membership, where: [role: :owner]
     has_one :my_team, through: [:owner_membership, :team]
+    has_many :owner_memberships, Plausible.Teams.Membership, where: [role: :owner]
+    has_many :owned_teams, through: [:owner_memberships, :team]
 
     timestamps()
   end
