@@ -50,7 +50,7 @@ export function QueryPeriodsPicker({ className }: { className?: string }) {
               />
             )}
           </Popover>
-          <Popover className="w-0 h-0 self-stretch md:relative">
+          <Popover className="w-0 h-9 md:relative">
             {({ close }) => (
               <ComparisonCalendarMenu
                 calendarButtonRef={compareCalendarButtonRef}
