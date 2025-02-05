@@ -55,13 +55,15 @@
   var pageLeaveSending = false
 
   function getDocumentHeight() {
+    var body = document.body || {}
+    var el = document.documentElement || {}
     return Math.max(
-      document.body.scrollHeight || 0,
-      document.body.offsetHeight || 0,
-      document.body.clientHeight || 0,
-      document.documentElement.scrollHeight || 0,
-      document.documentElement.offsetHeight || 0,
-      document.documentElement.clientHeight || 0
+      body.scrollHeight || 0,
+      body.offsetHeight || 0,
+      body.clientHeight || 0,
+      el.scrollHeight || 0,
+      el.offsetHeight || 0,
+      el.clientHeight || 0
     )
   }
 
