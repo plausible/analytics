@@ -238,7 +238,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
     end
 
     @tag :capture_log
-    test "billing role is currently not supported by the underlying servies",
+    test "billing role is currently not supported by the underlying services",
          %{
            conn: conn,
            team: team
