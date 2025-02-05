@@ -54,15 +54,21 @@ defmodule Plausible.CrmExtensions do
         <script type="text/javascript">
           (async () => {
             const CHECK_INTERVAL = 300
-            const userIdField = document.querySelector("#enterprise_plan_user_id")
-            const userIdLabel = document.querySelector("label[for=enterprise_plan_user_id]")
+
+            const teamPicker = document.querySelector("#pick-raw-resource")
+            if (teamPicker) {
+              teamPicker.style.display = "none";
+            }
+            const teamIdField = document.querySelector("#enterprise_plan_team_id") || 
+                            document.querySelector("#team_id")
+            const teamIdLabel = document.querySelector("label[for=enterprise_plan_team_id]")
             const dataList = document.createElement("datalist")
-            dataList.id = "user-choices"
-            userIdField.after(dataList)
-            userIdField.setAttribute("list", "user-choices")
-            userIdField.setAttribute("type", "text")
+            dataList.id = "team-choices"
+            teamIdField.after(dataList)
+            teamIdField.setAttribute("list", "team-choices")
+            teamIdField.setAttribute("type", "text")
             const labelSpan = document.createElement("span")
-            userIdLabel.appendChild(labelSpan)
+            teamIdLabel.appendChild(labelSpan)
 
             let updateAction;
 
@@ -70,17 +76,17 @@ defmodule Plausible.CrmExtensions do
               id = Number(id)
 
               if (!isNaN(id) && id > 0) {
-                const response = await fetch(`/crm/billing/search/user-by-id/${id}`)
+                const response = await fetch(`/crm/billing/search/team-by-id/${id}`)
                 labelSpan.innerHTML = ` <i>(${await response.text()})</i>`
               }
             }
 
             const updateSearch = async () => {
-              const search = userIdField.value
+              const search = teamIdField.value
 
               updateLabel(search)
 
-              const response = await fetch("/crm/billing/search/user", {
+              const response = await fetch("/crm/billing/search/team", {
                 headers: { "Content-Type": "application/json" },
                 method: "POST",
                 body: JSON.stringify({ search: search })
@@ -100,9 +106,9 @@ defmodule Plausible.CrmExtensions do
               dataList.replaceChildren(...options)
             }
 
-            updateLabel(userIdField.value)
+            updateLabel(teamIdField.value)
 
-            userIdField.addEventListener("input", async (e) => {
+            teamIdField.addEventListener("input", async (e) => {
               if (updateAction) {
                 clearTimeout(updateAction)
                 updateAction = null
@@ -136,20 +142,20 @@ defmodule Plausible.CrmExtensions do
         <script type="text/javascript">
           (async () => {
             const CHECK_INTERVAL = 300
-            const userIdField = document.getElementById("enterprise_plan_user_id") || document.getElementById("user_id")
+            const teamIdField = document.getElementById("enterprise_plan_team_id") || document.getElementById("team_id")
             let planRequest
-            let lastValue = Number(userIdField.value)
+            let lastValue = Number(teamIdField.value)
             let currentValue = lastValue
 
             setTimeout(prefillCallback, CHECK_INTERVAL)
 
             async function prefillCallback() {
-              currentValue = Number(userIdField.value)
+              currentValue = Number(teamIdField.value)
               if (Number.isInteger(currentValue)
                     && currentValue > 0
                     && currentValue != lastValue
                     && !planRequest) {
-                planRequest = await fetch("/crm/billing/user/" + currentValue + "/current_plan")
+                planRequest = await fetch("/crm/billing/team/" + currentValue + "/current_plan")
                 const result = await planRequest.json()
 
                 fillForm(result)
@@ -178,7 +184,10 @@ defmodule Plausible.CrmExtensions do
 
               ['stats_api', 'props', 'funnels', 'revenue_goals'].forEach(feature => {
                 const checked = result.features.includes(feature)
-                document.getElementById('enterprise_plan_features_' + feature).checked = checked
+                const field = document.querySelector(`input[type=checkbox][value=${feature}]`)
+                if (field) {
+                  field.checked = checked
+                }
               });
             }
           })()
