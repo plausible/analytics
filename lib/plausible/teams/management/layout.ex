@@ -127,9 +127,11 @@ defmodule Plausible.Teams.Management.Layout do
   def persist(layout, context) do
     result =
       Repo.transaction(fn ->
-        context.my_team
-        |> Teams.Team.setup_changeset()
-        |> Repo.update!()
+        if not context.my_team.setup_complete do
+          context.my_team
+          |> Teams.Team.setup_changeset()
+          |> Repo.update!()
+        end
 
         layout
         |> sorted_for_persistence()

@@ -241,6 +241,36 @@ defmodule Plausible.Teams.Management.LayoutTest do
       assert_no_emails_delivered()
     end
 
+    test "writes setup markers", %{user: user, team: team} do
+      refute team.setup_complete
+      refute team.setup_at
+
+      team |> Layout.init() |> Layout.persist(%{current_user: user, my_team: team})
+
+      team = Repo.reload!(team)
+
+      assert team.setup_complete
+      assert team.setup_at
+    end
+
+    test "won't update setup_at", %{user: user, team: team} do
+      team =
+        team
+        |> Teams.Team.setup_changeset(
+          NaiveDateTime.utc_now(:second)
+          |> NaiveDateTime.shift(month: -1)
+        )
+        |> Repo.update!()
+
+      assert setup_at = team.setup_at
+
+      team |> Layout.init() |> Layout.persist(%{current_user: user, my_team: team})
+
+      team = Repo.reload!(team)
+
+      assert team.setup_at == setup_at
+    end
+
     test "invitation pending email goes out", %{user: user, team: team} do
       assert {:ok, 1} =
                team
