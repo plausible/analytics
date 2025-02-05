@@ -31,16 +31,12 @@ defmodule PlausibleWeb.AdminController do
   end
 
   def current_plan(conn, params) do
-    user_id = String.to_integer(params["user_id"])
+    team_id = String.to_integer(params["team_id"])
 
     team =
-      case Teams.get_by_owner(user_id) do
-        {:ok, team} ->
-          Teams.with_subscription(team)
-
-        {:error, :no_team} ->
-          nil
-      end
+      team_id
+      |> Teams.get()
+      |> Teams.with_subscription()
 
     plan =
       case team && team.subscription &&
@@ -68,21 +64,39 @@ defmodule PlausibleWeb.AdminController do
     |> send_resp(200, json_response)
   end
 
-  def user_by_id(conn, params) do
-    id = params["user_id"]
+  def team_by_id(conn, params) do
+    id = params["team_id"]
 
     entry =
       Repo.one(
-        from u in Plausible.Auth.User,
-          where: u.id == ^id,
-          select: fragment("concat(?, ?, ?, ?)", u.name, " (", u.email, ")")
+        from t in Plausible.Teams.Team,
+          inner_join: o in assoc(t, :owners),
+          where: t.id == ^id,
+          group_by: t.id,
+          select:
+            fragment(
+              """
+              case when ? = ? then 
+                string_agg(concat(?, ' (', ?, ')'), ',') 
+              else 
+                concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']') 
+              end
+              """,
+              t.name,
+              "My Team",
+              o.name,
+              o.email,
+              t.name,
+              o.name,
+              o.email
+            )
       ) || ""
 
     conn
     |> send_resp(200, entry)
   end
 
-  def user_search(conn, params) do
+  def team_search(conn, params) do
     search =
       (params["search"] || "")
       |> String.trim()
@@ -96,20 +110,42 @@ defmodule PlausibleWeb.AdminController do
 
         term = "%#{term}%"
 
-        user_id =
+        team_id =
           case Integer.parse(search) do
             {id, ""} -> id
             _ -> 0
           end
 
-        if user_id != 0 do
+        if team_id != 0 do
           []
         else
           Repo.all(
-            from u in Plausible.Auth.User,
-              where: u.id == ^user_id or ilike(u.name, ^term) or ilike(u.email, ^term),
-              order_by: [u.name, u.id],
-              select: [fragment("concat(?, ?, ?, ?)", u.name, " (", u.email, ")"), u.id],
+            from t in Teams.Team,
+              inner_join: o in assoc(t, :owners),
+              where:
+                t.id == ^team_id or ilike(t.name, ^term) or ilike(o.email, ^term) or
+                  ilike(o.name, ^term),
+              order_by: [t.name, t.id],
+              group_by: t.id,
+              select: [
+                fragment(
+                  """
+                  case when ? = ? then 
+                    string_agg(concat(?, ' (', ?, ')'), ',') 
+                  else 
+                    concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']') 
+                  end
+                  """,
+                  t.name,
+                  "My Team",
+                  o.name,
+                  o.email,
+                  t.name,
+                  o.name,
+                  o.email
+                ),
+                t.id
+              ],
               limit: 20
           )
         end
