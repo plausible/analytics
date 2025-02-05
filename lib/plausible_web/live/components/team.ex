@@ -3,11 +3,10 @@ defmodule PlausibleWeb.Live.Components.Team do
   Shared component base for listing team members/invitations
   alongside with the role dropdown.
   """
-  use Phoenix.Component, global_prefixes: ~w(x-)
+  use PlausibleWeb, :component
   import PlausibleWeb.Components.Generic
 
   alias Plausible.Auth.User
-  alias Phoenix.LiveView.JS
 
   attr :user, User, required: true
   attr :label, :string, default: nil
