@@ -131,6 +131,17 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert Enum.count(Plausible.Teams.Invitations.all(team)) == 3
     end
 
+    test "fails to accept invitation to already existing e-mail", %{
+      conn: conn,
+      user: user
+    } do
+      lv = get_liveview(conn)
+      add_invite(lv, user.email, "admin")
+
+      assert lv |> render() |> text() =~
+               "Error! Make sure the e-mail is valid and is not taken already"
+    end
+
     test "allows removing any type of entry", %{
       conn: conn,
       user: user,

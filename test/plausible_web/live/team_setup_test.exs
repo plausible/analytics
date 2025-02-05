@@ -260,6 +260,29 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert_no_emails_delivered()
     end
+
+    test "respawns membersip enqueued for deletion", %{
+      conn: conn,
+      team: team
+    } do
+      member2 = add_member(team, role: :editor, user: new_user(email: "another@example.com"))
+
+      lv = get_child_lv(conn)
+
+      remove_member(lv, 1)
+
+      add_invite(lv, "another@example.com", "viewer")
+
+      html = render(lv)
+
+      assert find(html, "#member-list .member:nth-of-type(1)") |> text() =~ "Team Member"
+      assert find(html, "#member-list .member:nth-of-type(2)") |> text() =~ "You"
+
+      save_layout(lv)
+
+      assert_no_emails_delivered()
+      assert_team_membership(member2, team, :viewer)
+    end
   end
 
   defp type_into_input(lv, id, text) do
