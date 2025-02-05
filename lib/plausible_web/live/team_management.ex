@@ -152,7 +152,13 @@ defmodule PlausibleWeb.Live.TeamManagement do
         />
       </div>
 
-      <.button :if={@mode == :team_setup} id="save-layout" type="submit" phx-click="save-team-layout">
+      <.button
+        :if={@mode == :team_setup}
+        id="save-layout"
+        type="submit"
+        phx-click="save-team-layout"
+        class="mt-8 w-full"
+      >
         Create Team
       </.button>
     </div>
