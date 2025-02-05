@@ -27,7 +27,8 @@ import {
   PopoverMenuProps,
   linkClassName,
   MenuSeparator,
-  CalendarPanel
+  CalendarPanel,
+  hiddenCalendarButtonClassName
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
@@ -150,7 +151,11 @@ export const ComparisonCalendarMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
-      <Popover.Button className="h-9" tabIndex={-1} ref={calendarButtonRef} />
+      <Popover.Button
+        className={hiddenCalendarButtonClassName}
+        tabIndex={-1}
+        ref={calendarButtonRef}
+      />
       <CalendarPanel className="mt-2">
         <DateRangeCalendar
           id="calendar"

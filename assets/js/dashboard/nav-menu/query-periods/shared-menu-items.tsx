@@ -19,6 +19,8 @@ export const datemenuButtonClassName = classNames(
   'justify-between px-2 w-full'
 )
 
+export const hiddenCalendarButtonClassName = 'outline-none h-9'
+
 export const DateMenuChevron = () => (
   <ChevronDownIcon className="hidden lg:inline-block h-4 w-4 md:h-5 md:w-5 ml-1 md:ml-2 text-gray-500" />
 )
