@@ -7,7 +7,7 @@ defmodule Plausible.Teams.Memberships do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  def all_members(team) do
+  def all(team) do
     query =
       from tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),

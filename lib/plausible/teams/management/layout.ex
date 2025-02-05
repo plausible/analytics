@@ -15,8 +15,8 @@ defmodule Plausible.Teams.Management.Layout do
 
   @spec init(Teams.Team.t()) :: t()
   def init(%Teams.Team{} = team) do
-    invitations_sent = Teams.Invitations.find_team_invitations(team)
-    all_members = Teams.Memberships.all_members(team)
+    invitations_sent = Teams.Invitations.all(team)
+    all_members = Teams.Memberships.all(team)
     build_by_email(invitations_sent ++ all_members)
   end
 

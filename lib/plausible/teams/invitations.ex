@@ -35,7 +35,7 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def find_team_invitations(%Teams.Team{} = team) do
+  def all(%Teams.Team{} = team) do
     Repo.all(
       from ti in Teams.Invitation,
         inner_join: inviter in assoc(ti, :inviter),
@@ -44,7 +44,7 @@ defmodule Plausible.Teams.Invitations do
     )
   end
 
-  def find_team_invitations(%Plausible.Auth.User{} = user) do
+  def all(%Plausible.Auth.User{} = user) do
     Repo.all(
       from ti in Teams.Invitation,
         inner_join: inviter in assoc(ti, :inviter),

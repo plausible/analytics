@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       add_invite(lv, "new4@example.com", "admin")
 
       assert lv |> render() |> text() =~ "Your account is limited to 3 team members"
-      assert Enum.count(Plausible.Teams.Invitations.find_team_invitations(team)) == 3
+      assert Enum.count(Plausible.Teams.Invitations.all(team)) == 3
     end
 
     test "allows removing any type of entry", %{
