@@ -161,7 +161,6 @@ defmodule PlausibleWeb.Live.Components.Team do
 
     ~H"""
     <.dropdown_item
-      x-on:click.prevent
       id={@id}
       href="#"
       phx-click={@click}
