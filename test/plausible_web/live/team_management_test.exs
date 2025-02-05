@@ -222,6 +222,21 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert html =~ "This operation is not supported"
     end
 
+    test "multiple-owners situation is currently not supported by the underlying services",
+         %{
+           conn: conn,
+           team: team
+         } do
+      add_member(team, role: :admin)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, 2, "owner")
+      html = render(lv)
+
+      assert html =~ "This operation is not supported"
+    end
+
     @tag :capture_log
     test "billing role is currently not supported by the underlying servies",
          %{
