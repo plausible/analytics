@@ -42,6 +42,7 @@ defmodule Plausible.Teams.TeamAdmin do
     [
       name: %{value: &team_name/1},
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
+      owners: %{value: &get_owners/1},
       other_members: %{value: &get_other_members/1},
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
       subscription_plan: %{value: &subscription_plan/1},
@@ -106,12 +107,16 @@ defmodule Plausible.Teams.TeamAdmin do
   end
 
   defp team_name(team) do
-    owners = Enum.map_join(team.owners, ", ", & &1.email)
+    case team.owners do
+      [owner] ->
+        if team.name == "My Team" do
+          owner.name
+        else
+          team.name
+        end
 
-    if team.name == "My Team" do
-      owners
-    else
-      "#{team.name} #{owners}"
+      [_ | _] ->
+        team.name
     end
   end
 
@@ -175,15 +180,42 @@ defmodule Plausible.Teams.TeamAdmin do
       "/subscriptions/customers/manage/" <> paddle_id
   end
 
+  defp get_owners(team) do
+    team.owners
+    |> Enum.map_join("<br><br>\n", fn owner ->
+      name = html_escape(owner.name)
+      email = html_escape(owner.email)
+
+      """
+      <a href="/crm/auth/user/#{owner.id}">#{name}</a><br>#{email}
+      """
+    end)
+    |> Phoenix.HTML.raw()
+  end
+
   defp get_other_members(team) do
     team.team_memberships
     |> Enum.reject(&(&1.role == :owner))
-    |> Enum.map_join(", ", fn tm -> tm.user.email <> " (#{tm.role})" end)
+    |> Enum.map_join("<br>\n", fn tm ->
+      email = html_escape(tm.user.email)
+      role = html_escape(tm.role)
+
+      """
+      <a href="/crm/auth/user/#{tm.user.id}">#{email <> " (#{role})"}</a>
+      """
+    end)
+    |> Phoenix.HTML.raw()
   end
 
   defp format_date(nil), do: "--"
 
   defp format_date(date) do
     Calendar.strftime(date, "%b %-d, %Y")
+  end
+
+  def html_escape(string) do
+    string
+    |> Phoenix.HTML.html_escape()
+    |> Phoenix.HTML.safe_to_string()
   end
 end
