@@ -259,6 +259,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
   end
 
   describe "to be revisited" do
+    setup [:create_user, :log_in, :create_team, :setup_team]
+
     @tag :capture_log
     test "billing role is currently not supported by the underlying services",
          %{
