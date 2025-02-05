@@ -1,6 +1,7 @@
 /** @format */
 
 import React, {
+  ReactNode,
   RefObject,
   useCallback,
   useEffect,
@@ -11,6 +12,7 @@ import classNames from 'classnames'
 import { popover } from '../../components/popover'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { DashboardQuery } from '../../query'
+import { Popover, Transition } from '@headlessui/react'
 
 export const linkClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -24,8 +26,6 @@ export const datemenuButtonClassName = classNames(
   popover.toggleButton.classNames.shadow,
   'justify-between px-2 w-full'
 )
-
-export const calendarPositionClassName = '*:!top-auto *:!right-0 *:!absolute'
 
 export const DateMenuChevron = () => (
   <ChevronDownIcon className="hidden lg:inline-block h-4 w-4 md:h-5 md:w-5 ml-1 md:ml-2 text-gray-500" />
@@ -51,7 +51,7 @@ export interface DropdownWithCalendarState {
   toggleDropdown: (mode: 'menu' | 'calendar') => void
   dropdownState: DropdownState
   buttonRef: RefObject<HTMLButtonElement>
-  panelRef: RefObject<HTMLDivElement>
+  calendarPanelRef: RefObject<HTMLDivElement>
 }
 
 export const useDropdownWithCalendar = ({
@@ -60,7 +60,7 @@ export const useDropdownWithCalendar = ({
   dropdownIsOpen
 }: PopoverMenuProps & { query: DashboardQuery }): DropdownWithCalendarState => {
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
+  const calendarPanelRef = useRef<HTMLDivElement>(null)
   const [currentMode, setCurrentMode] = useState<'menu' | 'calendar'>('menu')
 
   // closes dropdown when query changes
@@ -97,9 +97,9 @@ export const useDropdownWithCalendar = ({
         }
         if (
           mode === 'calendar' &&
-          typeof panelRef.current?.focus === 'function'
+          typeof calendarPanelRef.current?.focus === 'function'
         ) {
-          panelRef.current.focus()
+          calendarPanelRef.current.focus()
         }
       }
     },
@@ -107,10 +107,37 @@ export const useDropdownWithCalendar = ({
   )
 
   return {
-    panelRef,
+    calendarPanelRef,
     buttonRef,
     dropdownState: state,
     closeDropdown,
     toggleDropdown
   }
 }
+
+const calendarPositionClassName = '*:!top-auto *:!right-0 *:!absolute'
+
+type CalendarPanelProps = {
+  show: boolean
+  className?: string
+  children: ReactNode
+}
+
+export const CalendarPanel = React.forwardRef<
+  HTMLDivElement,
+  CalendarPanelProps
+>(({ children, show, className }, ref) => (
+  <Transition
+    show={show}
+    {...popover.transition.props}
+    className={classNames(
+      popover.transition.classNames.fullwidth,
+      'md:left-auto',
+      className
+    )}
+  >
+    <Popover.Panel static ref={ref} className={calendarPositionClassName}>
+      {children}
+    </Popover.Panel>
+  </Transition>
+))

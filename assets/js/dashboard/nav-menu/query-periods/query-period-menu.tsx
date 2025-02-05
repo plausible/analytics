@@ -38,7 +38,7 @@ import {
   useDropdownWithCalendar,
   DropdownWithCalendarState,
   DropdownState,
-  calendarPositionClassName
+  CalendarPanel
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
@@ -109,7 +109,7 @@ export const QueryPeriodMenu = (props: PopoverMenuProps) => {
 }
 
 const QueryPeriodMenuInner = ({
-  panelRef,
+  calendarPanelRef,
   dropdownState,
   closeDropdown,
   toggleDropdown
@@ -142,65 +142,61 @@ const QueryPeriodMenuInner = ({
   return (
     <>
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
+      <CalendarPanel
+        ref={calendarPanelRef}
+        show={dropdownState === DropdownState.CALENDAR}
+        className="mt-2"
+      >
+        <DateRangeCalendar
+          id="calendar"
+          onCloseWithSelection={(selection) => {
+            navigate({
+              search: getSearchToApplyCustomDates(selection)
+            })
+            closeDropdown()
+          }}
+          minDate={site.statsBegin}
+          maxDate={formatISO(nowForSite(site))}
+          defaultDates={
+            query.from && query.to
+              ? [formatISO(query.from), formatISO(query.to)]
+              : undefined
+          }
+        />
+      </CalendarPanel>
       <Transition
+        show={dropdownState === DropdownState.MENU}
         {...popover.transition.props}
         className={classNames(
           'mt-2',
           popover.transition.classNames.fullwidth,
-          dropdownState === DropdownState.CALENDAR
-            ? 'md-left-auto'
-            : 'md:left-auto md:w-56'
+          'md:left-auto md:w-56'
         )}
       >
         <Popover.Panel
-          ref={panelRef}
-          className={
-            dropdownState === DropdownState.CALENDAR
-              ? calendarPositionClassName
-              : popover.panel.classNames.roundedSheet
-          }
+          static
+          className={popover.panel.classNames.roundedSheet}
           data-testid="datemenu"
         >
-          {dropdownState === DropdownState.CALENDAR && (
-            <DateRangeCalendar
-              id="calendar"
-              onCloseWithSelection={(selection) => {
-                navigate({
-                  search: getSearchToApplyCustomDates(selection)
-                })
-                closeDropdown()
-              }}
-              minDate={site.statsBegin}
-              maxDate={formatISO(nowForSite(site))}
-              defaultDates={
-                query.from && query.to
-                  ? [formatISO(query.from), formatISO(query.to)]
-                  : undefined
-              }
-            />
-          )}
-          {dropdownState === DropdownState.MENU &&
-            groups.map((group, index) => (
-              <React.Fragment key={index}>
-                {group.map(
-                  ([[label, keyboardKey], { search, isActive, onEvent }]) => (
-                    <AppNavigationLink
-                      key={label}
-                      data-selected={isActive({ site, query })}
-                      className={linkClassName}
-                      search={search}
-                      onClick={onEvent && ((e) => onEvent(e))}
-                    >
-                      {label}
-                      {!!keyboardKey && (
-                        <KeybindHint>{keyboardKey}</KeybindHint>
-                      )}
-                    </AppNavigationLink>
-                  )
-                )}
-                {index < groups.length - 1 && <MenuSeparator />}
-              </React.Fragment>
-            ))}
+          {groups.map((group, index) => (
+            <React.Fragment key={index}>
+              {group.map(
+                ([[label, keyboardKey], { search, isActive, onEvent }]) => (
+                  <AppNavigationLink
+                    key={label}
+                    data-selected={isActive({ site, query })}
+                    className={linkClassName}
+                    search={search}
+                    onClick={onEvent && ((e) => onEvent(e))}
+                  >
+                    {label}
+                    {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}
+                  </AppNavigationLink>
+                )
+              )}
+              {index < groups.length - 1 && <MenuSeparator />}
+            </React.Fragment>
+          ))}
         </Popover.Panel>
       </Transition>
     </>

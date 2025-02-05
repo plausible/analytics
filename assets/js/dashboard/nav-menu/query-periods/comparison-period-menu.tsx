@@ -30,13 +30,13 @@ import {
   useDropdownWithCalendar,
   DropdownWithCalendarState,
   DropdownState,
-  calendarPositionClassName
+  CalendarPanel
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 
 export const ComparisonPeriodMenuItems = ({
-  panelRef,
+  calendarPanelRef,
   dropdownState,
   closeDropdown,
   toggleDropdown
@@ -50,106 +50,100 @@ export const ComparisonPeriodMenuItems = ({
   }
 
   return (
-    <Transition
-      {...popover.transition.props}
-      className={classNames(
-        'mt-2',
-        popover.transition.classNames.fullwidth,
-        dropdownState === DropdownState.CALENDAR
-          ? 'md:left-auto'
-          : 'md:left-auto md:w-56'
-      )}
-    >
-      <Popover.Panel
-        ref={panelRef}
-        className={
-          dropdownState === DropdownState.CALENDAR
-            ? calendarPositionClassName
-            : popover.panel.classNames.roundedSheet
-        }
+    <>
+      <CalendarPanel
+        ref={calendarPanelRef}
+        show={dropdownState === DropdownState.CALENDAR}
+        className="mt-2"
       >
-        {dropdownState === DropdownState.CALENDAR && (
-          <DateRangeCalendar
-            id="calendar"
-            onCloseWithSelection={(selection) => {
-              navigate({
-                search: getSearchToApplyCustomComparisonDates(selection)
-              })
-              closeDropdown()
-            }}
-            minDate={site.statsBegin}
-            maxDate={formatISO(nowForSite(site))}
-            defaultDates={
-              query.compare_from && query.compare_to
-                ? [formatISO(query.compare_from), formatISO(query.compare_to)]
-                : undefined
-            }
-          />
+        <DateRangeCalendar
+          id="calendar"
+          onCloseWithSelection={(selection) => {
+            navigate({
+              search: getSearchToApplyCustomComparisonDates(selection)
+            })
+            closeDropdown()
+          }}
+          minDate={site.statsBegin}
+          maxDate={formatISO(nowForSite(site))}
+          defaultDates={
+            query.compare_from && query.compare_to
+              ? [formatISO(query.compare_from), formatISO(query.compare_to)]
+              : undefined
+          }
+        />
+      </CalendarPanel>
+      <Transition
+        show={dropdownState === DropdownState.MENU}
+        {...popover.transition.props}
+        className={classNames(
+          'mt-2',
+          popover.transition.classNames.fullwidth,
+          'md:left-auto md:w-56'
         )}
-        {dropdownState === DropdownState.MENU && (
-          <>
-            {[
-              ComparisonMode.off,
-              ComparisonMode.previous_period,
-              ComparisonMode.year_over_year
-            ].map((comparisonMode) => (
+      >
+        <Popover.Panel static className={popover.panel.classNames.roundedSheet}>
+          {[
+            ComparisonMode.off,
+            ComparisonMode.previous_period,
+            ComparisonMode.year_over_year
+          ].map((comparisonMode) => (
+            <AppNavigationLink
+              key={comparisonMode}
+              data-selected={query.comparison === comparisonMode}
+              className={linkClassName}
+              search={(search) => ({
+                ...search,
+                ...clearedComparisonSearch,
+                comparison: comparisonMode
+              })}
+              onClick={closeDropdown}
+            >
+              {COMPARISON_MODES[comparisonMode]}
+            </AppNavigationLink>
+          ))}
+          <AppNavigationLink
+            data-selected={query.comparison === ComparisonMode.custom}
+            className={linkClassName}
+            search={(s) => s}
+            onClick={() => {
+              toggleDropdown('calendar')
+            }}
+          >
+            {COMPARISON_MODES[ComparisonMode.custom]}
+          </AppNavigationLink>
+          {query.comparison !== ComparisonMode.custom && (
+            <>
+              <MenuSeparator />
               <AppNavigationLink
-                key={comparisonMode}
-                data-selected={query.comparison === comparisonMode}
+                data-selected={query.match_day_of_week === true}
                 className={linkClassName}
-                search={(search) => ({
-                  ...search,
-                  ...clearedComparisonSearch,
-                  comparison: comparisonMode
-                })}
+                search={(s) => ({ ...s, match_day_of_week: true })}
                 onClick={closeDropdown}
               >
-                {COMPARISON_MODES[comparisonMode]}
+                {
+                  COMPARISON_MATCH_MODE_LABELS[
+                    ComparisonMatchMode.MatchDayOfWeek
+                  ]
+                }
               </AppNavigationLink>
-            ))}
-            <AppNavigationLink
-              data-selected={query.comparison === ComparisonMode.custom}
-              className={linkClassName}
-              search={(s) => s}
-              onClick={() => {
-                toggleDropdown('calendar')
-              }}
-            >
-              {COMPARISON_MODES[ComparisonMode.custom]}
-            </AppNavigationLink>
-            {query.comparison !== ComparisonMode.custom && (
-              <>
-                <MenuSeparator />
-                <AppNavigationLink
-                  data-selected={query.match_day_of_week === true}
-                  className={linkClassName}
-                  search={(s) => ({ ...s, match_day_of_week: true })}
-                  onClick={closeDropdown}
-                >
-                  {
-                    COMPARISON_MATCH_MODE_LABELS[
-                      ComparisonMatchMode.MatchDayOfWeek
-                    ]
-                  }
-                </AppNavigationLink>
-                <AppNavigationLink
-                  data-selected={query.match_day_of_week === false}
-                  className={linkClassName}
-                  search={(s) => ({ ...s, match_day_of_week: false })}
-                  onClick={closeDropdown}
-                >
-                  {
-                    COMPARISON_MATCH_MODE_LABELS[
-                      ComparisonMatchMode.MatchExactDate
-                    ]
-                  }
-                </AppNavigationLink>
-              </>
-            )}
-          </>
-        )}
-      </Popover.Panel>
-    </Transition>
+              <AppNavigationLink
+                data-selected={query.match_day_of_week === false}
+                className={linkClassName}
+                search={(s) => ({ ...s, match_day_of_week: false })}
+                onClick={closeDropdown}
+              >
+                {
+                  COMPARISON_MATCH_MODE_LABELS[
+                    ComparisonMatchMode.MatchExactDate
+                  ]
+                }
+              </AppNavigationLink>
+            </>
+          )}
+        </Popover.Panel>
+      </Transition>
+    </>
   )
 }
 
