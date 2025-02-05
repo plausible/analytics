@@ -295,7 +295,7 @@ defmodule PlausibleWeb.Router do
       post "/event", Api.ExternalController, :event
       get "/error", Api.ExternalController, :error
       # Remove this once all external checks are migration to new /system/health/* checks
-      get "/health", Api.SystemController, :liveness
+      get "/health", Api.SystemController, :readiness
     end
 
     scope "/system" do
