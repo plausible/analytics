@@ -422,5 +422,24 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       assert_no_emails_delivered()
     end
+
+    test "guests promotion", %{user: user, team: team} do
+      site = new_site(owner: user)
+      u2 = new_user()
+
+      add_guest(site, user: u2, role: :viewer)
+      assert_guest_membership(team, site, u2, :viewer)
+
+      layout = Layout.init(team)
+      assert Layout.has_guests?(layout)
+
+      layout
+      |> Layout.update_role(u2.email, :viewer)
+      |> Layout.persist(%{current_user: user, my_team: team})
+
+      refute team |> Layout.init() |> Layout.has_guests?()
+
+      assert_non_guest_membership(team, site, u2)
+    end
   end
 end

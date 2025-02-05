@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.TeamControllerTest do
+  # XXX: remove this whole controller -> rewrite to UpdateRole tests
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
   use Plausible.Teams.Test

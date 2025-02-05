@@ -353,6 +353,21 @@ defmodule Plausible.Teams.Test do
            )
   end
 
+  def assert_non_guest_membership(team, site, user) do
+    assert team_membership =
+             Repo.get_by(Plausible.Teams.Membership,
+               user_id: user.id,
+               team_id: team.id
+             )
+
+    assert team_membership.role != :guest
+
+    refute Repo.get_by(Plausible.Teams.GuestMembership,
+             team_membership_id: team_membership.id,
+             site_id: site.id
+           )
+  end
+
   def subscription_of(%Plausible.Auth.User{} = user) do
     user
     |> team_of()
