@@ -187,7 +187,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
       ) do
     email = String.trim(email)
 
-    existing_entry = Layout.get(layout, email)
+    existing_entry = Map.get(layout, email)
 
     socket =
       cond do

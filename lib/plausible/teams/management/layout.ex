@@ -24,14 +24,11 @@ defmodule Plausible.Teams.Management.Layout do
           t()
   def build_by_email(entities) do
     Enum.reduce(entities, %{}, fn
-      %Teams.Invitation{id: existing} = invitation, acc when is_integer(existing) ->
-        put(acc, invitation)
-
-      %Teams.Invitation{id: nil} = pending, acc ->
-        put(acc, pending)
+      %Teams.Invitation{} = invitation, acc ->
+        Map.put(acc, invitation.email, Entry.new(invitation))
 
       %Teams.Membership{} = membership, acc ->
-        put(
+        Map.put(
           acc,
           membership.user.email,
           Entry.new(membership)
@@ -61,41 +58,22 @@ defmodule Plausible.Teams.Management.Layout do
     )
   end
 
-  @spec put(t(), Entry.t() | Teams.Invitation.t() | Teams.Membership.t()) :: t()
-  def put(layout, %Entry{} = entry) do
-    put(layout, entry.email, entry)
-  end
-
-  def put(layout, entity) do
-    put(layout, Entry.new(entity))
-  end
-
-  @spec put(t(), String.t(), Entry.t()) :: t()
-  def put(layout, email, entry) do
-    Map.put(layout, email, entry)
-  end
-
-  @spec get(t(), String.t()) :: nil | Entry.t()
-  def get(layout, email) do
-    Map.get(layout, email)
-  end
-
   @spec update_role(t(), String.t(), atom()) :: t()
   def update_role(layout, email, role) do
     entry = Map.fetch!(layout, email)
-    put(layout, email, Entry.patch(entry, role: role, queued_op: :update))
+    Map.put(layout, email, Entry.patch(entry, role: role, queued_op: :update))
   end
 
   @spec schedule_send(t(), String.t(), atom(), Keyword.t()) :: t()
   def schedule_send(layout, email, role, entry_attrs \\ []) do
     invitation = %Teams.Invitation{email: email, role: role}
-    put(layout, email, Entry.new(invitation, Keyword.merge(entry_attrs, queued_op: :send)))
+    Map.put(layout, email, Entry.new(invitation, Keyword.merge(entry_attrs, queued_op: :send)))
   end
 
   @spec schedule_delete(t(), String.t()) :: t()
   def schedule_delete(layout, email) do
     entry = Map.fetch!(layout, email)
-    put(layout, email, Entry.patch(entry, queued_op: :delete))
+    Map.put(layout, email, Entry.patch(entry, queued_op: :delete))
   end
 
   @spec verify_removable(t(), String.t()) :: :ok | {:error, String.t()}

@@ -50,11 +50,9 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       layout =
         layout
-        |> Layout.put(
-          membership(name: "Aa", email: "00-invitation-accepted@example.com", role: :viewer)
-        )
-        |> Layout.put(invitation_pending("00-invitation-pending@example.com"))
-        |> Layout.put(invitation_sent("00-invitation-sent@example.com"))
+        |> put(membership(name: "Aa", email: "00-invitation-accepted@example.com", role: :viewer))
+        |> put(invitation_pending("00-invitation-pending@example.com"))
+        |> put(invitation_sent("00-invitation-sent@example.com"))
 
       assert [
                {"00-invitation-pending@example.com", %Entry{}},
@@ -78,7 +76,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
       refute Layout.removable?(layout, "owner@example.com")
 
       layout =
-        Layout.put(
+        put(
           layout,
           invitation_sent("maybe-owner@example.com", role: :owner)
         )
@@ -86,7 +84,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
       refute Layout.removable?(layout, "owner@example.com")
 
       layout =
-        Layout.put(
+        put(
           layout,
           membership(
             email: "secondary-owner@example.com",
@@ -112,7 +110,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
       assert %Entry{queued_op: :update, role: :owner} =
                sample_layout()
                |> Layout.update_role("current@example.com", :owner)
-               |> Layout.get("current@example.com")
+               |> Map.get("current@example.com")
 
       assert_raise KeyError, ~r/not found/, fn ->
         Layout.update_role(sample_layout(), "x", :owner)
@@ -128,7 +126,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
              } =
                sample_layout()
                |> Layout.schedule_send("new@example.com", :admin)
-               |> Layout.get("new@example.com")
+               |> Map.get("new@example.com")
 
       assert %Entry{
                queued_op: :send,
@@ -138,14 +136,14 @@ defmodule Plausible.Teams.Management.LayoutTest do
              } =
                sample_layout()
                |> Layout.schedule_send("new@example.com", :admin, name: "Joe Doe")
-               |> Layout.get("new@example.com")
+               |> Map.get("new@example.com")
     end
 
     test "schedule_delete/2" do
       assert %Entry{queued_op: :delete} =
                sample_layout()
                |> Layout.schedule_delete("current@example.com")
-               |> Layout.get("current@example.com")
+               |> Map.get("current@example.com")
 
       assert_raise KeyError, ~r/not found/, fn ->
         Layout.schedule_delete(sample_layout(), "x")
@@ -161,7 +159,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
       refute Layout.has_guests?(layout)
 
       layout =
-        Layout.put(
+        put(
           layout,
           membership(email: "guest@example.com", role: :guest)
         )
@@ -178,7 +176,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
     test "overwrite" do
       assert %Entry{queued_op: :send, type: :invitation_pending} =
                sample_layout()
-               |> Layout.put(
+               |> put(
                  membership(
                    name: "Aa",
                    email: "00-invitation-accepted@example.com",
@@ -186,7 +184,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
                  )
                )
                |> Layout.schedule_send("current@example.com", :admin)
-               |> Layout.get("current@example.com")
+               |> Map.get("current@example.com")
     end
 
     defp invitation_pending(email, attrs \\ []) do
@@ -290,7 +288,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
       )
 
       layout = Layout.init(team)
-      assert %{type: :invitation_sent} = Layout.get(layout, "test@example.com")
+      assert %{type: :invitation_sent} = Map.get(layout, "test@example.com")
     end
 
     test "membership removal email goes out", %{user: user, team: team} do
@@ -322,10 +320,8 @@ defmodule Plausible.Teams.Management.LayoutTest do
                team
                |> Layout.init()
                |> Layout.schedule_delete(user.email)
-               |> Layout.put(
-                 invitation_pending("00-invitation-pending@example.com", role: :owner)
-               )
-               |> Layout.put(invitation_sent("00-invitation-sent@example.com", role: :owner))
+               |> put(invitation_pending("00-invitation-pending@example.com", role: :owner))
+               |> put(invitation_sent("00-invitation-sent@example.com", role: :owner))
                |> Layout.persist(%{current_user: user, my_team: team})
 
       assert {:error, :only_one_owner} =
@@ -441,5 +437,10 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       assert_non_guest_membership(team, site, u2)
     end
+  end
+
+  def put(layout, entity) do
+    entry = Entry.new(entity)
+    Map.put(layout, entry.email, entry)
   end
 end
