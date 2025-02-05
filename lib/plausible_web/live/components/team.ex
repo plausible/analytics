@@ -133,10 +133,11 @@ defmodule PlausibleWeb.Live.Components.Team do
   attr :role, :atom, required: true
   attr :disabled, :boolean, default: false
   attr :dispatch_animation?, :boolean, default: false
-  slot :inner_block, required: true
   attr :rest, :global
   attr :user, :map, default: %{email: nil}
-  attr(:id, :string, default: nil)
+  attr :id, :string, default: nil
+
+  slot :inner_block, required: true
 
   def role_item(assigns) do
     click =

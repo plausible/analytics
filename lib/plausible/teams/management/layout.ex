@@ -39,9 +39,14 @@ defmodule Plausible.Teams.Management.Layout do
     end)
   end
 
-  @spec active_size(t()) :: non_neg_integer()
-  def active_size(layout) do
+  @spec active_count(t()) :: non_neg_integer()
+  def active_count(layout) do
     Enum.count(layout, fn {_, entry} -> entry.queued_op != :delete end)
+  end
+
+  @spec owners_count(t()) :: non_neg_integer()
+  def owners_count(layout) do
+    Enum.count(layout, fn {_, entry} -> entry.queued_op != :delete and entry.role == :owner end)
   end
 
   @spec has_guests?(t()) :: boolean()

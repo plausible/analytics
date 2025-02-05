@@ -163,6 +163,36 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert lv |> render() |> text() =~ "Your account is limited to 3 team members"
     end
 
+    test "all options are disabled for the sole owner", %{conn: conn} do
+      lv = get_child_lv(conn)
+
+      options =
+        lv
+        |> render()
+        |> find(~s|#member-list .member a|)
+
+      assert Enum.empty?(options)
+    end
+
+    test "in case of >1 owner, the one owner limit is still enforced", %{conn: conn, team: team} do
+      _other_owner = add_member(team, role: :owner)
+      lv = get_child_lv(conn)
+
+      options =
+        lv
+        |> render()
+        |> find(~s|#member-list .member a|)
+
+      refute Enum.empty?(options)
+
+      change_role(lv, 1, "viewer")
+
+      html = lv |> render()
+
+      assert [_ | _] = find(html, "#member-list .member:nth-of-type(1) a")
+      assert find(html, "#member-list .member:nth-of-type(2) a") == []
+    end
+
     test "allows removing any type of entry", %{
       conn: conn,
       user: user,

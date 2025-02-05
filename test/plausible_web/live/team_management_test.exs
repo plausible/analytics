@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         |> html_response(200)
         |> text()
 
-      assert resp =~ "Add, remove or change your team memberships."
+      assert resp =~ "Add, remove or change your team memberships"
 
       refute element_exists?(resp, ~s|button[phx-click="save-team-layout"]|)
     end
@@ -200,6 +200,43 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       )
 
       assert_no_emails_delivered()
+    end
+  end
+
+  describe "to be revisited" do
+    setup [:create_user, :log_in, :create_team, :setup_team]
+
+    test "guest->owner promotion is currently not supported by the underlying services",
+         %{
+           conn: conn,
+           user: user
+         } do
+      site = new_site(owner: user)
+      add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
+
+      lv = get_liveview(conn)
+
+      change_role(lv, 1, "owner", "#guest-list .guest")
+      html = render(lv)
+
+      assert html =~ "This operation is not supported"
+    end
+
+    @tag :capture_log
+    test "billing role is currently not supported by the underlying servies",
+         %{
+           conn: conn,
+           team: team
+         } do
+      Process.flag(:trap_exit, true)
+      _member2 = add_member(team, role: :admin)
+
+      lv = get_liveview(conn)
+
+      assert :unsupported == change_role(lv, 2, "billing")
+    catch
+      _, _ ->
+        :unsupported
     end
   end
 

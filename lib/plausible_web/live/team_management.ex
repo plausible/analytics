@@ -23,22 +23,24 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
   defp reset(%{assigns: %{current_user: current_user, my_team: my_team}} = socket) do
     {:ok, my_role} = Teams.Memberships.team_role(my_team, current_user)
-    # XXX handle redirect here
-    true = my_role in [:owner, :admin]
 
-    layout = Layout.init(my_team)
-    team_members_limit = Plausible.Teams.Billing.team_member_limit(my_team)
+    if my_role not in [:owner, :admin] do
+      redirect(socket, to: Routes.settings_path(socket, :team_general))
+    else
+      layout = Layout.init(my_team)
+      team_members_limit = Plausible.Teams.Billing.team_member_limit(my_team)
 
-    assign(socket,
-      attempted_save?: false,
-      team_members_limit: team_members_limit,
-      guests_limit: 10,
-      layout: layout,
-      my_role: my_role,
-      team_layout_changed?: false,
-      input_role: :viewer,
-      input_email: ""
-    )
+      assign(socket,
+        attempted_save?: false,
+        team_members_limit: team_members_limit,
+        guests_limit: 10,
+        layout: layout,
+        my_role: my_role,
+        team_layout_changed?: false,
+        input_role: :viewer,
+        input_email: ""
+      )
+    end
   end
 
   def render(assigns) do
@@ -49,7 +51,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
       :if={
         (not @team_layout_changed? or @attempted_save?) and
           not Plausible.Billing.Quota.below_limit?(
-            Layout.active_size(@layout) - 1,
+            Layout.active_count(@layout) - 1,
             @team_members_limit
           )
       }
@@ -129,6 +131,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
           label={entry_label(entry, @current_user)}
           my_role={@my_role}
           remove_disabled={not Layout.removable?(@layout, email)}
+          disabled={entry.role == :owner && Layout.owners_count(@layout) == 1}
         />
       </div>
 
@@ -298,6 +301,13 @@ defmodule PlausibleWeb.Live.TeamManagement do
         |> reset()
         |> put_live_flash(:success, "Team layout updated successfully")
 
+      {{:error, :only_one_owner}, _} ->
+        socket
+        |> put_live_flash(
+          :error,
+          "The team has to have at least one owner"
+        )
+
       {{:error, {:over_limit, limit}}, _} ->
         socket
         |> put_live_flash(
@@ -305,9 +315,9 @@ defmodule PlausibleWeb.Live.TeamManagement do
           "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit"
         )
 
-      {{:error, error}, _} ->
+      {{:error, :permission_denied}, _} ->
         socket
-        |> put_live_flash(:error, inspect(error))
+        |> put_live_flash(:error, "This operation is not supported")
     end
   end
 

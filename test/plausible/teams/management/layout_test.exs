@@ -71,7 +71,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
              ] = Layout.sorted_for_display(layout)
     end
 
-    test "removable?/2" do
+    test "removable?/2 + counters" do
       layout = sample_layout()
       assert Layout.removable?(layout, "invitation-pending@example.com")
       assert Layout.removable?(layout, "current@example.com")
@@ -97,7 +97,13 @@ defmodule Plausible.Teams.Management.LayoutTest do
       assert Layout.removable?(layout, "owner@example.com")
       assert Layout.removable?(layout, "secondary-owner@example.com")
 
+      assert Layout.owners_count(layout) == 3
+      assert Layout.active_count(layout) == 9
+
       layout = Layout.schedule_delete(layout, "owner@example.com")
+
+      assert Layout.owners_count(layout) == 2
+      assert Layout.active_count(layout) == 8
 
       refute Layout.removable?(layout, "secondary-owner@example.com")
     end
@@ -310,6 +316,28 @@ defmodule Plausible.Teams.Management.LayoutTest do
                |> Layout.schedule_send("test2@example.com", :admin)
                |> Layout.schedule_send("test3@example.com", :admin)
                |> Layout.schedule_send("test4@example.com", :admin)
+               |> Layout.persist(%{current_user: user, my_team: team})
+
+      assert {:error, :only_one_owner} =
+               team
+               |> Layout.init()
+               |> Layout.schedule_delete(user.email)
+               |> Layout.put(
+                 invitation_pending("00-invitation-pending@example.com", role: :owner)
+               )
+               |> Layout.put(invitation_sent("00-invitation-sent@example.com", role: :owner))
+               |> Layout.persist(%{current_user: user, my_team: team})
+
+      assert {:error, :only_one_owner} =
+               team
+               |> Layout.init()
+               |> Layout.update_role(user.email, :viewer)
+               |> Layout.persist(%{current_user: user, my_team: team})
+
+      assert {:error, :already_a_member} =
+               team
+               |> Layout.init()
+               |> Layout.schedule_send(user.email, :admin)
                |> Layout.persist(%{current_user: user, my_team: team})
 
       assert_no_emails_delivered()
