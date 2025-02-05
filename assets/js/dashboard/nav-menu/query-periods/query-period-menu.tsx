@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
@@ -35,9 +35,6 @@ import {
   PopoverMenuProps,
   linkClassName,
   MenuSeparator,
-  useDropdownWithCalendar,
-  DropdownWithCalendarState,
-  DropdownState,
   CalendarPanel
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
@@ -85,14 +82,18 @@ function QueryPeriodMenuKeybinds({
   )
 }
 
-export const QueryPeriodMenu = (props: PopoverMenuProps) => {
+export const QueryPeriodMenu = ({
+  closeDropdown,
+  calendarButtonRef
+}: PopoverMenuProps) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
-
-  const { buttonRef, ...rest } = useDropdownWithCalendar({
-    ...props,
-    query
-  })
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const toggleCalendar = () => {
+    if (typeof calendarButtonRef.current?.click === 'function') {
+      calendarButtonRef.current.click()
+    }
+  }
 
   return (
     <>
@@ -103,20 +104,23 @@ export const QueryPeriodMenu = (props: PopoverMenuProps) => {
         </span>
         <DateMenuChevron />
       </Popover.Button>
-      <QueryPeriodMenuInner {...rest} />
+      <QueryPeriodMenuInner
+        toggleCalendar={toggleCalendar}
+        closeDropdown={closeDropdown}
+      />
     </>
   )
 }
 
 const QueryPeriodMenuInner = ({
-  calendarPanelRef,
-  dropdownState,
   closeDropdown,
-  toggleDropdown
-}: Omit<DropdownWithCalendarState, 'buttonRef'>) => {
+  toggleCalendar
+}: {
+  closeDropdown: () => void
+  toggleCalendar: () => void
+}) => {
   const site = useSiteContext()
   const { query } = useQueryContext()
-  const navigate = useAppNavigate()
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -129,7 +133,7 @@ const QueryPeriodMenuInner = ({
           {
             search: (s) => s,
             isActive: ({ query }) => query.period === QueryPeriod.custom,
-            onEvent: () => toggleDropdown('calendar')
+            onEvent: toggleCalendar
           }
         ]
       ],
@@ -137,35 +141,12 @@ const QueryPeriodMenuInner = ({
         ? []
         : [[compareLink]]
     })
-  }, [site, query, toggleDropdown, closeDropdown])
+  }, [site, query, closeDropdown, toggleCalendar])
 
   return (
     <>
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
-      <CalendarPanel
-        ref={calendarPanelRef}
-        show={dropdownState === DropdownState.CALENDAR}
-        className="mt-2"
-      >
-        <DateRangeCalendar
-          id="calendar"
-          onCloseWithSelection={(selection) => {
-            navigate({
-              search: getSearchToApplyCustomDates(selection)
-            })
-            closeDropdown()
-          }}
-          minDate={site.statsBegin}
-          maxDate={formatISO(nowForSite(site))}
-          defaultDates={
-            query.from && query.to
-              ? [formatISO(query.from), formatISO(query.to)]
-              : undefined
-          }
-        />
-      </CalendarPanel>
       <Transition
-        show={dropdownState === DropdownState.MENU}
         {...popover.transition.props}
         className={classNames(
           'mt-2',
@@ -174,7 +155,6 @@ const QueryPeriodMenuInner = ({
         )}
       >
         <Popover.Panel
-          static
           className={popover.panel.classNames.roundedSheet}
           data-testid="datemenu"
         >
@@ -199,6 +179,40 @@ const QueryPeriodMenuInner = ({
           ))}
         </Popover.Panel>
       </Transition>
+    </>
+  )
+}
+
+export const MainCalendar = ({
+  closeDropdown,
+  calendarButtonRef
+}: PopoverMenuProps) => {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
+  const navigate = useAppNavigate()
+
+  return (
+    <>
+      <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
+      <Popover.Button className="h-9" tabIndex={-1} ref={calendarButtonRef} />
+      <CalendarPanel className="mt-2">
+        <DateRangeCalendar
+          id="calendar"
+          onCloseWithSelection={(selection) => {
+            navigate({
+              search: getSearchToApplyCustomDates(selection)
+            })
+            closeDropdown()
+          }}
+          minDate={site.statsBegin}
+          maxDate={formatISO(nowForSite(site))}
+          defaultDates={
+            query.from && query.to
+              ? [formatISO(query.from), formatISO(query.to)]
+              : undefined
+          }
+        />
+      </CalendarPanel>
     </>
   )
 }

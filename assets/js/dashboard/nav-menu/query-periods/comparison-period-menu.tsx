@@ -1,6 +1,6 @@
 /** @format */
 
-import React from 'react'
+import React, { useRef } from 'react'
 import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
@@ -27,22 +27,18 @@ import {
   PopoverMenuProps,
   linkClassName,
   MenuSeparator,
-  useDropdownWithCalendar,
-  DropdownWithCalendarState,
-  DropdownState,
   CalendarPanel
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 
 export const ComparisonPeriodMenuItems = ({
-  calendarPanelRef,
-  dropdownState,
   closeDropdown,
-  toggleDropdown
-}: Omit<DropdownWithCalendarState, 'buttonRef'>) => {
-  const site = useSiteContext()
-  const navigate = useAppNavigate()
+  toggleCalendar
+}: {
+  closeDropdown: () => void
+  toggleCalendar: () => void
+}) => {
   const { query } = useQueryContext()
 
   if (!isComparisonEnabled(query.comparison)) {
@@ -50,12 +46,112 @@ export const ComparisonPeriodMenuItems = ({
   }
 
   return (
+    <Transition
+      {...popover.transition.props}
+      className={classNames(
+        'mt-2',
+        popover.transition.classNames.fullwidth,
+        'md:left-auto md:w-56'
+      )}
+    >
+      <Popover.Panel className={popover.panel.classNames.roundedSheet}>
+        {[
+          ComparisonMode.off,
+          ComparisonMode.previous_period,
+          ComparisonMode.year_over_year
+        ].map((comparisonMode) => (
+          <AppNavigationLink
+            key={comparisonMode}
+            data-selected={query.comparison === comparisonMode}
+            className={linkClassName}
+            search={(search) => ({
+              ...search,
+              ...clearedComparisonSearch,
+              comparison: comparisonMode
+            })}
+            onClick={closeDropdown}
+          >
+            {COMPARISON_MODES[comparisonMode]}
+          </AppNavigationLink>
+        ))}
+        <AppNavigationLink
+          data-selected={query.comparison === ComparisonMode.custom}
+          className={linkClassName}
+          search={(s) => s}
+          onClick={toggleCalendar}
+        >
+          {COMPARISON_MODES[ComparisonMode.custom]}
+        </AppNavigationLink>
+        {query.comparison !== ComparisonMode.custom && (
+          <>
+            <MenuSeparator />
+            <AppNavigationLink
+              data-selected={query.match_day_of_week === true}
+              className={linkClassName}
+              search={(s) => ({ ...s, match_day_of_week: true })}
+              onClick={closeDropdown}
+            >
+              {COMPARISON_MATCH_MODE_LABELS[ComparisonMatchMode.MatchDayOfWeek]}
+            </AppNavigationLink>
+            <AppNavigationLink
+              data-selected={query.match_day_of_week === false}
+              className={linkClassName}
+              search={(s) => ({ ...s, match_day_of_week: false })}
+              onClick={closeDropdown}
+            >
+              {COMPARISON_MATCH_MODE_LABELS[ComparisonMatchMode.MatchExactDate]}
+            </AppNavigationLink>
+          </>
+        )}
+      </Popover.Panel>
+    </Transition>
+  )
+}
+
+export const ComparisonPeriodMenu = ({
+  calendarButtonRef,
+  closeDropdown
+}: PopoverMenuProps) => {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
+
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const toggleCalendar = () => {
+    if (typeof calendarButtonRef.current?.click === 'function') {
+      calendarButtonRef.current.click()
+    }
+  }
+
+  return (
     <>
-      <CalendarPanel
-        ref={calendarPanelRef}
-        show={dropdownState === DropdownState.CALENDAR}
-        className="mt-2"
-      >
+      <BlurMenuButtonOnEscape targetRef={buttonRef} />
+      <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
+        <span className={popover.toggleButton.classNames.truncatedText}>
+          {getCurrentComparisonPeriodDisplayName({ site, query })}
+        </span>
+        <DateMenuChevron />
+      </Popover.Button>
+      <ComparisonPeriodMenuItems
+        closeDropdown={closeDropdown}
+        toggleCalendar={toggleCalendar}
+      />
+    </>
+  )
+}
+
+export const ComparisonCalendarMenu = ({
+  closeDropdown,
+  calendarButtonRef
+}: PopoverMenuProps) => {
+  const site = useSiteContext()
+  const navigate = useAppNavigate()
+  const { query } = useQueryContext()
+
+  return (
+    <>
+      <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
+      <Popover.Button className="h-9" tabIndex={-1} ref={calendarButtonRef} />
+      <CalendarPanel className="mt-2">
         <DateRangeCalendar
           id="calendar"
           onCloseWithSelection={(selection) => {
@@ -73,98 +169,6 @@ export const ComparisonPeriodMenuItems = ({
           }
         />
       </CalendarPanel>
-      <Transition
-        show={dropdownState === DropdownState.MENU}
-        {...popover.transition.props}
-        className={classNames(
-          'mt-2',
-          popover.transition.classNames.fullwidth,
-          'md:left-auto md:w-56'
-        )}
-      >
-        <Popover.Panel static className={popover.panel.classNames.roundedSheet}>
-          {[
-            ComparisonMode.off,
-            ComparisonMode.previous_period,
-            ComparisonMode.year_over_year
-          ].map((comparisonMode) => (
-            <AppNavigationLink
-              key={comparisonMode}
-              data-selected={query.comparison === comparisonMode}
-              className={linkClassName}
-              search={(search) => ({
-                ...search,
-                ...clearedComparisonSearch,
-                comparison: comparisonMode
-              })}
-              onClick={closeDropdown}
-            >
-              {COMPARISON_MODES[comparisonMode]}
-            </AppNavigationLink>
-          ))}
-          <AppNavigationLink
-            data-selected={query.comparison === ComparisonMode.custom}
-            className={linkClassName}
-            search={(s) => s}
-            onClick={() => {
-              toggleDropdown('calendar')
-            }}
-          >
-            {COMPARISON_MODES[ComparisonMode.custom]}
-          </AppNavigationLink>
-          {query.comparison !== ComparisonMode.custom && (
-            <>
-              <MenuSeparator />
-              <AppNavigationLink
-                data-selected={query.match_day_of_week === true}
-                className={linkClassName}
-                search={(s) => ({ ...s, match_day_of_week: true })}
-                onClick={closeDropdown}
-              >
-                {
-                  COMPARISON_MATCH_MODE_LABELS[
-                    ComparisonMatchMode.MatchDayOfWeek
-                  ]
-                }
-              </AppNavigationLink>
-              <AppNavigationLink
-                data-selected={query.match_day_of_week === false}
-                className={linkClassName}
-                search={(s) => ({ ...s, match_day_of_week: false })}
-                onClick={closeDropdown}
-              >
-                {
-                  COMPARISON_MATCH_MODE_LABELS[
-                    ComparisonMatchMode.MatchExactDate
-                  ]
-                }
-              </AppNavigationLink>
-            </>
-          )}
-        </Popover.Panel>
-      </Transition>
-    </>
-  )
-}
-
-export const ComparisonPeriodMenu = (props: PopoverMenuProps) => {
-  const site = useSiteContext()
-  const { query } = useQueryContext()
-  const { buttonRef, ...rest } = useDropdownWithCalendar({
-    ...props,
-    query
-  })
-
-  return (
-    <>
-      <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
-        <span className={popover.toggleButton.classNames.truncatedText}>
-          {getCurrentComparisonPeriodDisplayName({ site, query })}
-        </span>
-        <DateMenuChevron />
-      </Popover.Button>
-      <ComparisonPeriodMenuItems {...rest} />
     </>
   )
 }
