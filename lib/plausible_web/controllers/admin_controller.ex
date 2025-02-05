@@ -7,39 +7,13 @@ defmodule PlausibleWeb.AdminController do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  def usage(conn, %{"user_id" => user_id} = params) do
-    user_id = String.to_integer(user_id)
-
-    team_id =
-      case Teams.get_by_owner(user_id) do
-        {:ok, team} ->
-          team
-          |> Teams.with_subscription()
-          |> Plausible.Repo.preload(:owners)
-          |> Map.fetch!(:id)
-
-        {:error, :no_team} ->
-          0
-
-        {:error, :multiple_teams} ->
-          0
-      end
-
-    params =
-      params
-      |> Map.delete("user_id")
-      |> Map.put("team_id", to_string(team_id))
-
-    usage(conn, params)
-  end
-
   def usage(conn, params) do
     team_id = String.to_integer(params["team_id"])
 
     team =
       team_id
       |> Teams.get()
-      |> Plausible.Repo.preload(:owners)
+      |> Repo.preload([:owners, team_memberships: :user])
 
     usage = Teams.Billing.quota_usage(team, with_features: true)
 
@@ -157,6 +131,8 @@ defmodule PlausibleWeb.AdminController do
         <li>Features: #{features_usage(usage.features)}</li>
         <li>Monthly pageviews: #{monthly_pageviews_usage(usage.monthly_pageviews, limits.monthly_pageviews)}</li>
         #{sites_count_row(team)}
+        <li>Owners: #{get_owners(team)}</li>
+        <li>Team members: #{get_other_members(team)}</li>
       </ul>
     """
 
@@ -229,5 +205,35 @@ defmodule PlausibleWeb.AdminController do
       end)
 
     "<ul>#{Enum.join(list_items)}</ul>"
+  end
+
+  defp get_owners(team) do
+    team.owners
+    |> Enum.map_join(", ", fn owner ->
+      email = html_escape(owner.email)
+
+      """
+      <a href="/crm/auth/user/#{owner.id}">#{email}</a>
+      """
+    end)
+  end
+
+  defp get_other_members(team) do
+    team.team_memberships
+    |> Enum.reject(&(&1.role == :owner))
+    |> Enum.map_join(", ", fn tm ->
+      email = html_escape(tm.user.email)
+      role = html_escape(tm.role)
+
+      """
+      <a href="/crm/auth/user/#{tm.user.id}">#{email <> " (#{role})"}</a>
+      """
+    end)
+  end
+
+  def html_escape(string) do
+    string
+    |> Phoenix.HTML.html_escape()
+    |> Phoenix.HTML.safe_to_string()
   end
 end
