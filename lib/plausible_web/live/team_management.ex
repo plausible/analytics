@@ -33,7 +33,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
       assign(socket,
         attempted_save?: false,
         team_members_limit: team_members_limit,
-        guests_limit: 10,
         layout: layout,
         my_role: my_role,
         team_layout_changed?: false,
