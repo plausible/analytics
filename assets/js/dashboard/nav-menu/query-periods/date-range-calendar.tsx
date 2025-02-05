@@ -1,5 +1,5 @@
 /* @format */
-import React from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import DatePicker from 'react-flatpickr'
 
 export interface DateRangeCalendarProps {
@@ -20,8 +20,20 @@ export function DateRangeCalendar({
   onCloseWithSelection
 }: DateRangeCalendarProps) {
   const hideInputFieldClassName = '!invisible !h-0 !w-0 !p-0 !m-0 !border-0'
+  const calendarRef = useRef<DatePicker>(null)
+  useLayoutEffect(() => {
+    // on Safari, this removes little arrow pointing to (hidden) input,
+    // which didn't appear with other browsers
+    calendarRef.current?.flatpickr?.calendarContainer?.classList.remove(
+      'arrowTop',
+      'arrowBottom',
+      'arrowLeft',
+      'arrowRight'
+    )
+  }, [])
   return (
     <DatePicker
+      ref={calendarRef}
       className={hideInputFieldClassName}
       id={id}
       options={{
