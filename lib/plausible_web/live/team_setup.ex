@@ -7,7 +7,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   alias Plausible.Repo
   alias Plausible.Teams
-  alias Plausible.Teams.Invitations.Candidates
   alias Plausible.Teams.Management.Layout
   alias PlausibleWeb.Router.Helpers, as: Routes
 
@@ -24,19 +23,11 @@ defmodule PlausibleWeb.Live.TeamSetup do
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {true, %Teams.Team{}, _} ->
-          all_candidates =
-            my_team
-            |> Candidates.search_site_guests("")
-            |> Enum.map(fn user ->
-              {user.email, "#{user.name} <#{user.email}>"}
-            end)
-
           team_name_changeset = Teams.Team.name_changeset(my_team)
 
           layout = Layout.init(my_team)
 
           assign(socket,
-            all_candidates: all_candidates,
             team_name_changeset: team_name_changeset,
             team_layout: layout
           )
