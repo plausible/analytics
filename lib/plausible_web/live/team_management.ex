@@ -124,7 +124,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
       <div id="member-list">
         <.member
           :for={{email, entry} <- Layout.sorted_for_display(@layout)}
-          :if={entry.queued_op != :delete and entry.role != :guest}
+          :if={entry.role != :guest}
           user={%User{email: entry.email, name: entry.name}}
           role={entry.role}
           label={entry_label(entry, @current_user)}
@@ -145,7 +145,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
       <div :if={Layout.has_guests?(@layout)} id="guest-list">
         <.member
           :for={{email, entry} <- Layout.sorted_for_display(@layout)}
-          :if={entry.queued_op != :delete and entry.role == :guest}
+          :if={entry.role == :guest}
           user={%User{email: entry.email, name: entry.name}}
           role={entry.role}
           label={entry_label(entry, @current_user)}

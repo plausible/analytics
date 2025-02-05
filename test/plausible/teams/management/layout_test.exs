@@ -53,6 +53,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
         |> put(membership(name: "Aa", email: "00-invitation-accepted@example.com", role: :viewer))
         |> put(invitation_pending("00-invitation-pending@example.com"))
         |> put(invitation_sent("00-invitation-sent@example.com"))
+        |> Layout.schedule_delete("owner@example.com")
 
       assert [
                {"00-invitation-pending@example.com", %Entry{}},
@@ -61,7 +62,6 @@ defmodule Plausible.Teams.Management.LayoutTest do
                {"invitation-sent@example.com", %Entry{}},
                {"00-invitation-accepted@example.com", %Entry{}},
                {"current@example.com", %Entry{}},
-               {"owner@example.com", %Entry{}},
                {"guest-pending@example.com", %Entry{role: :guest, type: :invitation_pending}},
                {"invitation-sent-guest@example.com",
                 %Entry{role: :guest, type: :invitation_sent}},

@@ -88,7 +88,9 @@ defmodule Plausible.Teams.Management.Layout do
 
   @spec sorted_for_display(t()) :: [{String.t(), Entry.t()}]
   def sorted_for_display(layout) do
-    Enum.sort_by(layout, fn {email, entry} ->
+    layout
+    |> Enum.reject(fn {_, entry} -> entry.queued_op == :delete end)
+    |> Enum.sort_by(fn {email, entry} ->
       primary_criterion =
         case entry do
           %{role: :guest, type: :invitation_pending} -> 10
