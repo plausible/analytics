@@ -445,6 +445,7 @@ defmodule PlausibleWeb.Api.StatsController do
     if current_results[stat.key] do
       formatter =
         if stat.key == :time_on_page do
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           &if is_nil(&1), do: 0, else: &1
         else
           & &1
