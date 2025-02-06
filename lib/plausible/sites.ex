@@ -75,7 +75,7 @@ defmodule Plausible.Sites do
     to: Plausible.Teams.Sites
 
   def list_people(site) do
-    owner_membership =
+    owner_memberships =
       from(
         tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
@@ -86,7 +86,7 @@ defmodule Plausible.Sites do
           role: tm.role
         }
       )
-      |> Repo.one!()
+      |> Repo.all()
 
     memberships =
       from(
@@ -111,7 +111,7 @@ defmodule Plausible.Sites do
       )
       |> Repo.all()
 
-    memberships = [owner_membership | memberships]
+    memberships = owner_memberships ++ memberships
 
     invitations =
       from(
