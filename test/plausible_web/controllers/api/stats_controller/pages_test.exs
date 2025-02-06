@@ -1137,6 +1137,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns scroll depth warning code", %{conn: conn, site: site} do
+      Plausible.Sites.set_scroll_depth_visible_at(site)
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/pages?period=day&detailed=true&with_imported=true")
+
+      response = json_response(conn, 200)
+      assert response["meta"]["metric_warnings"]["scroll_depth"] == "no_imported_scroll_depth"
+    end
+
     test "returns imported pages with a pageview goal filter", %{conn: conn, site: site} do
       insert(:goal, site: site, page_path: "/blog**")
 
