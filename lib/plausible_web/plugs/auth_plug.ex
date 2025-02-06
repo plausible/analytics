@@ -49,6 +49,7 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:current_user_session, user_session)
         |> assign(:my_team, my_team)
         |> assign(:current_team, current_team || my_team)
+        |> assign(:multiple_teams?, Teams.Users.teams_count(user) > 1)
 
       _ ->
         conn
