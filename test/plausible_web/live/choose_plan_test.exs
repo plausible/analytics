@@ -999,7 +999,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user: user
     } do
       user
-      |> Plausible.Auth.User.changeset(%{trial_expiry_date: nil})
+      |> team_of()
+      |> Ecto.Changeset.change(trial_expiry_date: nil)
       |> Repo.update!()
 
       {:ok, lv, _doc} = get_liveview(conn)
