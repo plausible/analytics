@@ -43,14 +43,14 @@ export const SearchInput = ({
         type="keyup"
         handler={blurSearchBox}
         shouldIgnoreWhen={[isModifierPressed, () => !isFocused]}
-        target={searchBoxRef.current}
+        targetRef={searchBoxRef}
       />
       <Keybind
         keyboardKey="/"
         type="keyup"
         handler={focusSearchBox}
         shouldIgnoreWhen={[isModifierPressed, () => isFocused]}
-        target={document}
+        targetRef="document"
       />
       <input
         onBlur={() => setIsFocused(false)}
