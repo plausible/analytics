@@ -58,6 +58,11 @@ defmodule PlausibleWeb.Live.AuthContext do
       |> assign_new(:current_team, fn context ->
         context.team_from_session || context.my_team
       end)
+      |> assign_new(:multiple_teams?, fn context ->
+        if context.current_user do
+          Teams.Users.teams_count(context.current_user) > 1
+        end
+      end)
 
     {:cont, socket}
   end
