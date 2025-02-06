@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
     test "renders member, enqueues invitation, delivers it", %{conn: conn, user: user, team: team} do
       {lv, html} = get_child_lv(conn, with_html?: true)
-      member_row1 = find(html, "#member-list .member:nth-of-type(1)") |> text()
+      member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "#{user.name}"
       assert member_row1 =~ "#{user.email}"
       assert member_row1 =~ "You"
@@ -67,12 +67,12 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      member_row1 = find(html, "#member-list .member:nth-of-type(1)") |> text()
+      member_row1 = find(html, "#{member_el()}:nth-of-type(1)") |> text()
       assert member_row1 =~ "new@example.com"
       assert member_row1 =~ "Invited User"
       assert member_row1 =~ "Invitation Pending"
 
-      member_row2 = find(html, "#member-list .member:nth-of-type(2)") |> text()
+      member_row2 = find(html, "#{member_el()}:nth-of-type(2)") |> text()
       assert member_row2 =~ "#{user.name}"
       assert member_row2 =~ "#{user.email}"
 
@@ -92,13 +92,13 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert text_of_element(html, "#member-list .member:nth-of-type(1) button") == "Admin"
-      assert text_of_element(html, "#member-list .member:nth-of-type(2) button") == "Owner"
+      assert text_of_element(html, "#{member_el()}:nth-of-type(1) button") == "Admin"
+      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Owner"
 
       change_role(lv, 1, "viewer")
       html = render(lv)
 
-      assert text_of_element(html, "#member-list .member:nth-of-type(1) button") == "Viewer"
+      assert text_of_element(html, "#{member_el()}:nth-of-type(1) button") == "Viewer"
 
       save_layout(lv)
 
@@ -112,13 +112,13 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       member2 = add_member(team, role: :admin)
       {lv, html} = get_child_lv(conn, with_html?: true)
 
-      assert text_of_element(html, "#member-list .member:nth-of-type(1) button") == "Owner"
-      assert text_of_element(html, "#member-list .member:nth-of-type(2) button") == "Admin"
+      assert text_of_element(html, "#{member_el()}:nth-of-type(1) button") == "Owner"
+      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Admin"
 
       change_role(lv, 2, "viewer")
       html = render(lv)
 
-      assert text_of_element(html, "#member-list .member:nth-of-type(2) button") == "Viewer"
+      assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
 
       save_layout(lv)
 
@@ -138,14 +138,14 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert length(find(html, "#member-list .member")) == 1
+      assert length(find(html, member_el())) == 1
 
-      assert text_of_element(html, "#guest-list .guest:first-of-type button") == "Guest"
+      assert text_of_element(html, "#{guest_el()}:first-of-type button") == "Guest"
 
-      change_role(lv, 1, "viewer", "#guest-list .guest")
+      change_role(lv, 1, "viewer", guest_el())
       html = render(lv)
 
-      assert length(find(html, "#member-list .member")) == 2
+      assert length(find(html, member_el())) == 2
       refute element_exists?(html, "#guest-list")
     end
 
@@ -169,7 +169,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       options =
         lv
         |> render()
-        |> find(~s|#member-list .member a|)
+        |> find("#{member_el()} a")
 
       assert Enum.empty?(options)
     end
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       options =
         lv
         |> render()
-        |> find(~s|#member-list .member a|)
+        |> find("#{member_el()} a")
 
       refute Enum.empty?(options)
 
@@ -189,8 +189,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = lv |> render()
 
-      assert [_ | _] = find(html, "#member-list .member:nth-of-type(1) a")
-      assert find(html, "#member-list .member:nth-of-type(2) a") == []
+      assert [_ | _] = find(html, "#{member_el()}:nth-of-type(1) a")
+      assert find(html, "#{member_el()}:nth-of-type(2) a") == []
     end
 
     test "allows removing any type of entry", %{
@@ -214,15 +214,15 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert html |> find("#member-list .member") |> Enum.count() == 4
-      assert html |> find("#guest-list .guest") |> Enum.count() == 1
+      assert html |> find(member_el()) |> Enum.count() == 4
+      assert html |> find(guest_el()) |> Enum.count() == 1
 
-      pending = find(html, "#member-list .member:nth-of-type(1)") |> text()
-      sent = find(html, "#member-list .member:nth-of-type(2)") |> text()
-      owner = find(html, "#member-list .member:nth-of-type(3)") |> text()
-      admin = find(html, "#member-list .member:nth-of-type(4)") |> text()
+      pending = find(html, "#{member_el()}:nth-of-type(1)") |> text()
+      sent = find(html, "#{member_el()}:nth-of-type(2)") |> text()
+      owner = find(html, "#{member_el()}:nth-of-type(3)") |> text()
+      admin = find(html, "#{member_el()}:nth-of-type(4)") |> text()
 
-      guest_member = find(html, "#guest-list .guest:first-of-type") |> text()
+      guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
 
       assert pending =~ "Invitation Pending"
       assert sent =~ "Invitation Sent"
@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       remove_member(lv, 2)
 
       # remove guest
-      remove_member(lv, 1, "#guest-list .guest")
+      remove_member(lv, 1, guest_el())
 
       html = render(lv) |> text()
 
@@ -275,8 +275,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       html = render(lv)
 
-      assert find(html, "#member-list .member:nth-of-type(1)") |> text() =~ "Team Member"
-      assert find(html, "#member-list .member:nth-of-type(2)") |> text() =~ "You"
+      assert find(html, "#{member_el()}:nth-of-type(1)") |> text() =~ "Team Member"
+      assert find(html, "#{member_el()}:nth-of-type(2)") |> text() =~ "You"
 
       save_layout(lv)
 
@@ -309,7 +309,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     |> render_click()
   end
 
-  defp change_role(lv, index, role, main_selector \\ "#member-list .member") do
+  defp change_role(lv, index, role, main_selector \\ member_el()) do
     lv
     |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-value-role="#{role}"]|)
     |> render_click()
@@ -326,9 +326,17 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
     end
   end
 
-  defp remove_member(lv, index, main_selector \\ "#member-list .member") do
+  defp remove_member(lv, index, main_selector \\ member_el()) do
     lv
     |> element(~s|#{main_selector}:nth-of-type(#{index}) a[phx-click="remove-member"]|)
     |> render_click()
+  end
+
+  defp member_el() do
+    ~s|#member-list div[data-test-kind="member"]|
+  end
+
+  defp guest_el() do
+    ~s|#guest-list div[data-test-kind="guest"]|
   end
 end

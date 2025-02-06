@@ -8,18 +8,19 @@ defmodule PlausibleWeb.Live.Components.Team do
 
   alias Plausible.Auth.User
 
-  attr :user, User, required: true
-  attr :label, :string, default: nil
-  attr :role, :atom, default: nil
-  attr :my_role, :atom, required: true
-  attr :disabled, :boolean, default: false
-  attr :remove_disabled, :boolean, default: false
+  attr(:user, User, required: true)
+  attr(:label, :string, default: nil)
+  attr(:role, :atom, default: nil)
+  attr(:my_role, :atom, required: true)
+  attr(:disabled, :boolean, default: false)
+  attr(:remove_disabled, :boolean, default: false)
 
   def member(assigns) do
     ~H"""
     <div
-      class={[(@role == :guest && "guest") || "member", "mt-4"]}
+      class="mt-4"
       id={"member-row-#{:erlang.phash2(@user.email)}"}
+      data-test-kind={if @role == :guest, do: "guest", else: "member"}
       data-role-changed={
         JS.show(
           transition: {"duration-500", "opacity-0 shadow-2xl -translate-y-6", "opacity-100 shadow"},
@@ -129,14 +130,14 @@ defmodule PlausibleWeb.Live.Components.Team do
     """
   end
 
-  attr :role, :atom, required: true
-  attr :disabled, :boolean, default: false
-  attr :dispatch_animation?, :boolean, default: false
-  attr :rest, :global
-  attr :user, :map, default: %{email: nil}
-  attr :id, :string, default: nil
+  attr(:role, :atom, required: true)
+  attr(:disabled, :boolean, default: false)
+  attr(:dispatch_animation?, :boolean, default: false)
+  attr(:rest, :global)
+  attr(:user, :map, default: %{email: nil})
+  attr(:id, :string, default: nil)
 
-  slot :inner_block, required: true
+  slot(:inner_block, required: true)
 
   def role_item(assigns) do
     click =
