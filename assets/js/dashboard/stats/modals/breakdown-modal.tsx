@@ -152,6 +152,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           key: m.key,
           width: m.width,
           align: 'right',
+          metricWarning: getMetricWarning(m, meta),
           renderValue: (item) => m.renderValue(item, meta),
           onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
           sortDirection: orderByDictionary[m.key]
@@ -233,3 +234,13 @@ const ExternalLinkIcon = ({ url }: { url?: string }) =>
       </svg>
     </a>
   ) : null
+
+const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
+  if (meta && meta.metric_warnings) {
+    const code = meta.metric_warnings[metric.key]
+
+    if (code == 'no_imported_scroll_depth') {
+      return 'Includes only native data'
+    }
+  }
+}
