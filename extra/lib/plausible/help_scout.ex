@@ -91,6 +91,7 @@ defmodule Plausible.HelpScout do
             {team, team.subscription, plan}
 
           {:error, :multiple_teams} ->
+            # NOTE: We might consider exposing the other teams later on
             [team | _] = Plausible.Teams.Users.owned_teams(user)
             team = Plausible.Teams.with_subscription(team)
             plan = Billing.Plans.get_subscription_plan(team.subscription)
