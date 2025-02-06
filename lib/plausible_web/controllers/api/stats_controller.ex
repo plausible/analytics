@@ -909,9 +909,20 @@ defmodule PlausibleWeb.Api.StatsController do
         pages |> to_csv(cols)
       end
     else
+      response_meta = Stats.Breakdown.formatted_date_ranges(query)
+
+      response_meta =
+        case meta[:metric_warnings] do
+          %{scroll_depth: %{code: code}} ->
+            Map.put(response_meta, :metric_warnings, %{scroll_depth: code})
+
+          _ ->
+            response_meta
+        end
+
       json(conn, %{
         results: pages,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta: response_meta,
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
