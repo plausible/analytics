@@ -57,14 +57,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       populate_stats(site, [
         # user 1: /blog -> /another -> blog/posts/1
         build(:pageview, user_id: 1, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 1,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:01:00],
           scroll_depth: 20
         ),
         build(:pageview, user_id: 1, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 1,
           pathname: "/another",
           timestamp: ~N[2020-01-01 00:02:00],
@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           pathname: "/blog/posts/1",
           timestamp: ~N[2020-01-01 00:02:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 1,
           pathname: "/blog/posts/1",
           timestamp: ~N[2020-01-01 00:03:00],
@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         ),
         # user 2: /blog -> /blog/posts/1 -> /blog/posts/2
         build(:pageview, user_id: 2, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 2,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:01:00],
@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           pathname: "/blog/posts/1",
           timestamp: ~N[2020-01-01 00:02:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 2,
           pathname: "/blog/posts/1",
           timestamp: ~N[2020-01-01 00:03:00],
@@ -105,7 +105,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           pathname: "/blog/posts/2",
           timestamp: ~N[2020-01-01 00:02:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 2,
           pathname: "/blog/posts/2",
           timestamp: ~N[2020-01-01 00:03:00],

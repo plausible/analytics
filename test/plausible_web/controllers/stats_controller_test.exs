@@ -85,7 +85,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       populate_stats(site, [build(:pageview)])
 
-      # No pageleaves yet - `scroll_depth_visible_at` will remain `nil`
+      # No engagements yet - `scroll_depth_visible_at` will remain `nil`
       html =
         conn
         |> get("/#{site.domain}")
@@ -98,10 +98,10 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 123),
-        build(:pageleave, user_id: 123, scroll_depth: 20)
+        build(:engagement, user_id: 123, scroll_depth: 20)
       ])
 
-      # Pageleaves exist now - `scroll_depth_visible_at` gets set to `utc_now`
+      # engagements exist now - `scroll_depth_visible_at` gets set to `utc_now`
       html =
         conn
         |> get("/#{site.domain}")
@@ -254,17 +254,17 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
       ])
 
       pages =
@@ -703,21 +703,21 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "exports scroll depth in visitors.csv", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-05 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2020-01-05 00:01:00],
           scroll_depth: 40
         ),
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-05 10:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2020-01-05 10:01:00],
           scroll_depth: 17
         ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-07 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog",
           timestamp: ~N[2020-01-07 00:01:00],
@@ -1098,7 +1098,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       site = insert(:site)
       link = insert(:shared_link, site: site)
 
-      # No pageleaves yet - `scroll_depth_visible_at` will remain `nil`
+      # No engagements yet - `scroll_depth_visible_at` will remain `nil`
       html =
         conn
         |> get("/share/#{site.domain}/?auth=#{link.slug}")
@@ -1111,10 +1111,10 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 123),
-        build(:pageleave, user_id: 123, scroll_depth: 20)
+        build(:engagement, user_id: 123, scroll_depth: 20)
       ])
 
-      # Pageleaves exist now - `scroll_depth_visible_at` gets set to `utc_now`
+      # engagements exist now - `scroll_depth_visible_at` gets set to `utc_now`
       html =
         conn
         |> get("/share/#{site.domain}/?auth=#{link.slug}")

@@ -126,8 +126,8 @@ defmodule Plausible.Goal do
     value = get_field(changeset, :event_name)
 
     cond do
-      value == "pageleave" ->
-        {:error, "The event name 'pageleave' is reserved and cannot be used as a goal"}
+      value == "engagement" ->
+        {:error, "The event name 'engagement' is reserved and cannot be used as a goal"}
 
       value && String.match?(value, ~r/^.+/) ->
         :ok
