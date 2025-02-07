@@ -2,7 +2,7 @@
 # platform specific, it makes sense to build it in the docker
 
 #### Builder
-FROM hexpm/elixir:1.17.1-erlang-27.0-alpine-3.20.1 AS buildcontainer
+FROM hexpm/elixir:1.17.3-erlang-27.2.1-alpine-3.20.5 AS buildcontainer
 
 ARG MIX_ENV=ce
 
@@ -54,7 +54,7 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.20.1
+FROM alpine:3.20.5
 LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}
