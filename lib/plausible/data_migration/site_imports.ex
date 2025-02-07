@@ -15,6 +15,10 @@ defmodule Plausible.DataMigration.SiteImports do
   require Plausible.Imported.SiteImport
 
   defmodule SiteImportSnapshot do
+    @moduledoc """
+    A snapshot of the Plausible.Imported.SiteImport schema from April 2024.
+    """
+
     use Ecto.Schema
 
     schema "site_imports" do
