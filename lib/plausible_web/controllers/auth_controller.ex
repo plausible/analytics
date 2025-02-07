@@ -476,7 +476,7 @@ defmodule PlausibleWeb.AuthController do
         |> redirect(external: redirect_route)
 
       _any ->
-        Sentry.capture_message("Google OAuth callback failed. Reason: #{inspect(params)}")
+        Logger.error("Google OAuth callback failed. Reason: #{inspect(params)}")
 
         conn
         |> put_flash(

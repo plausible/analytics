@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   end
 
   def error(conn, _params) do
-    Sentry.capture_message("JS snippet error")
+    Logger.error("JS snippet error")
     send_resp(conn, 200, "")
   end
 

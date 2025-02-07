@@ -84,11 +84,13 @@ defmodule Plausible.Ingestion.Counters do
           {_, _} = AsyncInsertRepo.insert_all(Record, records)
         catch
           _, thrown ->
-            Sentry.capture_message(
+            Logger.error(
               "Caught an error when trying to flush ingest counters.",
-              extra: %{
-                number_of_records: Enum.count(records),
-                error: inspect(thrown)
+              sentry: %{
+                extra: %{
+                  number_of_records: Enum.count(records),
+                  error: inspect(thrown)
+                }
               }
             )
         end
