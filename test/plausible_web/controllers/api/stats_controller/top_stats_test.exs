@@ -486,6 +486,25 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       :set_scroll_depth_visible_at
     ]
 
+    test "puts scroll depth warning code", %{conn: conn, site: site} do
+      filters = Jason.encode!([[:is, "event:page", ["/"]]])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}&with_imported=true"
+        )
+
+      top_stats = json_response(conn, 200)["top_stats"]
+
+      assert %{
+               "graph_metric" => "scroll_depth",
+               "name" => "Scroll depth",
+               "value" => nil,
+               "warning_code" => "no_imported_scroll_depth"
+             } in top_stats
+    end
+
     test "returns divisible metrics as 0 when no stats exist", %{
       site: site,
       conn: conn
@@ -613,7 +632,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn: conn,
       site: site
     } do
-      populate_stats(site, [
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-01-01], has_scroll_depth: true)
+
+      populate_stats(site, site_import.id, [
         build(:pageview,
           pathname: "/",
           user_id: @user_id,
@@ -996,7 +1018,8 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     end
 
     test "returns scroll_depth with a page filter with imported data", %{conn: conn, site: site} do
-      site_import = insert(:site_import, site: site)
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-01-01], has_scroll_depth: true)
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
@@ -1023,11 +1046,17 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           "/api/stats/#{site.domain}/top-stats?period=7d&date=2021-01-07&filters=#{filters}&with_imported=true"
         )
 
-      res = json_response(conn, 200)
+      scroll_depth_stat =
+        conn
+        |> json_response(200)
+        |> Map.get("top_stats")
+        |> Enum.find(&(&1["name"] == "Scroll depth"))
 
-      assert %{"name" => "Scroll depth", "value" => 55, "graph_metric" => "scroll_depth"} in res[
-               "top_stats"
-             ]
+      assert scroll_depth_stat == %{
+               "name" => "Scroll depth",
+               "value" => 55,
+               "graph_metric" => "scroll_depth"
+             }
     end
 
     test "contains filter", %{conn: conn, site: site} do

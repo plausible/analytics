@@ -52,6 +52,7 @@ export type DashboardQuery = typeof queryDefaultValue
 export type BreakdownResultMeta = {
   date_range_label: string
   comparison_date_range_label?: string
+  metric_warnings: Record<string, string> | undefined
 }
 
 export function addFilter(

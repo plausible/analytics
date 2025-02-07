@@ -17,11 +17,11 @@ export const SortButton = ({
   return (
     <button
       onClick={toggleSort}
-      title={next.hint}
       className={classNames('group', 'hover:underline', 'relative')}
     >
       {children}
       <span
+        title={next.hint}
         className={classNames(
           'absolute',
           'rounded inline-block h-4 w-4',
