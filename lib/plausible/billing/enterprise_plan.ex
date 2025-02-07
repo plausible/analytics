@@ -24,9 +24,6 @@ defmodule Plausible.Billing.EnterprisePlan do
     field :features, Plausible.Billing.Ecto.FeatureList, default: []
     field :hourly_api_request_limit, :integer
 
-    # Field used only by CRM for mapping to the ones in the owned team
-    field :user_id, :integer, virtual: true
-
     belongs_to :team, Plausible.Teams.Team
 
     timestamps()

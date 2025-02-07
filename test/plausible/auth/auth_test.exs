@@ -64,6 +64,15 @@ defmodule Plausible.AuthTest do
       assert {:error, :upgrade_required} =
                Auth.create_api_key(user, "my new key", Ecto.UUID.generate())
     end
+
+    test "creates a key for user on a growth plan when they are an owner of more than one team" do
+      user = new_user() |> subscribe_to_growth_plan()
+      another_site = new_site()
+      add_member(another_site.team, user: user, role: :owner)
+
+      assert {:ok, %Auth.ApiKey{}} =
+               Auth.create_api_key(user, "my new key", Ecto.UUID.generate())
+    end
   end
 
   describe "delete_api_key/2" do
