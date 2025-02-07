@@ -9,19 +9,34 @@ defmodule Plausible.DataMigration.SiteImports do
 
   import Ecto.Query
 
-  alias Plausible.ClickhouseRepo
-  alias Plausible.Imported
+  alias Plausible.{Repo, ClickhouseRepo, Imported, Site}
   alias Plausible.Imported.SiteImport
-  alias Plausible.Repo
-  alias Plausible.Site
 
   require Plausible.Imported.SiteImport
+
+  defmodule SiteImportSnapshot do
+    use Ecto.Schema
+
+    schema "site_imports" do
+      field :start_date, :date
+      field :end_date, :date
+      field :label, :string
+      field :source, Ecto.Enum, values: [:universal_analytics, :google_analytics_4, :csv, :noop]
+      field :status, Ecto.Enum, values: [:pending, :importing, :completed, :failed]
+      field :legacy, :boolean, default: false
+
+      belongs_to :site, Plausible.Site
+      belongs_to :imported_by, Plausible.Auth.User
+
+      timestamps()
+    end
+  end
 
   def run(opts \\ []) do
     dry_run? = Keyword.get(opts, :dry_run?, true)
 
     site_import_query =
-      from(i in Imported.SiteImport,
+      from(i in SiteImportSnapshot,
         where: i.site_id == parent_as(:site).id and i.status == ^SiteImport.completed(),
         select: 1
       )
@@ -37,7 +52,7 @@ defmodule Plausible.DataMigration.SiteImports do
       |> Repo.all(log: false)
 
     site_imports =
-      from(i in Imported.SiteImport, where: i.status == ^SiteImport.completed())
+      from(i in SiteImportSnapshot, where: i.status == ^SiteImport.completed())
       |> Repo.all(log: false)
 
     legacy_site_imports = backfill_legacy_site_imports(sites_with_only_legacy_import, dry_run?)
@@ -64,7 +79,7 @@ defmodule Plausible.DataMigration.SiteImports do
           |> Map.put(:site_id, site.id)
           |> Map.take([:legacy, :start_date, :end_date, :source, :status, :site_id])
 
-        %Imported.SiteImport{}
+        %SiteImportSnapshot{}
         |> Ecto.Changeset.change(params)
         |> insert!(dry_run?)
       end
