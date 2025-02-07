@@ -30,6 +30,8 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
         |> Repo.update!()
         |> Repo.preload(:user)
 
+      :ok = maybe_prune_guest_memberships(team_membership)
+
       {:ok, team_membership}
     end
   end
@@ -86,4 +88,15 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   defp can_grant_role_to_other?(:admin, :viewer, :editor), do: true
   defp can_grant_role_to_other?(:admin, :viewer, :viewer), do: true
   defp can_grant_role_to_other?(_, _, _), do: false
+
+  defp maybe_prune_guest_memberships(%Teams.Membership{role: :guest}),
+    do: :ok
+
+  defp maybe_prune_guest_memberships(%Teams.Membership{} = team_membership) do
+    team_membership
+    |> Ecto.assoc(:guest_memberships)
+    |> Repo.delete_all()
+
+    :ok
+  end
 end

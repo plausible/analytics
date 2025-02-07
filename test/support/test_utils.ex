@@ -47,6 +47,15 @@ defmodule Plausible.TestUtils do
     {:ok, team: team}
   end
 
+  def setup_team(%{team: team}) do
+    team =
+      team
+      |> Plausible.Teams.Team.setup_changeset()
+      |> Repo.update!()
+
+    {:ok, team: team}
+  end
+
   def create_legacy_site_import(%{site: site}) do
     create_site_import(%{site: site, create_legacy_import?: true})
   end

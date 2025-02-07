@@ -222,6 +222,7 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :class, :string, default: ""
+  attr :id, :string, default: nil
 
   slot :button, required: true do
     attr(:class, :string)
@@ -236,11 +237,17 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <div
+      id={@id}
       x-data="dropdown"
       x-on:keydown.escape.prevent.stop="close($refs.button)"
       class="relative inline-block text-left"
     >
-      <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
+      <button
+        x-ref="button"
+        x-on:click="toggle()"
+        type="button"
+        class={["py-2.5", List.first(@button).class]}
+      >
         {render_slot(List.first(@button))}
       </button>
       <div
@@ -255,7 +262,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-on:click.outside="close($refs.button)"
         style="display: none;"
         class={[
-          "origin-top-right absolute z-50 right-0 mt-2 p-1 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none",
+          "origin-top-right absolute z-50 right-0 mt-2 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none",
           @menu_class
         ]}
       >
@@ -267,6 +274,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string)
   attr(:class, :string, default: "")
+  attr(:id, :string, default: nil)
   attr(:new_tab, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global, include: ~w(method))
@@ -287,6 +295,7 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <.unstyled_link
+        id={@id}
         class={@class}
         new_tab={@new_tab}
         href={@href}

@@ -63,9 +63,7 @@ defmodule Plausible.Teams.Team do
     |> validate_required(:name)
   end
 
-  def setup_changeset(team) do
-    now = NaiveDateTime.utc_now(:second)
-
+  def setup_changeset(team, now \\ NaiveDateTime.utc_now(:second)) do
     team
     |> change(
       setup_complete: true,

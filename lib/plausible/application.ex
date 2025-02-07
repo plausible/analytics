@@ -15,6 +15,7 @@ defmodule Plausible.Application do
 
     children =
       [
+        Plausible.PromEx,
         Plausible.Cache.Stats,
         Plausible.Repo,
         Plausible.ClickhouseRepo,
@@ -104,7 +105,6 @@ defmodule Plausible.Application do
         end,
         endpoint,
         {Oban, Application.get_env(:plausible, Oban)},
-        Plausible.PromEx,
         on_ee do
           help_scout_vault()
         end
