@@ -9,7 +9,7 @@ defmodule Plausible.DataMigration.SiteImports do
 
   import Ecto.Query
 
-  alias Plausible.{Repo, ClickhouseRepo, Imported, Site}
+  alias Plausible.{Repo, ClickhouseRepo, Site}
   alias Plausible.Imported.SiteImport
 
   require Plausible.Imported.SiteImport
@@ -31,6 +31,21 @@ defmodule Plausible.DataMigration.SiteImports do
       timestamps()
     end
   end
+
+  @imported_tables_april_2024 [
+    "imported_visitors",
+    "imported_sources",
+    "imported_pages",
+    "imported_entry_pages",
+    "imported_exit_pages",
+    "imported_custom_events",
+    "imported_locations",
+    "imported_devices",
+    "imported_browsers",
+    "imported_operating_systems"
+  ]
+
+  def imported_tables_april_2024(), do: @imported_tables_april_2024
 
   def run(opts \\ []) do
     dry_run? = Keyword.get(opts, :dry_run?, true)
@@ -161,11 +176,11 @@ defmodule Plausible.DataMigration.SiteImports do
   # Exposed for testing purposes
   @doc false
   def imported_stats_end_date(site_id, import_ids) do
-    [first_schema | schemas] = Imported.schemas()
+    [first_table | tables] = @imported_tables_april_2024
 
     query =
-      Enum.reduce(schemas, max_date_query(first_schema, site_id, import_ids), fn schema, query ->
-        from(s in subquery(union_all(query, ^max_date_query(schema, site_id, import_ids))))
+      Enum.reduce(tables, max_date_query(first_table, site_id, import_ids), fn table, query ->
+        from(s in subquery(union_all(query, ^max_date_query(table, site_id, import_ids))))
       end)
 
     dates = ClickhouseRepo.all(from(q in query, select: q.max_date), log: false)
@@ -226,8 +241,8 @@ defmodule Plausible.DataMigration.SiteImports do
     entity
   end
 
-  defp max_date_query(schema, site_id, import_ids) do
-    from(q in schema,
+  defp max_date_query(table, site_id, import_ids) do
+    from(q in table,
       where: q.site_id == ^site_id,
       where: q.import_id in ^import_ids,
       select: %{max_date: fragment("max(?)", q.date)}
