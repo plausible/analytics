@@ -240,7 +240,7 @@ const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
     const code = meta.metric_warnings[metric.key]
 
     if (code == 'no_imported_scroll_depth') {
-      return 'Includes only native data'
+      return 'Does not include imported data'
     }
   }
 }
