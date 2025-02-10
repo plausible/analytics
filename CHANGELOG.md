@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 - Internal stats API routes no longer support legacy dashboard filter format.
 - Dashboard no longer shows "Unique visitors" in top stats when filtering by a goal which used to count all users including ones who didn't complete the goal. "Unique conversions" shows the number of unique visitors who completed the goal.
+- Dashboard no longer shows "Total visitors" in breakdown details modals.
 
 ### Changed
 
