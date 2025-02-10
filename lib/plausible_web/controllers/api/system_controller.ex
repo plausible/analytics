@@ -23,14 +23,22 @@ defmodule PlausibleWeb.Api.SystemController do
   def readiness(conn, _params) do
     postgres_health =
       case Ecto.Adapters.SQL.query(Plausible.Repo, "SELECT 1", []) do
-        {:ok, _} -> "ok"
-        e -> "error: #{inspect(e)}"
+        {:ok, _} ->
+          "ok"
+
+        e ->
+          Logger.error("Postgres health check failure: #{inspect(e)}")
+          "error"
       end
 
     clickhouse_health =
       case Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, "SELECT 1", []) do
-        {:ok, _} -> "ok"
-        e -> "error: #{inspect(e)}"
+        {:ok, _} ->
+          "ok"
+
+        e ->
+          Logger.error("Clickhouse health check failure: #{inspect(e)}")
+          "error"
       end
 
     cache_health =
