@@ -237,7 +237,7 @@ const ExternalLinkIcon = ({ url }: { url?: string }) =>
 
 const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
   const warnings = meta?.metric_warnings
-  
+
   if (warnings) {
     const code = warnings[metric.key]?.code
 
