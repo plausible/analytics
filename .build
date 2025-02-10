@@ -72,6 +72,7 @@ Plausible.DataMigration.LocationsSync.html
 Plausible.DataMigration.NumericIDs.html
 Plausible.DataMigration.PopulateEventSessionColumns.html
 Plausible.DataMigration.PostgresRepo.html
+Plausible.DataMigration.SiteImports.SiteImportSnapshot.html
 Plausible.DataMigration.SiteImports.html
 Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
@@ -459,8 +460,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-0D0260AA.js
-dist/sidebar_items-F832D747.js
+dist/search_data-3F2A905E.js
+dist/sidebar_items-A1CC4328.js
 index.html
 readme.html
 search.html
