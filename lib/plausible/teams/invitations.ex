@@ -35,7 +35,16 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def find_team_invitations(user) do
+  def all(%Teams.Team{} = team) do
+    Repo.all(
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        where: ti.team_id == ^team.id,
+        preload: [inviter: inviter]
+    )
+  end
+
+  def all(%Plausible.Auth.User{} = user) do
     Repo.all(
       from ti in Teams.Invitation,
         inner_join: inviter in assoc(ti, :inviter),

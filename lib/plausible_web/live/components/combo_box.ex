@@ -106,7 +106,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             phx-target={@myself}
             phx-debounce={200}
             value={@display_value}
-            class="text-sm [&.phx-change-loading+svg.spinner]:block border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0"
+            class="text-sm [&.phx-change-loading+svg.spinner]:block border-none py-1.5 px-1.5 w-full inline-block rounded-md focus:outline-none focus:ring-0"
             style="background-color: inherit;"
             required={@required}
           />

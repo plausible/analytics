@@ -19,4 +19,16 @@
       </.button>
     </.form>
   </.tile>
+  <.tile>
+    <:title>
+      <a id="team-members">Team Members</a>
+    </:title>
+    <:subtitle>
+      Add, remove or change your team memberships
+    </:subtitle>
+    {live_render(@conn, PlausibleWeb.Live.TeamManagement,
+      id: "team-setup",
+      session: %{"mode" => "team-management"}
+    )}
+  </.tile>
 </.settings_tiles>
