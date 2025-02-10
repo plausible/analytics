@@ -287,6 +287,7 @@ PlausibleWeb.Api.Internal.SegmentsController.html
 PlausibleWeb.Api.InternalController.html
 PlausibleWeb.Api.PaddleController.html
 PlausibleWeb.Api.StatsController.html
+PlausibleWeb.Api.SystemController.html
 PlausibleWeb.AuthController.html
 PlausibleWeb.AuthPlug.html
 PlausibleWeb.AuthView.html
@@ -460,8 +461,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-3F2A905E.js
-dist/sidebar_items-A1CC4328.js
+dist/search_data-FB72D0D3.js
+dist/sidebar_items-9CA069E9.js
 index.html
 readme.html
 search.html
