@@ -39,7 +39,6 @@ function ReferrerDrilldownModal() {
   function chooseMetrics() {
     if (hasConversionGoalFilter(query)) {
       return [
-        metrics.createTotalVisitors(),
         metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),
         metrics.createConversionRate()
       ]

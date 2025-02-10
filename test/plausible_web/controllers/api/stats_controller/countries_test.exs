@@ -98,7 +98,6 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "alpha_3" => "EST",
                  "name" => "Estonia",
                  "flag" => "🇪🇪",
-                 "total_visitors" => 2,
                  "visitors" => 1,
                  "conversion_rate" => 50.0
                },
@@ -107,7 +106,6 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "alpha_3" => "GBR",
                  "name" => "United Kingdom",
                  "flag" => "🇬🇧",
-                 "total_visitors" => 1,
                  "visitors" => 1,
                  "conversion_rate" => 100.0
                }
@@ -148,7 +146,6 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "alpha_3" => "GBR",
                  "name" => "United Kingdom",
                  "flag" => "🇬🇧",
-                 "total_visitors" => 1,
                  "visitors" => 1,
                  "conversion_rate" => 100.0
                },
@@ -157,7 +154,6 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "alpha_3" => "EST",
                  "name" => "Estonia",
                  "flag" => "🇪🇪",
-                 "total_visitors" => 2,
                  "visitors" => 1,
                  "conversion_rate" => 50.0
                }

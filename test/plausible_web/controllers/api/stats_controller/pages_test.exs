@@ -1155,14 +1155,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{
                  "visitors" => 2,
                  "name" => "/blog/post-1",
-                 "conversion_rate" => 100.0,
-                 "total_visitors" => 2
+                 "conversion_rate" => 100.0
                },
                %{
                  "visitors" => 1,
                  "name" => "/blog",
-                 "conversion_rate" => 100.0,
-                 "total_visitors" => 1
+                 "conversion_rate" => 100.0
                }
              ]
     end
@@ -1497,7 +1495,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"total_visitors" => 3, "visitors" => 1, "name" => "/", "conversion_rate" => 33.3}
+               %{"visitors" => 1, "name" => "/", "conversion_rate" => 33.3}
              ]
     end
 
@@ -2055,13 +2053,11 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       assert json_response(conn, 200)["results"] == [
                %{
-                 "total_visitors" => 2,
                  "visitors" => 1,
                  "name" => "/page1",
                  "conversion_rate" => 50.0
                },
                %{
-                 "total_visitors" => 1,
                  "visitors" => 1,
                  "name" => "/page2",
                  "conversion_rate" => 100.0
@@ -2396,13 +2392,11 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{
                  "name" => "/exit1",
                  "visitors" => 1,
-                 "total_visitors" => 1,
                  "conversion_rate" => 100.0
                },
                %{
                  "name" => "/exit2",
                  "visitors" => 1,
-                 "total_visitors" => 1,
                  "conversion_rate" => 100.0
                }
              ]

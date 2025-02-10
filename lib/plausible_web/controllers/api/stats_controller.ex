@@ -1636,7 +1636,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp breakdown_metrics(query, extra_metrics \\ []) do
     if toplevel_goal_filter?(query) do
-      [:visitors, :conversion_rate, :total_visitors]
+      [:visitors, :conversion_rate]
     else
       [:visitors] ++ extra_metrics
     end

@@ -104,7 +104,6 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Chrome",
-                 "total_visitors" => 2,
                  "visitors" => 1,
                  "conversion_rate" => 50.0
                }
@@ -309,7 +308,6 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                "browser" => "Chrome",
                "conversion_rate" => 66.7,
                "version" => "110",
-               "total_visitors" => 3,
                "visitors" => 2
              } == List.first(json_response)
 
@@ -318,7 +316,6 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                "browser" => "Firefox",
                "conversion_rate" => 100.0,
                "version" => "121",
-               "total_visitors" => 1,
                "visitors" => 1
              } == List.last(json_response)
     end

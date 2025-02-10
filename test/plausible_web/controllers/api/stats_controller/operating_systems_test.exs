@@ -79,7 +79,6 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Mac",
-                 "total_visitors" => 2,
                  "visitors" => 1,
                  "conversion_rate" => 50.0
                }
@@ -206,7 +205,6 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Mac",
-                 "total_visitors" => 2,
                  "visitors" => 1,
                  "conversion_rate" => 50.0
                }

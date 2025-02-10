@@ -247,7 +247,6 @@ defmodule Plausible.Stats.SQL.Expression do
   def event_metric(:conversion_rate), do: %{}
   def event_metric(:scroll_depth), do: %{}
   def event_metric(:group_conversion_rate), do: %{}
-  def event_metric(:total_visitors), do: %{}
 
   def event_metric(unknown), do: raise("Unknown metric: #{unknown}")
 
