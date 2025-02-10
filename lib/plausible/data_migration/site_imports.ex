@@ -10,9 +10,6 @@ defmodule Plausible.DataMigration.SiteImports do
   import Ecto.Query
 
   alias Plausible.{Repo, ClickhouseRepo, Site}
-  alias Plausible.Imported.SiteImport
-
-  require Plausible.Imported.SiteImport
 
   defmodule SiteImportSnapshot do
     @moduledoc """
@@ -56,7 +53,7 @@ defmodule Plausible.DataMigration.SiteImports do
 
     site_import_query =
       from(i in SiteImportSnapshot,
-        where: i.site_id == parent_as(:site).id and i.status == ^SiteImport.completed(),
+        where: i.site_id == parent_as(:site).id and i.status == ^:completed,
         select: 1
       )
 
@@ -71,7 +68,7 @@ defmodule Plausible.DataMigration.SiteImports do
       |> Repo.all(log: false)
 
     site_imports =
-      from(i in SiteImportSnapshot, where: i.status == ^SiteImport.completed())
+      from(i in SiteImportSnapshot, where: i.status == ^:completed)
       |> Repo.all(log: false)
 
     legacy_site_imports = backfill_legacy_site_imports(sites_with_only_legacy_import, dry_run?)
@@ -256,12 +253,12 @@ defmodule Plausible.DataMigration.SiteImports do
   defp from_legacy(%Site.ImportedData{} = data) do
     status =
       case data.status do
-        "ok" -> SiteImport.completed()
-        "error" -> SiteImport.failed()
-        _ -> SiteImport.importing()
+        "ok" -> :completed
+        "error" -> :failed
+        _ -> :importing
       end
 
-    %SiteImport{
+    %SiteImportSnapshot{
       id: 0,
       legacy: true,
       start_date: data.start_date,
