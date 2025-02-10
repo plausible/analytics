@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Api.SystemController do
   use PlausibleWeb, :controller
+  require Logger
 
   def info(conn, _params) do
     build =
@@ -20,9 +21,20 @@ defmodule PlausibleWeb.Api.SystemController do
     json(conn, %{ok: true})
   end
 
+  @task_timeout 15_000
   def readiness(conn, _params) do
+    postgres_health_task =
+      Task.async(fn ->
+        Ecto.Adapters.SQL.query(Plausible.Repo, "SELECT 1", [])
+      end)
+
+    clickhouse_health_task =
+      Task.async(fn ->
+        Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, "SELECT 1", [])
+      end)
+
     postgres_health =
-      case Ecto.Adapters.SQL.query(Plausible.Repo, "SELECT 1", []) do
+      case Task.await(postgres_health_task, @task_timeout) do
         {:ok, _} ->
           "ok"
 
@@ -32,7 +44,7 @@ defmodule PlausibleWeb.Api.SystemController do
       end
 
     clickhouse_health =
-      case Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, "SELECT 1", []) do
+      case Task.await(clickhouse_health_task, @task_timeout) do
         {:ok, _} ->
           "ok"
 
