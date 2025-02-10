@@ -22,6 +22,7 @@ defmodule Plausible.Imported.SiteImport do
     field :source, Ecto.Enum, values: ImportSources.names()
     field :status, Ecto.Enum, values: @statuses
     field :legacy, :boolean, default: false
+    field :has_scroll_depth, :boolean, default: false
 
     belongs_to :site, Site
     belongs_to :imported_by, User

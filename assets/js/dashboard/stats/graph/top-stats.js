@@ -64,6 +64,14 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
             <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp} />s ago
           </p>
         )}
+
+        {stat.name === 'Scroll depth' &&
+          data.meta.metric_warnings?.scroll_depth?.code ===
+            'no_imported_scroll_depth' && (
+            <p className="font-normal text-xs whitespace-nowrap">
+              * Does not include imported data
+            </p>
+          )}
       </div>
     )
   }
@@ -115,6 +123,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
         {statExtraName && (
           <span className="hidden sm:inline-block ml-1">{statExtraName}</span>
         )}
+        {stat.warning_code && <span className="inline-block ml-1">*</span>}
       </div>
     )
   }

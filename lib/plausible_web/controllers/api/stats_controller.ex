@@ -207,6 +207,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     json(conn, %{
       top_stats: top_stats,
+      meta: meta,
       interval: query.interval,
       sample_percent: sample_percent,
       with_imported_switch: with_imported_switch_info(meta),
@@ -890,7 +891,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: pages,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end

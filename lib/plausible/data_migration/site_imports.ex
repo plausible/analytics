@@ -9,20 +9,51 @@ defmodule Plausible.DataMigration.SiteImports do
 
   import Ecto.Query
 
-  alias Plausible.ClickhouseRepo
-  alias Plausible.Imported
-  alias Plausible.Imported.SiteImport
-  alias Plausible.Repo
-  alias Plausible.Site
+  alias Plausible.{Repo, ClickhouseRepo, Site}
 
-  require Plausible.Imported.SiteImport
+  defmodule SiteImportSnapshot do
+    @moduledoc """
+    A snapshot of the Plausible.Imported.SiteImport schema from April 2024.
+    """
+
+    use Ecto.Schema
+
+    schema "site_imports" do
+      field :start_date, :date
+      field :end_date, :date
+      field :label, :string
+      field :source, Ecto.Enum, values: [:universal_analytics, :google_analytics_4, :csv, :noop]
+      field :status, Ecto.Enum, values: [:pending, :importing, :completed, :failed]
+      field :legacy, :boolean, default: false
+
+      belongs_to :site, Plausible.Site
+      belongs_to :imported_by, Plausible.Auth.User
+
+      timestamps()
+    end
+  end
+
+  @imported_tables_april_2024 [
+    "imported_visitors",
+    "imported_sources",
+    "imported_pages",
+    "imported_entry_pages",
+    "imported_exit_pages",
+    "imported_custom_events",
+    "imported_locations",
+    "imported_devices",
+    "imported_browsers",
+    "imported_operating_systems"
+  ]
+
+  def imported_tables_april_2024(), do: @imported_tables_april_2024
 
   def run(opts \\ []) do
     dry_run? = Keyword.get(opts, :dry_run?, true)
 
     site_import_query =
-      from(i in Imported.SiteImport,
-        where: i.site_id == parent_as(:site).id and i.status == ^SiteImport.completed(),
+      from(i in SiteImportSnapshot,
+        where: i.site_id == parent_as(:site).id and i.status == ^:completed,
         select: 1
       )
 
@@ -37,7 +68,7 @@ defmodule Plausible.DataMigration.SiteImports do
       |> Repo.all(log: false)
 
     site_imports =
-      from(i in Imported.SiteImport, where: i.status == ^SiteImport.completed())
+      from(i in SiteImportSnapshot, where: i.status == ^:completed)
       |> Repo.all(log: false)
 
     legacy_site_imports = backfill_legacy_site_imports(sites_with_only_legacy_import, dry_run?)
@@ -64,7 +95,7 @@ defmodule Plausible.DataMigration.SiteImports do
           |> Map.put(:site_id, site.id)
           |> Map.take([:legacy, :start_date, :end_date, :source, :status, :site_id])
 
-        %Imported.SiteImport{}
+        %SiteImportSnapshot{}
         |> Ecto.Changeset.change(params)
         |> insert!(dry_run?)
       end
@@ -146,11 +177,11 @@ defmodule Plausible.DataMigration.SiteImports do
   # Exposed for testing purposes
   @doc false
   def imported_stats_end_date(site_id, import_ids) do
-    [first_schema | schemas] = Imported.schemas()
+    [first_table | tables] = @imported_tables_april_2024
 
     query =
-      Enum.reduce(schemas, max_date_query(first_schema, site_id, import_ids), fn schema, query ->
-        from(s in subquery(union_all(query, ^max_date_query(schema, site_id, import_ids))))
+      Enum.reduce(tables, max_date_query(first_table, site_id, import_ids), fn table, query ->
+        from(s in subquery(union_all(query, ^max_date_query(table, site_id, import_ids))))
       end)
 
     dates = ClickhouseRepo.all(from(q in query, select: q.max_date), log: false)
@@ -211,8 +242,8 @@ defmodule Plausible.DataMigration.SiteImports do
     entity
   end
 
-  defp max_date_query(schema, site_id, import_ids) do
-    from(q in schema,
+  defp max_date_query(table, site_id, import_ids) do
+    from(q in table,
       where: q.site_id == ^site_id,
       where: q.import_id in ^import_ids,
       select: %{max_date: fragment("max(?)", q.date)}
@@ -222,12 +253,12 @@ defmodule Plausible.DataMigration.SiteImports do
   defp from_legacy(%Site.ImportedData{} = data) do
     status =
       case data.status do
-        "ok" -> SiteImport.completed()
-        "error" -> SiteImport.failed()
-        _ -> SiteImport.importing()
+        "ok" -> :completed
+        "error" -> :failed
+        _ -> :importing
       end
 
-    %SiteImport{
+    %SiteImportSnapshot{
       id: 0,
       legacy: true,
       start_date: data.start_date,
