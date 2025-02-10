@@ -313,9 +313,7 @@ defmodule Plausible.Sites do
     locked
   end
 
-  def get_for_user!(user, domain, roles \\ [:owner, :admin, :viewer]) do
-    roles = translate_roles(roles)
-
+  def get_for_user!(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
     site =
       if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
         get_by_domain!(domain)
@@ -328,9 +326,7 @@ defmodule Plausible.Sites do
     Repo.preload(site, :team)
   end
 
-  def get_for_user(user, domain, roles \\ [:owner, :admin, :viewer]) do
-    roles = translate_roles(roles)
-
+  def get_for_user(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
     if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
       get_by_domain(domain)
     else
@@ -338,13 +334,6 @@ defmodule Plausible.Sites do
       |> get_for_user_query(domain, List.delete(roles, :super_admin))
       |> Repo.one()
     end
-  end
-
-  defp translate_roles(roles) do
-    Enum.map(roles, fn
-      :admin -> :editor
-      role -> role
-    end)
   end
 
   defp get_for_user_query(user_id, domain, roles) do

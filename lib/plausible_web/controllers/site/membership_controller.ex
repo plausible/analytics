@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     This controller deals with user management via the UI in Site Settings -> People. It's important to enforce permissions in this controller.
 
     Owner - Can manage users, can trigger a 'transfer ownership' request
-    Admin - Can manage users
+    Admin and Editor - Can manage users
     Viewer - Can not access user management settings
     Anyone - Can accept invitations
 
