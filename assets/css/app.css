@@ -5,7 +5,7 @@
 @import './modal.css';
 @import './loader.css';
 @import './tooltip.css';
-@import './flatpickr.css';
+@import './flatpickr-colors.css';
 @import './chartjs.css';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
@@ -244,11 +244,6 @@ blockquote {
 .fade-enter-active {
   opacity: 1;
   transition: opacity 100ms ease-in;
-}
-
-.flatpickr-calendar.static.open {
-  right: 2px;
-  top: 12px;
 }
 
 .datamaps-subunit {

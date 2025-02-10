@@ -1116,12 +1116,21 @@ defmodule PlausibleWeb.SettingsControllerTest do
       refute html =~ "Team Settings"
     end
 
-    test "renders team settings, when team assigned", %{conn: conn, user: user} do
+    test "renders team settings, when team assigned and set up", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
+      team |> Plausible.Teams.Team.setup_changeset() |> Repo.update!()
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
       assert html =~ "Team Settings"
       assert html =~ team.name
+    end
+
+    test "does not render team settings, when team not set up", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      assert html =~ "Team Settings"
+      refute html =~ team.name
     end
 
     test "GET /settings/team/general", %{conn: conn, user: user} do

@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:uri, uri)
       |> assign(
         :team_invitations,
-        Plausible.Teams.Invitations.find_team_invitations(socket.assigns.current_user)
+        Plausible.Teams.Invitations.all(socket.assigns.current_user)
       )
       |> assign(:filter_text, params["filter_text"] || "")
 

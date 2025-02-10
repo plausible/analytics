@@ -12,7 +12,7 @@
         mt?={false}
         href={Routes.membership_path(@conn, :invite_member_form, @site.domain)}
       >
-        Invite new member
+        Invite New Guest
       </.button_link>
     </.filter_bar>
 
@@ -50,7 +50,7 @@
                 </p>
               </div>
 
-              <.dropdown class="relative">
+              <.dropdown>
                 <:button class="bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
                   {membership.role |> to_string() |> String.capitalize()}
                   <Heroicons.chevron_down mini class="size-4 mt-0.5" />

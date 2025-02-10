@@ -87,7 +87,7 @@ defmodule Plausible.Stats.Goals do
           case Plausible.Goal.type(goal) do
             :event -> goal.event_name
             :page -> "pageview"
-            :scroll -> "pageleave"
+            :scroll -> "engagement"
           end
         end),
       # :TRICKY: event goals are considered to match everything for the sake of efficient queries in query_builder.ex
@@ -166,7 +166,7 @@ defmodule Plausible.Stats.Goals do
 
   defp goal_condition(:scroll, goal, false = _imported?) do
     pathname_condition = page_path_condition(goal.page_path, _imported? = false)
-    name_condition = dynamic([e], e.name == "pageleave")
+    name_condition = dynamic([e], e.name == "engagement")
 
     scroll_condition =
       dynamic([e], e.scroll_depth <= 100 and e.scroll_depth >= ^goal.scroll_threshold)

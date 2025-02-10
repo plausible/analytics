@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 
 import * as storage from '../../util/storage';
 import * as url from '../../util/url';
@@ -14,6 +14,7 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { sourcesRoute, channelsRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
+import { BlurMenuButtonOnEscape } from '../../keybinding';
 
 const UTM_TAGS = {
   utm_medium: { title: 'UTM Mediums', label: 'Medium', endpoint: '/utm_mediums' },
@@ -166,6 +167,7 @@ export default function SourceList() {
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
   const previousQuery = usePrevious(query);
+  const dropdownButtonRef = useRef(null)
 
   useEffect(() => setLoading(true), [query, currentTab])
 
@@ -203,8 +205,9 @@ export default function SourceList() {
         <div className={currentTab === 'all' ? activeClass : defaultClass} onClick={setTab('all')}>Sources</div>
 
         <Menu as="div" className="relative inline-block text-left">
+          <BlurMenuButtonOnEscape targetRef={dropdownButtonRef}/>
           <div>
-            <Menu.Button className="inline-flex justify-between focus:outline-none">
+            <Menu.Button className="inline-flex justify-between focus:outline-none" ref={dropdownButtonRef}>
               <span className={currentTab.startsWith('utm_') ? activeClass : defaultClass}>{buttonText}</span>
               <ChevronDownIcon className="-mr-1 ml-1 h-4 w-4" aria-hidden="true" />
             </Menu.Button>

@@ -1,28 +1,6 @@
 /* @format */
 /* stylelint-disable media-feature-range-notation */
 /* stylelint-disable selector-class-pattern */
-.flatpickr-calendar::before,
-.flatpickr-calendar::after {
-  right: 22px !important;
-}
-
-.flatpickr-wrapper {
-  right: 35% !important;
-}
-
-@media (max-width: 768px) {
-  .flatpickr-wrapper {
-    right: 50% !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .flatpickr-wrapper {
-    position: absolute !important;
-    right: 0 !important;
-    left: 0 !important;
-  }
-}
 
 /* Because Flatpickr offers zero support for dynamic theming on its own (outside of third-party plugins) */
 .dark .flatpickr-calendar {
