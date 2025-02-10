@@ -133,13 +133,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                %{
                  "name" => "Scroll 50 /blog/**",
                  "visitors" => 2,
-                 "events" => 0,
+                 "events" => nil,
                  "conversion_rate" => 100.0
                },
                %{
                  "name" => "Scroll 75 /blog/posts/1",
                  "visitors" => 1,
-                 "events" => 0,
+                 "events" => nil,
                  "conversion_rate" => 50.0
                }
              ]

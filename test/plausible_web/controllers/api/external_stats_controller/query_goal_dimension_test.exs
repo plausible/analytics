@@ -242,7 +242,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
 
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["Visit /blog"], "metrics" => [2, 2, 100.0]},
-               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [1, 0, 50.0]}
+               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [1, nil, 50.0]}
              ]
     end
 
@@ -321,10 +321,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Scroll /blog 25", "jane"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["Scroll /blog 50", "jane"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["Scroll /blog 25", "john"], "metrics" => [1, 0, 25.0]},
-               %{"dimensions" => ["Scroll /blog 75", "jane"], "metrics" => [1, 0, 25.0]}
+               %{"dimensions" => ["Scroll /blog 25", "jane"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["Scroll /blog 50", "jane"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["Scroll /blog 25", "john"], "metrics" => [1, nil, 25.0]},
+               %{"dimensions" => ["Scroll /blog 75", "jane"], "metrics" => [1, nil, 25.0]}
              ]
     end
 
@@ -379,7 +379,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Twitter"], "metrics" => [1, 0, 50.0]}
+               %{"dimensions" => ["Twitter"], "metrics" => [1, nil, 50.0]}
              ]
     end
 
@@ -459,8 +459,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["jane"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["john"], "metrics" => [1, 0, 25.0]}
+               %{"dimensions" => ["jane"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["john"], "metrics" => [1, nil, 25.0]}
              ]
     end
 
@@ -540,9 +540,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["Scroll /blog 75"], "metrics" => [1, 0, 25.0]}
+               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["Scroll /blog 75"], "metrics" => [1, nil, 25.0]}
              ]
     end
   end
