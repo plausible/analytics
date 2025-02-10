@@ -207,7 +207,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     json(conn, %{
       top_stats: top_stats,
-      metric_warnings: metric_warnings(meta),
+      meta: meta,
       interval: query.interval,
       sample_percent: sample_percent,
       with_imported_switch: with_imported_switch_info(meta),
@@ -901,17 +901,9 @@ defmodule PlausibleWeb.Api.StatsController do
         pages |> to_csv(cols)
       end
     else
-      response_meta = Stats.Breakdown.formatted_date_ranges(query)
-
-      response_meta =
-        case metric_warnings(meta) do
-          warnings when map_size(warnings) == 0 -> response_meta
-          warnings -> Map.put(response_meta, :metric_warnings, warnings)
-        end
-
       json(conn, %{
         results: pages,
-        meta: response_meta,
+        meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1683,12 +1675,5 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp toplevel_goal_filter?(query) do
     Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0)
-  end
-
-  defp metric_warnings(query_result_meta) do
-    case query_result_meta[:metric_warnings] do
-      %{scroll_depth: %{code: code}} -> %{scroll_depth: code}
-      _ -> %{}
-    end
   end
 end

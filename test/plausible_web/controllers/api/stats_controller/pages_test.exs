@@ -1144,7 +1144,9 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         get(conn, "/api/stats/#{site.domain}/pages?period=day&detailed=true&with_imported=true")
 
       response = json_response(conn, 200)
-      assert response["meta"]["metric_warnings"]["scroll_depth"] == "no_imported_scroll_depth"
+
+      assert response["meta"]["metric_warnings"]["scroll_depth"]["code"] ==
+               "no_imported_scroll_depth"
     end
 
     test "returns imported pages with a pageview goal filter", %{conn: conn, site: site} do

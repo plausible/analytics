@@ -236,8 +236,10 @@ const ExternalLinkIcon = ({ url }: { url?: string }) =>
   ) : null
 
 const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
-  if (meta && meta.metric_warnings) {
-    const code = meta.metric_warnings[metric.key]
+  const warnings = meta?.metric_warnings
+  
+  if (warnings) {
+    const code = warnings[metric.key]?.code
 
     if (code == 'no_imported_scroll_depth') {
       return 'Does not include imported data'

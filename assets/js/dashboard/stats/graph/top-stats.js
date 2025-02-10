@@ -66,7 +66,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
         )}
 
         {stat.name === 'Scroll depth' &&
-          data.metric_warnings.scroll_depth === 'no_imported_scroll_depth' && (
+          data.meta.metric_warnings?.scroll_depth?.code === 'no_imported_scroll_depth' && (
             <p className="font-normal text-xs whitespace-nowrap">
               * Does not include imported data
             </p>

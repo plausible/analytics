@@ -495,9 +495,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}&with_imported=true"
         )
 
-      %{"top_stats" => top_stats, "metric_warnings" => metric_warnings} = json_response(conn, 200)
+      %{"top_stats" => top_stats, "meta" => meta} = json_response(conn, 200)
 
-      assert metric_warnings == %{"scroll_depth" => "no_imported_scroll_depth"}
+      assert meta["metric_warnings"]["scroll_depth"]["code"] == "no_imported_scroll_depth"
 
       assert %{
                "graph_metric" => "scroll_depth",
