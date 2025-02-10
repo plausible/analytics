@@ -432,7 +432,7 @@ defmodule Plausible.Exports do
       max_scroll_depth_per_visitor_q =
         from(e in "events_v2",
           where: ^export_filter(site_id, date_range),
-          where: e.name == "pageleave" and e.scroll_depth <= 100,
+          where: e.name == "engagement" and e.scroll_depth <= 100,
           select: %{
             date: date(e.timestamp, ^timezone),
             page: selected_as(e.pathname, :page),
@@ -453,7 +453,7 @@ defmodule Plausible.Exports do
                 p.max_scroll_depth,
                 p.max_scroll_depth
               ),
-            pageleave_visitors: count(p.user_id)
+            pageleave_visitors: fragment("uniq(?)", p.user_id)
           },
           group_by: [:date, :page]
         )

@@ -1046,19 +1046,19 @@ defmodule Plausible.Imported.CSVImporterTest do
       stats =
         [
           build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-          build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+          build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
           build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-          build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+          build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
           build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-          build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+          build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
           build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-          build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+          build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
           build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-          build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+          build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
           build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-          build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100),
+          build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100),
           build(:pageview, user_id: 78, pathname: "/", timestamp: t0),
-          build(:pageleave, user_id: 78, pathname: "/", timestamp: t1, scroll_depth: 20),
+          build(:engagement, user_id: 78, pathname: "/", timestamp: t1, scroll_depth: 20),
           build(:pageview, pathname: "/", timestamp: t1),
           build(:pageview, pathname: "/blog", timestamp: NaiveDateTime.add(t0, 1, :day))
         ]
@@ -1151,7 +1151,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
 
     @tag :tmp_dir
-    test "does not include scroll depth without existing pageleave data", %{
+    test "does not include scroll depth without existing engagement data", %{
       user: user,
       tmp_dir: tmp_dir
     } do
@@ -1228,7 +1228,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         )
       )
     else
-      File.rename!(context.local_path, Path.join(tmp_dir, "plausible-export.zip"))
+      Plausible.File.mv!(context.local_path, Path.join(tmp_dir, "plausible-export.zip"))
     end
 
     context
@@ -1236,9 +1236,11 @@ defmodule Plausible.Imported.CSVImporterTest do
 
   defp unzip_archive(%{tmp_dir: tmp_dir} = context) do
     assert {:ok, files} =
-             :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
+             :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")),
+               cwd: to_charlist(tmp_dir)
+             )
 
-    Map.put(context, :exported_files, files)
+    Map.put(context, :exported_files, Enum.map(files, &to_string/1))
   end
 
   defp upload_csvs(%{exported_files: files} = context) do
