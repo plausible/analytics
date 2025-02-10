@@ -54,7 +54,7 @@ defmodule PlausibleWeb.SiteController do
           changeset: Plausible.Site.changeset(%Plausible.Site{}),
           first_site?: first_site?,
           site_limit: Plausible.Teams.Billing.site_limit(team),
-          site_limit_exceeded?: true,
+          site_limit_exceeded?: false,
           flow: flow,
           form_submit_url: "/sites?flow=#{flow}"
         )
