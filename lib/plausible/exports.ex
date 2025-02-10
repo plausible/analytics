@@ -284,11 +284,7 @@ defmodule Plausible.Exports do
   defmacrop visit_duration(t) do
     quote do
       selected_as(
-        fragment(
-          "toUInt64(round(greatest(sum(?*?),0)*any(_sample_factor)))",
-          unquote(t).sign,
-          unquote(t).duration
-        ),
+        scale_sample(fragment("greatest(sum(?*?),0)", unquote(t).sign, unquote(t).duration)),
         :visit_duration
       )
     end
@@ -297,7 +293,7 @@ defmodule Plausible.Exports do
   defmacrop visitors(t) do
     quote do
       selected_as(
-        fragment("toUInt64(round(uniq(?)*any(_sample_factor)))", unquote(t).user_id),
+        scale_sample(fragment("uniq(?)", unquote(t).user_id)),
         :visitors
       )
     end
@@ -306,7 +302,7 @@ defmodule Plausible.Exports do
   defmacrop visits(t) do
     quote do
       selected_as(
-        fragment("toUInt64(round(greatest(sum(?),0)*any(_sample_factor)))", unquote(t).sign),
+        scale_sample(fragment("greatest(sum(?),0)", unquote(t).sign)),
         :visits
       )
     end
@@ -315,10 +311,12 @@ defmodule Plausible.Exports do
   defmacrop bounces(t) do
     quote do
       selected_as(
-        fragment(
-          "toUInt32(round(greatest(sum(?*?),0)*any(_sample_factor)))",
-          unquote(t).sign,
-          unquote(t).is_bounce
+        scale_sample(
+          fragment(
+            "greatest(sum(?*?),0)",
+            unquote(t).sign,
+            unquote(t).is_bounce
+          )
         ),
         :bounces
       )
@@ -328,10 +326,12 @@ defmodule Plausible.Exports do
   defmacrop pageviews(t) do
     quote do
       selected_as(
-        fragment(
-          "toUInt64(round(greatest(sum(?*?),0)*any(_sample_factor)))",
-          unquote(t).sign,
-          unquote(t).pageviews
+        scale_sample(
+          fragment(
+            "greatest(sum(?*?),0)",
+            unquote(t).sign,
+            unquote(t).pageviews
+          )
         ),
         :pageviews
       )
@@ -359,7 +359,7 @@ defmodule Plausible.Exports do
           date: date(e.timestamp, ^timezone),
           pageviews:
             selected_as(
-              fragment("toUInt64(round(countIf(?='pageview')*any(_sample_factor)))", e.name),
+              scale_sample(fragment("countIf(?='pageview')", e.name)),
               :pageviews
             )
         }
@@ -466,11 +466,11 @@ defmodule Plausible.Exports do
           selected_as(fragment("any(?)", e.hostname), :hostname),
           selected_as(e.pathname, :page),
           selected_as(
-            fragment("toUInt64(round(uniq(?)*any(_sample_factor)))", e.session_id),
+            scale_sample(fragment("uniq(?)", e.session_id)),
             :visits
           ),
           visitors(e),
-          selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews),
+          selected_as(scale_sample(fragment("count()")), :pageviews),
           selected_as(fragment("any(?)", s.scroll_depth), :scroll_depth),
           selected_as(fragment("any(?)", s.pageleave_visitors), :pageleave_visitors)
         ]
@@ -482,11 +482,11 @@ defmodule Plausible.Exports do
         selected_as(fragment("any(?)", e.hostname), :hostname),
         selected_as(e.pathname, :page),
         selected_as(
-          fragment("toUInt64(round(uniq(?)*any(_sample_factor)))", e.session_id),
+          scale_sample(fragment("uniq(?)", e.session_id)),
           :visits
         ),
         visitors(e),
-        selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews)
+        selected_as(scale_sample(fragment("count()")), :pageviews)
       ])
     end
   end
@@ -501,7 +501,7 @@ defmodule Plausible.Exports do
         s.entry_page,
         visitors(s),
         selected_as(
-          fragment("toUInt64(round(greatest(sum(?),0)*any(_sample_factor)))", s.sign),
+          scale_sample(fragment("greatest(sum(?),0)", s.sign)),
           :entrances
         ),
         visit_duration(s),
@@ -521,7 +521,7 @@ defmodule Plausible.Exports do
         visitors(s),
         visit_duration(s),
         selected_as(
-          fragment("toUInt64(round(greatest(sum(?),0)*any(_sample_factor)))", s.sign),
+          scale_sample(fragment("greatest(sum(?),0)", s.sign)),
           :exits
         ),
         bounces(s),
@@ -562,7 +562,7 @@ defmodule Plausible.Exports do
           :path
         ),
         visitors(e),
-        selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :events)
+        selected_as(scale_sample(fragment("count()")), :events)
       ]
   end
 

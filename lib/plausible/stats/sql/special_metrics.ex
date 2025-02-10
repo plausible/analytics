@@ -263,7 +263,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   defp total_visitors(site, query) do
     Base.base_event_query(site, query)
     |> select([e],
-      total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+      total_visitors: scale_sample(fragment("uniq(?)", e.user_id))
     )
   end
 end
