@@ -207,6 +207,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     json(conn, %{
       top_stats: top_stats,
+      metric_warnings: metric_warnings(meta),
       interval: query.interval,
       sample_percent: sample_percent,
       with_imported_switch: with_imported_switch_info(meta),
@@ -386,7 +387,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     top_stats =
       @goal_top_stats
-      |> Enum.map(&top_stats_entry(results, meta, &1))
+      |> Enum.map(&top_stats_entry(results, &1))
       |> Enum.reject(&is_nil/1)
 
     %{top_stats: top_stats, meta: meta, sample_percent: 100}
@@ -433,7 +434,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     top_stats =
       @other_top_stats
-      |> Enum.map(&top_stats_entry(results, meta, &1))
+      |> Enum.map(&top_stats_entry(results, &1))
       |> Enum.reject(&is_nil/1)
 
     sample_percent = results[:sample_percent][:value]
@@ -441,7 +442,7 @@ defmodule PlausibleWeb.Api.StatsController do
     %{top_stats: top_stats, meta: meta, sample_percent: sample_percent}
   end
 
-  defp top_stats_entry(current_results, meta, stat) do
+  defp top_stats_entry(current_results, stat) do
     if current_results[stat.key] do
       formatter =
         if stat.key == :time_on_page do
@@ -455,7 +456,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
       %{name: stat.name, value: formatter.(value), graph_metric: stat.key}
       |> maybe_put_comparison(current_results, stat.key, formatter)
-      |> maybe_put_metric_warning(meta, stat.key)
     end
   end
 
@@ -471,15 +471,6 @@ defmodule PlausibleWeb.Api.StatsController do
       entry
     end
   end
-
-  defp maybe_put_metric_warning(entry, meta, :scroll_depth) do
-    case meta[:metric_warnings][:scroll_depth] do
-      nil -> entry
-      warning -> Map.put(entry, :warning_code, warning.code)
-    end
-  end
-
-  defp maybe_put_metric_warning(entry, _, _), do: entry
 
   def sources(conn, params) do
     site = conn.assigns[:site]
@@ -913,12 +904,9 @@ defmodule PlausibleWeb.Api.StatsController do
       response_meta = Stats.Breakdown.formatted_date_ranges(query)
 
       response_meta =
-        case meta[:metric_warnings] do
-          %{scroll_depth: %{code: code}} ->
-            Map.put(response_meta, :metric_warnings, %{scroll_depth: code})
-
-          _ ->
-            response_meta
+        case metric_warnings(meta) do
+          warnings when map_size(warnings) == 0 -> response_meta
+          warnings -> Map.put(response_meta, :metric_warnings, warnings)
         end
 
       json(conn, %{
@@ -1695,5 +1683,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp toplevel_goal_filter?(query) do
     Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0)
+  end
+
+  defp metric_warnings(query_result_meta) do
+    case query_result_meta[:metric_warnings] do
+      %{scroll_depth: %{code: code}} -> %{scroll_depth: code}
+      _ -> %{}
+    end
   end
 end
