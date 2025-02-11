@@ -47,7 +47,7 @@ defmodule Plausible.Site do
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
-    has_many :ownerships, through: [:team, :ownerships]
+    has_many :ownerships, through: [:team, :ownerships], preload_order: [asc: :id]
     has_many :owners, through: [:team, :owners]
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Cache`.

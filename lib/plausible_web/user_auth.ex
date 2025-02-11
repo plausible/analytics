@@ -142,6 +142,7 @@ defmodule PlausibleWeb.UserAuth do
         left_lateral_join: ts in subquery(last_team_subscription_query),
         on: true,
         where: us.token == ^token and us.timeout_at > ^now,
+        order_by: t.id,
         preload: [user: {u, team_memberships: {tm, team: {t, subscription: ts}}}]
       )
 
