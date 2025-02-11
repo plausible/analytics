@@ -104,6 +104,20 @@ defmodule Plausible.Stats.Goals do
     }
   end
 
+  def toplevel_scroll_goal_filters?(query) do
+    goal_filters? =
+      Enum.any?(query.filters, fn
+        [_, "event:goal", _] -> true
+        _ -> false
+      end)
+
+    any_scroll_goals_preloaded? =
+      query.preloaded_goals.matching_toplevel_filters
+      |> Enum.any?(fn goal -> Plausible.Goal.type(goal) == :scroll end)
+
+    goal_filters? and any_scroll_goals_preloaded?
+  end
+
   defp filter_preloaded(goals, filter, clause) do
     Enum.filter(goals, fn goal -> matches?(goal, filter, clause) end)
   end

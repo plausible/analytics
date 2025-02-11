@@ -242,7 +242,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
 
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["Visit /blog"], "metrics" => [2, 2, 100.0]},
-               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [1, 0, 50.0]}
+               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [1, nil, 50.0]}
              ]
     end
 
@@ -321,10 +321,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Scroll /blog 25", "jane"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["Scroll /blog 50", "jane"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["Scroll /blog 25", "john"], "metrics" => [1, 0, 25.0]},
-               %{"dimensions" => ["Scroll /blog 75", "jane"], "metrics" => [1, 0, 25.0]}
+               %{"dimensions" => ["Scroll /blog 25", "jane"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["Scroll /blog 50", "jane"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["Scroll /blog 25", "john"], "metrics" => [1, nil, 25.0]},
+               %{"dimensions" => ["Scroll /blog 75", "jane"], "metrics" => [1, nil, 25.0]}
              ]
     end
 
@@ -379,7 +379,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Twitter"], "metrics" => [1, 0, 50.0]}
+               %{"dimensions" => ["Twitter"], "metrics" => [1, nil, 50.0]}
              ]
     end
 
@@ -459,8 +459,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["jane"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["john"], "metrics" => [1, 0, 25.0]}
+               %{"dimensions" => ["jane"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["john"], "metrics" => [1, nil, 25.0]}
              ]
     end
 
@@ -540,9 +540,60 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [2, 0, 50.0]},
-               %{"dimensions" => ["Scroll /blog 75"], "metrics" => [1, 0, 25.0]}
+               %{"dimensions" => ["Scroll /blog 25"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [2, nil, 50.0]},
+               %{"dimensions" => ["Scroll /blog 75"], "metrics" => [1, nil, 25.0]}
+             ]
+    end
+
+    test "breakdown by event:goal with goal filters", %{conn: conn, site: site} do
+      insert(:goal,
+        site: site,
+        page_path: "/blog",
+        scroll_threshold: 50,
+        display_name: "Scroll /blog 50"
+      )
+
+      insert(:goal, site: site, page_path: "/blog", display_name: "Visit /blog")
+
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/blog",
+          scroll_depth: 20,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, user_id: 2, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 2,
+          pathname: "/blog",
+          scroll_depth: 70,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, user_id: 3, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 3,
+          pathname: "/blog",
+          scroll_depth: 50,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, user_id: 4, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 4, pathname: "/blog", timestamp: ~N[2021-01-01 00:01:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["Scroll /blog 50", "Visit /blog"]]],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Visit /blog"], "metrics" => [4, 5, 100.0]},
+               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [2, nil, 50.0]}
              ]
     end
   end

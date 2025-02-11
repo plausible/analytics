@@ -1621,7 +1621,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                }
              } = json_response(conn, 200)
 
-      assert results == [%{"dimensions" => [], "metrics" => [1, 0, 100.0]}]
+      assert results == [%{"dimensions" => [], "metrics" => [1, nil, 100.0]}]
     end
 
     test "rejects imported data with warning when page scroll goal is filtered by (IN filter)", %{
@@ -1671,7 +1671,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                }
              } = json_response(conn, 200)
 
-      assert results == [%{"dimensions" => [], "metrics" => [1, 1, 100.0]}]
+      assert results == [%{"dimensions" => [], "metrics" => [1, nil, 100.0]}]
     end
 
     test "ignores imported data for page scroll goal conversions in goal breakdown", %{
@@ -1720,7 +1720,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
       assert results == [
                %{"dimensions" => ["Visit /blog**"], "metrics" => [2, 2, 100.0]},
-               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [1, 0, 50.0]}
+               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [1, nil, 50.0]}
              ]
     end
   end

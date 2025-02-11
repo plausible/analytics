@@ -188,7 +188,8 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
     )
   }
 
-  const stats = data && data.top_stats.map(renderStat)
+  const stats =
+    data && data.top_stats.filter((stat) => stat.value !== null).map(renderStat)
 
   if (stats && query.period === 'realtime') {
     stats.push(blinkingDot())
