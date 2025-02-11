@@ -101,13 +101,19 @@ defmodule Plausible.HelpScout do
             {nil, nil, nil}
         end
 
+      status_link =
+        if team do
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :teams, :team, team.id)
+        else
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id)
+        end
+
       {:ok,
        %{
          email: user.email,
          notes: user.notes,
          status_label: status_label(team, subscription),
-         status_link:
-           Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id),
+         status_link: status_link,
          plan_label: plan_label(subscription, plan),
          plan_link: plan_link(subscription),
          sites_count: Plausible.Teams.owned_sites_count(team),
