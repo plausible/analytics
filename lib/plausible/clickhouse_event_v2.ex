@@ -73,6 +73,7 @@ defmodule Plausible.ClickhouseEventV2 do
 
   @session_properties [
     :session_id,
+    :user_id,
     :referrer,
     :referrer_source,
     :click_id_param,

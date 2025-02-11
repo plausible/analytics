@@ -1258,6 +1258,23 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              }
     end
 
+    test "salts rotating once does not", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      Plausible.Session.WriteBuffer.flush()
+      Plausible.Session.Salts.rotate()
+
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+
+      [event1, event2] = get_events(site)
+      [session1, session2] = get_sessions(site)
+
+      records = [event1, event2, session1, session2]
+
+      assert length(records) == 4
+      assert records |> Enum.map(& &1.user_id) |> Enum.uniq() |> Enum.count() == 1
+      assert records |> Enum.map(& &1.session_id) |> Enum.uniq() |> Enum.count() == 1
+    end
+
     test "responds 400 with errors when domain is missing", %{conn: conn} do
       params = %{
         domain: nil,
