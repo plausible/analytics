@@ -34,7 +34,6 @@
       elements.forEach(element => {
         const attributeValue = element.getAttribute(attribute);
         const eventValue = `${attribute}-${attributeValue}`;
-        
         trigger('phx-event', {
           props: {
             event: attribute,

@@ -47,5 +47,68 @@ test.describe('script.live-view.js tracking', () => {
         expect(request.postDataJSON().u).toEqual("/navigate")
         expectCustomEvent(request, 'pageview', {})
     });
+    
+});
+
+test.describe('script.live-view.js moon ds tracking', () => {
+    let plausibleRequestMock;
+
+    test.beforeEach(async ({ page }) => {
+        plausibleRequestMock = mockRequest(page, '/api/event')
+        await page.goto('/live-view-moon-components.html');
+    });
+
+    test('Sends data-moon-react-assets-id', async ({ page }) => {
+        await page.evaluate(() => window.dispatchEvent(new CustomEvent("data-moon-react-assets-id", { value: "main-form" })))
+        const request = await plausibleRequestMock;
+        expectCustomEvent(request, 'phx-event', { event: 'data-moon-react-assets-id', value: 'main-form' })
+    });
+    
+});
+    
+test.describe('script.live-view.js moon icons ds tracking', () => {
+    let plausibleRequestMock;
+
+    test.beforeEach(async ({ page }) => {
+        plausibleRequestMock = mockRequest(page, '/api/event')
+        await page.goto('/live-view-moon-components-4.html');
+    });
+
+    test('Sends data-moon-icons-react-id', async ({ page }) => {
+        await page.evaluate(() => window.dispatchEvent(new CustomEvent("data-moon-icons-react-id", { value: "main-form-react" })))
+        const request = await plausibleRequestMock;
+        expectCustomEvent(request, 'phx-event', { event: 'data-moon-icons-react-id', value: 'main-form-react' })
+    });
+    
+});
+
+test.describe('script.live-view.js moon ds elixir tracking', () => {
+    let plausibleRequestMock;
+
+    test.beforeEach(async ({ page }) => {
+        plausibleRequestMock = mockRequest(page, '/api/event')
+        await page.goto('/live-view-moon-components-2.html');
+    });
+
+    test('Sends data-moon-elixir-assets-id', async ({ page }) => {
+        await page.evaluate(() => window.dispatchEvent(new CustomEvent("data-moon-elixir-assets-id", { value: "main-form-elixir" })))
+        const request = await plausibleRequestMock;
+        expectCustomEvent(request, 'phx-event', { event: 'data-moon-elixir-assets-id', value: 'main-form-elixir' })
+    });
+});
+
+test.describe('script.live-view.js moon ds icons tracking', () => {
+    let plausibleRequestMock;
+
+    test.beforeEach(async ({ page }) => {
+        plausibleRequestMock = mockRequest(page, '/api/event')
+        await page.goto('/live-view-moon-components-3.html');
+    });
+
+    test('Sends data-moon-icons-id', async ({ page }) => {
+        await page.evaluate(() => window.dispatchEvent(new CustomEvent("data-moon-icons-id", { value: "main-form-icon" })))
+        const request = await plausibleRequestMock;
+        expectCustomEvent(request, 'phx-event', { event: 'data-moon-icons-id', value: 'main-form-icon' })
+    });
 
 });
