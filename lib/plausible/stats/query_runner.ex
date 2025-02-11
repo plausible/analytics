@@ -164,18 +164,23 @@ defmodule Plausible.Stats.QueryRunner do
     do: Map.get(time_on_page, dimensions)
 
   defp get_metric(entry, :events, _dimensions, query, _time_on_page) do
-    scroll_goal_dimension? =
-      if "event:goal" in query.dimensions do
+    # :TODO: Tests for the subtle behavior for when there's both goal dimension AND filters.
+    cond do
+      "event:goal" in query.dimensions ->
         goal = get_dimension_goal(entry, query)
-        Plausible.Goal.type(goal) == :scroll
-      end
 
-    scroll_goal_filters? = Plausible.Stats.Goals.toplevel_scroll_goal_filters?(query)
+        if Plausible.Goal.type(goal) != :scroll do
+          Map.get(entry, :events)
+        else
+          nil
+        end
 
-    if scroll_goal_dimension? || scroll_goal_filters? do
-      nil
-    else
-      Map.get(entry, :events)
+      # Cannot show aggregate when there are at least some scroll goal filters
+      Plausible.Stats.Goals.toplevel_scroll_goal_filters?(query) ->
+        nil
+
+      true ->
+        Map.get(entry, :events)
     end
   end
 
