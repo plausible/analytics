@@ -53,7 +53,7 @@ defmodule Plausible.Stats.Breakdown do
     if query.include.comparisons do
       comparison_date_range_label =
         query
-        |> Comparisons.get_comparison_query(query.include.comparisons)
+        |> Comparisons.get_comparison_query()
         |> format_date_range()
 
       Map.put(

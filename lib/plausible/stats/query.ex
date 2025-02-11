@@ -2,6 +2,7 @@ defmodule Plausible.Stats.Query do
   use Plausible
 
   defstruct utc_time_range: nil,
+            comparison_utc_time_range: nil,
             interval: nil,
             period: nil,
             dimensions: [],
@@ -27,21 +28,22 @@ defmodule Plausible.Stats.Query do
             site_native_stats_start_at: nil
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy}
+  alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}
 
   @type t :: %__MODULE__{}
 
   def build(site, schema_type, params, debug_metadata) do
     with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params) do
       query =
-        struct!(__MODULE__, Map.to_list(query_data))
-        |> put_imported_opts(site)
-        |> struct!(
+        %__MODULE__{
           now: DateTime.utc_now(:second),
           debug_metadata: debug_metadata,
           site_id: site.id,
           site_native_stats_start_at: site.native_stats_start_at
-        )
+        }
+        |> set(Map.to_list(query_data))
+        |> put_comparison_utc_time_range()
+        |> put_imported_opts(site)
 
       on_ee do
         query = Plausible.Stats.Sampling.put_threshold(query, site, params)
@@ -123,6 +125,13 @@ defmodule Plausible.Stats.Query do
     put_imported_opts(query, nil)
   end
 
+  def put_comparison_utc_time_range(%__MODULE__{include: %{comparisons: nil}} = query), do: query
+
+  def put_comparison_utc_time_range(%__MODULE__{include: %{comparisons: comparison_opts}} = query) do
+    datetime_range = Comparisons.get_comparison_utc_time_range(query, comparison_opts)
+    set(query, comparison_utc_time_range: datetime_range)
+  end
+
   def put_imported_opts(query, site) do
     requested? = query.include.imports
 
@@ -150,8 +159,7 @@ defmodule Plausible.Stats.Query do
       is_nil(query.latest_import_end_date) ->
         :no_imported_data
 
-      query.period in ["realtime", "30m"] or
-          Date.after?(date_range(query).first, query.latest_import_end_date) ->
+      not imported_data_in_range?(query) ->
         :out_of_range
 
       "time:minute" in query.dimensions or "time:hour" in query.dimensions ->
@@ -163,6 +171,23 @@ defmodule Plausible.Stats.Query do
       true ->
         nil
     end
+  end
+
+  defp imported_data_in_range?(%__MODULE__{period: period}) when period in ["realtime", "30m"] do
+    false
+  end
+
+  defp imported_data_in_range?(query) do
+    query_range_start =
+      case query.include.comparisons do
+        %DateTimeRange{} = comparison_range ->
+          DateTimeRange.to_date_range(comparison_range, query.timezone).first
+
+        _ ->
+          date_range(query).first
+      end
+
+    not Date.after?(query_range_start, query.latest_import_end_date)
   end
 
   @spec trace(%__MODULE__{}, [atom()]) :: %__MODULE__{}

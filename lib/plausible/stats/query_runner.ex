@@ -62,7 +62,7 @@ defmodule Plausible.Stats.QueryRunner do
        when is_map(query.include.comparisons) do
     comparison_query =
       query
-      |> Comparisons.get_comparison_query(query.include.comparisons)
+      |> Comparisons.get_comparison_query()
       |> Comparisons.add_comparison_filters(main_results)
 
     struct!(runner, comparison_query: comparison_query)
