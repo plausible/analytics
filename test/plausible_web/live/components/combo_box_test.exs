@@ -245,24 +245,6 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       end
     end
 
-    defmodule CreatableCustomView do
-      use Phoenix.LiveView
-
-      def render(assigns) do
-        ~H"""
-        <.live_component
-          submit_name="some_submit_name"
-          module={PlausibleWeb.Live.Components.ComboBox}
-          suggest_fun={&ComboBox.StaticSearch.suggest/2}
-          id="test-creatable-component"
-          creatable
-          creatable_prompt="Custom Text"
-          clear_on_select
-        />
-        """
-      end
-    end
-
     test "stores selected value from suggestion", %{conn: conn} do
       {:ok, lv, _html} = live_isolated(conn, CreatableView, session: %{})
       type_into_combo(lv, "test-creatable-component", "option 20")
