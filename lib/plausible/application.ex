@@ -16,6 +16,7 @@ defmodule Plausible.Application do
     children =
       [
         Plausible.PromEx,
+        {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         Plausible.Cache.Stats,
         Plausible.Repo,
         Plausible.ClickhouseRepo,
@@ -99,7 +100,6 @@ defmodule Plausible.Application do
         Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
         Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
         ReferrerBlocklist,
-        {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         {Plausible.RateLimit, clean_period: :timer.minutes(10)},
         {Finch, name: Plausible.Finch, pools: finch_pool_config()},
         {Phoenix.PubSub, name: Plausible.PubSub},
