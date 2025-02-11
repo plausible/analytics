@@ -330,27 +330,6 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
       assert Floki.attribute(creatable_option, "x-on:click") == []
     end
-
-    test "allows for custom creatable prompt", %{conn: conn} do
-      {:ok, lv, _html} = live_isolated(conn, CreatableCustomView, session: %{})
-
-      assert lv
-             |> type_into_combo("test-creatable-component", "my new option")
-             |> text_of_element("li#dropdown-test-creatable-component-option-0 a") ==
-               ~s(Custom Text "my new option")
-    end
-
-    test "clears on select", %{conn: conn} do
-      {:ok, lv, _html} = live_isolated(conn, CreatableCustomView, session: %{})
-
-      type_into_combo(lv, "test-creatable-component", "my new option")
-
-      lv
-      |> element("li#dropdown-test-creatable-component-option-0 a")
-      |> render_click()
-
-      assert lv |> render() |> text_of_attr("#test-creatable-component", "value") == ""
-    end
   end
 
   describe "async suggestions" do

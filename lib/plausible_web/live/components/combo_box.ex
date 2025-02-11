@@ -68,10 +68,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:suggest_fun, :any, required: true)
   attr(:suggestions_limit, :integer)
   attr(:class, :string, default: "")
-  attr(:clear_on_select, :boolean, default: false)
   attr(:required, :boolean, default: false)
   attr(:creatable, :boolean, default: false)
-  attr(:creatable_prompt, :string, default: "Create")
   attr(:errors, :list, default: [])
   attr(:async, :boolean, default: Mix.env() != :test)
   attr(:on_selection_made, :any)
@@ -138,7 +136,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           target={@myself}
           creatable={@creatable}
           display_value={@display_value}
-          creatable_prompt={@creatable_prompt}
         />
       </div>
     </div>
@@ -173,7 +170,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:suggest_fun, :any, required: true)
   attr(:target, :any)
   attr(:creatable, :boolean, required: true)
-  attr(:creatable_prompt, :string, default: nil)
   attr(:display_value, :string, required: true)
 
   def combo_dropdown(assigns) do
@@ -194,7 +190,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         target={@target}
         ref={@ref}
         creatable
-        creatable_prompt={@creatable_prompt}
       />
 
       <.option
@@ -235,7 +230,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:target, :any)
   attr(:idx, :integer, required: true)
   attr(:creatable, :boolean, default: false)
-  attr(:creatable_prompt, :string, required: false)
 
   def option(assigns) do
     assigns = assign(assigns, :suggestions_limit, suggestions_limit(assigns))
@@ -260,7 +254,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         class="block truncate py-2 px-3"
       >
         <%= if @creatable do %>
-          {@creatable_prompt} "{@display_value}"
+          Create "{@display_value}"
         <% else %>
           {@display_value}
         <% end %>
@@ -323,13 +317,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   defp do_select(socket, submit_value, display_value) do
     id = socket.assigns.id
-
-    display_value =
-      if socket.assigns[:clear_on_select] do
-        ""
-      else
-        display_value
-      end
 
     socket =
       socket
