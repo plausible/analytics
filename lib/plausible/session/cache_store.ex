@@ -23,6 +23,7 @@ defmodule Plausible.Session.CacheStore do
         handle_event(event, found_session, session_attributes, buffer_insert)
       end
     )
+    |> unwrap_error()
   end
 
   defp handle_event(%{name: name} = event, found_session, _, _)
@@ -31,7 +32,7 @@ defmodule Plausible.Session.CacheStore do
       # Make sure the session is kept active in the in-memory session cache
       refresh_session_cache(found_session, event.timestamp)
 
-      {:ok, found_session}
+      found_session
     else
       {:error, :no_session_for_pageleave}
     end
@@ -140,4 +141,7 @@ defmodule Plausible.Session.CacheStore do
       "entry_meta.value": Map.get(event, :"meta.value")
     }
   end
+
+  defp unwrap_error({:ok, {:error, error}}), do: {:error, error}
+  defp unwrap_error(response), do: response
 end
