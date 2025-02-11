@@ -164,7 +164,6 @@ defmodule Plausible.Stats.QueryRunner do
     do: Map.get(time_on_page, dimensions)
 
   defp get_metric(entry, :events, _dimensions, query, _time_on_page) do
-    # :TODO: Tests for the subtle behavior for when there's both goal dimension AND filters.
     cond do
       "event:goal" in query.dimensions ->
         goal = get_dimension_goal(entry, query)
