@@ -1270,7 +1270,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       records = [event1, event2, session1, session2]
 
-      assert length(records) == 4
       assert records |> Enum.map(& &1.user_id) |> Enum.uniq() |> Enum.count() == 1
       assert records |> Enum.map(& &1.session_id) |> Enum.uniq() |> Enum.count() == 1
     end
