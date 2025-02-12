@@ -108,6 +108,17 @@ defmodule Plausible.HelpScout do
           Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id)
         end
 
+      sites_link =
+        if team do
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+            custom_search: team.identifier
+          )
+        else
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+            custom_search: user.email
+          )
+        end
+
       {:ok,
        %{
          email: user.email,
@@ -117,10 +128,7 @@ defmodule Plausible.HelpScout do
          plan_label: plan_label(subscription, plan),
          plan_link: plan_link(subscription),
          sites_count: Plausible.Teams.owned_sites_count(team),
-         sites_link:
-           Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-             custom_search: user.email
-           )
+         sites_link: sites_link
        }}
     end
   end
