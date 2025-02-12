@@ -9,7 +9,6 @@ defmodule Plausible.Stats.QueryResult do
 
   use Plausible
   alias Plausible.Stats.{DateTimeRange, Query, QueryRunner}
-  alias Plausible.Imported
 
   defstruct results: [],
             meta: %{},
@@ -44,8 +43,8 @@ defmodule Plausible.Stats.QueryResult do
 
   defp meta(%QueryRunner{} = runner) do
     %{}
-    |> add_imports_meta(runner)
-    |> add_metric_warnings_meta(runner)
+    |> add_imports_meta(runner.main_query)
+    |> add_metric_warnings_meta(runner.main_query)
     |> add_time_labels_meta(runner.main_query)
     |> add_total_rows_meta(runner.main_query, runner.total_rows)
   end
@@ -58,40 +57,23 @@ defmodule Plausible.Stats.QueryResult do
       "Imported stats are not included because the time dimension (i.e. the interval) is too short."
   }
 
-  defp add_imports_meta(meta, %QueryRunner{} = runner) do
-    %{main_query: %{include: include} = main_query} = runner
-
-    if include.imports or include[:imports_meta] do
-      comparison_query = Map.get(runner, :comparison_query)
-
-      imports_included =
-        case comparison_query do
-          %Query{include_imported: true} -> true
-          _ -> main_query.include_imported
-        end
-
-      imports_skip_reason =
-        case comparison_query do
-          %Query{skip_imported_reason: nil} -> nil
-          _ -> main_query.skip_imported_reason
-        end
-
-      imports_warning = @imports_warnings[imports_skip_reason]
-
+  defp add_imports_meta(meta, %Query{include: include} = query) do
+    if include.imports or include.imports_meta do
       %{
-        imports_included: imports_included,
-        imports_skip_reason: imports_skip_reason,
-        imports_warning: imports_warning
+        imports_included: query.include_imported,
+        imports_skip_reason: query.skip_imported_reason,
+        imports_warning: @imports_warnings[query.skip_imported_reason]
       }
-      |> Map.reject(fn {_key, value} -> is_nil(value) end)
+      |> Enum.reject(fn {_key, value} -> is_nil(value) end)
+      |> Enum.into(%{})
       |> Map.merge(meta)
     else
       meta
     end
   end
 
-  defp add_metric_warnings_meta(meta, runner) do
-    warnings = metric_warnings(meta, runner)
+  defp add_metric_warnings_meta(meta, query) do
+    warnings = metric_warnings(query)
 
     if map_size(warnings) > 0 do
       Map.put(meta, :metric_warnings, warnings)
@@ -130,9 +112,9 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp metric_warnings(meta, %QueryRunner{main_query: query} = runner) do
+  defp metric_warnings(%Query{} = query) do
     Enum.reduce(query.metrics, %{}, fn metric, acc ->
-      case metric_warning(metric, meta, runner) do
+      case metric_warning(metric, query) do
         nil -> acc
         %{} = warning -> Map.put(acc, metric, warning)
       end
@@ -151,7 +133,7 @@ defmodule Plausible.Stats.QueryResult do
         "Revenue metrics are null as there are no matching revenue goals."
     }
 
-    defp metric_warning(metric, _meta, %QueryRunner{main_query: query})
+    defp metric_warning(metric, %Query{} = query)
          when metric in @revenue_metrics do
       if query.revenue_warning do
         %{
@@ -169,25 +151,13 @@ defmodule Plausible.Stats.QueryResult do
     warning: "No imports with scroll depth data were found"
   }
 
-  defp metric_warning(:scroll_depth, %{imports_included: true} = _meta, %QueryRunner{} = runner) do
-    %QueryRunner{site: site, main_query: main_query, comparison_query: comparison_query} = runner
-
-    imports_in_main_range = Imported.completed_imports_in_query_range(site, main_query)
-
-    imports_in_comparison_range =
-      case comparison_query do
-        nil -> []
-        %Query{} = query -> Imported.completed_imports_in_query_range(site, query)
-      end
-
-    imports_in_range = imports_in_main_range ++ imports_in_comparison_range
-
-    if not Enum.any?(imports_in_range, & &1.has_scroll_depth) do
+  defp metric_warning(:scroll_depth, %Query{} = query) do
+    if query.include_imported and not Enum.any?(query.imports_in_range, & &1.has_scroll_depth) do
       @no_imported_scroll_depth_metric_warning
     end
   end
 
-  defp metric_warning(_metric, _meta, _query), do: nil
+  defp metric_warning(_metric, _query), do: nil
 
   defp to_iso8601(datetime, timezone) do
     datetime
