@@ -1,18 +1,24 @@
-const { expectPlausibleInAction, engagementCooldown } = require('./support/test-utils')
+const { expect } = require("@playwright/test")
+const { expectPlausibleInAction, engagementCooldown, hideAndShowCurrentTab } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
 test.describe('engagement events', () => {
-  test('sends a pageleave when navigating to the next page', async ({ page }) => {
+  test('sends an engagement event with time measurement when navigating to the next page', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
       expectedRequests: [{n: 'pageview'}],
     })
 
-    await expectPlausibleInAction(page, {
+    await page.waitForTimeout(1000)
+
+    const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
       expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}]
     })
+
+    expect(request.e).toBeGreaterThan(1000)
+    expect(request.e).toBeLessThan(1500)
   })
 
   test('sends an event and a pageview on hash-based SPA navigation', async ({ page }) => {
@@ -21,13 +27,18 @@ test.describe('engagement events', () => {
       expectedRequests: [{n: 'pageview'}],
     })
 
-    await expectPlausibleInAction(page, {
+    await page.waitForTimeout(1000)
+
+    const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#hash-nav'),
       expectedRequests: [
         {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html`},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`}
       ]
     })
+
+    expect(request.e).toBeGreaterThan(1000)
+    expect(request.e).toBeLessThan(1500)
   })
 
   test('sends an event and a pageview on history-based SPA navigation', async ({ page }) => {
@@ -36,13 +47,18 @@ test.describe('engagement events', () => {
       expectedRequests: [{n: 'pageview'}],
     })
 
-    await expectPlausibleInAction(page, {
+    await page.waitForTimeout(1000)
+
+    const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#history-nav'),
       expectedRequests: [
         {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/another-page`}
       ]
     })
+
+    expect(request.e).toBeGreaterThan(1000)
+    expect(request.e).toBeLessThan(1500)
   })
 
   test('sends an event with the manually overridden URL', async ({ page }) => {
@@ -86,7 +102,7 @@ test.describe('engagement events', () => {
     await engagementCooldown(page)
 
     // Navigate from ignored page to a tracked page ->
-    // no pageleave from the current page, pageview on the next page
+    // no engagement from the current page, pageview on the next page
     await expectPlausibleInAction(page, {
       action: () => page.click('#hash-link-1'),
       expectedRequests: [{n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1}],
@@ -96,7 +112,7 @@ test.describe('engagement events', () => {
     await engagementCooldown(page)
 
     // Navigate from a tracked page to another tracked page ->
-    // pageleave with the last page URL, pageview with the new URL
+    // engagement with the last page URL, pageview with the new URL
     await expectPlausibleInAction(page, {
       action: () => page.click('#hash-link-2'),
       expectedRequests: [
@@ -188,4 +204,45 @@ test.describe('engagement events', () => {
     })
   })
 
+  test('sends engagement events when tab toggles between foreground and background', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement.html'),
+      expectedRequests: [{n: 'pageview'}],
+    })
+
+    const [request1] = await expectPlausibleInAction(page, {
+      action: () => hideAndShowCurrentTab(page, {delay: 2000}),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+    })
+    expect(request1.e).toBeLessThan(500)
+
+    await page.waitForTimeout(2000)
+
+    const [request2] = await expectPlausibleInAction(page, {
+      action: () => hideAndShowCurrentTab(page, {delay: 2000}),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+    })
+
+    expect(request2.e).toBeGreaterThan(2000)
+    expect(request2.e).toBeLessThan(2500)
+  })
+
+  test('does not send engagement events when tab is only open for a short time', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement.html'),
+      expectedRequests: [{n: 'pageview'}],
+    })
+
+    await expectPlausibleInAction(page, {
+      action: () => hideAndShowCurrentTab(page),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+    })
+
+    await page.waitForTimeout(100)
+
+    await expectPlausibleInAction(page, {
+      action: () => hideAndShowCurrentTab(page),
+      refutedRequests: [{n: 'engagement'}],
+    })
+  })
 })

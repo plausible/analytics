@@ -131,6 +131,8 @@ exports.expectPlausibleInAction = async function (page, {
   expect(refutedButFoundRequestBodies, refutedBodySubsetsErrorMessage).toHaveLength(0)
 
   expect(requestBodies.length).toBe(requestsToExpect)
+
+  return requestBodies
 }
 
 exports.ignoreEngagementRequests = function(requestPostData) {
@@ -157,8 +159,11 @@ exports.showCurrentTab = async function(page) {
   return toggleTabVisibility(page, false)
 }
 
-exports.hideAndShowCurrentTab = async function(page) {
+exports.hideAndShowCurrentTab = async function(page, options = {}) {
   await exports.hideCurrentTab(page)
+  if (options.delay > 0) {
+    await delay(options.delay)
+  }
   await exports.showCurrentTab(page)
 }
 
