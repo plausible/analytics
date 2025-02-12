@@ -651,7 +651,8 @@ defmodule PlausibleWeb.Live.Sites do
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
       Sites.list_with_invitations(assigns.current_user, assigns.params,
-        filter_by_domain: assigns.filter_text
+        filter_by_domain: assigns.filter_text,
+        team: assigns.current_team
       )
 
     hourly_stats =

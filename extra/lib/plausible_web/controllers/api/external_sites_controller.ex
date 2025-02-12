@@ -8,16 +8,18 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   alias Plausible.Sites
   alias Plausible.Goal
   alias Plausible.Goals
+  alias Plausible.Teams
   alias PlausibleWeb.Api.Helpers, as: H
 
   @pagination_opts [cursor_fields: [{:id, :desc}], limit: 100, maximum_limit: 1000]
 
   def index(conn, params) do
+    team = Teams.get(params["team_id"])
     user = conn.assigns.current_user
 
     page =
       user
-      |> Sites.for_user_query()
+      |> Sites.for_user_query(team)
       |> paginate(params, @pagination_opts)
 
     json(conn, %{
