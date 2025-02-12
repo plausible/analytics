@@ -9,6 +9,7 @@ import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
+import { useSegmentExpandedContext } from '../segments/segment-expanded-context'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -154,6 +155,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   }
 
   const canClear = query.filters.length > 1
+  const canSaveAsSegment = canClear
 
   return (
     <div
@@ -222,6 +224,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
                   />
                 )}
                 {canClear && <ClearAction />}
+                {canSaveAsSegment && <SaveAsSegmentAction />}
               </Popover.Panel>
             </Transition>
           </Popover>
@@ -234,7 +237,7 @@ const ClearAction = () => (
   <AppNavigationLink
     title="Clear all filters"
     className={classNames(
-      'self-start button h-9 !px-3 !py-2 flex !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
+      'button flex self-start h-9 !px-3 !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
     )}
     search={(search) => ({
       ...search,
@@ -245,3 +248,20 @@ const ClearAction = () => (
     Clear all filters
   </AppNavigationLink>
 )
+
+const SaveAsSegmentAction = () => {
+  const { expandedSegment, setModal } = useSegmentExpandedContext()
+  return !expandedSegment ? (
+    <AppNavigationLink
+      title="Clear all filters"
+      className={classNames(
+        'button flex self-start h-9 !px-3 whitespace-nowrap'
+      )}
+      search={(s) => s}
+      onClick={() => setModal('create')}
+      state={{ expandedSegment: null }}
+    >
+      Save as segment
+    </AppNavigationLink>
+  ) : null
+}

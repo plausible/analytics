@@ -1,6 +1,7 @@
 /** @format */
 
 import * as api from '../api'
+import { formatSegmentIdAsLabelKey } from '../filtering/segments'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
   page: ['page', 'entry_page', 'exit_page'],
@@ -12,7 +13,8 @@ export const FILTER_MODAL_TO_FILTER_GROUP = {
   utm: ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   goal: ['goal'],
   props: ['props'],
-  hostname: ['hostname']
+  hostname: ['hostname'],
+  segment: ['segment']
 }
 
 export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
@@ -65,9 +67,13 @@ export function isFreeChoiceFilterOperation(operation) {
 export function getLabel(labels, filterKey, value) {
   if (['country', 'region', 'city'].includes(filterKey)) {
     return labels[value]
-  } else {
-    return value
   }
+
+  if (filterKey === 'segment') {
+    return labels[formatSegmentIdAsLabelKey(value)]
+  }
+
+  return value
 }
 
 export function getPropertyKeyFromFilterKey(filterKey) {
@@ -135,11 +141,18 @@ export function formatFilterGroup(filterGroup) {
 export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   const filteredBy = Object.fromEntries(
     filters
-      .flatMap(([_operation, filterKey, clauses]) =>
-        ['country', 'region', 'city'].includes(filterKey) ? clauses : []
-      )
+      .flatMap(([_operation, filterKey, clauses]) => {
+        if (filterKey === 'segment') {
+          return clauses.map(formatSegmentIdAsLabelKey)
+        }
+        if (['country', 'region', 'city'].includes(filterKey)) {
+          return clauses
+        }
+        return []
+      })
       .map((value) => [value, true])
   )
+
   let result = { ...labels }
   for (const value in labels) {
     if (!filteredBy[value]) {
@@ -149,7 +162,7 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
 
   if (
     mergedFilterKey &&
-    ['country', 'region', 'city'].includes(mergedFilterKey)
+    ['country', 'region', 'city', 'segment'].includes(mergedFilterKey)
   ) {
     result = {
       ...result,
@@ -160,20 +173,65 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   return result
 }
 
+const NO_PREFIX_KEYS = new Set(['segment'])
 const EVENT_FILTER_KEYS = new Set(['name', 'page', 'goal', 'hostname'])
+const EVENT_PREFIX = 'event:'
+const VISIT_PREFIX = 'visit:'
 
-export function serializeApiFilters(filters) {
-  const apiFilters = filters.map(serializeFilter)
-  return JSON.stringify(apiFilters)
+function remapFilterKey(filterKey) {
+  if (NO_PREFIX_KEYS.has(filterKey)) {
+    return filterKey
+  }
+  if (EVENT_FILTER_KEYS.has(filterKey)) {
+    return `${EVENT_PREFIX}${filterKey}`
+  }
+  return `${VISIT_PREFIX}${filterKey}`
 }
 
-function serializeFilter([operation, filterKey, clauses, ...modifiers]) {
-  let apiFilterKey = `visit:${filterKey}`
-  if (
-    filterKey.startsWith(EVENT_PROPS_PREFIX) ||
-    EVENT_FILTER_KEYS.has(filterKey)
-  ) {
-    apiFilterKey = `event:${filterKey}`
+function remapApiFilterKey(apiFilterKey) {
+  const isNoPrefixKey = NO_PREFIX_KEYS.has(apiFilterKey)
+
+  if (isNoPrefixKey) {
+    return apiFilterKey
+  }
+
+  const isEventKey = apiFilterKey.startsWith(EVENT_PREFIX)
+  const isVisitKey = apiFilterKey.startsWith(VISIT_PREFIX)
+
+  if (isEventKey) {
+    return apiFilterKey.substring(EVENT_PREFIX.length)
+  }
+  if (isVisitKey) {
+    return apiFilterKey.substring(VISIT_PREFIX.length)
+  }
+
+  return apiFilterKey // maybe throw?
+}
+
+export function remapToApiFilters(filters) {
+  return filters.map(remapToApiFilter)
+}
+
+export function remapFromApiFilters(apiFilters) {
+  return apiFilters.map((apiFilter) => {
+    const [operation, ...rest] = apiFilter
+    if (operation === 'has_not_done') {
+      const [[_, key, clauses]] = rest
+      return [FILTER_OPERATIONS.has_not_done, key, clauses]
+    }
+    const [apiFilterKey, clauses] = rest
+    return [operation, remapApiFilterKey(apiFilterKey), clauses]
+  })
+}
+
+export function serializeApiFilters(filters) {
+  return JSON.stringify(remapToApiFilters(filters))
+}
+
+function remapToApiFilter([operation, filterKey, clauses, ...modifiers]) {
+  const apiFilterKey = remapFilterKey(filterKey)
+  if (apiFilterKey === 'segment') {
+    return [operation, apiFilterKey, clauses.map((v) => parseInt(v, 10))]
   }
   if (operation === FILTER_OPERATIONS.has_not_done) {
     // :NOTE: Frontend does not support advanced query building that's used in the backend.
@@ -232,5 +290,6 @@ export const formattedFilters = {
   page: 'Page',
   hostname: 'Hostname',
   entry_page: 'Entry Page',
-  exit_page: 'Exit Page'
+  exit_page: 'Exit Page',
+  segment: 'Segment'
 }
