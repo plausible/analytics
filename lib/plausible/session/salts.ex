@@ -4,10 +4,10 @@ defmodule Plausible.Session.Salts do
 
   def start_link(opts) do
     name = opts[:name] || __MODULE__
-    now = opts[:now] || DateTime.utc_now()
 
     Agent.start_link(
       fn ->
+        now = opts[:now] || DateTime.utc_now()
         clean_old_salts(now)
 
         ^name =
