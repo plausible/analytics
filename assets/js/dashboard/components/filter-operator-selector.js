@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { Fragment } from 'react'
+import React, { Fragment, useRef } from 'react'
 
 import {
   FILTER_OPERATIONS,
@@ -12,9 +12,11 @@ import {
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
+import { BlurMenuButtonOnEscape } from '../keybinding'
 
 export default function FilterOperatorSelector(props) {
   const filterName = props.forFilter
+  const buttonRef = useRef()
 
   function renderTypeItem(operation, shouldDisplay) {
     return (
@@ -46,8 +48,12 @@ export default function FilterOperatorSelector(props) {
       <Menu as="div" className="relative inline-block text-left w-full">
         {({ open }) => (
           <>
+            <BlurMenuButtonOnEscape targetRef={buttonRef} />
             <div className="w-full">
-              <Menu.Button className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500 text-left">
+              <Menu.Button
+                ref={buttonRef}
+                className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500 text-left"
+              >
                 {FILTER_OPERATIONS_DISPLAY_NAMES[props.selectedType]}
                 <ChevronDownIcon
                   className="-mr-2 ml-2 h-4 w-4 text-gray-500 dark:text-gray-400"

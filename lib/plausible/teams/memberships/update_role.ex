@@ -15,7 +15,7 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
     with :ok <- check_valid_role(new_role),
          {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
          {:ok, current_user_role} <- Memberships.team_role(team, current_user),
-         granting_to_self? = team_membership.user_id == user_id,
+         granting_to_self? = team_membership.user_id == current_user.id,
          :ok <-
            check_can_grant_role(
              current_user_role,
@@ -29,6 +29,8 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
         |> Ecto.Changeset.change(role: new_role)
         |> Repo.update!()
         |> Repo.preload(:user)
+
+      :ok = maybe_prune_guest_memberships(team_membership)
 
       {:ok, team_membership}
     end
@@ -86,4 +88,15 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   defp can_grant_role_to_other?(:admin, :viewer, :editor), do: true
   defp can_grant_role_to_other?(:admin, :viewer, :viewer), do: true
   defp can_grant_role_to_other?(_, _, _), do: false
+
+  defp maybe_prune_guest_memberships(%Teams.Membership{role: :guest}),
+    do: :ok
+
+  defp maybe_prune_guest_memberships(%Teams.Membership{} = team_membership) do
+    team_membership
+    |> Ecto.assoc(:guest_memberships)
+    |> Repo.delete_all()
+
+    :ok
+  end
 end

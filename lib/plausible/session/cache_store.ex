@@ -78,8 +78,7 @@ defmodule Plausible.Session.CacheStore do
   defp update_session(session, event) do
     %{
       session
-      | user_id: event.user_id,
-        timestamp: event.timestamp,
+      | timestamp: event.timestamp,
         entry_page:
           if(session.entry_page == "" and event.name == "pageview",
             do: event.pathname,

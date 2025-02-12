@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         |> get("/sites/#{site.domain}/memberships/invite")
         |> html_response(200)
 
-      assert html =~ "Invite member to"
+      assert html =~ "Invite guest to"
       assert element_exists?(html, ~s/button[type=submit]/)
       refute element_exists?(html, ~s/button[type=submit][disabled]/)
     end

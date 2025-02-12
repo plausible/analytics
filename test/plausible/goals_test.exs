@@ -32,10 +32,73 @@ defmodule Plausible.GoalsTest do
     assert {"should be at most %{count} character(s)", _} = changeset.errors[:event_name]
   end
 
+  test "create/2 validates scroll_threshold in range [-1, 100]" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{"page_path" => "/blog/post-1", "scroll_threshold" => -2})
+
+    assert {"Should be -1 (missing) or in range [0, 100]", _} =
+             changeset.errors[:scroll_threshold]
+
+    {:error, changeset} =
+      Goals.create(site, %{"page_path" => "/blog/post-1", "scroll_threshold" => 101})
+
+    assert {"Should be -1 (missing) or in range [0, 100]", _} =
+             changeset.errors[:scroll_threshold]
+
+    assert {:ok, _} =
+             Goals.create(site, %{"page_path" => "/blog/post-1", "scroll_threshold" => -1})
+
+    assert {:ok, _} =
+             Goals.create(site, %{"page_path" => "/blog/post-2", "scroll_threshold" => 50})
+  end
+
+  test "create/2 validates page path exists for scroll goals" do
+    site = new_site()
+
+    {:error, changeset} =
+      Goals.create(site, %{"event_name" => "Signup", "scroll_threshold" => 50})
+
+    assert {"page_path field missing for page scroll goal", _} =
+             changeset.errors[:scroll_threshold]
+  end
+
+  test "create/2 validates uniqueness across page_path and scroll_threshold" do
+    site = new_site()
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "page_path" => "/blog/post-1",
+        "scroll_threshold" => 50,
+        "display_name" => "Scroll 50"
+      })
+
+    {:ok, _} =
+      Goals.create(site, %{
+        "page_path" => "/blog/post-1",
+        "scroll_threshold" => 75,
+        "display_name" => "Scroll 75"
+      })
+
+    {:error, changeset} =
+      Goals.create(site, %{
+        "page_path" => "/blog/post-1",
+        "scroll_threshold" => 50,
+        "display_name" => "Scroll 50 another"
+      })
+
+    assert {"has already been taken", _} =
+             changeset.errors[:page_path]
+  end
+
   test "create/2 fails to create the same pageview goal twice" do
     site = new_site()
-    {:ok, _} = Goals.create(site, %{"page_path" => "foo bar"})
-    assert {:error, changeset} = Goals.create(site, %{"page_path" => "foo bar"})
+    {:ok, _} = Goals.create(site, %{"page_path" => "foo bar", "display_name" => "one"})
+
+    assert {:error, changeset} =
+             Goals.create(site, %{"page_path" => "foo bar", "display_name" => "two"})
+
     assert {"has already been taken", _} = changeset.errors[:page_path]
   end
 
@@ -56,11 +119,11 @@ defmodule Plausible.GoalsTest do
     assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
-  test "create/2 fails to create a goal with 'pageleave' as event_name (reserved)" do
+  test "create/2 fails to create a goal with 'engagement' as event_name (reserved)" do
     site = new_site()
-    assert {:error, changeset} = Goals.create(site, %{"event_name" => "pageleave"})
+    assert {:error, changeset} = Goals.create(site, %{"event_name" => "engagement"})
 
-    assert {"The event name 'pageleave' is reserved and cannot be used as a goal", _} =
+    assert {"The event name 'engagement' is reserved and cannot be used as a goal", _} =
              changeset.errors[:event_name]
   end
 
@@ -115,6 +178,53 @@ defmodule Plausible.GoalsTest do
     assert goal1.id == goal2.id
     assert goal2.page_path == "/"
     assert goal2.display_name == "Homepage"
+  end
+
+  test "update/2 also updates all segments the goal is a part of" do
+    user = new_user()
+    site = new_site(owner: user)
+    {:ok, goal1} = Goals.create(site, %{"event_name" => "Signup"})
+    {:ok, _goal2} = Goals.create(site, %{"event_name" => "Signup from nav"})
+
+    {:ok, segment1} =
+      Plausible.Segments.insert_one(user.id, site, :editor, %{
+        "type" => "site",
+        "segment_data" => %{
+          "filters" => [
+            ["is", "event:page", ["/blog"]],
+            ["is", "event:goal", ["Signup from nav", "Signup"]],
+            ["is", "event:props:variant", ["A"]]
+          ]
+        },
+        "name" => "Site segment"
+      })
+
+    {:ok, segment2} =
+      Plausible.Segments.insert_one(user.id, site, :editor, %{
+        "type" => "personal",
+        "segment_data" => %{
+          "filters" => [
+            ["is", "event:goal", ["Signup"]]
+          ]
+        },
+        "name" => "Personal segment"
+      })
+
+    Goals.update(goal1, %{"display_name" => "SIGNUP"})
+
+    assert Repo.reload!(segment1).segment_data == %{
+             "filters" => [
+               ["is", "event:page", ["/blog"]],
+               ["is", "event:goal", ["Signup from nav", "SIGNUP"]],
+               ["is", "event:props:variant", ["A"]]
+             ]
+           }
+
+    assert Repo.reload!(segment2).segment_data == %{
+             "filters" => [
+               ["is", "event:goal", ["SIGNUP"]]
+             ]
+           }
   end
 
   @tag :ee_only

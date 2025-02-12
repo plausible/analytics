@@ -196,9 +196,11 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
+  # TODO: make it possible to query events from engagement events (total conversions for page scroll goals)
   def event_metric(:events) do
     wrap_alias([e], %{
-      events: fragment("toUInt64(round(countIf(? != 'pageleave') * any(_sample_factor)))", e.name)
+      events:
+        fragment("toUInt64(round(countIf(? != 'engagement') * any(_sample_factor)))", e.name)
     })
   end
 
@@ -326,19 +328,27 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:conversion_rate, _query), do: %{}
   def session_metric(:group_conversion_rate, _query), do: %{}
 
-  defmacro event_goal_join(events, page_regexes) do
+  defmacro event_goal_join(goal_join_data) do
     quote do
       fragment(
         """
-        arrayPushFront(
-          CAST(multiMatchAllIndices(?, ?) AS Array(Int64)),
-          -indexOf(?, ?)
+        arrayIntersect(
+          multiMatchAllIndices(?, ?),
+          arrayMap(
+            (expected_name, threshold, index) -> if(expected_name = ? and ? between threshold and 100, index, -1),
+            ?,
+            ?,
+            ?
+          )
         )
         """,
         e.pathname,
-        type(^unquote(page_regexes), {:array, :string}),
-        type(^unquote(events), {:array, :string}),
-        e.name
+        type(^unquote(goal_join_data).page_regexes, {:array, :string}),
+        e.name,
+        e.scroll_depth,
+        type(^unquote(goal_join_data).event_names_by_type, {:array, :string}),
+        type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
+        type(^unquote(goal_join_data).indices, {:array, :integer})
       )
     end
   end

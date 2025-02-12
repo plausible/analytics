@@ -40,7 +40,8 @@ defmodule PlausibleWeb.SettingsController do
 
     render(conn, :team_general,
       team_name_changeset: name_changeset,
-      layout: {PlausibleWeb.LayoutView, :settings}
+      layout: {PlausibleWeb.LayoutView, :settings},
+      connect_live_socket: true
     )
   end
 

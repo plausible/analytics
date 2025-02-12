@@ -5,23 +5,28 @@ import SiteSwitcher from '../site-switcher'
 import { useSiteContext } from '../site-context'
 import { useUserContext } from '../user-context'
 import CurrentVisitors from '../stats/current-visitors'
-import QueryPeriodPicker from '../datepicker'
 import Filters from '../filters'
 import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
 import { FilterMenu } from './filter-menu'
+import { FiltersBar } from './filters-bar'
+import { QueryPeriodsPicker } from './query-periods/query-periods-picker'
 
 interface TopBarProps {
   showCurrentVisitors: boolean
-  extraBar?: ReactNode
 }
 
-export function TopBar({ showCurrentVisitors, extraBar }: TopBarProps) {
+export function TopBar({ showCurrentVisitors }: TopBarProps) {
+  return (
+    <TopBarStickyWrapper>
+      <TopBarInner showCurrentVisitors={showCurrentVisitors} />
+    </TopBarStickyWrapper>
+  )
+}
+
+function TopBarStickyWrapper({ children }: { children: ReactNode }) {
   const site = useSiteContext()
-  const user = useUserContext()
-  const tooltipBoundary = useRef(null)
   const { ref, inView } = useInView({ threshold: 0 })
-  const { saved_segments } = site.flags
 
   return (
     <>
@@ -34,22 +39,74 @@ export function TopBar({ showCurrentVisitors, extraBar }: TopBarProps) {
             'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-850'
         )}
       >
-        <div className="flex items-center w-full">
-          <div className="flex items-center w-full" ref={tooltipBoundary}>
+        {children}
+      </div>
+    </>
+  )
+}
+
+function TopBarInner({ showCurrentVisitors }: TopBarProps) {
+  const site = useSiteContext()
+  const user = useUserContext()
+  const { saved_segments } = site.flags
+  const leftActionsRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <div className="flex items-center w-full">
+      {saved_segments ? (
+        <>
+          <div
+            className="flex items-center gap-x-4 shrink-0"
+            ref={leftActionsRef}
+          >
             <SiteSwitcher
               site={site}
               loggedIn={user.loggedIn}
               currentUserRole={user.role}
             />
             {showCurrentVisitors && (
-              <CurrentVisitors tooltipBoundary={tooltipBoundary.current} />
+              <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />
             )}
-            {saved_segments ? <FilterMenu /> : <Filters />}
           </div>
-          <QueryPeriodPicker />
-        </div>
-        {!!saved_segments && !!extraBar && extraBar}
-      </div>
-    </>
+          <div className="flex w-full">
+            <FiltersBar
+              accessors={{
+                topBar: (filtersBarElement) =>
+                  filtersBarElement?.parentElement?.parentElement,
+                leftSection: (filtersBarElement) =>
+                  filtersBarElement?.parentElement?.parentElement
+                    ?.firstElementChild as HTMLElement,
+                rightSection: (filtersBarElement) =>
+                  filtersBarElement?.parentElement?.parentElement
+                    ?.lastElementChild as HTMLElement
+              }}
+            />
+          </div>
+          <div className="flex gap-x-4 shrink-0">
+            <FilterMenu />
+            <QueryPeriodsPicker />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center w-full" ref={leftActionsRef}>
+            <SiteSwitcher
+              className="mr-2 sm:mr-4"
+              site={site}
+              loggedIn={user.loggedIn}
+              currentUserRole={user.role}
+            />
+            {showCurrentVisitors && (
+              <CurrentVisitors
+                className="ml-1 mr-auto"
+                tooltipBoundaryRef={leftActionsRef}
+              />
+            )}
+            <Filters />
+          </div>
+          <QueryPeriodsPicker className="ml-auto pl-2" />
+        </>
+      )}
+    </div>
   )
 }

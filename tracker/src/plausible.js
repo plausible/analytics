@@ -18,7 +18,7 @@
 
     {{#if pageleave}}
     if (eventName === 'pageview') {
-      currentPageLeaveIgnored = true
+      currentEngagementIgnored = true
     }
     {{/if}}
   }
@@ -35,33 +35,35 @@
   }
 
   {{#if pageleave}}
-  // :NOTE: Tracking pageleave events is currently experimental.
+  // :NOTE: Tracking engagement events is currently experimental.
 
-  var currentPageLeaveIgnored
-  var currentPageLeaveURL = location.href
-  var currentPageLeaveProps = {}
-  var currentPageMaxEngagementScrollDepth = -1
+  var currentEngagementIgnored
+  var currentEngagementURL = location.href
+  var currentEngagementProps = {}
+  var currentEngagementMaxScrollDepth = -1
 
   // Multiple pageviews might be sent by the same script when the page
   // uses client-side routing (e.g. hash or history-based). This flag
   // prevents registering multiple listeners in those cases.
-  var listeningPageLeave = false
+  var listeningOnEngagement = false
 
   // In SPA-s, multiple listeners that trigger the pageleave event
   // might fire nearly at the same time. E.g. when navigating back
   // in browser history while using hash-based routing - a popstate
   // and hashchange will be fired in a very quick succession. This
-  // flag prevents sending multiple pageleaves in those cases.
-  var pageLeaveSending = false
+  // flag prevents sending multiple engagement events in those cases.
+  var engagementCooldown = false
 
   function getDocumentHeight() {
+    var body = document.body || {}
+    var el = document.documentElement || {}
     return Math.max(
-      document.body.scrollHeight || 0,
-      document.body.offsetHeight || 0,
-      document.body.clientHeight || 0,
-      document.documentElement.scrollHeight || 0,
-      document.documentElement.offsetHeight || 0,
-      document.documentElement.clientHeight || 0
+      body.scrollHeight || 0,
+      body.offsetHeight || 0,
+      body.clientHeight || 0,
+      el.scrollHeight || 0,
+      el.offsetHeight || 0,
+      el.clientHeight || 0
     )
   }
 
@@ -98,52 +100,39 @@
     }
   })
 
-  function triggerPageLeave() {
-    if (!pageLeaveSending && !currentPageLeaveIgnored) {
-      pageLeaveSending = true
-      setTimeout(function () {pageLeaveSending = false}, 500)
-      triggerEngagementEvent('pageleave')
-    }
-  }
-
   function triggerEngagement() {
     // Avoid sending redundant engagement events if user has not scrolled the page
-    // Note that `currentPageMaxEngagementScrollDepth` default of -1 ensures that at least one
+    // Note that `currentEngagementMaxScrollDepth` default of -1 ensures that at least one
     // engagement event is sent
-    if (!currentPageLeaveIgnored && currentPageMaxEngagementScrollDepth < maxScrollDepthPx) {
-      currentPageMaxEngagementScrollDepth = maxScrollDepthPx
-      triggerEngagementEvent('engagement')
-    }
+    if (!engagementCooldown && !currentEngagementIgnored && currentEngagementMaxScrollDepth < maxScrollDepthPx) {
+      currentEngagementMaxScrollDepth = maxScrollDepthPx
+      setTimeout(function () {engagementCooldown = false}, 300)
 
+      var payload = {
+        n: 'engagement',
+        sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
+        d: dataDomain,
+        u: currentEngagementURL,
+        p: currentEngagementProps
+      }
+
+      {{#if hash}}
+      payload.h = 1
+      {{/if}}
+
+      sendRequest(endpoint, payload)
+    }
   }
 
-  function triggerEngagementEvent(name) {
-    var payload = {
-      n: name,
-      sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
-      d: dataDomain,
-      u: currentPageLeaveURL,
-      p: currentPageLeaveProps
-    }
-
-    {{#if hash}}
-    payload.h = 1
-    {{/if}}
-
-    sendRequest(endpoint, payload)
-  }
-
-  function registerPageLeaveListener() {
-    if (!listeningPageLeave) {
-      window.addEventListener('pagehide', triggerPageLeave)
-
+  function registerEngagementListener() {
+    if (!listeningOnEngagement) {
       // Only register visibilitychange listener only after initial page load and pageview
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
           triggerEngagement()
         }
       })
-      listeningPageLeave = true
+      listeningOnEngagement = true
     }
   }
   {{/if}}
@@ -235,11 +224,11 @@
 
     {{#if pageleave}}
     if (isPageview) {
-      currentPageLeaveIgnored = false
-      currentPageLeaveURL = payload.u
-      currentPageLeaveProps = payload.p
-      currentPageMaxEngagementScrollDepth = -1
-      registerPageLeaveListener()
+      currentEngagementIgnored = false
+      currentEngagementURL = payload.u
+      currentEngagementProps = payload.p
+      currentEngagementMaxScrollDepth = -1
+      registerEngagementListener()
     }
     {{/if}}
 
@@ -290,8 +279,7 @@
       {{/unless}}
 
       {{#if pageleave}}
-      if (isSPANavigation && listeningPageLeave) {
-        triggerPageLeave()
+      if (isSPANavigation && listeningOnEngagement) {
         triggerEngagement()
         currentDocumentHeight = getDocumentHeight()
         maxScrollDepthPx = getCurrentScrollDepthPx()

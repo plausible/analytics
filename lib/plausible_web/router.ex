@@ -294,8 +294,14 @@ defmodule PlausibleWeb.Router do
 
       post "/event", Api.ExternalController, :event
       get "/error", Api.ExternalController, :error
-      get "/health", Api.ExternalController, :health
-      get "/system", Api.ExternalController, :info
+      # Remove this once all external checks are migration to new /system/health/* checks
+      get "/health", Api.SystemController, :readiness
+    end
+
+    scope "/system" do
+      get "/", Api.SystemController, :info
+      get "/health/live", Api.SystemController, :liveness
+      get "/health/ready", Api.SystemController, :readiness
     end
 
     scope [] do
@@ -389,8 +395,6 @@ defmodule PlausibleWeb.Router do
 
     get "/team/general", SettingsController, :team_general
     post "/team/general/name", SettingsController, :update_team_name
-    put "/team/memberships/u/:id/role/:new_role", TeamController, :update_member_role
-    delete "/team/memberships/u/:id", TeamController, :remove_member
     post "/team/invitations/:invitation_id/accept", InvitationController, :accept_invitation
     post "/team/invitations/:invitation_id/reject", InvitationController, :reject_invitation
     delete "/team/invitations/:invitation_id", InvitationController, :remove_team_invitation

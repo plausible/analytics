@@ -253,10 +253,12 @@ defmodule Plausible.DataMigration.SiteImportsTest do
                ~D[2021-02-11]
     end
 
-    test "considers all imported tables" do
+    test "considers all imported tables (existing April 2024)" do
       date = ~D[2021-01-11]
 
-      for {table, idx} <- Enum.with_index(Imported.tables()) do
+      all_tables = SiteImports.imported_tables_april_2024()
+
+      for {table, idx} <- Enum.with_index(all_tables) do
         site_import = insert(:site_import)
         end_date = Date.add(date, idx)
 

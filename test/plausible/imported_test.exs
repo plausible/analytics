@@ -3,6 +3,7 @@ defmodule Plausible.ImportedTest do
   use Plausible
 
   alias Plausible.Imported
+  alias Plausible.Stats.{Query, DateTimeRange}
 
   describe "list_all_imports/1" do
     test "returns empty when there are no imports" do
@@ -113,6 +114,67 @@ defmodule Plausible.ImportedTest do
         )
 
       assert Imported.latest_import_end_date(site) == ~D[2024-01-08]
+    end
+  end
+
+  describe "completed_imports_in_query_range/2" do
+    setup do
+      site = insert(:site)
+
+      site_import_feb =
+        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
+
+      site_import_apr =
+        insert(:site_import, site: site, start_date: ~D[2021-04-10], end_date: ~D[2021-04-20])
+
+      {:ok, %{site: site, site_import_feb: site_import_feb, site_import_apr: site_import_apr}}
+    end
+
+    test "returns empty list if no imports exist" do
+      site = insert(:site)
+      tz = "Etc/UTC"
+
+      query = %Query{
+        utc_time_range: DateTimeRange.new!(~D[2021-01-01], ~D[2021-12-31], tz),
+        timezone: tz
+      }
+
+      assert Imported.completed_imports_in_query_range(site, query) == []
+    end
+
+    test "returns imports in query range", %{
+      site: site,
+      site_import_feb: site_import_feb,
+      site_import_apr: site_import_apr
+    } do
+      tz = "Etc/UTC"
+
+      query = %Query{
+        utc_time_range: DateTimeRange.new!(~D[2021-01-01], ~D[2021-12-31], tz),
+        timezone: tz
+      }
+
+      imports_in_range = Imported.completed_imports_in_query_range(site, query)
+
+      assert Enum.find(imports_in_range, &(&1.id == site_import_feb.id))
+      assert Enum.find(imports_in_range, &(&1.id == site_import_apr.id))
+    end
+
+    test "returns imports in a non-utc timezone query range", %{
+      site: site,
+      site_import_feb: site_import_feb
+    } do
+      datetime_from = DateTime.new!(~D[2021-03-01], ~T[03:00:00], "Etc/UTC")
+      datetime_to = DateTime.new!(~D[2021-04-10], ~T[03:00:00], "Etc/UTC")
+
+      query = %Query{
+        utc_time_range: DateTimeRange.new!(datetime_from, datetime_to),
+        timezone: "America/Chicago"
+      }
+
+      [site_import] = Imported.completed_imports_in_query_range(site, query)
+
+      assert site_import.id == site_import_feb.id
     end
   end
 

@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Details modal search inputs are now case-insensitive.
 - Improved report performance in cases where site has a lot of unique pathnames
 - Plausible script now uses `fetch` with keepalive flag as default over `XMLHttpRequest`. This will ensure more reliable tracking. Reminder to use `compat` script variant if tracking Internet Explorer is required.
+- The old `/api/health` healtcheck is soft-deprecated in favour of separate `/api/system/live` and `/api/system/ready` checks
 
 ### Fixed
 
@@ -29,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - Fix Direct / None details modal not opening
 - Fix year over year comparisons being offset by a day for leap years
 - Breakdown modals now display correct comparison values instead of 0 after pagination
+- Fix database mismatch between event and session user_ids after rotating salts
 
 ## v2.1.5-rc.1 - 2025-01-17
 

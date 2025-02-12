@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import React, { ReactNode } from 'react'
 import { SortDirection } from '../hooks/use-order-by'
 import { SortButton } from './sort-button'
+import { Tooltip } from '../util/tooltip'
 
 export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   /** Unique column ID, used for sorting purposes and to get the value of the cell using rowItem[key] */
@@ -17,6 +18,8 @@ export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   width: string
   /** Aligns column content. */
   align?: 'left' | 'right'
+  /** A warning to be rendered as a tooltip for the column header */
+  metricWarning?: string
   /**
    * Function used to transform the value found at item[key] for the cell. Superseded by renderItem if present. @example 1120 => "1.1k"
    */
@@ -100,6 +103,29 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
   columns: ColumnConfiguraton<T>[]
   data: T[] | { pages: T[][] }
 }) => {
+  const renderColumnLabel = (column: ColumnConfiguraton<T>) => {
+    if (column.metricWarning) {
+      return (
+        <Tooltip
+          info={warningSpan(column.metricWarning)}
+          className="inline-block"
+        >
+          {column.label + ' *'}
+        </Tooltip>
+      )
+    } else {
+      return column.label
+    }
+  }
+
+  const warningSpan = (warning: string) => {
+    return (
+      <span className="text-xs font-normal whitespace-nowrap">
+        {'*' + warning}
+      </span>
+    )
+  }
+
   return (
     <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
       <thead>
@@ -115,10 +141,10 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
                   toggleSort={column.onSort}
                   sortDirection={column.sortDirection ?? null}
                 >
-                  {column.label}
+                  {renderColumnLabel(column)}
                 </SortButton>
               ) : (
-                column.label
+                renderColumnLabel(column)
               )}
             </TableHeaderCell>
           ))}

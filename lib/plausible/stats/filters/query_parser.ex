@@ -445,7 +445,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   def preload_goals_and_revenue(site, metrics, filters, dimensions) do
     preloaded_goals =
-      Plausible.Goals.Filters.preload_needed_goals(site, dimensions, filters)
+      Plausible.Stats.Goals.preload_needed_goals(site, dimensions, filters)
 
     {revenue_warning, revenue_currencies} =
       preload_revenue(site, preloaded_goals, metrics, dimensions)
