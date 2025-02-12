@@ -57,6 +57,7 @@ defmodule Plausible.Teams.TeamAdmin do
 
   def form_fields(_) do
     [
+      identifier: %{create: :hidden, update: :readonly},
       name: nil,
       trial_expiry_date: %{
         help_text: "Change will also update Accept Traffic Until date"

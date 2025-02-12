@@ -36,6 +36,7 @@ defmodule Plausible.SiteAdmin do
       inner_join: o in assoc(r, :owners),
       inner_join: t in assoc(r, :team),
       preload: [owners: o, team: t, guest_memberships: [team_membership: :user]],
+      or_where: type(t.identifier, :string) == ^search,
       or_where: ilike(t.name, ^search_term),
       or_where: ilike(r.domain, ^search_term),
       or_where: ilike(o.email, ^search_term),
