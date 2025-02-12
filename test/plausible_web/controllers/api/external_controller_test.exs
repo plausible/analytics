@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> post("/api/event", params)
 
       pageview = get_event(site)
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert pageview.hostname == "example.com"
@@ -226,7 +226,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
       event = get_event(site)
 
       assert response(conn, 202) == "ok"
@@ -253,7 +253,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
@@ -273,7 +273,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
       event = get_event(site)
 
       assert response(conn, 202) == "ok"
@@ -333,7 +333,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == ""
@@ -353,7 +353,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == ""
@@ -372,7 +372,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "blog.example.com"
@@ -389,7 +389,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.referrer == "indiehackers.com/page"
     end
@@ -405,7 +405,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.referrer_source == "betalist"
       assert session.utm_source == "betalist"
@@ -421,7 +421,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.referrer_source == "betalist"
       assert session.utm_source == "betalist"
@@ -437,7 +437,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.referrer_source == "betalist"
       assert session.utm_source == "betalist"
@@ -454,7 +454,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.referrer_source == "Facebook"
     end
@@ -470,7 +470,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.utm_medium == "ads"
       assert session.utm_source == "instagram"
@@ -490,7 +490,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "indiehackers.com"
@@ -529,7 +529,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer == "android-app://some.android.app"
@@ -548,7 +548,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent_mobile)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.screen_size == "Mobile"
@@ -566,7 +566,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", "unknown UA")
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.screen_size == ""
@@ -584,7 +584,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent_tablet)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.screen_size == "Tablet"
@@ -605,7 +605,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.screen_size == "Desktop"
@@ -898,7 +898,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer == ""
@@ -916,7 +916,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "2.125.160.216")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
       event = get_event(site)
 
       assert session.country_code == "GB"
@@ -940,7 +940,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "0.0.0.0")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == <<0, 0>>
       assert session.subdivision1_code == ""
@@ -959,7 +959,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "0.0.0.1")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == <<0, 0>>
       assert session.subdivision1_code == ""
@@ -978,7 +978,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "0.0.0.2")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == <<0, 0>>
       assert session.subdivision1_code == ""
@@ -997,7 +997,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "216.160.83.56:123")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == "US"
     end
@@ -1013,7 +1013,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "2001:218:1:1:1:1:1:1")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == "JP"
     end
@@ -1029,7 +1029,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-forwarded-for", "[2001:218:1:1:1:1:1:1]:123")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == "JP"
     end
@@ -1049,7 +1049,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("cf-connecting-ip", "216.160.83.56")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == "US"
     end
@@ -1069,7 +1069,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("b-forwarded-for", "216.160.83.56,9.9.9.9")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == "US"
     end
@@ -1092,7 +1092,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("x-plausible-ip", "216.160.83.56")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == "US"
     end
@@ -1110,7 +1110,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> put_req_header("forwarded", "by=0.0.0.0;for=216.160.83.56;host=somehost.com;proto=https")
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == "US"
     end
@@ -1129,7 +1129,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       )
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.country_code == "JP"
     end
@@ -1162,7 +1162,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> post("/api/event", params)
 
       pageview = get_event(site)
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert pageview.pathname == "/opportunity"
       assert session.referrer_source == "Facebook"
@@ -1214,7 +1214,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> post("/api/event", params)
 
       pageview = get_event(site)
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert pageview.hostname == "test.com"
       assert pageview.pathname == "/ﺝﻭﺎﺋﺯ-ﻮﻤﺳﺎﺒﻗﺎﺗ"
@@ -1235,7 +1235,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       conn
       |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert session.utm_source == "Something \"quoted\""
     end
@@ -1256,6 +1256,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
                  "url" => ["is required"]
                }
              }
+    end
+
+    test "salts rotating once does not", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      Plausible.Session.WriteBuffer.flush()
+      Plausible.Session.Salts.rotate()
+
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+
+      [event1, event2] = get_events(site)
+      [session1, session2] = get_sessions(site)
+
+      records = [event1, event2, session1, session2]
+
+      assert records |> Enum.map(& &1.user_id) |> Enum.uniq() |> Enum.count() == 1
+      assert records |> Enum.map(& &1.session_id) |> Enum.uniq() |> Enum.count() == 1
     end
 
     test "responds 400 with errors when domain is missing", %{conn: conn} do
@@ -1364,7 +1380,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Cross-network"
@@ -1382,7 +1398,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Shopping"
@@ -1404,7 +1420,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Shopping"
@@ -1425,7 +1441,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Shopping"
@@ -1444,7 +1460,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
@@ -1463,7 +1479,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
@@ -1487,7 +1503,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Search"
@@ -1511,7 +1527,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
@@ -1532,7 +1548,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
@@ -1556,7 +1572,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
@@ -1580,7 +1596,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
@@ -1600,7 +1616,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
@@ -1620,7 +1636,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Social"
@@ -1638,7 +1654,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Social"
@@ -1657,7 +1673,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Video"
@@ -1675,7 +1691,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Video"
@@ -1693,7 +1709,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Display"
@@ -1711,7 +1727,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Display"
@@ -1729,7 +1745,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Other"
@@ -1748,7 +1764,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Shopping"
@@ -1766,7 +1782,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Shopping"
@@ -1784,7 +1800,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Shopping"
@@ -1803,7 +1819,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Social"
@@ -1821,7 +1837,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Social"
@@ -1839,7 +1855,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Social"
@@ -1858,7 +1874,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Video"
@@ -1876,7 +1892,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Video"
@@ -1894,7 +1910,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Video"
@@ -1913,7 +1929,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Search"
@@ -1931,7 +1947,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Search"
@@ -1949,7 +1965,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Referral"
@@ -1967,7 +1983,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Email"
@@ -1985,7 +2001,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Email"
@@ -2003,7 +2019,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Affiliates"
@@ -2021,7 +2037,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Audio"
@@ -2039,7 +2055,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "SMS"
@@ -2057,7 +2073,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "SMS"
@@ -2078,7 +2094,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Mobile Push Notifications"
@@ -2096,7 +2112,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Mobile Push Notifications"
@@ -2118,7 +2134,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Referral"
@@ -2139,7 +2155,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Direct"
@@ -2167,7 +2183,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Threads"
@@ -2190,7 +2206,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Instagram"
@@ -2213,7 +2229,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Youtube"
@@ -2236,7 +2252,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Youtube"
@@ -2259,7 +2275,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
@@ -2282,7 +2298,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
@@ -2305,7 +2321,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
@@ -2328,7 +2344,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
@@ -2351,7 +2367,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Reddit"
@@ -2374,7 +2390,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Google"
@@ -2397,7 +2413,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Google"
@@ -2420,7 +2436,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Google"
@@ -2443,7 +2459,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Twitter"
@@ -2467,7 +2483,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Reddit"
@@ -2490,7 +2506,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Perplexity"
@@ -2512,7 +2528,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Perplexity"
@@ -2535,7 +2551,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Microsoft Teams"
@@ -2558,7 +2574,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Wikipedia"
@@ -2581,7 +2597,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Bing"
@@ -2604,7 +2620,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Brave"
@@ -2627,7 +2643,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
@@ -2650,7 +2666,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
@@ -2673,7 +2689,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
@@ -2696,7 +2712,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
@@ -2719,7 +2735,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
@@ -2742,7 +2758,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
@@ -2765,7 +2781,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
@@ -2788,7 +2804,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Discord"
@@ -2811,7 +2827,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Discord"
@@ -2834,7 +2850,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Discord"
@@ -2857,7 +2873,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Discord"
@@ -2877,7 +2893,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Baidu"
@@ -2897,7 +2913,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Telegram"
@@ -2917,7 +2933,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Telegram"
@@ -2937,7 +2953,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Sogou"
@@ -2957,7 +2973,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Sogou"
@@ -2977,7 +2993,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Sogou"
@@ -2997,7 +3013,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Linktree"
@@ -3016,7 +3032,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Linktree"
@@ -3046,7 +3062,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Hacker News"
@@ -3069,7 +3085,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yahoo!"
@@ -3092,7 +3108,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Gmail"
@@ -3114,7 +3130,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Newsletter-UK"
@@ -3137,7 +3153,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "temu.com"
@@ -3159,7 +3175,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Telegram"
@@ -3182,7 +3198,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "chatgpt.com"
@@ -3205,7 +3221,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Slack"
@@ -3227,7 +3243,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "producthunt"
@@ -3250,7 +3266,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "GitHub"
@@ -3273,7 +3289,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "steamcommunity.com"
@@ -3296,7 +3312,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Vkontakte"
@@ -3319,7 +3335,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Threads"
@@ -3342,7 +3358,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      session = get_created_session(site)
+      [session] = get_sessions(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Ecosia"
@@ -3563,10 +3579,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     )
   end
 
-  defp get_created_session(site) do
+  defp get_sessions(site) do
     Plausible.Session.WriteBuffer.flush()
 
-    ClickhouseRepo.one(
+    ClickhouseRepo.all(
       from(s in Plausible.ClickhouseSessionV2,
         where: s.site_id == ^site.id and s.sign == 1,
         order_by: [desc: s.timestamp]
