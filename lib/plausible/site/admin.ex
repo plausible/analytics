@@ -116,7 +116,8 @@ defmodule Plausible.SiteAdmin do
       transfer_ownership_direct: %{
         name: "Transfer ownership without invite",
         inputs: [
-          %{name: "email", title: "New Owner Email", default: nil}
+          %{name: "email", title: "New Owner Email", default: nil},
+          %{name: "team_id", title: "Team Identifier", default: nil}
         ],
         action: fn conn, sites, params -> transfer_ownership_direct(conn, sites, params) end
       }
@@ -154,9 +155,8 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp transfer_ownership_direct(_conn, sites, %{"email" => email} = params) do
-    team = Plausible.Teams.get(params["team_id"])
-
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
+         {:ok, team} <- get_team_by_id(params["team_id"]),
          {:ok, _} <-
            Plausible.Site.Memberships.bulk_transfer_ownership_direct(
              sites,
@@ -180,9 +180,26 @@ defmodule Plausible.SiteAdmin do
       {:error, :permission_denied} ->
         {:error, "The new owner can't add sites in the selected team"}
 
+      {:error, :invalid_team_id} ->
+        {:error, "The provided team identifier is invalid"}
+
       {:error, {:over_plan_limits, limits}} ->
         {:error, "Plan limits exceeded for one of the sites: #{Enum.join(limits, ", ")}"}
     end
+  end
+
+  defp get_team_by_id(id) when is_binary(id) and byte_size(id) > 0 do
+    case Ecto.UUID.cast(id) do
+      {:ok, team_id} ->
+        {:ok, Plausible.Teams.get(team_id)}
+
+      :error ->
+        {:error, :invalid_team_id}
+    end
+  end
+
+  defp get_team_by_id(_) do
+    {:ok, nil}
   end
 
   defp format_date(date) do
