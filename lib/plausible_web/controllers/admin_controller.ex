@@ -14,6 +14,7 @@ defmodule PlausibleWeb.AdminController do
       team_id
       |> Teams.get()
       |> Repo.preload([:owners, team_memberships: :user])
+      |> Teams.with_subscription()
 
     usage = Teams.Billing.quota_usage(team, with_features: true)
 
