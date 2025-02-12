@@ -210,7 +210,7 @@ defmodule PlausibleWeb.AdminController do
 
       sites_link =
         Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-          custom_search: List.first(team.owners).email
+          custom_search: team.identifier
         )
 
       """
