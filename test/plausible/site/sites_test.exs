@@ -458,6 +458,51 @@ defmodule Plausible.SitesTest do
              } = Sites.list_with_invitations(user1, %{}, filter_by_domain: "first")
     end
 
+    test "scopes by team when provided" do
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
+
+      site1 = new_site(owner: user1, domain: "first.example.com")
+      site2 = new_site(owner: user2, domain: "first-transfer.example.com")
+      site3 = new_site(owner: user3, domain: "first-invitation.example.com")
+      site4 = new_site(domain: "zzzsitefromanotherteam.com")
+
+      invite_guest(site3, user1, role: :viewer, inviter: user3)
+      invite_transfer(site2, user1, inviter: user2)
+      add_member(site4.team, user: user1, role: :editor)
+
+      assert_matches %{
+                       entries: [
+                         %{id: ^site1.id},
+                         %{id: ^site4.id}
+                       ]
+                     } = Sites.list(user1, %{})
+
+      assert_matches %{
+                       entries: [
+                         %{id: ^site3.id},
+                         %{id: ^site2.id},
+                         %{id: ^site1.id},
+                         %{id: ^site4.id}
+                       ]
+                     } = Sites.list_with_invitations(user1, %{})
+
+      assert_matches %{
+                       entries: [
+                         %{id: ^site4.id}
+                       ]
+                     } = Sites.list(user1, %{}, team: site4.team)
+
+      assert_matches %{
+                       entries: [
+                         %{id: ^site3.id},
+                         %{id: ^site2.id},
+                         %{id: ^site4.id}
+                       ]
+                     } = Sites.list_with_invitations(user1, %{}, team: site4.team)
+    end
+
     test "handles pagination correctly" do
       user1 = new_user()
       user2 = new_user()
