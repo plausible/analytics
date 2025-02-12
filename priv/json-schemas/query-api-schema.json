@@ -261,6 +261,10 @@
           "$comment": "only :internal"
         },
         {
+          "const": "new_time_on_page",
+          "$comment": "only :internal"
+        },
+        {
           "const": "total_revenue",
           "markdownDescription": "Total revenue",
           "$comment": "only :ee"

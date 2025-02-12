@@ -248,6 +248,22 @@ defmodule Plausible.Stats.SQL.Expression do
   def event_metric(:group_conversion_rate), do: %{}
   def event_metric(:total_visitors), do: %{}
 
+  def event_metric(:new_time_on_page) do
+    wrap_alias(
+      [e],
+      %{
+        new_time_on_page:
+          fragment(
+            "toInt32(round(ifNotFinite(sum(?) / uniq(?) / 1000, 0)))",
+            e.engagement_time,
+            e.session_id
+          ),
+        __internal_total_time_on_page: fragment("sum(?)", e.engagement_time),
+        __internal_total_time_on_page_visits: fragment("uniq(?)", e.session_id)
+      }
+    )
+  end
+
   def event_metric(unknown), do: raise("Unknown metric: #{unknown}")
 
   def session_metric(:bounce_rate, query) do
