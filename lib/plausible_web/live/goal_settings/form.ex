@@ -132,6 +132,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         site={@site}
         x-init="tabSelectionInProgress = false"
       />
+      <.scroll_fields
+        :if={@selected_tab == "scroll"}
+        x-show="!tabSelectionInProgress"
+        f={f}
+        suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        current_user={@current_user}
+        site={@site}
+        x-init="tabSelectionInProgress = false"
+      />
 
       <div x-show="!tabSelectionInProgress">
         <.button type="submit" class="w-full">
@@ -196,16 +205,62 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
       />
+    </div>
+    """
+  end
+
+  attr(:f, Phoenix.HTML.Form)
+  attr(:current_user, Plausible.Auth.User)
+  attr(:site, Plausible.Site)
+  attr(:suffix, :string)
+  attr(:goal, Plausible.Goal, default: nil)
+  attr(:rest, :global)
+
+  def scroll_fields(assigns) do
+    ~H"""
+    <div id="scroll-form" class="py-2" {@rest}>
+      <.label for={"scroll_threshold_input_#{@suffix}"}>
+        Scroll Threshold
+      </.label>
 
       <.input
-        :if={Plausible.Stats.ScrollDepth.feature_visible?(@site, @current_user)}
-        label="Scroll Depth Threshold (optional)"
+        id={"scroll_threshold_input_#{@suffix}"}
         field={@f[:scroll_threshold]}
         type="number"
         value={if @goal && @goal.scroll_threshold > -1, do: @goal.scroll_threshold, else: nil}
         min="0"
         max="100"
         step="1"
+      />
+
+      <.label for={"page_path_input_#{@suffix}"} class="mt-3">
+        Page Path
+      </.label>
+
+      <.live_component
+        id={"page_path_input_#{@suffix}"}
+        submit_name="goal[page_path]"
+        class={[
+          "py-2"
+        ]}
+        module={ComboBox}
+        suggest_fun={fn input, _options -> suggest_page_paths(input, @site) end}
+        selected={if @goal && @goal.page_path, do: @goal.page_path}
+        creatable
+        x-on-selection-change="document.getElementById('pageview_display_name_input').setAttribute('value', 'Visit ' + $event.detail.value.displayValue)"
+      />
+
+      <.error :for={msg <- Enum.map(@f[:page_path].errors, &translate_error/1)}>
+        {msg}
+      </.error>
+
+      <.input
+        label="Display Name"
+        id="pageview_display_name_input"
+        field={@f[:display_name]}
+        type="text"
+        x-data="{ firstFocus: true }"
+        x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
       />
     </div>
     """
@@ -375,6 +430,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     <div class="my-2 text-sm w-full flex rounded border border-gray-300 dark:border-gray-500">
       <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
       <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
+      <.scroll_tab selected?={@selected_tab == "scroll"} myself={@myself} />
     </div>
     """
   end
@@ -383,7 +439,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <a
       class={[
-        "w-1/2 text-center py-2.5 border-r dark:border-gray-500",
+        "w-1/3 text-center py-2.5 border-r dark:border-gray-500",
         "cursor-pointer",
         @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
         !@selected? && "dark:text-gray-100 text-gray-800"
@@ -403,7 +459,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <a
       class={[
-        "w-1/2 text-center py-2.5 cursor-pointer",
+        "w-1/3 text-center py-2.5 cursor-pointer",
         @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
         !@selected? && "dark:text-gray-100 text-gray-800"
       ]}
@@ -414,6 +470,25 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-target={@myself}
     >
       Pageview
+    </a>
+    """
+  end
+
+  def scroll_tab(assigns) do
+    ~H"""
+    <a
+      class={[
+        "w-1/3 text-center py-2.5 cursor-pointer",
+        @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
+        !@selected? && "dark:text-gray-100 text-gray-800"
+      ]}
+      id="pageview-tab"
+      x-on:click={!@selected? && "tabSelectionInProgress = true"}
+      phx-click="switch-tab"
+      phx-value-tab="scroll"
+      phx-target={@myself}
+    >
+      Scroll
     </a>
     """
   end
