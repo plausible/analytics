@@ -122,6 +122,13 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     })
   end
 
+  defp select_metric(:new_time_on_page, "imported_pages") do
+    wrap_alias([i], %{
+      total_time_on_page: sum(i.total_time_on_page),
+      total_time_on_page_visits: sum(i.total_time_on_page_visits)
+    })
+  end
+
   defp select_metric(_metric, _table), do: %{}
 
   def group_imported_by(q, query) do
@@ -367,6 +374,21 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     |> select_merge_as([s, i], %{
       __imported_total_scroll_depth: i.total_scroll_depth,
       __imported_total_scroll_depth_visits: i.total_scroll_depth_visits
+    })
+    |> select_joined_metrics(rest)
+  end
+
+  def select_joined_metrics(q, [:new_time_on_page | rest]) do
+    q
+    |> select_merge_as([s, i], %{
+      new_time_on_page:
+        fragment(
+          "toInt32(round(ifNotFinite((? + ?) / (? + ?), 0)))",
+          s.__internal_total_time_on_page,
+          i.total_time_on_page,
+          s.__internal_total_time_on_page_visits,
+          i.total_time_on_page_visits
+        )
     })
     |> select_joined_metrics(rest)
   end
