@@ -35,7 +35,7 @@ defmodule Plausible.Ingestion.Event do
           | :site_hostname_allowlist
           | :verification_agent
           | :lock_timeout
-          | :no_session_for_pageleave
+          | :no_session_for_engagement
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -385,8 +385,8 @@ defmodule Plausible.Ingestion.Event do
       )
 
     case session_result do
-      {:ok, :no_session_for_pageleave} ->
-        drop(event, :no_session_for_pageleave)
+      {:ok, :no_session_for_engagement} ->
+        drop(event, :no_session_for_engagement)
 
       {:error, :timeout} ->
         drop(event, :lock_timeout)
