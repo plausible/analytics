@@ -32,7 +32,7 @@ defmodule Plausible.Application do
           global_ttl: :timer.minutes(60)
         ),
         Plausible.Cache.Adapter.child_spec(:sessions, :cache_sessions,
-          ttl_check_interval: :timer.seconds(60),
+          ttl_check_interval: :timer.seconds(10),
           global_ttl: :timer.minutes(30)
         ),
         warmed_cache(Plausible.Site.Cache,
