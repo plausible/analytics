@@ -96,7 +96,7 @@ defmodule Plausible.Imported.CSVImporter do
       statement =
         """
         INSERT INTO {table:Identifier}(site_id,import_id,#{s3_columns}) \
-        SELECT {site_id:UInt64}, {import_id:UInt64}, * \
+        SELECT {site_id:UInt64}, {import_id:UInt64}, #{s3_columns} \
         FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String}) \
         WHERE date >= {start_date:Date} AND date <= {end_date:Date}\
         """
@@ -140,7 +140,7 @@ defmodule Plausible.Imported.CSVImporter do
           statement =
             """
             INSERT INTO {table:Identifier}(site_id,import_id,#{input_columns}) \
-            SELECT {site_id:UInt64}, {import_id:UInt64}, * \
+            SELECT {site_id:UInt64}, {import_id:UInt64}, #{input_columns} \
             FROM input({input_structure:String}) \
             WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
             FORMAT CSVWithNames
