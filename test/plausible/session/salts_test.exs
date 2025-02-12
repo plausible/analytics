@@ -35,7 +35,7 @@ defmodule Plausible.Session.SaltsTest do
     count = Repo.aggregate(q, :count)
     assert count == 2
 
-    future = DateTime.shift(DateTime.utc_now(), hour: 24)
+    future = DateTime.shift(DateTime.utc_now(), hour: 24, minute: -1)
 
     :ok = Salts.rotate(__MODULE__, future)
 
