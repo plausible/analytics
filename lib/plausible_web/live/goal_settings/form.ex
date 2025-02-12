@@ -84,7 +84,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         f={f}
         goal={@goal}
         suffix={@context_unique_id}
-        current_user={@current_user}
         site={@site}
       />
 
@@ -108,7 +107,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
       <.title>Add Goal for {@domain}</.title>
 
-      <.tabs selected_tab={@selected_tab} myself={@myself} />
+      <.tabs current_user={@current_user} site={@site} selected_tab={@selected_tab} myself={@myself} />
 
       <.custom_event_fields
         :if={@selected_tab == "custom_events"}
@@ -128,7 +127,14 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-show="!tabSelectionInProgress"
         f={f}
         suffix={suffix(@context_unique_id, @tab_sequence_id)}
-        current_user={@current_user}
+        site={@site}
+        x-init="tabSelectionInProgress = false"
+      />
+      <.scroll_fields
+        :if={@selected_tab == "scroll"}
+        x-show="!tabSelectionInProgress"
+        f={f}
+        suffix={suffix(@context_unique_id, @tab_sequence_id)}
         site={@site}
         x-init="tabSelectionInProgress = false"
       />
@@ -158,7 +164,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   attr(:f, Phoenix.HTML.Form)
-  attr(:current_user, Plausible.Auth.User)
   attr(:site, Plausible.Site)
   attr(:suffix, :string)
   attr(:goal, Plausible.Goal, default: nil)
@@ -196,16 +201,58 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-data="{ firstFocus: true }"
         x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
       />
+    </div>
+    """
+  end
+
+  attr(:f, Phoenix.HTML.Form)
+  attr(:site, Plausible.Site)
+  attr(:suffix, :string)
+  attr(:goal, Plausible.Goal, default: nil)
+  attr(:rest, :global)
+
+  def scroll_fields(assigns) do
+    ~H"""
+    <div id="scroll-form" class="py-2" {@rest}>
+      <.label for={"scroll_threshold_input_#{@suffix}"}>
+        Scroll Threshold
+      </.label>
 
       <.input
-        :if={Plausible.Stats.ScrollDepth.feature_visible?(@site, @current_user)}
-        label="Scroll Depth Threshold (optional)"
+        id={"scroll_threshold_input_#{@suffix}"}
         field={@f[:scroll_threshold]}
         type="number"
         value={if @goal && @goal.scroll_threshold > -1, do: @goal.scroll_threshold, else: nil}
         min="0"
         max="100"
         step="1"
+      />
+
+      <.label for={"scroll_page_path_input_#{@suffix}"} class="mt-3">
+        Page Path
+      </.label>
+
+      <.live_component
+        id={"scroll_page_path_input_#{@suffix}"}
+        submit_name="goal[page_path]"
+        class={[
+          "py-2"
+        ]}
+        module={ComboBox}
+        suggest_fun={fn input, _options -> suggest_page_paths(input, @site) end}
+        selected={if @goal && @goal.page_path, do: @goal.page_path}
+        creatable
+      />
+
+      <.error :for={msg <- Enum.map(@f[:page_path].errors, &translate_error/1)}>
+        {msg}
+      </.error>
+
+      <.input
+        label="Display Name"
+        id="scroll_display_name_input"
+        field={@f[:display_name]}
+        type="text"
       />
     </div>
     """
@@ -375,6 +422,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     <div class="my-2 text-sm w-full flex rounded border border-gray-300 dark:border-gray-500 overflow-hidden">
       <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
       <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
+      <.scroll_tab
+        :if={Plausible.Stats.ScrollDepth.feature_visible?(@site, @current_user)}
+        selected?={@selected_tab == "scroll"}
+        myself={@myself}
+      />
     </div>
     """
   end
@@ -383,7 +435,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <a
       class={[
-        "w-1/2 text-center py-2.5 border-r dark:border-gray-500",
+        "flex-1 text-center py-2.5 border-r dark:border-gray-500",
         "cursor-pointer",
         @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
         !@selected? && "dark:text-gray-100 text-gray-800"
@@ -403,7 +455,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <a
       class={[
-        "w-1/2 text-center py-2.5 cursor-pointer",
+        "flex-1 text-center py-2.5 cursor-pointer",
         @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
         !@selected? && "dark:text-gray-100 text-gray-800"
       ]}
@@ -414,6 +466,25 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-target={@myself}
     >
       Pageview
+    </a>
+    """
+  end
+
+  def scroll_tab(assigns) do
+    ~H"""
+    <a
+      class={[
+        "flex-1 text-center py-2.5 cursor-pointer border-l dark:border-gray-500",
+        @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
+        !@selected? && "dark:text-gray-100 text-gray-800"
+      ]}
+      id="scroll-tab"
+      x-on:click={!@selected? && "tabSelectionInProgress = true"}
+      phx-click="switch-tab"
+      phx-value-tab="scroll"
+      phx-target={@myself}
+    >
+      Scroll
     </a>
     """
   end
