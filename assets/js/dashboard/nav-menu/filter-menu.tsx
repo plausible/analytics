@@ -13,6 +13,7 @@ import { popover } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { BlurMenuButtonOnEscape } from '../keybinding'
+import { SearchableSegmentsSection } from './segments/searchable-segments-section'
 
 export function getFilterListItems({
   propsAvailable
@@ -50,6 +51,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
   const buttonRef = useRef<HTMLButtonElement>(null)
+
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
@@ -75,37 +77,38 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         )}
       >
         <Popover.Panel
-          className={classNames(popover.panel.classNames.roundedSheet, 'flex')}
+          className={classNames(popover.panel.classNames.roundedSheet)}
         >
-          {columns.map((filterGroups, index) => (
-            <div key={index} className="flex flex-col w-1/2">
-              {filterGroups.map(({ title, modals }) => (
-                <div key={title}>
-                  <div className="text-xs pb-1 px-4 pt-2 font-bold uppercase text-indigo-500 dark:text-indigo-400">
-                    {title}
+          <div className="flex">
+            {columns.map((filterGroups, index) => (
+              <div key={index} className="flex flex-col w-1/2">
+                {filterGroups.map(({ title, modals }) => (
+                  <div key={title}>
+                    <div className={titleClassName}>{title}</div>
+                    {modals
+                      .filter((m) => !!m)
+                      .map((modalKey) => (
+                        <AppNavigationLink
+                          className={classNames(
+                            popover.items.classNames.navigationLink,
+                            popover.items.classNames.hoverLink
+                            // 'text-xs'
+                          )}
+                          onClick={() => closeDropdown()}
+                          key={modalKey}
+                          path={filterRoute.path}
+                          params={{ field: modalKey }}
+                          search={(s) => s}
+                        >
+                          {formatFilterGroup(modalKey)}
+                        </AppNavigationLink>
+                      ))}
                   </div>
-                  {modals
-                    .filter((m) => !!m)
-                    .map((modalKey) => (
-                      <AppNavigationLink
-                        className={classNames(
-                          popover.items.classNames.navigationLink,
-                          popover.items.classNames.hoverLink,
-                          'text-xs'
-                        )}
-                        onClick={() => closeDropdown()}
-                        key={modalKey}
-                        path={filterRoute.path}
-                        params={{ field: modalKey }}
-                        search={(s) => s}
-                      >
-                        {formatFilterGroup(modalKey)}
-                      </AppNavigationLink>
-                    ))}
-                </div>
-              ))}
-            </div>
-          ))}
+                ))}
+              </div>
+            ))}
+          </div>
+          <SearchableSegmentsSection closeList={closeDropdown} />
         </Popover.Panel>
       </Transition>
     </>
@@ -117,3 +120,6 @@ export const FilterMenu = () => (
     {({ close }) => <FilterMenuItems closeDropdown={close} />}
   </Popover>
 )
+
+const titleClassName =
+  'text-sm pb-1 px-4 pt-2 font-bold uppercase text-indigo-500 dark:text-indigo-400'

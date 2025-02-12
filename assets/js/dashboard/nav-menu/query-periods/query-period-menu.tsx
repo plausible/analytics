@@ -34,12 +34,12 @@ import {
   DateMenuChevron,
   PopoverMenuProps,
   linkClassName,
-  MenuSeparator,
   CalendarPanel,
   hiddenCalendarButtonClassName
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
+import { MenuSeparator } from '../nav-menu-components'
 
 function QueryPeriodMenuKeybinds({
   closeDropdown,
