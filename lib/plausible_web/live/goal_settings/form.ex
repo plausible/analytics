@@ -372,7 +372,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def tabs(assigns) do
     ~H"""
     <div class="text-sm mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
-    <div class="my-2 text-sm w-full flex rounded border border-gray-300 dark:border-gray-500">
+    <div class="my-2 text-sm w-full flex rounded border border-gray-300 dark:border-gray-500 overflow-hidden">
       <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
       <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
     </div>
