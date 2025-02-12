@@ -2,13 +2,16 @@ defmodule Plausible.Session.Salts do
   use Agent
   use Plausible.Repo
 
-  def start_link(_opts) do
+  def start_link(opts) do
+    name = opts[:name] || __MODULE__
+    now = opts[:now] || DateTime.utc_now()
+
     Agent.start_link(
       fn ->
-        clean_old_salts()
+        clean_old_salts(now)
 
-        __MODULE__ =
-          :ets.new(__MODULE__, [
+        ^name =
+          :ets.new(name, [
             :named_table,
             :set,
             :protected,
@@ -27,47 +30,47 @@ defmodule Plausible.Session.Salts do
               %{previous: nil, current: current}
 
             [] ->
-              new = generate_and_persist_new_salt()
+              new = generate_and_persist_new_salt(now)
               %{previous: nil, current: new}
           end
 
-        true = :ets.insert(__MODULE__, {:state, state})
-        :ok
+        true = :ets.insert(name, {:state, state})
+        {:ok, name}
       end,
-      name: __MODULE__
+      name: name
     )
   end
 
-  def fetch() do
-    [state: state] = :ets.lookup(__MODULE__, :state)
+  def fetch(name \\ __MODULE__) do
+    [state: state] = :ets.lookup(name, :state)
     state
   end
 
-  def rotate() do
-    Agent.update(__MODULE__, fn :ok ->
-      current = fetch().current
-      clean_old_salts()
+  def rotate(name \\ __MODULE__, now \\ DateTime.utc_now()) do
+    Agent.update(name, fn {:ok, ^name} ->
+      current = fetch(name).current
+      clean_old_salts(now)
 
       state = %{
-        current: generate_and_persist_new_salt(),
+        current: generate_and_persist_new_salt(now),
         previous: current
       }
 
-      true = :ets.insert(__MODULE__, {:state, state})
-      :ok
+      true = :ets.insert(name, {:state, state})
+      {:ok, name}
     end)
   end
 
-  defp generate_and_persist_new_salt() do
+  defp generate_and_persist_new_salt(now) do
     salt = :crypto.strong_rand_bytes(16)
 
-    Repo.insert_all("salts", [%{salt: salt, inserted_at: DateTime.utc_now()}])
+    Repo.insert_all("salts", [%{salt: salt, inserted_at: now}])
     salt
   end
 
-  defp clean_old_salts() do
-    Repo.delete_all(
-      from s in "salts", where: s.inserted_at < fragment("now() - '48 hours'::interval")
-    )
+  defp clean_old_salts(now) do
+    h48_ago = DateTime.shift(now, hour: -48)
+
+    Repo.delete_all(from s in "salts", where: s.inserted_at < ^h48_ago)
   end
 end
