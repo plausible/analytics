@@ -151,16 +151,34 @@ defmodule Plausible.Sites do
     %{memberships: memberships, invitations: site_transfers ++ invitations}
   end
 
-  @spec for_user_query(Auth.User.t()) :: Ecto.Query.t()
-  def for_user_query(user) do
-    from(s in Site,
-      inner_join: t in assoc(s, :team),
-      inner_join: tm in assoc(t, :team_memberships),
-      left_join: gm in assoc(tm, :guest_memberships),
-      where: tm.user_id == ^user.id,
-      where: tm.role != :guest or gm.site_id == s.id,
-      order_by: [desc: s.id]
-    )
+  @spec for_user_query(Auth.User.t(), Teams.Team.t() | nil) :: Ecto.Query.t()
+  def for_user_query(user, team \\ nil) do
+    query =
+      from(s in Site,
+        as: :site,
+        inner_join: t in assoc(s, :team),
+        as: :team,
+        inner_join: tm in assoc(t, :team_memberships),
+        as: :team_memberships,
+        left_join: gm in assoc(tm, :guest_memberships),
+        as: :guest_memberships,
+        where: tm.user_id == ^user.id,
+        order_by: [desc: s.id]
+      )
+
+    if team do
+      where(
+        query,
+        [team_memberships: tm, guest_memberships: gm, site: s],
+        (tm.role != :guest and tm.team_id == ^team.id) or gm.site_id == s.id
+      )
+    else
+      where(
+        query,
+        [team_memberships: tm, guest_memberships: gm, site: s],
+        tm.role != :guest or gm.site_id == s.id
+      )
+    end
   end
 
   def create(user, params, team \\ nil) do
