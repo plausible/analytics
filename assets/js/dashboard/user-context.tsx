@@ -9,28 +9,27 @@ export enum Role {
 }
 
 const userContextDefaultValue = {
-  role: Role.viewer,
+  id: null,
+  role: null,
   loggedIn: false
-}
+} as
+  | { loggedIn: false; id: null; role: null }
+  | { loggedIn: true; id: number; role: Role }
 
-const UserContext = createContext(userContextDefaultValue)
+type UserContextValue = typeof userContextDefaultValue
+
+const UserContext = createContext<UserContextValue>(userContextDefaultValue)
 
 export const useUserContext = () => {
   return useContext(UserContext)
 }
 
 export default function UserContextProvider({
-  role,
-  loggedIn,
+  user,
   children
 }: {
-  role: Role
-  loggedIn: boolean
+  user: UserContextValue
   children: ReactNode
 }) {
-  return (
-    <UserContext.Provider value={{ role, loggedIn }}>
-      {children}
-    </UserContext.Provider>
-  )
+  return <UserContext.Provider value={user}>{children}</UserContext.Provider>
 }

@@ -78,6 +78,7 @@ defmodule PlausibleWeb.StatsController do
           title: title(conn, site),
           demo: demo,
           flags: get_flags(current_user, site),
+          members: get_members(current_user, site),
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           load_dashboard_js: true
@@ -365,6 +366,7 @@ defmodule PlausibleWeb.StatsController do
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: get_flags(current_user, shared_link.site),
+          members: get_members(current_user, shared_link.site),
           is_dbip: is_dbip(),
           load_dashboard_js: true
         )
@@ -389,6 +391,19 @@ defmodule PlausibleWeb.StatsController do
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)
       |> Map.new()
+
+  defp get_members(nil, _site) do
+    nil
+  end
+
+  defp get_members(_user, site = %Plausible.Site{}) do
+    memberships =
+      Plausible.Repo.preload(site, :guest_memberships).guest_memberships |> IO.inspect()
+
+    %{"0" => "0"}
+    # s = Plausible.Repo.preload(site, :guest_memberships)
+    # s.guest_memberships |> Enum.map(fn member -> {member.id, member.name} end) |> Map.new()
+  end
 
   defp is_dbip() do
     on_ee do

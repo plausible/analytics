@@ -16,6 +16,7 @@ describe('parseSiteFromDataset', () => {
       data-funnels-opted-out="false"
       data-props-opted-out="false"
       data-funnels-available="true"
+      data-site-segments-available="true"
       data-props-available="true"
       data-revenue-goals='[{"currency":"USD","display_name":"Purchase"}]'
       data-funnels='[{"id":1,"name":"From homepage to login","steps_count":3}]'
@@ -27,6 +28,8 @@ describe('parseSiteFromDataset', () => {
       data-embedded=""
       data-is-dbip="false"
       data-current-user-role="owner"
+      data-current-user-id="1"
+      data-members='{"1":"Test User"}'
       data-flags="{}"
       data-valid-intervals-by-period='{"12mo":["day","week","month"],"30d":["day","week"],"6mo":["day","week","month"],"7d":["hour","day"],"all":["week","month"],"custom":["day","week","month"],"day":["minute","hour"],"month":["day","week"],"realtime":["minute"],"year":["day","week","month"]}'
       {...attrs}
@@ -41,6 +44,7 @@ describe('parseSiteFromDataset', () => {
     propsOptedOut: false,
     funnelsAvailable: true,
     propsAvailable: true,
+    siteSegmentsAvailable: true,
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
     hasProps: true,
@@ -63,7 +67,8 @@ describe('parseSiteFromDataset', () => {
       realtime: ['minute'],
       year: ['day', 'week', 'month']
     },
-    shared: false
+    shared: false,
+    members: { '1': 'Test User' }
   }
 
   it('parses from dom string map correctly', () => {
