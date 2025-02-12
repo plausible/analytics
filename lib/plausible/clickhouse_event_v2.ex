@@ -18,6 +18,7 @@ defmodule Plausible.ClickhouseEventV2 do
     field :"meta.key", {:array, :string}
     field :"meta.value", {:array, :string}
     field :scroll_depth, Ch, type: "UInt8"
+    field :engagement_time, Ch, type: "UInt32"
 
     field :revenue_source_amount, Ch, type: "Nullable(Decimal64(3))"
     field :revenue_source_currency, Ch, type: "FixedString(3)"
@@ -62,6 +63,7 @@ defmodule Plausible.ClickhouseEventV2 do
         :"meta.key",
         :"meta.value",
         :scroll_depth,
+        :engagement_time,
         :revenue_source_amount,
         :revenue_source_currency,
         :revenue_reporting_amount,
