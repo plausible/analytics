@@ -397,12 +397,22 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp get_members(_user, site = %Plausible.Site{}) do
-    memberships =
-      Plausible.Repo.preload(site, :guest_memberships).guest_memberships |> IO.inspect()
+    site =
+      site
+      |> Plausible.Repo.preload(
+        team: [team_memberships: [:user]],
+        guest_memberships: [team_membership: [:user]]
+      )
 
-    %{"0" => "0"}
-    # s = Plausible.Repo.preload(site, :guest_memberships)
-    # s.guest_memberships |> Enum.map(fn member -> {member.id, member.name} end) |> Map.new()
+    site.guest_memberships
+    |> Enum.map(fn i = %Plausible.Teams.GuestMembership{} ->
+      i.team_membership
+    end)
+    |> Enum.concat(site.team.team_memberships)
+    |> Enum.map(fn i = %Plausible.Teams.Membership{} ->
+      {i.user.id, i.user.name}
+    end)
+    |> Map.new()
   end
 
   defp is_dbip() do
