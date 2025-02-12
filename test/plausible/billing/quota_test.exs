@@ -67,6 +67,23 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Plausible.Teams.Billing.site_limit(team) == 10
     end
+
+    test "grandfathered site limit should be unlimited when accepting transfer invitations" do
+      # must be before ~D[2021-05-05]
+      owner = new_user(team: [inserted_at: ~N[2021-01-01 00:00:00]])
+      # plan with site_limit: 10
+      subscribe_to_plan(owner, "857097")
+      _site = for _ <- 1..10, do: new_site(owner: owner)
+
+      other_owner = new_user()
+      other_site = new_site(owner: other_owner)
+      invite_transfer(other_site, owner, inviter: other_owner)
+
+      team = owner |> team_of()
+
+      assert Plausible.Teams.Billing.site_limit(team) == :unlimited
+      assert Plausible.Teams.Invitations.ensure_can_take_ownership(other_site, team) == :ok
+    end
   end
 
   test "site_usage/1 returns the amount of sites the user owns" do
@@ -664,7 +681,7 @@ defmodule Plausible.Billing.QuotaTest do
              } = Plausible.Teams.Billing.monthly_pageview_usage(team)
     end
 
-    test "pageleave events are not counted towards monthly pageview usage" do
+    test "engagement events are not counted towards monthly pageview usage" do
       user = new_user()
       site = new_site(owner: user)
       team = team_of(user)
@@ -673,7 +690,7 @@ defmodule Plausible.Billing.QuotaTest do
       populate_stats(site, [
         build(:event, timestamp: Timex.shift(now, days: -8), name: "custom"),
         build(:pageview, user_id: 199, timestamp: Timex.shift(now, days: -5, minutes: -2)),
-        build(:pageleave, user_id: 199, timestamp: Timex.shift(now, days: -5))
+        build(:engagement, user_id: 199, timestamp: Timex.shift(now, days: -5))
       ])
 
       assert %{

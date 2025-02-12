@@ -1,6 +1,5 @@
 /** @format */
 
-import { parseSearch, stringifySearch } from './util/url'
 import {
   nowForSite,
   formatISO,
@@ -10,12 +9,7 @@ import {
   parseUTCDate,
   isAfter
 } from './util/date'
-import {
-  FILTER_OPERATIONS,
-  getFiltersByKeyPrefix,
-  parseLegacyFilter,
-  parseLegacyPropsFilter
-} from './util/filters'
+import { FILTER_OPERATIONS, getFiltersByKeyPrefix } from './util/filters'
 import { PlausibleSite } from './site-context'
 import { ComparisonMode, QueryPeriod } from './query-time-periods'
 import { AppNavigationTarget } from './navigation/use-app-navigate'
@@ -37,7 +31,7 @@ export type Filter = [FilterOperator, FilterKey, FilterClause[]]
  *  for filters `[["is", "city", [2761369]], ["is", "country", ["AT"]]]`,
  *  labels would be `{"2761369": "Vienna", "AT": "Austria"}`
  * */
-export type FilterClauseLabels = Record<string, unknown>
+export type FilterClauseLabels = Record<string, string>
 
 export const queryDefaultValue = {
   period: '30d' as QueryPeriod,
@@ -58,6 +52,7 @@ export type DashboardQuery = typeof queryDefaultValue
 export type BreakdownResultMeta = {
   date_range_label: string
   comparison_date_range_label?: string
+  metric_warnings: Record<string, Record<string, string>> | undefined
 }
 
 export function addFilter(
@@ -65,29 +60,6 @@ export function addFilter(
   filter: Filter
 ): DashboardQuery {
   return { ...query, filters: [...query.filters, filter] }
-}
-
-const LEGACY_URL_PARAMETERS = {
-  goal: null,
-  source: null,
-  utm_medium: null,
-  utm_source: null,
-  utm_campaign: null,
-  utm_content: null,
-  utm_term: null,
-  referrer: null,
-  screen: null,
-  browser: null,
-  browser_version: null,
-  os: null,
-  os_version: null,
-  country: 'country_labels',
-  region: 'region_labels',
-  city: 'city_labels',
-  page: null,
-  hostname: null,
-  entry_page: null,
-  exit_page: null
 }
 
 export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
@@ -100,70 +72,20 @@ export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
   })
 }
 
-// Called once when dashboard is loaded load. Checks whether old filter style is used and if so,
-// updates the filters and updates location
-export function filtersBackwardsCompatibilityRedirect(
-  windowLocation: Location,
-  windowHistory: History
-) {
-  const searchRecord = parseSearch(windowLocation.search)
-  const getValue = (k: string) => searchRecord[k]
-
-  // New filters are used - no need to do anything
-  if (getValue('filters')) {
-    return
-  }
-
-  const changedSearchRecordEntries = []
-  const filters: DashboardQuery['filters'] = []
-  let labels: DashboardQuery['labels'] = {}
-
-  for (const [key, value] of Object.entries(searchRecord)) {
-    if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {
-      const filter = parseLegacyFilter(key, value) as Filter
-      filters.push(filter)
-      const labelsKey: string | null | undefined =
-        LEGACY_URL_PARAMETERS[key as keyof typeof LEGACY_URL_PARAMETERS]
-      if (labelsKey && getValue(labelsKey)) {
-        const clauses = filter[2]
-        const labelsValues = (getValue(labelsKey) as string)
-          .split('|')
-          .filter((label) => !!label)
-        const newLabels = Object.fromEntries(
-          clauses.map((clause, index) => [clause, labelsValues[index]])
-        )
-
-        labels = Object.assign(labels, newLabels)
-      }
-    } else {
-      changedSearchRecordEntries.push([key, value])
-    }
-  }
-
-  if (getValue('props')) {
-    filters.push(...(parseLegacyPropsFilter(getValue('props')) as Filter[]))
-  }
-
-  if (filters.length > 0) {
-    changedSearchRecordEntries.push(['filters', filters], ['labels', labels])
-    windowHistory.pushState(
-      {},
-      '',
-      `${windowLocation.pathname}${stringifySearch(Object.fromEntries(changedSearchRecordEntries))}`
-    )
-  }
-}
-
 // Returns a boolean indicating whether the given query includes a
 // non-empty goal filterset containing a single, or multiple revenue
 // goals with the same currency. Used to decide whether to render
 // revenue metrics in a dashboard report or not.
 export function revenueAvailable(query: DashboardQuery, site: PlausibleSite) {
-  const revenueGoalsInFilter = site.revenueGoals.filter((rg) => {
+  const revenueGoalsInFilter = site.revenueGoals.filter((revenueGoal) => {
     const goalFilters: Filter[] = getFiltersByKeyPrefix(query, 'goal')
 
-    return goalFilters.some(([_op, _key, clauses]) => {
-      return clauses.includes(rg.display_name)
+    return goalFilters.some(([operation, _key, clauses]) => {
+      return (
+        [FILTER_OPERATIONS.is, FILTER_OPERATIONS.contains].includes(
+          operation
+        ) && clauses.includes(revenueGoal.display_name)
+      )
     })
   })
 

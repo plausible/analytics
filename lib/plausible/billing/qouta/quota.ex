@@ -68,9 +68,16 @@ defmodule Plausible.Billing.Quota do
   end
 
   defp exceeded_limits(usage, plan, opts) do
+    site_limit_exceeded? =
+      if opts[:skip_site_limit_check?] do
+        false
+      else
+        not within_limit?(usage.sites, plan.site_limit)
+      end
+
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
-          {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
+          {:site_limit, site_limit_exceeded?},
           {:monthly_pageview_limit,
            exceeds_monthly_pageview_limit?(usage.monthly_pageviews, plan, opts)}
         ],

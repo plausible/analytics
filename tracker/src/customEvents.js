@@ -193,6 +193,8 @@ function handleTaggedElementClickEvent(event) {
     var eventAttrs = getTaggedEventAttributes(taggedElement)
 
     if (clickedLink) {
+      // if the clicked tagged element is a link, we attach the `url` property
+      // automatically for user convenience
       eventAttrs.props.url = clickedLink.href
       sendLinkClickEvent(event, clickedLink, eventAttrs)
     } else {

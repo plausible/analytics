@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useCallback } from 'react'
+import React, { Fragment, useState, useEffect, useCallback, useRef } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -7,10 +7,11 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import GoalConversions, { specialTitleWhenGoalFilter, SPECIAL_GOALS } from './goal-conversions'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
-import { hasGoalFilter } from '../../util/filters'
+import { hasConversionGoalFilter } from '../../util/filters'
 import { useSiteContext } from '../../site-context'
 import { useQueryContext } from '../../query-context'
 import { useUserContext } from '../../user-context'
+import { BlurMenuButtonOnEscape } from '../../keybinding'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -42,7 +43,7 @@ export default function Behaviours({ importedDataInView }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
   const user = useUserContext();
-
+  const buttonRef = useRef();
   const adminAccess = ['owner', 'admin', 'editor', 'super_admin'].includes(user.role)
   const tabKey = storage.getDomainScopedStorageKey('behavioursTab', site.domain)
   const funnelKey = storage.getDomainScopedStorageKey('behavioursTabFunnel', site.domain)
@@ -70,13 +71,13 @@ export default function Behaviours({ importedDataInView }) {
   }, [])
 
   useEffect(() => {
-    const justRemovedGoalFilter = !hasGoalFilter(query)
+    const justRemovedGoalFilter = !hasConversionGoalFilter(query)
     if (mode === PROPS && justRemovedGoalFilter && showingPropsForGoalFilter) {
       setShowingPropsForGoalFilter(false)
       setMode(CONVERSIONS)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasGoalFilter(query)])
+  }, [hasConversionGoalFilter(query)])
 
   useEffect(() => {
     setMode(defaultMode())
@@ -118,8 +119,9 @@ export default function Behaviours({ importedDataInView }) {
 
   function tabFunnelPicker() {
     return <Menu as="div" className="relative inline-block text-left">
+      <BlurMenuButtonOnEscape targetRef={buttonRef}/>
       <div>
-        <Menu.Button className="inline-flex justify-between focus:outline-none">
+        <Menu.Button ref={buttonRef} className="inline-flex justify-between focus:outline-none">
           <span className={(mode == FUNNELS) ? ACTIVE_CLASS : DEFAULT_CLASS}>Funnels</span>
           <ChevronDownIcon className="-mr-1 ml-1 h-4 w-4" aria-hidden="true" />
         </Menu.Button>

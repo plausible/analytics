@@ -63,7 +63,8 @@ defmodule PlausibleWeb.EmailTest do
   end
 
   describe "priority email layout" do
-    test "uses the `priority` message stream in Postmark" do
+    @tag :ee_only
+    test "uses the `priority` message stream in Postmark in EE" do
       email =
         Email.priority_email()
         |> Email.render("activation_email.html", %{
@@ -72,6 +73,18 @@ defmodule PlausibleWeb.EmailTest do
         })
 
       assert %{"MessageStream" => "priority"} = email.private[:message_params]
+    end
+
+    @tag :ce_build_only
+    test "doesn't use the `priority` message stream in Postmark in CE" do
+      email =
+        Email.priority_email()
+        |> Email.render("activation_email.html", %{
+          user: build(:user, name: "John Doe"),
+          code: "123"
+        })
+
+      refute email.private[:message_params]["MessageStream"]
     end
 
     test "greets user by first name if user in template assigns" do

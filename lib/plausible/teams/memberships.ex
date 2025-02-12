@@ -7,10 +7,28 @@ defmodule Plausible.Teams.Memberships do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  def all(team) do
+    query =
+      from tm in Teams.Membership,
+        inner_join: u in assoc(tm, :user),
+        where: tm.team_id == ^team.id,
+        order_by: [asc: u.id],
+        preload: [user: u]
+
+    Repo.all(query)
+  end
+
   def all_pending_site_transfers(email) do
     email
     |> pending_site_transfers_query()
     |> Repo.all()
+  end
+
+  def owners_count(team) do
+    Repo.aggregate(
+      from(tm in Teams.Membership, where: tm.team_id == ^team.id and tm.role == :owner),
+      :count
+    )
   end
 
   def team_role(team, user) do
@@ -143,6 +161,23 @@ defmodule Plausible.Teams.Memberships do
     )
 
     :ok
+  end
+
+  def get_team_membership(team, %Auth.User{} = user) do
+    get_team_membership(team, user.id)
+  end
+
+  def get_team_membership(team, user_id) do
+    query =
+      from(
+        tm in Teams.Membership,
+        where: tm.team_id == ^team.id and tm.user_id == ^user_id
+      )
+
+    case Repo.one(query) do
+      nil -> {:error, :membership_not_found}
+      membership -> {:ok, membership}
+    end
   end
 
   defp get_guest_membership(site_id, user_id) do

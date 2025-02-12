@@ -8,6 +8,7 @@ defmodule Plausible.Goal do
   schema "goals" do
     field :event_name, :string
     field :page_path, :string
+    field :scroll_threshold, :integer, default: -1
     field :display_name, :string
 
     on_ee do
@@ -23,7 +24,7 @@ defmodule Plausible.Goal do
     timestamps()
   end
 
-  @fields [:id, :site_id, :event_name, :page_path, :display_name] ++
+  @fields [:id, :site_id, :event_name, :page_path, :scroll_threshold, :display_name] ++
             on_ee(do: [:currency], else: [])
 
   @max_event_name_length 120
@@ -37,11 +38,19 @@ defmodule Plausible.Goal do
     |> cast_assoc(:site)
     |> update_leading_slash()
     |> validate_event_name_and_page_path()
+    |> validate_page_path_for_scroll_goal()
     |> maybe_put_display_name()
     |> unique_constraint(:event_name, name: :goals_event_name_unique)
-    |> unique_constraint(:page_path, name: :goals_page_path_unique)
+    |> unique_constraint([:page_path, :scroll_threshold],
+      name: :goals_page_path_and_scroll_threshold_unique
+    )
     |> unique_constraint(:display_name, name: :goals_site_id_display_name_index)
     |> validate_length(:event_name, max: @max_event_name_length)
+    |> validate_number(:scroll_threshold,
+      greater_than_or_equal_to: -1,
+      less_than_or_equal_to: 100,
+      message: "Should be -1 (missing) or in range [0, 100]"
+    )
     |> check_constraint(:event_name,
       name: :check_event_name_or_page_path,
       message: "cannot co-exist with page_path"
@@ -54,9 +63,14 @@ defmodule Plausible.Goal do
     goal.display_name
   end
 
-  @spec type(t()) :: :event | :page
-  def type(%{event_name: event_name}) when is_binary(event_name), do: :event
-  def type(%{page_path: page_path}) when is_binary(page_path), do: :page
+  @spec type(t()) :: :event | :scroll | :page
+  def type(goal) do
+    cond do
+      is_binary(goal.event_name) -> :event
+      is_binary(goal.page_path) && goal.scroll_threshold > -1 -> :scroll
+      is_binary(goal.page_path) -> :page
+    end
+  end
 
   defp update_leading_slash(changeset) do
     case get_field(changeset, :page_path) do
@@ -86,6 +100,18 @@ defmodule Plausible.Goal do
     end
   end
 
+  defp validate_page_path_for_scroll_goal(changeset) do
+    scroll_threshold = get_field(changeset, :scroll_threshold)
+    page_path = get_field(changeset, :page_path)
+
+    if scroll_threshold > -1 and is_nil(page_path) do
+      changeset
+      |> add_error(:scroll_threshold, "page_path field missing for page scroll goal")
+    else
+      changeset
+    end
+  end
+
   defp validate_page_path(changeset) do
     value = get_field(changeset, :page_path)
 
@@ -100,8 +126,8 @@ defmodule Plausible.Goal do
     value = get_field(changeset, :event_name)
 
     cond do
-      value == "pageleave" ->
-        {:error, "The event name 'pageleave' is reserved and cannot be used as a goal"}
+      value == "engagement" ->
+        {:error, "The event name 'engagement' is reserved and cannot be used as a goal"}
 
       value && String.match?(value, ~r/^.+/) ->
         :ok

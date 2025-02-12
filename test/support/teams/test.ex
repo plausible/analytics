@@ -291,6 +291,13 @@ defmodule Plausible.Teams.Test do
     membership
   end
 
+  def refute_team_member(user, team) do
+    refute Repo.get_by(Teams.Membership,
+             team_id: team.id,
+             user_id: user.id
+           )
+  end
+
   def assert_team_attached(site, team_id \\ nil) do
     assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owner])
 
@@ -343,6 +350,21 @@ defmodule Plausible.Teams.Test do
              team_membership_id: team_membership.id,
              site_id: site.id,
              role: role
+           )
+  end
+
+  def assert_non_guest_membership(team, site, user) do
+    assert team_membership =
+             Repo.get_by(Plausible.Teams.Membership,
+               user_id: user.id,
+               team_id: team.id
+             )
+
+    assert team_membership.role != :guest
+
+    refute Repo.get_by(Plausible.Teams.GuestMembership,
+             team_membership_id: team_membership.id,
+             site_id: site.id
            )
   end
 

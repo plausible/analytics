@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as storage from '../../util/storage';
-import { getFiltersByKeyPrefix, hasGoalFilter, isFilteringOnFixedValue } from '../../util/filters';
+import { getFiltersByKeyPrefix, hasConversionGoalFilter, isFilteringOnFixedValue } from '../../util/filters';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
 import * as api from '../../api';
@@ -71,8 +71,8 @@ function Browsers({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage()
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
   }
 
@@ -113,8 +113,8 @@ function BrowserVersions({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage()
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
   }
 
@@ -180,8 +180,8 @@ function OperatingSystems({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage({ meta: { hiddenonMobile: true } })
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(query) && metrics.createPercentage({ meta: { hiddenonMobile: true } })
     ].filter(metric => !!metric)
   }
 
@@ -227,8 +227,8 @@ function OperatingSystemVersions({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage()
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
   }
 
@@ -268,8 +268,8 @@ function ScreenSizes({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage()
+      hasConversionGoalFilter(query) && metrics.createConversionRate(),
+      !hasConversionGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
   }
 

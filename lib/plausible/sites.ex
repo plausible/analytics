@@ -231,11 +231,9 @@ defmodule Plausible.Sites do
   end
 
   def stats_start_date(%Site{} = site) do
-    site = Plausible.Imported.load_import_data(site)
-
     start_date =
       [
-        site.earliest_import_start_date,
+        Plausible.Imported.earliest_import_start_date(site),
         native_stats_start_date(site)
       ]
       |> Enum.reject(&is_nil/1)
@@ -284,6 +282,14 @@ defmodule Plausible.Sites do
     |> Ecto.Changeset.change()
     |> Ecto.Changeset.put_change(:installation_meta, meta)
     |> Repo.update!()
+  end
+
+  def set_scroll_depth_visible_at(site) do
+    utc_now = NaiveDateTime.utc_now(:second)
+
+    site
+    |> Ecto.Changeset.change(%{scroll_depth_visible_at: utc_now})
+    |> Repo.update()
   end
 
   def has_goals?(site) do

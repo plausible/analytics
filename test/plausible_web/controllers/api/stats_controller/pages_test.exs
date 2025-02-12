@@ -1,10 +1,17 @@
 defmodule PlausibleWeb.Api.StatsController.PagesTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/pages" do
-    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
+    setup [
+      :create_user,
+      :log_in,
+      :create_site,
+      :create_legacy_site_import,
+      :set_scroll_depth_visible_at
+    ]
 
     test "returns top pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -609,17 +616,17 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
       ])
 
       conn =
@@ -648,13 +655,34 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "does not return scroll depth (in detailed mode) when site.scroll_depth_visible_at=nil",
+         %{conn: conn, user: user} do
+      site = new_site(owner: user)
+
+      populate_stats(site, [build(:pageview)])
+
+      pages =
+        conn
+        |> get("/api/stats/#{site.domain}/pages?detailed=true")
+        |> json_response(200)
+        |> Map.get("results")
+
+      assert List.first(pages) == %{
+               "bounce_rate" => 100,
+               "name" => "/",
+               "pageviews" => 1,
+               "time_on_page" => nil,
+               "visitors" => 1
+             }
+    end
+
     test "calculates scroll_depth from native and imported data combined", %{
       conn: conn,
       site: site
     } do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00],
@@ -699,7 +727,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           pathname: "/native-and-imported",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/native-and-imported",
           timestamp: ~N[2020-01-01 00:01:00],
@@ -710,7 +738,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           pathname: "/native-only",
           timestamp: ~N[2020-01-01 00:01:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/native-only",
           timestamp: ~N[2020-01-01 00:02:00],
@@ -1107,6 +1135,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"visitors" => 3, "name" => "/register"},
                %{"visitors" => 1, "name" => "/contact"}
              ]
+    end
+
+    test "returns scroll depth warning code", %{conn: conn, site: site} do
+      Plausible.Sites.set_scroll_depth_visible_at(site)
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/pages?period=day&detailed=true&with_imported=true")
+
+      response = json_response(conn, 200)
+
+      assert response["meta"]["metric_warnings"]["scroll_depth"]["code"] ==
+               "no_imported_scroll_depth"
     end
 
     test "returns imported pages with a pageview goal filter", %{conn: conn, site: site} do

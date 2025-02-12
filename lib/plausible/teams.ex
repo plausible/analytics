@@ -6,7 +6,7 @@ defmodule Plausible.Teams do
   import Ecto.Query
 
   alias __MODULE__
-  alias Plausible.Auth.GracePeriod
+  alias Plausible.Auth
   alias Plausible.Repo
   use Plausible
 
@@ -16,13 +16,17 @@ defmodule Plausible.Teams do
     not is_nil(team) and FunWithFlags.enabled?(:teams, for: team)
   end
 
-  @spec get!(pos_integer()) :: Teams.Team.t()
-  def get!(team_id) do
+  @spec get!(pos_integer() | binary()) :: Teams.Team.t()
+  def get!(team_id) when is_integer(team_id) do
     Repo.get!(Teams.Team, team_id)
   end
 
+  def get!(team_identifier) when is_binary(team_identifier) do
+    Repo.get_by!(Teams.Team, identifier: team_identifier)
+  end
+
   @spec get_owner(Teams.Team.t()) ::
-          {:ok, Plausible.Auth.User.t()} | {:error, :no_owner | :multiple_owners}
+          {:ok, Auth.User.t()} | {:error, :no_owner | :multiple_owners}
   def get_owner(team) do
     case Repo.preload(team, :owner).owner do
       nil -> {:error, :no_owner}
@@ -68,10 +72,11 @@ defmodule Plausible.Teams do
 
   def owned_sites_ids(team) do
     Repo.all(
-      from s in Plausible.Site,
+      from(s in Plausible.Site,
         where: s.team_id == ^team.id,
         select: s.id,
         order_by: [desc: s.id]
+      )
     )
   end
 
@@ -81,9 +86,10 @@ defmodule Plausible.Teams do
 
   def owned_sites_locked?(team) do
     Repo.exists?(
-      from s in Plausible.Site,
+      from(s in Plausible.Site,
         where: s.team_id == ^team.id,
         where: s.locked == true
+      )
     )
   end
 
@@ -137,6 +143,7 @@ defmodule Plausible.Teams do
   If the user has a non-guest membership other than owner, `:no_team` error
   is returned.
   """
+  @spec get_or_create(Auth.User.t()) :: {:ok, Teams.Team.t()} | {:error, :multiple_teams}
   def get_or_create(user) do
     with {:error, :no_team} <- get_by_owner(user) do
       case create_my_team(user) do
@@ -149,6 +156,8 @@ defmodule Plausible.Teams do
     end
   end
 
+  @spec get_by_owner(Auth.User.t() | pos_integer()) ::
+          {:ok, Teams.Team.t()} | {:error, :no_team | :multiple_teams}
   def get_by_owner(user_id) when is_integer(user_id) do
     result =
       from(tm in Teams.Membership,
@@ -157,18 +166,21 @@ defmodule Plausible.Teams do
         select: t,
         order_by: t.id
       )
-      |> Repo.one()
+      |> Repo.all()
 
     case result do
-      nil ->
+      [] ->
         {:error, :no_team}
 
-      team ->
+      [team] ->
         {:ok, team}
+
+      _teams ->
+        {:error, :multiple_teams}
     end
   end
 
-  def get_by_owner(%Plausible.Auth.User{} = user) do
+  def get_by_owner(%Auth.User{} = user) do
     get_by_owner(user.id)
   end
 
@@ -187,25 +199,25 @@ defmodule Plausible.Teams do
 
   def start_grace_period(team) do
     team
-    |> GracePeriod.start_changeset()
+    |> Teams.GracePeriod.start_changeset()
     |> Repo.update!()
   end
 
   def start_manual_lock_grace_period(team) do
     team
-    |> GracePeriod.start_manual_lock_changeset()
+    |> Teams.GracePeriod.start_manual_lock_changeset()
     |> Repo.update!()
   end
 
   def end_grace_period(team) do
     team
-    |> GracePeriod.end_changeset()
+    |> Teams.GracePeriod.end_changeset()
     |> Repo.update!()
   end
 
   def remove_grace_period(team) do
     team
-    |> GracePeriod.remove_changeset()
+    |> Teams.GracePeriod.remove_changeset()
     |> Repo.update!()
   end
 
@@ -272,11 +284,13 @@ defmodule Plausible.Teams do
     team_membership =
       team
       |> Teams.Membership.changeset(user, :owner)
+      |> Ecto.Changeset.put_change(:is_autocreated, true)
       |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
       |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!(
         on_conflict: :nothing,
-        conflict_target: {:unsafe_fragment, "(user_id) WHERE role != 'guest'"}
+        conflict_target:
+          {:unsafe_fragment, "(user_id) WHERE role = 'owner' and is_autocreated = true"}
       )
 
     if team_membership.id do

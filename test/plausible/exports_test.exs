@@ -6,8 +6,10 @@ defmodule Plausible.ExportsTest do
   # for e2e export->import tests please see Plausible.Imported.CSVImporterTest
 
   describe "export_queries/2" do
-    test "returns named ecto queries" do
-      queries = Plausible.Exports.export_queries(_site_id = 1, nil)
+    setup [:create_user, :create_site]
+
+    test "returns named ecto queries", %{site: site} do
+      queries = Plausible.Exports.export_queries(site.id, nil)
       assert queries |> Map.values() |> Enum.all?(&match?(%Ecto.Query{}, &1))
 
       assert Map.keys(queries) == [
@@ -24,9 +26,9 @@ defmodule Plausible.ExportsTest do
              ]
     end
 
-    test "with date range" do
+    test "with date range", %{site: site} do
       queries =
-        Plausible.Exports.export_queries(_site_id = 1, nil,
+        Plausible.Exports.export_queries(site.id, nil,
           date_range: Date.range(~D[2023-01-01], ~D[2024-03-12])
         )
 
@@ -44,8 +46,8 @@ defmodule Plausible.ExportsTest do
              ]
     end
 
-    test "with custom extension" do
-      queries = Plausible.Exports.export_queries(_site_id = 1, nil, extname: ".ch")
+    test "with custom extension", %{site: site} do
+      queries = Plausible.Exports.export_queries(site.id, nil, extname: ".ch")
 
       assert Map.keys(queries) == [
                "imported_browsers.ch",
@@ -87,7 +89,9 @@ defmodule Plausible.ExportsTest do
       end)
 
       assert {:ok, files} =
-               :zip.unzip(to_charlist(Path.join(tmp_dir, "numbers.zip")), cwd: tmp_dir)
+               :zip.unzip(to_charlist(Path.join(tmp_dir, "numbers.zip")),
+                 cwd: to_charlist(tmp_dir)
+               )
 
       assert Enum.map(files, &Path.basename/1) == ["1.csv", "2.csv"]
 
@@ -135,8 +139,10 @@ defmodule Plausible.ExportsTest do
         end)
       end
 
-      assert {:error, :einval} =
-               :zip.unzip(to_charlist(Path.join(tmp_dir, "failed.zip")), cwd: tmp_dir)
+      assert {:error, :bad_eocd} =
+               :zip.unzip(to_charlist(Path.join(tmp_dir, "failed.zip")),
+                 cwd: to_charlist(tmp_dir)
+               )
     end
   end
 end

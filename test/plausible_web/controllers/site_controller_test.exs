@@ -10,6 +10,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   import Plausible.Test.Support.HTML
 
   alias Plausible.Imported.SiteImport
+  alias Plausible.Teams
 
   require Plausible.Imported.SiteImport
 
@@ -323,7 +324,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       for _ <- 1..51, do: new_site(owner: user)
 
-      Ecto.Changeset.change(user, %{inserted_at: ~N[2021-05-04 00:00:00]})
+      Ecto.Changeset.change(team_of(user), %{inserted_at: ~N[2021-05-04 00:00:00]})
       |> Repo.update()
 
       conn =
@@ -566,6 +567,35 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert text_of_element(resp, "#invitation-#{st.transfer_id}") ==
                "#{new_owner.email} Owner"
+    end
+
+    test "renders team management notices", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+
+      refute resp =~ "You can also invite people to your team"
+      refute resp =~ "Team members automatically have access to this site."
+
+      user |> team_of() |> Teams.Team.setup_changeset() |> Repo.update!()
+
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+      assert resp =~ "You can also invite people to your team"
+      assert resp =~ "Team members automatically have access to this site."
+    end
+
+    test "does not render team management notices to editors", %{conn: conn, user: user} do
+      # this can go away once we support multiple teams
+      user |> team_of() |> Repo.delete!()
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_member(team_of(owner), user: user, role: :editor)
+
+      owner |> team_of() |> Teams.Team.setup_changeset() |> Repo.update!()
+
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+
+      refute resp =~ "You can also invite people to your team"
+      refute resp =~ "Team members automatically have access to this site."
     end
   end
 
@@ -891,6 +921,20 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "An extra step is needed"
       assert resp =~ "Google Search Console integration"
       assert resp =~ "google-integration"
+    end
+
+    @tag :ee_only
+    test "renders looker studio integration section", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/integrations")
+      resp = html_response(conn, 200)
+      assert resp =~ "Google Looker Studio Connector"
+    end
+
+    @tag :ce_build_only
+    test "does not render looker studio integration section", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/integrations")
+      resp = html_response(conn, 200)
+      refute resp =~ "Google Looker Studio Connector"
     end
   end
 
@@ -1561,8 +1605,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       imports = Plausible.Imported.list_all_imports(site)
 
       assert Enum.find(imports, &(&1.id == import_id))
-
-      site = Plausible.Imported.load_import_data(site)
 
       assert eventually(fn ->
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)

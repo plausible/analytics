@@ -124,8 +124,8 @@ defmodule Plausible.Factory do
     Map.put(event_factory(attrs), :name, "pageview")
   end
 
-  def pageleave_factory(attrs) do
-    Map.put(event_factory(attrs), :name, "pageleave")
+  def engagement_factory(attrs) do
+    Map.put(event_factory(attrs), :name, "engagement")
   end
 
   def event_factory(attrs) do
@@ -379,7 +379,7 @@ defmodule Plausible.Factory do
   end
 
   def segment_factory do
-    %Plausible.Segment{
+    %Plausible.Segments.Segment{
       segment_data: %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
     }
   end

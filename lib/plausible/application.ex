@@ -16,20 +16,13 @@ defmodule Plausible.Application do
     children =
       [
         Plausible.Cache.Stats,
+        Plausible.PromEx,
+        {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         Plausible.Repo,
         Plausible.ClickhouseRepo,
         Plausible.IngestRepo,
         Plausible.AsyncInsertRepo,
         Plausible.ImportDeletionRepo,
-        {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
-        {Plausible.RateLimit, clean_period: :timer.minutes(10)},
-        Plausible.Ingestion.Counters,
-        {Finch, name: Plausible.Finch, pools: finch_pool_config()},
-        {Phoenix.PubSub, name: Plausible.PubSub},
-        Plausible.Session.Salts,
-        Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
-        Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
-        ReferrerBlocklist,
         Plausible.Cache.Adapter.child_spec(:customer_currency, :cache_customer_currency,
           ttl_check_interval: :timer.minutes(5),
           global_ttl: :timer.minutes(60)
@@ -102,9 +95,16 @@ defmodule Plausible.Application do
             ]
           )
         end,
+        Plausible.Ingestion.Counters,
+        Plausible.Session.Salts,
+        Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
+        Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
+        ReferrerBlocklist,
+        {Plausible.RateLimit, clean_period: :timer.minutes(10)},
+        {Finch, name: Plausible.Finch, pools: finch_pool_config()},
+        {Phoenix.PubSub, name: Plausible.PubSub},
         endpoint,
         {Oban, Application.get_env(:plausible, Oban)},
-        Plausible.PromEx,
         on_ee do
           help_scout_vault()
         end

@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   defp aggregate_time_on_page(site, query) do
     windowed_pages_q =
       from e in Base.base_event_query(site, Query.remove_top_level_filters(query, ["event:page"])),
-        where: e.name != "pageleave",
+        where: e.name != "engagement",
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
@@ -83,7 +83,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
              site,
              Query.remove_top_level_filters(query, ["event:page", "event:props"])
            ),
-           where: e.name != "pageleave",
+           where: e.name != "engagement",
            select: %{
              next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
              next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),

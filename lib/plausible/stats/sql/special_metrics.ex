@@ -58,7 +58,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         |> Query.set(
           dimensions: [],
           include_imported: query.include_imported,
-          preloaded_goals: [],
+          preloaded_goals: Map.put(query.preloaded_goals, :matching_toplevel_filters, []),
           pagination: nil
         )
 
@@ -102,7 +102,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           metrics: [:visitors],
           order_by: [],
           include_imported: query.include_imported,
-          preloaded_goals: [],
+          preloaded_goals: Map.put(query.preloaded_goals, :matching_toplevel_filters, []),
           pagination: nil
         )
 
@@ -131,7 +131,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     if :scroll_depth in query.metrics do
       max_per_visitor_q =
         Base.base_event_query(site, query)
-        |> where([e], e.name == "pageleave" and e.scroll_depth <= 100)
+        |> where([e], e.name == "engagement" and e.scroll_depth <= 100)
         |> select([e], %{
           user_id: e.user_id,
           max_scroll_depth: max(e.scroll_depth)

@@ -4,7 +4,7 @@ import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
 import { useSiteContext } from './site-context'
-import { parseSearch } from './util/url'
+import { parseSearch } from './util/url-search-params'
 import dayjs from 'dayjs'
 import { nowForSite, yesterday } from './util/date'
 import {

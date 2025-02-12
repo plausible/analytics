@@ -2,33 +2,39 @@ name: Build Public Images GHCR
 
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  GHCR_REPO: ghcr.io/plausible/community-edition
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-22.04
+          - platform: linux/arm64
+            runner: ubuntu-22.04-arm
 
-    permissions:
-      contents: read
-      packages: write
+    runs-on: ${{ matrix.runner || 'ubuntu-22.04' }}
 
     steps:
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/plausible/community-edition
-          tags: |
-            type=semver,pattern={{version}},prefix=v
-            type=semver,pattern={{major}}.{{minor}},prefix=v
-            type=semver,pattern={{major}},prefix=v
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+          images: ${{ env.GHCR_REPO }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -40,29 +46,80 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build
         id: docker_build
         uses: docker/build-push-action@v6
         with:
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64, linux/arm64
+          outputs: type=image,name=${{ env.GHCR_REPO }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             MIX_ENV=ce
             BUILD_METADATA=${{ steps.meta.outputs.json }}
-            ERL_FLAGS=+JMsingle true
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.docker_build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Notify team on failure
         if: ${{ failure() }}
         uses: fjogeleit/http-request-action@v1
         with:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
-          method: 'POST'
+          method: "POST"
           customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images.yml\">Build failed</a>"}'
+          data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-public-images-ghcr.yml\">Build failed</a>"}'
+
+  push:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.GHCR_REPO }}
+          tags: |
+            type=semver,pattern={{version}},prefix=v
+            type=semver,pattern={{major}}.{{minor}},prefix=v
+            type=semver,pattern={{major}},prefix=v
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.GHCR_REPO }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.GHCR_REPO }}:${{ steps.meta.outputs.version }}

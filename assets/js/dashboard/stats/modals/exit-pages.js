@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import Modal from './modal'
-import { hasGoalFilter } from "../../util/filters";
+import { hasConversionGoalFilter } from "../../util/filters";
 import { addFilter } from '../../query'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from '../reports/metrics'
@@ -33,7 +33,7 @@ function ExitPagesModal() {
   }, [reportInfo.dimension])
 
   function chooseMetrics() {
-    if (hasGoalFilter(query)) {
+    if (hasConversionGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
         metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),

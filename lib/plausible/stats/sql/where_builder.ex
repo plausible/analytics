@@ -4,7 +4,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   """
 
   import Ecto.Query
-  import Plausible.Stats.Time, only: [utc_boundaries: 2]
+  import Plausible.Stats.Time, only: [utc_boundaries: 1]
   import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
 
   use Plausible.Stats.SQL.Fragments
@@ -19,8 +19,8 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   ]
 
   @doc "Builds WHERE clause for a given Query against sessions or events table"
-  def build(table, site, query) do
-    base_condition = filter_site_time_range(table, site, query)
+  def build(table, query) do
+    base_condition = filter_site_time_range(table, query)
 
     query.filters
     |> Enum.map(&add_filter(table, query, &1))
@@ -41,17 +41,18 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     end
   end
 
-  defp filter_site_time_range(:events, site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
+  defp filter_site_time_range(:events, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query)
 
     dynamic(
       [e],
-      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp <= ^last_datetime
+      e.site_id == ^query.site_id and e.timestamp >= ^first_datetime and
+        e.timestamp <= ^last_datetime
     )
   end
 
-  defp filter_site_time_range(:sessions, site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
+  defp filter_site_time_range(:sessions, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query)
 
     # Counts each _active_ session in time range even if they started before
     dynamic(
@@ -66,7 +67,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       # Without it, the sample factor would be greatly overestimated for large sites,
       # as query would be estimated to return _all_ rows matching other conditions
       # before `start == last_datetime`.
-      s.site_id == ^site.id and
+      s.site_id == ^query.site_id and
         s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
         s.timestamp >= ^first_datetime and
         s.start <= ^last_datetime
@@ -93,12 +94,26 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc or ^condition) end)
   end
 
+  defp add_filter(_table, query, [:has_done, filter]) do
+    condition =
+      dynamic([], ^filter_site_time_range(:events, query) and ^add_filter(:events, query, filter))
+
+    dynamic(
+      [t],
+      t.session_id in subquery(from(e in "events_v2", where: ^condition, select: e.session_id))
+    )
+  end
+
+  defp add_filter(table, query, [:has_not_done, filter]) do
+    dynamic([], not (^add_filter(table, query, [:has_done, filter])))
+  end
+
   defp add_filter(:events, _query, [:is, "event:name" | _rest] = filter) do
     in_clause(col_value(:name), filter)
   end
 
   defp add_filter(:events, query, [_, "event:goal" | _rest] = filter) do
-    Plausible.Goals.Filters.add_filter(query, filter)
+    Plausible.Stats.Goals.add_filter(query, filter)
   end
 
   defp add_filter(:events, _query, [_, "event:page" | _rest] = filter) do

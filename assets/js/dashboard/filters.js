@@ -12,10 +12,9 @@ import {
   cleanLabels,
   FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup,
-  EVENT_PROPS_PREFIX,
-  plainFilterText,
-  styledFilterText
-} from "./util/filters";
+  EVENT_PROPS_PREFIX
+} from "./util/filters"
+import { plainFilterText, styledFilterText } from "./util/filter-text"
 
 const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
 
@@ -231,11 +230,11 @@ function Filters() {
 
   function renderDropDown() {
     return (
-      <Menu as="div" className="md:relative ml-auto">
+      <Menu as="div" className="md:relative ml-auto shrink-0">
         {({ open }) => (
           <>
             <div>
-              <Menu.Button onClick={trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
+              <Menu.Button onClick={trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded whitespace-nowrap">
                 {renderDropdownButton()}
               </Menu.Button>
             </div>

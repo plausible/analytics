@@ -6,7 +6,8 @@ import {
   numberShortFormatter,
   durationFormatter,
   percentageFormatter,
-  numberLongFormatter
+  numberLongFormatter,
+  nullable
 } from '../../util/number-formatter'
 
 export type FormattableMetric =
@@ -23,7 +24,7 @@ export const MetricFormatterShort: Record<
   FormattableMetric,
   (value: ValueType) => string
 > = {
-  events: numberShortFormatter,
+  events: nullable(numberShortFormatter),
   pageviews: numberShortFormatter,
   total_visitors: numberShortFormatter,
   current_visitors: numberShortFormatter,
@@ -51,7 +52,7 @@ export const MetricFormatterLong: Record<
   FormattableMetric,
   (value: ValueType) => string
 > = {
-  events: numberLongFormatter,
+  events: nullable(numberLongFormatter),
   pageviews: numberLongFormatter,
   total_visitors: numberLongFormatter,
   current_visitors: numberShortFormatter,

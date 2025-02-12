@@ -3,6 +3,7 @@ defmodule Plausible.ImportedTest do
   use Plausible
 
   alias Plausible.Imported
+  alias Plausible.Stats.{Query, DateTimeRange}
 
   describe "list_all_imports/1" do
     test "returns empty when there are no imports" do
@@ -32,14 +33,14 @@ defmodule Plausible.ImportedTest do
     end
   end
 
-  describe "get_imports_date_range/1" do
-    test "returns empty when there are no imports" do
+  describe "earliest_import_start_date/1" do
+    test "returns nil if no site_imports exist" do
       site = insert(:site)
 
-      assert %{start_date: nil, end_date: nil} = Imported.get_imports_date_range(site)
+      assert is_nil(Imported.earliest_import_start_date(site))
     end
 
-    test "returns empty when only incomplete or failed imports are present" do
+    test "returns nil when only incomplete or failed imports are present" do
       site = insert(:site)
 
       _import1 = insert(:site_import, site: site, status: :pending)
@@ -47,7 +48,7 @@ defmodule Plausible.ImportedTest do
       _import3 = insert(:site_import, site: site, status: :failed)
       _rogue_import = insert(:site_import, site: build(:site), status: :completed)
 
-      assert %{start_date: nil, end_date: nil} = Imported.get_imports_date_range(site)
+      assert is_nil(Imported.earliest_import_start_date(site))
     end
 
     test "returns start and end dates considering all imports" do
@@ -70,8 +71,110 @@ defmodule Plausible.ImportedTest do
           status: :completed
         )
 
-      assert %{start_date: ~D[2020-04-02], end_date: ~D[2024-01-08]} =
-               Imported.get_imports_date_range(site)
+      assert Imported.earliest_import_start_date(site) == ~D[2020-04-02]
+    end
+  end
+
+  describe "latest_import_end_date/1" do
+    test "returns nil if no site_imports exist" do
+      site = insert(:site)
+
+      assert is_nil(Imported.latest_import_end_date(site))
+    end
+
+    test "returns nil when only incomplete or failed imports are present" do
+      site = insert(:site)
+
+      _import1 = insert(:site_import, site: site, status: :pending)
+      _import2 = insert(:site_import, site: site, status: :importing)
+      _import3 = insert(:site_import, site: site, status: :failed)
+      _rogue_import = insert(:site_import, site: build(:site), status: :completed)
+
+      assert is_nil(Imported.latest_import_end_date(site))
+    end
+
+    test "returns start and end dates considering all imports" do
+      site = insert(:site)
+
+      _import1 =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2020-04-02],
+          end_date: ~D[2022-06-22],
+          status: :completed,
+          legacy: true
+        )
+
+      _import2 =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2022-06-22],
+          end_date: ~D[2024-01-08],
+          status: :completed
+        )
+
+      assert Imported.latest_import_end_date(site) == ~D[2024-01-08]
+    end
+  end
+
+  describe "completed_imports_in_query_range/2" do
+    setup do
+      site = insert(:site)
+
+      site_import_feb =
+        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
+
+      site_import_apr =
+        insert(:site_import, site: site, start_date: ~D[2021-04-10], end_date: ~D[2021-04-20])
+
+      {:ok, %{site: site, site_import_feb: site_import_feb, site_import_apr: site_import_apr}}
+    end
+
+    test "returns empty list if no imports exist" do
+      site = insert(:site)
+      tz = "Etc/UTC"
+
+      query = %Query{
+        utc_time_range: DateTimeRange.new!(~D[2021-01-01], ~D[2021-12-31], tz),
+        timezone: tz
+      }
+
+      assert Imported.completed_imports_in_query_range(site, query) == []
+    end
+
+    test "returns imports in query range", %{
+      site: site,
+      site_import_feb: site_import_feb,
+      site_import_apr: site_import_apr
+    } do
+      tz = "Etc/UTC"
+
+      query = %Query{
+        utc_time_range: DateTimeRange.new!(~D[2021-01-01], ~D[2021-12-31], tz),
+        timezone: tz
+      }
+
+      imports_in_range = Imported.completed_imports_in_query_range(site, query)
+
+      assert Enum.find(imports_in_range, &(&1.id == site_import_feb.id))
+      assert Enum.find(imports_in_range, &(&1.id == site_import_apr.id))
+    end
+
+    test "returns imports in a non-utc timezone query range", %{
+      site: site,
+      site_import_feb: site_import_feb
+    } do
+      datetime_from = DateTime.new!(~D[2021-03-01], ~T[03:00:00], "Etc/UTC")
+      datetime_to = DateTime.new!(~D[2021-04-10], ~T[03:00:00], "Etc/UTC")
+
+      query = %Query{
+        utc_time_range: DateTimeRange.new!(datetime_from, datetime_to),
+        timezone: "America/Chicago"
+      }
+
+      [site_import] = Imported.completed_imports_in_query_range(site, query)
+
+      assert site_import.id == site_import_feb.id
     end
   end
 

@@ -608,13 +608,13 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, timestamp: t0),
-        build(:pageleave, user_id: 12, timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 34, timestamp: t0),
-        build(:pageleave, user_id: 34, timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, timestamp: t2),
-        build(:pageleave, user_id: 34, timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, timestamp: NaiveDateTime.add(t0, 1, :day)),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           timestamp: NaiveDateTime.add(t1, 1, :day),
           scroll_depth: 20
@@ -640,14 +640,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       populate_stats(site, site_import.id, [
         # 2020-01-01 - only native data
         build(:pageview, user_id: 12, timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave, user_id: 12, timestamp: ~N[2020-01-01 00:01:00], scroll_depth: 20),
+        build(:engagement, user_id: 12, timestamp: ~N[2020-01-01 00:01:00], scroll_depth: 20),
         build(:pageview, user_id: 34, timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave, user_id: 34, timestamp: ~N[2020-01-01 00:01:00], scroll_depth: 17),
+        build(:engagement, user_id: 34, timestamp: ~N[2020-01-01 00:01:00], scroll_depth: 17),
         build(:pageview, user_id: 34, timestamp: ~N[2020-01-01 00:02:00]),
-        build(:pageleave, user_id: 34, timestamp: ~N[2020-01-01 00:03:00], scroll_depth: 60),
+        build(:engagement, user_id: 34, timestamp: ~N[2020-01-01 00:03:00], scroll_depth: 60),
         # 2020-01-02 - both imported and native data
         build(:pageview, user_id: 56, timestamp: ~N[2020-01-02 00:00:00]),
-        build(:pageleave, user_id: 56, timestamp: ~N[2020-01-02 00:01:00], scroll_depth: 20),
+        build(:engagement, user_id: 56, timestamp: ~N[2020-01-02 00:01:00], scroll_depth: 20),
         build(:imported_pages,
           date: ~D[2020-01-02],
           page: "/",

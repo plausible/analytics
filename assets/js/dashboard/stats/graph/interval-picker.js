@@ -1,11 +1,14 @@
-import React, { Fragment, useCallback, useEffect, useRef } from 'react';
+import React, { Fragment, useRef } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
 import * as storage from '../../util/storage';
-import { isKeyPressed, isModifierPressed, isTyping } from '../../keybinding';
+import { BlurMenuButtonOnEscape, isModifierPressed, isTyping, Keybind } from '../../keybinding';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
+import { useMatch } from 'react-router-dom';
+import { rootRoute } from '../../router';
+import { popover } from '../../components/popover';
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -71,19 +74,6 @@ function storeInterval(period, domain, interval) {
   storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
-function useIKeybinding(ref) {
-  const handleKeyPress = useCallback((event) => {
-    if (isKeyPressed(event, { keyboardKey: "i", shouldIgnoreWhen: [isTyping, isModifierPressed] })) {
-      ref.current?.click()
-    }
-  }, [ref])
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyPress)
-    return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [handleKeyPress])
-}
-
 export const getCurrentInterval = function(site, query) {
   const options = validIntervals(site, query)
 
@@ -101,7 +91,7 @@ export function IntervalPicker({ onIntervalUpdate }) {
   const menuElement = useRef(null)
   const {query} = useQueryContext();
   const site = useSiteContext();
-  useIKeybinding(menuElement)
+  const dashboardRouteMatch = useMatch(rootRoute.path)
   
   if (query.period == 'realtime') return null
 
@@ -134,7 +124,22 @@ export function IntervalPicker({ onIntervalUpdate }) {
     <Menu as="div" className="relative inline-block pl-2">
       {({ open }) => (
         <>
-          <Menu.Button ref={menuElement} className="text-sm inline-flex focus:outline-none text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600 items-center">
+          {!!dashboardRouteMatch && (
+            <Keybind
+              targetRef="document"
+              type="keydown"
+              keyboardKey="i"
+              handler={() => {
+                menuElement.current?.click()
+              }}
+              shouldIgnoreWhen={[isModifierPressed, isTyping]}
+            />
+          )}
+          <BlurMenuButtonOnEscape targetRef={menuElement} />
+          <Menu.Button
+            ref={menuElement}
+            className="text-sm inline-flex focus:outline-none text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600 items-center"
+          >
             {INTERVAL_LABELS[currentInterval]}
             <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
           </Menu.Button>
@@ -142,13 +147,12 @@ export function IntervalPicker({ onIntervalUpdate }) {
           <Transition
             as={Fragment}
             show={open}
-            enter="transition ease-out duration-100"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95">
-            <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
+            {...popover.transition.props}
+          >
+            <Menu.Items
+              className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
+              static
+            >
               {options.map(renderDropdownItem)}
             </Menu.Items>
           </Transition>

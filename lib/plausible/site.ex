@@ -21,6 +21,7 @@ defmodule Plausible.Site do
     field :conversions_enabled, :boolean, default: true
     field :props_enabled, :boolean, default: true
     field :funnels_enabled, :boolean, default: true
+    field :scroll_depth_visible_at, :naive_datetime
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
@@ -62,13 +63,7 @@ defmodule Plausible.Site do
     field :invitations, {:array, :map}, virtual: true
     field :pinned_at, :naive_datetime, virtual: true
 
-    # Used for caching imports data for the duration of the whole request
-    # to avoid multiple identical fetches. Populated by plugs putting
-    # `site` in `assigns`.
-    field :import_data_loaded, :boolean, default: false, virtual: true
-    field :earliest_import_start_date, :date, virtual: true
-    field :latest_import_end_date, :date, virtual: true
-    field :complete_import_ids, {:array, :integer}, default: [], virtual: true
+    has_many :completed_imports, Plausible.Imported.SiteImport, where: [status: :completed]
 
     timestamps()
   end

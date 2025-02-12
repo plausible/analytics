@@ -13,6 +13,7 @@ defmodule Plausible.Teams.Membership do
 
   schema "team_memberships" do
     field :role, Ecto.Enum, values: @roles
+    field :is_autocreated, :boolean, default: false
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :team, Plausible.Teams.Team
@@ -30,6 +31,5 @@ defmodule Plausible.Teams.Membership do
     |> put_change(:role, role)
     |> put_assoc(:team, team)
     |> put_assoc(:user, user)
-    |> unique_constraint(:user_id, name: :one_team_per_user)
   end
 end

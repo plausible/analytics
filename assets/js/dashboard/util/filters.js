@@ -1,8 +1,6 @@
 /** @format */
 
-import React, { useMemo } from 'react'
 import * as api from '../api'
-import { useQueryContext } from '../query-context'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
   page: ['page', 'entry_page', 'exit_page'],
@@ -30,20 +28,18 @@ export const FILTER_OPERATIONS = {
   is: 'is',
   isNot: 'is_not',
   contains: 'contains',
-  contains_not: 'contains_not'
+  contains_not: 'contains_not',
+  has_not_done: 'has_not_done'
 }
 
 export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.is]: 'is',
   [FILTER_OPERATIONS.isNot]: 'is not',
   [FILTER_OPERATIONS.contains]: 'contains',
-  [FILTER_OPERATIONS.contains_not]: 'does not contain'
-}
-
-const OPERATION_PREFIX = {
-  [FILTER_OPERATIONS.isNot]: '!',
-  [FILTER_OPERATIONS.contains]: '~',
-  [FILTER_OPERATIONS.is]: ''
+  [FILTER_OPERATIONS.contains_not]: 'does not contain',
+  // :NOTE: Goal filters are displayed as "is not" in the UI, but in the backend they are wrapped with has_not_done.
+  // It is currently unclear if we'll do the same for other event filters in the future.
+  [FILTER_OPERATIONS.has_not_done]: 'is not'
 }
 
 export function supportsIsNot(filterName) {
@@ -56,22 +52,15 @@ export function supportsContains(filterName) {
     .includes(filterName)
 }
 
+export function supportsHasDoneNot(filterName) {
+  return filterName === 'goal'
+}
+
 export function isFreeChoiceFilterOperation(operation) {
   return [FILTER_OPERATIONS.contains, FILTER_OPERATIONS.contains_not].includes(
     operation
   )
 }
-
-// As of March 2023, Safari does not support negative lookbehind regexes. In case it throws an error, falls back to plain | matching. This means
-// escaping pipe characters in filters does not currently work in Safari
-let NON_ESCAPED_PIPE_REGEX
-try {
-  NON_ESCAPED_PIPE_REGEX = new RegExp('(?<!\\\\)\\|', 'g')
-} catch (_e) {
-  NON_ESCAPED_PIPE_REGEX = '|'
-}
-
-const ESCAPED_PIPE = '\\|'
 
 export function getLabel(labels, filterKey, value) {
   if (['country', 'region', 'city'].includes(filterKey)) {
@@ -114,71 +103,16 @@ export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
   return false
 }
 
-export function hasGoalFilter(query) {
-  return getFiltersByKeyPrefix(query, 'goal').length > 0
-}
+export function hasConversionGoalFilter(query) {
+  const goalFilters = getFiltersByKeyPrefix(query, 'goal')
 
-export function useHasGoalFilter() {
-  const {
-    query: { filters }
-  } = useQueryContext()
-  return useMemo(
-    () => getFiltersByKeyPrefix({ filters }, 'goal').length > 0,
-    [filters]
-  )
+  return goalFilters.some(([operation, _filterKey, _clauses]) => {
+    return operation !== FILTER_OPERATIONS.has_not_done
+  })
 }
 
 export function isRealTimeDashboard(query) {
   return query?.period === 'realtime'
-}
-
-export function useIsRealtimeDashboard() {
-  const {
-    query: { period }
-  } = useQueryContext()
-  return useMemo(() => isRealTimeDashboard({ period }), [period])
-}
-
-export function plainFilterText(query, [operation, filterKey, clauses]) {
-  const formattedFilter = formattedFilters[filterKey]
-
-  if (formattedFilter) {
-    return `${formattedFilter} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.map((value) => getLabel(query.labels, filterKey, value)).reduce((prev, curr) => `${prev} or ${curr}`)}`
-  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return `Property ${propKey} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.reduce((prev, curr) => `${prev} or ${curr}`)}`
-  }
-
-  throw new Error(`Unknown filter: ${filterKey}`)
-}
-
-export function styledFilterText(query, [operation, filterKey, clauses]) {
-  const formattedFilter = formattedFilters[filterKey]
-
-  if (formattedFilter) {
-    return (
-      <>
-        {formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
-        {clauses
-          .map((value) => (
-            <b key={value}>{getLabel(query.labels, filterKey, value)}</b>
-          ))
-          .reduce((prev, curr) => [prev, ' or ', curr])}{' '}
-      </>
-    )
-  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return (
-      <>
-        Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
-        {clauses
-          .map((label) => <b key={label}>{label}</b>)
-          .reduce((prev, curr) => [prev, ' or ', curr])}{' '}
-      </>
-    )
-  }
-
-  throw new Error(`Unknown filter: ${filterKey}`)
 }
 
 // Note: Currently only a single goal filter can be applied at a time.
@@ -229,20 +163,25 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
 const EVENT_FILTER_KEYS = new Set(['name', 'page', 'goal', 'hostname'])
 
 export function serializeApiFilters(filters) {
-  const apiFilters = filters.map(
-    ([operation, filterKey, clauses, ...modifiers]) => {
-      let apiFilterKey = `visit:${filterKey}`
-      if (
-        filterKey.startsWith(EVENT_PROPS_PREFIX) ||
-        EVENT_FILTER_KEYS.has(filterKey)
-      ) {
-        apiFilterKey = `event:${filterKey}`
-      }
-      return [operation, apiFilterKey, clauses, ...modifiers]
-    }
-  )
-
+  const apiFilters = filters.map(serializeFilter)
   return JSON.stringify(apiFilters)
+}
+
+function serializeFilter([operation, filterKey, clauses, ...modifiers]) {
+  let apiFilterKey = `visit:${filterKey}`
+  if (
+    filterKey.startsWith(EVENT_PROPS_PREFIX) ||
+    EVENT_FILTER_KEYS.has(filterKey)
+  ) {
+    apiFilterKey = `event:${filterKey}`
+  }
+  if (operation === FILTER_OPERATIONS.has_not_done) {
+    // :NOTE: Frontend does not support advanced query building that's used in the backend.
+    // As such we emulate the backend behavior for has_not_done goal filters
+    return ['has_not_done', ['is', apiFilterKey, clauses, ...modifiers]]
+  } else {
+    return [operation, apiFilterKey, clauses, ...modifiers]
+  }
 }
 
 export function fetchSuggestions(apiPath, query, input, additionalFilter) {
@@ -294,27 +233,4 @@ export const formattedFilters = {
   hostname: 'Hostname',
   entry_page: 'Entry Page',
   exit_page: 'Exit Page'
-}
-
-export function parseLegacyFilter(filterKey, rawValue) {
-  const operation =
-    Object.keys(OPERATION_PREFIX).find(
-      (operation) => OPERATION_PREFIX[operation] === rawValue[0]
-    ) || FILTER_OPERATIONS.is
-
-  const value =
-    operation === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
-
-  const clauses = value
-    .split(NON_ESCAPED_PIPE_REGEX)
-    .filter((clause) => !!clause)
-    .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
-
-  return [operation, filterKey, clauses]
-}
-
-export function parseLegacyPropsFilter(rawValue) {
-  return Object.entries(JSON.parse(rawValue)).map(([key, propVal]) => {
-    return parseLegacyFilter(`${EVENT_PROPS_PREFIX}${key}`, propVal)
-  })
 }

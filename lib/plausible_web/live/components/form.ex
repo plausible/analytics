@@ -396,7 +396,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         type="select"
         options={@options}
         onchange={"if (event.target.value) { location.href = '#{@href_base}' + event.target.value }"}
-        class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
+        class="dark:bg-gray-800 mt-1 block w-full pl-3.5 pr-10 py-2.5 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
       />
     </.form>
     """

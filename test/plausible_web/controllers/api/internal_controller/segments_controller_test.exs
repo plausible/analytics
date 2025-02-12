@@ -330,7 +330,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                "errors" => [
                  [
                    "segment_data",
-                   "#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"
+                   "#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]",
+                   []
                  ]
                ]
              }
@@ -354,19 +355,20 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           })
           |> json_response(200)
 
-        assert %{
-                 "name" => "Some segment",
-                 "type" => "#{unquote(type)}",
-                 "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
-                 "owner_id" => user.id
-               } == Map.drop(response, ["id", "inserted_at", "updated_at"])
+        assert_matches ^strict_map(%{
+                         "id" => ^any(:pos_integer),
+                         "name" => "Some segment",
+                         "type" => ^"#{unquote(type)}",
+                         "segment_data" =>
+                           ^strict_map(%{"filters" => [["is", "visit:entry_page", ["/blog"]]]}),
+                         "owner_id" => ^user.id,
+                         "inserted_at" => ^any(:iso8601_naive_datetime),
+                         "updated_at" => ^any(:iso8601_naive_datetime)
+                       }) = response
 
-        assert is_integer(response["id"])
-        assert is_binary(response["inserted_at"])
-        assert is_binary(response["updated_at"])
         assert response["inserted_at"] == response["updated_at"]
 
-        verify_segment_in_db(%Plausible.Segment{
+        verify_segment_in_db(%Plausible.Segments.Segment{
           id: response["id"],
           name: response["name"],
           type: String.to_existing_atom(response["type"]),
@@ -569,11 +571,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
   defp verify_segment_in_db(segment) do
     uncomparable_keys = [:__meta__, :site]
 
-    assert Map.drop(Repo.get(Plausible.Segment, segment.id), uncomparable_keys) ==
+    assert Map.drop(Repo.get(Plausible.Segments.Segment, segment.id), uncomparable_keys) ==
              Map.drop(segment, uncomparable_keys)
   end
 
   defp verify_no_segment_in_db(segment) do
-    assert Repo.get(Plausible.Segment, segment.id) == nil
+    assert Repo.get(Plausible.Segments.Segment, segment.id) == nil
   end
 end

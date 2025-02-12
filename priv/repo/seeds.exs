@@ -11,6 +11,8 @@
 # and so on) as they will fail if something goes wrong.
 import Plausible.Teams.Test
 
+FunWithFlags.enable(:teams)
+
 words =
   for i <- 0..(:erlang.system_info(:atom_count) - 1),
       do: :erlang.binary_to_term(<<131, 75, i::24>>)
@@ -58,6 +60,7 @@ site =
   )
 
 add_guest(site, user: new_user(name: "Arnold Wallaby", password: "plausible"), role: :viewer)
+add_guest(site, user: new_user(name: "Lois Lane", password: "plausible"), role: :editor)
 
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
 Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")

@@ -12,9 +12,15 @@
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
   var dataDomain = scriptEl.getAttribute('data-domain')
 
-  function onIgnoredEvent(reason, options) {
+  function onIgnoredEvent(eventName, reason, options) {
     if (reason) console.warn('Ignoring Event: ' + reason);
     options && options.callback && options.callback()
+
+    {{#if pageleave}}
+    if (eventName === 'pageview') {
+      currentEngagementIgnored = true
+    }
+    {{/if}}
   }
 
   function defaultEndpoint(el) {
@@ -29,33 +35,35 @@
   }
 
   {{#if pageleave}}
-  // :NOTE: Tracking pageleave events is currently experimental.
+  // :NOTE: Tracking engagement events is currently experimental.
 
-  // Keeps track of the URL to be sent in the pageleave event payload.
-  // Should get updated on pageviews triggered manually with a custom
-  // URL, and on SPA navigation.
-  var currentPageLeaveURL = location.href
+  var currentEngagementIgnored
+  var currentEngagementURL = location.href
+  var currentEngagementProps = {}
+  var currentEngagementMaxScrollDepth = -1
 
   // Multiple pageviews might be sent by the same script when the page
   // uses client-side routing (e.g. hash or history-based). This flag
   // prevents registering multiple listeners in those cases.
-  var listeningPageLeave = false
+  var listeningOnEngagement = false
 
   // In SPA-s, multiple listeners that trigger the pageleave event
   // might fire nearly at the same time. E.g. when navigating back
   // in browser history while using hash-based routing - a popstate
   // and hashchange will be fired in a very quick succession. This
-  // flag prevents sending multiple pageleaves in those cases.
-  var pageLeaveSending = false
+  // flag prevents sending multiple engagement events in those cases.
+  var engagementCooldown = false
 
   function getDocumentHeight() {
+    var body = document.body || {}
+    var el = document.documentElement || {}
     return Math.max(
-      document.body.scrollHeight || 0,
-      document.body.offsetHeight || 0,
-      document.body.clientHeight || 0,
-      document.documentElement.scrollHeight || 0,
-      document.documentElement.offsetHeight || 0,
-      document.documentElement.clientHeight || 0
+      body.scrollHeight || 0,
+      body.offsetHeight || 0,
+      body.clientHeight || 0,
+      el.scrollHeight || 0,
+      el.offsetHeight || 0,
+      el.clientHeight || 0
     )
   }
 
@@ -80,6 +88,7 @@
       currentDocumentHeight = getDocumentHeight()
       if (++count === 15) {clearInterval(interval)}
     }, 200)
+
   })
 
   document.addEventListener('scroll', function() {
@@ -91,32 +100,39 @@
     }
   })
 
-  function triggerPageLeave() {
-    if (pageLeaveSending) {return}
-    pageLeaveSending = true
-    setTimeout(function () {pageLeaveSending = false}, 500)
+  function triggerEngagement() {
+    // Avoid sending redundant engagement events if user has not scrolled the page
+    // Note that `currentEngagementMaxScrollDepth` default of -1 ensures that at least one
+    // engagement event is sent
+    if (!engagementCooldown && !currentEngagementIgnored && currentEngagementMaxScrollDepth < maxScrollDepthPx) {
+      currentEngagementMaxScrollDepth = maxScrollDepthPx
+      setTimeout(function () {engagementCooldown = false}, 300)
 
-    var payload = {
-      n: 'pageleave',
-      sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
-      d: dataDomain,
-      u: currentPageLeaveURL,
-    }
+      var payload = {
+        n: 'engagement',
+        sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
+        d: dataDomain,
+        u: currentEngagementURL,
+        p: currentEngagementProps
+      }
 
-    {{#if hash}}
-    payload.h = 1
-    {{/if}}
+      {{#if hash}}
+      payload.h = 1
+      {{/if}}
 
-    if (navigator.sendBeacon) {
-      var blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
-      navigator.sendBeacon(endpoint, blob)
+      sendRequest(endpoint, payload)
     }
   }
 
-  function registerPageLeaveListener() {
-    if (!listeningPageLeave) {
-      window.addEventListener('pagehide', triggerPageLeave)
-      listeningPageLeave = true
+  function registerEngagementListener() {
+    if (!listeningOnEngagement) {
+      // Only register visibilitychange listener only after initial page load and pageview
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+          triggerEngagement()
+        }
+      })
+      listeningOnEngagement = true
     }
   }
   {{/if}}
@@ -126,15 +142,15 @@
 
     {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
-      return onIgnoredEvent('localhost', options)
+      return onIgnoredEvent(eventName, 'localhost', options)
     }
     if ((window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) && !window.__plausible) {
-      return onIgnoredEvent(null, options)
+      return onIgnoredEvent(eventName, null, options)
     }
     {{/unless}}
     try {
       if (window.localStorage.plausible_ignore === 'true') {
-        return onIgnoredEvent('localStorage flag', options)
+        return onIgnoredEvent(eventName, 'localStorage flag', options)
       }
     } catch (e) {
 
@@ -147,7 +163,7 @@
       var isIncluded = !dataIncludeAttr || (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
       var isExcluded = dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
 
-      if (!isIncluded || isExcluded) return onIgnoredEvent('exclusion rule', options)
+      if (!isIncluded || isExcluded) return onIgnoredEvent(eventName, 'exclusion rule', options)
     }
 
     function pathMatches(wildcardPath) {
@@ -166,10 +182,6 @@
 
     {{#if manual}}
     var customURL = options && options.u
-
-    {{#if pageleave}}
-    isPageview && customURL && (currentPageLeaveURL = customURL)
-    {{/if}}
 
     payload.u = customURL ? customURL : location.href
     {{else}}
@@ -210,6 +222,21 @@
     payload.h = 1
     {{/if}}
 
+    {{#if pageleave}}
+    if (isPageview) {
+      currentEngagementIgnored = false
+      currentEngagementURL = payload.u
+      currentEngagementProps = payload.p
+      currentEngagementMaxScrollDepth = -1
+      registerEngagementListener()
+    }
+    {{/if}}
+
+    sendRequest(endpoint, payload, options)
+  }
+
+  function sendRequest(endpoint, payload, options) {
+    {{#if compat}}
     var request = new XMLHttpRequest();
     request.open('POST', endpoint, true);
     request.setRequestHeader('Content-Type', 'text/plain');
@@ -218,14 +245,23 @@
 
     request.onreadystatechange = function() {
       if (request.readyState === 4) {
-        {{#if pageleave}}
-        if (isPageview) {
-          registerPageLeaveListener()
-        }
-        {{/if}}
         options && options.callback && options.callback({status: request.status})
       }
     }
+    {{else}}
+    if (window.fetch) {
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        keepalive: true,
+        body: JSON.stringify(payload)
+      }).then(function(response) {
+        options && options.callback && options.callback({status: response.status})
+      })
+    }
+    {{/if}}
   }
 
   var queue = (window.plausible && window.plausible.q) || []
@@ -241,11 +277,10 @@
       {{#unless hash}}
       if (lastPage === location.pathname) return;
       {{/unless}}
-      
+
       {{#if pageleave}}
-      if (isSPANavigation && listeningPageLeave) {
-        triggerPageLeave();
-        currentPageLeaveURL = location.href;
+      if (isSPANavigation && listeningOnEngagement) {
+        triggerEngagement()
         currentDocumentHeight = getDocumentHeight()
         maxScrollDepthPx = getCurrentScrollDepthPx()
       }

@@ -224,11 +224,11 @@ defmodule PlausibleWeb.Router do
         do: plug(PlausibleWeb.Plugs.FeatureFlagCheckPlug, [:saved_segments])
 
       pipe_through :segments_endpoints
-      get "/", SegmentsController, :get_all_segments
-      post "/", SegmentsController, :create_segment
-      get "/:segment_id", SegmentsController, :get_segment
-      patch "/:segment_id", SegmentsController, :update_segment
-      delete "/:segment_id", SegmentsController, :delete_segment
+      get "/", SegmentsController, :index
+      post "/", SegmentsController, :create
+      get "/:segment_id", SegmentsController, :get
+      patch "/:segment_id", SegmentsController, :update
+      delete "/:segment_id", SegmentsController, :delete
     end
   end
 
@@ -294,8 +294,14 @@ defmodule PlausibleWeb.Router do
 
       post "/event", Api.ExternalController, :event
       get "/error", Api.ExternalController, :error
-      get "/health", Api.ExternalController, :health
-      get "/system", Api.ExternalController, :info
+      # Remove this once all external checks are migration to new /system/health/* checks
+      get "/health", Api.SystemController, :readiness
+    end
+
+    scope "/system" do
+      get "/", Api.SystemController, :info
+      get "/health/live", Api.SystemController, :liveness
+      get "/health/ready", Api.SystemController, :readiness
     end
 
     scope [] do
@@ -389,6 +395,9 @@ defmodule PlausibleWeb.Router do
 
     get "/team/general", SettingsController, :team_general
     post "/team/general/name", SettingsController, :update_team_name
+    post "/team/invitations/:invitation_id/accept", InvitationController, :accept_invitation
+    post "/team/invitations/:invitation_id/reject", InvitationController, :reject_invitation
+    delete "/team/invitations/:invitation_id", InvitationController, :remove_team_invitation
   end
 
   scope "/", PlausibleWeb do
@@ -418,6 +427,7 @@ defmodule PlausibleWeb.Router do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
       live "/sites", Sites, :index, as: :site
+      live "/team/setup", TeamSetup, :setup, as: :team_setup
     end
 
     get "/sites/new", SiteController, :new
