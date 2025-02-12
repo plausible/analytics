@@ -436,10 +436,10 @@ defmodule Plausible.Exports do
           select: %{
             date: date(e.timestamp, ^timezone),
             page: selected_as(e.pathname, :page),
-            user_id: e.user_id,
+            session_id: e.session_id,
             max_scroll_depth: max(e.scroll_depth)
           },
-          group_by: [e.user_id, selected_as(:date), selected_as(:page)]
+          group_by: [e.session_id, selected_as(:date), selected_as(:page)]
         )
 
       scroll_depth_q =
@@ -447,13 +447,8 @@ defmodule Plausible.Exports do
           select: %{
             date: p.date,
             page: p.page,
-            scroll_depth:
-              fragment(
-                "if(isNull(sum(?)), NULL, toUInt64(sum(?)))",
-                p.max_scroll_depth,
-                p.max_scroll_depth
-              ),
-            pageleave_visitors: fragment("uniq(?)", p.user_id)
+            total_scroll_depth: fragment("sum(?)", p.max_scroll_depth),
+            total_scroll_depth_visits: fragment("uniq(?)", p.session_id)
           },
           group_by: [:date, :page]
         )
@@ -471,8 +466,8 @@ defmodule Plausible.Exports do
           ),
           visitors(e),
           selected_as(scale_sample(fragment("count()")), :pageviews),
-          selected_as(fragment("any(?)", s.scroll_depth), :scroll_depth),
-          selected_as(fragment("any(?)", s.pageleave_visitors), :pageleave_visitors)
+          selected_as(fragment("any(?)", s.total_scroll_depth), :total_scroll_depth),
+          selected_as(fragment("any(?)", s.total_scroll_depth_visits), :total_scroll_depth_visits)
         ]
       )
     else

@@ -1033,10 +1033,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           page: "/",
           date: ~D[2021-01-01],
           visitors: 8,
-          scroll_depth: 410,
-          pageleave_visitors: 8
+          total_scroll_depth: 410,
+          total_scroll_depth_visits: 8
         ),
-        build(:imported_pages, page: "/", date: ~D[2021-01-02], visitors: 100, scroll_depth: nil)
+        build(:imported_pages, page: "/", date: ~D[2021-01-02], visitors: 100)
       ])
 
       filters = Jason.encode!([[:is, "event:page", ["/"]]])
