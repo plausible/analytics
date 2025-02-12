@@ -62,7 +62,7 @@ defmodule Plausible.HelpScoutTest do
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team.id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team.identifier)}"
 
         assert {:ok,
                 %{
@@ -412,7 +412,7 @@ defmodule Plausible.HelpScoutTest do
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team.id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team.identifier)}"
 
         assert {:ok,
                 %{
@@ -451,7 +451,7 @@ defmodule Plausible.HelpScoutTest do
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team2.id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(user2.email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team2.identifier)}"
 
         assert {:ok,
                 %{
