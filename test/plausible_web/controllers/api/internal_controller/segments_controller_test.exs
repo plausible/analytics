@@ -272,6 +272,36 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                "updated_at" => NaiveDateTime.to_iso8601(segment.updated_at)
              }
     end
+
+    test "serves dates correctly in site timezone", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user, timezone: "Australia/Sydney")
+
+      segment =
+        insert(:segment,
+          site: site,
+          name: "any",
+          owner: user,
+          type: :personal,
+          inserted_at: "2025-02-01T00:00:00",
+          updated_at: "2025-02-01T00:00:00"
+        )
+
+      conn =
+        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
+
+      assert json_response(conn, 200) == %{
+               "id" => segment.id,
+               "owner_id" => user.id,
+               "name" => segment.name,
+               "type" => Atom.to_string(segment.type),
+               "segment_data" => segment.segment_data,
+               "inserted_at" => "2025-02-01T11:00:00",
+               "updated_at" => "2025-02-01T11:00:00"
+             }
+    end
   end
 
   describe "POST /api/:domain/segments" do
