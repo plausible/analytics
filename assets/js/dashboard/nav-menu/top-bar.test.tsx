@@ -98,7 +98,7 @@ test('user can open and close filters dropdown', async () => {
 })
 
 test('current visitors renders when visitors are present and disappears after visitors are null', async () => {
-  mockAPI.get(`/api/stats/${domain}/current-visitors?`, 500)
+  mockAPI.get(`/api/stats/${domain}/current-visitors`, 500)
   render(<TopBar showCurrentVisitors={true} />, {
     wrapper: (props) => (
       <TestContextProviders siteOptions={{ domain, flags }} {...props} />
@@ -111,7 +111,7 @@ test('current visitors renders when visitors are present and disappears after vi
     ).toBeVisible()
   })
 
-  mockAPI.get(`/api/stats/${domain}/current-visitors?`, null)
+  mockAPI.get(`/api/stats/${domain}/current-visitors`, null)
   fireEvent(document, new CustomEvent('tick'))
   await waitForElementToBeRemoved(() =>
     screen.queryByRole('link', { name: /current visitors/ })

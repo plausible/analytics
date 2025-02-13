@@ -10,6 +10,7 @@ import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
 import { useSegmentExpandedContext } from '../segments/segment-expanded-context'
+import { isSegmentFilter } from '../filtering/segments'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -235,7 +236,6 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
 
 const ClearAction = () => (
   <AppNavigationLink
-    title="Clear all filters"
     className={classNames(
       'button flex self-start h-9 !px-3 !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
     )}
@@ -250,18 +250,29 @@ const ClearAction = () => (
 )
 
 const SaveAsSegmentAction = () => {
+  const { query } = useQueryContext()
   const { expandedSegment, setModal } = useSegmentExpandedContext()
-  return !expandedSegment ? (
+  if (expandedSegment) {
+    return null
+  }
+
+  const disabledReason = query.filters.some(isSegmentFilter)
+    ? 'Segment filters can not be saved within other segments'
+    : undefined
+  const disabled = !!disabledReason
+
+  return (
     <AppNavigationLink
-      title="Clear all filters"
       className={classNames(
-        'button flex self-start h-9 !px-3 whitespace-nowrap'
+        'button flex self-start h-9 !px-3 whitespace-nowrap',
+        { 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed': !!disabled }
       )}
+      title={disabledReason}
       search={(s) => s}
-      onClick={() => setModal('create')}
+      onClick={disabled ? () => {} : () => setModal('create')}
       state={{ expandedSegment: null }}
     >
       Save as segment
     </AppNavigationLink>
-  ) : null
+  )
 }

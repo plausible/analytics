@@ -99,7 +99,7 @@ export async function get(
     query ? url + serializeQuery(query, extraQuery) : url,
     {
       signal: abortController.signal,
-      headers: getHeaders()
+      headers: { ...getHeaders(), Accept: 'application/json' }
     }
   )
   return handleApiResponse(response)
