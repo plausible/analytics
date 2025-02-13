@@ -385,17 +385,17 @@ defmodule Plausible.Ingestion.Event do
       )
 
     case session_result do
+      {:ok, :no_session_for_pageleave} ->
+        drop(event, :no_session_for_pageleave)
+
+      {:error, :timeout} ->
+        drop(event, :lock_timeout)
+
       {:ok, session} ->
         %{
           event
           | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
         }
-
-      {:error, :no_session_for_pageleave} ->
-        drop(event, :no_session_for_pageleave)
-
-      {:error, :timeout} ->
-        drop(event, :lock_timeout)
     end
   end
 

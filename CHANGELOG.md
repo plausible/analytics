@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - Fix Direct / None details modal not opening
 - Fix year over year comparisons being offset by a day for leap years
 - Breakdown modals now display correct comparison values instead of 0 after pagination
+- Fix database mismatch between event and session user_ids after rotating salts
 
 ## v2.1.5-rc.1 - 2025-01-17
 

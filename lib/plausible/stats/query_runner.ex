@@ -126,20 +126,18 @@ defmodule Plausible.Stats.QueryRunner do
   defp build_from_ch(ch_results, query, time_on_page) do
     ch_results
     |> Enum.map(fn entry ->
-      dimensions = Enum.map(query.dimensions, &dimension_label(&1, entry, query))
+      dimension_labels = Enum.map(query.dimensions, &dimension_label(&1, entry, query))
 
       %{
-        dimensions: dimensions,
-        metrics: Enum.map(query.metrics, &get_metric(entry, &1, dimensions, query, time_on_page))
+        dimensions: dimension_labels,
+        metrics:
+          Enum.map(query.metrics, &get_metric(entry, &1, dimension_labels, query, time_on_page))
       }
     end)
   end
 
   defp dimension_label("event:goal", entry, query) do
-    goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
-
-    query.preloaded_goals.matching_toplevel_filters
-    |> Enum.at(goal_index - 1)
+    get_dimension_goal(entry, query)
     |> Plausible.Goal.display_name()
   end
 
@@ -165,7 +163,34 @@ defmodule Plausible.Stats.QueryRunner do
   defp get_metric(_entry, :time_on_page, dimensions, _query, time_on_page),
     do: Map.get(time_on_page, dimensions)
 
+  defp get_metric(entry, :events, _dimensions, query, _time_on_page) do
+    cond do
+      "event:goal" in query.dimensions ->
+        goal = get_dimension_goal(entry, query)
+
+        if Plausible.Goal.type(goal) != :scroll do
+          Map.get(entry, :events)
+        else
+          nil
+        end
+
+      # Cannot show aggregate when there are at least some scroll goal filters
+      Plausible.Stats.Goals.toplevel_scroll_goal_filters?(query) ->
+        nil
+
+      true ->
+        Map.get(entry, :events)
+    end
+  end
+
   defp get_metric(entry, metric, _dimensions, _query, _time_on_page), do: Map.get(entry, metric)
+
+  defp get_dimension_goal(entry, query) do
+    goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
+
+    query.preloaded_goals.matching_toplevel_filters
+    |> Enum.at(goal_index - 1)
+  end
 
   # Special case: If comparison and single time dimension, add 0 rows - otherwise
   # comparisons would not be shown for timeseries with 0 values.

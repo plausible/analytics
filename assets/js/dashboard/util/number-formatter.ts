@@ -39,6 +39,15 @@ export function numberLongFormatter(num: number): string {
   return numberFormat.format(num)
 }
 
+export function nullable<T>(formatter: (num: T) => string): (num: T | null) => string {
+  return (num: T | null): string => {
+    if (num === null) {
+      return '-'
+    }
+    return formatter(num)
+  }
+}
+
 function pad(num: number, size: number): string {
   return ('000' + num).slice(size * -1);
 }
