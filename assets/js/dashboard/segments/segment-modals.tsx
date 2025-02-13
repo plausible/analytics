@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { ReactNode, useLayoutEffect, useState } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
   isSegmentFilter,
@@ -409,14 +409,32 @@ const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
   )
 }
 
+const Placeholder = ({
+  children,
+  placeholder
+}: {
+  children: ReactNode | false
+  placeholder: ReactNode
+}) => (
+  <span
+    className={classNames(
+      'rounded',
+      children === false &&
+        'bg-gray-100 dark:bg-gray-700 text-gray-100 dark:text-gray-700'
+    )}
+  >
+    {children === false ? placeholder : children}
+  </span>
+)
+
 export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
   const { query } = useQueryContext()
 
-  const { data, fetchSegment } = useSegmentPrefetch({
+  const { data, fetchSegment, status, error } = useSegmentPrefetch({
     id: String(id)
   })
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     fetchSegment()
   }, [fetchSegment])
 
@@ -426,22 +444,23 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-x-2">
             <h1 className="text-xl font-bold break-all">
-              {data ? data.name : 'Segment'}
+              {data ? data.name : 'Segment details'}
             </h1>
           </div>
         </div>
-        {data?.segment_data ? (
-          <div className="mt-2 text-sm">
-            {
-              {
-                [SegmentType.personal]: 'Personal segment',
-                [SegmentType.site]: 'Site segment'
-              }[data.type]
-            }
-          </div>
-        ) : null}
+
+        <div className="mt-2 text-sm/5">
+          <Placeholder placeholder={'Segment type'}>
+            {data?.segment_data
+              ? {
+                  [SegmentType.personal]: 'Personal segment',
+                  [SegmentType.site]: 'Site segment'
+                }[data.type]
+              : false}
+          </Placeholder>
+        </div>
         <div className="my-4 border-b border-gray-300" />
-        {data?.segment_data ? (
+        {!!data?.segment_data && (
           <>
             <FiltersInSegment segment_data={data.segment_data} />
 
@@ -489,8 +508,24 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
               </ButtonsRow>
             </div>
           </>
-        ) : (
-          <div className="loading sm" />
+        )}
+        {status === 'pending' && (
+          <div className="flex items-center justify-center">
+            <div className="loading">
+              <div />
+            </div>
+          </div>
+        )}
+        {error !== null && (
+          <ErrorPanel
+            className="mt-4"
+            errorMessage={
+              error instanceof ApiError
+                ? error.message
+                : 'Something went wrong loading segment'
+            }
+            onRetry={() => fetchSegment()}
+          />
         )}
       </div>
     </ModalWithRouting>

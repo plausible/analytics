@@ -403,7 +403,7 @@ defmodule PlausibleWeb.StatsController do
     nil
   end
 
-  defp get_members(_user, site = %Plausible.Site{}) do
+  defp get_members(_user, %Plausible.Site{} = site) do
     site =
       site
       |> Plausible.Repo.preload(

@@ -183,20 +183,12 @@ export const useSegmentPrefetch = ({ id }: { id: string }) => {
     typeof queryKey
   > = useCallback(
     async ({ queryKey: [_, id] }) => {
-      const res = await fetch(
-        `/api/${encodeURIComponent(site.domain)}/segments/${id}`,
-        {
-          method: 'GET',
-          headers: {
-            'content-type': 'application/json',
-            accept: 'application/json'
-          }
-        }
+      const response: SavedSegment & { segment_data: SegmentData } = await get(
+        `/api/${encodeURIComponent(site.domain)}/segments/${id}`
       )
-      const d = await res.json()
       return {
-        ...d,
-        segment_data: parseApiSegmentData(d.segment_data)
+        ...response,
+        segment_data: parseApiSegmentData(response.segment_data)
       }
     },
     [site]
@@ -227,7 +219,13 @@ export const useSegmentPrefetch = ({ id }: { id: string }) => {
     [queryClient, getSegmentFn, queryKey]
   )
 
-  return { prefetchSegment, data: getSegment.data, fetchSegment }
+  return {
+    prefetchSegment,
+    data: getSegment.data,
+    fetchSegment,
+    error: getSegment.error,
+    status: getSegment.status
+  }
 }
 
 const SegmentLink = ({
