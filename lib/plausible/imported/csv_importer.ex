@@ -182,7 +182,7 @@ defmodule Plausible.Imported.CSVImporter do
     "imported_operating_systems" =>
       "date Date, operating_system String, operating_system_version String, visitors UInt64, visits UInt64, visit_duration UInt64, bounces UInt32, pageviews UInt64",
     "imported_pages" =>
-      "date Date, hostname String, page String, visits UInt64, visitors UInt64, pageviews UInt64, total_scroll_depth UInt64, total_scroll_depth_visits UInt64",
+      "date Date, hostname String, page String, visits UInt64, visitors UInt64, pageviews UInt64, total_scroll_depth UInt64, total_scroll_depth_visits UInt64, total_time_on_page UInt64, total_time_on_page_visits UInt64",
     "imported_sources" =>
       "date Date, source String, referrer String, utm_source String, utm_medium String, utm_campaign String, utm_content String, utm_term String, pageviews UInt64, visitors UInt64, visits UInt64, visit_duration UInt64, bounces UInt32",
     "imported_visitors" =>
