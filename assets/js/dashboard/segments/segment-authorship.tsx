@@ -3,7 +3,7 @@
 import React from 'react'
 import { SavedSegment } from '../filtering/segments'
 import { PlausibleSite, useSiteContext } from '../site-context'
-import { formatDayShort, parseUTCDate } from '../util/date'
+import { dateForSite, formatDayShort } from '../util/date'
 
 const getAuthorLabel = (
   site: Pick<PlausibleSite, 'members'>,
@@ -29,7 +29,7 @@ export const SegmentAuthorship = ({
   owner_id,
   inserted_at,
   updated_at
-}: SavedSegment & {
+}: Pick<SavedSegment, 'owner_id' | 'inserted_at' | 'updated_at'> & {
   className?: string
 }) => {
   const site = useSiteContext()
@@ -41,12 +41,12 @@ export const SegmentAuthorship = ({
   return (
     <div className={className}>
       <div>
-        {`Created at ${formatDayShort(parseUTCDate(inserted_at))}`}
+        {`Created at ${formatDayShort(dateForSite(inserted_at, site))}`}
         {!showUpdatedAt && !!authorLabel && ` by ${authorLabel}`}
       </div>
       {showUpdatedAt && (
         <div>
-          {`Last updated at ${formatDayShort(parseUTCDate(updated_at))}`}
+          {`Last updated at ${formatDayShort(dateForSite(updated_at, site))}`}
           {!!authorLabel && ` by ${authorLabel}`}
         </div>
       )}

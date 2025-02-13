@@ -18,6 +18,12 @@ import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
 import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { MutationStatus } from '@tanstack/react-query'
+
+interface ApiRequestState {
+  status: MutationStatus
+  error?: unknown
+}
 
 interface SegmentTypeSelectorProps {
   siteSegmentsAvailable: boolean
@@ -67,6 +73,7 @@ export const CreateSegmentModal = ({
   userCanSelectSiteSegment,
   namePlaceholder
 }: SharedSegmentModalProps &
+  ApiRequestState &
   SegmentTypeSelectorProps & {
     segment?: SavedSegment
     onSave: (input: Pick<SavedSegment, 'name' | 'type'>) => void
@@ -125,7 +132,7 @@ export const DeleteSegmentModal = ({
   onClose: () => void
   onSave: (input: Pick<SavedSegment, 'id'>) => void
   segment: SavedSegment & { segment_data?: SegmentData }
-}) => {
+} & ApiRequestState) => {
   return (
     <SegmentActionModal onClose={onClose}>
       <FormTitle>
@@ -281,6 +288,7 @@ export const UpdateSegmentModal = ({
   userCanSelectSiteSegment,
   namePlaceholder
 }: SharedSegmentModalProps &
+  ApiRequestState &
   SegmentTypeSelectorProps & {
     onSave: (input: Pick<SavedSegment, 'id' | 'name' | 'type'>) => void
     segment: SavedSegment
@@ -342,11 +350,11 @@ const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
   )
 }
 
-export const SegmentModal = () => {
+export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
   const { query } = useQueryContext()
-  const segmentsFilter = query.filters.find(isSegmentFilter)!
+
   const { data, fetchSegment } = useSegmentPrefetch({
-    id: String(segmentsFilter[2][0])
+    id: String(id)
   })
 
   useLayoutEffect(() => {

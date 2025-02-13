@@ -1,8 +1,9 @@
 /** @format */
 
 import { DashboardQuery, Filter } from '../query'
-import { remapFromApiFilters } from '../util/filters'
+import { cleanLabels, remapFromApiFilters } from '../util/filters'
 import { plainFilterText } from '../util/filter-text'
+import { AppNavigationTarget } from '../navigation/use-app-navigate'
 
 export enum SegmentType {
   personal = 'personal',
@@ -67,3 +68,19 @@ export const parseApiSegmentData = ({
   filters: remapFromApiFilters(filters),
   ...rest
 })
+
+export function getSearchToApplySingleSegmentFilter(
+  segment: Pick<SavedSegment, 'id' | 'name'>
+): Required<AppNavigationTarget>['search'] {
+  return (search) => {
+    const filters = [['is', 'segment', [segment.id]]]
+    const labels = cleanLabels(filters, {}, 'segment', {
+      [formatSegmentIdAsLabelKey(segment.id)]: segment.name
+    })
+    return {
+      ...search,
+      filters,
+      labels
+    }
+  }
+}
