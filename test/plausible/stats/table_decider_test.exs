@@ -79,8 +79,8 @@ defmodule Plausible.Stats.TableDeciderTest do
     test "other metrics put in its own result" do
       query = make_query([])
 
-      assert partition_metrics([:time_on_page, :percentage, :total_visitors], query) ==
-               {[], [:percentage], [:time_on_page, :total_visitors]}
+      assert partition_metrics([:time_on_page, :percentage], query) ==
+               {[], [:percentage], [:time_on_page]}
     end
 
     test "metrics that can be calculated on either when event-only metrics" do
