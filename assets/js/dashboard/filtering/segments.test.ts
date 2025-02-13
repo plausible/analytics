@@ -4,6 +4,7 @@ import { remapToApiFilters } from '../util/filters'
 import {
   formatSegmentIdAsLabelKey,
   getFilterSegmentsByNameInsensitive,
+  getSearchToApplySingleSegmentFilter,
   getSegmentNamePlaceholder,
   isSegmentIdLabelKey,
   parseApiSegmentData
@@ -84,5 +85,27 @@ describe(`${parseApiSegmentData.name}`, () => {
       labels: { PL: 'Poland' }
     })
     expect(remapToApiFilters(dashboardFormat.filters)).toEqual(apiFormatFilters)
+  })
+})
+
+describe(`${getSearchToApplySingleSegmentFilter.name}`, () => {
+  test('generated search function applies single segment correctly', () => {
+    const searchFunction = getSearchToApplySingleSegmentFilter({
+      name: 'APAC',
+      id: 500
+    })
+    const existingSearch = {
+      date: '2025-02-10',
+      filters: [
+        ['is', 'country', ['US']],
+        ['is', 'page', ['/blog']]
+      ],
+      labels: { US: 'United States' }
+    }
+    expect(searchFunction(existingSearch)).toEqual({
+      date: '2025-02-10',
+      filters: [['is', 'segment', [500]]],
+      labels: { 'segment-500': 'APAC' }
+    })
   })
 })
