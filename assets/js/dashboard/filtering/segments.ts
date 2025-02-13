@@ -27,14 +27,16 @@ const SEGMENT_LABEL_KEY_PREFIX = 'segment-'
 
 export function getFilterSegmentsByNameInsensitive(
   search?: string
-): (s: SavedSegment) => boolean {
+): (s: Pick<SavedSegment, 'name'>) => boolean {
   return (s) =>
     search?.trim().length
       ? s.name.toLowerCase().includes(search.trim().toLowerCase())
       : true
 }
 
-export const getSegmentNamePlaceholder = (query: DashboardQuery) =>
+export const getSegmentNamePlaceholder = (
+  query: Pick<DashboardQuery, 'labels' | 'filters'>
+) =>
   query.filters
     .reduce(
       (combinedName, filter) =>
@@ -58,7 +60,10 @@ export const isSegmentFilter = (f: Filter): boolean => f[1] === 'segment'
 export const parseApiSegmentData = ({
   filters,
   ...rest
-}: SegmentData): SegmentData => ({
+}: {
+  filters: unknown[]
+  labels: Record<string, string>
+}): SegmentData => ({
   filters: remapFromApiFilters(filters),
   ...rest
 })
