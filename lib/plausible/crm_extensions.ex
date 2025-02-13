@@ -67,6 +67,7 @@ defmodule Plausible.CrmExtensions do
             teamIdField.after(dataList)
             teamIdField.setAttribute("list", "team-choices")
             teamIdField.setAttribute("type", "text")
+            teamIdField.setAttribute("autocomplete", "off")
             const labelSpan = document.createElement("span")
             teamIdLabel.appendChild(labelSpan)
 
