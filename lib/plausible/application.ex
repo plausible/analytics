@@ -31,7 +31,19 @@ defmodule Plausible.Application do
           ttl_check_interval: :timer.minutes(5),
           global_ttl: :timer.minutes(60)
         ),
-        Plausible.Cache.Adapter.child_spec(:sessions, :cache_sessions,
+        Plausible.Cache.Adapter.child_spec(:sessions_1, :cache_sessions_1,
+          ttl_check_interval: :timer.seconds(10),
+          global_ttl: :timer.minutes(30)
+        ),
+        Plausible.Cache.Adapter.child_spec(:sessions_2, :cache_sessions_2,
+          ttl_check_interval: :timer.seconds(10),
+          global_ttl: :timer.minutes(30)
+        ),
+        Plausible.Cache.Adapter.child_spec(:sessions_3, :cache_sessions_3,
+          ttl_check_interval: :timer.seconds(10),
+          global_ttl: :timer.minutes(30)
+        ),
+        Plausible.Cache.Adapter.child_spec(:sessions_4, :cache_sessions_4,
           ttl_check_interval: :timer.seconds(10),
           global_ttl: :timer.minutes(30)
         ),
