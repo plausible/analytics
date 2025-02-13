@@ -124,7 +124,10 @@ defmodule PlausibleWeb.AdminController do
             from t in Teams.Team,
               inner_join: o in assoc(t, :owners),
               where:
-                t.id == ^team_id or ilike(t.name, ^term) or ilike(o.email, ^term) or
+                t.id == ^team_id or
+                  type(t.identifier, :string) == ^search or
+                  ilike(t.name, ^term) or
+                  ilike(o.email, ^term) or
                   ilike(o.name, ^term),
               order_by: [t.name, t.id],
               group_by: t.id,
@@ -132,18 +135,20 @@ defmodule PlausibleWeb.AdminController do
                 fragment(
                   """
                   case when ? = ? then 
-                    string_agg(concat(?, ' (', ?, ')'), ',') 
+                    concat(string_agg(concat(?, ' (', ?, ')'), ','), ' - ', ?)
                   else 
-                    concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']') 
+                    concat(concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']'), ' - ', ?)
                   end
                   """,
                   t.name,
                   "My Team",
                   o.name,
                   o.email,
+                  t.identifier,
                   t.name,
                   o.name,
-                  o.email
+                  o.email,
+                  t.identifier
                 ),
                 t.id
               ],
