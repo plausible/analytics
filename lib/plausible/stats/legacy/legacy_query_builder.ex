@@ -28,6 +28,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> preload_goals_and_revenue(site)
       |> put_order_by(params)
       |> put_include(site, params)
+      |> Query.put_comparison_utc_time_range()
       |> Query.put_imported_opts(site)
 
     on_ee do
@@ -327,6 +328,11 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       date_range: date_range,
       match_day_of_week: params["match_day_of_week"] == "true"
     }
+  end
+
+  # Legacy support for Stats API v1
+  def parse_comparison_params(_site, %{"compare" => "previous_period"}) do
+    %{mode: "previous_period"}
   end
 
   def parse_comparison_params(_site, _options), do: nil

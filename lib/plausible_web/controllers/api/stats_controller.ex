@@ -1631,7 +1631,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def comparison_query(query) do
     if query.include.comparisons do
-      Comparisons.get_comparison_query(query, query.include.comparisons)
+      Comparisons.get_comparison_query(query)
     end
   end
 
