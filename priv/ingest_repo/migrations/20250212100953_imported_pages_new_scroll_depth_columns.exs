@@ -1,6 +1,8 @@
 defmodule Plausible.IngestRepo.Migrations.ImportedPagesNewScrollDepthColumns do
   use Ecto.Migration
 
+  @on_cluster Plausible.MigrationUtils.on_cluster_statement("imported_pages")
+
   def up do
     execute """
     ALTER TABLE imported_pages #{@on_cluster}
