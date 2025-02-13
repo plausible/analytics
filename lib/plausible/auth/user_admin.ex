@@ -33,7 +33,7 @@ defmodule Plausible.Auth.UserAdmin do
     [
       name: nil,
       email: nil,
-      owned_teams: %{value: &teams(&1.owned_teams)},
+      owned_teams: %{value: &Phoenix.HTML.raw(teams(&1.owned_teams))},
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)}
     ]
   end
@@ -51,18 +51,17 @@ defmodule Plausible.Auth.UserAdmin do
     Plausible.Auth.TOTP.force_disable(user)
   end
 
-  defp teams([]) do
+  def teams([]) do
     "(none)"
   end
 
-  defp teams(teams) do
+  def teams(teams) do
     teams
     |> Enum.map_join("<br>\n", fn team ->
       """
       <a href="/crm/teams/team/#{team.id}">#{team.name}</a>
       """
     end)
-    |> Phoenix.HTML.raw()
   end
 
   defp format_date(nil), do: "--"

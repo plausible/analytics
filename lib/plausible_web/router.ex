@@ -101,6 +101,7 @@ defmodule PlausibleWeb.Router do
     scope "/crm", PlausibleWeb do
       pipe_through :flags
       get "/teams/team/:team_id/usage", AdminController, :usage
+      get "/auth/user/:user_id/info", AdminController, :user_info
       get "/billing/team/:team_id/current_plan", AdminController, :current_plan
       get "/billing/search/team-by-id/:team_id", AdminController, :team_by_id
       post "/billing/search/team", AdminController, :team_search

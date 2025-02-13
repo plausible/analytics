@@ -45,9 +45,9 @@ defmodule Plausible.Teams.TeamAdmin do
       owners: %{value: &get_owners/1},
       other_members: %{value: &get_other_members/1},
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
-      subscription_plan: %{value: &subscription_plan/1},
-      subscription_status: %{value: &subscription_status/1},
-      grace_period: %{value: &grace_period_status/1},
+      subscription_plan: %{value: &Phoenix.HTML.raw(subscription_plan(&1))},
+      subscription_status: %{value: &Phoenix.HTML.raw(subscription_status(&1))},
+      grace_period: %{value: &Phoenix.HTML.raw(grace_period_status(&1))},
       accept_traffic_until: %{
         name: "Accept traffic until",
         value: &format_date(&1.accept_traffic_until)
@@ -116,7 +116,7 @@ defmodule Plausible.Teams.TeamAdmin do
       quota = PlausibleWeb.AuthView.subscription_quota(subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(subscription)
 
-      {:safe, ~s(<a href="#{manage_url(subscription)}">#{quota} \(#{interval}\)</a>)}
+      ~s(<a href="#{manage_url(subscription)}">#{quota} \(#{interval}\)</a>)
     else
       "--"
     end
@@ -129,7 +129,7 @@ defmodule Plausible.Teams.TeamAdmin do
           PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
 
         if team.subscription.paddle_subscription_id do
-          {:safe, ~s(<a href="#{manage_url(team.subscription)}">#{status_str}</a>)}
+          ~s(<a href="#{manage_url(team.subscription)}">#{status_str}</a>)
         else
           status_str
         end

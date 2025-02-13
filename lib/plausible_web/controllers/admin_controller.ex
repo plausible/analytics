@@ -31,6 +31,28 @@ defmodule PlausibleWeb.AdminController do
     |> send_resp(200, html_response)
   end
 
+  def user_info(conn, params) do
+    user_id = String.to_integer(params["user_id"])
+
+    user =
+      Plausible.Auth.User
+      |> Repo.get!(user_id)
+      |> Repo.preload(:owned_teams)
+
+    teams_list = Plausible.Auth.UserAdmin.teams(user.owned_teams)
+
+    html_response = """
+      <div style="margin-bottom: 1.1em;">
+        <p><b>Owned teams:</b></p>
+        #{teams_list}
+      </div>
+    """
+
+    conn
+    |> put_resp_content_type("text/html")
+    |> send_resp(200, html_response)
+  end
+
   def current_plan(conn, params) do
     team_id = String.to_integer(params["team_id"])
 
