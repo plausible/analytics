@@ -7,7 +7,10 @@ defmodule PlausibleWeb.InvitationController do
        [:owner, :editor, :admin] when action in [:remove_invitation]
 
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
-    case Plausible.Site.Memberships.accept_invitation(invitation_id, conn.assigns.current_user) do
+    current_user = conn.assigns.current_user
+    team = conn.assigns.current_team
+
+    case Plausible.Site.Memberships.accept_invitation(invitation_id, current_user, team) do
       {:ok, result} ->
         team = result.team
 
@@ -38,9 +41,9 @@ defmodule PlausibleWeb.InvitationController do
         |> put_flash(:error, "Invitation missing or already accepted")
         |> redirect(to: "/sites")
 
-      {:error, :already_other_team_member} ->
+      {:error, :permission_denied} ->
         conn
-        |> put_flash(:error, "You already are a team member in another team")
+        |> put_flash(:error, "You can't add sites in the current team")
         |> redirect(to: "/sites")
 
       {:error, :no_plan} ->

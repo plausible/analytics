@@ -89,7 +89,7 @@ defmodule Plausible.Billing do
     subscription =
       Subscription
       |> Repo.get_by(paddle_subscription_id: params["subscription_id"])
-      |> Repo.preload(team: :owner)
+      |> Repo.preload(team: :owners)
 
     if subscription do
       changeset =
@@ -99,9 +99,11 @@ defmodule Plausible.Billing do
 
       updated = Repo.update!(changeset)
 
-      subscription.team.owner
-      |> PlausibleWeb.Email.cancellation_email()
-      |> Plausible.Mailer.send()
+      for owner <- subscription.team.owners do
+        owner
+        |> PlausibleWeb.Email.cancellation_email()
+        |> Plausible.Mailer.send()
+      end
 
       updated
     end
@@ -138,9 +140,16 @@ defmodule Plausible.Billing do
         Teams.get!(team_id)
 
       {:user_id, user_id} ->
-        user = Repo.get!(Auth.User, user_id)
-        {:ok, team} = Teams.get_or_create(user)
-        team
+        # Given a guest or non-owner member user initiates the new subscription payment
+        # and becomes an owner of an existing team already with a subscription in between,
+        # this could result in assigning this new subscription to the newly owned team,
+        # effectively "shadowing" any old one.
+        #
+        # That's why we are always defaulting to creating a new "My Team" team regardless
+        # if they were owner of one before or not.
+        Auth.User
+        |> Repo.get!(user_id)
+        |> Teams.force_create_my_team()
     end
   end
 
@@ -212,7 +221,7 @@ defmodule Plausible.Billing do
       Teams.Team
       |> Repo.get!(subscription.team_id)
       |> Teams.with_subscription()
-      |> Repo.preload(:owner)
+      |> Repo.preload(:owners)
 
     if subscription.id != team.subscription.id do
       Sentry.capture_message("Susbscription ID mismatch",
@@ -236,7 +245,8 @@ defmodule Plausible.Billing do
       )
 
     if plan do
-      api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id == ^team.owner.id)
+      owner_ids = Enum.map(team.owners, & &1.id)
+      api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id in ^owner_ids)
       Repo.update_all(api_keys, set: [hourly_request_limit: plan.hourly_api_request_limit])
     end
 

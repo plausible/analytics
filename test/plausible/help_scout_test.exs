@@ -55,13 +55,14 @@ defmodule Plausible.HelpScoutTest do
 
     describe "get_details_for_customer/2" do
       test "returns details for user on trial" do
-        %{id: user_id, email: email} = new_user(trial_expiry_date: Date.utc_today())
+        %{email: email} = user = new_user(trial_expiry_date: Date.utc_today())
         stub_help_scout_requests(email)
+        team = team_of(user)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
+        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team.id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team.identifier)}"
 
         assert {:ok,
                 %{
@@ -405,12 +406,13 @@ defmodule Plausible.HelpScoutTest do
 
     describe "get_details_for_emails/2" do
       test "returns details for user and persists mapping" do
-        %{id: user_id, email: email} = new_user(trial_expiry_date: Date.utc_today())
+        %{email: email} = user = new_user(trial_expiry_date: Date.utc_today())
+        team = team_of(user)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
+        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team.id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team.identifier)}"
 
         assert {:ok,
                 %{
@@ -444,11 +446,12 @@ defmodule Plausible.HelpScoutTest do
         user2 = new_user()
         new_site(owner: user2)
         new_site(owner: user2)
+        team2 = team_of(user2)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user2.id}"
+        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team2.id}"
 
         owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(user2.email)}"
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team2.identifier)}"
 
         assert {:ok,
                 %{
