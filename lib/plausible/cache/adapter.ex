@@ -9,6 +9,23 @@ defmodule Plausible.Cache.Adapter do
 
   require Logger
 
+  @spec child_specs(atom(), atom(), Keyword.t()) :: [Supervisor.child_spec()]
+  def child_specs(name, child_id, opts \\ [])
+      when is_atom(name) and is_atom(child_id) and is_list(opts) do
+    partitions = partitions(name)
+
+    if partitions == 1 do
+      [child_spec(name, child_id, opts)]
+    else
+      Enum.map(1..partitions, fn partition ->
+        partition_name = String.to_atom("#{name}_#{partition}")
+        partition_child_id = String.to_atom("#{child_id}_#{partition}")
+
+        child_spec(partition_name, partition_child_id, opts)
+      end)
+    end
+  end
+
   @spec child_spec(atom(), atom(), Keyword.t()) :: Supervisor.child_spec()
   def child_spec(name, child_id, opts \\ [])
       when is_atom(name) and is_atom(child_id) and is_list(opts) do
