@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { Fragment, ReactNode, useLayoutEffect, useState } from 'react'
+import React, { ReactNode, useLayoutEffect, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
   isSegmentFilter,
@@ -19,10 +19,13 @@ import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
 import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/react/24/outline'
 
-interface SharedSegmentModalProps {
-  onClose: () => void
+interface SegmentTypeSelectorProps {
   siteSegmentsAvailable: boolean
   userCanSelectSiteSegment: boolean
+}
+
+interface SharedSegmentModalProps {
+  onClose: () => void
   namePlaceholder: string
 }
 
@@ -63,10 +66,11 @@ export const CreateSegmentModal = ({
   siteSegmentsAvailable: siteSegmentsAvailable,
   userCanSelectSiteSegment,
   namePlaceholder
-}: SharedSegmentModalProps & {
-  segment?: SavedSegment
-  onSave: (input: Pick<SavedSegment, 'name' | 'type'>) => void
-}) => {
+}: SharedSegmentModalProps &
+  SegmentTypeSelectorProps & {
+    segment?: SavedSegment
+    onSave: (input: Pick<SavedSegment, 'name' | 'type'>) => void
+  }) => {
   const defaultName = segment?.name ? `Copy of ${segment.name}` : ''
   const [name, setName] = useState(defaultName)
   const defaultType =
@@ -86,7 +90,7 @@ export const CreateSegmentModal = ({
         onChange={setName}
         namePlaceholder={namePlaceholder}
       />
-      <SegmentTypeInput
+      <SegmentTypeSelector
         value={type}
         onChange={setType}
         siteSegmentsAvailable={siteSegmentsAvailable}
@@ -198,18 +202,15 @@ const SegmentNameInput = ({
   )
 }
 
-const SegmentTypeInput = ({
+const SegmentTypeSelector = ({
   value,
   onChange,
   siteSegmentsAvailable,
   userCanSelectSiteSegment
-}: {
+}: SegmentTypeSelectorProps & {
   value: SegmentType
   onChange: (value: SegmentType) => void
-} & Pick<
-  SharedSegmentModalProps,
-  'siteSegmentsAvailable' | 'userCanSelectSiteSegment'
->) => {
+}) => {
   const options = [
     {
       type: SegmentType.personal,
@@ -251,7 +252,6 @@ const SegmentTypeInput = ({
               value=""
               onChange={() => onChange(type)}
               className="mt-4 w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:border-gray-600"
-              // disabled={disabled}
             />
             <label
               htmlFor={`segment-type-${type}`}
@@ -280,10 +280,11 @@ export const UpdateSegmentModal = ({
   siteSegmentsAvailable,
   userCanSelectSiteSegment,
   namePlaceholder
-}: SharedSegmentModalProps & {
-  onSave: (input: Pick<SavedSegment, 'id' | 'name' | 'type'>) => void
-  segment: SavedSegment
-}) => {
+}: SharedSegmentModalProps &
+  SegmentTypeSelectorProps & {
+    onSave: (input: Pick<SavedSegment, 'id' | 'name' | 'type'>) => void
+    segment: SavedSegment
+  }) => {
   const [name, setName] = useState(segment.name)
   const [type, setType] = useState<SegmentType>(segment.type)
 
@@ -295,7 +296,7 @@ export const UpdateSegmentModal = ({
         onChange={setName}
         namePlaceholder={namePlaceholder}
       />
-      <SegmentTypeInput
+      <SegmentTypeSelector
         value={type}
         onChange={setType}
         siteSegmentsAvailable={siteSegmentsAvailable}
