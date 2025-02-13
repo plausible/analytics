@@ -120,9 +120,8 @@ defmodule Plausible.Cache.Adapter do
     {:ok, result}
   catch
     :exit, {:timeout, _} ->
-      Sentry.capture_message(
-        "Timeout while executing with lock on key in '#{inspect(cache_name)}'",
-        extra: %{key: key}
+      Logger.error("Timeout while executing with lock on key in '#{inspect(cache_name)}'",
+        sentry: %{extra: %{key: key}}
       )
 
       {:error, :timeout}
