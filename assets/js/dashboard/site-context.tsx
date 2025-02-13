@@ -10,6 +10,7 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     scrollDepthVisible: dataset.scrollDepthVisible === 'true',
     funnelsAvailable: dataset.funnelsAvailable === 'true',
     propsAvailable: dataset.propsAvailable === 'true',
+    siteSegmentsAvailable: dataset.siteSegmentsAvailable === 'true',
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
     propsOptedOut: dataset.propsOptedOut === 'true',
@@ -22,7 +23,8 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     isDbip: dataset.isDbip === 'true',
     flags: JSON.parse(dataset.flags!),
     validIntervalsByPeriod: JSON.parse(dataset.validIntervalsByPeriod!),
-    shared: !!dataset.sharedLinkAuth
+    shared: !!dataset.sharedLinkAuth,
+    members: JSON.parse(dataset.members!)
   }
 }
 
@@ -40,6 +42,7 @@ const siteContextDefaultValue = {
   scrollDepthVisible: false,
   funnelsAvailable: false,
   propsAvailable: false,
+  siteSegmentsAvailable: false,
   conversionsOptedOut: false,
   funnelsOptedOut: false,
   propsOptedOut: false,
@@ -54,7 +57,8 @@ const siteContextDefaultValue = {
   isDbip: false,
   flags: {} as FeatureFlags,
   validIntervalsByPeriod: {} as Record<string, Array<string>>,
-  shared: false
+  shared: false,
+  members: null as null | Record<number, string>
 }
 
 export type PlausibleSite = typeof siteContextDefaultValue
