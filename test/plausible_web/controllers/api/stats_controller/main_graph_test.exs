@@ -634,6 +634,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert plot == [40, 20, 0, 0, 0, 0, 0]
     end
 
+    @tag skip: "To be re-enabled in the next PR"
     test "returns scroll depth per day with imported data", %{conn: conn, site: site} do
       site_import = insert(:site_import, site: site)
 

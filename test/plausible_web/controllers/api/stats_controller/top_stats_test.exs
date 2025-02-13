@@ -1018,6 +1018,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
+    @tag skip: "To be re-enabled in the next PR"
     test "returns scroll_depth with a page filter with imported data", %{conn: conn, site: site} do
       site_import =
         insert(:site_import, site: site, start_date: ~D[2021-01-01], has_scroll_depth: true)

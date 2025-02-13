@@ -180,27 +180,12 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
             fragment(
               """
               case
-                when isNotNull(?) AND isNotNull(?) then
-                  toUInt8(round((? + ?) / (? + ?)))
-                when isNotNull(?) then
-                  toUInt8(round(? / ?))
                 when isNotNull(?) then
                   toUInt8(round(? / ?))
                 else
                   NULL
               end
               """,
-              # Case 1: Both imported and native scroll depth sums are present
-              selected_as(:__internal_scroll_depth_sum),
-              s.scroll_depth_sum,
-              selected_as(:__internal_scroll_depth_sum),
-              s.scroll_depth_sum,
-              selected_as(:__internal_pageleave_visitors),
-              s.pageleave_visitors,
-              # Case 2: Only imported scroll depth sum is present
-              selected_as(:__internal_scroll_depth_sum),
-              selected_as(:__internal_scroll_depth_sum),
-              selected_as(:__internal_pageleave_visitors),
               # Case 3: Only native scroll depth sum is present
               s.scroll_depth_sum,
               s.scroll_depth_sum,
