@@ -11,6 +11,7 @@ import { rootRoute } from '../../router';
 import { useAppNavigate } from '../../navigation/use-app-navigate';
 import { SegmentModal } from '../../segments/segment-modals';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import { isSegmentFilter } from '../../filtering/segments';
 
 function partitionFilters(modalType, filters) {
   const otherFilters = []
@@ -201,8 +202,10 @@ export default function FilterModalWithRouter(props) {
   const { field } = useParams()
   const { query } = useQueryContext()
   const site = useSiteContext()
-  if (field === 'segment') {
-    return <SegmentModal />
+  const firstSegmentFilter = field === 'segment' ? query.filters?.find(isSegmentFilter) : null
+  if (firstSegmentFilter) {
+    const firstSegmentId = firstSegmentFilter[2][0]
+    return <SegmentModal id={firstSegmentId} />
   }
   return (
     <FilterModal
