@@ -445,7 +445,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                "Invalid filters. Dimension `event:goal` can only be filtered at the top level.",
                []
              ]
-           ]}
+           ]},
+          {[["has_not_done", ["is", "event:goal", ["a goal"]]]],
+           [["segment_data", "Invalid filters. Deep filters are not supported.", []]]}
         ] do
       test "prevents owners from updating segments to invalid filters #{inspect(filters)} with error 400",
            %{
