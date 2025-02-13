@@ -1524,7 +1524,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       refute meta["metric_warnings"]["scroll_depth"]
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "does not return warning when imported scroll depth exists", %{
       conn: conn,
       site: site

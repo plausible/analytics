@@ -363,7 +363,6 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "imports scroll_depth as null when the column does not exist in pages CSV",
          %{site: site, user: user} = ctx do
       _ = ctx
@@ -424,9 +423,9 @@ defmodule Plausible.Imported.CSVImporterTest do
                status: :completed
              } = Repo.get_by!(SiteImport, site_id: site.id)
 
-      # q = from(i in "imported_pages", where: i.site_id == ^site.id, select: i.scroll_depth)
+      q = from(i in "imported_pages", where: i.site_id == ^site.id, select: i.scroll_depth)
 
-      # assert List.duplicate(nil, 16) == Plausible.IngestRepo.all(q)
+      assert List.duplicate(nil, 16) == Plausible.IngestRepo.all(q)
     end
 
     test "accepts cells without quotes", %{site: site, user: user} = ctx do
@@ -1033,7 +1032,6 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
 
     @tag :tmp_dir
-    @tag skip: "To be re-enabled in the next PR"
     test "scroll_depth", %{conn: conn, user: user, tmp_dir: tmp_dir} do
       exported_site = new_site(owner: user)
       imported_site = new_site(owner: user)
@@ -1154,7 +1152,6 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
 
     @tag :tmp_dir
-    @tag skip: "To be re-enabled in the next PR"
     test "does not include scroll depth without existing engagement data", %{
       user: user,
       tmp_dir: tmp_dir

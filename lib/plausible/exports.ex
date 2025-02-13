@@ -428,8 +428,7 @@ defmodule Plausible.Exports do
         order_by: selected_as(:date)
       )
 
-    # :TODO: To be removed in the next PR
-    if include_scroll_depth? and false do
+    if include_scroll_depth? do
       max_scroll_depth_per_visitor_q =
         from(e in "events_v2",
           where: ^export_filter(site_id, date_range),

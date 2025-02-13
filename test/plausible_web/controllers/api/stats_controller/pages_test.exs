@@ -676,7 +676,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              }
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "calculates scroll_depth from native and imported data combined", %{
       conn: conn,
       site: site
@@ -718,7 +717,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "handles missing scroll_depth data from native and imported sources", %{
       conn: conn,
       site: site
@@ -800,7 +798,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "can query scroll depth only from imported data, ignoring rows where scroll depth doesn't exist",
          %{
            conn: conn,
@@ -1140,7 +1137,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "returns scroll depth warning code", %{conn: conn, site: site} do
       Plausible.Sites.set_scroll_depth_visible_at(site)
 
@@ -1153,7 +1149,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                "no_imported_scroll_depth"
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "returns imported pages with a pageview goal filter", %{conn: conn, site: site} do
       insert(:goal, site: site, page_path: "/blog**")
 
