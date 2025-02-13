@@ -363,7 +363,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
-    test "imports scroll_depth as null when the column does not exist in pages CSV",
+    test "imports scroll_depth as 0 when the column does not exist in pages CSV",
          %{site: site, user: user} = ctx do
       _ = ctx
 
@@ -423,9 +423,23 @@ defmodule Plausible.Imported.CSVImporterTest do
                status: :completed
              } = Repo.get_by!(SiteImport, site_id: site.id)
 
-      q = from(i in "imported_pages", where: i.site_id == ^site.id, select: i.scroll_depth)
+      q =
+        from(
+          i in "imported_pages",
+          where: i.site_id == ^site.id,
+          select: %{
+            total_scroll_depth: i.total_scroll_depth,
+            total_scroll_depth_visits: i.total_scroll_depth_visits
+          }
+        )
 
-      assert List.duplicate(nil, 16) == Plausible.IngestRepo.all(q)
+      assert List.duplicate(
+               %{
+                 total_scroll_depth: 0,
+                 total_scroll_depth_visits: 0
+               },
+               16
+             ) == Plausible.IngestRepo.all(q)
     end
 
     test "accepts cells without quotes", %{site: site, user: user} = ctx do
@@ -1108,7 +1122,7 @@ defmodule Plausible.Imported.CSVImporterTest do
             date: i.date,
             page: i.page,
             total_scroll_depth: i.total_scroll_depth,
-            total_scroll_depth_visitors: i.total_scroll_depth_visitors
+            total_scroll_depth_visits: i.total_scroll_depth_visits
           }
         )
         |> Plausible.IngestRepo.all()
@@ -1117,28 +1131,28 @@ defmodule Plausible.Imported.CSVImporterTest do
                date: expected_start_date,
                page: "/",
                total_scroll_depth: 20,
-               total_scroll_depth_visitors: 1
+               total_scroll_depth_visits: 1
              } in imported_data
 
       assert %{
                date: expected_start_date,
                page: "/another",
                total_scroll_depth: 50,
-               total_scroll_depth_visitors: 2
+               total_scroll_depth_visits: 2
              } in imported_data
 
       assert %{
                date: expected_start_date,
                page: "/blog",
                total_scroll_depth: 180,
-               total_scroll_depth_visitors: 3
+               total_scroll_depth_visits: 3
              } in imported_data
 
       assert %{
                date: expected_end_date,
                page: "/blog",
-               total_scroll_depth: nil,
-               total_scroll_depth_visitors: 0
+               total_scroll_depth: 0,
+               total_scroll_depth_visits: 0
              } in imported_data
 
       # assert via stats queries that scroll_depth from imported

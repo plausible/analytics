@@ -61,7 +61,7 @@ defmodule Plausible.Imported.CSVImporter do
         from(i in "imported_pages",
           where: i.site_id == ^site_import.site_id,
           where: i.import_id == ^site_import.id,
-          where: not is_nil(i.scroll_depth),
+          where: i.total_scroll_depth > 0,
           select: 1
         )
       )
