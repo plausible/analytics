@@ -19,10 +19,13 @@ import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
 import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { MutationStatus } from '@tanstack/react-query'
+import { ApiError } from '../api'
+import { ErrorPanel } from '../components/error-panel'
 
-interface ApiRequestState {
+interface ApiRequestProps {
   status: MutationStatus
   error?: unknown
+  reset: () => void
 }
 
 interface SegmentTypeSelectorProps {
@@ -44,7 +47,7 @@ const primaryNegativeButtonClassName = classNames(
 
 const secondaryButtonClassName = classNames(
   'button',
-  'border border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-300 !bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-850'
+  'border !border-gray-300 dark:!border-gray-500 !text-gray-700 dark:!text-gray-300 !bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-850'
 )
 
 const SegmentActionModal = ({
@@ -71,9 +74,12 @@ export const CreateSegmentModal = ({
   onSave,
   siteSegmentsAvailable: siteSegmentsAvailable,
   userCanSelectSiteSegment,
-  namePlaceholder
+  namePlaceholder,
+  error,
+  reset,
+  status
 }: SharedSegmentModalProps &
-  ApiRequestState &
+  ApiRequestProps &
   SegmentTypeSelectorProps & {
     segment?: SavedSegment
     onSave: (input: Pick<SavedSegment, 'name' | 'type'>) => void
@@ -103,23 +109,38 @@ export const CreateSegmentModal = ({
         siteSegmentsAvailable={siteSegmentsAvailable}
         userCanSelectSiteSegment={userCanSelectSiteSegment}
       />
-      <ButtonsRow className="justify-end">
+      <ButtonsRow>
         <button className={secondaryButtonClassName} onClick={onClose}>
           Cancel
         </button>
         <button
           className={primaryNeutralButtonClassName}
-          onClick={() => {
-            const trimmedName = name.trim()
-            const saveableName = trimmedName.length
-              ? trimmedName
-              : namePlaceholder
-            onSave({ name: saveableName, type })
-          }}
+          onClick={
+            status !== 'pending'
+              ? () => {
+                  const trimmedName = name.trim()
+                  const saveableName = trimmedName.length
+                    ? trimmedName
+                    : namePlaceholder
+                  onSave({ name: saveableName, type })
+                }
+              : () => {}
+          }
         >
           Save
         </button>
       </ButtonsRow>
+      {error !== null && (
+        <ErrorPanel
+          className="mt-4"
+          errorMessage={
+            error instanceof ApiError
+              ? error.message
+              : 'Something went wrong creating segment'
+          }
+          onClose={reset}
+        />
+      )}
     </SegmentActionModal>
   )
 }
@@ -127,12 +148,15 @@ export const CreateSegmentModal = ({
 export const DeleteSegmentModal = ({
   onClose,
   onSave,
-  segment
+  segment,
+  status,
+  error,
+  reset
 }: {
   onClose: () => void
   onSave: (input: Pick<SavedSegment, 'id'>) => void
   segment: SavedSegment & { segment_data?: SegmentData }
-} & ApiRequestState) => {
+} & ApiRequestProps) => {
   return (
     <SegmentActionModal onClose={onClose}>
       <FormTitle>
@@ -147,19 +171,35 @@ export const DeleteSegmentModal = ({
         <FiltersInSegment segment_data={segment.segment_data} />
       )}
 
-      <ButtonsRow className="justify-end">
+      <ButtonsRow>
         <button className={secondaryButtonClassName} onClick={onClose}>
           Cancel
         </button>
         <button
           className={primaryNegativeButtonClassName}
-          onClick={() => {
-            onSave({ id: segment.id })
-          }}
+          disabled={status === 'pending'}
+          onClick={
+            status === 'pending'
+              ? () => {}
+              : () => {
+                  onSave({ id: segment.id })
+                }
+          }
         >
           Delete
         </button>
       </ButtonsRow>
+      {error !== null && (
+        <ErrorPanel
+          className="mt-4"
+          errorMessage={
+            error instanceof ApiError
+              ? error.message
+              : 'Something went wrong deleting segment'
+          }
+          onClose={reset}
+        />
+      )}
     </SegmentActionModal>
   )
 }
@@ -286,9 +326,12 @@ export const UpdateSegmentModal = ({
   segment,
   siteSegmentsAvailable,
   userCanSelectSiteSegment,
-  namePlaceholder
+  namePlaceholder,
+  status,
+  error,
+  reset
 }: SharedSegmentModalProps &
-  ApiRequestState &
+  ApiRequestProps &
   SegmentTypeSelectorProps & {
     onSave: (input: Pick<SavedSegment, 'id' | 'name' | 'type'>) => void
     segment: SavedSegment
@@ -310,23 +353,39 @@ export const UpdateSegmentModal = ({
         siteSegmentsAvailable={siteSegmentsAvailable}
         userCanSelectSiteSegment={userCanSelectSiteSegment}
       />
-      <ButtonsRow className="justify-end">
+      <ButtonsRow>
         <button className={secondaryButtonClassName} onClick={onClose}>
           Cancel
         </button>
         <button
           className={primaryNeutralButtonClassName}
-          onClick={() => {
-            const trimmedName = name.trim()
-            const saveableName = trimmedName.length
-              ? trimmedName
-              : namePlaceholder
-            onSave({ id: segment.id, name: saveableName, type })
-          }}
+          disabled={status === 'pending'}
+          onClick={
+            status === 'pending'
+              ? () => {}
+              : () => {
+                  const trimmedName = name.trim()
+                  const saveableName = trimmedName.length
+                    ? trimmedName
+                    : namePlaceholder
+                  onSave({ id: segment.id, name: saveableName, type })
+                }
+          }
         >
           Save
         </button>
       </ButtonsRow>
+      {error !== null && (
+        <ErrorPanel
+          className="mt-4"
+          errorMessage={
+            error instanceof ApiError
+              ? error.message
+              : 'Something went wrong updating segment'
+          }
+          onClose={reset}
+        />
+      )}
     </SegmentActionModal>
   )
 }

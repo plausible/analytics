@@ -22,6 +22,8 @@ import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import { popover } from '../../components/popover'
 import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { MenuSeparator } from '../nav-menu-components'
+import { ErrorPanel } from '../../components/error-panel'
+import { get } from '../../api'
 
 const useSegmentsListQuery = () => {
   const site = useSiteContext()
@@ -30,16 +32,9 @@ const useSegmentsListQuery = () => {
     queryKey: ['segments'],
     placeholderData: (previousData) => previousData,
     queryFn: async () => {
-      const response = await fetch(
-        `/api/${encodeURIComponent(site.domain)}/segments`,
-        {
-          method: 'GET',
-          headers: {
-            'content-type': 'application/json',
-            accept: 'application/json'
-          }
-        }
-      ).then((res): Promise<SavedSegment[]> => res.json())
+      const response: SavedSegment[] = await get(
+        `/api/${encodeURIComponent(site.domain)}/segments`
+      )
 
       return response.sort(
         (a, b) =>
@@ -68,7 +63,7 @@ export const SearchableSegmentsSection = ({
   const segmentFilter = query.filters.find(isSegmentFilter)
   const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
 
-  const { data } = useSegmentsListQuery()
+  const { data, ...listQuery } = useSegmentsListQuery()
   const [searchValue, setSearch] = useState<string>()
   const [showAll, setShowAll] = useState(false)
 
@@ -98,7 +93,7 @@ export const SearchableSegmentsSection = ({
         <>
           <MenuSeparator />
           <div className="flex items-center pt-2 px-4 pb-2">
-            <div className="text-xs font-bold uppercase text-indigo-500 dark:text-indigo-400 mr-4">
+            <div className="text-sm font-bold uppercase text-indigo-500 dark:text-indigo-400 mr-4">
               Segments
             </div>
             {data.length > initialSliceLength && (
@@ -158,6 +153,21 @@ export const SearchableSegmentsSection = ({
               </Tooltip>
             )}
         </>
+      )}
+      {listQuery.status === 'pending' && (
+        <div className="p-4 flex justify-center items-center">
+          <div className="loading sm">
+            <div />
+          </div>
+        </div>
+      )}
+      {listQuery.error && (
+        <div className="p-4">
+          <ErrorPanel
+            errorMessage="Loading segments failed"
+            onRetry={() => listQuery.refetch()}
+          />
+        </div>
       )}
     </>
   )
