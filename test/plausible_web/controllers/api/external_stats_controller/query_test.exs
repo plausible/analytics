@@ -3892,6 +3892,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "scroll_depth metric is session-based", %{conn: conn, site: site} do
+      t0 = ~N[2020-01-01 00:00:00]
+      t1 = NaiveDateTime.add(t0, 10, :minute)
+      t2 = NaiveDateTime.add(t0, 3, :hour)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t0, scroll_depth: 20),
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t1),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 40),
+        # Different session
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t2),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t2, scroll_depth: 80)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["scroll_depth"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               # avg(max(20, 40), 80) = 60
+               %{"dimensions" => ["/blog"], "metrics" => [60]}
+             ]
+    end
+
     test "can sort by scroll_depth in event:page breakdown", %{conn: conn, site: site} do
       t0 = ~N[2020-01-01 00:00:00]
       [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)

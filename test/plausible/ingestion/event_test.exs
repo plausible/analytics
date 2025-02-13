@@ -320,11 +320,11 @@ defmodule Plausible.Ingestion.EventTest do
     end
   end
 
-  test "drops pageleave event when no session found from cache" do
+  test "drops engagement event when no session found from cache" do
     site = new_site()
 
     payload = %{
-      name: "pageleave",
+      name: "engagement",
       url: "https://#{site.domain}/123",
       d: "#{site.domain}"
     }
@@ -333,7 +333,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     assert {:ok, request} = Request.build(conn)
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
-    assert dropped.drop_reason == :no_session_for_pageleave
+    assert dropped.drop_reason == :no_session_for_engagement
   end
 
   @tag :ee_only

@@ -10,15 +10,21 @@ defmodule Plausible.Stats.SQL.Fragments do
     end
   end
 
+  defmacro scale_sample(fragment_) do
+    quote do
+      fragment("toUInt64(round(? * any(_sample_factor)))", unquote(fragment_))
+    end
+  end
+
   defmacro uniq(user_id) do
     quote do
-      fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", unquote(user_id))
+      scale_sample(fragment("uniq(?)", unquote(user_id)))
     end
   end
 
   defmacro total() do
     quote do
-      fragment("toUInt64(round(count(*) * any(_sample_factor)))")
+      scale_sample(fragment("count()"))
     end
   end
 
