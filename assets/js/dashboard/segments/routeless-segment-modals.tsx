@@ -8,7 +8,7 @@ import {
   UpdateSegmentModal
 } from './segment-modals'
 import {
-  formatSegmentIdAsLabelKey,
+  getSearchToApplySingleSegmentFilter,
   getSegmentNamePlaceholder,
   parseApiSegmentData,
   SavedSegment,
@@ -20,17 +20,18 @@ import { cleanLabels, remapToApiFilters } from '../util/filters'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import { useQueryContext } from '../query-context'
 import { Role, useUserContext } from '../user-context'
+import { mutation } from '../api'
 
-export const TransientSegmentModals = (_p: { closeList: () => void }) => {
+export const RoutelessSegmentModals = () => {
   const navigate = useAppNavigate()
   const queryClient = useQueryClient()
   const site = useSiteContext()
-  const { expandedSegment, modal, setModal } = useSegmentExpandedContext()
   const { query } = useQueryContext()
   const user = useUserContext()
+  const { expandedSegment, modal, setModal } = useSegmentExpandedContext()
 
   const patchSegment = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       id,
       name,
       type,
@@ -39,54 +40,43 @@ export const TransientSegmentModals = (_p: { closeList: () => void }) => {
       Partial<Pick<SavedSegment, 'name' | 'type'>> & {
         segment_data?: SegmentData
       }) => {
-      return fetch(`/api/${encodeURIComponent(site.domain)}/segments/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          name,
-          type,
-          ...(segment_data && {
-            segment_data: {
-              filters: remapToApiFilters(segment_data.filters),
-              labels: cleanLabels(segment_data.filters, segment_data.labels)
+      const response: SavedSegment & { segment_data: SegmentData } =
+        await mutation(
+          `/api/${encodeURIComponent(site.domain)}/segments/${id}`,
+          {
+            method: 'PATCH',
+            body: {
+              name,
+              type,
+              ...(segment_data && {
+                segment_data: {
+                  filters: remapToApiFilters(segment_data.filters),
+                  labels: cleanLabels(segment_data.filters, segment_data.labels)
+                }
+              })
             }
-          })
-        }),
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/json'
-        }
-      })
-        .then((res) => res.json())
-        .then((d) => ({
-          ...d,
-          segment_data: parseApiSegmentData(d.segment_data)
-        }))
+          }
+        )
+
+      return {
+        ...response,
+        segment_data: parseApiSegmentData(response.segment_data)
+      }
     },
-    onSuccess: async (d) => {
+    onSuccess: async (segment) => {
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
-        search: (search) => {
-          const filters = [['is', 'segment', [d.id]]]
-          const labels = cleanLabels(filters, {}, 'segment', {
-            [formatSegmentIdAsLabelKey(d.id)]: d.name
-          })
-          return {
-            ...search,
-            filters,
-            labels
-          }
-        },
+        search: getSearchToApplySingleSegmentFilter(segment),
         state: {
           expandedSegment: null
         }
-        // replace: true
       })
       setModal(null)
     }
   })
 
   const createSegment = useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       name,
       type,
       segment_data
@@ -95,62 +85,50 @@ export const TransientSegmentModals = (_p: { closeList: () => void }) => {
       type: 'personal' | 'site'
       segment_data: SegmentData
     }) => {
-      return fetch(`/api/${encodeURIComponent(site.domain)}/segments`, {
-        method: 'POST',
-        body: JSON.stringify({
-          name,
-          type,
-          segment_data: {
-            filters: remapToApiFilters(segment_data.filters),
-            labels: cleanLabels(segment_data.filters, segment_data.labels)
+      const response: SavedSegment & { segment_data: SegmentData } =
+        await mutation(`/api/${encodeURIComponent(site.domain)}/segments`, {
+          method: 'POST',
+          body: {
+            name,
+            type,
+            segment_data: {
+              filters: remapToApiFilters(segment_data.filters),
+              labels: cleanLabels(segment_data.filters, segment_data.labels)
+            }
           }
-        }),
-        headers: { 'content-type': 'application/json' }
-      })
-        .then((res) => res.json())
-        .then((d) => ({
-          ...d,
-          segment_data: parseApiSegmentData(d.segment_data)
-        }))
+        })
+      return {
+        ...response,
+        segment_data: parseApiSegmentData(response.segment_data)
+      }
     },
-    onSuccess: async (d) => {
+    onSuccess: async (segment) => {
+      queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
-        search: (search) => {
-          queryClient.invalidateQueries({ queryKey: ['segments'] })
-          const filters = [['is', 'segment', [d.id]]]
-          const labels = cleanLabels(filters, {}, 'segment', {
-            [formatSegmentIdAsLabelKey(d.id)]: d.name
-          })
-          return {
-            ...search,
-            filters,
-            labels
-          }
-        },
+        search: getSearchToApplySingleSegmentFilter(segment),
         state: {
           expandedSegment: null
         }
-        // replace: true
       })
       setModal(null)
     }
   })
 
   const deleteSegment = useMutation({
-    mutationFn: (data: Pick<SavedSegment, 'id'>) => {
-      return fetch(
-        `/api/${encodeURIComponent(site.domain)}/segments/${data.id}`,
-        {
-          method: 'DELETE'
-        }
-      )
-        .then((res) => res.json())
-        .then((d) => ({
-          ...d,
-          segment_data: parseApiSegmentData(d.segment_data)
-        }))
+    mutationFn: async (data: Pick<SavedSegment, 'id'>) => {
+      const response: SavedSegment & { segment_data: SegmentData } =
+        await mutation(
+          `/api/${encodeURIComponent(site.domain)}/segments/${data.id}`,
+          {
+            method: 'DELETE'
+          }
+        )
+      return {
+        ...response,
+        segment_data: parseApiSegmentData(response.segment_data)
+      }
     },
-    onSuccess: (_d): void => {
+    onSuccess: (_segment): void => {
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
         search: (s) => {
@@ -163,7 +141,6 @@ export const TransientSegmentModals = (_p: { closeList: () => void }) => {
         state: {
           expandedSegment: null
         }
-        // replace: true
       })
       setModal(null)
     }
@@ -200,6 +177,8 @@ export const TransientSegmentModals = (_p: { closeList: () => void }) => {
               }
             })
           }
+          status={patchSegment.status}
+          error={patchSegment.error}
         />
       )}
       {modal === 'create' && (
@@ -219,6 +198,8 @@ export const TransientSegmentModals = (_p: { closeList: () => void }) => {
               }
             })
           }
+          status={createSegment.status}
+          error={createSegment.error}
         />
       )}
       {modal === 'delete' && expandedSegment && (
@@ -226,6 +207,8 @@ export const TransientSegmentModals = (_p: { closeList: () => void }) => {
           segment={expandedSegment}
           onClose={() => setModal(null)}
           onSave={({ id }) => deleteSegment.mutate({ id })}
+          status={deleteSegment.status}
+          error={deleteSegment.error}
         />
       )}
     </>

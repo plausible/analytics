@@ -12,7 +12,7 @@ import { FilterMenu } from './filter-menu'
 import { FiltersBar } from './filters-bar'
 import { QueryPeriodsPicker } from './query-periods/query-periods-picker'
 import { SegmentMenu } from './segments/segment-menu'
-import { TransientSegmentModals } from '../segments/transient-segment-modals'
+import { RoutelessSegmentModals } from '../segments/routeless-segment-modals'
 
 interface TopBarProps {
   showCurrentVisitors: boolean
@@ -88,7 +88,7 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
             <SegmentMenu />
             <FilterMenu />
             <QueryPeriodsPicker />
-            <TransientSegmentModals closeList={() => {}} />
+            <RoutelessSegmentModals />
           </div>
         </>
       ) : (
