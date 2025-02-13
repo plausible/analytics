@@ -179,6 +179,7 @@ export const RoutelessSegmentModals = () => {
           }
           status={patchSegment.status}
           error={patchSegment.error}
+          reset={patchSegment.reset}
         />
       )}
       {modal === 'create' && (
@@ -200,6 +201,7 @@ export const RoutelessSegmentModals = () => {
           }
           status={createSegment.status}
           error={createSegment.error}
+          reset={createSegment.reset}
         />
       )}
       {modal === 'delete' && expandedSegment && (
@@ -209,6 +211,7 @@ export const RoutelessSegmentModals = () => {
           onSave={({ id }) => deleteSegment.mutate({ id })}
           status={deleteSegment.status}
           error={deleteSegment.error}
+          reset={deleteSegment.reset}
         />
       )}
     </>

@@ -4,7 +4,6 @@ import React, {
   ReactNode,
   useContext,
   useEffect,
-  useLayoutEffect,
   useState
 } from 'react'
 import { SavedSegment, SegmentData } from '../filtering/segments'
@@ -51,22 +50,24 @@ export default function SegmentExpandedContextProvider({
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
 
-  useLayoutEffect(() => {
+  const locationStateExpandedSegment = location.state?.expandedSegment
+
+  useEffect(() => {
     // copy location.state to state
-    if (location.state?.expandedSegment) {
+    if (locationStateExpandedSegment) {
       setState({
-        expandedSegment: location.state.expandedSegment
+        expandedSegment: locationStateExpandedSegment
       })
     }
-    if (location.state?.expandedSegment === null) {
+    if (locationStateExpandedSegment === null) {
       setState({
         expandedSegment: segmentExpandedContextDefaultValue.expandedSegment
       })
       // setModal(segmentExpandedContextDefaultValue.modal)
     }
-  }, [location.state])
+  }, [locationStateExpandedSegment])
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     // clear edit mode on clearing all filters
     if (!query.filters.length && expandedSegmentState.expandedSegment) {
       navigate({
@@ -77,7 +78,8 @@ export default function SegmentExpandedContextProvider({
         replace: true
       })
       // overwrite undefined locationState with current expandedSegment, to handle Back navigation correctly
-    } else if (location.state?.expandedSegment === undefined) {
+    } else if (locationStateExpandedSegment === undefined) {
+      // console.log('Slowness')
       navigate({
         search: (s) => s,
         state: {
@@ -86,11 +88,12 @@ export default function SegmentExpandedContextProvider({
         replace: true
       })
     }
-  }, [query, expandedSegmentState.expandedSegment, navigate, location.state])
-
-  useEffect(() => {
-    console.log({ modal })
-  }, [modal])
+  }, [
+    query,
+    expandedSegmentState.expandedSegment,
+    navigate,
+    locationStateExpandedSegment
+  ])
 
   return (
     <SegmentExpandedContext.Provider
