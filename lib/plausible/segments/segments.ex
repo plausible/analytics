@@ -137,6 +137,54 @@ defmodule Plausible.Segments do
     end
   end
 
+  def update_goal_in_segments(
+        %Plausible.Site{} = site,
+        %Plausible.Goal{} = stale_goal,
+        %Plausible.Goal{} = updated_goal
+      ) do
+    # Looks for a pattern like ["is", "event:goal", [...<goal_name>...]] in the filters structure.
+    # Added a bunch of whitespace matchers to make sure it's tolerant of valid JSON formatting
+    goal_filter_regex =
+      ~s(.*?\\[\s*"is",\s*"event:goal",\s*\\[.*?"#{Regex.escape(stale_goal.display_name)}".*?\\]\s*\\].*?)
+
+    segments_to_update =
+      from(
+        s in Segment,
+        where: s.site_id == ^site.id,
+        where: fragment("?['filters']::text ~ ?", s.segment_data, ^goal_filter_regex)
+      )
+
+    stale_goal_name = stale_goal.display_name
+
+    for segment <- Repo.all(segments_to_update) do
+      updated_filters =
+        Plausible.Stats.Filters.transform_filters(segment.segment_data["filters"], fn
+          ["is", "event:goal", clauses] ->
+            new_clauses =
+              Enum.map(clauses, fn
+                ^stale_goal_name -> updated_goal.display_name
+                clause -> clause
+              end)
+
+            [["is", "event:goal", new_clauses]]
+
+          _ ->
+            nil
+        end)
+
+      updated_segment_data = Map.put(segment.segment_data, "filters", updated_filters)
+
+      from(
+        s in Segment,
+        where: s.id == ^segment.id,
+        update: [set: [segment_data: ^updated_segment_data]]
+      )
+      |> Repo.update_all([])
+    end
+
+    :ok
+  end
+
   def delete_one(user_id, %Plausible.Site{} = site, site_role, segment_id) do
     with {:ok, segment} <- get_one(user_id, site, site_role, segment_id) do
       cond do

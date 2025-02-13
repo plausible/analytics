@@ -262,19 +262,48 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.events == 2
   end
 
-  test "does not update session counters on pageleave event", %{buffer: buffer} do
-    now = Timex.now()
-    pageview = build(:pageview, timestamp: Timex.shift(now, seconds: -10))
-    pageleave = %{pageview | name: "pageleave", timestamp: now}
+  test "does not update session counters on engagement event", %{buffer: buffer} do
+    now = NaiveDateTime.utc_now(:second)
+    pageview = build(:pageview, timestamp: NaiveDateTime.shift(now, second: -10))
+    engagement = %{pageview | name: "engagement", timestamp: now}
 
     CacheStore.on_event(pageview, %{}, nil, buffer)
-    CacheStore.on_event(pageleave, %{}, nil, buffer)
+    CacheStore.on_event(engagement, %{}, nil, buffer)
     assert_receive({:buffer, :insert, [[session]]})
 
     assert session.is_bounce == true
     assert session.duration == 0
     assert session.pageviews == 1
     assert session.events == 1
+  end
+
+  test "keeps session in cache after engagement events", %{buffer: buffer} do
+    start = NaiveDateTime.utc_now(:second) |> NaiveDateTime.shift(day: -1)
+
+    pageview1 = build(:event, name: "pageview", timestamp: start)
+
+    CacheStore.on_event(pageview1, %{}, nil, buffer)
+    assert_receive({:buffer, :insert, [[start_session]]})
+
+    for delta <- [20, 40, 60] do
+      engagement =
+        Map.merge(pageview1, %{
+          name: "engagement",
+          timestamp: start |> NaiveDateTime.shift(minute: delta)
+        })
+
+      CacheStore.on_event(engagement, %{}, nil, buffer)
+    end
+
+    pageview2 = Map.put(pageview1, :timestamp, start |> NaiveDateTime.shift(minute: 80))
+    CacheStore.on_event(pageview2, %{}, nil, buffer)
+    assert_receive({:buffer, :insert, [[_negative_record, updated_session]]})
+
+    assert updated_session.session_id == start_session.session_id
+    assert updated_session.is_bounce == false
+    assert updated_session.duration == 80 * 60
+    assert updated_session.pageviews == 2
+    assert updated_session.events == 2
   end
 
   describe "hostname-related attributes" do
