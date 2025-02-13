@@ -182,7 +182,10 @@ function remapFilterKey(filterKey) {
   if (NO_PREFIX_KEYS.has(filterKey)) {
     return filterKey
   }
-  if (EVENT_FILTER_KEYS.has(filterKey)) {
+  if (
+    EVENT_FILTER_KEYS.has(filterKey) ||
+    filterKey.startsWith(EVENT_PROPS_PREFIX)
+  ) {
     return `${EVENT_PREFIX}${filterKey}`
   }
   return `${VISIT_PREFIX}${filterKey}`
@@ -216,8 +219,12 @@ export function remapFromApiFilters(apiFilters) {
   return apiFilters.map((apiFilter) => {
     const [operation, ...rest] = apiFilter
     if (operation === 'has_not_done') {
-      const [[_, key, clauses]] = rest
-      return [FILTER_OPERATIONS.has_not_done, key, clauses]
+      const [[_, apiFilterKey, clauses]] = rest
+      return [
+        FILTER_OPERATIONS.has_not_done,
+        remapApiFilterKey(apiFilterKey),
+        clauses
+      ]
     }
     const [apiFilterKey, clauses] = rest
     return [operation, remapApiFilterKey(apiFilterKey), clauses]
