@@ -28,6 +28,25 @@ defmodule Plausible.CrmExtensions do
       ]
     end
 
+    def javascripts(%{assigns: %{context: "auth", resource: "user", entry: %{} = user}}) do
+      [
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
+          (async () => {
+            const response = await fetch("/crm/auth/user/#{user.id}/info")
+            const usageHTML = await response.text()
+            const cardBody = document.querySelector(".card-body")
+            if (cardBody) {
+              const usageDOM = document.createElement("div")
+              usageDOM.innerHTML = usageHTML
+              cardBody.prepend(usageDOM)
+            }
+          })()
+        </script>
+        """)
+      ]
+    end
+
     def javascripts(%{assigns: %{context: "sites", resource: "site", entry: %{domain: domain}}}) do
       base_url = PlausibleWeb.Endpoint.url()
 
