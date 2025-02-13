@@ -87,6 +87,61 @@ defmodule Plausible.Teams.TeamAdmin do
     "Cannot remove the team for now"
   end
 
+  def grace_period_status(team) do
+    grace_period = team.grace_period
+
+    case grace_period do
+      nil ->
+        "--"
+
+      %{manual_lock: true, is_over: true} ->
+        "Manually locked"
+
+      %{manual_lock: true, is_over: false} ->
+        "Waiting for manual lock"
+
+      %{is_over: true} ->
+        "ended"
+
+      %{end_date: %Date{} = end_date} ->
+        days_left = Date.diff(end_date, Date.utc_today())
+        "#{days_left} days left"
+    end
+  end
+
+  def subscription_plan(team) do
+    subscription = team.subscription
+
+    if Subscription.Status.active?(subscription) && subscription.paddle_subscription_id do
+      quota = PlausibleWeb.AuthView.subscription_quota(subscription)
+      interval = PlausibleWeb.AuthView.subscription_interval(subscription)
+
+      {:safe, ~s(<a href="#{manage_url(subscription)}">#{quota} \(#{interval}\)</a>)}
+    else
+      "--"
+    end
+  end
+
+  def subscription_status(team) do
+    cond do
+      team && team.subscription ->
+        status_str =
+          PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
+
+        if team.subscription.paddle_subscription_id do
+          {:safe, ~s(<a href="#{manage_url(team.subscription)}">#{status_str}</a>)}
+        else
+          status_str
+        end
+
+      Plausible.Teams.on_trial?(team) ->
+        "On trial"
+
+      true ->
+        "Trial expired"
+    end
+  end
+
   defp lock(team) do
     if team.grace_period do
       Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
@@ -118,61 +173,6 @@ defmodule Plausible.Teams.TeamAdmin do
 
       [_ | _] ->
         team.name
-    end
-  end
-
-  defp grace_period_status(team) do
-    grace_period = team.grace_period
-
-    case grace_period do
-      nil ->
-        "--"
-
-      %{manual_lock: true, is_over: true} ->
-        "Manually locked"
-
-      %{manual_lock: true, is_over: false} ->
-        "Waiting for manual lock"
-
-      %{is_over: true} ->
-        "ended"
-
-      %{end_date: %Date{} = end_date} ->
-        days_left = Date.diff(end_date, Date.utc_today())
-        "#{days_left} days left"
-    end
-  end
-
-  defp subscription_plan(team) do
-    subscription = team.subscription
-
-    if Subscription.Status.active?(subscription) && subscription.paddle_subscription_id do
-      quota = PlausibleWeb.AuthView.subscription_quota(subscription)
-      interval = PlausibleWeb.AuthView.subscription_interval(subscription)
-
-      {:safe, ~s(<a href="#{manage_url(subscription)}">#{quota} \(#{interval}\)</a>)}
-    else
-      "--"
-    end
-  end
-
-  defp subscription_status(team) do
-    cond do
-      team && team.subscription ->
-        status_str =
-          PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
-
-        if team.subscription.paddle_subscription_id do
-          {:safe, ~s(<a href="#{manage_url(team.subscription)}">#{status_str}</a>)}
-        else
-          status_str
-        end
-
-      Plausible.Teams.on_trial?(team) ->
-        "On trial"
-
-      true ->
-        "Trial expired"
     end
   end
 
