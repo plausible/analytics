@@ -291,6 +291,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         field={@f[:display_name]}
         type="text"
         x-model="displayName"
+        x-data="{ firstFocus: true }"
+        x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
       />
     </div>
     """
