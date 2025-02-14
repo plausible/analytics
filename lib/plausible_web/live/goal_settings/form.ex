@@ -223,12 +223,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       if is_nil(assigns.goal) do
         """
         {
-          scrollThreshold: '',
+          scrollThreshold: '90',
           pagePath: '',
           displayName: '',
           updateDisplayName() {
             if (this.scrollThreshold && this.pagePath) {
-              this.displayName = `Scroll > ${this.scrollThreshold}% on ${this.pagePath}`
+              this.displayName = `Scroll ${this.scrollThreshold}% on ${this.pagePath}`
             }
           }
         }
@@ -249,11 +249,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="scroll-form" class="py-2" x-data={@js} {@rest}>
       <.label for={"scroll_threshold_input_#{@suffix}"}>
-        Scroll Threshold
+        Scroll Percentage Threshold (0-100)
       </.label>
 
       <.input
         id={"scroll_threshold_input_#{@suffix}"}
+        required
         field={@f[:scroll_threshold]}
         type="number"
         min="0"
