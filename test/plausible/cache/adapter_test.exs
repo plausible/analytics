@@ -19,7 +19,9 @@ defmodule Plausible.Cache.AdapterTest do
           name: :"cache_supervisor_#{test}"
         )
 
-      for i <- 1..iterations, do: Adapter.put(name, i, i)
+      half = floor(iterations / 2)
+      for i <- 1..half, do: Adapter.put(name, i, i)
+      Adapter.put_many(name, for(i <- half..iterations, do: {i, i}))
 
       assert Adapter.size(name) == iterations
 
