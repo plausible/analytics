@@ -19,7 +19,7 @@ defmodule Plausible.Cache.AdapterTest do
           name: :"cache_supervisor_#{test}"
         )
 
-      half = floor(iterations / 2)
+      half = div(iterations, 2)
       for i <- 1..half, do: Adapter.put(name, i, i)
       Adapter.put_many(name, for(i <- half..iterations, do: {i, i}))
 
