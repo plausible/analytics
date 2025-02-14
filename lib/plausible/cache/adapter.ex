@@ -155,6 +155,17 @@ defmodule Plausible.Cache.Adapter do
       {:error, :timeout}
   end
 
+  @spec get_names(atom()) :: [atom()]
+  def get_names(cache_name) do
+    partitions = partitions(cache_name)
+
+    if partitions == 1 do
+      [cache_name]
+    else
+      Enum.map(1..partitions, &String.to_existing_atom("#{cache_name}_#{&1}"))
+    end
+  end
+
   defp get_keys(full_cache_name) do
     ets = ConCache.ets(full_cache_name)
 
@@ -166,16 +177,6 @@ defmodule Plausible.Cache.Adapter do
       end,
       fn _ -> :ok end
     )
-  end
-
-  defp get_names(cache_name) do
-    partitions = partitions(cache_name)
-
-    if partitions == 1 do
-      [cache_name]
-    else
-      Enum.map(1..partitions, &String.to_existing_atom("#{cache_name}_#{&1}"))
-    end
   end
 
   defp get_name(cache_name, key) do

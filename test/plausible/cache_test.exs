@@ -2,6 +2,7 @@ defmodule Plausible.CacheTest do
   use Plausible.DataCase, async: true
 
   alias Plausible.Cache
+  alias Plausible.Cache.Adapter
   import ExUnit.CaptureLog
 
   defmodule ExampleCache do
