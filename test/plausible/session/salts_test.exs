@@ -20,11 +20,15 @@ defmodule Plausible.Session.SaltsTest do
   end
 
   test "old salts can be cleaned" do
-    h30_ago = DateTime.shift(DateTime.utc_now(), hour: -48)
+    h30_ago =
+      DateTime.shift(DateTime.utc_now(), hour: -48)
+      |> IO.inspect(label: :h30_ago)
 
     {:ok, _} = Salts.start_link(name: __MODULE__, now: h30_ago)
 
-    h24_ago = DateTime.shift(DateTime.utc_now(), hour: -24)
+    h24_ago =
+      DateTime.shift(DateTime.utc_now(), hour: -24)
+      |> IO.inspect(label: :h24_ago)
 
     :ok = Salts.rotate(__MODULE__, h24_ago)
 
@@ -35,7 +39,9 @@ defmodule Plausible.Session.SaltsTest do
     count = Repo.aggregate(q, :count)
     assert count == 2
 
-    future = DateTime.shift(DateTime.utc_now(), hour: 24, minute: -1)
+    future =
+      DateTime.shift(DateTime.utc_now(), hour: 24, minute: 5)
+      |> IO.inspect(label: :future)
 
     :ok = Salts.rotate(__MODULE__, future)
 
