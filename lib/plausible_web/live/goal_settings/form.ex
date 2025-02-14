@@ -219,8 +219,35 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:rest, :global)
 
   def scroll_fields(assigns) do
+    js =
+      if is_nil(assigns.goal) do
+        """
+        {
+          scrollThreshold: '',
+          pagePath: '',
+          displayName: '',
+          updateDisplayName() {
+            if (this.scrollThreshold && this.pagePath) {
+              this.displayName = `Scroll > ${this.scrollThreshold}% on ${this.pagePath}`
+            }
+          }
+        }
+        """
+      else
+        """
+        {
+          scrollThreshold: '#{assigns.goal.scroll_threshold}',
+          pagePath: '#{assigns.goal.page_path}',
+          displayName: '#{assigns.goal.display_name}',
+          updateDisplayName() {}
+        }
+        """
+      end
+
+    assigns = assign(assigns, :js, js)
+
     ~H"""
-    <div id="scroll-form" class="py-2" {@rest}>
+    <div id="scroll-form" class="py-2" x-data={@js} {@rest}>
       <.label for={"scroll_threshold_input_#{@suffix}"}>
         Scroll Threshold
       </.label>
@@ -229,10 +256,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         id={"scroll_threshold_input_#{@suffix}"}
         field={@f[:scroll_threshold]}
         type="number"
-        value={if @goal && @goal.scroll_threshold > -1, do: @goal.scroll_threshold, else: nil}
         min="0"
         max="100"
         step="1"
+        x-model="scrollThreshold"
+        x-on:change="updateDisplayName"
       />
 
       <.label for={"scroll_page_path_input_#{@suffix}"} class="mt-3">
@@ -249,6 +277,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         suggest_fun={fn input, _options -> suggest_page_paths(input, @site) end}
         selected={if @goal && @goal.page_path, do: @goal.page_path}
         creatable
+        x-on-selection-change="pagePath = $event.detail.value.displayValue; updateDisplayName()"
       />
 
       <.error :for={msg <- Enum.map(@f[:page_path].errors, &translate_error/1)}>
@@ -260,6 +289,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         id="scroll_display_name_input"
         field={@f[:display_name]}
         type="text"
+        x-model="displayName"
       />
     </div>
     """
