@@ -20,10 +20,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       |> to_form()
 
     selected_tab =
-      if assigns.goal && assigns.goal.page_path do
-        "pageviews"
-      else
-        "custom_events"
+      case assigns.goal do
+        %{page_path: p, scroll_threshold: s} when not is_nil(p) and s > -1 -> "scroll"
+        %{page_path: p} when not is_nil(p) -> "pageviews"
+        _goal_or_nil -> "custom_events"
       end
 
     socket =
@@ -81,6 +81,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       />
       <.pageview_fields
         :if={@selected_tab == "pageviews"}
+        f={f}
+        goal={@goal}
+        suffix={@context_unique_id}
+        site={@site}
+      />
+      <.scroll_fields
+        :if={@selected_tab == "scroll"}
         f={f}
         goal={@goal}
         suffix={@context_unique_id}
