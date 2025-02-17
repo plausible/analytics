@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-9E10AB64.js"></script>
+    <script src="dist/sidebar_items-B105EE5F.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -169,11 +169,20 @@ main graph with last month or with the same month from last year.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_comparison_query/2" data-no-tooltip translate="no">get_comparison_query(source_query, options)</a>
+        <a href="#get_comparison_query/1" data-no-tooltip translate="no">get_comparison_query(source_query)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Generates a comparison query based on the source query and comparison mode.</p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_comparison_utc_time_range/2" data-no-tooltip translate="no">get_comparison_utc_time_range(source_query, options)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Generates a <code class="inline">DateTimeRange</code> for the comparison period by the given source query
+and comparison options.</p></div>
 
     </div>
 
@@ -198,7 +207,7 @@ main graph with last month or with the same month from last year.</p>
     </a>
     <h1 class="signature" translate="no">add_comparison_filters(comparison_query, main_results_list)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L67" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L70" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -212,15 +221,35 @@ filters are added to ensure comparison query returns same set of results
 as main query.</p>
   </section>
 </section>
-<section class="detail" id="get_comparison_query/2">
+<section class="detail" id="get_comparison_query/1">
 
   <div class="detail-header">
-    <a href="#get_comparison_query/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#get_comparison_query/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">get_comparison_query(source_query, options)</h1>
+    <h1 class="signature" translate="no">get_comparison_query(source_query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L44" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L56" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="get_comparison_utc_time_range/2">
+
+  <div class="detail-header">
+    <a href="#get_comparison_utc_time_range/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">get_comparison_utc_time_range(source_query, options)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L45" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -231,14 +260,15 @@ as main query.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_comparison_query(<a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
-  <a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_comparison_utc_time_range(<a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  <a href="Plausible.Stats.DateTimeRange.html#t:t/0">Plausible.Stats.DateTimeRange.t</a>()</pre>
 
       </div>
 
-<p>Generates a comparison query based on the source query and comparison mode.</p><p>Currently only historical periods are supported for comparisons (not <code class="inline">realtime</code>
-and <code class="inline">30m</code> periods).</p><h2 id="get_comparison_query/2-options" class="section-heading">
-  <a href="#get_comparison_query/2-options" class="hover-link">
+<p>Generates a <code class="inline">DateTimeRange</code> for the comparison period by the given source query
+and comparison options.</p><p>Currently only historical periods are supported for comparisons (not <code class="inline">realtime</code>
+and <code class="inline">30m</code> periods).</p><h2 id="get_comparison_utc_time_range/2-options" class="section-heading">
+  <a href="#get_comparison_utc_time_range/2-options" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Options</span>
