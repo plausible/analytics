@@ -42,7 +42,7 @@ defmodule Plausible.Stats.Query do
           site_id: site.id,
           site_native_stats_start_at: site.native_stats_start_at
         }
-        |> set(Map.to_list(query_data))
+        |> struct!(Map.to_list(query_data))
         |> put_comparison_utc_time_range()
         |> put_imported_opts(site)
 
@@ -130,7 +130,7 @@ defmodule Plausible.Stats.Query do
 
   def put_comparison_utc_time_range(%__MODULE__{include: %{comparisons: comparison_opts}} = query) do
     datetime_range = Comparisons.get_comparison_utc_time_range(query, comparison_opts)
-    set(query, comparison_utc_time_range: datetime_range)
+    struct!(query, comparison_utc_time_range: datetime_range)
   end
 
   def put_imported_opts(query, site) do
@@ -138,7 +138,7 @@ defmodule Plausible.Stats.Query do
 
     query =
       if site do
-        set(query,
+        struct!(query,
           imports_exist: Plausible.Imported.any_completed_imports?(site),
           imports_in_range: get_imports_in_range(site, query)
         )
