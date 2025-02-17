@@ -330,7 +330,6 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     }
   end
 
-  # Legacy support for Stats API v1
   def parse_comparison_params(_site, %{"compare" => "previous_period"}) do
     %{mode: "previous_period"}
   end
