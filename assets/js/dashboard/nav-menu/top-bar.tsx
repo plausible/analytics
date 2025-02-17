@@ -13,6 +13,7 @@ import { FiltersBar } from './filters-bar'
 import { QueryPeriodsPicker } from './query-periods/query-periods-picker'
 import { SegmentMenu } from './segments/segment-menu'
 import { RoutelessSegmentModals } from '../segments/routeless-segment-modals'
+import { useSegmentExpandedContext } from '../segments/segment-expanded-context'
 
 interface TopBarProps {
   showCurrentVisitors: boolean
@@ -52,24 +53,71 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
   const user = useUserContext()
   const { saved_segments } = site.flags
   const leftActionsRef = useRef<HTMLDivElement>(null)
-
+  const { expandedSegment } = useSegmentExpandedContext()
   return (
-    <div className="flex items-center w-full">
-      {saved_segments ? (
-        <>
-          <div
-            className="flex items-center gap-x-4 shrink-0"
-            ref={leftActionsRef}
-          >
-            <SiteSwitcher
-              site={site}
-              loggedIn={user.loggedIn}
-              currentUserRole={user.role}
-            />
-            {showCurrentVisitors && (
-              <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />
-            )}
-          </div>
+    <>
+      <div className="flex items-center w-full">
+        {saved_segments ? (
+          <>
+            <div
+              className="flex items-center gap-x-4 shrink-0"
+              ref={leftActionsRef}
+            >
+              <SiteSwitcher
+                site={site}
+                loggedIn={user.loggedIn}
+                currentUserRole={user.role}
+              />
+              {showCurrentVisitors && (
+                <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />
+              )}
+            </div>
+            <div className="flex w-full">
+              {!expandedSegment && (
+                <FiltersBar
+                  accessors={{
+                    topBar: (filtersBarElement) =>
+                      filtersBarElement?.parentElement?.parentElement,
+                    leftSection: (filtersBarElement) =>
+                      filtersBarElement?.parentElement?.parentElement
+                        ?.firstElementChild as HTMLElement,
+                    rightSection: (filtersBarElement) =>
+                      filtersBarElement?.parentElement?.parentElement
+                        ?.lastElementChild as HTMLElement
+                  }}
+                />
+              )}
+            </div>
+            <div className="flex gap-x-4 shrink-0">
+              {!expandedSegment && <FilterMenu />}
+              <QueryPeriodsPicker />
+              <RoutelessSegmentModals />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center w-full" ref={leftActionsRef}>
+              <SiteSwitcher
+                className="mr-2 sm:mr-4"
+                site={site}
+                loggedIn={user.loggedIn}
+                currentUserRole={user.role}
+              />
+              {showCurrentVisitors && (
+                <CurrentVisitors
+                  className="ml-1 mr-auto"
+                  tooltipBoundaryRef={leftActionsRef}
+                />
+              )}
+              <Filters />
+            </div>
+            <QueryPeriodsPicker className="ml-auto pl-2" />
+          </>
+        )}
+      </div>
+      {!!saved_segments && !!expandedSegment && (
+        <div className="flex items-center w-full mt-3 -ml-4">
+          <div className="w-0" />
           <div className="flex w-full">
             <FiltersBar
               accessors={{
@@ -84,33 +132,12 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
               }}
             />
           </div>
-          <div className="flex gap-x-4 shrink-0">
-            <SegmentMenu />
+          <div className="flex shrink-0 gap-x-4 -mr-4">
             <FilterMenu />
-            <QueryPeriodsPicker />
-            <RoutelessSegmentModals />
+            <SegmentMenu />
           </div>
-        </>
-      ) : (
-        <>
-          <div className="flex items-center w-full" ref={leftActionsRef}>
-            <SiteSwitcher
-              className="mr-2 sm:mr-4"
-              site={site}
-              loggedIn={user.loggedIn}
-              currentUserRole={user.role}
-            />
-            {showCurrentVisitors && (
-              <CurrentVisitors
-                className="ml-1 mr-auto"
-                tooltipBoundaryRef={leftActionsRef}
-              />
-            )}
-            <Filters />
-          </div>
-          <QueryPeriodsPicker className="ml-auto pl-2" />
-        </>
+        </div>
       )}
-    </div>
+    </>
   )
 }
