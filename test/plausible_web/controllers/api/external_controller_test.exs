@@ -649,7 +649,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == ["true", "12"]
     end
 
-    test "records custom props for a pageleave event", %{conn: conn, site: site} do
+    test "records custom props for a engagement event", %{conn: conn, site: site} do
       post(conn, "/api/event", %{
         n: "pageview",
         u: "https://ab.cd",
@@ -657,7 +657,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       })
 
       post(conn, "/api/event", %{
-        name: "pageleave",
+        name: "engagement",
         url: "http://ab.cd/",
         domain: site.domain,
         props: %{
@@ -666,10 +666,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         }
       })
 
-      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert Map.get(pageleave, :"meta.key") == ["bool_test", "number_test"]
-      assert Map.get(pageleave, :"meta.value") == ["true", "12"]
+      assert Map.get(engagement, :"meta.key") == ["bool_test", "number_test"]
+      assert Map.get(engagement, :"meta.value") == ["true", "12"]
     end
 
     test "filters out bad props", %{conn: conn, site: site} do
@@ -1302,54 +1302,54 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
     test "ingests scroll_depth as 255 when sd not in params", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain})
 
-      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert pageleave.scroll_depth == 255
+      assert engagement.scroll_depth == 255
     end
 
-    test "sd field is ignored if name is not pageleave", %{conn: conn, site: site} do
+    test "sd field is ignored if name is not engagement", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain, sd: 10})
       post(conn, "/api/event", %{n: "custom_e", u: "https://test.com", d: site.domain, sd: 10})
 
       assert [%{scroll_depth: 0}, %{scroll_depth: 0}] = get_events(site)
     end
 
-    test "ingests valid scroll_depth for a pageleave", %{conn: conn, site: site} do
+    test "ingests valid scroll_depth for a engagement", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: 25})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: 25})
 
-      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert pageleave.scroll_depth == 25
+      assert engagement.scroll_depth == 25
     end
 
     test "ingests scroll_depth as 100 when sd > 100", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: 101})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: 101})
 
-      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert pageleave.scroll_depth == 100
+      assert engagement.scroll_depth == 100
     end
 
     test "ingests scroll_depth as 255 when sd is a string", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: "1"})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: "1"})
 
-      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert pageleave.scroll_depth == 255
+      assert engagement.scroll_depth == 255
     end
 
     test "ingests scroll_depth as 255 when sd is a negative integer", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: -1})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: -1})
 
-      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert pageleave.scroll_depth == 255
+      assert engagement.scroll_depth == 255
     end
 
     test "ingests valid scroll_depth for a engagement event", %{conn: conn, site: site} do

@@ -25,15 +25,14 @@ defmodule Plausible.Session.CacheStore do
     )
   end
 
-  defp handle_event(%{name: name} = event, found_session, _, _)
-       when name in ["pageleave", "engagement"] do
+  defp handle_event(%{name: "engagement"} = event, found_session, _, _) do
     if found_session do
       # Make sure the session is kept active in the in-memory session cache
       refresh_session_cache(found_session, event.timestamp)
 
       found_session
     else
-      :no_session_for_pageleave
+      :no_session_for_engagement
     end
   end
 

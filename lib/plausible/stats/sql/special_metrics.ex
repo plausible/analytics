@@ -129,15 +129,15 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
   def maybe_add_scroll_depth(q, site, query) do
     if :scroll_depth in query.metrics do
-      max_per_visitor_q =
+      max_per_session_q =
         Base.base_event_query(site, query)
         |> where([e], e.name == "engagement" and e.scroll_depth <= 100)
         |> select([e], %{
-          user_id: e.user_id,
+          session_id: e.session_id,
           max_scroll_depth: max(e.scroll_depth)
         })
         |> SQL.QueryBuilder.build_group_by(:events, query)
-        |> group_by([e], e.user_id)
+        |> group_by([e], e.session_id)
 
       dim_shortnames = Enum.map(query.dimensions, fn dim -> shortname(query, dim) end)
 
@@ -150,12 +150,13 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         dim_shortnames
         |> Enum.map(fn dim -> dynamic([p], field(p, ^dim)) end)
 
-      scroll_depth_sum_q =
-        subquery(max_per_visitor_q)
-        |> select([p], %{
-          scroll_depth_sum:
-            fragment("if(count(?) = 0, NULL, sum(?))", p.user_id, p.max_scroll_depth),
-          pageleave_visitors: fragment("count(?)", p.user_id)
+      total_scroll_depth_q =
+        subquery(max_per_session_q)
+        |> select([], %{})
+        |> select_merge_as([p], %{
+          # Note: No need to upscale sample size here since it would end up cancelling out due to the result being an average
+          total_scroll_depth: fragment("sum(?)", p.max_scroll_depth),
+          total_scroll_depth_visits: fragment("uniq(?)", p.session_id)
         })
         |> select_merge(^dim_select)
         |> group_by(^dim_group_by)
@@ -171,7 +172,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         end
 
       joined_q =
-        join(q, :left, [e], s in subquery(scroll_depth_sum_q), on: ^join_on_dim_condition)
+        join(q, :left, [e], s in subquery(total_scroll_depth_q), on: ^join_on_dim_condition)
 
       if query.include_imported do
         joined_q
@@ -179,17 +180,14 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           scroll_depth:
             fragment(
               """
-              case
-                when isNotNull(?) then
-                  toUInt8(round(? / ?))
-                else
-                  NULL
-              end
+              if(? + ? > 0, toInt8(round((? + ?) / (? + ?))), NULL)
               """,
-              # Case 3: Only native scroll depth sum is present
-              s.scroll_depth_sum,
-              s.scroll_depth_sum,
-              s.pageleave_visitors
+              s.total_scroll_depth_visits,
+              selected_as(:__imported_total_scroll_depth_visits),
+              s.total_scroll_depth,
+              selected_as(:__imported_total_scroll_depth),
+              s.total_scroll_depth_visits,
+              selected_as(:__imported_total_scroll_depth_visits)
             )
         })
       else
@@ -198,9 +196,9 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           scroll_depth:
             fragment(
               "if(any(?) > 0, toUInt8(round(any(?) / any(?))), NULL)",
-              s.pageleave_visitors,
-              s.scroll_depth_sum,
-              s.pageleave_visitors
+              s.total_scroll_depth_visits,
+              s.total_scroll_depth,
+              s.total_scroll_depth_visits
             )
         })
       end
@@ -248,7 +246,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   defp total_visitors(site, query) do
     Base.base_event_query(site, query)
     |> select([e],
-      total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+      total_visitors: scale_sample(fragment("uniq(?)", e.user_id))
     )
   end
 end

@@ -634,7 +634,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert plot == [40, 20, 0, 0, 0, 0, 0]
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "returns scroll depth per day with imported data", %{conn: conn, site: site} do
       site_import = insert(:site_import, site: site)
 
@@ -653,18 +652,18 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           date: ~D[2020-01-02],
           page: "/",
           visitors: 1,
-          scroll_depth: 40,
-          pageleave_visitors: 1
+          total_scroll_depth: 40,
+          total_scroll_depth_visits: 1
         ),
         # 2020-01-03 - only imported data
         build(:imported_pages,
           date: ~D[2020-01-03],
           page: "/",
           visitors: 1,
-          scroll_depth: 90,
-          pageleave_visitors: 1
+          total_scroll_depth: 90,
+          total_scroll_depth_visits: 1
         ),
-        build(:imported_pages, date: ~D[2020-01-03], page: "/", visitors: 100, scroll_depth: nil)
+        build(:imported_pages, date: ~D[2020-01-03], page: "/", visitors: 100)
       ])
 
       filters = Jason.encode!([[:is, "event:page", ["/"]]])

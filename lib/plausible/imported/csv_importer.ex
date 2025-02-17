@@ -5,6 +5,7 @@ defmodule Plausible.Imported.CSVImporter do
   """
 
   use Plausible.Imported.Importer
+  import Ecto.Query, only: [from: 2]
 
   @impl true
   def name(), do: :csv
@@ -54,6 +55,26 @@ defmodule Plausible.Imported.CSVImporter do
       {:error, Exception.message(e)}
   end
 
+  def on_success(site_import, _extra_data) do
+    has_scroll_depth? =
+      Plausible.ClickhouseRepo.exists?(
+        from(i in "imported_pages",
+          where: i.site_id == ^site_import.site_id,
+          where: i.import_id == ^site_import.id,
+          where: i.total_scroll_depth_visits > 0,
+          select: 1
+        )
+      )
+
+    if has_scroll_depth? do
+      site_import
+      |> Ecto.Changeset.change(%{has_scroll_depth: true})
+      |> Plausible.Repo.update!()
+    end
+
+    :ok
+  end
+
   defp import_s3(ch, site_import, uploads) do
     %{
       id: import_id,
@@ -75,7 +96,7 @@ defmodule Plausible.Imported.CSVImporter do
       statement =
         """
         INSERT INTO {table:Identifier}(site_id,import_id,#{s3_columns}) \
-        SELECT {site_id:UInt64}, {import_id:UInt64}, * \
+        SELECT {site_id:UInt64}, {import_id:UInt64}, #{s3_columns} \
         FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String}) \
         WHERE date >= {start_date:Date} AND date <= {end_date:Date}\
         """
@@ -119,7 +140,7 @@ defmodule Plausible.Imported.CSVImporter do
           statement =
             """
             INSERT INTO {table:Identifier}(site_id,import_id,#{input_columns}) \
-            SELECT {site_id:UInt64}, {import_id:UInt64}, * \
+            SELECT {site_id:UInt64}, {import_id:UInt64}, #{input_columns} \
             FROM input({input_structure:String}) \
             WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
             FORMAT CSVWithNames
@@ -161,7 +182,7 @@ defmodule Plausible.Imported.CSVImporter do
     "imported_operating_systems" =>
       "date Date, operating_system String, operating_system_version String, visitors UInt64, visits UInt64, visit_duration UInt64, bounces UInt32, pageviews UInt64",
     "imported_pages" =>
-      "date Date, hostname String, page String, visits UInt64, visitors UInt64, pageviews UInt64",
+      "date Date, hostname String, page String, visits UInt64, visitors UInt64, pageviews UInt64, total_scroll_depth UInt64, total_scroll_depth_visits UInt64",
     "imported_sources" =>
       "date Date, source String, referrer String, utm_source String, utm_medium String, utm_campaign String, utm_content String, utm_term String, pageviews UInt64, visitors UInt64, visits UInt64, visit_duration UInt64, bounces UInt32",
     "imported_visitors" =>

@@ -191,27 +191,25 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def event_metric(:pageviews) do
     wrap_alias([e], %{
-      pageviews:
-        fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
+      pageviews: scale_sample(fragment("countIf(? = 'pageview')", e.name))
     })
   end
 
   def event_metric(:events) do
     wrap_alias([e], %{
-      events:
-        fragment("toUInt64(round(countIf(? != 'engagement') * any(_sample_factor)))", e.name)
+      events: scale_sample(fragment("countIf(? != 'engagement')", e.name))
     })
   end
 
   def event_metric(:visitors) do
     wrap_alias([e], %{
-      visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+      visitors: scale_sample(fragment("uniq(?)", e.user_id))
     })
   end
 
   def event_metric(:visits) do
     wrap_alias([e], %{
-      visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id)
+      visits: scale_sample(fragment("uniq(?)", e.session_id))
     })
   end
 
@@ -273,26 +271,25 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def session_metric(:visits, _query) do
     wrap_alias([s], %{
-      visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
+      visits: scale_sample(fragment("sum(?)", s.sign))
     })
   end
 
   def session_metric(:pageviews, _query) do
     wrap_alias([s], %{
-      pageviews:
-        fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
+      pageviews: scale_sample(fragment("sum(? * ?)", s.sign, s.pageviews))
     })
   end
 
   def session_metric(:events, _query) do
     wrap_alias([s], %{
-      events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+      events: scale_sample(fragment("sum(? * ?)", s.sign, s.events))
     })
   end
 
   def session_metric(:visitors, _query) do
     wrap_alias([s], %{
-      visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
+      visitors: scale_sample(fragment("uniq(?)", s.user_id))
     })
   end
 
