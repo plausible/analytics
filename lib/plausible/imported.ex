@@ -99,9 +99,9 @@ defmodule Plausible.Imported do
 
     site
     |> get_completed_imports()
-    |> Enum.filter(fn site_import ->
-      Date.compare(site_import.start_date, date_range.last) in [:lt, :eq] and
-        Date.compare(site_import.end_date, date_range.first) in [:gt, :eq]
+    |> Enum.reject(fn site_import ->
+      Date.after?(site_import.start_date, date_range.last) or
+        Date.before?(site_import.end_date, date_range.first)
     end)
   end
 
