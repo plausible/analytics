@@ -168,10 +168,14 @@ defmodule Plausible.Stats.Goals do
       if is_nil(goal) do
         dynamic([e], ^dynamic_statement)
       else
-        type = Plausible.Goal.type(goal)
-        dynamic([e], ^goal_condition(type, goal, imported?) or ^dynamic_statement)
+        dynamic([e], ^goal_condition(goal, imported?) or ^dynamic_statement)
       end
     end)
+  end
+
+  def goal_condition(goal, imported? \\ false) do
+    type = Plausible.Goal.type(goal)
+    goal_condition(type, goal, imported?)
   end
 
   defp goal_condition(:event, goal, _) do
