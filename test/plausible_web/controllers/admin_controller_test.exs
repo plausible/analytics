@@ -4,26 +4,30 @@ defmodule PlausibleWeb.AdminControllerTest do
 
   alias Plausible.Repo
 
-  describe "GET /crm/auth/user/:user_id/usage" do
-    setup [:create_user, :log_in]
+  describe "GET /crm/teams/team/:team_id/usage" do
+    setup [:create_user, :log_in, :create_team]
 
     @tag :ee_only
     test "returns 403 if the logged in user is not a super admin", %{conn: conn} do
-      conn = get(conn, "/crm/auth/user/1/usage")
+      conn = get(conn, "/crm/teams/team/1/usage")
       assert response(conn, 403) == "Not allowed"
     end
 
     @tag :ee_only
-    test "returns usage data as a standalone page", %{conn: conn, user: user} do
+    test "returns usage data as a standalone page", %{conn: conn, user: user, team: team} do
       patch_env(:super_admin_user_ids, [user.id])
-      conn = get(conn, "/crm/auth/user/#{user.id}/usage")
+      conn = get(conn, "/crm/teams/team/#{team.id}/usage")
       assert response(conn, 200) =~ "<html"
     end
 
     @tag :ee_only
-    test "returns usage data in embeddable form when requested", %{conn: conn, user: user} do
+    test "returns usage data in embeddable form when requested", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
       patch_env(:super_admin_user_ids, [user.id])
-      conn = get(conn, "/crm/auth/user/#{user.id}/usage?embed=true")
+      conn = get(conn, "/crm/teams/team/#{team.id}/usage?embed=true")
       refute response(conn, 200) =~ "<html"
     end
   end
@@ -102,23 +106,25 @@ defmodule PlausibleWeb.AdminControllerTest do
 
     @tag :ee_only
     test "returns 403 if the logged in user is not a super admin", %{conn: conn} do
-      conn = get(conn, "/crm/billing/user/0/current_plan")
+      conn = get(conn, "/crm/billing/team/0/current_plan")
       assert response(conn, 403) == "Not allowed"
     end
 
     @tag :ee_only
-    test "returns empty state for non-existent user", %{conn: conn, user: user} do
+    test "returns empty state for non-existent team", %{conn: conn, user: user} do
       patch_env(:super_admin_user_ids, [user.id])
 
-      conn = get(conn, "/crm/billing/user/0/current_plan")
+      conn = get(conn, "/crm/billing/team/0/current_plan")
       assert json_response(conn, 200) == %{"features" => []}
     end
 
     @tag :ee_only
     test "returns empty state for user without subscription", %{conn: conn, user: user} do
       patch_env(:super_admin_user_ids, [user.id])
+      _site = new_site(owner: user)
+      team = team_of(user)
 
-      conn = get(conn, "/crm/billing/user/#{user.id}/current_plan")
+      conn = get(conn, "/crm/billing/team/#{team.id}/current_plan")
       assert json_response(conn, 200) == %{"features" => []}
     end
 
@@ -131,7 +137,9 @@ defmodule PlausibleWeb.AdminControllerTest do
 
       subscribe_to_plan(user, "does-not-exist")
 
-      conn = get(conn, "/crm/billing/user/#{user.id}/current_plan")
+      team = team_of(user)
+
+      conn = get(conn, "/crm/billing/team/#{team.id}/current_plan")
       assert json_response(conn, 200) == %{"features" => []}
     end
 
@@ -140,8 +148,9 @@ defmodule PlausibleWeb.AdminControllerTest do
       patch_env(:super_admin_user_ids, [user.id])
 
       subscribe_to_plan(user, "857104")
+      team = team_of(user)
 
-      conn = get(conn, "/crm/billing/user/#{user.id}/current_plan")
+      conn = get(conn, "/crm/billing/team/#{team.id}/current_plan")
 
       assert json_response(conn, 200) == %{
                "features" => ["goals"],

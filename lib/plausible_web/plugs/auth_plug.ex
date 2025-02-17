@@ -9,6 +9,7 @@ defmodule PlausibleWeb.AuthPlug do
   import Plug.Conn
   use Plausible.Repo
 
+  alias Plausible.Teams
   alias PlausibleWeb.UserAuth
 
   def init(options) do
@@ -20,13 +21,24 @@ defmodule PlausibleWeb.AuthPlug do
       {:ok, user_session} ->
         user = user_session.user
 
-        team =
-          case user.team_memberships do
-            [%{team: team}] ->
-              team
+        current_team =
+          conn
+          |> Plug.Conn.get_session("current_team_id")
+          |> Plausible.Teams.get()
+          |> Teams.with_subscription()
+          |> Repo.preload(:owners)
 
-            [] ->
-              nil
+        current_team_owner? =
+          case current_team && Teams.Memberships.team_role(current_team, user) do
+            {:ok, :owner} -> true
+            _ -> false
+          end
+
+        my_team =
+          case {current_team_owner?, current_team, user} do
+            {true, %Teams.Team{}, _} -> current_team
+            {_, _, %{team_memberships: [%{team: team} | _]}} -> team
+            {_, _, %{team_memberships: []}} -> nil
           end
 
         Plausible.OpenTelemetry.add_user_attributes(user)
@@ -35,7 +47,9 @@ defmodule PlausibleWeb.AuthPlug do
         conn
         |> assign(:current_user, user)
         |> assign(:current_user_session, user_session)
-        |> assign(:my_team, team)
+        |> assign(:my_team, my_team)
+        |> assign(:current_team, current_team || my_team)
+        |> assign(:multiple_teams?, Teams.Users.teams_count(user) > 1)
 
       _ ->
         conn

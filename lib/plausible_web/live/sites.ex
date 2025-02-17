@@ -651,7 +651,8 @@ defmodule PlausibleWeb.Live.Sites do
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
       Sites.list_with_invitations(assigns.current_user, assigns.params,
-        filter_by_domain: assigns.filter_text
+        filter_by_domain: assigns.filter_text,
+        team: assigns.current_team
       )
 
     hourly_stats =
@@ -664,7 +665,7 @@ defmodule PlausibleWeb.Live.Sites do
         end)
       end
 
-    invitations = extract_invitations(sites.entries, assigns.current_user)
+    invitations = extract_invitations(sites.entries, assigns.current_team)
 
     assign(
       socket,
@@ -674,20 +675,14 @@ defmodule PlausibleWeb.Live.Sites do
     )
   end
 
-  defp extract_invitations(sites, user) do
+  defp extract_invitations(sites, team) do
     sites
     |> Enum.filter(&(&1.entry_type == "invitation"))
     |> Enum.flat_map(& &1.invitations)
-    |> Enum.map(&check_limits(&1, user))
+    |> Enum.map(&check_limits(&1, team))
   end
 
-  defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} -> team
-        _ -> nil
-      end
-
+  defp check_limits(%{role: :owner, site: site} = invitation, team) do
     case ensure_can_take_ownership(site, team) do
       :ok ->
         check_features(invitation, team)

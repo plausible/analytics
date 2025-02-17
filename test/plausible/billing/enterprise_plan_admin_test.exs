@@ -9,10 +9,12 @@ defmodule Plausible.Billing.EnterprisePlanAdminTest do
 
   test "sanitizes number inputs and whitespace" do
     user = new_user()
+    _site = new_site(owner: user)
+    team = team_of(user)
 
     changeset =
       EnterprisePlanAdmin.create_changeset(%EnterprisePlan{}, %{
-        "user_id" => to_string(user.id),
+        "team_id" => to_string(team.id),
         "paddle_plan_id" => " . 123456 ",
         "billing_interval" => "monthly",
         "monthly_pageview_limit" => "100,000,000",
@@ -34,10 +36,12 @@ defmodule Plausible.Billing.EnterprisePlanAdminTest do
 
   test "scrubs empty attrs" do
     user = new_user()
+    _site = new_site(owner: user)
+    team = team_of(user)
 
     changeset =
       EnterprisePlanAdmin.create_changeset(%EnterprisePlan{}, %{
-        "user_id" => to_string(user.id),
+        "team_id" => to_string(team.id),
         "paddle_plan_id" => " ,.     ",
         "billing_interval" => "monthly",
         "monthly_pageview_limit" => "100,000,000",

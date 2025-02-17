@@ -1,0 +1,32 @@
+<.focus_box>
+  <:title>Switch Team</:title>
+
+  <:subtitle>Switch your current team.</:subtitle>
+
+  <div>
+    <ul>
+      <li
+        :for={team <- @teams}
+        class={if team.current?, do: ["border-indigo-400 border-l-4 m-2"], else: ["m-2"]}
+      >
+        <.unstyled_link
+          method={if team.current?, do: "get", else: "post"}
+          href={
+            if team.current?,
+              do: "#",
+              else: Routes.auth_path(@conn, :switch_team, team.identifier)
+          }
+        >
+          <div class="hover:bg-indigo-100 dark:hover:bg-gray-700 p-4">
+            <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
+              {team.name}
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              Owner{if team.many_owners?, do: "s"}: {team.owners}
+            </p>
+          </div>
+        </.unstyled_link>
+      </li>
+    </ul>
+  </div>
+</.focus_box>

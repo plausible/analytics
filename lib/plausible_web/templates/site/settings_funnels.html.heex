@@ -13,7 +13,7 @@
     </:subtitle>
 
     <PlausibleWeb.Components.Billing.Notice.premium_feature
-      billable_user={@site.owner}
+      billable_user={List.first(@site.owners)}
       current_user={@current_user}
       current_team={@site_team}
       feature_mod={Plausible.Billing.Feature.Funnels}
