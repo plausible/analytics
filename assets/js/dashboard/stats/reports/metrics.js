@@ -143,17 +143,6 @@ export const createAverageRevenue = (props) => {
   })
 }
 
-export const createTotalVisitors = (props) => {
-  const renderLabel = (_query) => 'Total Visitors'
-  return new Metric({
-    width: 'w-28',
-    ...props,
-    key: 'total_visitors',
-    renderLabel,
-    sortable: false
-  })
-}
-
 export const createVisits = (props) => {
   return new Metric({ width: 'w-24', sortable: true, ...props, key: 'visits' })
 }
