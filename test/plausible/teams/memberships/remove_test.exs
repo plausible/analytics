@@ -26,6 +26,44 @@ defmodule Plausible.Teams.Memberships.RemoveTest do
     )
   end
 
+  test "when member is removed, associated personal segment is deleted" do
+    user = new_user()
+    site = new_site(owner: user)
+    team = team_of(user)
+    collaborator = add_member(team, role: :editor)
+
+    segment =
+      insert(:segment,
+        type: :personal,
+        owner: collaborator,
+        site: site,
+        name: "personal segment"
+      )
+
+    assert {:ok, _} = Remove.remove(team, collaborator.id, user)
+
+    refute Repo.reload(segment)
+  end
+
+  test "when member is removed, associated site segment will be owner-less" do
+    user = new_user()
+    site = new_site(owner: user)
+    team = team_of(user)
+    collaborator = add_member(team, role: :editor)
+
+    segment =
+      insert(:segment,
+        type: :site,
+        owner: collaborator,
+        site: site,
+        name: "site segment"
+      )
+
+    assert {:ok, _} = Remove.remove(team, collaborator.id, user)
+
+    assert Repo.reload(segment).owner_id == nil
+  end
+
   test "can't remove the only owner" do
     user = new_user()
     _site = new_site(owner: user)
