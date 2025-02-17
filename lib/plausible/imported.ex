@@ -66,20 +66,17 @@ defmodule Plausible.Imported do
     @goals_with_path
   end
 
+  @spec any_completed_imports?(Site.t()) :: boolean()
+  def any_completed_imports?(site) do
+    get_completed_imports(site) != []
+  end
+
   @spec earliest_import_start_date(Site.t()) :: Date.t() | nil
   def earliest_import_start_date(site) do
     site
     |> get_completed_imports()
     |> Enum.map(& &1.start_date)
     |> Enum.min(Date, fn -> nil end)
-  end
-
-  @spec latest_import_end_date(Site.t()) :: Date.t() | nil
-  def latest_import_end_date(site) do
-    site
-    |> get_completed_imports()
-    |> Enum.map(& &1.end_date)
-    |> Enum.max(Date, fn -> nil end)
   end
 
   @spec complete_import_ids(Site.t()) :: [non_neg_integer()]
@@ -102,8 +99,9 @@ defmodule Plausible.Imported do
 
     site
     |> get_completed_imports()
-    |> Enum.filter(fn site_import ->
-      site_import.start_date <= date_range.last && site_import.end_date >= date_range.first
+    |> Enum.reject(fn site_import ->
+      Date.after?(site_import.start_date, date_range.last) or
+        Date.before?(site_import.end_date, date_range.first)
     end)
   end
 

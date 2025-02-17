@@ -20,13 +20,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
-      query =
-        if params["compare"] == "previous_period" do
-          Query.set_include(query, :comparisons, %{mode: "previous_period"})
-        else
-          query
-        end
-
       %{results: results, meta: meta} = Plausible.Stats.aggregate(site, query, metrics)
 
       payload = maybe_add_warning(%{results: results}, meta)
