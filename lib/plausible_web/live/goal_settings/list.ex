@@ -50,12 +50,13 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               </div>
             </.td>
             <.td hide_on_mobile height="h-16">
-              <span :if={goal.page_path}>Pageview</span><span :if={goal.event_name && !goal.currency}>Custom Event</span><span :if={
-                goal.currency
-              }>Revenue Goal (<%= goal.currency %>)</span><span
-                :if={not Enum.empty?(goal.funnels)}
-                class="text-gray-400 dark:text-gray-600"
-              ><br />Belongs to funnel(s)</span>
+              <span :if={goal.page_path && goal.scroll_threshold > -1}>Scroll</span>
+              <span :if={goal.page_path && goal.scroll_threshold == -1}>Pageview</span>
+              <span :if={goal.event_name && !goal.currency}>Custom Event</span>
+              <span :if={goal.currency}>Revenue Goal ({goal.currency})</span>
+              <span :if={not Enum.empty?(goal.funnels)} class="text-gray-400 dark:text-gray-600">
+                <br />Belongs to funnel(s)
+              </span>
             </.td>
             <.td actions height="h-16">
               <.edit_button
