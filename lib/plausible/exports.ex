@@ -429,7 +429,7 @@ defmodule Plausible.Exports do
       )
 
     if include_scroll_depth? do
-      max_scroll_depth_per_visitor_q =
+      max_scroll_depth_per_session_q =
         from(e in "events_v2",
           where: ^export_filter(site_id, date_range),
           where: e.name == "engagement" and e.scroll_depth <= 100,
@@ -443,7 +443,7 @@ defmodule Plausible.Exports do
         )
 
       scroll_depth_q =
-        from(p in subquery(max_scroll_depth_per_visitor_q),
+        from(p in subquery(max_scroll_depth_per_session_q),
           select: %{
             date: p.date,
             page: p.page,

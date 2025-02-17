@@ -129,7 +129,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
   def maybe_add_scroll_depth(q, site, query) do
     if :scroll_depth in query.metrics do
-      max_per_visitor_q =
+      max_per_session_q =
         Base.base_event_query(site, query)
         |> where([e], e.name == "engagement" and e.scroll_depth <= 100)
         |> select([e], %{
@@ -151,7 +151,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         |> Enum.map(fn dim -> dynamic([p], field(p, ^dim)) end)
 
       total_scroll_depth_q =
-        subquery(max_per_visitor_q)
+        subquery(max_per_session_q)
         |> select([], %{})
         |> select_merge_as([p], %{
           # Note: No need to upscale sample size here since it would end up cancelling out due to the result being an average

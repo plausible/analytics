@@ -10,9 +10,9 @@ defmodule Plausible.Stats.SQL.Fragments do
     end
   end
 
-  defmacro scale_sample(fragment_) do
+  defmacro scale_sample(sampled_fragment) do
     quote do
-      fragment("toUInt64(round(? * any(_sample_factor)))", unquote(fragment_))
+      fragment("toUInt64(round(? * any(_sample_factor)))", unquote(sampled_fragment))
     end
   end
 
