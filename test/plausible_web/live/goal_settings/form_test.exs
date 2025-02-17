@@ -278,6 +278,24 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert updated.display_name == "Visit /updated"
       assert updated.id == g.id
     end
+
+    test "renders error when goal is invalid", %{conn: conn, site: site} do
+      {:ok, [g, g2, _]} = setup_goals(site)
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
+
+      html = render(lv)
+      assert element_exists?(html, ~s|#page_path_input_modalseq0[value="/go/to/blog/**"|)
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{page_path: "/updated", display_name: g2.display_name}})
+
+      html = render(lv)
+
+      assert html =~ "has already been taken"
+    end
   end
 
   describe "Combos integration" do
