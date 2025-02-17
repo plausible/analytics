@@ -5,7 +5,10 @@
 
   <div>
     <ul>
-      <li :for={team <- @teams} class={if team.current?, do: ["border-l m-2"], else: ["m-2"]}>
+      <li
+        :for={team <- @teams}
+        class={if team.current?, do: ["border-indigo-400 border-l-4 m-2"], else: ["m-2"]}
+      >
         <.unstyled_link
           method={if team.current?, do: "get", else: "post"}
           href={
@@ -14,7 +17,7 @@
               else: Routes.auth_path(@conn, :switch_team, team.identifier)
           }
         >
-          <div class="hover:bg-gray-700 p-4">
+          <div class="hover:bg-indigo-100 dark:hover:bg-gray-700 p-4">
             <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
               {team.name}
             </p>
