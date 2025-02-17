@@ -64,8 +64,7 @@ defmodule Plausible.Stats.QueryResult do
         imports_skip_reason: query.skip_imported_reason,
         imports_warning: @imports_warnings[query.skip_imported_reason]
       }
-      |> Enum.reject(fn {_key, value} -> is_nil(value) end)
-      |> Enum.into(%{})
+      |> Map.reject(fn {_key, value} -> is_nil(value) end)
       |> Map.merge(meta)
     else
       meta
