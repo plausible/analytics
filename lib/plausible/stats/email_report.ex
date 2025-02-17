@@ -16,6 +16,8 @@ defmodule Plausible.Stats.EmailReport do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, QueryResult}
 
+  @aggregate_metrics [:pageviews, :visitors, :bounce_rate]
+
   def get(site, query) do
     aggregate_and_compare(site, query)
     |> put_top_5_pages(site, query)
@@ -23,17 +25,15 @@ defmodule Plausible.Stats.EmailReport do
   end
 
   defp aggregate_and_compare(site, query) do
-    metrics = [:pageviews, :visitors, :bounce_rate]
-
     query =
       query
-      |> Query.set(metrics: metrics)
+      |> Query.set(metrics: @aggregate_metrics)
       |> Query.set_include(:comparisons, %{mode: "previous_period"})
       |> Query.put_comparison_utc_time_range()
 
     %QueryResult{results: [result]} = Plausible.Stats.query(site, query)
 
-    metrics
+    @aggregate_metrics
     |> Enum.with_index()
     |> Enum.map(fn {metric, idx} ->
       value = Enum.at(result.metrics, idx)
