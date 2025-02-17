@@ -84,7 +84,9 @@ export const CreateSegmentModal = ({
     segment?: SavedSegment
     onSave: (input: Pick<SavedSegment, 'name' | 'type'>) => void
   }) => {
-  const defaultName = segment?.name ? `Copy of ${segment.name}` : ''
+  const defaultName = segment?.name
+    ? `Copy of ${segment.name}`.slice(0, 255)
+    : ''
   const [name, setName] = useState(defaultName)
   const defaultType =
     segment?.type === SegmentType.site &&
