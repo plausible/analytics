@@ -82,14 +82,14 @@ export function MovePeriodArrows({ className }: { className?: string }) {
   return (
     <div
       className={classNames(
-        'flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800',
+        'flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer focus:z-10 dark:bg-gray-800',
         className
       )}
     >
       <AppNavigationLink
         className={classNames(
           sharedClass,
-          'rounded-l border-gray-300 dark:border-gray-500',
+          'rounded-l border-gray-300 dark:border-gray-500 focus:z-10',
           { [enabledClass]: canGoBack, [disabledClass]: !canGoBack }
         )}
         search={
@@ -106,7 +106,7 @@ export function MovePeriodArrows({ className }: { className?: string }) {
         <ArrowIcon direction="left" />
       </AppNavigationLink>
       <AppNavigationLink
-        className={classNames(sharedClass, {
+        className={classNames(sharedClass, 'rounded-r', {
           [enabledClass]: canGoForward,
           [disabledClass]: !canGoForward
         })}

@@ -9,6 +9,8 @@ import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
+import { useSegmentExpandedContext } from '../segments/segment-expanded-context'
+import { isSegmentFilter } from '../filtering/segments'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -154,6 +156,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   }
 
   const canClear = query.filters.length > 1
+  const canSaveAsSegment = canClear
 
   return (
     <div
@@ -222,6 +225,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
                   />
                 )}
                 {canClear && <ClearAction />}
+                {canSaveAsSegment && <SaveAsSegmentAction />}
               </Popover.Panel>
             </Transition>
           </Popover>
@@ -232,9 +236,8 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
 
 const ClearAction = () => (
   <AppNavigationLink
-    title="Clear all filters"
     className={classNames(
-      'self-start button h-9 !px-3 !py-2 flex !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
+      'button flex self-start h-9 !px-3 !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
     )}
     search={(search) => ({
       ...search,
@@ -245,3 +248,31 @@ const ClearAction = () => (
     Clear all filters
   </AppNavigationLink>
 )
+
+const SaveAsSegmentAction = () => {
+  const { query } = useQueryContext()
+  const { expandedSegment, setModal } = useSegmentExpandedContext()
+  if (expandedSegment) {
+    return null
+  }
+
+  const disabledReason = query.filters.some(isSegmentFilter)
+    ? 'Segment filters can not be saved within other segments'
+    : undefined
+  const disabled = !!disabledReason
+
+  return (
+    <AppNavigationLink
+      className={classNames(
+        'button flex self-start h-9 !px-3 whitespace-nowrap',
+        { 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed': !!disabled }
+      )}
+      title={disabledReason}
+      search={(s) => s}
+      onClick={disabled ? () => {} : () => setModal('create')}
+      state={{ expandedSegment: null }}
+    >
+      Save as segment
+    </AppNavigationLink>
+  )
+}

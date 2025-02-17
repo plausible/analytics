@@ -76,8 +76,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         conn
         |> put_status(400)
         |> json(%{
-          errors:
-            Enum.map(errors, fn {field_key, {message, opts}} -> [field_key, message, opts] end)
+          error: Segments.serialize_first_error(errors)
         })
 
       {:ok, segment} ->
@@ -111,8 +110,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         conn
         |> put_status(400)
         |> json(%{
-          errors:
-            Enum.map(errors, fn {field_key, {message, opts}} -> [field_key, message, opts] end)
+          error: Segments.serialize_first_error(errors)
         })
 
       {:ok, segment} ->

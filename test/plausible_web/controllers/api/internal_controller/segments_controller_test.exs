@@ -327,13 +327,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         })
 
       assert json_response(conn, 400) == %{
-               "errors" => [
-                 [
-                   "segment_data",
-                   "#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]",
-                   []
-                 ]
-               ]
+               "error" =>
+                 "segment_data #/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"
              }
     end
 
@@ -417,19 +412,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       end
     end
 
-    for {filters, expected_errors} <- [
-          {[],
-           [
-             [
-               "segment_data",
-               "property \"filters\" must be an array with at least one member",
-               []
-             ]
-           ]},
-          {[["foo", "bar"]],
-           [["segment_data", "#/filters/0: Invalid filter [\"foo\", \"bar\"]", []]]},
+    for {filters, expected_error} <- [
+          {[], "segment_data property \"filters\" must be an array with at least one member"},
+          {[["foo", "bar"]], "segment_data #/filters/0: Invalid filter [\"foo\", \"bar\"]"},
           {[["not", ["is", "visit:entry_page", ["/campaigns/:campaign_name"]]]],
-           [["segment_data", "Invalid filters. Deep filters are not supported.", []]]},
+           "segment_data Invalid filters. Deep filters are not supported."},
           {[
              [
                "or",
@@ -439,13 +426,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                ]
              ]
            ],
-           [
-             [
-               "segment_data",
-               "Invalid filters. Dimension `event:goal` can only be filtered at the top level.",
-               []
-             ]
-           ]}
+           "segment_data Invalid filters. Dimension `event:goal` can only be filtered at the top level."}
         ] do
       test "prevents owners from updating segments to invalid filters #{inspect(filters)} with error 400",
            %{
@@ -467,9 +448,33 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           })
 
         assert json_response(conn, 400) == %{
-                 "errors" => unquote(expected_errors)
+                 "error" => unquote(expected_error)
                }
       end
+    end
+
+    test "prevents editors from updating segments name beyond 255 characters with error 400",
+         %{
+           conn: conn,
+           user: user,
+           site: site
+         } do
+      segment =
+        insert(:segment,
+          site: site,
+          name: "any name",
+          type: :personal,
+          owner: user
+        )
+
+      conn =
+        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
+          "name" => String.duplicate("a", 256)
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "name should be at most 255 byte(s)"
+             }
     end
 
     test "editors can update a segment", %{conn: conn, user: user} do
