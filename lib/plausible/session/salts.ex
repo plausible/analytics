@@ -1,56 +1,81 @@
 defmodule Plausible.Session.Salts do
-  use Agent
+  use GenServer
   use Plausible.Repo
 
-  def start_link(_opts) do
-    Agent.start_link(
-      fn ->
-        clean_old_salts()
-
-        salts =
-          Repo.all(from s in "salts", select: s.salt, order_by: [desc: s.inserted_at], limit: 2)
-
-        case salts do
-          [current, prev] ->
-            %{previous: prev, current: current}
-
-          [current] ->
-            %{previous: nil, current: current}
-
-          [] ->
-            new = generate_and_persist_new_salt()
-            %{previous: nil, current: new}
-        end
-      end,
-      name: __MODULE__
-    )
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, opts, name: opts[:name] || __MODULE__)
   end
 
-  def fetch() do
-    Agent.get(__MODULE__, & &1)
+  @impl true
+  def init(opts) do
+    name = opts[:name] || __MODULE__
+    now = opts[:now] || DateTime.utc_now()
+    clean_old_salts(now)
+
+    ^name =
+      :ets.new(name, [
+        :named_table,
+        :set,
+        :protected,
+        {:read_concurrency, true}
+      ])
+
+    salts =
+      Repo.all(from s in "salts", select: s.salt, order_by: [desc: s.inserted_at], limit: 2)
+
+    state =
+      case salts do
+        [current, prev] ->
+          %{previous: prev, current: current}
+
+        [current] ->
+          %{previous: nil, current: current}
+
+        [] ->
+          new = generate_and_persist_new_salt(now)
+          %{previous: nil, current: new}
+      end
+
+    true = :ets.insert(name, {:state, state})
+    {:ok, name}
   end
 
-  def rotate() do
-    Agent.update(__MODULE__, fn %{current: current} ->
-      clean_old_salts()
+  def rotate(name \\ __MODULE__, now \\ DateTime.utc_now()) do
+    GenServer.call(name, {:rotate, now})
+  end
 
+  @impl true
+  def handle_call({:rotate, now}, _from, name) do
+    current = fetch(name).current
+    clean_old_salts(now)
+
+    state =
       %{
-        current: generate_and_persist_new_salt(),
+        current: generate_and_persist_new_salt(now),
         previous: current
       }
-    end)
+
+    true = :ets.insert(name, {:state, state})
+    {:reply, :ok, name}
   end
 
-  defp generate_and_persist_new_salt() do
+  def fetch(name \\ __MODULE__) do
+    [state: state] = :ets.lookup(name, :state)
+
+    state
+  end
+
+  defp generate_and_persist_new_salt(now) do
     salt = :crypto.strong_rand_bytes(16)
 
-    Repo.insert_all("salts", [%{salt: salt, inserted_at: DateTime.utc_now()}])
+    Repo.insert_all("salts", [%{salt: salt, inserted_at: now}])
     salt
   end
 
-  defp clean_old_salts() do
-    Repo.delete_all(
-      from s in "salts", where: s.inserted_at < fragment("now() - '48 hours'::interval")
-    )
+  defp clean_old_salts(now) do
+    h48_ago =
+      DateTime.shift(now, hour: -48)
+
+    Repo.delete_all(from s in "salts", where: s.inserted_at < ^h48_ago)
   end
 end

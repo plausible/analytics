@@ -196,7 +196,6 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  # TODO: make it possible to query events from engagement events (total conversions for page scroll goals)
   def event_metric(:events) do
     wrap_alias([e], %{
       events:
