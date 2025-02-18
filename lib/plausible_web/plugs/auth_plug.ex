@@ -7,9 +7,7 @@ defmodule PlausibleWeb.AuthPlug do
   """
 
   import Plug.Conn
-  use Plausible.Repo
 
-  alias Plausible.Teams
   alias PlausibleWeb.UserAuth
 
   def init(options) do
@@ -21,25 +19,33 @@ defmodule PlausibleWeb.AuthPlug do
       {:ok, user_session} ->
         user = user_session.user
 
+        current_team_id = Plug.Conn.get_session(conn, "current_team_id")
+
         current_team =
-          conn
-          |> Plug.Conn.get_session("current_team_id")
-          |> Plausible.Teams.get()
-          |> Teams.with_subscription()
-          |> Repo.preload(:owners)
+          if current_team_id do
+            user.team_memberships
+            |> Enum.find(%{}, &(&1.team_id == current_team_id))
+            |> Map.get(:team)
+          end
 
         current_team_owner? =
-          case current_team && Teams.Memberships.team_role(current_team, user) do
-            {:ok, :owner} -> true
-            _ -> false
-          end
+          (current_team || %{})
+          |> Map.get(:owners, [])
+          |> Enum.any?(&(&1.id == user.id))
 
         my_team =
-          case {current_team_owner?, current_team, user} do
-            {true, %Teams.Team{}, _} -> current_team
-            {_, _, %{team_memberships: [%{team: team} | _]}} -> team
-            {_, _, %{team_memberships: []}} -> nil
+          if current_team_owner? do
+            current_team
+          else
+            user.team_memberships
+            # NOTE: my_team should eventually only hold user's personal team. This requires
+            # additional adjustments, which will be done in follow-up work.
+            # |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
+            |> List.first(%{})
+            |> Map.get(:team)
           end
+
+        teams_count = length(user.team_memberships)
 
         Plausible.OpenTelemetry.add_user_attributes(user)
         Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
@@ -49,7 +55,8 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:current_user_session, user_session)
         |> assign(:my_team, my_team)
         |> assign(:current_team, current_team || my_team)
-        |> assign(:multiple_teams?, Teams.Users.teams_count(user) > 1)
+        |> assign(:teams_count, teams_count)
+        |> assign(:multiple_teams?, teams_count > 1)
 
       _ ->
         conn

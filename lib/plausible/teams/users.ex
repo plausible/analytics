@@ -33,15 +33,6 @@ defmodule Plausible.Teams.Users do
     |> Repo.preload(:owners)
   end
 
-  def teams_count(user) do
-    from(
-      tm in Teams.Membership,
-      where: tm.user_id == ^user.id,
-      where: tm.role != :guest
-    )
-    |> Repo.aggregate(:count)
-  end
-
   def team_member?(user, opts \\ []) do
     excluded_team_ids = Keyword.get(opts, :except, [])
 
