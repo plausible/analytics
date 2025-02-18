@@ -99,7 +99,7 @@ export const SearchableSegmentsSection = ({
             {data.length > initialSliceLength && (
               <SearchInput
                 placeholderUnfocused="Press / to search"
-                className="ml-auto w-full py-1"
+                className="ml-auto w-full py-1 text-sm"
                 onSearch={setSearch}
               />
             )}
@@ -154,6 +154,14 @@ export const SearchableSegmentsSection = ({
             )}
         </>
       )}
+      {!!data?.length && searchValue && !showableSlice?.length && (
+        <Tooltip className="group" info={null}>
+          <div className={classNames(linkClassName)}>
+            No segments found. Clear search to show all.
+          </div>
+        </Tooltip>
+      )}
+
       {listQuery.status === 'pending' && (
         <div className="p-4 flex justify-center items-center">
           <div className="loading sm">
@@ -231,8 +239,6 @@ export const useSegmentPrefetch = ({ id }: { id: string }) => {
 const SegmentLink = ({
   id,
   name,
-  // type,
-  // owner_id,
   appliedSegmentIds,
   closeList
 }: SavedSegment & { appliedSegmentIds: number[]; closeList: () => void }) => {
@@ -244,7 +250,6 @@ const SegmentLink = ({
     <AppNavigationLink
       className={linkClassName}
       key={id}
-      // active={appliedSegmentIds.includes(id)}
       onMouseEnter={prefetchSegment}
       onClick={closeList}
       search={(search) => {

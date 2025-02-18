@@ -64,10 +64,15 @@ export const COMPARISON_MATCH_MODE_LABELS = {
 
 export const DEFAULT_COMPARISON_MODE = ComparisonMode.previous_period
 
-export const COMPARISON_DISABLED_PERIODS = [
-  QueryPeriod.realtime,
-  QueryPeriod.all
-]
+const COMPARISON_DISABLED_PERIODS = [QueryPeriod.realtime, QueryPeriod.all]
+
+export const isComparisonForbidden = ({
+  period,
+  segmentIsExpanded
+}: {
+  period: QueryPeriod
+  segmentIsExpanded: boolean
+}) => COMPARISON_DISABLED_PERIODS.includes(period) || segmentIsExpanded
 
 export const DEFAULT_COMPARISON_MATCH_MODE = ComparisonMatchMode.MatchDayOfWeek
 
@@ -501,7 +506,8 @@ export function getSavedTimePreferencesFromStorage({
 export function getDashboardTimeSettings({
   searchValues,
   storedValues,
-  defaultValues
+  defaultValues,
+  segmentIsExpanded
 }: {
   searchValues: Record<'period' | 'comparison' | 'match_day_of_week', unknown>
   storedValues: ReturnType<typeof getSavedTimePreferencesFromStorage>
@@ -509,6 +515,7 @@ export function getDashboardTimeSettings({
     DashboardQuery,
     'period' | 'comparison' | 'match_day_of_week'
   >
+  segmentIsExpanded: boolean
 }): Pick<DashboardQuery, 'period' | 'comparison' | 'match_day_of_week'> {
   let period: QueryPeriod
   if (isValidPeriod(searchValues.period)) {
@@ -521,7 +528,7 @@ export function getDashboardTimeSettings({
 
   let comparison: ComparisonMode | null
 
-  if ([QueryPeriod.realtime, QueryPeriod.all].includes(period)) {
+  if (isComparisonForbidden({ period, segmentIsExpanded })) {
     comparison = null
   } else {
     comparison = isValidComparison(searchValues.comparison)

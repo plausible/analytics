@@ -4,6 +4,7 @@ import React, {
   ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useState
 } from 'react'
 import { SavedSegment, SegmentData } from '../filtering/segments'
@@ -34,6 +35,29 @@ export const useSegmentExpandedContext = () => {
   return useContext(SegmentExpandedContext)
 }
 
+const getExpandedSegment = ({
+  state
+}: {
+  state: Record<string, unknown> | undefined
+}): SavedSegment & { segment_data: SegmentData } => {
+  const locationStateExpandedSegment = state?.expandedSegment
+  return locationStateExpandedSegment as SavedSegment & {
+    segment_data: SegmentData
+  }
+}
+
+export const useIsSegmentExpanded = ({
+  state
+}: {
+  state: Record<string, unknown>
+}) => {
+  const isSegmentExpanded = useMemo(
+    () => !!getExpandedSegment({ state }),
+    [state]
+  )
+  return isSegmentExpanded
+}
+
 export default function SegmentExpandedContextProvider({
   children
 }: {
@@ -50,7 +74,9 @@ export default function SegmentExpandedContextProvider({
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
 
-  const locationStateExpandedSegment = location.state?.expandedSegment
+  const locationStateExpandedSegment = getExpandedSegment({
+    state: location.state
+  })
 
   useEffect(() => {
     // copy location.state to state
@@ -58,12 +84,10 @@ export default function SegmentExpandedContextProvider({
       setState({
         expandedSegment: locationStateExpandedSegment
       })
-    }
-    if (locationStateExpandedSegment === null) {
+    } else if (locationStateExpandedSegment === null) {
       setState({
         expandedSegment: segmentExpandedContextDefaultValue.expandedSegment
       })
-      // setModal(segmentExpandedContextDefaultValue.modal)
     }
   }, [locationStateExpandedSegment])
 
@@ -79,7 +103,6 @@ export default function SegmentExpandedContextProvider({
       })
       // overwrite undefined locationState with current expandedSegment, to handle Back navigation correctly
     } else if (locationStateExpandedSegment === undefined) {
-      // console.log('Slowness')
       navigate({
         search: (s) => s,
         state: {

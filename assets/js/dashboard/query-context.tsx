@@ -19,6 +19,7 @@ import {
   queryDefaultValue,
   postProcessFilters
 } from './query'
+import { useIsSegmentExpanded } from './segments/segment-expanded-context'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
@@ -55,14 +56,16 @@ export default function QueryContextProvider({
     ...otherSearch
   } = useMemo(() => parseSearch(location.search), [location.search])
 
+  const segmentIsExpanded = useIsSegmentExpanded({ state: location.state })
+
   const query = useMemo(() => {
     const defaultValues = queryDefaultValue
     const storedValues = getSavedTimePreferencesFromStorage({ site })
-
     const timeQuery = getDashboardTimeSettings({
       searchValues: { period, comparison, match_day_of_week },
       storedValues,
-      defaultValues
+      defaultValues,
+      segmentIsExpanded
     })
 
     return {
@@ -111,7 +114,8 @@ export default function QueryContextProvider({
     period,
     to,
     with_imported,
-    site
+    site,
+    segmentIsExpanded
   ])
 
   useSaveTimePreferencesToStorage({
