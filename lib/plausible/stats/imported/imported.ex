@@ -265,16 +265,11 @@ defmodule Plausible.Stats.Imported do
           fragment(
             """
             notEmpty(
-              arrayFilter(
-                goal_idx -> ?[goal_idx] = 'page' AND match(?, ?[goal_idx]),
-                ?
-              ) as indices
+              multiMatchAllIndices(?, ?) AS indices
             )
             """,
-            type(^goal_join_data.types, {:array, :string}),
             i.page,
-            type(^goal_join_data.page_regexes, {:array, :string}),
-            type(^goal_join_data.indices, {:array, :integer})
+            type(^goal_join_data.page_goal_regexes, {:array, :string})
           )
         )
         |> join(:inner, [_i], index in fragment("indices"), hints: "ARRAY", on: true)

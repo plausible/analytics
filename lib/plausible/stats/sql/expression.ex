@@ -329,23 +329,34 @@ defmodule Plausible.Stats.SQL.Expression do
     quote do
       fragment(
         """
-        arrayIntersect(
-          multiMatchAllIndices(?, ?),
-          arrayMap(
-            (expected_name, threshold, index) -> if(expected_name = ? and ? between threshold and 100, index, -1),
-            ?,
-            ?,
+        if(
+          ? IN ('pageview', 'engagement'),
+          arrayIntersect(
+            multiMatchAllIndices(
+              ?,
+              ?
+            ),
+            arrayMap(
+              (threshold, index) -> if(? between threshold and 100, index, -1),
+              ?,
+              ?
+            )
+          ),
+          createCustomEventArray(
+            indexOf(?, ?),
             ?
           )
         )
         """,
-        e.pathname,
-        type(^unquote(goal_join_data).page_regexes, {:array, :string}),
         e.name,
+        e.pathname,
+        type(^unquote(goal_join_data).page_and_scroll_goal_regexes, {:array, :string}),
         e.scroll_depth,
-        type(^unquote(goal_join_data).event_names_by_type, {:array, :string}),
         type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
-        type(^unquote(goal_join_data).indices, {:array, :integer})
+        type(^unquote(goal_join_data).page_and_scroll_goal_indices, {:array, :integer}),
+        type(^unquote(goal_join_data).custom_event_names, {:array, :string}),
+        e.name,
+        ^unquote(goal_join_data).custom_event_names_start_index
       )
     end
   end
