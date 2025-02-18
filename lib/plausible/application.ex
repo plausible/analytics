@@ -175,7 +175,7 @@ defmodule Plausible.Application do
 
   defp maybe_add_sentry_pool(pool_config, default) do
     case Sentry.Config.dsn() do
-      {"http" <> _rest = url, _, _} ->
+      %{endpoint_uri: "http" <> _rest = url} ->
         Map.put(pool_config, url, Config.Reader.merge(default, size: 50))
 
       nil ->
