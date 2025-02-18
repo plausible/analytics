@@ -33,7 +33,9 @@ import { SegmentModalState } from './segments/segment-expanded-context'
 const queryContextDefaultValue = {
   query: queryDefaultValue,
   otherSearch: {} as Record<string, unknown>,
-  expandedSegment: null as SavedSegment | null,
+  expandedSegment: null as
+    | (SavedSegment & { segment_data: SegmentData })
+    | null,
   modal: null as SegmentModalState,
   setModal: (_modal: SegmentModalState) => {}
 }
@@ -46,33 +48,35 @@ export const useQueryContext = () => {
   return useContext(QueryContext)
 }
 
-function useDefiniteLocation<T>() {
+function useDefiniteLocationState<T>(key: string) {
   const location = useLocation()
+  const rawState = useMemo(() => location.state ?? {}, [location.state])
+
   const navigate = useAppNavigate()
   // Initialize with location.state if defined, otherwise null.
-  const [definiteState, setDefiniteState] = useState<T | null>(
-    location.state !== undefined ? (location.state as T) : null
+  const [definiteValue, setDefiniteValue] = useState<T | null>(
+    rawState[key] === undefined ? null : (rawState[key] as T)
   )
 
   // Effect: Whenever explicitState changes, sync it into location.state.
   useEffect(() => {
     // Normalize location.state so that undefined is treated as null.
-    if (location.state === undefined) {
+    if (rawState[key] === undefined) {
       navigate({
         search: (s) => s,
-        replace: true,
-        state: definiteState ?? null
+        state: { ...rawState, [key]: definiteValue },
+        replace: true
       })
     }
-  }, [definiteState, location.state, navigate])
+  }, [definiteValue, rawState, navigate, key])
 
   useEffect(() => {
-    if (location.state !== undefined && location.state !== definiteState) {
-      setDefiniteState(location.state as T)
+    if (rawState[key] !== undefined && rawState[key] !== definiteValue) {
+      setDefiniteValue(rawState[key] as T)
     }
-  }, [location.state, definiteState])
+  }, [rawState, definiteValue, key])
 
-  return { location, definiteState }
+  return { location, definiteValue }
 }
 
 export default function QueryContextProvider({
@@ -80,13 +84,12 @@ export default function QueryContextProvider({
 }: {
   children: ReactNode
 }) {
-  const { location, definiteState } = useDefiniteLocation<{
-    expandedSegment: SavedSegment & { segment_data: SegmentData }
-  }>()
+  const { location, definiteValue: expandedSegment } = useDefiniteLocationState<
+    SavedSegment & { segment_data: SegmentData }
+  >('expandedSegment')
   const navigate = useAppNavigate()
   const site = useSiteContext()
 
-  const expandedSegment = definiteState?.expandedSegment ?? null
   const [modal, setModal] = useState<SegmentModalState>(null)
 
   const {
@@ -165,8 +168,8 @@ export default function QueryContextProvider({
   ])
 
   useEffect(() => {
-    // clear edit mode on clearing all filters
-    if (!query.filters.length && expandedSegment) {
+    // clear edit mode on clearing all filters or removing last filter
+    if (!!expandedSegment && !query.filters.length) {
       navigate({
         search: (s) => s,
         state: {
