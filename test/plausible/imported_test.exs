@@ -75,48 +75,6 @@ defmodule Plausible.ImportedTest do
     end
   end
 
-  describe "latest_import_end_date/1" do
-    test "returns nil if no site_imports exist" do
-      site = insert(:site)
-
-      assert is_nil(Imported.latest_import_end_date(site))
-    end
-
-    test "returns nil when only incomplete or failed imports are present" do
-      site = insert(:site)
-
-      _import1 = insert(:site_import, site: site, status: :pending)
-      _import2 = insert(:site_import, site: site, status: :importing)
-      _import3 = insert(:site_import, site: site, status: :failed)
-      _rogue_import = insert(:site_import, site: build(:site), status: :completed)
-
-      assert is_nil(Imported.latest_import_end_date(site))
-    end
-
-    test "returns start and end dates considering all imports" do
-      site = insert(:site)
-
-      _import1 =
-        insert(:site_import,
-          site: site,
-          start_date: ~D[2020-04-02],
-          end_date: ~D[2022-06-22],
-          status: :completed,
-          legacy: true
-        )
-
-      _import2 =
-        insert(:site_import,
-          site: site,
-          start_date: ~D[2022-06-22],
-          end_date: ~D[2024-01-08],
-          status: :completed
-        )
-
-      assert Imported.latest_import_end_date(site) == ~D[2024-01-08]
-    end
-  end
-
   describe "completed_imports_in_query_range/2" do
     setup do
       site = insert(:site)

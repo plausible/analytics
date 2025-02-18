@@ -250,7 +250,7 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_scroll_depth(changeset, %{} = request_body) do
-    if Changeset.get_field(changeset, :event_name) in ["pageleave", "engagement"] do
+    if Changeset.get_field(changeset, :event_name) == "engagement" do
       scroll_depth =
         case request_body["sd"] do
           sd when is_integer(sd) and sd >= 0 and sd <= 100 -> sd

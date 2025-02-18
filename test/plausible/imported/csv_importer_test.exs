@@ -363,8 +363,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
-    @tag skip: "To be re-enabled in the next PR"
-    test "imports scroll_depth as null when the column does not exist in pages CSV",
+    test "imports scroll_depth as 0 when the column does not exist in pages CSV",
          %{site: site, user: user} = ctx do
       _ = ctx
 
@@ -424,9 +423,23 @@ defmodule Plausible.Imported.CSVImporterTest do
                status: :completed
              } = Repo.get_by!(SiteImport, site_id: site.id)
 
-      # q = from(i in "imported_pages", where: i.site_id == ^site.id, select: i.scroll_depth)
+      q =
+        from(
+          i in "imported_pages",
+          where: i.site_id == ^site.id,
+          select: %{
+            total_scroll_depth: i.total_scroll_depth,
+            total_scroll_depth_visits: i.total_scroll_depth_visits
+          }
+        )
 
-      # assert List.duplicate(nil, 16) == Plausible.IngestRepo.all(q)
+      assert List.duplicate(
+               %{
+                 total_scroll_depth: 0,
+                 total_scroll_depth_visits: 0
+               },
+               16
+             ) == Plausible.IngestRepo.all(q)
     end
 
     test "accepts cells without quotes", %{site: site, user: user} = ctx do
@@ -1033,7 +1046,6 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
 
     @tag :tmp_dir
-    @tag skip: "To be re-enabled in the next PR"
     test "scroll_depth", %{conn: conn, user: user, tmp_dir: tmp_dir} do
       exported_site = new_site(owner: user)
       imported_site = new_site(owner: user)
@@ -1109,24 +1121,39 @@ defmodule Plausible.Imported.CSVImporterTest do
           select: %{
             date: i.date,
             page: i.page,
-            scroll_depth: i.scroll_depth,
-            pageleave_visitors: i.pageleave_visitors
+            total_scroll_depth: i.total_scroll_depth,
+            total_scroll_depth_visits: i.total_scroll_depth_visits
           }
         )
         |> Plausible.IngestRepo.all()
 
-      assert %{date: expected_start_date, page: "/", scroll_depth: 20, pageleave_visitors: 1} in imported_data
+      assert %{
+               date: expected_start_date,
+               page: "/",
+               total_scroll_depth: 20,
+               total_scroll_depth_visits: 1
+             } in imported_data
 
       assert %{
                date: expected_start_date,
                page: "/another",
-               scroll_depth: 50,
-               pageleave_visitors: 2
+               total_scroll_depth: 50,
+               total_scroll_depth_visits: 2
              } in imported_data
 
-      assert %{date: expected_start_date, page: "/blog", scroll_depth: 180, pageleave_visitors: 3} in imported_data
+      assert %{
+               date: expected_start_date,
+               page: "/blog",
+               total_scroll_depth: 180,
+               total_scroll_depth_visits: 3
+             } in imported_data
 
-      assert %{date: expected_end_date, page: "/blog", scroll_depth: nil, pageleave_visitors: 0} in imported_data
+      assert %{
+               date: expected_end_date,
+               page: "/blog",
+               total_scroll_depth: 0,
+               total_scroll_depth_visits: 0
+             } in imported_data
 
       # assert via stats queries that scroll_depth from imported
       # data matches the scroll_depth from native data
@@ -1154,7 +1181,6 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
 
     @tag :tmp_dir
-    @tag skip: "To be re-enabled in the next PR"
     test "does not include scroll depth without existing engagement data", %{
       user: user,
       tmp_dir: tmp_dir

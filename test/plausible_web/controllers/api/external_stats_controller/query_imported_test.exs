@@ -1524,7 +1524,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       refute meta["metric_warnings"]["scroll_depth"]
     end
 
-    @tag skip: "To be re-enabled in the next PR"
     test "does not return warning when imported scroll depth exists", %{
       conn: conn,
       site: site
@@ -1548,8 +1547,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
         build(:imported_pages,
           page: "/",
           date: ~D[2021-02-01],
-          scroll_depth: 80,
-          pageleave_visitors: 1
+          total_scroll_depth: 80,
+          total_scroll_depth_visits: 1
         ),
         build(:imported_pages, page: "/", date: ~D[2021-02-28])
       ])
