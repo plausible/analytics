@@ -2,7 +2,6 @@
 
 import React from 'react'
 import classNames from 'classnames'
-import { useSegmentExpandedContext } from '../../segments/segment-expanded-context'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../../components/popover'
 import { AppNavigationLink } from '../../navigation/use-app-navigate'
@@ -13,6 +12,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { useQueryContext } from '../../query-context'
 
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -25,7 +25,7 @@ const buttonClassName = classNames(
 )
 
 export const SegmentMenu = () => {
-  const { expandedSegment, setModal } = useSegmentExpandedContext()
+  const { expandedSegment, setModal } = useQueryContext()
 
   if (!expandedSegment) {
     return null

@@ -15,7 +15,6 @@ import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanLabels } from '../../util/filters'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
-import { useSegmentExpandedContext } from '../../segments/segment-expanded-context'
 import { SegmentAuthorship } from '../../segments/segment-authorship'
 import { SearchInput } from '../../components/search-input'
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
@@ -59,7 +58,7 @@ export const SearchableSegmentsSection = ({
 }: {
   closeList: () => void
 }) => {
-  const { query } = useQueryContext()
+  const { query, expandedSegment } = useQueryContext()
   const segmentFilter = query.filters.find(isSegmentFilter)
   const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
 
@@ -80,8 +79,6 @@ export const SearchableSegmentsSection = ({
   const showableSlice = showAll
     ? filteredData
     : filteredData?.slice(0, initialSliceLength)
-
-  const { expandedSegment } = useSegmentExpandedContext()
 
   if (expandedSegment) {
     return null

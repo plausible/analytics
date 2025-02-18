@@ -9,7 +9,6 @@ import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
-import { useSegmentExpandedContext } from '../segments/segment-expanded-context'
 import { isSegmentFilter } from '../filtering/segments'
 
 // Component structure is
@@ -250,8 +249,7 @@ const ClearAction = () => (
 )
 
 const SaveAsSegmentAction = () => {
-  const { query } = useQueryContext()
-  const { expandedSegment, setModal } = useSegmentExpandedContext()
+  const { query, expandedSegment, setModal } = useQueryContext()
   if (expandedSegment) {
     return null
   }

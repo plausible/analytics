@@ -1,7 +1,7 @@
 /* @format */
 import React from 'react'
 import { NavigateKeybind } from './keybinding'
-import { useSegmentExpandedContext } from './segments/segment-expanded-context'
+import { useQueryContext } from './query-context'
 
 const ClearFiltersKeybind = () => (
   <NavigateKeybind
@@ -22,6 +22,6 @@ const ClearFiltersKeybind = () => (
 )
 
 export function DashboardKeybinds() {
-  const { modal } = useSegmentExpandedContext()
+  const { modal } = useQueryContext()
   return modal === null && <ClearFiltersKeybind />
 }
