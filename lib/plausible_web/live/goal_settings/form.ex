@@ -524,7 +524,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-value-tab="scroll"
       phx-target={@myself}
     >
-      Scroll
+      Scroll Depth
     </a>
     """
   end
