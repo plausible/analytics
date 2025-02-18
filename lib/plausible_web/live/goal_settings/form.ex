@@ -249,7 +249,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="scroll-form" class="py-2" x-data={@js} {@rest}>
       <.label for={"scroll_threshold_input_#{@suffix}"}>
-        Scroll Percentage Threshold (0-100)
+        Scroll Percentage Threshold (1-100)
       </.label>
 
       <.input
@@ -257,7 +257,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         required
         field={@f[:scroll_threshold]}
         type="number"
-        min="0"
+        min="1"
         max="100"
         step="1"
         x-model="scrollThreshold"
