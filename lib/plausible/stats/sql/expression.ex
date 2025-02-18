@@ -330,16 +330,20 @@ defmodule Plausible.Stats.SQL.Expression do
       fragment(
         """
         arrayConcat(
-          arrayIntersect(
-            multiMatchAllIndices(
-              ?,
-              ?
+          if(
+            ? IN ('pageview', 'engagement'),
+            arrayIntersect(
+              multiMatchAllIndices(
+                ?,
+                ?
+              ),
+              arrayFilter(
+                (index, threshold) -> ? between threshold and 100,
+                ?,
+                ?
+              )
             ),
-            arrayFilter(
-              (index, threshold) -> ? between threshold and 100,
-              ?,
-              ?
-            )
+            []
           ),
           createCustomEventArray(
             indexOf(?, ?),
@@ -347,6 +351,7 @@ defmodule Plausible.Stats.SQL.Expression do
           )
         )
         """,
+        e.name,
         e.pathname,
         type(^unquote(goal_join_data).page_and_scroll_goal_regexes, {:array, :string}),
         e.scroll_depth,
