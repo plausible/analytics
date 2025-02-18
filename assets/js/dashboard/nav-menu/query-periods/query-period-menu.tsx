@@ -25,7 +25,7 @@ import {
   getSearchToApplyCustomDates,
   isComparisonForbidden
 } from '../../query-time-periods'
-import { useLocation, useMatch } from 'react-router-dom'
+import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../../components/popover'
@@ -40,7 +40,6 @@ import {
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
 import { MenuSeparator } from '../nav-menu-components'
-import { useIsSegmentExpanded } from '../../segments/segment-expanded-context'
 
 function QueryPeriodMenuKeybinds({
   closeDropdown,
@@ -122,9 +121,7 @@ const QueryPeriodMenuInner = ({
   toggleCalendar: () => void
 }) => {
   const site = useSiteContext()
-  const { query } = useQueryContext()
-  const location = useLocation()
-  const segmentIsExpanded = useIsSegmentExpanded({ state: location.state })
+  const { query, expandedSegment } = useQueryContext()
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -143,12 +140,12 @@ const QueryPeriodMenuInner = ({
       ],
       extraGroups: isComparisonForbidden({
         period: query.period,
-        segmentIsExpanded
+        segmentIsExpanded: !!expandedSegment
       })
         ? []
         : [[compareLink]]
     })
-  }, [site, query, closeDropdown, toggleCalendar, segmentIsExpanded])
+  }, [site, query, closeDropdown, toggleCalendar, expandedSegment])
 
   return (
     <>

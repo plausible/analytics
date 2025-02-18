@@ -1,5 +1,12 @@
 /* @format */
-import React, { createContext, useMemo, useContext, ReactNode } from 'react'
+import React, {
+  createContext,
+  useMemo,
+  useContext,
+  ReactNode,
+  useEffect,
+  useState
+} from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
@@ -19,11 +26,16 @@ import {
   queryDefaultValue,
   postProcessFilters
 } from './query'
-import { useIsSegmentExpanded } from './segments/segment-expanded-context'
+import { SavedSegment, SegmentData } from './filtering/segments'
+import { useAppNavigate } from './navigation/use-app-navigate'
+import { SegmentModalState } from './segments/segment-expanded-context'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
-  otherSearch: {} as Record<string, unknown>
+  otherSearch: {} as Record<string, unknown>,
+  expandedSegment: null as SavedSegment | null,
+  modal: null as SegmentModalState,
+  setModal: (_modal: SegmentModalState) => {}
 }
 
 export type QueryContextValue = typeof queryContextDefaultValue
@@ -34,13 +46,49 @@ export const useQueryContext = () => {
   return useContext(QueryContext)
 }
 
+function useDefiniteLocation<T>() {
+  const location = useLocation()
+  const navigate = useAppNavigate()
+  // Initialize with location.state if defined, otherwise null.
+  const [definiteState, setDefiniteState] = useState<T | null>(
+    location.state !== undefined ? (location.state as T) : null
+  )
+
+  // Effect: Whenever explicitState changes, sync it into location.state.
+  useEffect(() => {
+    // Normalize location.state so that undefined is treated as null.
+    if (location.state === undefined) {
+      navigate({
+        search: (s) => s,
+        replace: true,
+        state: definiteState ?? null
+      })
+    }
+  }, [definiteState, location.state, navigate])
+
+  useEffect(() => {
+    if (location.state !== undefined && location.state !== definiteState) {
+      setDefiniteState(location.state as T)
+    }
+  }, [location.state, definiteState])
+
+  return { location, definiteState }
+}
+
 export default function QueryContextProvider({
   children
 }: {
   children: ReactNode
 }) {
-  const location = useLocation()
+  const { location, definiteState } = useDefiniteLocation<{
+    expandedSegment: SavedSegment & { segment_data: SegmentData }
+  }>()
+  const navigate = useAppNavigate()
   const site = useSiteContext()
+
+  const expandedSegment = definiteState?.expandedSegment ?? null
+  const [modal, setModal] = useState<SegmentModalState>(null)
+
   const {
     compare_from,
     compare_to,
@@ -56,8 +104,6 @@ export default function QueryContextProvider({
     ...otherSearch
   } = useMemo(() => parseSearch(location.search), [location.search])
 
-  const segmentIsExpanded = useIsSegmentExpanded({ state: location.state })
-
   const query = useMemo(() => {
     const defaultValues = queryDefaultValue
     const storedValues = getSavedTimePreferencesFromStorage({ site })
@@ -65,7 +111,7 @@ export default function QueryContextProvider({
       searchValues: { period, comparison, match_day_of_week },
       storedValues,
       defaultValues,
-      segmentIsExpanded
+      segmentIsExpanded: !!expandedSegment
     })
 
     return {
@@ -115,8 +161,21 @@ export default function QueryContextProvider({
     to,
     with_imported,
     site,
-    segmentIsExpanded
+    expandedSegment
   ])
+
+  useEffect(() => {
+    // clear edit mode on clearing all filters
+    if (!query.filters.length && expandedSegment) {
+      navigate({
+        search: (s) => s,
+        state: {
+          expandedSegment: null
+        },
+        replace: true
+      })
+    }
+  }, [query.filters, expandedSegment, navigate])
 
   useSaveTimePreferencesToStorage({
     site,
@@ -130,7 +189,15 @@ export default function QueryContextProvider({
   }, [])
 
   return (
-    <QueryContext.Provider value={{ query, otherSearch }}>
+    <QueryContext.Provider
+      value={{
+        query,
+        otherSearch,
+        expandedSegment,
+        modal,
+        setModal
+      }}
+    >
       {children}
     </QueryContext.Provider>
   )

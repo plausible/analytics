@@ -1,7 +1,6 @@
 /** @format */
 
 import React from 'react'
-import { useSegmentExpandedContext } from './segment-expanded-context'
 import {
   CreateSegmentModal,
   DeleteSegmentModal,
@@ -26,9 +25,8 @@ export const RoutelessSegmentModals = () => {
   const navigate = useAppNavigate()
   const queryClient = useQueryClient()
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { query, expandedSegment, modal, setModal } = useQueryContext()
   const user = useUserContext()
-  const { expandedSegment, modal, setModal } = useSegmentExpandedContext()
 
   const patchSegment = useMutation({
     mutationFn: async ({
