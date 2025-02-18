@@ -40,6 +40,8 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
 
   @all_roles [:public, :viewer, :admin, :editor, :super_admin, :owner]
 
+  def all_roles(), do: @all_roles
+
   def init([]), do: {@all_roles, nil}
 
   def init(:all_roles), do: {@all_roles, nil}
