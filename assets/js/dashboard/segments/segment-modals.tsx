@@ -478,8 +478,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                     labels: data.segment_data.labels
                   })}
                   state={{
-                    expandedSegment: data,
-                    modal: null
+                    expandedSegment: data
                   }}
                 >
                   Edit segment
