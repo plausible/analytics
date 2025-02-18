@@ -336,8 +336,8 @@ defmodule Plausible.Stats.SQL.Expression do
               ?,
               ?
             ),
-            arrayMap(
-              (threshold, index) -> if(? between threshold and 100, index, -1),
+            arrayFilter(
+              (index, threshold) -> ? between threshold and 100,
               ?,
               ?
             )
@@ -352,8 +352,8 @@ defmodule Plausible.Stats.SQL.Expression do
         e.pathname,
         type(^unquote(goal_join_data).page_and_scroll_goal_regexes, {:array, :string}),
         e.scroll_depth,
-        type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
         type(^unquote(goal_join_data).page_and_scroll_goal_indices, {:array, :integer}),
+        type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
         type(^unquote(goal_join_data).custom_event_names, {:array, :string}),
         e.name,
         ^unquote(goal_join_data).custom_event_names_start_index
