@@ -34,6 +34,9 @@ PG_FLAGS ?= --detach -e POSTGRES_PASSWORD="postgres" -p 5432:5432 --name plausib
 postgres: ## Start a container with a recent version of postgres
 	docker run $(PG_FLAGS) --volume=plausible_db:/var/lib/postgresql/data postgres:latest
 
+postgres-client: ## Connect to postgres
+	docker run $(PG_FLAGS) --volume=plausible_db:/var/lib/postgresql/data postgres:latest
+
 postgres-prod: ## Start a container with the same version of postgres as the one in prod
 	docker run $(PG_FLAGS) --volume=plausible_db_prod:/var/lib/postgresql/data postgres:15
 

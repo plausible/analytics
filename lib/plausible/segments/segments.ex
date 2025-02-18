@@ -232,6 +232,17 @@ defmodule Plausible.Segments do
     )
   end
 
+  def user_removed(user) do
+    Repo.delete_all(
+      from segment in Segment,
+        as: :segment,
+        where: segment.owner_id == ^user.id,
+        where: segment.type == :personal
+    )
+
+    #  Site segments are set to owner=null via ON DELETE SET NULL
+  end
+
   def delete_one(user_id, %Plausible.Site{} = site, site_role, segment_id) do
     with {:ok, segment} <- get_one(user_id, site, site_role, segment_id) do
       cond do
