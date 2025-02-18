@@ -42,5 +42,6 @@ defmodule Plausible.Repo.Migrations.AddMissingIndexes do
 
     create index(:google_auth, [:user_id], concurrently: true)
     create index(:segments, [:owner_id], concurrently: true)
+    create index(:api_keys, [:user_id], concurrently: true)
   end
 end
