@@ -85,8 +85,8 @@ function TopBarInner({ showCurrentVisitors }: TopBarProps) {
             />
           </div>
           <div className="flex gap-x-4 shrink-0">
-            <SegmentMenu />
             <FilterMenu />
+            <SegmentMenu />
             <QueryPeriodsPicker />
             <RoutelessSegmentModals />
           </div>
