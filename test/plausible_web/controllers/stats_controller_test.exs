@@ -667,8 +667,20 @@ defmodule PlausibleWeb.StatsControllerTest do
     |> Enum.map(&String.split(&1, ","))
   end
 
-  describe "GET /:domain/export - via shared link" do
+  describe "GET /:domain/export - via shared link as anonymous user" do
     setup [:create_user, :create_site, :set_scroll_depth_visible_at]
+
+    test "export is not allowed for anonymous users", %{conn: conn, site: site} do
+      link = insert(:shared_link, site: site)
+
+      populate_exported_stats(site)
+      conn = get(conn, "/" <> site.domain <> "/export?auth=#{link.slug}&date=2021-10-20")
+      assert response(conn, 404)
+    end
+  end
+
+  describe "GET /:domain/export - via shared link" do
+    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       link = insert(:shared_link, site: site)
