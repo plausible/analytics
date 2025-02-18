@@ -86,12 +86,12 @@ defmodule Plausible.Stats.Goals do
         goals
         |> Enum.filter(&(Plausible.Goal.type(&1) == :page))
         |> Enum.map(&Filters.Utils.page_regex(&1.page_path)),
-      event_names_imports: Enum.map(goals, &to_string(&1.event_name)),
+      event_names_imports: goals |> Enum.map(&to_string(&1.event_name)),
       page_and_scroll_goal_indices:
-        Enum.with_index(page_and_scroll_goals, 1) |> Enum.map(fn {_goal, idx} -> idx end),
+        page_and_scroll_goals |> Enum.with_index(1) |> Enum.map(fn {_goal, idx} -> idx end),
       page_and_scroll_goal_regexes:
-        Enum.map(page_and_scroll_goals, &Filters.Utils.page_regex(&1.page_path)),
-      scroll_thresholds: Enum.map(page_and_scroll_goals, & &1.scroll_threshold),
+        page_and_scroll_goals |> Enum.map(&Filters.Utils.page_regex(&1.page_path)),
+      scroll_thresholds: page_and_scroll_goals |> Enum.map(& &1.scroll_threshold),
       custom_event_names: event_goals |> Enum.map(& &1.event_name),
       custom_event_names_start_index: length(page_and_scroll_goals)
     }

@@ -329,8 +329,7 @@ defmodule Plausible.Stats.SQL.Expression do
     quote do
       fragment(
         """
-        if(
-          ? IN ('pageview', 'engagement'),
+        arrayConcat(
           arrayIntersect(
             multiMatchAllIndices(
               ?,
@@ -348,7 +347,6 @@ defmodule Plausible.Stats.SQL.Expression do
           )
         )
         """,
-        e.name,
         e.pathname,
         type(^unquote(goal_join_data).page_and_scroll_goal_regexes, {:array, :string}),
         e.scroll_depth,

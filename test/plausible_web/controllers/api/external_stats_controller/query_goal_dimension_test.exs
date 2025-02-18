@@ -596,5 +596,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
                %{"dimensions" => ["Scroll /blog 50"], "metrics" => [2, nil, 50.0]}
              ]
     end
+
+    test "handles breakdown by custom event goal with event `pageview`", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "pageview", display_name: "Pageview")
+
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events"],
+          "date_range" => "all",
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Pageview"], "metrics" => [1, 1]}
+             ]
+    end
   end
 end
