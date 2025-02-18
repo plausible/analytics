@@ -6,11 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Plausible Playwright tests</title>
-  <script defer src="/tracker/js/plausible.local.js"></script>
 </head>
 
 <body>
-  HELLO!
+  <script>
+    window.addEventListener('pageshow', (e) => {
+      console.log(e.persisted)
+    })
+  </script>
 </body>
 
 </html>
