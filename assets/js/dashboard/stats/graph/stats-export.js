@@ -3,11 +3,17 @@ import * as api from '../../api';
 import { getCurrentInterval } from "./interval-picker";
 import { useSiteContext } from "../../site-context";
 import { useQueryContext } from "../../query-context";
+import { useUserContext } from '../../user-context';
 
 export default function StatsExport() {
   const site = useSiteContext();
   const { query } = useQueryContext();
   const [exporting, setExporting] = useState(false)
+  const user = useUserContext();
+
+  if (!user.loggedIn) {
+    return null;
+  }
 
   function startExport() {
     setExporting(true)
