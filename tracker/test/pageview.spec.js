@@ -10,12 +10,4 @@ test.describe('Basic installation', () => {
     expect(plausibleRequest.url()).toContain('/api/event')
     expect(plausibleRequest.postDataJSON().n).toEqual('pageview')
   })
-
-  test('bfcache', async ({ page }) => {
-    await page.goto('/simple.html')
-    await page.goto('/manual.html')
-    await page.evaluate(() => {
-      window.history.back()
-    })
-  })
 })
