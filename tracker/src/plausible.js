@@ -56,9 +56,9 @@
 
   // Timestamp indicating when this particular page last became visible.
   // Reset during pageviews, set to null when page is closed.
-  var currentEngagementStartTime
+  var runningEnagementStart
   // When page is hidden, this 'engaged' time is saved to this variable
-  var currentEngagementBeforeHideTime
+  var currentEngagementTime
 
   function getDocumentHeight() {
     var body = document.body || {}
@@ -108,10 +108,10 @@
 
   function triggerEngagement() {
     var engagementTime
-    if (currentEngagementStartTime) {
-      engagementTime = currentEngagementBeforeHideTime + (Date.now() - currentEngagementStartTime)
+    if (runningEnagementStart) {
+      engagementTime = currentEngagementTime + (Date.now() - runningEnagementStart)
     } else {
-      engagementTime = currentEngagementBeforeHideTime
+      engagementTime = currentEngagementTime
     }
 
     // Avoid sending redundant engagement events if user has not scrolled the page and not engaged for at least 1 second
@@ -130,8 +130,8 @@
         e: engagementTime
       }
 
-      currentEngagementStartTime = (document.visibilityState === 'hidden') ? Date.now() : null
-      currentEngagementBeforeHideTime = 0
+      runningEnagementStart = (document.visibilityState === 'hidden') ? Date.now() : null
+      currentEngagementTime = 0
 
       {{#if hash}}
       payload.h = 1
@@ -147,12 +147,12 @@
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
           // Tab went back to background. Save the engaged time so far
-          currentEngagementBeforeHideTime += (Date.now() - currentEngagementStartTime)
-          currentEngagementStartTime = null
+          currentEngagementTime += (Date.now() - runningEnagementStart)
+          runningEnagementStart = null
 
           triggerEngagement()
         } else {
-          currentEngagementStartTime = Date.now()
+          runningEnagementStart = Date.now()
         }
       })
       listeningOnEngagement = true
@@ -251,8 +251,8 @@
       currentEngagementURL = payload.u
       currentEngagementProps = payload.p
       currentEngagementMaxScrollDepth = -1
-      currentEngagementBeforeHideTime = 0
-      currentEngagementStartTime = Date.now()
+      currentEngagementTime = 0
+      runningEnagementStart = Date.now()
       registerEngagementListener()
     }
     {{/if}}
