@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useQueryContext } from '../../query-context'
+import { useRoutelessModalsContext } from '../../navigation/routeless-modals-context'
 
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -25,7 +26,8 @@ const buttonClassName = classNames(
 )
 
 export const SegmentMenu = () => {
-  const { expandedSegment, setModal } = useQueryContext()
+  const { setModal } = useRoutelessModalsContext()
+  const { expandedSegment } = useQueryContext()
 
   if (!expandedSegment) {
     return null

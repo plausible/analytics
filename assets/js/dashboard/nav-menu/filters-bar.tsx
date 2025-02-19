@@ -10,6 +10,7 @@ import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
 import { isSegmentFilter } from '../filtering/segments'
+import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -249,7 +250,8 @@ const ClearAction = () => (
 )
 
 const SaveAsSegmentAction = () => {
-  const { query, expandedSegment, setModal } = useQueryContext()
+  const { setModal } = useRoutelessModalsContext()
+  const { query, expandedSegment } = useQueryContext()
   if (expandedSegment) {
     return null
   }
