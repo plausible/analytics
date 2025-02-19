@@ -16,14 +16,14 @@ import {
   useAppNavigate
 } from '../../navigation/use-app-navigate'
 import {
-  COMPARISON_DISABLED_PERIODS,
   getCompareLinkItem,
   last6MonthsLinkItem,
   getDatePeriodGroups,
   LinkItem,
   QueryPeriod,
   getCurrentPeriodDisplayName,
-  getSearchToApplyCustomDates
+  getSearchToApplyCustomDates,
+  isComparisonForbidden
 } from '../../query-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
@@ -34,12 +34,12 @@ import {
   DateMenuChevron,
   PopoverMenuProps,
   linkClassName,
-  MenuSeparator,
   CalendarPanel,
   hiddenCalendarButtonClassName
 } from './shared-menu-items'
 import { DateRangeCalendar } from './date-range-calendar'
 import { formatISO, nowForSite } from '../../util/date'
+import { MenuSeparator } from '../nav-menu-components'
 
 function QueryPeriodMenuKeybinds({
   closeDropdown,
@@ -121,7 +121,7 @@ const QueryPeriodMenuInner = ({
   toggleCalendar: () => void
 }) => {
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  const { query, expandedSegment } = useQueryContext()
 
   const groups = useMemo(() => {
     const compareLink = getCompareLinkItem({ site, query })
@@ -138,11 +138,14 @@ const QueryPeriodMenuInner = ({
           }
         ]
       ],
-      extraGroups: COMPARISON_DISABLED_PERIODS.includes(query.period)
+      extraGroups: isComparisonForbidden({
+        period: query.period,
+        segmentIsExpanded: !!expandedSegment
+      })
         ? []
         : [[compareLink]]
     })
-  }, [site, query, closeDropdown, toggleCalendar])
+  }, [site, query, closeDropdown, toggleCalendar, expandedSegment])
 
   return (
     <>

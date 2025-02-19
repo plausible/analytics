@@ -1,5 +1,11 @@
 /* @format */
-import React, { createContext, useMemo, useContext, ReactNode } from 'react'
+import React, {
+  createContext,
+  useMemo,
+  useContext,
+  ReactNode,
+  useEffect
+} from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
@@ -19,10 +25,14 @@ import {
   queryDefaultValue,
   postProcessFilters
 } from './query'
+import { SavedSegment, SegmentData } from './filtering/segments'
+import { useAppNavigate } from './navigation/use-app-navigate'
+import { useDefiniteLocationState } from './navigation/use-definite-location-state'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
-  otherSearch: {} as Record<string, unknown>
+  otherSearch: {} as Record<string, unknown>,
+  expandedSegment: null as (SavedSegment & { segment_data: SegmentData }) | null
 }
 
 export type QueryContextValue = typeof queryContextDefaultValue
@@ -39,7 +49,12 @@ export default function QueryContextProvider({
   children: ReactNode
 }) {
   const location = useLocation()
+  const { definiteValue: expandedSegment } = useDefiniteLocationState<
+    SavedSegment & { segment_data: SegmentData }
+  >('expandedSegment')
+  const navigate = useAppNavigate()
   const site = useSiteContext()
+
   const {
     compare_from,
     compare_to,
@@ -58,11 +73,11 @@ export default function QueryContextProvider({
   const query = useMemo(() => {
     const defaultValues = queryDefaultValue
     const storedValues = getSavedTimePreferencesFromStorage({ site })
-
     const timeQuery = getDashboardTimeSettings({
       searchValues: { period, comparison, match_day_of_week },
       storedValues,
-      defaultValues
+      defaultValues,
+      segmentIsExpanded: !!expandedSegment
     })
 
     return {
@@ -111,8 +126,22 @@ export default function QueryContextProvider({
     period,
     to,
     with_imported,
-    site
+    site,
+    expandedSegment
   ])
+
+  useEffect(() => {
+    // clear edit mode on clearing all filters or removing last filter
+    if (!!expandedSegment && !query.filters.length) {
+      navigate({
+        search: (s) => s,
+        state: {
+          expandedSegment: null
+        },
+        replace: true
+      })
+    }
+  }, [query.filters, expandedSegment, navigate])
 
   useSaveTimePreferencesToStorage({
     site,
@@ -126,7 +155,13 @@ export default function QueryContextProvider({
   }, [])
 
   return (
-    <QueryContext.Provider value={{ query, otherSearch }}>
+    <QueryContext.Provider
+      value={{
+        query,
+        otherSearch,
+        expandedSegment
+      }}
+    >
       {children}
     </QueryContext.Provider>
   )
