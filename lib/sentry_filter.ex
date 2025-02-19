@@ -23,6 +23,16 @@ defmodule Plausible.SentryFilter do
     %{event | fingerprint: ["ingestion_request"]}
   end
 
+  def before_send(
+        %{extra: %{logger_level: :error}, message: %{formatted: "Ranch listener" <> rest}} = event
+      ) do
+    if String.contains?(rest, "had its request process") do
+      false
+    else
+      event
+    end
+  end
+
   def before_send(event) do
     event
   end
