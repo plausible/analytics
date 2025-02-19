@@ -20,12 +20,16 @@ import { useAppNavigate } from '../navigation/use-app-navigate'
 import { useQueryContext } from '../query-context'
 import { Role, useUserContext } from '../user-context'
 import { mutation } from '../api'
+import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
+
+export type RoutelessSegmentModal = 'create' | 'update' | 'delete'
 
 export const RoutelessSegmentModals = () => {
   const navigate = useAppNavigate()
   const queryClient = useQueryClient()
   const site = useSiteContext()
-  const { query, expandedSegment, modal, setModal } = useQueryContext()
+  const { modal, setModal } = useRoutelessModalsContext()
+  const { query, expandedSegment } = useQueryContext()
   const user = useUserContext()
 
   const patchSegment = useMutation({

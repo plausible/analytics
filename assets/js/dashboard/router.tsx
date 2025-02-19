@@ -27,6 +27,7 @@ import FilterModal from './stats/modals/filter-modal'
 import QueryContextProvider from './query-context'
 import { DashboardKeybinds } from './dashboard-keybinds'
 import LastLoadContextProvider from './last-load-context'
+import { RoutelessModalsContextProvider } from './navigation/routeless-modals-context'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,13 +40,15 @@ const queryClient = new QueryClient({
 function DashboardElement() {
   return (
     <QueryClientProvider client={queryClient}>
-      <QueryContextProvider>
-        <LastLoadContextProvider>
-          <Dashboard />
-          {/** render any children of the root route below */}
-        </LastLoadContextProvider>
-        <Outlet />
-      </QueryContextProvider>
+      <RoutelessModalsContextProvider>
+        <QueryContextProvider>
+          <LastLoadContextProvider>
+            <Dashboard />
+            {/** render any children of the root route below */}
+          </LastLoadContextProvider>
+          <Outlet />
+        </QueryContextProvider>
+      </RoutelessModalsContextProvider>
     </QueryClientProvider>
   )
 }
