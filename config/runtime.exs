@@ -802,6 +802,11 @@ if config_env() in [:dev, :staging, :prod, :test] do
           api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
         ]
       ],
+      teams: [
+        resources: [
+          team: [schema: Plausible.Teams.Team, admin: Plausible.Teams.TeamAdmin]
+        ]
+      ],
       sites: [
         resources: [
           site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]

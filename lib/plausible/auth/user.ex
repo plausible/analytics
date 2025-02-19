@@ -34,11 +34,6 @@ defmodule Plausible.Auth.User do
     # Field for purely informational purposes in CRM context
     field :notes, :string
 
-    # Fields used only by CRM for mapping to the ones in the owned team
-    field :trial_expiry_date, :date, virtual: true
-    field :allow_next_upgrade_override, :boolean, virtual: true
-    field :accept_traffic_until, :date, virtual: true
-
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
     field :totp_enabled, :boolean, default: false
     field :totp_secret, Plausible.Auth.TOTP.EncryptedBinary
@@ -49,8 +44,8 @@ defmodule Plausible.Auth.User do
     has_many :team_memberships, Plausible.Teams.Membership
     has_many :api_keys, Plausible.Auth.ApiKey
     has_one :google_auth, Plausible.Site.GoogleAuth
-    has_one :owner_membership, Plausible.Teams.Membership, where: [role: :owner]
-    has_one :my_team, through: [:owner_membership, :team]
+    has_many :owner_memberships, Plausible.Teams.Membership, where: [role: :owner]
+    has_many :owned_teams, through: [:owner_memberships, :team]
 
     timestamps()
   end
@@ -113,16 +108,7 @@ defmodule Plausible.Auth.User do
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [
-      :email,
-      :name,
-      :email_verified,
-      :theme,
-      :notes,
-      :trial_expiry_date,
-      :allow_next_upgrade_override,
-      :accept_traffic_until
-    ])
+    |> cast(attrs, [:email, :name, :email_verified, :theme, :notes])
     |> validate_required([:email, :name, :email_verified])
     |> unique_constraint(:email)
   end

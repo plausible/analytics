@@ -91,6 +91,24 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert_team_attached(site, new_team.id)
     end
 
+    test "fails when new owner has no permissions for current team", %{conn: conn, user: user} do
+      old_owner = new_user()
+      site = new_site(owner: old_owner)
+
+      other_owner = new_user() |> subscribe_to_growth_plan()
+      new_team = team_of(other_owner)
+      add_member(new_team, user: user, role: :viewer)
+
+      transfer = invite_transfer(site, user, inviter: old_owner)
+
+      conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
+
+      assert redirected_to(conn, 302) == "/sites"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "You can't add sites in the current team"
+    end
+
     @tag :ee_only
     test "fails when new owner has no plan", %{conn: conn, user: user} do
       old_owner = new_user()

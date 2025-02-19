@@ -26,12 +26,13 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def create_site(conn, %{"site" => site_params}) do
-    team = conn.assigns.my_team
+    current_team = conn.assigns.current_team
+    team = Plausible.Teams.get(site_params["team_id"]) || current_team
     user = conn.assigns.current_user
     first_site? = Plausible.Teams.Billing.site_usage(team) == 0
     flow = conn.params["flow"]
 
-    case Sites.create(user, site_params) do
+    case Sites.create(user, site_params, team) do
       {:ok, %{site: site}} ->
         if first_site? do
           PlausibleWeb.Email.welcome_email(user)
@@ -44,6 +45,18 @@ defmodule PlausibleWeb.SiteController do
               site_created: true,
               flow: flow
             )
+        )
+
+      {:error, _, :permission_denied, _} ->
+        conn
+        |> put_flash(:error, "You are not permitted to add sites in the current team")
+        |> render("new.html",
+          changeset: Plausible.Site.changeset(%Plausible.Site{}),
+          first_site?: first_site?,
+          site_limit: Plausible.Teams.Billing.site_limit(team),
+          site_limit_exceeded?: false,
+          flow: flow,
+          form_submit_url: "/sites?flow=#{flow}"
         )
 
       {:error, _, {:over_limit, limit}, _} ->

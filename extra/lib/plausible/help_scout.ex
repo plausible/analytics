@@ -90,8 +90,33 @@ defmodule Plausible.HelpScout do
             plan = Billing.Plans.get_subscription_plan(team.subscription)
             {team, team.subscription, plan}
 
+          {:error, :multiple_teams} ->
+            # NOTE: We might consider exposing the other teams later on
+            [team | _] = Plausible.Teams.Users.owned_teams(user)
+            team = Plausible.Teams.with_subscription(team)
+            plan = Billing.Plans.get_subscription_plan(team.subscription)
+            {team, team.subscription, plan}
+
           {:error, :no_team} ->
             {nil, nil, nil}
+        end
+
+      status_link =
+        if team do
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :teams, :team, team.id)
+        else
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id)
+        end
+
+      sites_link =
+        if team do
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+            custom_search: team.identifier
+          )
+        else
+          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+            custom_search: user.email
+          )
         end
 
       {:ok,
@@ -99,15 +124,11 @@ defmodule Plausible.HelpScout do
          email: user.email,
          notes: user.notes,
          status_label: status_label(team, subscription),
-         status_link:
-           Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id),
+         status_link: status_link,
          plan_label: plan_label(subscription, plan),
          plan_link: plan_link(subscription),
          sites_count: Plausible.Teams.owned_sites_count(team),
-         sites_link:
-           Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-             custom_search: user.email
-           )
+         sites_link: sites_link
        }}
     end
   end

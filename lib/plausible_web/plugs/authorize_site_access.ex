@@ -112,7 +112,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
         site =
           site
           |> Repo.preload([
-            :owner,
+            :owners,
             :completed_imports,
             team: [subscription: Plausible.Teams.last_subscription_query()]
           ])

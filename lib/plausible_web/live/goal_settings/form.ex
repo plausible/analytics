@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   alias Plausible.Repo
 
   def update(assigns, socket) do
-    site = Repo.preload(assigns.site, [:team, :owner])
+    site = Repo.preload(assigns.site, [:team, :owners])
 
     has_access_to_revenue_goals? =
       Plausible.Billing.Feature.RevenueGoals.check_availability(site.team) == :ok
@@ -297,7 +297,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div class="mt-6 space-y-3" x-data={@js_data}>
       <PlausibleWeb.Components.Billing.Notice.premium_feature
-        billable_user={@site.owner}
+        billable_user={List.first(@site.owners)}
         current_user={@current_user}
         current_team={@site_team}
         feature_mod={Plausible.Billing.Feature.RevenueGoals}
