@@ -114,9 +114,17 @@
       engagementTime = currentEngagementTime
     }
 
-    // Avoid sending redundant engagement events if user has not scrolled the page and not engaged for at least 1 second
-    // Note that `currentEngagementMaxScrollDepth` default of -1 ensures that at least one engagement event is sent
-    // per pageview.
+    /*
+    We send engagements if there's new relevant engagement information to share:
+    - If the user has scrolled more than the previously sent max scroll depth.
+    - If the user has been engaged for more than 1 second since the last engagement event.
+
+    The first engagement event is always sent due to containing at leastthe initial scroll depth.
+
+    We don't send engagements if:
+    - Less than 300ms have passed since the last engagement event
+    - The current pageview is ignored (onIgnoredEvent)
+    */
     if (!engagementCooldown && !currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime > 1000)) {
       currentEngagementMaxScrollDepth = maxScrollDepthPx
       setTimeout(function () {engagementCooldown = false}, 300)
