@@ -84,6 +84,7 @@ defmodule Plausible.Auth do
             from ep in Plausible.Billing.EnterprisePlan, where: ep.team_id == ^team.id
           )
 
+          Plausible.Segments.user_removed(user)
           Repo.delete!(team)
           Repo.delete!(user)
 

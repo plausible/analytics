@@ -138,8 +138,13 @@ defmodule Plausible.Teams.Memberships do
         guest_membership =
           Repo.preload(guest_membership, [:site, team_membership: [:team, :user]])
 
-        Repo.delete!(guest_membership)
-        prune_guests(guest_membership.team_membership.team)
+        {:ok, _} =
+          Repo.transaction(fn ->
+            Repo.delete!(guest_membership)
+            prune_guests(guest_membership.team_membership.team)
+            Plausible.Segments.after_user_removed_from_site(site, user)
+          end)
+
         send_site_member_removed_email(guest_membership)
 
       {:error, _} ->

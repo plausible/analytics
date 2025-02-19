@@ -185,6 +185,64 @@ defmodule Plausible.Segments do
     :ok
   end
 
+  def after_user_removed_from_site(site, user) do
+    Repo.delete_all(
+      from segment in Segment,
+        where: segment.site_id == ^site.id,
+        where: segment.owner_id == ^user.id,
+        where: segment.type == :personal
+    )
+
+    Repo.update_all(
+      from(segment in Segment,
+        where: segment.site_id == ^site.id,
+        where: segment.owner_id == ^user.id,
+        where: segment.type == :site,
+        update: [set: [owner_id: nil]]
+      ),
+      []
+    )
+  end
+
+  def after_user_removed_from_team(team, user) do
+    team_sites_q =
+      from(
+        site in Plausible.Site,
+        where: site.team_id == ^team.id,
+        where: parent_as(:segment).site_id == site.id
+      )
+
+    Repo.delete_all(
+      from segment in Segment,
+        as: :segment,
+        where: segment.owner_id == ^user.id,
+        where: segment.type == :personal,
+        where: exists(team_sites_q)
+    )
+
+    Repo.update_all(
+      from(segment in Segment,
+        as: :segment,
+        where: segment.owner_id == ^user.id,
+        where: segment.type == :site,
+        where: exists(team_sites_q),
+        update: [set: [owner_id: nil]]
+      ),
+      []
+    )
+  end
+
+  def user_removed(user) do
+    Repo.delete_all(
+      from segment in Segment,
+        as: :segment,
+        where: segment.owner_id == ^user.id,
+        where: segment.type == :personal
+    )
+
+    #  Site segments are set to owner=null via ON DELETE SET NULL
+  end
+
   def delete_one(user_id, %Plausible.Site{} = site, site_role, segment_id) do
     with {:ok, segment} <- get_one(user_id, site, site_role, segment_id) do
       cond do

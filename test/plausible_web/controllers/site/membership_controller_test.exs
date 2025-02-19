@@ -384,6 +384,46 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       refute Repo.exists?(from tm in Plausible.Teams.Membership, where: tm.user_id == ^admin.id)
     end
 
+    test "when members is removed, associated personal segment is deleted", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      admin = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          type: :personal,
+          owner: admin,
+          site: site,
+          name: "personal segment"
+        )
+
+      delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
+
+      refute Repo.reload(segment)
+    end
+
+    test "when members is removed, associated site segment will be owner-less", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      admin = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: admin,
+          site: site,
+          name: "site segment"
+        )
+
+      delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
+
+      assert Repo.reload(segment).owner_id == nil
+    end
+
     test "fails to remove a member from a foreign site (silently)", %{conn: conn, user: user} do
       foreign_member = new_user()
       foreign_site = new_site()
