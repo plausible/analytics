@@ -169,7 +169,7 @@ export const DeleteSegmentModal = ({
         }
         <span className="break-all">{` "${segment.name}"?`}</span>
       </FormTitle>
-      {segment.segment_data && (
+      {!!segment.segment_data && (
         <FiltersInSegment segment_data={segment.segment_data} />
       )}
 
