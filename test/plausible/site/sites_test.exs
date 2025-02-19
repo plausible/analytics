@@ -48,6 +48,48 @@ defmodule Plausible.SitesTest do
       assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
                Sites.create(user, params)
     end
+
+    test "fails for user owning more than one team without explicit pick" do
+      user = new_user()
+      _site1 = new_site(owner: user)
+      site2 = new_site()
+      add_member(site2.team, user: user, role: :owner)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:error, _, :multiple_teams, _} = Sites.create(user, params)
+    end
+
+    test "fails for user not being permitted to add sites in selected team" do
+      user = new_user()
+      site = new_site()
+      viewer_team = site.team
+      add_member(viewer_team, user: user, role: :viewer)
+      other_site = new_site()
+      other_team = other_site.team
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:error, _, :permission_denied, _} = Sites.create(user, params, viewer_team)
+      assert {:error, _, :permission_denied, _} = Sites.create(user, params, other_team)
+    end
+
+    test "succeeds for user being permitted to add sites in selected team" do
+      user = new_user()
+      viewer_site = new_site()
+      viewer_team = viewer_site.team
+      editor_site = new_site()
+      editor_team = editor_site.team
+
+      add_member(viewer_team, user: user, role: :viewer)
+      add_member(editor_team, user: user, role: :editor)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: site}} = Sites.create(user, params, editor_team)
+
+      assert site.team_id == editor_team.id
+    end
   end
 
   describe "stats_start_date" do
@@ -414,6 +456,51 @@ defmodule Plausible.SitesTest do
                  %{id: ^site1_id}
                ]
              } = Sites.list_with_invitations(user1, %{}, filter_by_domain: "first")
+    end
+
+    test "scopes by team when provided" do
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
+
+      site1 = new_site(owner: user1, domain: "first.example.com")
+      site2 = new_site(owner: user2, domain: "first-transfer.example.com")
+      site3 = new_site(owner: user3, domain: "first-invitation.example.com")
+      site4 = new_site(domain: "zzzsitefromanotherteam.com")
+
+      invite_guest(site3, user1, role: :viewer, inviter: user3)
+      invite_transfer(site2, user1, inviter: user2)
+      add_member(site4.team, user: user1, role: :editor)
+
+      assert_matches %{
+                       entries: [
+                         %{id: ^site1.id},
+                         %{id: ^site4.id}
+                       ]
+                     } = Sites.list(user1, %{})
+
+      assert_matches %{
+                       entries: [
+                         %{id: ^site3.id},
+                         %{id: ^site2.id},
+                         %{id: ^site1.id},
+                         %{id: ^site4.id}
+                       ]
+                     } = Sites.list_with_invitations(user1, %{})
+
+      assert_matches %{
+                       entries: [
+                         %{id: ^site4.id}
+                       ]
+                     } = Sites.list(user1, %{}, team: site4.team)
+
+      assert_matches %{
+                       entries: [
+                         %{id: ^site3.id},
+                         %{id: ^site2.id},
+                         %{id: ^site4.id}
+                       ]
+                     } = Sites.list_with_invitations(user1, %{}, team: site4.team)
     end
 
     test "handles pagination correctly" do

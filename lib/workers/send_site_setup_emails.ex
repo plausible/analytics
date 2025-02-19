@@ -44,16 +44,16 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         on: se.site_id == s.id,
         where: is_nil(se.id),
         where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
-        preload: [:owner, :team]
+        preload: [:owners, :team]
       )
 
     for site <- Repo.all(q) do
-      owner = site.owner
+      owners = site.owners
       setup_completed = Plausible.Sites.has_stats?(site)
       hours_passed = NaiveDateTime.diff(DateTime.utc_now(), site.inserted_at, :hour)
 
       if !setup_completed && hours_passed > 47 do
-        send_setup_help_email(owner, site)
+        send_setup_help_email(owners, site)
       end
     end
   end
@@ -66,7 +66,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         where: is_nil(se.id),
         inner_join: t in assoc(s, :team),
         where: s.inserted_at > fragment("(now() at time zone 'utc') - '72 hours'::interval"),
-        preload: [:owner, team: t]
+        preload: [:owners, team: t]
       )
 
     for site <- Repo.all(q) do
@@ -89,8 +89,10 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
   end
 
   defp send_setup_success_email(site) do
-    PlausibleWeb.Email.site_setup_success(site.owner, site.team, site)
-    |> Plausible.Mailer.send()
+    for owner <- site.owners do
+      PlausibleWeb.Email.site_setup_success(owner, site.team, site)
+      |> Plausible.Mailer.send()
+    end
 
     Repo.insert_all("setup_success_emails", [
       %{
@@ -100,9 +102,11 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
     ])
   end
 
-  defp send_setup_help_email(user, site) do
-    PlausibleWeb.Email.site_setup_help(user, site)
-    |> Plausible.Mailer.send()
+  defp send_setup_help_email(users, site) do
+    for user <- users do
+      PlausibleWeb.Email.site_setup_help(user, site)
+      |> Plausible.Mailer.send()
+    end
 
     Repo.insert_all("setup_help_emails", [
       %{

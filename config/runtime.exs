@@ -756,7 +756,9 @@ if config_env() in [:prod, :ce] do
       {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
       {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
       # Rescue orphaned jobs after 2 hours
-      {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)}
+      {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},
+      # Daily at 1am
+      {Oban.Plugins.Reindexer, schedule: "0 1 * * *"}
     ],
     queues: if(cron_enabled, do: queues, else: []),
     peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
@@ -798,6 +800,11 @@ if config_env() in [:dev, :staging, :prod, :test] do
         resources: [
           user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin],
           api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
+        ]
+      ],
+      teams: [
+        resources: [
+          team: [schema: Plausible.Teams.Team, admin: Plausible.Teams.TeamAdmin]
         ]
       ],
       sites: [

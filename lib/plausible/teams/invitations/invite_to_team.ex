@@ -12,7 +12,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeam do
   def invite(team, inviter, invitee_email, role, opts \\ [])
 
   def invite(team, inviter, invitee_email, role, opts) when role in @valid_roles do
-    with team <- Repo.preload(team, [:owner]),
+    with team <- Repo.preload(team, [:owners]),
          :ok <-
            Teams.Invitations.check_invitation_permissions(
              team,
