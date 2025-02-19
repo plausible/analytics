@@ -5,7 +5,8 @@ export enum Role {
   owner = 'owner',
   admin = 'admin',
   viewer = 'viewer',
-  editor = 'editor'
+  editor = 'editor',
+  public = 'public'
 }
 
 const userContextDefaultValue = {
