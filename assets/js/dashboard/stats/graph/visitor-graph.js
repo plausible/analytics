@@ -10,20 +10,13 @@ import WithImportedSwitch from './with-imported-switch';
 import SamplingNotice from './sampling-notice';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url';
-import { isComparisonEnabled } from '../../query-time-periods';
 import LineGraphWithRouter from './line-graph';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 
 function fetchTopStats(site, query) {
-  const q = { ...query }
-
-  if (!isComparisonEnabled(q.comparison) && query.period !== 'realtime') {
-    q.comparison = 'previous_period'
-  }
-
-  return api.get(url.apiPath(site, '/top-stats'), q)
+  return api.get(url.apiPath(site, '/top-stats'), query)
 }
 
 function fetchMainGraph(site, query, metric, interval) {

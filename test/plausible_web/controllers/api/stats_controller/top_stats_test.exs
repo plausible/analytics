@@ -51,7 +51,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{
                "name" => "Unique visitors",
                "value" => 2,
-               "graph_metric" => "visitors"
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
              } in res["top_stats"]
     end
 
@@ -69,7 +71,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{
                "name" => "Total pageviews",
                "value" => 3,
-               "graph_metric" => "pageviews"
+               "graph_metric" => "pageviews",
+               "change" => 100,
+               "comparison_value" => 0
              } in res["top_stats"]
     end
 
@@ -92,16 +96,48 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert res["top_stats"] == [
-               %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"},
-               %{"name" => "Total visits", "value" => 2, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 2, "graph_metric" => "pageviews"},
+               %{
+                 "name" => "Unique visitors",
+                 "value" => 2,
+                 "graph_metric" => "visitors",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Total visits",
+                 "value" => 2,
+                 "graph_metric" => "visits",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Total pageviews",
+                 "value" => 2,
+                 "graph_metric" => "pageviews",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
                %{
                  "name" => "Views per visit",
                  "value" => 2.0,
-                 "graph_metric" => "views_per_visit"
+                 "graph_metric" => "views_per_visit",
+                 "change" => 100,
+                 "comparison_value" => 0.0
                },
-               %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"},
-               %{"name" => "Visit duration", "value" => 120, "graph_metric" => "visit_duration"}
+               %{
+                 "name" => "Bounce rate",
+                 "value" => 0,
+                 "graph_metric" => "bounce_rate",
+                 "change" => nil,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Visit duration",
+                 "value" => 120,
+                 "graph_metric" => "visit_duration",
+                 "change" => 100,
+                 "comparison_value" => 0
+               }
              ]
     end
 
@@ -117,7 +153,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Views per visit", "value" => 1.33, "graph_metric" => "views_per_visit"} in res[
+      assert %{
+               "name" => "Views per visit",
+               "value" => 1.33,
+               "graph_metric" => "views_per_visit",
+               "change" => 100,
+               "comparison_value" => 0.0
+             } in res[
                "top_stats"
              ]
     end
@@ -133,7 +175,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Bounce rate", "value" => 50, "graph_metric" => "bounce_rate"} in res[
+      assert %{
+               "name" => "Bounce rate",
+               "value" => 50,
+               "graph_metric" => "bounce_rate",
+               "change" => nil,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -157,7 +205,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Visit duration", "value" => 450, "graph_metric" => "visit_duration"} in res[
+      assert %{
+               "name" => "Visit duration",
+               "value" => 450,
+               "graph_metric" => "visit_duration",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -392,7 +446,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!([[:is, "event:page", ["/"]]])
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
-      assert %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"} ==
+      assert %{
+               "name" => "Bounce rate",
+               "value" => 0,
+               "graph_metric" => "bounce_rate",
+               "change" => nil,
+               "comparison_value" => 0
+             } ==
                conn
                |> get(path)
                |> json_response(200)
@@ -518,15 +578,33 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Bounce rate", "value" => 0, "graph_metric" => "bounce_rate"} in res[
+      assert %{
+               "name" => "Bounce rate",
+               "value" => 0,
+               "graph_metric" => "bounce_rate",
+               "change" => nil,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
 
-      assert %{"name" => "Views per visit", "value" => 0.0, "graph_metric" => "views_per_visit"} in res[
+      assert %{
+               "name" => "Views per visit",
+               "value" => 0.0,
+               "graph_metric" => "views_per_visit",
+               "change" => 0,
+               "comparison_value" => 0.0
+             } in res[
                "top_stats"
              ]
 
-      assert %{"name" => "Visit duration", "value" => 0, "graph_metric" => "visit_duration"} in res[
+      assert %{
+               "name" => "Visit duration",
+               "value" => 0,
+               "graph_metric" => "visit_duration",
+               "change" => 0,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -559,16 +637,48 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert res["top_stats"] == [
-               %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "visitors"},
-               %{"name" => "Total visits", "value" => 3, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 4, "graph_metric" => "pageviews"},
+               %{
+                 "name" => "Unique visitors",
+                 "value" => 3,
+                 "graph_metric" => "visitors",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Total visits",
+                 "value" => 3,
+                 "graph_metric" => "visits",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Total pageviews",
+                 "value" => 4,
+                 "graph_metric" => "pageviews",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
                %{
                  "name" => "Views per visit",
                  "value" => 1.33,
-                 "graph_metric" => "views_per_visit"
+                 "graph_metric" => "views_per_visit",
+                 "change" => 100,
+                 "comparison_value" => 0
                },
-               %{"name" => "Bounce rate", "value" => 33, "graph_metric" => "bounce_rate"},
-               %{"name" => "Visit duration", "value" => 303, "graph_metric" => "visit_duration"}
+               %{
+                 "name" => "Bounce rate",
+                 "value" => 33,
+                 "graph_metric" => "bounce_rate",
+                 "change" => nil,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Visit duration",
+                 "value" => 303,
+                 "graph_metric" => "visit_duration",
+                 "change" => 100,
+                 "comparison_value" => 0
+               }
              ]
     end
 
@@ -616,16 +726,48 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert res["top_stats"] == [
-               %{"name" => "Unique visitors", "value" => 5, "graph_metric" => "visitors"},
-               %{"name" => "Total visits", "value" => 11, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 101, "graph_metric" => "pageviews"},
+               %{
+                 "name" => "Unique visitors",
+                 "value" => 5,
+                 "graph_metric" => "visitors",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Total visits",
+                 "value" => 11,
+                 "graph_metric" => "visits",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Total pageviews",
+                 "value" => 101,
+                 "graph_metric" => "pageviews",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
                %{
                  "name" => "Views per visit",
                  "value" => 9.18,
-                 "graph_metric" => "views_per_visit"
+                 "graph_metric" => "views_per_visit",
+                 "change" => 100,
+                 "comparison_value" => 0
                },
-               %{"name" => "Bounce rate", "value" => 9, "graph_metric" => "bounce_rate"},
-               %{"name" => "Visit duration", "value" => 71, "graph_metric" => "visit_duration"}
+               %{
+                 "name" => "Bounce rate",
+                 "value" => 9,
+                 "graph_metric" => "bounce_rate",
+                 "change" => nil,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Visit duration",
+                 "value" => 71,
+                 "graph_metric" => "visit_duration",
+                 "change" => 100,
+                 "comparison_value" => 0
+               }
              ]
     end
 
@@ -665,10 +807,32 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert res["top_stats"] == [
-               %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"},
-               %{"name" => "Total visits", "value" => 4, "graph_metric" => "visits"},
-               %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"},
-               %{"name" => "Scroll depth", "value" => nil, "graph_metric" => "scroll_depth"}
+               %{
+                 "name" => "Unique visitors",
+                 "value" => 2,
+                 "graph_metric" => "visitors",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Total visits",
+                 "value" => 4,
+                 "graph_metric" => "visits",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Total pageviews",
+                 "value" => 36,
+                 "graph_metric" => "pageviews",
+                 "change" => 100,
+                 "comparison_value" => 0
+               },
+               %{
+                 "name" => "Scroll depth",
+                 "value" => nil,
+                 "graph_metric" => "scroll_depth"
+               }
              ]
     end
   end
@@ -988,7 +1152,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 2,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1077,7 +1247,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 2,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1099,7 +1275,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 2,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1136,11 +1318,23 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res =
         json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 3,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
 
-      assert %{"name" => "Total visits", "value" => 3, "graph_metric" => "visits"} in res[
+      assert %{
+               "name" => "Total visits",
+               "value" => 3,
+               "graph_metric" => "visits",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1162,7 +1356,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 2,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1184,7 +1384,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 2,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1219,7 +1425,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Total visits", "value" => 2, "graph_metric" => "visits"} in res[
+      assert %{
+               "name" => "Total visits",
+               "value" => 2,
+               "graph_metric" => "visits",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1266,11 +1478,23 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 2,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
 
-      assert %{"name" => "Total pageviews", "value" => 2, "graph_metric" => "pageviews"} in res[
+      assert %{
+               "name" => "Total pageviews",
+               "value" => 2,
+               "graph_metric" => "pageviews",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1296,11 +1520,23 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res =
         json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 4, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 4,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
 
-      assert %{"name" => "Total pageviews", "value" => 6, "graph_metric" => "pageviews"} in res[
+      assert %{
+               "name" => "Total pageviews",
+               "value" => 6,
+               "graph_metric" => "pageviews",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1329,11 +1565,23 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique visitors",
+               "value" => 3,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
 
-      assert %{"name" => "Total pageviews", "value" => 4, "graph_metric" => "pageviews"} in res[
+      assert %{
+               "name" => "Total pageviews",
+               "value" => 4,
+               "graph_metric" => "pageviews",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1387,11 +1635,23 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique conversions", "value" => 2, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique conversions",
+               "value" => 2,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
 
-      assert %{"name" => "Total conversions", "value" => 3, "graph_metric" => "events"} in res[
+      assert %{
+               "name" => "Total conversions",
+               "value" => 3,
+               "graph_metric" => "events",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1415,7 +1675,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique conversions", "value" => 1, "graph_metric" => "visitors"} in res[
+      assert %{
+               "name" => "Unique conversions",
+               "value" => 1,
+               "graph_metric" => "visitors",
+               "change" => 100,
+               "comparison_value" => 0
+             } in res[
                "top_stats"
              ]
     end
@@ -1439,7 +1705,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Conversion rate", "value" => 33.3, "graph_metric" => "conversion_rate"} in res[
+      assert %{
+               "name" => "Conversion rate",
+               "value" => 33.3,
+               "graph_metric" => "conversion_rate",
+               "change" => 33.3,
+               "comparison_value" => 0.0
+             } in res[
                "top_stats"
              ]
     end
@@ -1894,10 +2166,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   describe "GET /api/stats/top-stats - with comparisons" do
     setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
-    test "does not return comparisons by default", %{site: site, conn: conn} do
+    test "returns previous_period comparison (with match_day_of_week=true) by default", %{
+      site: site,
+      conn: conn
+    } do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2020-12-31 00:00:00]),
-        build(:pageview, timestamp: ~N[2020-12-31 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-12-25 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-12-25 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:01:00]),
         build(:pageview, timestamp: ~N[2021-01-01 10:00:00])
@@ -1907,7 +2182,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Total visits", "value" => 3, "graph_metric" => "visits"} in res[
+      assert %{
+               "name" => "Total visits",
+               "value" => 3,
+               "graph_metric" => "visits",
+               "change" => 50,
+               "comparison_value" => 2
+             } in res[
                "top_stats"
              ]
     end

@@ -192,10 +192,29 @@ defmodule PlausibleWeb.Api.StatsController do
 
     params = realtime_period_to_30m(params)
 
-    query =
-      site
-      |> Query.from(params, debug_metadata(conn))
-      |> Query.set_include(:imports_meta, true)
+    {query, original_query_include_imported} =
+      if is_nil(params["comparison"]) and params["period"] != "30m" do
+        # TRICKY: Top Stats returns comparison data by default even when comparison
+        # mode is disabled. That is to render the small change arrows for each metric.
+        # Even when imported data gets picked due to that default comparison, we don't
+        # want to display the "with_imported_switch", nor any imports-related warnings.
+        original_query = Query.from(site, params, %{})
+
+        params =
+          params
+          |> Map.put("comparison", "previous_period")
+          |> Map.put("match_day_of_week", "true")
+
+        query = Query.from(site, params, debug_metadata(conn))
+
+        {query, original_query.include_imported}
+      else
+        query = Query.from(site, params, debug_metadata(conn))
+
+        {query, query.include_imported}
+      end
+
+    query = Query.set_include(query, :imports_meta, true)
 
     %{
       top_stats: top_stats,
@@ -210,7 +229,7 @@ defmodule PlausibleWeb.Api.StatsController do
       meta: meta,
       interval: query.interval,
       sample_percent: sample_percent,
-      with_imported_switch: with_imported_switch_info(meta),
+      with_imported_switch: with_imported_switch_info(meta, original_query_include_imported),
       includes_imported: meta[:imports_included] == true,
       comparing_from: query.include.comparisons && Query.date_range(comparison_query).first,
       comparing_to: query.include.comparisons && Query.date_range(comparison_query).last,
@@ -219,18 +238,21 @@ defmodule PlausibleWeb.Api.StatsController do
     })
   end
 
-  defp with_imported_switch_info(%Jason.OrderedObject{} = meta) do
-    case {meta[:imports_included], meta[:imports_skip_reason]} do
-      {true, nil} ->
+  defp with_imported_switch_info(%Jason.OrderedObject{} = meta, original_query_include_imported) do
+    case {original_query_include_imported, meta[:imports_included], meta[:imports_skip_reason]} do
+      {false, true, nil} ->
+        %{visible: false, togglable: false, tooltip_msg: nil}
+
+      {true, true, nil} ->
         %{visible: true, togglable: true, tooltip_msg: "Click to exclude imported data"}
 
-      {false, nil} ->
+      {_, false, nil} ->
         %{visible: true, togglable: true, tooltip_msg: "Click to include imported data"}
 
-      {false, :unsupported_query} ->
+      {_, false, :unsupported_query} ->
         %{visible: true, togglable: false, tooltip_msg: "Imported data cannot be included"}
 
-      {false, reason} when reason in [:no_imported_data, :out_of_range] ->
+      {_, false, reason} when reason in [:no_imported_data, :out_of_range] ->
         %{visible: false, togglable: false, tooltip_msg: nil}
     end
   end
