@@ -195,8 +195,7 @@ defmodule Plausible.SiteAdmin do
 
   defp get_other_members(site) do
     site.guest_memberships
-    |> Enum.map(fn m -> m.team_membership.user.email <> "(#{member_role(m.role)})" end)
-    |> Enum.join(", ")
+    |> Enum.map_join(", ", fn m -> m.team_membership.user.email <> "(#{member_role(m.role)})" end)
   end
 
   def get_struct_fields(module) do
