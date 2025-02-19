@@ -21,6 +21,25 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       event_tab = lv |> element(~s/a#event-tab/) |> render_click()
       assert event_tab =~ "Event Name"
     end
+
+    test "can navigate to scroll tab if scroll_depth feature visible for site/user",
+         %{conn: conn, site: site} do
+      Plausible.Sites.set_scroll_depth_visible_at(site)
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/a#scroll-tab/) |> render_click()
+      html = render(lv)
+      input_names = html |> find("#scroll-form input") |> Enum.map(&name_of/1)
+      assert "goal[scroll_threshold]" in input_names
+      assert "goal[page_path]" in input_names
+      assert "goal[display_name]" in input_names
+    end
+
+    test "does not render scroll tab if scroll_depth feature not visible for site/user",
+         %{conn: conn, site: site} do
+      html = get_liveview(conn, site) |> render()
+      refute element_exists?(html, ~s/a#scroll-tab/)
+    end
   end
 
   describe "Goal submission" do
@@ -86,26 +105,6 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
                "goal[page_path]",
                "goal[display_name]"
              ]
-    end
-
-    test "renders scroll_threshold input in pageview goal form if scroll_depth feature visible for site/user",
-         %{conn: conn, site: site} do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-
-      lv = get_liveview(conn, site)
-      lv |> element(~s/a#pageview-tab/) |> render_click()
-      html = render(lv)
-      input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
-      assert "goal[scroll_threshold]" in input_names
-    end
-
-    test "does not render scroll_threshold input in pageview goal form if scroll_depth feature not visible for site/user",
-         %{conn: conn, site: site} do
-      lv = get_liveview(conn, site)
-      lv |> element(~s/a#pageview-tab/) |> render_click()
-      html = render(lv)
-      input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
-      refute "goal[scroll_threshold]" in input_names
     end
 
     test "renders error on empty submission", %{conn: conn, site: site} do
