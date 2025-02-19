@@ -690,7 +690,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute Repo.reload(segment)
     end
 
-    test "context > team is not autodeleted - personal segement is deleted", %{
+    test "context > team is not autodeleted - personal segment is deleted", %{
       conn: conn,
       user: user
     } do
@@ -711,7 +711,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute Repo.reload(segment)
     end
 
-    test "context > team is not autodeleted - site segement is kept with owner=null", %{
+    test "context > team is not autodeleted - site segment is kept with owner=null", %{
       conn: conn,
       user: user
     } do
