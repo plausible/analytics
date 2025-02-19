@@ -42,6 +42,7 @@ defmodule Plausible.Ingestion.Request do
     field :pathname, :string
     field :props, :map
     field :scroll_depth, :integer
+    field :engagement_time, :integer
 
     on_ee do
       field :revenue_source, :map
@@ -79,6 +80,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_referrer(request_body)
         |> put_props(request_body)
         |> put_scroll_depth(request_body)
+        |> put_engagement_time(request_body)
         |> put_pathname()
         |> put_query_params()
         |> put_revenue_source(request_body)
@@ -259,6 +261,20 @@ defmodule Plausible.Ingestion.Request do
         end
 
       Changeset.put_change(changeset, :scroll_depth, scroll_depth)
+    else
+      changeset
+    end
+  end
+
+  defp put_engagement_time(changeset, %{} = request_body) do
+    if Changeset.get_field(changeset, :event_name) == "engagement" do
+      engagement_time =
+        case request_body["e"] do
+          e when is_integer(e) and e >= 0 -> e
+          _ -> 0
+        end
+
+      Changeset.put_change(changeset, :engagement_time, engagement_time)
     else
       changeset
     end

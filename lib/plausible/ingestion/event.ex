@@ -251,7 +251,8 @@ defmodule Plausible.Ingestion.Event do
       name: event.request.event_name,
       hostname: event.request.hostname,
       pathname: event.request.pathname,
-      scroll_depth: event.request.scroll_depth
+      scroll_depth: event.request.scroll_depth,
+      engagement_time: event.request.engagement_time
     })
   end
 
