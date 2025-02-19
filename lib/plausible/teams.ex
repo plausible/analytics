@@ -16,17 +16,6 @@ defmodule Plausible.Teams do
     not is_nil(team) and FunWithFlags.enabled?(:teams, for: team)
   end
 
-  @spec get(pos_integer() | binary() | nil) :: Teams.Team.t() | nil
-  def get(nil), do: nil
-
-  def get(team_id) when is_integer(team_id) do
-    Repo.get(Teams.Team, team_id)
-  end
-
-  def get(team_identifier) when is_binary(team_identifier) do
-    Repo.get_by(Teams.Team, identifier: team_identifier)
-  end
-
   @spec get!(pos_integer() | binary()) :: Teams.Team.t()
   def get!(team_id) when is_integer(team_id) do
     Repo.get!(Teams.Team, team_id)
@@ -34,6 +23,15 @@ defmodule Plausible.Teams do
 
   def get!(team_identifier) when is_binary(team_identifier) do
     Repo.get_by!(Teams.Team, identifier: team_identifier)
+  end
+
+  @spec get_owner(Teams.Team.t()) ::
+          {:ok, Auth.User.t()} | {:error, :no_owner | :multiple_owners}
+  def get_owner(team) do
+    case Repo.preload(team, :owner).owner do
+      nil -> {:error, :no_owner}
+      owner_user -> {:ok, owner_user}
+    end
   end
 
   @spec on_trial?(Teams.Team.t() | nil) :: boolean()
@@ -113,6 +111,27 @@ defmodule Plausible.Teams do
   end
 
   @doc """
+  Create (when necessary) and load team relation for provided site.
+
+  Used for sync logic to work smoothly during transitional period.
+  """
+  def load_for_site(site) do
+    site = Repo.preload(site, [:team, :owner])
+
+    if site.team do
+      site
+    else
+      {:ok, team} = get_or_create(site.owner)
+
+      site
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.put_assoc(:team, team)
+      |> Ecto.Changeset.force_change(:updated_at, site.updated_at)
+      |> Repo.update!()
+    end
+  end
+
+  @doc """
   Get or create user's team.
 
   If the user has no non-guest membership yet, an implicit "My Team" team is
@@ -135,25 +154,6 @@ defmodule Plausible.Teams do
           get_by_owner(user)
       end
     end
-  end
-
-  @spec force_create_my_team(Auth.User.t()) :: Teams.Team.t()
-  def force_create_my_team(user) do
-    {:ok, team} =
-      Repo.transaction(fn ->
-        Repo.update_all(
-          from(tm in Teams.Membership,
-            where: tm.user_id == ^user.id,
-            where: tm.is_autocreated == true
-          ),
-          set: [is_autocreated: false]
-        )
-
-        {:ok, team} = create_my_team(user)
-        team
-      end)
-
-    team
   end
 
   @spec get_by_owner(Auth.User.t() | pos_integer()) ::

@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     This controller deals with user management via the UI in Site Settings -> People. It's important to enforce permissions in this controller.
 
     Owner - Can manage users, can trigger a 'transfer ownership' request
-    Admin and Editor - Can manage users
+    Admin - Can manage users
     Viewer - Can not access user management settings
     Anyone - Can accept invitations
 
@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site =
       conn.assigns.current_user
       |> Plausible.Sites.get_for_user!(conn.assigns.site.domain)
-      |> Plausible.Repo.preload(:owners)
+      |> Plausible.Repo.preload(:owner)
 
     limit = Plausible.Teams.Billing.team_member_limit(site.team)
     usage = Plausible.Teams.Billing.team_member_usage(site.team)
@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     site =
       Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
-      |> Plausible.Repo.preload(:owners)
+      |> Plausible.Repo.preload(:owner)
 
     case Memberships.create_invitation(site, conn.assigns.current_user, email, role) do
       {:ok, invitation} ->

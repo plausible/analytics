@@ -567,23 +567,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                } = json_response(conn, 200)
       end
 
-      test "returns sites scoped to a given team for full memberships", %{conn: conn, user: user} do
-        _owned_site = new_site(owner: user)
-        other_site = new_site()
-        add_guest(other_site, user: user, role: :viewer)
-        other_team_site = new_site()
-        add_member(other_team_site.team, user: user, role: :viewer)
-
-        conn = get(conn, "/api/v1/sites?team_id=" <> other_team_site.team.identifier)
-
-        assert_matches %{
-                         "sites" => [
-                           %{"domain" => ^other_team_site.domain},
-                           %{"domain" => ^other_site.domain}
-                         ]
-                       } = json_response(conn, 200)
-      end
-
       test "handles pagination correctly", %{conn: conn, user: user} do
         [
           %{domain: site1_domain},

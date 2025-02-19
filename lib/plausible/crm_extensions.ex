@@ -9,31 +9,12 @@ defmodule Plausible.CrmExtensions do
     # Kaffy uses String.to_existing_atom when listing params
     @custom_search :custom_search
 
-    def javascripts(%{assigns: %{context: "teams", resource: "team", entry: %{} = team}}) do
-      [
-        Phoenix.HTML.raw("""
-        <script type="text/javascript">
-          (async () => {
-            const response = await fetch("/crm/teams/team/#{team.id}/usage?embed=true")
-            const usageHTML = await response.text()
-            const cardBody = document.querySelector(".card-body")
-            if (cardBody) {
-              const usageDOM = document.createElement("div")
-              usageDOM.innerHTML = usageHTML
-              cardBody.prepend(usageDOM)
-            }
-          })()
-        </script>
-        """)
-      ]
-    end
-
     def javascripts(%{assigns: %{context: "auth", resource: "user", entry: %{} = user}}) do
       [
         Phoenix.HTML.raw("""
         <script type="text/javascript">
           (async () => {
-            const response = await fetch("/crm/auth/user/#{user.id}/info")
+            const response = await fetch("/crm/auth/user/#{user.id}/usage?embed=true")
             const usageHTML = await response.text()
             const cardBody = document.querySelector(".card-body")
             if (cardBody) {
@@ -73,22 +54,15 @@ defmodule Plausible.CrmExtensions do
         <script type="text/javascript">
           (async () => {
             const CHECK_INTERVAL = 300
-
-            const teamPicker = document.querySelector("#pick-raw-resource")
-            if (teamPicker) {
-              teamPicker.style.display = "none";
-            }
-            const teamIdField = document.querySelector("#enterprise_plan_team_id") || 
-                            document.querySelector("#team_id")
-            const teamIdLabel = document.querySelector("label[for=enterprise_plan_team_id]")
+            const userIdField = document.querySelector("#enterprise_plan_user_id")
+            const userIdLabel = document.querySelector("label[for=enterprise_plan_user_id]")
             const dataList = document.createElement("datalist")
-            dataList.id = "team-choices"
-            teamIdField.after(dataList)
-            teamIdField.setAttribute("list", "team-choices")
-            teamIdField.setAttribute("type", "text")
-            teamIdField.setAttribute("autocomplete", "off")
+            dataList.id = "user-choices"
+            userIdField.after(dataList)
+            userIdField.setAttribute("list", "user-choices")
+            userIdField.setAttribute("type", "text")
             const labelSpan = document.createElement("span")
-            teamIdLabel.appendChild(labelSpan)
+            userIdLabel.appendChild(labelSpan)
 
             let updateAction;
 
@@ -96,17 +70,17 @@ defmodule Plausible.CrmExtensions do
               id = Number(id)
 
               if (!isNaN(id) && id > 0) {
-                const response = await fetch(`/crm/billing/search/team-by-id/${id}`)
+                const response = await fetch(`/crm/billing/search/user-by-id/${id}`)
                 labelSpan.innerHTML = ` <i>(${await response.text()})</i>`
               }
             }
 
             const updateSearch = async () => {
-              const search = teamIdField.value
+              const search = userIdField.value
 
               updateLabel(search)
 
-              const response = await fetch("/crm/billing/search/team", {
+              const response = await fetch("/crm/billing/search/user", {
                 headers: { "Content-Type": "application/json" },
                 method: "POST",
                 body: JSON.stringify({ search: search })
@@ -126,9 +100,9 @@ defmodule Plausible.CrmExtensions do
               dataList.replaceChildren(...options)
             }
 
-            updateLabel(teamIdField.value)
+            updateLabel(userIdField.value)
 
-            teamIdField.addEventListener("input", async (e) => {
+            userIdField.addEventListener("input", async (e) => {
               if (updateAction) {
                 clearTimeout(updateAction)
                 updateAction = null
@@ -162,20 +136,20 @@ defmodule Plausible.CrmExtensions do
         <script type="text/javascript">
           (async () => {
             const CHECK_INTERVAL = 300
-            const teamIdField = document.getElementById("enterprise_plan_team_id") || document.getElementById("team_id")
+            const userIdField = document.getElementById("enterprise_plan_user_id") || document.getElementById("user_id")
             let planRequest
-            let lastValue = Number(teamIdField.value)
+            let lastValue = Number(userIdField.value)
             let currentValue = lastValue
 
             setTimeout(prefillCallback, CHECK_INTERVAL)
 
             async function prefillCallback() {
-              currentValue = Number(teamIdField.value)
+              currentValue = Number(userIdField.value)
               if (Number.isInteger(currentValue)
                     && currentValue > 0
                     && currentValue != lastValue
                     && !planRequest) {
-                planRequest = await fetch("/crm/billing/team/" + currentValue + "/current_plan")
+                planRequest = await fetch("/crm/billing/user/" + currentValue + "/current_plan")
                 const result = await planRequest.json()
 
                 fillForm(result)
@@ -204,10 +178,7 @@ defmodule Plausible.CrmExtensions do
 
               ['stats_api', 'props', 'funnels', 'revenue_goals'].forEach(feature => {
                 const checked = result.features.includes(feature)
-                const field = document.querySelector(`input[type=checkbox][value=${feature}]`)
-                if (field) {
-                  field.checked = checked
-                }
+                document.getElementById('enterprise_plan_features_' + feature).checked = checked
               });
             }
           })()
@@ -217,7 +188,7 @@ defmodule Plausible.CrmExtensions do
     end
 
     def javascripts(%{assigns: %{context: context}})
-        when context in ["teams", "sites", "billing"] do
+        when context in ["sites", "billing"] do
       [
         Phoenix.HTML.raw("""
         <script type="text/javascript">

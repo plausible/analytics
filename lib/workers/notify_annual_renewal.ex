@@ -25,7 +25,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
       Repo.all(
         from t in Teams.Team,
           as: :team,
-          inner_join: o in assoc(t, :owners),
+          inner_join: o in assoc(t, :owner),
           inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
           on: true,
           left_join: sent in ^sent_notification,
@@ -35,38 +35,29 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
           where:
             s.next_bill_date > fragment("now()::date") and
               s.next_bill_date <= fragment("now()::date + INTERVAL '7 days'"),
-          preload: [owners: o, subscription: s]
+          preload: [owner: o, subscription: s]
       )
 
     for team <- teams do
       case team.subscription.status do
         Subscription.Status.active() ->
-          for owner <- team.owners do
-            template = PlausibleWeb.Email.yearly_renewal_notification(team, owner)
-            Plausible.Mailer.send(template)
-          end
+          template = PlausibleWeb.Email.yearly_renewal_notification(team)
+          Plausible.Mailer.send(template)
 
         Subscription.Status.deleted() ->
-          for owner <- team.owners do
-            template = PlausibleWeb.Email.yearly_expiration_notification(team, owner)
-            Plausible.Mailer.send(template)
-          end
+          template = PlausibleWeb.Email.yearly_expiration_notification(team)
+          Plausible.Mailer.send(template)
 
         _ ->
-          Sentry.capture_message("Invalid subscription for renewal",
-            team: team,
-            user: List.first(team.owner)
-          )
+          Sentry.capture_message("Invalid subscription for renewal", team: team, user: team.owner)
       end
 
-      for owner <- team.owners do
-        Repo.insert_all("sent_renewal_notifications", [
-          %{
-            user_id: owner.id,
-            timestamp: NaiveDateTime.utc_now()
-          }
-        ])
-      end
+      Repo.insert_all("sent_renewal_notifications", [
+        %{
+          user_id: team.owner.id,
+          timestamp: NaiveDateTime.utc_now()
+        }
+      ])
     end
 
     :ok

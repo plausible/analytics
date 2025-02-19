@@ -42,8 +42,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
       token: token,
       conn: conn
     } do
-      [owner | _] = Plausible.Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
+      site = Plausible.Repo.preload(site, :owner)
+      subscribe_to_growth_plan(site.owner)
 
       url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
@@ -66,8 +66,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
       token: token,
       conn: conn
     } do
-      [owner | _] = Plausible.Repo.preload(site, :owners).owners
-      subscribe_to_growth_plan(owner)
+      site = Plausible.Repo.preload(site, :owner)
+      subscribe_to_growth_plan(site.owner)
 
       url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 

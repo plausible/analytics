@@ -72,30 +72,10 @@
                         {@conn.assigns[:current_user].email}
                       </p>
                     </.dropdown_item>
-                    <.dropdown_item :if={@conn.assigns[:multiple_teams?]}>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Team</div>
-                      <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
-                        {@current_team.name}
-                      </p>
-                    </.dropdown_item>
-
                     <.dropdown_divider />
                     <.dropdown_item href={Routes.settings_path(@conn, :index)}>
                       Account Settings
                     </.dropdown_item>
-
-                    <div :if={Plausible.Teams.enabled?(@my_team) and not @my_team.setup_complete}>
-                      <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
-                        <span class="flex-1">
-                          Create a Team
-                        </span>
-                        <span class="ml-1 bg-indigo-700 text-gray-100 text-xs p-1 rounded">
-                          NEW
-                        </span>
-                      </.dropdown_item>
-                      <.dropdown_divider />
-                    </div>
-
                     <div :if={Plausible.Teams.enabled?(@my_team) and @my_team.setup_complete}>
                       <.dropdown_item
                         class="flex"
@@ -104,12 +84,6 @@
                         <span class="flex-1">
                           Team Settings
                         </span>
-                      </.dropdown_item>
-                      <.dropdown_item
-                        :if={@conn.assigns[:multiple_teams?]}
-                        href={Routes.auth_path(@conn, :select_team)}
-                      >
-                        Switch Team
                       </.dropdown_item>
                       <.dropdown_divider />
                     </div>
@@ -144,6 +118,18 @@
                     >
                       Github Repo
                     </.dropdown_item>
+                    <.dropdown_divider />
+                    <div :if={Plausible.Teams.enabled?(@my_team) and not @my_team.setup_complete}>
+                      <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
+                        <span class="flex-1">
+                          Create a Team
+                        </span>
+                        <span class="ml-1 bg-indigo-700 text-gray-100 text-xs p-1 rounded">
+                          NEW
+                        </span>
+                      </.dropdown_item>
+                      <.dropdown_divider />
+                    </div>
                     <.dropdown_item href="/logout">Log Out</.dropdown_item>
                   </:menu>
                 </.dropdown>

@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def aggregate(conn, params) do
-    site = Repo.preload(conn.assigns.site, :owners)
+    site = Repo.preload(conn.assigns.site, :owner)
 
     params = Map.put(params, "property", nil)
 
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def breakdown(conn, params) do
-    site = Repo.preload(conn.assigns.site, :owners)
+    site = Repo.preload(conn.assigns.site, :owner)
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp event_only_property?(_), do: false
 
   def timeseries(conn, params) do
-    site = Repo.preload(conn.assigns.site, :owners)
+    site = Repo.preload(conn.assigns.site, :owner)
 
     params = Map.put(params, "property", nil)
 

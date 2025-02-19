@@ -40,7 +40,7 @@ defmodule Plausible.Workers.CheckUsage do
       Repo.all(
         from(t in Teams.Team,
           as: :team,
-          inner_join: o in assoc(t, :owners),
+          inner_join: o in assoc(t, :owner),
           inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
           on: true,
           left_join: ep in Plausible.Billing.EnterprisePlan,
@@ -58,7 +58,7 @@ defmodule Plausible.Workers.CheckUsage do
             least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==
               day_of_month(^yesterday),
           order_by: t.id,
-          preload: [subscription: s, enterprise_plan: ep, owners: o]
+          preload: [subscription: s, enterprise_plan: ep, owner: o]
         )
       )
 
@@ -110,10 +110,8 @@ defmodule Plausible.Workers.CheckUsage do
         suggested_plan =
           Plausible.Billing.Plans.suggest(subscriber, pageview_usage.last_cycle.total)
 
-        for owner <- subscriber.owners do
-          PlausibleWeb.Email.over_limit_email(owner, pageview_usage, suggested_plan)
-          |> Plausible.Mailer.send()
-        end
+        PlausibleWeb.Email.over_limit_email(subscriber.owner, pageview_usage, suggested_plan)
+        |> Plausible.Mailer.send()
 
         Plausible.Teams.start_grace_period(subscriber)
 
@@ -131,15 +129,13 @@ defmodule Plausible.Workers.CheckUsage do
         nil
 
       {{_, pageview_usage}, {_, {site_usage, site_allowance}}} ->
-        for owner <- subscriber.owners do
-          PlausibleWeb.Email.enterprise_over_limit_internal_email(
-            owner,
-            pageview_usage,
-            site_usage,
-            site_allowance
-          )
-          |> Plausible.Mailer.send()
-        end
+        PlausibleWeb.Email.enterprise_over_limit_internal_email(
+          subscriber.owner,
+          pageview_usage,
+          site_usage,
+          site_allowance
+        )
+        |> Plausible.Mailer.send()
 
         Plausible.Teams.start_manual_lock_grace_period(subscriber)
     end

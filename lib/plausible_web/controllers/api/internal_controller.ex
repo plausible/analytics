@@ -6,10 +6,9 @@ defmodule PlausibleWeb.Api.InternalController do
 
   def sites(conn, _params) do
     current_user = conn.assigns[:current_user]
-    current_team = conn.assigns[:current_team]
 
     if current_user do
-      sites = sites_for(current_user, current_team)
+      sites = sites_for(current_user)
 
       json(conn, %{data: sites})
     else
@@ -55,8 +54,8 @@ defmodule PlausibleWeb.Api.InternalController do
     end
   end
 
-  defp sites_for(user, team) do
-    pagination = Sites.list(user, %{page_size: 9}, team: team)
+  defp sites_for(user) do
+    pagination = Sites.list(user, %{page_size: 9})
     Enum.map(pagination.entries, &%{domain: &1.domain})
   end
 end

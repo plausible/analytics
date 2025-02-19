@@ -610,62 +610,6 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Repo.get(Plausible.Site, viewer_site.id)
       refute Repo.get(Plausible.Site, owner_site.id)
     end
-
-    test "refuses to delete user when an only owner of a setup team", %{
-      conn: conn,
-      user: user,
-      site: site
-    } do
-      site.team
-      |> Plausible.Teams.Team.setup_changeset()
-      |> Repo.update!()
-
-      conn = delete(conn, "/me")
-
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :danger_zone)
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "You can't delete your account when you are the only owner on a team"
-
-      assert Repo.reload(user)
-    end
-
-    test "refuses to delete user when an only owner of multiple setup teams", %{
-      conn: conn,
-      user: user,
-      site: site
-    } do
-      site.team
-      |> Plausible.Teams.Team.setup_changeset()
-      |> Repo.update!()
-
-      another_owner = new_user()
-      another_site = new_site(owner: another_owner)
-      add_member(another_site.team, user: user, role: :owner)
-      Repo.delete!(another_owner)
-
-      conn = delete(conn, "/me")
-
-      assert redirected_to(conn, 302) == Routes.settings_path(conn, :danger_zone)
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "You can't delete your account when you are the only owner on a team"
-
-      assert Repo.reload(user)
-    end
-
-    test "allows to delete user when not the only owner of a setup team", %{
-      conn: conn,
-      user: user
-    } do
-      another_owner = new_user()
-      another_site = new_site(owner: another_owner)
-      add_member(another_site.team, user: user, role: :owner)
-
-      delete(conn, "/me")
-
-      refute Repo.reload(user)
-    end
   end
 
   describe "GET /auth/google/callback" do

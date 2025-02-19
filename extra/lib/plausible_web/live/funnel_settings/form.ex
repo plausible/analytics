@@ -16,7 +16,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
         :owner,
         :admin,
-        :editor,
         :super_admin
       ])
 

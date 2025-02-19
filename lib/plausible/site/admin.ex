@@ -33,11 +33,9 @@ defmodule Plausible.SiteAdmin do
 
     from(r in query,
       as: :site,
-      inner_join: o in assoc(r, :owners),
+      inner_join: o in assoc(r, :owner),
       inner_join: t in assoc(r, :team),
-      preload: [owners: o, team: t, guest_memberships: [team_membership: :user]],
-      or_where: type(t.identifier, :string) == ^search,
-      or_where: ilike(t.name, ^search_term),
+      preload: [owner: o, team: t, guest_memberships: [team_membership: :user]],
       or_where: ilike(r.domain, ^search_term),
       or_where: ilike(o.email, ^search_term),
       or_where: ilike(o.name, ^search_term),
@@ -80,8 +78,7 @@ defmodule Plausible.SiteAdmin do
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
       timezone: nil,
       public: nil,
-      team: %{value: &get_team/1},
-      owners: %{value: &get_owners/1},
+      owner: %{value: &get_owner/1},
       other_members: %{value: &get_other_members/1},
       limits: %{
         value: fn site ->
@@ -116,8 +113,7 @@ defmodule Plausible.SiteAdmin do
       transfer_ownership_direct: %{
         name: "Transfer ownership without invite",
         inputs: [
-          %{name: "email", title: "New Owner Email", default: nil},
-          %{name: "team_id", title: "Team Identifier", default: nil}
+          %{name: "email", title: "New Owner Email", default: nil}
         ],
         action: fn conn, sites, params -> transfer_ownership_direct(conn, sites, params) end
       }
@@ -154,14 +150,12 @@ defmodule Plausible.SiteAdmin do
     {:error, "Please select at least one site from the list"}
   end
 
-  defp transfer_ownership_direct(_conn, sites, %{"email" => email} = params) do
+  defp transfer_ownership_direct(_conn, sites, %{"email" => email}) do
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
-         {:ok, team} <- get_team_by_id(params["team_id"]),
          {:ok, _} <-
            Plausible.Site.Memberships.bulk_transfer_ownership_direct(
              sites,
-             new_owner,
-             team
+             new_owner
            ) do
       :ok
     else
@@ -174,87 +168,35 @@ defmodule Plausible.SiteAdmin do
       {:error, :no_plan} ->
         {:error, "The new owner does not have a subscription"}
 
-      {:error, :multiple_teams} ->
-        {:error, "The new owner owns more than one team"}
-
-      {:error, :permission_denied} ->
-        {:error, "The new owner can't add sites in the selected team"}
-
-      {:error, :invalid_team_id} ->
-        {:error, "The provided team identifier is invalid"}
-
       {:error, {:over_plan_limits, limits}} ->
         {:error, "Plan limits exceeded for one of the sites: #{Enum.join(limits, ", ")}"}
     end
-  end
-
-  defp get_team_by_id(id) when is_binary(id) and byte_size(id) > 0 do
-    case Ecto.UUID.cast(id) do
-      {:ok, team_id} ->
-        {:ok, Plausible.Teams.get(team_id)}
-
-      :error ->
-        {:error, :invalid_team_id}
-    end
-  end
-
-  defp get_team_by_id(_) do
-    {:ok, nil}
   end
 
   defp format_date(date) do
     Calendar.strftime(date, "%b %-d, %Y")
   end
 
-  defp get_team(site) do
-    team_name =
-      case site.owners do
-        [owner] ->
-          if site.team.name == "My Team" do
-            owner.name
-          else
-            site.team.name
-          end
+  defp get_owner(site) do
+    owner = site.owner
 
-        [_ | _] ->
-          site.team.name
-      end
-      |> html_escape()
+    if owner do
+      escaped_name = Phoenix.HTML.html_escape(owner.name) |> Phoenix.HTML.safe_to_string()
+      escaped_email = Phoenix.HTML.html_escape(owner.email) |> Phoenix.HTML.safe_to_string()
 
-    """
-    <a href="/crm/teams/team/#{site.team.id}">#{team_name}</a>
-    """
-    |> Phoenix.HTML.raw()
-  end
-
-  defp get_owners(site) do
-    owners_html =
-      Enum.map(site.owners, fn owner ->
-        escaped_name = html_escape(owner.name)
-        escaped_email = html_escape(owner.email)
-
-        """
-         <a href="/crm/auth/user/#{owner.id}">#{escaped_name}</a>
-         <br/>
-         #{escaped_email}
-        """
-      end)
-
-    {:safe, Enum.join(owners_html, "<br/><br/>")}
+      {:safe,
+       """
+        <a href="/crm/auth/user/#{owner.id}">#{escaped_name}</a>
+        <br/><br/>
+        #{escaped_email}
+       """}
+    end
   end
 
   defp get_other_members(site) do
     site.guest_memberships
-    |> Enum.map_join(", ", fn m ->
-      id = m.team_membership.user.id
-      email = html_escape(m.team_membership.user.email)
-      role = html_escape(m.role)
-
-      """
-      <a href="/auth/user/#{id}">#{email} (#{role})</a>
-      """
-    end)
-    |> Phoenix.HTML.raw()
+    |> Enum.map(fn m -> m.team_membership.user.email <> "(#{member_role(m.role)})" end)
+    |> Enum.join(", ")
   end
 
   def get_struct_fields(module) do
@@ -268,9 +210,6 @@ defmodule Plausible.SiteAdmin do
   def create_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
   def update_changeset(schema, attrs), do: Plausible.Site.crm_changeset(schema, attrs)
 
-  def html_escape(string) do
-    string
-    |> Phoenix.HTML.html_escape()
-    |> Phoenix.HTML.safe_to_string()
-  end
+  defp member_role(:editor), do: :admin
+  defp member_role(other), do: other
 end

@@ -8,13 +8,18 @@ defmodule PlausibleWeb.AdminController do
   alias Plausible.Teams
 
   def usage(conn, params) do
-    team_id = String.to_integer(params["team_id"])
+    user_id = String.to_integer(params["user_id"])
 
     team =
-      team_id
-      |> Teams.get()
-      |> Repo.preload([:owners, team_memberships: :user])
-      |> Teams.with_subscription()
+      case Teams.get_by_owner(user_id) do
+        {:ok, team} ->
+          team
+          |> Teams.with_subscription()
+          |> Plausible.Repo.preload(:owner)
+
+        {:error, :no_team} ->
+          nil
+      end
 
     usage = Teams.Billing.quota_usage(team, with_features: true)
 
@@ -31,35 +36,17 @@ defmodule PlausibleWeb.AdminController do
     |> send_resp(200, html_response)
   end
 
-  def user_info(conn, params) do
+  def current_plan(conn, params) do
     user_id = String.to_integer(params["user_id"])
 
-    user =
-      Plausible.Auth.User
-      |> Repo.get!(user_id)
-      |> Repo.preload(:owned_teams)
-
-    teams_list = Plausible.Auth.UserAdmin.teams(user.owned_teams)
-
-    html_response = """
-      <div style="margin-bottom: 1.1em;">
-        <p><b>Owned teams:</b></p>
-        #{teams_list}
-      </div>
-    """
-
-    conn
-    |> put_resp_content_type("text/html")
-    |> send_resp(200, html_response)
-  end
-
-  def current_plan(conn, params) do
-    team_id = String.to_integer(params["team_id"])
-
     team =
-      team_id
-      |> Teams.get()
-      |> Teams.with_subscription()
+      case Teams.get_by_owner(user_id) do
+        {:ok, team} ->
+          Teams.with_subscription(team)
+
+        {:error, :no_team} ->
+          nil
+      end
 
     plan =
       case team && team.subscription &&
@@ -87,39 +74,21 @@ defmodule PlausibleWeb.AdminController do
     |> send_resp(200, json_response)
   end
 
-  def team_by_id(conn, params) do
-    id = params["team_id"]
+  def user_by_id(conn, params) do
+    id = params["user_id"]
 
     entry =
       Repo.one(
-        from t in Plausible.Teams.Team,
-          inner_join: o in assoc(t, :owners),
-          where: t.id == ^id,
-          group_by: t.id,
-          select:
-            fragment(
-              """
-              case when ? = ? then 
-                string_agg(concat(?, ' (', ?, ')'), ',') 
-              else 
-                concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']') 
-              end
-              """,
-              t.name,
-              "My Team",
-              o.name,
-              o.email,
-              t.name,
-              o.name,
-              o.email
-            )
+        from u in Plausible.Auth.User,
+          where: u.id == ^id,
+          select: fragment("concat(?, ?, ?, ?)", u.name, " (", u.email, ")")
       ) || ""
 
     conn
     |> send_resp(200, entry)
   end
 
-  def team_search(conn, params) do
+  def user_search(conn, params) do
     search =
       (params["search"] || "")
       |> String.trim()
@@ -133,47 +102,20 @@ defmodule PlausibleWeb.AdminController do
 
         term = "%#{term}%"
 
-        team_id =
+        user_id =
           case Integer.parse(search) do
             {id, ""} -> id
             _ -> 0
           end
 
-        if team_id != 0 do
+        if user_id != 0 do
           []
         else
           Repo.all(
-            from t in Teams.Team,
-              inner_join: o in assoc(t, :owners),
-              where:
-                t.id == ^team_id or
-                  type(t.identifier, :string) == ^search or
-                  ilike(t.name, ^term) or
-                  ilike(o.email, ^term) or
-                  ilike(o.name, ^term),
-              order_by: [t.name, t.id],
-              group_by: t.id,
-              select: [
-                fragment(
-                  """
-                  case when ? = ? then 
-                    concat(string_agg(concat(?, ' (', ?, ')'), ','), ' - ', ?)
-                  else 
-                    concat(concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']'), ' - ', ?)
-                  end
-                  """,
-                  t.name,
-                  "My Team",
-                  o.name,
-                  o.email,
-                  t.identifier,
-                  t.name,
-                  o.name,
-                  o.email,
-                  t.identifier
-                ),
-                t.id
-              ],
+            from u in Plausible.Auth.User,
+              where: u.id == ^user_id or ilike(u.name, ^term) or ilike(u.email, ^term),
+              order_by: [u.name, u.id],
+              select: [fragment("concat(?, ?, ?, ?)", u.name, " (", u.email, ")"), u.id],
               limit: 20
           )
         end
@@ -189,17 +131,12 @@ defmodule PlausibleWeb.AdminController do
   defp usage_and_limits_html(team, usage, limits, embed?) do
     content = """
       <ul>
-        <li>Team: <b>#{team.name}</b></li>
-        <li>Subscription plan: #{Teams.TeamAdmin.subscription_plan(team)}</li>
-        <li>Subscription status: #{Teams.TeamAdmin.subscription_status(team)}</li>
-        <li>Grace period: #{Teams.TeamAdmin.grace_period_status(team)}</li>
+        <li>Team: <b>#{team && team.name}</b></li>
         <li>Sites: <b>#{usage.sites}</b> / #{limits.sites}</li>
         <li>Team members: <b>#{usage.team_members}</b> / #{limits.team_members}</li>
         <li>Features: #{features_usage(usage.features)}</li>
         <li>Monthly pageviews: #{monthly_pageviews_usage(usage.monthly_pageviews, limits.monthly_pageviews)}</li>
         #{sites_count_row(team)}
-        <li>Owners: #{get_owners(team)}</li>
-        <li>Team members: #{get_other_members(team)}</li>
       </ul>
     """
 
@@ -240,7 +177,7 @@ defmodule PlausibleWeb.AdminController do
 
       sites_link =
         Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-          custom_search: team.identifier
+          custom_search: team.owner.email
         )
 
       """
@@ -272,35 +209,5 @@ defmodule PlausibleWeb.AdminController do
       end)
 
     "<ul>#{Enum.join(list_items)}</ul>"
-  end
-
-  defp get_owners(team) do
-    team.owners
-    |> Enum.map_join(", ", fn owner ->
-      email = html_escape(owner.email)
-
-      """
-      <a href="/crm/auth/user/#{owner.id}">#{email}</a>
-      """
-    end)
-  end
-
-  defp get_other_members(team) do
-    team.team_memberships
-    |> Enum.reject(&(&1.role == :owner))
-    |> Enum.map_join(", ", fn tm ->
-      email = html_escape(tm.user.email)
-      role = html_escape(tm.role)
-
-      """
-      <a href="/crm/auth/user/#{tm.user.id}">#{email <> " (#{role})"}</a>
-      """
-    end)
-  end
-
-  def html_escape(string) do
-    string
-    |> Phoenix.HTML.html_escape()
-    |> Phoenix.HTML.safe_to_string()
   end
 end

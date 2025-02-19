@@ -75,7 +75,7 @@ defmodule Plausible.Sites do
     to: Plausible.Teams.Sites
 
   def list_people(site) do
-    owner_memberships =
+    owner_membership =
       from(
         tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
@@ -86,7 +86,7 @@ defmodule Plausible.Sites do
           role: tm.role
         }
       )
-      |> Repo.all()
+      |> Repo.one!()
 
     memberships =
       from(
@@ -111,7 +111,7 @@ defmodule Plausible.Sites do
       )
       |> Repo.all()
 
-    memberships = owner_memberships ++ memberships
+    memberships = [owner_membership | memberships]
 
     invitations =
       from(
@@ -151,55 +151,28 @@ defmodule Plausible.Sites do
     %{memberships: memberships, invitations: site_transfers ++ invitations}
   end
 
-  @spec for_user_query(Auth.User.t(), Teams.Team.t() | nil) :: Ecto.Query.t()
-  def for_user_query(user, team \\ nil) do
-    query =
-      from(s in Site,
-        as: :site,
-        inner_join: t in assoc(s, :team),
-        as: :team,
-        inner_join: tm in assoc(t, :team_memberships),
-        as: :team_memberships,
-        left_join: gm in assoc(tm, :guest_memberships),
-        as: :guest_memberships,
-        where: tm.user_id == ^user.id,
-        order_by: [desc: s.id]
-      )
-
-    if team do
-      where(
-        query,
-        [team_memberships: tm, guest_memberships: gm, site: s],
-        (tm.role != :guest and tm.team_id == ^team.id) or gm.site_id == s.id
-      )
-    else
-      where(
-        query,
-        [team_memberships: tm, guest_memberships: gm, site: s],
-        tm.role != :guest or gm.site_id == s.id
-      )
-    end
+  @spec for_user_query(Auth.User.t()) :: Ecto.Query.t()
+  def for_user_query(user) do
+    from(s in Site,
+      inner_join: t in assoc(s, :team),
+      inner_join: tm in assoc(t, :team_memberships),
+      left_join: gm in assoc(tm, :guest_memberships),
+      where: tm.user_id == ^user.id,
+      where: tm.role != :guest or gm.site_id == s.id,
+      order_by: [desc: s.id]
+    )
   end
 
-  def create(user, params, team \\ nil) do
+  def create(user, params) do
     Ecto.Multi.new()
     |> Ecto.Multi.put(:site_changeset, Site.new(params))
     |> Ecto.Multi.run(:create_team, fn _repo, _context ->
-      cond do
-        team && Teams.Memberships.can_add_site?(team, user) ->
-          {:ok, Teams.with_subscription(team)}
+      {:ok, team} = Plausible.Teams.get_or_create(user)
 
-        is_nil(team) ->
-          with {:ok, team} <- Teams.get_or_create(user) do
-            {:ok, Teams.with_subscription(team)}
-          end
-
-        true ->
-          {:error, :permission_denied}
-      end
+      {:ok, Plausible.Teams.with_subscription(team)}
     end)
     |> Ecto.Multi.run(:ensure_can_add_new_site, fn _repo, %{create_team: team} ->
-      case Teams.Billing.ensure_can_add_new_site(team) do
+      case Plausible.Teams.Billing.ensure_can_add_new_site(team) do
         :ok -> {:ok, :proceed}
         error -> error
       end
@@ -331,7 +304,9 @@ defmodule Plausible.Sites do
     locked
   end
 
-  def get_for_user!(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
+  def get_for_user!(user, domain, roles \\ [:owner, :admin, :viewer]) do
+    roles = translate_roles(roles)
+
     site =
       if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
         get_by_domain!(domain)
@@ -344,7 +319,9 @@ defmodule Plausible.Sites do
     Repo.preload(site, :team)
   end
 
-  def get_for_user(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
+  def get_for_user(user, domain, roles \\ [:owner, :admin, :viewer]) do
+    roles = translate_roles(roles)
+
     if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
       get_by_domain(domain)
     else
@@ -352,6 +329,13 @@ defmodule Plausible.Sites do
       |> get_for_user_query(domain, List.delete(roles, :super_admin))
       |> Repo.one()
     end
+  end
+
+  defp translate_roles(roles) do
+    Enum.map(roles, fn
+      :admin -> :editor
+      role -> role
+    end)
   end
 
   defp get_for_user_query(user_id, domain, roles) do

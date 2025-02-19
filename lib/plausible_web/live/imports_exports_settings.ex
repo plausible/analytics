@@ -18,7 +18,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
         Plausible.Sites.get_for_user!(current_user, domain, [
           :owner,
           :admin,
-          :editor,
           :super_admin
         ])
       end)

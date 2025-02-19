@@ -63,30 +63,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   @tag :ee_only
-  test "halts with error when site's team lacks feature access", %{conn: conn} do
-    user = new_user()
-    _site = new_site(owner: user)
-    api_key = insert(:api_key, user: user)
-
-    another_owner =
-      new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [])
-
-    another_site = new_site(owner: another_owner)
-
-    conn =
-      conn
-      |> put_req_header("authorization", "Bearer #{api_key.key}")
-      |> get("/", %{"site_id" => another_site.domain})
-      |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicAPI.call(nil)
-
-    assert conn.halted
-
-    assert json_response(conn, 402)["error"] =~
-             "The account that owns this API key does not have access"
-  end
-
-  @tag :ee_only
   test "halts with error when upgrade is required", %{conn: conn} do
     user = new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [])
     site = new_site(owner: user)
