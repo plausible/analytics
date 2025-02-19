@@ -54,7 +54,7 @@
   // flag prevents sending multiple engagement events in those cases.
   var engagementCooldown = false
 
-  // Timestamp indicating when this particular page last become visible
+  // Timestamp indicating when this particular page last became visible.
   // Reset during pageviews, set to null when page is closed.
   var currentEngagementStartTime
   // When page is hidden, this 'engaged' time is saved to this variable

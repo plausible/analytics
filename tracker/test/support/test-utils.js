@@ -32,10 +32,10 @@ exports.metaKey = function() {
 
 // Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
 // list of requests as soon as the specified number of requests is made, or 3 seconds has passed.
-const mockManyRequests = function({ page, path, numberOfRequests, responseDelay, shouldIgnoreRequest }) {
+const mockManyRequests = function({ page, path, numberOfRequests, responseDelay, shouldIgnoreRequest, mockRequestTimeout = 3000 }) {
   return new Promise((resolve, _reject) => {
     let requestList = []
-    const requestTimeoutTimer = setTimeout(() => resolve(requestList), 3000)
+    const requestTimeoutTimer = setTimeout(() => resolve(requestList), mockRequestTimeout)
 
     page.route(path, async (route, request) => {
       const postData = request.postDataJSON()
@@ -89,7 +89,8 @@ exports.expectPlausibleInAction = async function (page, {
   awaitedRequestCount,
   expectedRequestCount,
   responseDelay,
-  shouldIgnoreRequest
+  shouldIgnoreRequest,
+  mockRequestTimeout = 3000
 }) {
   const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
   const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
@@ -99,7 +100,8 @@ exports.expectPlausibleInAction = async function (page, {
     path: '/api/event',
     responseDelay,
     shouldIgnoreRequest,
-    numberOfRequests: requestsToAwait
+    numberOfRequests: requestsToAwait,
+    mockRequestTimeout: mockRequestTimeout
   })
   await action()
   const requestBodies = await plausibleRequestMockList

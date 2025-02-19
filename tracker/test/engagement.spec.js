@@ -227,22 +227,35 @@ test.describe('engagement events', () => {
     expect(request2.e).toBeLessThan(2500)
   })
 
-  test('does not send engagement events when tab is only open for a short time', async ({ page }) => {
+  test('does not send engagement events when tab is only open for a short time until over 1000ms has passed', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
       expectedRequests: [{n: 'pageview'}],
     })
 
-    await expectPlausibleInAction(page, {
+    const [request1] = await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page),
       expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
     })
+    expect(request1.e).toBeLessThan(500)
 
-    await page.waitForTimeout(100)
+    await page.waitForTimeout(500)
 
     await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page),
       refutedRequests: [{n: 'engagement'}],
+      mockRequestTimeout: 100
     })
+
+    await page.waitForTimeout(500)
+
+    const [request2] = await expectPlausibleInAction(page, {
+      action: () => hideAndShowCurrentTab(page, {delay: 3000}),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+    })
+
+    // Sum of both visibility times
+    expect(request2.e).toBeGreaterThan(1000)
+    expect(request2.e).toBeLessThan(1500)
   })
 })
