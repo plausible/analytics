@@ -6,10 +6,11 @@ import { useSiteContext } from '../../site-context'
 import {
   formatSegmentIdAsLabelKey,
   getFilterSegmentsByNameInsensitive,
+  handleSegmentResponse,
   isSegmentFilter,
-  parseApiSegmentData,
   SavedSegment,
-  SegmentData
+  SegmentData,
+  SegmentDataFromApi
 } from '../../filtering/segments'
 import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanLabels } from '../../util/filters'
@@ -188,13 +189,9 @@ export const useSegmentPrefetch = ({ id }: { id: string }) => {
     typeof queryKey
   > = useCallback(
     async ({ queryKey: [_, id] }) => {
-      const response: SavedSegment & { segment_data: SegmentData } = await get(
-        `/api/${encodeURIComponent(site.domain)}/segments/${id}`
-      )
-      return {
-        ...response,
-        segment_data: parseApiSegmentData(response.segment_data)
-      }
+      const response: SavedSegment & { segment_data: SegmentDataFromApi } =
+        await get(`/api/${encodeURIComponent(site.domain)}/segments/${id}`)
+      return handleSegmentResponse(response)
     },
     [site]
   )

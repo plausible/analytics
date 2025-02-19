@@ -19,12 +19,29 @@ export type SavedSegment = {
   updated_at: string
 }
 
+export type SegmentDataFromApi = {
+  filters: unknown[]
+  labels: Record<string, string>
+}
+
+/** In this type, filters are parsed to dashboard format */
 export type SegmentData = {
   filters: Filter[]
   labels: Record<string, string>
 }
 
 const SEGMENT_LABEL_KEY_PREFIX = 'segment-'
+
+export function handleSegmentResponse(
+  segment: SavedSegment & {
+    segment_data: SegmentDataFromApi
+  }
+): SavedSegment & { segment_data: SegmentData } {
+  return {
+    ...segment,
+    segment_data: parseApiSegmentData(segment.segment_data)
+  }
+}
 
 export function getFilterSegmentsByNameInsensitive(
   search?: string

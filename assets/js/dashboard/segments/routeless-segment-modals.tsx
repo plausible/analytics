@@ -9,9 +9,10 @@ import {
 import {
   getSearchToApplySingleSegmentFilter,
   getSegmentNamePlaceholder,
-  parseApiSegmentData,
+  handleSegmentResponse,
   SavedSegment,
-  SegmentData
+  SegmentData,
+  SegmentDataFromApi
 } from '../filtering/segments'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSiteContext } from '../site-context'
@@ -42,7 +43,7 @@ export const RoutelessSegmentModals = () => {
       Partial<Pick<SavedSegment, 'name' | 'type'>> & {
         segment_data?: SegmentData
       }) => {
-      const response: SavedSegment & { segment_data: SegmentData } =
+      const response: SavedSegment & { segment_data: SegmentDataFromApi } =
         await mutation(
           `/api/${encodeURIComponent(site.domain)}/segments/${id}`,
           {
@@ -60,10 +61,7 @@ export const RoutelessSegmentModals = () => {
           }
         )
 
-      return {
-        ...response,
-        segment_data: parseApiSegmentData(response.segment_data)
-      }
+      return handleSegmentResponse(response)
     },
     onSuccess: async (segment) => {
       queryClient.invalidateQueries({ queryKey: ['segments'] })
@@ -87,7 +85,7 @@ export const RoutelessSegmentModals = () => {
       type: 'personal' | 'site'
       segment_data: SegmentData
     }) => {
-      const response: SavedSegment & { segment_data: SegmentData } =
+      const response: SavedSegment & { segment_data: SegmentDataFromApi } =
         await mutation(`/api/${encodeURIComponent(site.domain)}/segments`, {
           method: 'POST',
           body: {
@@ -99,10 +97,7 @@ export const RoutelessSegmentModals = () => {
             }
           }
         })
-      return {
-        ...response,
-        segment_data: parseApiSegmentData(response.segment_data)
-      }
+      return handleSegmentResponse(response)
     },
     onSuccess: async (segment) => {
       queryClient.invalidateQueries({ queryKey: ['segments'] })
@@ -118,17 +113,14 @@ export const RoutelessSegmentModals = () => {
 
   const deleteSegment = useMutation({
     mutationFn: async (data: Pick<SavedSegment, 'id'>) => {
-      const response: SavedSegment & { segment_data: SegmentData } =
+      const response: SavedSegment & { segment_data: SegmentDataFromApi } =
         await mutation(
           `/api/${encodeURIComponent(site.domain)}/segments/${data.id}`,
           {
             method: 'DELETE'
           }
         )
-      return {
-        ...response,
-        segment_data: parseApiSegmentData(response.segment_data)
-      }
+      return handleSegmentResponse(response)
     },
     onSuccess: (_segment): void => {
       queryClient.invalidateQueries({ queryKey: ['segments'] })
