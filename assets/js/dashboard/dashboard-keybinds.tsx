@@ -1,7 +1,7 @@
 /* @format */
 import React from 'react'
 import { NavigateKeybind } from './keybinding'
-import { useQueryContext } from './query-context'
+import { useRoutelessModalsContext } from './navigation/routeless-modals-context'
 
 const ClearFiltersKeybind = () => (
   <NavigateKeybind
@@ -22,6 +22,6 @@ const ClearFiltersKeybind = () => (
 )
 
 export function DashboardKeybinds() {
-  const { modal } = useQueryContext()
+  const { modal } = useRoutelessModalsContext()
   return modal === null && <ClearFiltersKeybind />
 }

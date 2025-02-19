@@ -6,7 +6,6 @@ import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../../components/popover'
 import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import {
-  CheckIcon,
   Square2StackIcon,
   TrashIcon,
   XMarkIcon
@@ -76,7 +75,7 @@ export const SegmentMenu = () => {
               )}
             >
               <Popover.Panel className={popover.panel.classNames.roundedSheet}>
-                <AppNavigationLink
+                {/* <AppNavigationLink
                   className={linkClassName}
                   search={(s) => s}
                   state={{ expandedSegment }}
@@ -89,7 +88,7 @@ export const SegmentMenu = () => {
                     <CheckIcon className="w-4 h-4 block" />
                     <span className="whitespace-nowrap">Update segment</span>
                   </div>
-                </AppNavigationLink>
+                </AppNavigationLink> */}
                 <AppNavigationLink
                   className={linkClassName}
                   search={(s) => s}

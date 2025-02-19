@@ -59,13 +59,13 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         ref={buttonRef}
         className={classNames(
           popover.toggleButton.classNames.rounded,
-          popover.toggleButton.classNames.ghost,
+          popover.toggleButton.classNames.shadow,
           'justify-center gap-1 px-3'
         )}
       >
         <PlusIcon className="block h-4 w-4" />
         <span className={popover.toggleButton.classNames.truncatedText}>
-          Add filter
+          Filter
         </span>
       </Popover.Button>
       <Transition

@@ -249,13 +249,13 @@ export default class SiteSwitcher extends React.Component {
         >
           <Favicon
             domain={this.props.site.domain}
-            className="w-4 mr-2 align-middle w-4"
+            className="w-4 align-middle"
           />
-          <span className="hidden sm:inline-block">
+          <span className="hidden sm:inline-block ml-2">
             {this.props.site.domain}
           </span>
           {this.props.loggedIn && (
-            <ChevronDownIcon className="ml-2 h-5 w-5 shrink-0" />
+            <ChevronDownIcon className="ml-2 h-5 w-5 shrink-0 hidden sm:inline-block" />
           )}
         </button>
 
