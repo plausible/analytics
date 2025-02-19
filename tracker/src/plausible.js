@@ -275,7 +275,7 @@
 
     function page(isSPANavigation) {
       {{#unless hash}}
-      if (lastPage === location.pathname) return;
+      if (isSPANavigation && lastPage === location.pathname) return;
       {{/unless}}
 
       {{#if pageleave}}
