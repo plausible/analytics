@@ -1,9 +1,6 @@
 /* @format */
 import React, { createContext, ReactNode, useContext, useState } from 'react'
-import {
-  RoutelessSegmentModal,
-  RoutelessSegmentModals
-} from '../segments/routeless-segment-modals'
+import { RoutelessSegmentModal } from '../segments/routeless-segment-modals'
 
 type ActiveModal = null | RoutelessSegmentModal
 
@@ -39,7 +36,6 @@ export function RoutelessModalsContextProvider({
         setModal
       }}
     >
-      <RoutelessSegmentModals />
       {children}
     </RoutelessModalsContext.Provider>
   )
