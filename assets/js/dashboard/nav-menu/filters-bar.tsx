@@ -11,6 +11,7 @@ import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
+import { DashboardQuery } from '../query'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -27,13 +28,15 @@ export const handleVisibility = ({
   leftoverWidth,
   seeMoreWidth,
   pillWidths,
-  pillGap
+  pillGap,
+  mustShowSeeMoreMenu
 }: {
   setVisibility: (v: VisibilityState) => void
   leftoverWidth: number | null
   pillWidths: (number | null)[] | null
   seeMoreWidth: number
   pillGap: number
+  mustShowSeeMoreMenu: boolean
 }): void => {
   if (leftoverWidth === null || pillWidths === null) {
     return
@@ -58,7 +61,7 @@ export const handleVisibility = ({
   const fits = fitToWidth(leftoverWidth)
 
   const seeMoreWillBePresent =
-    fits.visibleCount < pillWidths.length || pillWidths.length > 1
+    fits.visibleCount < pillWidths.length || mustShowSeeMoreMenu
 
   // Check if the appearance of "See more" would cause overflow
   if (seeMoreWillBePresent) {
@@ -106,6 +109,11 @@ interface FiltersBarProps {
   }
 }
 
+const canShowClearAllAction = (filters: DashboardQuery['filters']) =>
+  filters.length >= 2
+const canShowSaveAsSegmentAction = (filters: DashboardQuery['filters']) =>
+  filters.length >= 1 && !filters.some(isSegmentFilter)
+
 export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
@@ -137,7 +145,12 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
               BUFFER_RIGHT_PX
             : null,
         seeMoreWidth:
-          SEE_MORE_LEFT_MARGIN_PX + SEE_MORE_WIDTH_PX + SEE_MORE_RIGHT_MARGIN_PX
+          SEE_MORE_LEFT_MARGIN_PX +
+          SEE_MORE_WIDTH_PX +
+          SEE_MORE_RIGHT_MARGIN_PX,
+        mustShowSeeMoreMenu:
+          canShowClearAllAction(query.filters) ||
+          canShowClearAllAction(query.filters)
       })
     })
 
@@ -155,8 +168,8 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
     return <div className="w-4" />
   }
 
-  const canClear = query.filters.length > 1
-  const canSaveAsSegment = canClear
+  const showingClearAll = canShowClearAllAction(query.filters)
+  const showingSaveAsSegment = canShowSaveAsSegmentAction(query.filters)
 
   return (
     <div
@@ -181,7 +194,9 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
         />
       </div>
       {visibility !== null &&
-        (query.filters.length !== visibility.visibleCount || canClear) && (
+        (query.filters.length !== visibility.visibleCount ||
+          showingClearAll ||
+          showingSaveAsSegment) && (
           <Popover className="md:relative">
             <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
             <Popover.Button
@@ -224,8 +239,8 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
                     }}
                   />
                 )}
-                {canClear && <ClearAction />}
-                {canSaveAsSegment && <SaveAsSegmentAction />}
+                {showingClearAll && <ClearAction />}
+                {showingSaveAsSegment && <SaveAsSegmentAction />}
               </Popover.Panel>
             </Transition>
           </Popover>
@@ -251,25 +266,18 @@ const ClearAction = () => (
 
 const SaveAsSegmentAction = () => {
   const { setModal } = useRoutelessModalsContext()
-  const { query, expandedSegment } = useQueryContext()
+  const { expandedSegment } = useQueryContext()
   if (expandedSegment) {
     return null
   }
 
-  const disabledReason = query.filters.some(isSegmentFilter)
-    ? 'Segment filters can not be saved within other segments'
-    : undefined
-  const disabled = !!disabledReason
-
   return (
     <AppNavigationLink
       className={classNames(
-        'button flex self-start h-9 !px-3 whitespace-nowrap',
-        { 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed': !!disabled }
+        'button flex self-start h-9 !px-3 whitespace-nowrap'
       )}
-      title={disabledReason}
       search={(s) => s}
-      onClick={disabled ? () => {} : () => setModal('create')}
+      onClick={() => setModal('create')}
       state={{ expandedSegment: null }}
     >
       Save as segment

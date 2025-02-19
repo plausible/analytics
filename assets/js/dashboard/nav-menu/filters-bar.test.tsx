@@ -115,7 +115,8 @@ describe(`${handleVisibility.name}`, () => {
       leftoverWidth: 1000,
       seeMoreWidth: 100,
       pillWidths: [200, 200, 200, 200],
-      pillGap: 25
+      pillGap: 25,
+      mustShowSeeMoreMenu: true
     }
     handleVisibility(input)
     expect(setVisibility).toHaveBeenCalledTimes(1)
@@ -148,7 +149,8 @@ describe(`${handleVisibility.name}`, () => {
       leftoverWidth: 300,
       seeMoreWidth: 50,
       pillWidths: [250],
-      pillGap: 25
+      pillGap: 25,
+      mustShowSeeMoreMenu: false
     }
     handleVisibility(input)
     expect(setVisibility).toHaveBeenCalledTimes(1)
@@ -165,7 +167,8 @@ describe(`${handleVisibility.name}`, () => {
       leftoverWidth: 300,
       seeMoreWidth: 50,
       pillWidths: [250, 200],
-      pillGap: 25
+      pillGap: 25,
+      mustShowSeeMoreMenu: true
     }
     handleVisibility(input)
     expect(setVisibility).toHaveBeenCalledTimes(1)

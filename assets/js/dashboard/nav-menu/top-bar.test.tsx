@@ -80,7 +80,7 @@ test('user can open and close filters dropdown', async () => {
     )
   })
 
-  const toggleFilters = screen.getByRole('button', { name: /Add filter/ })
+  const toggleFilters = screen.getByRole('button', { name: 'Filter' })
   await userEvent.click(toggleFilters)
   expect(screen.queryAllByRole('link').map((el) => el.textContent)).toEqual([
     'Page',
