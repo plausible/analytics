@@ -68,6 +68,12 @@ defmodule Plausible.Goals do
         else
           updated_goal
         end
+      else
+        {:error, %Ecto.Changeset{} = changeset} ->
+          Repo.rollback(changeset)
+
+        {:error, :upgrade_required} ->
+          Repo.rollback(:upgrade_required)
       end
     end)
   end
