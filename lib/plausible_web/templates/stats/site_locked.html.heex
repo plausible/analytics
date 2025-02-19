@@ -48,7 +48,10 @@
               must upgrade their subscription plan in order to
               unlock the stats.
             </p>
-            <div class="mt-6 text-sm text-gray-500">
+            <div
+              :if={not Plausible.Teams.enabled?(@conn.assigns[:my_team])}
+              class="mt-6 text-sm text-gray-500"
+            >
               <p>Want to pay for this site with the account you're logged in with?</p>
               <p class="mt-1">
                 Contact {List.first(@site.owners).email} and ask them to
