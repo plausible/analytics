@@ -143,7 +143,7 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def invite(%Plausible.Site{} = site, invitee_email, role, inviter) do
-    site = Repo.preload(site, :team)
+    site = Teams.load_for_site(site)
 
     if role == :owner do
       create_site_transfer(
@@ -188,9 +188,10 @@ defmodule Plausible.Teams.Invitations do
     )
   end
 
-  def accept_site_transfer(site_transfer, team) do
+  def accept_site_transfer(site_transfer, user) do
     {:ok, _} =
       Repo.transaction(fn ->
+        {:ok, team} = Teams.get_or_create(user)
         :ok = transfer_site_ownership(site_transfer.site, team, NaiveDateTime.utc_now(:second))
         Repo.delete_all(from st in Teams.SiteTransfer, where: st.id == ^site_transfer.id)
       end)
@@ -198,9 +199,10 @@ defmodule Plausible.Teams.Invitations do
     :ok
   end
 
-  def transfer_site(site, team) do
+  def transfer_site(site, user) do
     {:ok, _} =
       Repo.transaction(fn ->
+        {:ok, team} = Teams.get_or_create(user)
         :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
       end)
 
@@ -333,7 +335,7 @@ defmodule Plausible.Teams.Invitations do
     site =
       Repo.preload(site, [
         :team,
-        :owners,
+        :owner,
         guest_memberships: [team_membership: :user],
         guest_invitations: [team_invitation: :inviter]
       ])
@@ -390,21 +392,19 @@ defmodule Plausible.Teams.Invitations do
     Repo.delete_all(from gm in Teams.GuestMembership, where: gm.id in ^old_guest_ids)
     :ok = Teams.Memberships.prune_guests(prior_team)
 
-    prior_owners = Repo.preload(prior_team, :owners).owners
+    {:ok, prior_owner} = Teams.get_owner(prior_team)
 
-    for prior_owner <- prior_owners do
-      {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)
+    {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)
 
-      if prior_owner_team_membership.role == :guest do
-        {:ok, _} =
-          prior_owner_team_membership
-          |> Teams.GuestMembership.changeset(site, :editor)
-          |> Repo.insert(
-            on_conflict: [set: [updated_at: now, role: :editor]],
-            conflict_target: [:team_membership_id, :site_id],
-            returning: true
-          )
-      end
+    if prior_owner_team_membership.role == :guest do
+      {:ok, _} =
+        prior_owner_team_membership
+        |> Teams.GuestMembership.changeset(site, :editor)
+        |> Repo.insert(
+          on_conflict: [set: [updated_at: now, role: :editor]],
+          conflict_target: [:team_membership_id, :site_id],
+          returning: true
+        )
     end
 
     on_ee do

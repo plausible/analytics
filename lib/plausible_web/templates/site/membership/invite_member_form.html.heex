@@ -12,7 +12,7 @@
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={Map.get(assigns, :is_at_limit, false)}
       current_user={@current_user}
-      billable_user={List.first(@site.owners)}
+      billable_user={@site.owner}
       current_team={@site_team}
       limit={Map.get(assigns, :team_member_limit, 0)}
       resource="team members"

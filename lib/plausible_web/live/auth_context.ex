@@ -31,49 +31,12 @@ defmodule PlausibleWeb.Live.AuthContext do
           _ -> nil
         end
       end)
-      |> assign_new(:team_from_session, fn
-        %{current_user: nil} ->
-          nil
-
-        %{current_user: user} ->
-          if current_team_id = session["current_team_id"] do
-            user.team_memberships
-            |> Enum.find(%{}, &(&1.team_id == current_team_id))
-            |> Map.get(:team)
-          end
-      end)
-      |> assign_new(:my_team, fn
-        %{current_user: nil} ->
-          nil
-
-        %{current_user: user} = context ->
-          current_team = context.team_from_session
-
-          current_team_owner? =
-            (current_team || %{})
-            |> Map.get(:owners, [])
-            |> Enum.any?(&(&1.id == user.id))
-
-          if current_team_owner? do
-            current_team
-          else
-            user.team_memberships
-            # NOTE: my_team should eventually only hold user's personal team. This requires
-            # additional adjustments, which will be done in follow-up work.
-            # |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
-            |> List.first(%{})
-            |> Map.get(:team)
-          end
-      end)
-      |> assign_new(:current_team, fn context ->
-        context.team_from_session || context.my_team
-      end)
-      |> assign_new(:teams_count, fn
-        %{current_user: nil} -> 0
-        %{current_user: user} -> length(user.team_memberships)
-      end)
-      |> assign_new(:multiple_teams?, fn context ->
-        context.teams_count > 1
+      |> assign_new(:my_team, fn context ->
+        case context.current_user do
+          nil -> nil
+          %{team_memberships: [%{team: team}]} -> team
+          %{team_memberships: []} -> nil
+        end
       end)
 
     {:cont, socket}

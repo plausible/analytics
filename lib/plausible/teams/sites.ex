@@ -8,21 +8,18 @@ defmodule Plausible.Teams.Sites do
   alias Plausible.Site
   alias Plausible.Teams
 
-  @type list_opt() :: {:filter_by_domain, String.t()} | {:team, Teams.Team.t() | nil}
+  @type list_opt() :: {:filter_by_domain, String.t()}
 
   @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
-    team = Keyword.get(opts, :team)
 
     team_membership_query =
-      from(tm in Teams.Membership,
+      from tm in Teams.Membership,
         inner_join: t in assoc(tm, :team),
         inner_join: s in assoc(t, :sites),
         where: tm.user_id == ^user.id and tm.role != :guest,
         select: %{site_id: s.id, entry_type: "site"}
-      )
-      |> maybe_filter_by_team(team)
 
     guest_membership_query =
       from tm in Teams.Membership,
@@ -74,10 +71,9 @@ defmodule Plausible.Teams.Sites do
   @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list_with_invitations(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
-    team = Keyword.get(opts, :team)
 
     team_membership_query =
-      from(tm in Teams.Membership,
+      from tm in Teams.Membership,
         inner_join: t in assoc(tm, :team),
         inner_join: u in assoc(tm, :user),
         as: :user,
@@ -98,8 +94,6 @@ defmodule Plausible.Teams.Sites do
           role: tm.role,
           transfer_id: 0
         }
-      )
-      |> maybe_filter_by_team(team)
 
     guest_membership_query =
       from(tm in Teams.Membership,
@@ -270,12 +264,6 @@ defmodule Plausible.Teams.Sites do
       end)
     end)
   end
-
-  defp maybe_filter_by_team(team_membership_query, %Teams.Team{} = team) do
-    where(team_membership_query, [tm], tm.team_id == ^team.id)
-  end
-
-  defp maybe_filter_by_team(team_membership_query, _), do: team_membership_query
 
   defp maybe_filter_by_domain(query, domain)
        when byte_size(domain) >= 1 and byte_size(domain) <= 64 do

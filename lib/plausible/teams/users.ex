@@ -8,31 +8,6 @@ defmodule Plausible.Teams.Users do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  def owned_teams(user) do
-    Repo.all(
-      from(
-        tm in Teams.Membership,
-        inner_join: t in assoc(tm, :team),
-        where: tm.user_id == ^user.id,
-        where: tm.role == :owner,
-        select: t
-      )
-    )
-  end
-
-  def teams(user) do
-    from(
-      tm in Teams.Membership,
-      inner_join: t in assoc(tm, :team),
-      where: tm.user_id == ^user.id,
-      where: tm.role != :guest,
-      select: t,
-      order_by: [t.name, t.id]
-    )
-    |> Repo.all()
-    |> Repo.preload(:owners)
-  end
-
   def team_member?(user, opts \\ []) do
     excluded_team_ids = Keyword.get(opts, :except, [])
 
