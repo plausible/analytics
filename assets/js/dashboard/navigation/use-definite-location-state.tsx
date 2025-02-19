@@ -9,6 +9,8 @@ import { useAppNavigate } from './use-app-navigate'
  * (re-navigating with replace: true on most navigations). It does so to
  * replace undefined `location.state[key]` with a known definite value.
  * The way to unset `location.state[key]` is to set it to null in navigation.
+ * This is to make sure that normal navigations (open Details etc) don't need to declare
+ * that they want to keep previous location.state.
  */
 export function useDefiniteLocationState<T>(key: string): {
   definiteValue: T | null
