@@ -141,7 +141,8 @@
         e: engagementTime
       }
 
-      runningEnagementStart = (document.visibilityState === 'hidden') ? Date.now() : null
+      // Reset current engagement time metrics. They will restart upon when page becomes visible or the next SPA pageview
+      runningEnagementStart = null
       currentEngagementTime = 0
 
       {{#if hash}}

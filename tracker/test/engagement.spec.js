@@ -258,4 +258,56 @@ test.describe('engagement events', () => {
     expect(request2.e).toBeGreaterThan(1000)
     expect(request2.e).toBeLessThan(1500)
   })
+
+  test('tracks engagement time properly in a SPA', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement-hash.html'),
+      expectedRequests: [{n: 'pageview'}],
+    })
+
+    await page.waitForTimeout(1000)
+
+    const [request] = await expectPlausibleInAction(page, {
+      action: () => page.click('#hash-nav'),
+      expectedRequests: [
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html`},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`}
+      ]
+    })
+
+    expect(request.e).toBeGreaterThan(1000)
+    expect(request.e).toBeLessThan(1500)
+
+    const [request2] = await expectPlausibleInAction(page, {
+      action: () => page.click('#hash-nav-2'),
+      expectedRequests: [
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`}
+      ]
+    })
+
+    expect(request2.e).toBeLessThan(200)
+
+    await page.waitForTimeout(3000)
+
+    const [request3] = await expectPlausibleInAction(page, {
+      action: () => hideAndShowCurrentTab(page),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`}],
+    })
+
+    expect(request3.e).toBeGreaterThan(3000)
+    expect(request3.e).toBeLessThan(3500)
+
+    await page.waitForTimeout(3000)
+    const [request4] = await expectPlausibleInAction(page, {
+      action: () => page.click('#hash-nav'),
+      expectedRequests: [
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#another-hash`},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-hash.html#some-hash`}
+      ]
+    })
+
+    expect(request4.e).toBeGreaterThan(3000)
+    expect(request4.e).toBeLessThan(3500)
+  })
 })
