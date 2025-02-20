@@ -80,6 +80,14 @@
     return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
   }
 
+  function getEngagementTime() {
+    if (runningEnagementStart) {
+      return currentEngagementTime + (Date.now() - runningEnagementStart)
+    } else {
+      return currentEngagementTime
+    }
+  }
+
   var currentDocumentHeight = getDocumentHeight()
   var maxScrollDepthPx = getCurrentScrollDepthPx()
 
@@ -107,12 +115,7 @@
   })
 
   function triggerEngagement() {
-    var engagementTime
-    if (runningEnagementStart) {
-      engagementTime = currentEngagementTime + (Date.now() - runningEnagementStart)
-    } else {
-      engagementTime = currentEngagementTime
-    }
+    var engagementTime = getEngagementTime()
 
     /*
     We send engagements if there's new relevant engagement information to share:
