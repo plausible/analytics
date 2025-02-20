@@ -9,6 +9,7 @@ import { MemoryRouter, MemoryRouterProps } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import QueryContextProvider from '../js/dashboard/query-context'
 import { getRouterBasepath } from '../js/dashboard/router'
+import { RoutelessModalsContextProvider } from '../js/dashboard/navigation/routeless-modals-context'
 
 type TestContextProvidersProps = {
   children: ReactNode
@@ -68,7 +69,9 @@ export const TestContextProviders = ({
           {...routerProps}
         >
           <QueryClientProvider client={queryClient}>
-            <QueryContextProvider>{children}</QueryContextProvider>
+            <RoutelessModalsContextProvider>
+              <QueryContextProvider>{children}</QueryContextProvider>
+            </RoutelessModalsContextProvider>
           </QueryClientProvider>
         </MemoryRouter>
       </UserContextProvider>

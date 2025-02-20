@@ -2,7 +2,7 @@ import React from 'react'
 import { useParams } from 'react-router-dom';
 
 import Modal from './modal';
-import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP, cleanLabels } from '../../util/filters';
+import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP, cleanLabels, getAvailableFilterModals } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { isModifierPressed, isTyping } from '../../keybinding';
@@ -202,6 +202,9 @@ export default function FilterModalWithRouter(props) {
   const { field } = useParams()
   const { query } = useQueryContext()
   const site = useSiteContext()
+  if (!Object.keys(getAvailableFilterModals(site)).includes(field)) {
+    return null
+  }
   const firstSegmentFilter = field === 'segment' ? query.filters?.find(isSegmentFilter) : null
   if (firstSegmentFilter) {
     const firstSegmentId = firstSegmentFilter[2][0]

@@ -17,6 +17,15 @@ export const FILTER_MODAL_TO_FILTER_GROUP = {
   segment: ['segment']
 }
 
+export function getAvailableFilterModals(site) {
+  const { props, segment, ...rest } = FILTER_MODAL_TO_FILTER_GROUP
+  return {
+    ...rest,
+    ...(site.propsAvailable && { props }),
+    ...(site.flags.saved_segments && { segment })
+  }
+}
+
 export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
   Object.entries(FILTER_MODAL_TO_FILTER_GROUP).flatMap(
     ([modalName, filterGroups]) =>
