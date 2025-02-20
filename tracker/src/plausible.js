@@ -120,7 +120,7 @@
     /*
     We send engagements if there's new relevant engagement information to share:
     - If the user has scrolled more than the previously sent max scroll depth.
-    - If the user has been engaged for more than 1 second since the last engagement event.
+    - If the user has been engaged for more than 3 seconds since the last engagement event.
 
     The first engagement event is always sent due to containing at leastthe initial scroll depth.
 
@@ -128,7 +128,7 @@
     - Less than 300ms have passed since the last engagement event
     - The current pageview is ignored (onIgnoredEvent)
     */
-    if (!engagementCooldown && !currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime > 1000)) {
+    if (!engagementCooldown && !currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime >= 3000)) {
       currentEngagementMaxScrollDepth = maxScrollDepthPx
       setTimeout(function () {engagementCooldown = false}, 300)
 
