@@ -75,7 +75,7 @@ defmodule Plausible.ImportedTest do
     end
   end
 
-  describe "completed_imports_in_query_range/2" do
+  describe "completed_imports_in_query_range/1" do
     setup do
       site = insert(:site)
 
@@ -85,11 +85,19 @@ defmodule Plausible.ImportedTest do
       site_import_apr =
         insert(:site_import, site: site, start_date: ~D[2021-04-10], end_date: ~D[2021-04-20])
 
-      {:ok, %{site: site, site_import_feb: site_import_feb, site_import_apr: site_import_apr}}
+      site_import_old =
+        insert(:site_import, site: site, start_date: ~D[2020-01-01], end_date: ~D[2020-02-01])
+
+      {:ok,
+       %{
+         site: site,
+         site_import_feb: site_import_feb,
+         site_import_apr: site_import_apr,
+         site_import_old: site_import_old
+       }}
     end
 
     test "returns empty list if no imports exist" do
-      site = insert(:site)
       tz = "Etc/UTC"
 
       query = %Query{
@@ -97,29 +105,28 @@ defmodule Plausible.ImportedTest do
         timezone: tz
       }
 
-      assert Imported.completed_imports_in_query_range(site, query) == []
+      assert Imported.completed_imports_in_query_range(query) == []
     end
 
     test "returns imports in query range", %{
-      site: site,
       site_import_feb: site_import_feb,
-      site_import_apr: site_import_apr
+      site_import_apr: site_import_apr,
+      site_import_old: site_import_old
     } do
       tz = "Etc/UTC"
 
       query = %Query{
         utc_time_range: DateTimeRange.new!(~D[2021-01-01], ~D[2021-12-31], tz),
-        timezone: tz
+        timezone: tz,
+        completed_imports: [site_import_feb, site_import_apr, site_import_old]
       }
 
-      imports_in_range = Imported.completed_imports_in_query_range(site, query)
+      imports_in_range = Imported.completed_imports_in_query_range(query)
 
-      assert Enum.find(imports_in_range, &(&1.id == site_import_feb.id))
-      assert Enum.find(imports_in_range, &(&1.id == site_import_apr.id))
+      assert Enum.sort(imports_in_range) == Enum.sort([site_import_feb, site_import_apr])
     end
 
     test "returns imports in a non-utc timezone query range", %{
-      site: site,
       site_import_feb: site_import_feb
     } do
       datetime_from = DateTime.new!(~D[2021-03-01], ~T[03:00:00], "Etc/UTC")
@@ -127,10 +134,11 @@ defmodule Plausible.ImportedTest do
 
       query = %Query{
         utc_time_range: DateTimeRange.new!(datetime_from, datetime_to),
-        timezone: "America/Chicago"
+        timezone: "America/Chicago",
+        completed_imports: [site_import_feb]
       }
 
-      [site_import] = Imported.completed_imports_in_query_range(site, query)
+      [site_import] = Imported.completed_imports_in_query_range(query)
 
       assert site_import.id == site_import_feb.id
     end

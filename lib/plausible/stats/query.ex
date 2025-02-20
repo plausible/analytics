@@ -2,13 +2,12 @@ defmodule Plausible.Stats.Query do
   use Plausible
 
   defstruct utc_time_range: nil,
-            comparison_utc_time_range: nil,
             interval: nil,
             period: nil,
             dimensions: [],
             filters: [],
             sample_threshold: 20_000_000,
-            imports_exist: false,
+            completed_imports: [],
             imports_in_range: [],
             include_imported: false,
             skip_imported_reason: nil,
@@ -26,7 +25,9 @@ defmodule Plausible.Stats.Query do
             revenue_warning: nil,
             remove_unavailable_revenue_metrics: false,
             site_id: nil,
-            site_native_stats_start_at: nil
+            site_native_stats_start_at: nil,
+            comparison_utc_time_range: nil,
+            comparison_query: nil
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}
@@ -134,17 +135,28 @@ defmodule Plausible.Stats.Query do
   end
 
   def put_imported_opts(query, site) do
-    requested? = query.include.imports
+    query
+    |> struct!(
+      completed_imports:
+        if(site, do: Plausible.Imported.completed_imports(site), else: query.completed_imports)
+    )
+    |> set_imports_in_range()
+    |> set_imports_included()
+  end
 
-    query =
-      if site do
-        struct!(query,
-          imports_exist: Plausible.Imported.any_completed_imports?(site),
-          imports_in_range: get_imports_in_range(site, query)
-        )
-      else
-        query
-      end
+  defp set_imports_in_range(%__MODULE__{period: period} = query)
+       when period in ["realtime", "30m"] do
+    query
+  end
+
+  defp set_imports_in_range(query) do
+    struct!(query,
+      imports_in_range: Plausible.Imported.completed_imports_in_query_range(query)
+    )
+  end
+
+  defp set_imports_included(query) do
+    requested? = query.include.imports
 
     skip_imported_reason = get_skip_imported_reason(query)
 
@@ -154,30 +166,11 @@ defmodule Plausible.Stats.Query do
     )
   end
 
-  defp get_imports_in_range(_site, %__MODULE__{period: period})
-       when period in ["realtime", "30m"] do
-    []
-  end
-
-  defp get_imports_in_range(site, query) do
-    in_range = Plausible.Imported.completed_imports_in_query_range(site, query)
-
-    in_comparison_range =
-      if is_map(query.include.comparisons) do
-        comparison_query = Comparisons.get_comparison_query(query)
-        Plausible.Imported.completed_imports_in_query_range(site, comparison_query)
-      else
-        []
-      end
-
-    in_comparison_range ++ in_range
-  end
-
   @spec get_skip_imported_reason(t()) ::
           nil | :no_imported_data | :out_of_range | :unsupported_query
   def get_skip_imported_reason(query) do
     cond do
-      not query.imports_exist ->
+      query.completed_imports == [] ->
         :no_imported_data
 
       query.imports_in_range == [] ->
