@@ -8,15 +8,15 @@
   },
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.1",
     "generatorics": "^1.1.0",
     "handlebars": "^4.7.8",
-    "uglify-js": "^3.9.4"
+    "uglify-js": "^3.19.3"
   },
   "devDependencies": {
+    "express": "^4.21.2",
     "@playwright/test": "^1.48.1",
-    "@types/node": "^22.7.7",
-    "eslint": "^8.56.0",
-    "eslint-plugin-playwright": "^0.20.0"
+    "@types/node": "^22.13.4",
+    "eslint": "^9.20.1",
+    "eslint-plugin-playwright": "^2.2.0"
   }
 }
