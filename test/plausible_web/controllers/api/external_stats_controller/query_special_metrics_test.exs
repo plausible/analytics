@@ -190,4 +190,30 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
              %{"dimensions" => ["Mobile"], "metrics" => [50]}
            ]
   end
+
+  test "can break down by visit:device with only percentage metric", %{conn: conn, site: site} do
+    site_import = insert(:site_import, site: site)
+
+    populate_stats(site, site_import.id, [
+      build(:pageview, screen_size: "Mobile"),
+      build(:pageview, screen_size: "Mobile"),
+      build(:pageview, screen_size: "Desktop"),
+      build(:imported_visitors, visitors: 5, date: ~D[2021-01-01]),
+      build(:imported_devices, device: "Desktop", visitors: 5, date: ~D[2021-01-01])
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["percentage"],
+        "date_range" => "all",
+        "dimensions" => ["visit:device"],
+        "include" => %{"imports" => true}
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => ["Desktop"], "metrics" => [75.0]},
+             %{"dimensions" => ["Mobile"], "metrics" => [25.0]}
+           ]
+  end
 end

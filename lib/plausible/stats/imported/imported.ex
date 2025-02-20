@@ -356,9 +356,17 @@ defmodule Plausible.Stats.Imported do
     end
   end
 
+  @cannot_optimize_metrics [
+    :scroll_depth,
+    :percentage,
+    :conversion_rate,
+    :group_conversion_rate,
+    :time_on_page
+  ]
+
   defp can_order_by?(query) do
     Enum.all?(query.order_by, fn
-      {:scroll_depth, _} -> false
+      {metric, _direction} when metric in @cannot_optimize_metrics -> false
       {metric, _direction} when is_atom(metric) -> metric in query.metrics
       _ -> true
     end)
