@@ -22,10 +22,12 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-funnels-opted-out") == "false"
       assert text_of_attr(resp, @react_container, "data-props-opted-out") == "false"
       assert text_of_attr(resp, @react_container, "data-props-available") == "true"
+      assert text_of_attr(resp, @react_container, "data-site-segments-available") == "true"
       assert text_of_attr(resp, @react_container, "data-funnels-available") == "true"
       assert text_of_attr(resp, @react_container, "data-has-props") == "false"
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
       assert text_of_attr(resp, @react_container, "data-embedded") == ""
+      assert text_of_attr(resp, @react_container, "data-members") == "null"
 
       [{"div", attrs, _}] = find(resp, @react_container)
       assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
@@ -115,11 +117,14 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /:domain - as a logged in user" do
     setup [:create_user, :log_in, :create_site]
 
-    test "can view stats of a website I've created", %{conn: conn, site: site} do
+    test "can view stats of a website I've created", %{conn: conn, site: site, user: user} do
       populate_stats(site, [build(:pageview)])
       conn = get(conn, "/" <> site.domain)
       resp = html_response(conn, 200)
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+
+      assert text_of_attr(resp, @react_container, "data-members") ==
+               "{\"#{user.id}\":\"#{user.name}\"}"
     end
 
     test "can view stats of a website I've created, enforcing pageviews check skip", %{

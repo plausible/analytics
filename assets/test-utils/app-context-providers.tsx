@@ -9,6 +9,7 @@ import { MemoryRouter, MemoryRouterProps } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import QueryContextProvider from '../js/dashboard/query-context'
 import { getRouterBasepath } from '../js/dashboard/router'
+import { RoutelessModalsContextProvider } from '../js/dashboard/navigation/routeless-modals-context'
 
 type TestContextProvidersProps = {
   children: ReactNode
@@ -29,6 +30,7 @@ export const TestContextProviders = ({
     scrollDepthVisible: false,
     funnelsAvailable: false,
     propsAvailable: false,
+    siteSegmentsAvailable: false,
     conversionsOptedOut: false,
     funnelsOptedOut: false,
     propsOptedOut: false,
@@ -41,7 +43,8 @@ export const TestContextProviders = ({
     isDbip: false,
     flags: {},
     validIntervalsByPeriod: {},
-    shared: false
+    shared: false,
+    members: { 1: 'Test User' }
   }
 
   const site = { ...defaultSite, ...siteOptions }
@@ -59,14 +62,16 @@ export const TestContextProviders = ({
   return (
     // <ThemeContextProvider> not interactive component, default value is suitable
     <SiteContextProvider site={site}>
-      <UserContextProvider role={Role.admin} loggedIn={true}>
+      <UserContextProvider user={{ role: Role.admin, loggedIn: true, id: 1 }}>
         <MemoryRouter
           basename={getRouterBasepath(site)}
           initialEntries={defaultInitialEntries}
           {...routerProps}
         >
           <QueryClientProvider client={queryClient}>
-            <QueryContextProvider>{children}</QueryContextProvider>
+            <RoutelessModalsContextProvider>
+              <QueryContextProvider>{children}</QueryContextProvider>
+            </RoutelessModalsContextProvider>
           </QueryClientProvider>
         </MemoryRouter>
       </UserContextProvider>

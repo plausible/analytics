@@ -2,13 +2,16 @@ import React from 'react'
 import { useParams } from 'react-router-dom';
 
 import Modal from './modal';
-import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP, cleanLabels } from '../../util/filters';
+import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP, cleanLabels, getAvailableFilterModals } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { isModifierPressed, isTyping } from '../../keybinding';
 import FilterModalGroup from "./filter-modal-group";
 import { rootRoute } from '../../router';
 import { useAppNavigate } from '../../navigation/use-app-navigate';
+import { SegmentModal } from '../../segments/segment-modals';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import { isSegmentFilter } from '../../filtering/segments';
 
 function partitionFilters(modalType, filters) {
   const otherFilters = []
@@ -171,18 +174,18 @@ class FilterModal extends React.Component {
                 className="button"
                 disabled={this.isDisabled()}
               >
-                Apply Filter
+                Apply filter
               </button>
 
               {this.state.hasRelevantFilters && (
                 <button
                   type="button"
-                  className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
+                  className="ml-4 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
                   onClick={() => {
                     this.selectFiltersAndCloseModal(this.state.otherFilters)
                   }}
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  <TrashIcon className="w-4 h-4 mr-2" />
                   Remove filter{FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].length > 1 ? 's' : ''}
                 </button>
               )}
@@ -199,6 +202,14 @@ export default function FilterModalWithRouter(props) {
   const { field } = useParams()
   const { query } = useQueryContext()
   const site = useSiteContext()
+  if (!Object.keys(getAvailableFilterModals(site)).includes(field)) {
+    return null
+  }
+  const firstSegmentFilter = field === 'segment' ? query.filters?.find(isSegmentFilter) : null
+  if (firstSegmentFilter) {
+    const firstSegmentId = firstSegmentFilter[2][0]
+    return <SegmentModal id={firstSegmentId} />
+  }
   return (
     <FilterModal
       {...props}
