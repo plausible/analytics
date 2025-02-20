@@ -1812,6 +1812,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     end
   end
 
+  test "can break down by visit:device with only percentage metric", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview, screen_size: "Mobile"),
+      build(:pageview, screen_size: "Mobile"),
+      build(:pageview, screen_size: "Desktop")
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["percentage"],
+        "date_range" => "all",
+        "dimensions" => ["visit:device"],
+        "order_by" => [["visit:device", "asc"]]
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => ["Desktop"], "metrics" => [33.3]},
+             %{"dimensions" => ["Mobile"], "metrics" => [66.7]}
+           ]
+  end
+
   test "breakdown by visit:os and visit:os_version", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview, operating_system: "Mac", operating_system_version: "14"),
