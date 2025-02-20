@@ -122,7 +122,7 @@
     - If the user has scrolled more than the previously sent max scroll depth.
     - If the user has been engaged for more than 3 seconds since the last engagement event.
 
-    The first engagement event is always sent due to containing at leastthe initial scroll depth.
+    The first engagement event is always sent due to containing at least the initial scroll depth.
 
     We don't send engagements if:
     - Less than 300ms have passed since the last engagement event
