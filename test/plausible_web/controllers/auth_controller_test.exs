@@ -654,6 +654,84 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Repo.reload(user)
     end
 
+    test "context > team is autodeleted - personal segment is also deleted", %{
+      conn: conn,
+      user: user,
+      site: owner_site
+    } do
+      segment =
+        insert(:segment,
+          type: :personal,
+          owner: user,
+          site: owner_site,
+          name: "personal segment"
+        )
+
+      delete(conn, "/me")
+
+      refute Repo.reload(segment)
+    end
+
+    test "context > team is autodeleted - site segment is also deleted", %{
+      conn: conn,
+      user: user,
+      site: owner_site
+    } do
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: owner_site,
+          name: "site segment"
+        )
+
+      delete(conn, "/me")
+
+      refute Repo.reload(segment)
+    end
+
+    test "context > team is not autodeleted - personal segment is deleted", %{
+      conn: conn,
+      user: user
+    } do
+      another_owner = new_user()
+      another_site = new_site(owner: another_owner)
+      add_member(another_site.team, user: user, role: :admin)
+
+      segment =
+        insert(:segment,
+          type: :personal,
+          owner: user,
+          site: another_site,
+          name: "personal segment"
+        )
+
+      delete(conn, "/me")
+
+      refute Repo.reload(segment)
+    end
+
+    test "context > team is not autodeleted - site segment is kept with owner=null", %{
+      conn: conn,
+      user: user
+    } do
+      another_owner = new_user()
+      another_site = new_site(owner: another_owner)
+      add_member(another_site.team, user: user, role: :admin)
+
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: user,
+          site: another_site,
+          name: "site segment"
+        )
+
+      delete(conn, "/me")
+
+      assert Repo.reload(segment).owner_id == nil
+    end
+
     test "allows to delete user when not the only owner of a setup team", %{
       conn: conn,
       user: user
