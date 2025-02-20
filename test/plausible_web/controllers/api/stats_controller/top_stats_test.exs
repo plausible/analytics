@@ -791,7 +791,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert res["with_imported_switch"] == %{
                "visible" => true,
                "togglable" => true,
-               "tooltip_msg" => "Click to exclude imported data"
+               "tooltip_msg" => "Click to include imported data"
              }
     end
 
@@ -803,9 +803,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert res["with_imported_switch"] == %{
-               "visible" => true,
-               "togglable" => true,
-               "tooltip_msg" => "Click to include imported data"
+               "visible" => false,
+               "togglable" => false,
+               "tooltip_msg" => nil
              }
     end
   end

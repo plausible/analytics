@@ -58,11 +58,24 @@ defmodule Plausible.Stats.QueryResult do
   }
 
   defp add_imports_meta(meta, %Query{include: include} = query) do
-    if include.imports or include.imports_meta do
+    if include.imports or include.dashboard_imports_meta do
+      comparison_query =
+        query.comparison_query || %{include_imported: false, skip_imported_reason: nil}
+
+      imports_included = query.include_imported or comparison_query.include_imported
+
+      imports_skip_reason =
+        if(imports_included,
+          do: nil,
+          else: query.skip_imported_reason || comparison_query.skip_imported_reason
+        )
+
       %{
-        imports_included: query.include_imported,
-        imports_skip_reason: query.skip_imported_reason,
-        imports_warning: @imports_warnings[query.skip_imported_reason]
+        imports_included: imports_included,
+        imports_skip_reason: imports_skip_reason,
+        imports_warning: @imports_warnings[imports_skip_reason],
+        imports_included_for_main_query:
+          if(include.dashboard_imports_meta, do: query.include_imported, else: nil)
       }
       |> Map.reject(fn {_key, value} -> is_nil(value) end)
       |> Map.merge(meta)
@@ -72,7 +85,7 @@ defmodule Plausible.Stats.QueryResult do
   end
 
   defp add_metric_warnings_meta(meta, query) do
-    warnings = metric_warnings(query)
+    warnings = metric_warnings(meta, query)
 
     if map_size(warnings) > 0 do
       Map.put(meta, :metric_warnings, warnings)
@@ -111,9 +124,9 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp metric_warnings(%Query{} = query) do
+  defp metric_warnings(meta, %Query{} = query) do
     Enum.reduce(query.metrics, %{}, fn metric, acc ->
-      case metric_warning(metric, query) do
+      case metric_warning(metric, meta, query) do
         nil -> acc
         %{} = warning -> Map.put(acc, metric, warning)
       end
@@ -132,7 +145,7 @@ defmodule Plausible.Stats.QueryResult do
         "Revenue metrics are null as there are no matching revenue goals."
     }
 
-    defp metric_warning(metric, %Query{} = query)
+    defp metric_warning(metric, _meta, %Query{} = query)
          when metric in @revenue_metrics do
       if query.revenue_warning do
         %{
@@ -150,13 +163,17 @@ defmodule Plausible.Stats.QueryResult do
     warning: "No imports with scroll depth data were found"
   }
 
-  defp metric_warning(:scroll_depth, %Query{} = query) do
-    if query.include_imported and not Enum.any?(query.imports_in_range, & &1.has_scroll_depth) do
-      @no_imported_scroll_depth_metric_warning
-    end
+  defp metric_warning(:scroll_depth, %{imports_included: true}, %Query{} = query) do
+    [query, query.comparison_query]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.find_value(fn query ->
+      if query.include_imported and not Enum.any?(query.imports_in_range, & &1.has_scroll_depth) do
+        @no_imported_scroll_depth_metric_warning
+      end
+    end)
   end
 
-  defp metric_warning(_metric, _query), do: nil
+  defp metric_warning(_metric, _meta, _query), do: nil
 
   defp to_iso8601(datetime, timezone) do
     datetime
