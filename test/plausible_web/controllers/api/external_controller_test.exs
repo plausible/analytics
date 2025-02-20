@@ -1258,6 +1258,25 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
              }
     end
 
+    test "responds 400 when event name is blank", %{conn: conn, site: site} do
+      params = %{
+        domain: site.domain,
+        name: "",
+        url: "http://example.com"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      assert json_response(conn, 400) == %{
+               "errors" => %{
+                 "event_name" => ["can't be blank"]
+               }
+             }
+    end
+
     test "salts rotating once does not", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       Plausible.Session.WriteBuffer.flush()
