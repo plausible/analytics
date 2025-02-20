@@ -58,7 +58,7 @@ defmodule PlausibleWeb.StatsController do
   )
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
-    site = Plausible.Repo.preload(site, :owners)
+    site = Plausible.Repo.preload(site, :owner)
     current_user = conn.assigns[:current_user]
     stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:site_role] == :super_admin
@@ -94,7 +94,7 @@ defmodule PlausibleWeb.StatsController do
         redirect(conn, external: Routes.site_path(conn, :verification, site.domain))
 
       Sites.locked?(site) ->
-        site = Plausible.Repo.preload(site, :owners)
+        site = Plausible.Repo.preload(site, :owner)
         render(conn, "site_locked.html", site: site, dogfood_page_path: dogfood_page_path)
     end
   end
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.StatsController do
   """
   def csv_export(conn, params) do
     if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
-      site = Plausible.Repo.preload(conn.assigns.site, :owners)
+      site = Plausible.Repo.preload(conn.assigns.site, :owner)
       query = Query.from(site, params, debug_metadata(conn))
 
       date_range = Query.date_range(query)
@@ -346,7 +346,7 @@ defmodule PlausibleWeb.StatsController do
     cond do
       !shared_link.site.locked ->
         current_user = conn.assigns[:current_user]
-        shared_link = Plausible.Repo.preload(shared_link, site: :owners)
+        shared_link = Plausible.Repo.preload(shared_link, site: :owner)
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
         scroll_depth_visible? =
@@ -377,10 +377,10 @@ defmodule PlausibleWeb.StatsController do
         )
 
       Sites.locked?(shared_link.site) ->
-        owners = Plausible.Repo.preload(shared_link.site, :owners)
+        owner = Plausible.Repo.preload(shared_link.site, :owner)
 
         render(conn, "site_locked.html",
-          owners: owners,
+          owner: owner,
           site: shared_link.site,
           dogfood_page_path: "/share/:dashboard"
         )

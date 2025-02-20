@@ -19,7 +19,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         Plausible.Sites.get_for_user!(current_user, domain, [
           :owner,
           :admin,
-          :editor,
           :super_admin
         ])
       end)
@@ -111,7 +110,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       Plausible.Sites.get_for_user!(
         socket.assigns.current_user,
         socket.assigns.domain,
-        [:owner, :admin, :editor]
+        [:owner, :admin]
       )
 
     id = String.to_integer(id)

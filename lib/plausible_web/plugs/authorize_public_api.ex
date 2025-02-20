@@ -134,7 +134,11 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp verify_site_access(api_key, site) do
-    team = Repo.preload(site, :team).team
+    team =
+      case Plausible.Teams.get_by_owner(api_key.user) do
+        {:ok, team} -> team
+        _ -> nil
+      end
 
     is_member? = Plausible.Teams.Memberships.site_member?(site, api_key.user)
     is_super_admin? = Auth.is_super_admin?(api_key.user_id)

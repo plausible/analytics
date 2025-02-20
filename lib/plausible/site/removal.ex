@@ -9,7 +9,7 @@ defmodule Plausible.Site.Removal do
   @spec run(Plausible.Site.t()) :: {:ok, map()}
   def run(site) do
     Repo.transaction(fn ->
-      site = Repo.preload(site, :team)
+      site = Plausible.Teams.load_for_site(site)
 
       result = Repo.delete_all(from(s in Plausible.Site, where: s.domain == ^site.domain))
 
