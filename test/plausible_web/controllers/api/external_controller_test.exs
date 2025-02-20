@@ -1313,35 +1313,61 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
   end
 
-  describe "scroll depth tests" do
+  describe "engagement event tests" do
     setup do
       site = new_site()
       {:ok, site: site}
     end
 
-    test "ingests scroll_depth as 255 when sd not in params", %{conn: conn, site: site} do
+    test "ingests scroll_depth and engagement_time when not in params", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain})
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
       assert engagement.scroll_depth == 255
+      assert engagement.engagement_time == 0
     end
 
-    test "sd field is ignored if name is not engagement", %{conn: conn, site: site} do
-      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain, sd: 10})
-      post(conn, "/api/event", %{n: "custom_e", u: "https://test.com", d: site.domain, sd: 10})
+    test "sd and e fields are ignored if name is not engagement", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{
+        n: "pageview",
+        u: "https://test.com",
+        d: site.domain,
+        sd: 10,
+        e: 789
+      })
 
-      assert [%{scroll_depth: 0}, %{scroll_depth: 0}] = get_events(site)
+      post(conn, "/api/event", %{
+        n: "custom_e",
+        u: "https://test.com",
+        d: site.domain,
+        sd: 10,
+        e: 789
+      })
+
+      assert [%{scroll_depth: 0, engagement_time: 0}, %{scroll_depth: 0, engagement_time: 0}] =
+               get_events(site)
     end
 
-    test "ingests valid scroll_depth for a engagement", %{conn: conn, site: site} do
+    test "ingests valid scroll_depth and engagement_time for a engagement", %{
+      conn: conn,
+      site: site
+    } do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: 25})
+
+      post(conn, "/api/event", %{
+        n: "engagement",
+        u: "https://test.com",
+        d: site.domain,
+        sd: 25,
+        e: 789
+      })
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
       assert engagement.scroll_depth == 25
+      assert engagement.engagement_time == 789
     end
 
     test "ingests scroll_depth as 100 when sd > 100", %{conn: conn, site: site} do
@@ -1371,13 +1397,23 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert engagement.scroll_depth == 255
     end
 
-    test "ingests valid scroll_depth for a engagement event", %{conn: conn, site: site} do
+    test "ingests engagement_time as 0 when e is a string", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: 25})
 
-      event = get_events(site) |> Enum.find(&(&1.name == "engagement"))
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, e: "789"})
 
-      assert event.scroll_depth == 25
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
+
+      assert engagement.engagement_time == 0
+    end
+
+    test "ingests engagement_time as 0 when e is a negative integer", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, e: -100})
+
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
+
+      assert engagement.engagement_time == 0
     end
   end
 
