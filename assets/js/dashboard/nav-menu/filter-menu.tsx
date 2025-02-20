@@ -92,7 +92,6 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
                           className={classNames(
                             popover.items.classNames.navigationLink,
                             popover.items.classNames.hoverLink
-                            // 'text-xs'
                           )}
                           onClick={() => closeDropdown()}
                           key={modalKey}

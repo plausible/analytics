@@ -1,10 +1,13 @@
 /** @format */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import classNames from 'classnames'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../../components/popover'
-import { AppNavigationLink } from '../../navigation/use-app-navigate'
+import {
+  AppNavigationLink,
+  useAppNavigate
+} from '../../navigation/use-app-navigate'
 import {
   Square2StackIcon,
   TrashIcon,
@@ -13,6 +16,8 @@ import {
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useQueryContext } from '../../query-context'
 import { useRoutelessModalsContext } from '../../navigation/routeless-modals-context'
+import { SavedSegment } from '../../filtering/segments'
+import { DashboardQuery } from '../../query'
 
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -23,6 +28,28 @@ const linkClassName = classNames(
 const buttonClassName = classNames(
   'text-white font-medium bg-indigo-600 hover:bg-indigo-700'
 )
+
+export const useClearExpandedSegmentModeOnFilterClear = ({
+  expandedSegment,
+  query
+}: {
+  expandedSegment: SavedSegment | null
+  query: DashboardQuery
+}) => {
+  const navigate = useAppNavigate()
+  useEffect(() => {
+    // clear edit mode on clearing all filters or removing last filter
+    if (!!expandedSegment && !query.filters.length) {
+      navigate({
+        search: (s) => s,
+        state: {
+          expandedSegment: null
+        },
+        replace: true
+      })
+    }
+  }, [query.filters, expandedSegment, navigate])
+}
 
 export const SegmentMenu = () => {
   const { setModal } = useRoutelessModalsContext()
@@ -75,20 +102,6 @@ export const SegmentMenu = () => {
               )}
             >
               <Popover.Panel className={popover.panel.classNames.roundedSheet}>
-                {/* <AppNavigationLink
-                  className={linkClassName}
-                  search={(s) => s}
-                  state={{ expandedSegment }}
-                  onClick={() => {
-                    closeDropdown()
-                    setModal('update')
-                  }}
-                >
-                  <div className="flex items-center gap-x-2">
-                    <CheckIcon className="w-4 h-4 block" />
-                    <span className="whitespace-nowrap">Update segment</span>
-                  </div>
-                </AppNavigationLink> */}
                 <AppNavigationLink
                   className={linkClassName}
                   search={(s) => s}
@@ -125,11 +138,6 @@ export const SegmentMenu = () => {
                     ...s,
                     filters: [],
                     labels: {}
-                    // filters: [[['is', 'segment', [expandedSegment.id]]]],
-                    // labels: {
-                    //   [formatSegmentIdAsLabelKey(expandedSegment.id)]:
-                    //     expandedSegment.name
-                    // }
                   })}
                   state={{ expandedSegment: null }}
                   onClick={closeDropdown}

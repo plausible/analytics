@@ -1,11 +1,5 @@
 /* @format */
-import React, {
-  createContext,
-  useMemo,
-  useContext,
-  ReactNode,
-  useEffect
-} from 'react'
+import React, { createContext, useMemo, useContext, ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
@@ -26,8 +20,8 @@ import {
   postProcessFilters
 } from './query'
 import { SavedSegment, SegmentData } from './filtering/segments'
-import { useAppNavigate } from './navigation/use-app-navigate'
 import { useDefiniteLocationState } from './navigation/use-definite-location-state'
+import { useClearExpandedSegmentModeOnFilterClear } from './nav-menu/segments/segment-menu'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
@@ -52,7 +46,6 @@ export default function QueryContextProvider({
   const { definiteValue: expandedSegment } = useDefiniteLocationState<
     SavedSegment & { segment_data: SegmentData }
   >('expandedSegment')
-  const navigate = useAppNavigate()
   const site = useSiteContext()
 
   const {
@@ -130,19 +123,7 @@ export default function QueryContextProvider({
     expandedSegment
   ])
 
-  useEffect(() => {
-    // clear edit mode on clearing all filters or removing last filter
-    if (!!expandedSegment && !query.filters.length) {
-      navigate({
-        search: (s) => s,
-        state: {
-          expandedSegment: null
-        },
-        replace: true
-      })
-    }
-  }, [query.filters, expandedSegment, navigate])
-
+  useClearExpandedSegmentModeOnFilterClear({ expandedSegment, query })
   useSaveTimePreferencesToStorage({
     site,
     period,

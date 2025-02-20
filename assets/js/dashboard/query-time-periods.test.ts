@@ -93,7 +93,7 @@ describe(`${getDashboardTimeSettings.name}`, () => {
     })
   })
 
-  it('respects segmentIsExpanded: true option', () => {
+  it('respects segmentIsExpanded: true option: comparison and edit segment mode are mutually exclusive', () => {
     expect(
       getDashboardTimeSettings({
         searchValues: {

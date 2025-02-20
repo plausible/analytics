@@ -27,7 +27,6 @@ import { get } from '../../api'
 
 const useSegmentsListQuery = () => {
   const site = useSiteContext()
-  const appliedSegmentIds = [] as number[]
   return useQuery({
     queryKey: ['segments'],
     placeholderData: (previousData) => previousData,
@@ -35,12 +34,7 @@ const useSegmentsListQuery = () => {
       const response: SavedSegment[] = await get(
         `/api/${encodeURIComponent(site.domain)}/segments`
       )
-
-      return response.sort(
-        (a, b) =>
-          appliedSegmentIds.findIndex((id) => id === b.id) -
-          appliedSegmentIds.findIndex((id) => id === a.id)
-      )
+      return response
     }
   })
 }
