@@ -71,6 +71,8 @@ defmodule PlausibleWeb.StatsController do
 
     cond do
       (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
+        flags = get_flags(current_user, site)
+
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> render("stats.html",
@@ -84,8 +86,12 @@ defmodule PlausibleWeb.StatsController do
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
           demo: demo,
-          flags: get_flags(current_user, site),
-          members: get_members(current_user, site),
+          flags: flags,
+          members:
+            if(flags.saved_segments,
+              do: get_members(conn.assigns[:site_role], site),
+              else: nil
+            ),
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           load_dashboard_js: true
@@ -353,6 +359,8 @@ defmodule PlausibleWeb.StatsController do
         scroll_depth_visible? =
           Plausible.Stats.ScrollDepth.check_feature_visible!(shared_link.site, current_user)
 
+        flags = get_flags(current_user, shared_link.site)
+
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
@@ -372,8 +380,12 @@ defmodule PlausibleWeb.StatsController do
           embedded: conn.params["embed"] == "true",
           background: conn.params["background"],
           theme: conn.params["theme"],
-          flags: get_flags(current_user, shared_link.site),
-          members: get_members(current_user, shared_link.site),
+          flags: flags,
+          members:
+            if(flags.saved_segments,
+              do: get_members(conn.assigns[:site_role], shared_link.site),
+              else: nil
+            ),
           is_dbip: is_dbip(),
           load_dashboard_js: true
         )
@@ -399,11 +411,8 @@ defmodule PlausibleWeb.StatsController do
       end)
       |> Map.new()
 
-  defp get_members(nil, _site) do
-    nil
-  end
-
-  defp get_members(_user, %Plausible.Site{} = site) do
+  defp get_members(site_role, %Plausible.Site{} = site)
+       when site_role in [:viewer, :editor, :owner, :admin, :super_admin] do
     site =
       site
       |> Plausible.Repo.preload(
@@ -420,6 +429,10 @@ defmodule PlausibleWeb.StatsController do
       {i.user.id, i.user.name}
     end)
     |> Map.new()
+  end
+
+  defp get_members(_site_role, _site) do
+    nil
   end
 
   defp is_dbip() do
