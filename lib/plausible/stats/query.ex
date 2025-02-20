@@ -2,7 +2,6 @@ defmodule Plausible.Stats.Query do
   use Plausible
 
   defstruct utc_time_range: nil,
-            comparison_utc_time_range: nil,
             interval: nil,
             period: nil,
             dimensions: [],
@@ -26,7 +25,9 @@ defmodule Plausible.Stats.Query do
             revenue_warning: nil,
             remove_unavailable_revenue_metrics: false,
             site_id: nil,
-            site_native_stats_start_at: nil
+            site_native_stats_start_at: nil,
+            comparison_utc_time_range: nil,
+            comparison_query: nil
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}

@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time}
+  alias Plausible.Stats.{Comparisons, DateTimeRange, Filters, Query, TableDecider, Util, Time}
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -49,7 +49,8 @@ defmodule Plausible.Stats.QueryOptimizer do
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
       &extend_hostname_filters_to_visit/1,
-      &remove_revenue_metrics_if_unavailable/1
+      &remove_revenue_metrics_if_unavailable/1,
+      &add_comparison_query/1
     ]
   end
 
@@ -184,5 +185,14 @@ defmodule Plausible.Stats.QueryOptimizer do
     end
   else
     defp remove_revenue_metrics_if_unavailable(query), do: query
+  end
+
+  defp add_comparison_query(query) do
+    if query.include.comparisons do
+      comparison_query = Comparisons.get_comparison_query(query)
+      Query.set(query, comparison_query: comparison_query)
+    else
+      query
+    end
   end
 end
