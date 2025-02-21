@@ -254,9 +254,9 @@ defmodule Plausible.Stats.SQL.Expression do
       %{
         new_time_on_page:
           fragment(
-            "toInt32(round(ifNotFinite(sum(?) / uniq(?) / 1000, 0)))",
-            e.engagement_time,
-            e.session_id
+            "toInt32(round(ifNotFinite(? / ?, 0)))",
+            selected_as(:__internal_total_time_on_page),
+            selected_as(:__internal_total_time_on_page_visits)
           ),
         __internal_total_time_on_page: fragment("sum(?)", e.engagement_time),
         __internal_total_time_on_page_visits: fragment("uniq(?)", e.session_id)
