@@ -274,40 +274,39 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     })
   end
 
-  def select_joined_metrics(q, []), do: q
+  def select_joined_metrics(q, query) do
+    select_metrics =
+      query.metrics
+      |> Enum.map(&joined_metric(&1, query))
+      |> Enum.reduce(%{}, &Map.merge/2)
+
+    select_merge(q, ^select_metrics)
+  end
+
   # NOTE: Reverse-engineering the native data bounces and total visit
   # durations to combine with imported data is inefficient. Instead both
   # queries should fetch bounces/total_visit_duration and visits and be
   # used as subqueries to a main query that then find the bounce rate/avg
   # visit_duration.
 
-  def select_joined_metrics(q, [:visits | rest]) do
-    q
-    |> select_merge_as([s, i], %{visits: s.visits + i.visits})
-    |> select_joined_metrics(rest)
+  defp joined_metric(:visits, _query) do
+    wrap_alias([s, i], %{visits: s.visits + i.visits})
   end
 
-  def select_joined_metrics(q, [:visitors | rest]) do
-    q
-    |> select_merge_as([s, i], %{visitors: s.visitors + i.visitors})
-    |> select_joined_metrics(rest)
+  defp joined_metric(:visitors, _query) do
+    wrap_alias([s, i], %{visitors: s.visitors + i.visitors})
   end
 
-  def select_joined_metrics(q, [:events | rest]) do
-    q
-    |> select_merge_as([s, i], %{events: s.events + i.events})
-    |> select_joined_metrics(rest)
+  defp joined_metric(:events, _query) do
+    wrap_alias([s, i], %{events: s.events + i.events})
   end
 
-  def select_joined_metrics(q, [:pageviews | rest]) do
-    q
-    |> select_merge_as([s, i], %{pageviews: s.pageviews + i.pageviews})
-    |> select_joined_metrics(rest)
+  defp joined_metric(:pageviews, _query) do
+    wrap_alias([s, i], %{pageviews: s.pageviews + i.pageviews})
   end
 
-  def select_joined_metrics(q, [:views_per_visit | rest]) do
-    q
-    |> select_merge_as([s, i], %{
+  defp joined_metric(:views_per_visit, _query) do
+    wrap_alias([s, i], %{
       views_per_visit:
         fragment(
           "if(? + ? > 0, round((? + ? * ?) / (? + ?), 2), 0)",
@@ -320,12 +319,10 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
           s.__internal_visits
         )
     })
-    |> select_joined_metrics(rest)
   end
 
-  def select_joined_metrics(q, [:bounce_rate | rest]) do
-    q
-    |> select_merge_as([s, i], %{
+  defp joined_metric(:bounce_rate, _query) do
+    wrap_alias([s, i], %{
       bounce_rate:
         fragment(
           "if(? + ? > 0, round(100 * (? + (? * ? / 100)) / (? + ?)), 0)",
@@ -338,12 +335,10 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
           s.__internal_visits
         )
     })
-    |> select_joined_metrics(rest)
   end
 
-  def select_joined_metrics(q, [:visit_duration | rest]) do
-    q
-    |> select_merge_as([s, i], %{
+  defp joined_metric(:visit_duration, _query) do
+    wrap_alias([s, i], %{
       visit_duration:
         fragment(
           """
@@ -362,25 +357,21 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
           i.__internal_visits
         )
     })
-    |> select_joined_metrics(rest)
   end
 
   # The final `scroll_depth` gets selected at a later querybuilding step
   # (in `Plausible.Stats.SQL.SpecialMetrics.add/3`). But in order to avoid
   # having to join with imported data there again, we select the required
   # information from imported data here already.
-  def select_joined_metrics(q, [:scroll_depth | rest]) do
-    q
-    |> select_merge_as([s, i], %{
+  defp joined_metric(:scroll_depth, _query) do
+    wrap_alias([s, i], %{
       __imported_total_scroll_depth: i.total_scroll_depth,
       __imported_total_scroll_depth_visits: i.total_scroll_depth_visits
     })
-    |> select_joined_metrics(rest)
   end
 
-  def select_joined_metrics(q, [:new_time_on_page | rest]) do
-    q
-    |> select_merge_as([s, i], %{
+  defp joined_metric(:new_time_on_page, _query) do
+    wrap_alias([s, i], %{
       new_time_on_page:
         fragment(
           "toInt32(round(ifNotFinite(? / ?, 0)))",
@@ -391,20 +382,16 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
       __internal_total_time_on_page_visits:
         s.__internal_total_time_on_page_visits + i.total_time_on_page_visits
     })
-    |> select_joined_metrics(rest)
   end
 
   # Ignored as it's calculated separately
-  def select_joined_metrics(q, [metric | rest])
-      when metric in [:conversion_rate, :group_conversion_rate, :percentage] do
-    q
-    |> select_joined_metrics(rest)
+  defp joined_metric(metric, _query)
+       when metric in [:conversion_rate, :group_conversion_rate, :percentage] do
+    %{}
   end
 
-  def select_joined_metrics(q, [metric | rest]) do
-    q
-    |> select_merge_as([s, i], %{metric => field(s, ^metric)})
-    |> select_joined_metrics(rest)
+  defp joined_metric(metric, _query) do
+    wrap_alias([s, i], %{metric => field(s, ^metric)})
   end
 
   defp dim(dimension), do: Plausible.Stats.Filters.without_prefix(dimension)
