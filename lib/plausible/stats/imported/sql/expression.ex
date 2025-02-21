@@ -383,12 +383,13 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     |> select_merge_as([s, i], %{
       new_time_on_page:
         fragment(
-          "toInt32(round(ifNotFinite((? + ?) / (? + ?), 0)))",
-          s.__internal_total_time_on_page,
-          i.total_time_on_page,
-          s.__internal_total_time_on_page_visits,
-          i.total_time_on_page_visits
-        )
+          "toInt32(round(ifNotFinite(? / ?, 0)))",
+          selected_as(:__internal_total_time_on_page),
+          selected_as(:__internal_total_time_on_page_visits)
+        ),
+      __internal_total_time_on_page: s.__internal_total_time_on_page + i.total_time_on_page,
+      __internal_total_time_on_page_visits:
+        s.__internal_total_time_on_page_visits + i.total_time_on_page_visits
     })
     |> select_joined_metrics(rest)
   end
