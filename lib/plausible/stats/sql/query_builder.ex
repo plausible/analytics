@@ -124,7 +124,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   defp select_event_metrics(query) do
     query.metrics
-    |> Enum.map(&SQL.Expression.event_metric/1)
+    |> Enum.map(&SQL.Expression.event_metric(&1, query))
     |> Enum.reduce(%{}, &Map.merge/2)
   end
 
