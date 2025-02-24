@@ -31,10 +31,10 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, _lv, html} = live(conn, "/sites")
 
       assert text_of_element(html, "#invitation-#{invitation1.invitation_id}") =~
-               "G.I. Joe has invited you to join the \"My Team\" as viewer member."
+               "G.I. Joe has invited you to join the \"My Personal Sites\" as viewer member."
 
       assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
-               "G.I. Jane has invited you to join the \"My Team\" as editor member."
+               "G.I. Jane has invited you to join the \"My Personal Sites\" as editor member."
 
       assert find(
                html,
