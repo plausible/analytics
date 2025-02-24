@@ -115,7 +115,7 @@ defmodule Plausible.Teams do
   @doc """
   Get or create user's team.
 
-  If the user has no non-guest membership yet, an implicit "My Team" team is
+  If the user has no non-guest membership yet, an implicit "My Personal Sites" team is
   created with them as an owner.
 
   If the user already has an owner membership in an existing team,
@@ -276,7 +276,7 @@ defmodule Plausible.Teams do
   defp create_my_team(user) do
     team =
       %Teams.Team{}
-      |> Teams.Team.changeset(%{name: "My Team"})
+      |> Teams.Team.changeset(%{name: "My Personal Sites"})
       |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
       |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!()
