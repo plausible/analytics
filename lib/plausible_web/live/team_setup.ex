@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
   def render(assigns) do
     ~H"""
     <.focus_box>
-      <:title>Create a new team</:title>
+      <:title>Setup a new team</:title>
       <:subtitle>
         Add members and assign roles to manage different sites access efficiently
       </:subtitle>
