@@ -23,13 +23,12 @@ defmodule PlausibleWeb.Live.TeamSetup do
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {true, %Teams.Team{}, _} ->
-          user = socket.assigns.current_user
-          team_name_changeset = Teams.Team.name_changeset(my_team, %{name: "#{user.name}'s Team"})
+          team_name_form = Teams.Team.name_changeset(my_team, %{name: ""}) |> to_form()
 
           layout = Layout.init(my_team)
 
           assign(socket,
-            team_name_changeset: team_name_changeset,
+            team_name_form: team_name_form,
             team_layout: layout
           )
 
@@ -60,44 +59,52 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
       <.form
         :let={f}
-        for={@team_name_changeset}
+        for={@team_name_form}
         method="post"
         phx-change="update-team"
+        phx-blur="update-team"
         id="update-team-form"
         class="mt-4 mb-8"
       >
-        <.input type="text" field={f[:name]} label="Name" width="w-full" phx-debounce="500" />
+        <.input
+          type="text"
+          placeholder={"#{@current_user.name}'s Team"}
+          autofocus
+          field={f[:name]}
+          label="Name"
+          width="w-full"
+          phx-debounce="500"
+        />
       </.form>
 
-      <.label class="mb-2">
-        Team Members
-      </.label>
-      {live_render(@socket, PlausibleWeb.Live.TeamManagement,
-        id: "team-management-setup",
-        container: {:div, id: "team-setup"},
-        session: %{
-          "mode" => "team-setup"
-        }
-      )}
+      <div :if={@team_name_form.source.valid?}>
+        <.label class="mb-2">
+          Team Members
+        </.label>
+        {live_render(@socket, PlausibleWeb.Live.TeamManagement,
+          id: "team-management-setup",
+          container: {:div, id: "team-setup"},
+          session: %{
+            "mode" => "team-setup"
+          }
+        )}
+      </div>
     </.focus_box>
     """
   end
 
   def handle_event("update-team", %{"team" => params}, socket) do
-    team_name_changeset =
-      socket.assigns.my_team
-      |> Teams.Team.name_changeset(params)
+    changeset = Teams.Team.name_changeset(socket.assigns.my_team, params)
 
-    if team_name_changeset.valid? do
-      my_team = Repo.update!(team_name_changeset)
+    socket =
+      case Repo.update(changeset) do
+        {:ok, _team} ->
+          assign(socket, team_name_form: to_form(changeset))
 
-      {:noreply,
-       assign(socket,
-         team_name_changeset: team_name_changeset,
-         my_team: my_team
-       )}
-    else
-      {:noreply, socket}
-    end
+        {:error, changeset} ->
+          assign(socket, team_name_form: to_form(changeset))
+      end
+
+    {:noreply, socket}
   end
 end

@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         phx-click="save-team-layout"
         class="mt-8 w-full"
       >
-        Create Team
+        Setup Team
       </.button>
     </div>
     """
