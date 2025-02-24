@@ -51,6 +51,23 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       _ = render(lv)
     end
+
+    test "setting team name to 'My Personal Sites' is reserved", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      {:ok, lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "#{user.name}'s Teamk"
+
+      type_into_input(lv, "team[name]", "Team Name 1")
+      _ = render(lv)
+      type_into_input(lv, "team[name]", "My Personal Sites")
+      _ = render(lv)
+      assert Repo.reload!(team).name == "Team Name 1"
+    end
   end
 
   describe "/team/setup - full integration" do
