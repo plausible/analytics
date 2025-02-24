@@ -36,6 +36,7 @@ defmodule Plausible.Ingestion.Event do
           | :verification_agent
           | :lock_timeout
           | :no_session_for_engagement
+          | :engagement_ff_throttle
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
