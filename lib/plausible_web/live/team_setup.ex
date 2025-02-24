@@ -23,7 +23,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {true, %Teams.Team{}, _} ->
-          team_name_changeset = Teams.Team.name_changeset(my_team)
+          user = socket.assigns.current_user
+          team_name_changeset = Teams.Team.name_changeset(my_team, %{name: "#{user.name}'s Team"})
 
           layout = Layout.init(my_team)
 
