@@ -36,6 +36,27 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
   describe "/team/setup - main differences from team management" do
     setup [:create_user, :log_in, :create_team]
 
+    test "renames the team on first render", %{conn: conn, team: team} do
+      assert team.name == "My Personal Sites"
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's Team"
+
+      assert Repo.reload!(team).name == "Jane Smith's Team"
+    end
+
+    test "does not rename the team if different than stock name", %{conn: conn, team: team} do
+      assert team.name == "My Personal Sites"
+      Repo.update!(Teams.Team.name_changeset(team, %{name: "Foo"}))
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "Foo"
+
+      assert Repo.reload!(team).name == "Foo"
+    end
+
     test "renders form", %{conn: conn} do
       {:ok, lv, html} = live(conn, @url)
       assert element_exists?(html, ~s|input#update-team-form_name[name="team[name]"]|)
@@ -97,6 +118,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert_redirect(lv, "/settings/team/general")
 
+      team = Repo.reload!(team)
+
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
         subject: @subject_prefix <> "You've been invited to \"#{team.name}\" team"
@@ -118,6 +141,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert text_of_element(html, "#{member_el()}:nth-of-type(1) button") == "Viewer"
 
       save_layout(lv)
+
+      team = Repo.reload!(team)
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
@@ -268,6 +293,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       refute html =~ "Guest"
 
       save_layout(lv)
+
+      team = Repo.reload!(team)
 
       assert_email_delivered_with(
         to: [nil: guest.email],
