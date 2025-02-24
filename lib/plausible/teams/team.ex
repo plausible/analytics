@@ -69,7 +69,7 @@ defmodule Plausible.Teams.Team do
     team
     |> cast(attrs, [:name])
     |> validate_required(:name)
-    |> validate_exclusion(:name, ["My Personal Sites"])
+    |> validate_exclusion(:name, [Plausible.Teams.name()])
   end
 
   def setup_changeset(team, now \\ NaiveDateTime.utc_now(:second)) do
