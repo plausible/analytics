@@ -1137,9 +1137,10 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       conn = get(conn, Routes.settings_path(conn, :team_general))
       html = html_response(conn, 200)
-      assert html =~ "Team Name"
+      assert html =~ "Team Information"
       assert html =~ "Change the name of your team"
       assert text_of_attr(html, "input#team_name", "value") == team.name
+      assert text_of_attr(html, "input#team-identifier", "value") == team.identifier
     end
 
     test "POST /settings/team/general/name", %{conn: conn, user: user} do
