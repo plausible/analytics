@@ -23,7 +23,10 @@ defmodule PlausibleWeb.Live.TeamSetup do
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {true, %Teams.Team{}, _} ->
-          team_name_form = Teams.Team.name_changeset(my_team, %{name: ""}) |> to_form()
+          user = socket.assigns.current_user
+
+          team_name_form =
+            Teams.Team.name_changeset(my_team, %{name: "#{user.name}'s Team"}) |> to_form()
 
           layout = Layout.init(my_team)
 
@@ -68,6 +71,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
       >
         <.input
           type="text"
+          value={"#{@current_user.name}'s Team"}
           placeholder={"#{@current_user.name}'s Team"}
           autofocus
           field={f[:name]}
@@ -77,18 +81,16 @@ defmodule PlausibleWeb.Live.TeamSetup do
         />
       </.form>
 
-      <div :if={@team_name_form.source.valid?}>
-        <.label class="mb-2">
-          Team Members
-        </.label>
-        {live_render(@socket, PlausibleWeb.Live.TeamManagement,
-          id: "team-management-setup",
-          container: {:div, id: "team-setup"},
-          session: %{
-            "mode" => "team-setup"
-          }
-        )}
-      </div>
+      <.label class="mb-2">
+        Team Members
+      </.label>
+      {live_render(@socket, PlausibleWeb.Live.TeamManagement,
+        id: "team-management-setup",
+        container: {:div, id: "team-setup"},
+        session: %{
+          "mode" => "team-setup"
+        }
+      )}
     </.focus_box>
     """
   end

@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       {:ok, lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "#{user.name}'s Teamk"
+               "#{user.name}'s Team"
 
       type_into_input(lv, "team[name]", "Team Name 1")
       _ = render(lv)
