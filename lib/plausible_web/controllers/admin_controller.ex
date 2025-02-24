@@ -106,7 +106,7 @@ defmodule PlausibleWeb.AdminController do
               end
               """,
               t.name,
-              "My Team",
+              "My Personal Sites",
               o.name,
               o.email,
               t.name,
@@ -163,7 +163,7 @@ defmodule PlausibleWeb.AdminController do
                   end
                   """,
                   t.name,
-                  "My Team",
+                  "My Personal Sites",
                   o.name,
                   o.email,
                   t.identifier,
