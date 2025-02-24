@@ -23,16 +23,27 @@ defmodule PlausibleWeb.Live.TeamSetup do
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {true, %Teams.Team{}, _} ->
-          user = socket.assigns.current_user
+          my_team =
+            if Teams.name(my_team) == Teams.name() do
+              current_user = socket.assigns.current_user
+
+              my_team
+              |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s Team"})
+              |> Repo.update!()
+            else
+              my_team
+            end
 
           team_name_form =
-            Teams.Team.name_changeset(my_team, %{name: "#{user.name}'s Team"}) |> to_form()
+            Teams.Team.name_changeset(my_team, %{})
+            |> to_form()
 
           layout = Layout.init(my_team)
 
           assign(socket,
             team_name_form: team_name_form,
-            team_layout: layout
+            team_layout: layout,
+            my_team: my_team
           )
 
         {false, _, _} ->
@@ -71,7 +82,6 @@ defmodule PlausibleWeb.Live.TeamSetup do
       >
         <.input
           type="text"
-          value={"#{@current_user.name}'s Team"}
           placeholder={"#{@current_user.name}'s Team"}
           autofocus
           field={f[:name]}
@@ -95,8 +105,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
     """
   end
 
-  def handle_event("update-team", %{"team" => params}, socket) do
-    changeset = Teams.Team.name_changeset(socket.assigns.my_team, params)
+  def handle_event("update-team", %{"team" => %{"name" => name}}, socket) do
+    changeset = Teams.Team.name_changeset(socket.assigns.my_team, %{name: name})
 
     socket =
       case Repo.update(changeset) do
