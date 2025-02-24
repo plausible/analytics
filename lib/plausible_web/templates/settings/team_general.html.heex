@@ -12,12 +12,14 @@
       for={@team_name_changeset}
       method="post"
     >
-      <.input_with_clipboard
-        name="team-identifier"
-        id="team-identifier"
-        label="Team Identifier"
-        value={@current_team.identifier}
-      />
+      <div class="w-1/2">
+        <.input_with_clipboard
+          name="team-identifier"
+          id="team-identifier"
+          label="Team Identifier"
+          value={@current_team.identifier}
+        />
+      </div>
       <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
 
       <.button type="submit">
