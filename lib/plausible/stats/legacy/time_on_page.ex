@@ -11,25 +11,25 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
 
   alias Plausible.Stats.{Base, Filters, Query, SQL, Util}
 
-  def calculate(site, query, ch_results) do
+  def calculate(_site, query, ch_results) do
     case {:time_on_page in query.metrics, query.dimensions} do
       {true, []} ->
-        aggregate_time_on_page(site, query)
+        aggregate_time_on_page(query)
 
       {true, ["event:page"]} ->
         pages =
           Enum.map(ch_results, fn entry -> Map.get(entry, Util.shortname(query, "event:page")) end)
 
-        breakdown_time_on_page(site, query, pages)
+        breakdown_time_on_page(query, pages)
 
       _ ->
         %{}
     end
   end
 
-  defp aggregate_time_on_page(site, query) do
+  defp aggregate_time_on_page(query) do
     windowed_pages_q =
-      from e in Base.base_event_query(site, Query.remove_top_level_filters(query, ["event:page"])),
+      from e in Base.base_event_query(Query.remove_top_level_filters(query, ["event:page"])),
         where: e.name != "engagement",
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
@@ -71,16 +71,15 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     %{[] => ClickhouseRepo.one(time_on_page_q, query: query)}
   end
 
-  defp breakdown_time_on_page(_site, _query, []) do
+  defp breakdown_time_on_page(_query, []) do
     %{}
   end
 
-  defp breakdown_time_on_page(site, query, pages) do
+  defp breakdown_time_on_page(query, pages) do
     import Ecto.Query
 
     windowed_pages_q =
       from e in Base.base_event_query(
-             site,
              Query.remove_top_level_filters(query, ["event:page", "event:props"])
            ),
            where: e.name != "engagement",
@@ -122,7 +121,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
         imported_timed_pages_q =
           from i in "imported_pages",
             group_by: i.page,
-            where: i.site_id == ^site.id,
+            where: i.site_id == ^query.site_id,
             where: i.date >= ^date_range.first and i.date <= ^date_range.last,
             where: i.page in ^pages,
             select: %{
