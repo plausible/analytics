@@ -361,7 +361,8 @@ defmodule Plausible.Stats.Imported do
     :percentage,
     :conversion_rate,
     :group_conversion_rate,
-    :time_on_page
+    :time_on_page,
+    :new_time_on_page
   ]
 
   defp can_order_by?(query) do
