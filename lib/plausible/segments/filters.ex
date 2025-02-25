@@ -64,7 +64,7 @@ defmodule Plausible.Segments.Filters do
   end
 
   defp replace_segment_with_filter_tree([_, "segment", clauses], preloaded_segments) do
-    if length(clauses) === 1 do
+    if length(clauses) == 1 do
       [[:and, Map.get(preloaded_segments, Enum.at(clauses, 0))]]
     else
       [[:or, Enum.map(clauses, fn id -> [:and, Map.get(preloaded_segments, id)] end)]]

@@ -566,7 +566,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       :ok
     else
       {:error,
-       "The goal `#{clause}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
+       "Invalid filters. The goal `#{clause}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
     end
   end
 
