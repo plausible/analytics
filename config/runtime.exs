@@ -312,8 +312,10 @@ config :plausible, :selfhost,
   disable_registration: disable_registration
 
 default_http_opts = [
-  transport_options: [max_connections: :infinity],
-  protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
+  http_1_options: [
+    max_request_line_length: 8192,
+    max_header_length: 8192
+  ]
 ]
 
 config :plausible, PlausibleWeb.Endpoint,
