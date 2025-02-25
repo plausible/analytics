@@ -197,9 +197,15 @@ defmodule Plausible.Segments.Segment do
   end
 
   defp dashboard_compatible_filter?(filter) do
-    is_list(filter) and length(filter) === 3 and
-      is_atom(Enum.at(filter, 0)) and
-      is_binary(Enum.at(filter, 1)) and
-      is_list(Enum.at(filter, 2))
+    regular_filter? =
+      is_list(filter) and length(filter) == 3 and
+        is_atom(Enum.at(filter, 0)) and
+        is_binary(Enum.at(filter, 1)) and
+        is_list(Enum.at(filter, 2))
+
+    has_not_done_filter? =
+      is_list(filter) and length(filter) == 2 and Enum.at(filter, 0) == :has_not_done
+
+    regular_filter? or has_not_done_filter?
   end
 end
