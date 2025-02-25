@@ -6,9 +6,9 @@ const PrivTrackerDir = '../priv/tracker/js/';
 
 const toReport = [
   'plausible.js',
-  'plausible.pageleave.js',
-  'plausible.manual.pageleave.js',
-  'plausible.hash.pageleave.js'
+  'plausible.compat.js',
+  'plausible.manual.js',
+  'plausible.hash.js'
 ];
 
 const results = [];
