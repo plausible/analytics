@@ -26,7 +26,8 @@ defmodule Plausible.Stats.Query do
             revenue_warning: nil,
             remove_unavailable_revenue_metrics: false,
             site_id: nil,
-            site_native_stats_start_at: nil
+            site_native_stats_start_at: nil,
+            time_on_page_combined_data: nil
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}

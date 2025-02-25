@@ -226,7 +226,7 @@ defmodule Plausible.Stats.Imported do
     imported_q =
       site
       |> Imported.Base.query_imported(query)
-      |> select_imported_metrics(query.metrics)
+      |> select_imported_metrics(query)
       |> paginate_optimization(query)
 
     from(
@@ -253,7 +253,7 @@ defmodule Plausible.Stats.Imported do
               i.name
             )
         })
-        |> select_imported_metrics(query.metrics)
+        |> select_imported_metrics(query)
         |> group_by([], selected_as(:dim0))
         |> where([], selected_as(:dim0) != 0)
 
@@ -282,7 +282,7 @@ defmodule Plausible.Stats.Imported do
         |> select_merge_as([_i, index], %{
           dim0: fragment("CAST(?, 'UInt64')", index)
         })
-        |> select_imported_metrics(query.metrics)
+        |> select_imported_metrics(query)
     end)
     |> Enum.reduce(q, fn imports_q, q ->
       naive_dimension_join(q, imports_q, query)
@@ -298,7 +298,7 @@ defmodule Plausible.Stats.Imported do
         |> Imported.Base.query_imported(query)
         |> where([i], i.visitors > 0)
         |> group_imported_by(query)
-        |> select_imported_metrics(query.metrics)
+        |> select_imported_metrics(query)
         |> paginate_optimization(query)
 
       from(s in subquery(q),
