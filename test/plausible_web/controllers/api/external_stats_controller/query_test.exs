@@ -4959,7 +4959,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           site: site,
           name: "Signups",
           segment_data: %{
-            "filters" => [["is", "event:name", ["Signup"]]]
+            "filters" => [["is", "event:goal", ["Signup"]]]
           }
         )
 
@@ -4998,7 +4998,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       # response shows what filters the segment was resolved to
       assert json_response(conn, 200)["query"]["filters"] == [
-               ["and", [["is", "event:name", ["Signup"]]]]
+               ["is", "event:goal", ["Signup"]]
              ]
     end
   end
