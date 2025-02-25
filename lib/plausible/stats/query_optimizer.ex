@@ -49,7 +49,8 @@ defmodule Plausible.Stats.QueryOptimizer do
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
       &extend_hostname_filters_to_visit/1,
-      &remove_revenue_metrics_if_unavailable/1
+      &remove_revenue_metrics_if_unavailable/1,
+      &set_time_on_page_combined_data/1
     ]
   end
 
@@ -184,5 +185,27 @@ defmodule Plausible.Stats.QueryOptimizer do
     end
   else
     defp remove_revenue_metrics_if_unavailable(query), do: query
+  end
+
+  defp set_time_on_page_combined_data(query) do
+    if :new_time_on_page in query.metrics and query.include.combined_time_on_page_cutoff do
+      cutoff =
+        query.include.combined_time_on_page_cutoff
+        |> DateTime.from_iso8601()
+        |> DateTime.shift_zone!("Etc/UTC")
+        |> DateTime.truncate(:second)
+
+      Query.set(
+        query,
+        time_on_page_combined_data: %{
+          include_main: DateTime.before?(cutoff, query.utc_time_range.last),
+          # :TODO: Check if this query allows for including legacy data?
+          include_legacy: DateTime.after?(cutoff, query.utc_time_range.first),
+          cutoff: cutoff
+        }
+      )
+    else
+      query
+    end
   end
 end
