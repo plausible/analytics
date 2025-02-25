@@ -109,17 +109,29 @@ interface FiltersBarProps {
   }
 }
 
-const canShowClearAllAction = (filters: DashboardQuery['filters']) =>
+const canShowClearAllAction = ({ filters }: Pick<DashboardQuery, 'filters'>) =>
   filters.length >= 2
-const canShowSaveAsSegmentAction = (filters: DashboardQuery['filters']) =>
-  filters.length >= 1 && !filters.some(isSegmentFilter)
+
+const canShowSaveAsSegmentAction = ({
+  filters,
+  isEditingSegment
+}: Pick<DashboardQuery, 'filters'> & { isEditingSegment: boolean }) =>
+  filters.length >= 1 && !filters.some(isSegmentFilter) && !isEditingSegment
 
 export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
-  const { query } = useQueryContext()
+  const { query, expandedSegment } = useQueryContext()
   const seeMoreRef = useRef<HTMLButtonElement>(null)
+
+  const showingClearAll = canShowClearAllAction({ filters: query.filters })
+  const showingSaveAsSegment = canShowSaveAsSegmentAction({
+    filters: query.filters,
+    isEditingSegment: !!expandedSegment
+  })
+
+  const mustShowSeeMoreMenu = showingClearAll || showingSaveAsSegment
 
   useLayoutEffect(() => {
     const topBar = accessors.topBar(containerRef.current)
@@ -148,9 +160,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
           SEE_MORE_LEFT_MARGIN_PX +
           SEE_MORE_WIDTH_PX +
           SEE_MORE_RIGHT_MARGIN_PX,
-        mustShowSeeMoreMenu:
-          canShowClearAllAction(query.filters) ||
-          canShowClearAllAction(query.filters)
+        mustShowSeeMoreMenu
       })
     })
 
@@ -161,15 +171,12 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [accessors, query.filters])
+  }, [accessors, query.filters, mustShowSeeMoreMenu])
 
   if (!query.filters.length) {
     // functions as spacer between elements.leftSection and elements.rightSection
     return <div className="w-4" />
   }
-
-  const showingClearAll = canShowClearAllAction(query.filters)
-  const showingSaveAsSegment = canShowSaveAsSegmentAction(query.filters)
 
   return (
     <div
@@ -195,8 +202,7 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
       </div>
       {visibility !== null &&
         (query.filters.length !== visibility.visibleCount ||
-          showingClearAll ||
-          showingSaveAsSegment) && (
+          mustShowSeeMoreMenu) && (
           <Popover className="md:relative">
             <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
             <Popover.Button
@@ -266,10 +272,6 @@ const ClearAction = () => (
 
 const SaveAsSegmentAction = () => {
   const { setModal } = useRoutelessModalsContext()
-  const { expandedSegment } = useQueryContext()
-  if (expandedSegment) {
-    return null
-  }
 
   return (
     <AppNavigationLink
