@@ -14,7 +14,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
     imports_meta: false,
     time_labels: false,
     total_rows: false,
-    comparisons: nil
+    comparisons: nil,
+    combined_time_on_page_cutoff: nil
   }
 
   @default_pagination %{

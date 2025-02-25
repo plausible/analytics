@@ -248,21 +248,55 @@ defmodule Plausible.Stats.SQL.Expression do
   def event_metric(:group_conversion_rate, _query), do: %{}
   def event_metric(:total_visitors, _query), do: %{}
 
-  def event_metric(:new_time_on_page, _query) do
-    wrap_alias(
-      [e],
-      %{
-        new_time_on_page:
-          fragment(
-            "toInt32(round(ifNotFinite(? / ?, 0)))",
-            selected_as(:__internal_total_time_on_page),
-            selected_as(:__internal_total_time_on_page_visits)
-          ),
-        __internal_total_time_on_page: fragment("sum(?)", e.engagement_time),
-        # :TODO: uniqIf(session_id, name = 'engagement')
-        __internal_total_time_on_page_visits: fragment("uniq(?)", e.session_id)
-      }
-    )
+  def event_metric(:new_time_on_page, query) do
+    case query.time_on_page_combined_data do
+      %{include_main: false} ->
+        wrap_alias(
+          [e],
+          %{
+            __internal_total_time_on_page: 0,
+            __internal_total_time_on_page_visits: 0
+          }
+        )
+
+      %{include_main: true, include_legacy: true, cutoff: cutoff} ->
+        wrap_alias(
+          [e],
+          %{
+            __internal_total_time_on_page:
+              fragment(
+                "sumIf(?, ? >= ?)",
+                e.engagement_time,
+                e.timestamp,
+                ^cutoff
+              ),
+            __internal_total_time_on_page_visits:
+              fragment(
+                "uniqIf(?, ? = 'engagement' and ? >= ?)",
+                e.session_id,
+                e.name,
+                e.timestamp,
+                ^cutoff
+              )
+          }
+        )
+
+      _ ->
+        wrap_alias(
+          [e],
+          %{
+            new_time_on_page:
+              fragment(
+                "toInt32(round(ifNotFinite(? / ?, 0)))",
+                selected_as(:__internal_total_time_on_page),
+                selected_as(:__internal_total_time_on_page_visits)
+              ),
+            __internal_total_time_on_page: fragment("sum(?)", e.engagement_time),
+            __internal_total_time_on_page_visits:
+              fragment("uniqIf(?, ? = 'engagement')", e.session_id, e.name)
+          }
+        )
+    end
   end
 
   def event_metric(unknown, _query), do: raise("Unknown metric: #{unknown}")
