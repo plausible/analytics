@@ -2441,22 +2441,17 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           utc_time_range: @date_range_day,
           filters: [
             [
+              :or,
+              [
+                [:and, [[:is, "visit:country", ["AU", "NZ"]]]],
+                [:and, [[:is, "visit:country", ["FR", "DE"]]]]
+              ]
+            ],
+            [
               :and,
               [
-                [
-                  :or,
-                  [
-                    [:and, [[:is, "visit:country", ["AU", "NZ"]]]],
-                    [:and, [[:is, "visit:country", ["FR", "DE"]]]]
-                  ]
-                ],
-                [
-                  :and,
-                  [
-                    [:is, "visit:browser", ["Firefox"]],
-                    [:is, "visit:os", ["Linux"]]
-                  ]
-                ]
+                [:is, "visit:browser", ["Firefox"]],
+                [:is, "visit:os", ["Linux"]]
               ]
             ]
           ],
