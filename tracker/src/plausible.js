@@ -16,9 +16,11 @@
     if (reason) console.warn('Ignoring Event: ' + reason);
     options && options.callback && options.callback()
 
+    {{#if pageleave}}
     if (eventName === 'pageview') {
       currentEngagementIgnored = true
     }
+    {{/if}}
   }
 
   function defaultEndpoint(el) {
@@ -32,6 +34,9 @@
     {{/if}}
   }
 
+  {{#if pageleave}}
+  // :NOTE: Tracking engagement events is currently experimental.
+
   var currentEngagementIgnored
   var currentEngagementURL = location.href
   var currentEngagementProps = {}
@@ -42,7 +47,7 @@
   // prevents registering multiple listeners in those cases.
   var listeningOnEngagement = false
 
-  // In SPA-s, multiple listeners that trigger the engagement event
+  // In SPA-s, multiple listeners that trigger the pageleave event
   // might fire nearly at the same time. E.g. when navigating back
   // in browser history while using hash-based routing - a popstate
   // and hashchange will be fired in a very quick succession. This
@@ -165,6 +170,7 @@
       listeningOnEngagement = true
     }
   }
+  {{/if}}
 
   function trigger(eventName, options) {
     var isPageview = eventName === 'pageview'
@@ -251,6 +257,7 @@
     payload.h = 1
     {{/if}}
 
+    {{#if pageleave}}
     if (isPageview) {
       currentEngagementIgnored = false
       currentEngagementURL = payload.u
@@ -260,6 +267,7 @@
       runningEnagementStart = Date.now()
       registerEngagementListener()
     }
+    {{/if}}
 
     sendRequest(endpoint, payload, options)
   }
@@ -307,11 +315,13 @@
       if (isSPANavigation && lastPage === location.pathname) return;
       {{/unless}}
 
+      {{#if pageleave}}
       if (isSPANavigation && listeningOnEngagement) {
         triggerEngagement()
         currentDocumentHeight = getDocumentHeight()
         maxScrollDepthPx = getCurrentScrollDepthPx()
       }
+      {{/if}}
 
       lastPage = location.pathname
       trigger('pageview')
@@ -345,12 +355,14 @@
       page()
     }
 
+    {{#if pageleave}}
     window.addEventListener('pageshow', function(event) {
       if (event.persisted) {
         // Page was restored from bfcache - trigger a pageview
         page();
       }
     })
+    {{/if}}
   {{/unless}}
 
   {{#if (any outbound_links file_downloads tagged_events)}}
