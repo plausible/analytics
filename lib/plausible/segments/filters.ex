@@ -63,8 +63,15 @@ defmodule Plausible.Segments.Filters do
     end
   end
 
+  defp expand_first_level_and_filters(filter) do
+    case filter do
+      [:and, clauses] -> clauses
+      filter -> [filter]
+    end
+  end
+
   defp replace_segment_with_filter_tree([_, "segment", clauses], preloaded_segments) do
-    if length(clauses) === 1 do
+    if length(clauses) == 1 do
       [[:and, Map.get(preloaded_segments, Enum.at(clauses, 0))]]
     else
       [[:or, Enum.map(clauses, fn id -> [:and, Map.get(preloaded_segments, id)] end)]]
@@ -84,8 +91,17 @@ defmodule Plausible.Segments.Filters do
     iex> resolve_segments([[:is, "visit:entry_page", ["/home"]], [:is, "segment", [1]]], %{1 => [[:contains, "visit:entry_page", ["blog"]], [:is, "visit:country", ["PL"]]]})
     {:ok, [
       [:is, "visit:entry_page", ["/home"]],
-      [:and, [[:contains, "visit:entry_page", ["blog"]], [:is, "visit:country", ["PL"]]]]
+      [:contains, "visit:entry_page", ["blog"]],
+      [:is, "visit:country", ["PL"]]
     ]}
+
+    iex> resolve_segments([[:is, "visit:entry_page", ["/home"]], [:is, "segment", [1]], [:is, "segment", [2]]], %{1 => [[:is, "visit:country", ["PL"]]], 2 => [[:is, "event:goal", ["Signup"]]]})
+    {:ok, [
+      [:is, "visit:entry_page", ["/home"]],
+      [:is, "visit:country", ["PL"]],
+      [:is, "event:goal", ["Signup"]]
+    ]}
+
 
     iex> resolve_segments([[:is, "segment", [1, 2]]], %{1 => [[:contains, "event:goal", ["Singup"]], [:is, "visit:country", ["PL"]]], 2 => [[:contains, "event:goal", ["Sauna"]], [:is, "visit:country", ["EE"]]]})
     {:ok, [
@@ -98,9 +114,11 @@ defmodule Plausible.Segments.Filters do
   def resolve_segments(original_filters, preloaded_segments) do
     if map_size(preloaded_segments) > 0 do
       {:ok,
-       Filters.transform_filters(original_filters, fn f ->
+       original_filters
+       |> Filters.transform_filters(fn f ->
          replace_segment_with_filter_tree(f, preloaded_segments)
-       end)}
+       end)
+       |> Filters.transform_filters(&expand_first_level_and_filters/1)}
     else
       {:ok, original_filters}
     end

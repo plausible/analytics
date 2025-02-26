@@ -1,6 +1,13 @@
 /** @format */
 
-import { formatISO, nowForSite, shiftMonths, yesterday } from './date'
+import {
+  dateForSite,
+  formatDayShort,
+  formatISO,
+  nowForSite,
+  shiftMonths,
+  yesterday
+} from './date'
 
 jest.useFakeTimers()
 
@@ -102,3 +109,13 @@ for (const [timezone, suite] of sets) {
     )
   })
 }
+
+describe('formatting UTC dates from database', () => {
+  it('is able to enrich UTC date string with site timezone, formatting the value correctly', () => {
+    expect(
+      formatDayShort(
+        dateForSite('2025-01-01T14:00:00', { offset: 60 * 60 * 11 })
+      )
+    ).toEqual('2 Jan')
+  })
+})
