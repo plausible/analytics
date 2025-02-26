@@ -3724,6 +3724,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   describe "scroll_depth" do
     setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
+    test "cannot query scroll depth without page filter or dimension", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["scroll_depth"]
+        })
+
+      assert %{"error" => error} = json_response(conn, 400)
+
+      assert error ==
+               "Metric `scroll_depth` can only be queried with event:page filters or dimensions."
+    end
+
     test "can query scroll_depth metric with a page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
