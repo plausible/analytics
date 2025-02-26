@@ -87,11 +87,6 @@ defmodule PlausibleWeb.StatsController do
           title: title(conn, site),
           demo: demo,
           flags: flags,
-          members:
-            if(flags.saved_segments,
-              do: get_members(conn.assigns[:site_role], site),
-              else: nil
-            ),
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           load_dashboard_js: true
@@ -381,11 +376,6 @@ defmodule PlausibleWeb.StatsController do
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: flags,
-          members:
-            if(flags.saved_segments,
-              do: get_members(conn.assigns[:site_role], shared_link.site),
-              else: nil
-            ),
           is_dbip: is_dbip(),
           load_dashboard_js: true
         )
@@ -410,30 +400,6 @@ defmodule PlausibleWeb.StatsController do
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)
       |> Map.new()
-
-  defp get_members(site_role, %Plausible.Site{} = site)
-       when site_role in [:viewer, :editor, :owner, :admin, :super_admin] do
-    site =
-      site
-      |> Plausible.Repo.preload(
-        team: [team_memberships: [:user]],
-        guest_memberships: [team_membership: [:user]]
-      )
-
-    site.guest_memberships
-    |> Enum.map(fn i = %Plausible.Teams.GuestMembership{} ->
-      i.team_membership
-    end)
-    |> Enum.concat(site.team.team_memberships)
-    |> Enum.map(fn i = %Plausible.Teams.Membership{} ->
-      {i.user.id, i.user.name}
-    end)
-    |> Map.new()
-  end
-
-  defp get_members(_site_role, _site) do
-    nil
-  end
 
   defp is_dbip() do
     on_ee do

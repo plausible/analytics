@@ -15,9 +15,17 @@ export type SavedSegment = {
   name: string
   type: SegmentType
   owner_id: number
+  owner_name: string
+  /** datetime in site timezone, example 2025-02-26 10:00:00 */
   inserted_at: string
+  /** datetime in site timezone, example 2025-02-26 10:00:00 */
   updated_at: string
 }
+
+export type SavedPublicSiteSegment = Pick<
+  SavedSegment,
+  'id' | 'type' | 'name' | 'inserted_at' | 'updated_at'
+>
 
 export type SegmentDataFromApi = {
   filters: unknown[]
