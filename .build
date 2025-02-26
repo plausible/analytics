@@ -149,6 +149,8 @@ Plausible.Segments.Segment.html
 Plausible.Segments.html
 Plausible.Sentry.Client.html
 Plausible.SentryFilter.html
+Plausible.Session.Balancer.html
+Plausible.Session.BalancerSupervisor.html
 Plausible.Session.CacheStore.html
 Plausible.Session.Salts.html
 Plausible.Shield.CountryRule.html
@@ -462,8 +464,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-CAB6F684.js
-dist/sidebar_items-2FDCC34A.js
+dist/search_data-1C674C1D.js
+dist/sidebar_items-15B76360.js
 index.html
 readme.html
 search.html
