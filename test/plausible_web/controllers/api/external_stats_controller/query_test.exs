@@ -3724,16 +3724,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   describe "scroll_depth" do
     setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
-    test "scroll depth is (not yet) available in public API", %{conn: conn, site: site} do
+    test "cannot query scroll depth without page filter or dimension", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
-          "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
           "metrics" => ["scroll_depth"]
         })
 
-      assert json_response(conn, 400)["error"] =~ "Invalid metric \"scroll_depth\""
+      assert %{"error" => error} = json_response(conn, 400)
+
+      assert error ==
+               "Metric `scroll_depth` can only be queried with event:page filters or dimensions."
     end
 
     test "can query scroll_depth metric with a page filter", %{conn: conn, site: site} do
@@ -3747,7 +3749,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
@@ -3781,7 +3783,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]], ["is", "event:props:author", ["john"]]],
           "date_range" => "all",
@@ -3793,13 +3795,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "scroll depth is 0 when no engagement data in range", %{conn: conn, site: site} do
+    test "scroll depth is nil when no engagement data in range", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
@@ -3811,9 +3813,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "scroll depth is 0 when no data at all in range", %{conn: conn, site: site} do
+    test "scroll depth is nil when no data at all in range", %{conn: conn, site: site} do
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
@@ -3845,7 +3847,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -3879,7 +3881,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -3908,7 +3910,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -3941,7 +3943,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -4028,7 +4030,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "order_by" => [["scroll_depth", "asc"]],
@@ -4097,7 +4099,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -4169,7 +4171,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "order_by" => [["scroll_depth", "desc"]],

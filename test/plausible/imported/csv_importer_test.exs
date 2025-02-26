@@ -1164,7 +1164,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       ]
 
       query_scroll_depth_per_page = fn conn, site ->
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
