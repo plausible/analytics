@@ -59,7 +59,7 @@ export const SearchInput = ({
         type="text"
         placeholder={isFocused ? placeholderFocused : placeholderUnfocused}
         className={classNames(
-          'shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 w-48',
+          'shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 w-48',
           className
         )}
         onChange={debouncedOnSearchInputChange}

@@ -1137,7 +1137,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "The goal `Signup` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
+        "Invalid filters. The goal `Signup` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
       )
     end
 
@@ -1152,7 +1152,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "The goal `Visit /thank-you` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
+        "Invalid filters. The goal `Visit /thank-you` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
       )
     end
 
@@ -1255,7 +1255,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals",
+        "Invalid filters. The goal `Unknown` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals",
         :internal
       )
     end
@@ -2441,22 +2441,17 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           utc_time_range: @date_range_day,
           filters: [
             [
+              :or,
+              [
+                [:and, [[:is, "visit:country", ["AU", "NZ"]]]],
+                [:and, [[:is, "visit:country", ["FR", "DE"]]]]
+              ]
+            ],
+            [
               :and,
               [
-                [
-                  :or,
-                  [
-                    [:and, [[:is, "visit:country", ["AU", "NZ"]]]],
-                    [:and, [[:is, "visit:country", ["FR", "DE"]]]]
-                  ]
-                ],
-                [
-                  :and,
-                  [
-                    [:is, "visit:browser", ["Firefox"]],
-                    [:is, "visit:os", ["Linux"]]
-                  ]
-                ]
+                [:is, "visit:browser", ["Firefox"]],
+                [:is, "visit:os", ["Linux"]]
               ]
             ]
           ],

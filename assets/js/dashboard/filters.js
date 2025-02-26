@@ -10,9 +10,9 @@ import { Menu, Transition } from '@headlessui/react';
 import {
   FILTER_GROUP_TO_MODAL_TYPE,
   cleanLabels,
-  FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup,
-  EVENT_PROPS_PREFIX
+  EVENT_PROPS_PREFIX,
+  getAvailableFilterModals
 } from "./util/filters"
 import { plainFilterText, styledFilterText } from "./util/filter-text"
 
@@ -101,10 +101,7 @@ function DropdownContent({ wrapped }) {
   const [addingFilter, setAddingFilter] = useState(false);
 
   if (wrapped === WRAPSTATE.unwrapped || addingFilter) {
-    let filterModals = { ...FILTER_MODAL_TO_FILTER_GROUP }
-    if (!site.propsAvailable) delete filterModals.props
-
-    return <>{Object.keys(filterModals).map((option) => <OpenFilterGroupOptionsButton key={option} option={option} />)}</>
+    return <>{Object.keys(getAvailableFilterModals(site)).map((option) => <OpenFilterGroupOptionsButton key={option} option={option} />)}</>
   }
 
   return (

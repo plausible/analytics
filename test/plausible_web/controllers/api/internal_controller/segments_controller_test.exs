@@ -327,13 +327,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         })
 
       assert json_response(conn, 400) == %{
-               "errors" => [
-                 [
-                   "segment_data",
-                   "#/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]",
-                   []
-                 ]
-               ]
+               "error" =>
+                 "segment_data #/filters/0: Invalid filter [\"is\", \"entry_page\", [\"/blog\"]]"
              }
     end
 
@@ -346,12 +341,18 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
            %{conn: conn, user: user} do
         site = new_site()
         add_guest(site, user: user, role: unquote(role))
+        insert(:goal, site: site, event_name: "Conversion")
 
         response =
           post(conn, "/api/#{site.domain}/segments", %{
             "name" => "Some segment",
             "type" => "#{unquote(type)}",
-            "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]}
+            "segment_data" => %{
+              "filters" => [
+                ["is", "visit:entry_page", ["/blog"]],
+                ["has_not_done", ["is", "event:goal", ["Conversion"]]]
+              ]
+            }
           })
           |> json_response(200)
 
@@ -360,7 +361,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                          "name" => "Some segment",
                          "type" => ^"#{unquote(type)}",
                          "segment_data" =>
-                           ^strict_map(%{"filters" => [["is", "visit:entry_page", ["/blog"]]]}),
+                           ^strict_map(%{
+                             "filters" => [
+                               ["is", "visit:entry_page", ["/blog"]],
+                               ["has_not_done", ["is", "event:goal", ["Conversion"]]]
+                             ]
+                           }),
                          "owner_id" => ^user.id,
                          "inserted_at" => ^any(:iso8601_naive_datetime),
                          "updated_at" => ^any(:iso8601_naive_datetime)
@@ -417,19 +423,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       end
     end
 
-    for {filters, expected_errors} <- [
-          {[],
-           [
-             [
-               "segment_data",
-               "property \"filters\" must be an array with at least one member",
-               []
-             ]
-           ]},
-          {[["foo", "bar"]],
-           [["segment_data", "#/filters/0: Invalid filter [\"foo\", \"bar\"]", []]]},
+    for {filters, expected_error} <- [
+          {[], "segment_data property \"filters\" must be an array with at least one member"},
+          {[["foo", "bar"]], "segment_data #/filters/0: Invalid filter [\"foo\", \"bar\"]"},
           {[["not", ["is", "visit:entry_page", ["/campaigns/:campaign_name"]]]],
-           [["segment_data", "Invalid filters. Deep filters are not supported.", []]]},
+           "segment_data Invalid filters. Deep filters are not supported."},
           {[
              [
                "or",
@@ -439,13 +437,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                ]
              ]
            ],
-           [
-             [
-               "segment_data",
-               "Invalid filters. Dimension `event:goal` can only be filtered at the top level.",
-               []
-             ]
-           ]}
+           "segment_data Invalid filters. Dimension `event:goal` can only be filtered at the top level."}
         ] do
       test "prevents owners from updating segments to invalid filters #{inspect(filters)} with error 400",
            %{
@@ -467,9 +459,102 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           })
 
         assert json_response(conn, 400) == %{
-                 "errors" => unquote(expected_errors)
+                 "error" => unquote(expected_error)
                }
       end
+    end
+
+    test "prevents editors from updating segments name beyond 255 characters with error 400",
+         %{
+           conn: conn,
+           user: user,
+           site: site
+         } do
+      segment =
+        insert(:segment,
+          site: site,
+          name: "any name",
+          type: :personal,
+          owner: user
+        )
+
+      conn =
+        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
+          "name" => String.duplicate("a", 256)
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "name should be at most 255 byte(s)"
+             }
+    end
+
+    test "updating a segment containing a goal that has been deleted, with the deleted goal still in filters, fails",
+         %{
+           conn: conn,
+           user: user,
+           site: site
+         } do
+      segment =
+        insert(:segment,
+          site: site,
+          name: "any name",
+          type: :personal,
+          owner: user,
+          segment_data: %{"filters" => [["is", "event:goal", ["Signup"]]]}
+        )
+
+      conn =
+        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
+          "segment_data" => %{
+            "filters" => [["is", "event:goal", ["Signup"]], ["is", "event:page", ["/register"]]]
+          }
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "segment_data Invalid filters. The goal `Signup` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
+             }
+    end
+
+    test "a segment containing a goal that has been deleted can be updated to not contain the goal",
+         %{
+           conn: conn,
+           user: user,
+           site: site
+         } do
+      segment =
+        insert(:segment,
+          site: site,
+          name: "any name",
+          type: :personal,
+          owner: user,
+          segment_data: %{"filters" => [["is", "event:goal", ["Signup"]]]}
+        )
+
+      insert(:goal, site: site, event_name: "a new goal")
+
+      response =
+        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
+          "segment_data" => %{
+            "filters" => [["is", "event:goal", ["a new goal"]]]
+          }
+        })
+        |> json_response(200)
+
+      assert_matches ^strict_map(%{
+                       "id" => ^segment.id,
+                       "name" => ^segment.name,
+                       "type" => ^any(:string, ~r/#{segment.type}/),
+                       "segment_data" =>
+                         ^strict_map(%{
+                           "filters" => [
+                             ["is", "event:goal", ["a new goal"]]
+                           ]
+                         }),
+                       "owner_id" => ^user.id,
+                       "inserted_at" => ^any(:iso8601_naive_datetime),
+                       "updated_at" => ^any(:iso8601_naive_datetime)
+                     }) = response
     end
 
     test "editors can update a segment", %{conn: conn, user: user} do
@@ -531,12 +616,33 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       verify_segment_in_db(segment)
     end
 
+    test "even site owners can't delete personal segments of other users",
+         %{conn: conn, site: site} do
+      other_user = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          site: site,
+          owner_id: other_user.id,
+          name: "any",
+          type: :personal
+        )
+
+      conn =
+        delete(conn, "/api/#{site.domain}/segments/#{segment.id}")
+
+      assert %{"error" => "Segment not found with ID \"#{segment.id}\""} ==
+               json_response(conn, 404)
+
+      verify_segment_in_db(segment)
+    end
+
     for %{role: role, type: type} <- [
           %{role: :viewer, type: :personal},
           %{role: :editor, type: :personal},
           %{role: :editor, type: :site}
         ] do
-      test "#{role} can delete segment with type \"#{type}\" successfully",
+      test "#{role} can delete their own segment with type \"#{type}\" successfully",
            %{conn: conn, user: user} do
         site = new_site()
         add_guest(site, user: user, role: unquote(role))
@@ -565,6 +671,36 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
 
         verify_no_segment_in_db(segment)
       end
+    end
+
+    test "site owner can delete a site segment owned by someone else, even if it contains a non-existing goal",
+         %{conn: conn, site: site} do
+      other_user = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          site: site,
+          owner: other_user,
+          name: "any",
+          type: :site,
+          segment_data: %{"filters" => [["is", "event:goal", ["non-existing goal"]]]}
+        )
+
+      response =
+        delete(conn, "/api/#{site.domain}/segments/#{segment.id}")
+        |> json_response(200)
+
+      assert %{
+               "owner_id" => other_user.id,
+               "id" => segment.id,
+               "name" => segment.name,
+               "segment_data" => segment.segment_data,
+               "type" => "site",
+               "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at),
+               "updated_at" => NaiveDateTime.to_iso8601(segment.updated_at)
+             } == response
+
+      verify_no_segment_in_db(segment)
     end
   end
 
