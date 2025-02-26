@@ -1,5 +1,5 @@
 defmodule Plausible.Ingestion.EventTest do
-  use Plausible.DataCase, async: false
+  use Plausible.DataCase, async: true
   use Plausible.Teams.Test
 
   import Phoenix.ConnTest
@@ -282,9 +282,10 @@ defmodule Plausible.Ingestion.EventTest do
 
     test = self()
 
-    very_slow_buffer = fn _sessions ->
+    very_slow_buffer = fn sessions ->
       send(test, :slow_buffer_insert_started)
-      Process.sleep(800)
+      Process.sleep(1000)
+      Plausible.Session.WriteBuffer.insert(sessions)
     end
 
     first_conn =
@@ -314,11 +315,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     receive do
       :slow_buffer_insert_started ->
-        assert {:ok, %{buffered: [], dropped: [dropped]}} =
-                 Event.build_and_buffer(second_request,
-                   session_write_buffer_insert: very_slow_buffer
-                 )
-
+        assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(second_request)
         assert dropped.drop_reason == :lock_timeout
     end
   end

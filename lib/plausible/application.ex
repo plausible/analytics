@@ -15,7 +15,6 @@ defmodule Plausible.Application do
 
     children =
       [
-        Plausible.Session.BalancerSupervisor,
         Plausible.Cache.Stats,
         Plausible.PromEx,
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},

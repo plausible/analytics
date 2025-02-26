@@ -393,7 +393,7 @@ defmodule Plausible.Ingestion.Event do
         event.clickhouse_event,
         event.clickhouse_session_attrs,
         previous_user_id,
-        buffer_insert: write_buffer_insert
+        write_buffer_insert
       )
 
     case session_result do

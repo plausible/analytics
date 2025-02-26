@@ -2,43 +2,27 @@ defmodule Plausible.Session.CacheStore do
   require Logger
   alias Plausible.Session.WriteBuffer
 
-  @lock_timeout 1000
+  @lock_timeout 500
 
   @lock_telemetry_event [:plausible, :sessions, :cache, :lock]
 
   def lock_telemetry_event, do: @lock_telemetry_event
 
-  def on_event(event, session_attributes, prev_user_id, opts \\ []) do
-    buffer_insert = Keyword.get(opts, :buffer_insert, &WriteBuffer.insert/1)
-    skip_balancer? = Keyword.get(opts, :skip_balancer?, false)
+  def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1) do
     lock_requested_at = System.monotonic_time()
 
-    try do
-      response =
-        Plausible.Session.Balancer.dispatch(
-          event.user_id,
-          fn ->
-            lock_duration = System.monotonic_time() - lock_requested_at
-            :telemetry.execute(@lock_telemetry_event, %{duration: lock_duration}, %{})
+    Plausible.Cache.Adapter.with_lock(
+      :sessions,
+      {event.site_id, event.user_id},
+      @lock_timeout,
+      fn ->
+        lock_duration = System.monotonic_time() - lock_requested_at
+        :telemetry.execute(@lock_telemetry_event, %{duration: lock_duration}, %{})
+        found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
 
-            found_session =
-              find_session(event, event.user_id) || find_session(event, prev_user_id)
-
-            handle_event(event, found_session, session_attributes, buffer_insert)
-          end,
-          timeout: @lock_timeout,
-          local?: skip_balancer?
-        )
-
-      case response do
-        {:error, e} -> raise e
-        _ -> {:ok, response}
+        handle_event(event, found_session, session_attributes, buffer_insert)
       end
-    catch
-      :exit, {:timeout, _} ->
-        Sentry.capture_message("Timeout while handling session event")
-        {:error, :timeout}
-    end
+    )
   end
 
   defp handle_event(%{name: "engagement"} = event, found_session, _, _) do
