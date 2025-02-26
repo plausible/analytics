@@ -87,7 +87,7 @@ defmodule Plausible.Segments do
            ),
          :ok <-
            Segment.validate_segment_data(site, params["segment_data"], true) do
-      {:ok, Repo.insert!(changeset)}
+      {:ok, Repo.insert!(changeset) |> Repo.preload(:owner)}
     else
       %{valid?: false, errors: errors} ->
         {:error, {:invalid_segment, errors}}
@@ -123,6 +123,7 @@ defmodule Plausible.Segments do
       {:ok,
        Repo.update!(
          changeset,
+         preload: :owner,
          returning: true
        )}
     else
@@ -271,7 +272,8 @@ defmodule Plausible.Segments do
       from(segment in Segment,
         where: segment.site_id == ^site_id,
         where: segment.id == ^segment_id,
-        where: segment.type == :site or segment.owner_id == ^user_id
+        where: segment.type == :site or segment.owner_id == ^user_id,
+        preload: [:owner]
       )
 
     Repo.one(query)
@@ -339,7 +341,8 @@ defmodule Plausible.Segments do
       from(segment in Segment,
         select: ^fields,
         where: segment.site_id == ^site_id,
-        order_by: [desc: segment.updated_at, desc: segment.id]
+        order_by: [desc: segment.updated_at, desc: segment.id],
+        preload: [:owner]
       )
 
     query =
@@ -369,5 +372,13 @@ defmodule Plausible.Segments do
       end)
 
     "#{field} #{formatted_message}"
+  end
+
+  @doc """
+  This function enriches the segment with site, without actually querying the database for the site again.
+  Needed for Plausible.Segments.Segment custom JSON serialization.
+  """
+  def enrich_with_site(%Segment{} = segment, %Plausible.Site{} = site) do
+    Map.put(segment, :site, site)
   end
 end

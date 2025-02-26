@@ -2,51 +2,29 @@
 
 import React from 'react'
 import { SavedSegment } from '../filtering/segments'
-import { PlausibleSite, useSiteContext } from '../site-context'
-import { dateForSite, formatDayShort } from '../util/date'
-
-const getAuthorLabel = (
-  site: Pick<PlausibleSite, 'members'>,
-  owner_id: number
-) => {
-  if (!site.members) {
-    return ''
-  }
-
-  if (!owner_id || !site.members[owner_id]) {
-    return '(Removed User)'
-  }
-
-  // if (owner_id === user.id) {
-  //   return 'You'
-  // }
-
-  return site.members[owner_id]
-}
+import { formatDayShort, parseNaiveDate } from '../util/date'
 
 export const SegmentAuthorship = ({
   className,
-  owner_id,
+  owner_name,
   inserted_at,
   updated_at
-}: Pick<SavedSegment, 'owner_id' | 'inserted_at' | 'updated_at'> & {
+}: Pick<SavedSegment, 'owner_name' | 'inserted_at' | 'updated_at'> & {
   className?: string
 }) => {
-  const site = useSiteContext()
-
-  const authorLabel = getAuthorLabel(site, owner_id)
+  const authorLabel = owner_name
 
   const showUpdatedAt = updated_at !== inserted_at
 
   return (
     <div className={className}>
       <div>
-        {`Created at ${formatDayShort(dateForSite(inserted_at, site))}`}
+        {`Created at ${formatDayShort(parseNaiveDate(inserted_at))}`}
         {!showUpdatedAt && !!authorLabel && ` by ${authorLabel}`}
       </div>
       {showUpdatedAt && (
         <div>
-          {`Last updated at ${formatDayShort(dateForSite(updated_at, site))}`}
+          {`Last updated at ${formatDayShort(parseNaiveDate(updated_at))}`}
           {!!authorLabel && ` by ${authorLabel}`}
         </div>
       )}

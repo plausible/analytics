@@ -10,17 +10,6 @@ defmodule Plausible.Segments.Segment do
 
   @type t() :: %__MODULE__{}
 
-  @derive {Jason.Encoder,
-           only: [
-             :id,
-             :name,
-             :type,
-             :segment_data,
-             :owner_id,
-             :inserted_at,
-             :updated_at
-           ]}
-
   schema "segments" do
     field :name, :string
     field :type, Ecto.Enum, values: @segment_types
@@ -202,5 +191,27 @@ defmodule Plausible.Segments.Segment do
       [:has_not_done, _] -> true
       _ -> false
     end
+  end
+end
+
+defimpl Jason.Encoder, for: Plausible.Segments.Segment do
+  def encode(%Plausible.Segments.Segment{} = segment, opts) do
+    %{
+      id: segment.id,
+      name: segment.name,
+      type: segment.type,
+      segment_data: segment.segment_data,
+      owner_id: segment.owner_id,
+      owner_name: if(is_nil(segment.owner_id), do: "(Removed User)", else: segment.owner.name),
+      inserted_at:
+        segment.inserted_at
+        |> Plausible.Timezones.to_datetime_in_timezone(segment.site.timezone)
+        |> Calendar.strftime("%Y-%m-%d %H:%M:%S"),
+      updated_at:
+        segment.updated_at
+        |> Plausible.Timezones.to_datetime_in_timezone(segment.site.timezone)
+        |> Calendar.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    |> Jason.Encode.map(opts)
   end
 end

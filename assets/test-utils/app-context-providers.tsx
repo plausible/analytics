@@ -43,8 +43,7 @@ export const TestContextProviders = ({
     isDbip: false,
     flags: {},
     validIntervalsByPeriod: {},
-    shared: false,
-    members: { 1: 'Test User' }
+    shared: false
   }
 
   const site = { ...defaultSite, ...siteOptions }

@@ -45,7 +45,6 @@
     data-current-user-id={
       if user = @conn.assigns[:current_user], do: user.id, else: Jason.encode!(nil)
     }
-    data-members={Jason.encode!(@members)}
     data-flags={Jason.encode!(@flags)}
     data-valid-intervals-by-period={
       Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()
