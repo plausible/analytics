@@ -38,12 +38,13 @@ defmodule Plausible.MixProject do
   def application do
     [
       mod: {Plausible.Application, []},
-      extra_applications: [
-        :logger,
-        :runtime_tools,
-        :tls_certificate_check,
-        :opentelemetry_exporter
-      ]
+      extra_applications:
+        [
+          :logger,
+          :runtime_tools,
+          :tls_certificate_check,
+          :opentelemetry_exporter
+        ] ++ if(Mix.env() == :dev, do: [:observer, :wx], else: [])
     ]
   end
 
