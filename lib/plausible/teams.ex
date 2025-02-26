@@ -275,8 +275,8 @@ defmodule Plausible.Teams do
 
   defp create_my_team(user) do
     team =
-      "My Team"
-      |> Teams.Team.changeset()
+      %Teams.Team{}
+      |> Teams.Team.changeset(%{name: "My Team"})
       |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
       |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!()

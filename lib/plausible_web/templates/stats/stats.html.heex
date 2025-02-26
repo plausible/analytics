@@ -27,6 +27,9 @@
     data-props-available={
       to_string(Plausible.Billing.Feature.Props.check_availability(@site.team) == :ok)
     }
+    data-site-segments-available={
+      to_string(Plausible.Billing.Feature.Props.check_availability(@site.team) == :ok)
+    }
     data-revenue-goals={Jason.encode!(@revenue_goals)}
     data-funnels={Jason.encode!(@funnels)}
     data-has-props={to_string(@has_props)}
@@ -39,6 +42,10 @@
     data-background={@conn.assigns[:background]}
     data-is-dbip={to_string(@is_dbip)}
     data-current-user-role={@conn.assigns[:site_role]}
+    data-current-user-id={
+      if user = @conn.assigns[:current_user], do: user.id, else: Jason.encode!(nil)
+    }
+    data-members={Jason.encode!(@members)}
     data-flags={Jason.encode!(@flags)}
     data-valid-intervals-by-period={
       Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()

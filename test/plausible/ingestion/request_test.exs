@@ -432,7 +432,7 @@ defmodule Plausible.Ingestion.RequestTest do
   test "long body length" do
     payload = """
     {
-      "name": "pageview", 
+      "name": "pageview",
       "domain": "dummy.site",
       "url": "#{:binary.copy("a", 1_000)}"
     }
@@ -490,7 +490,8 @@ defmodule Plausible.Ingestion.RequestTest do
              "uri" => "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
              "user_agent" => "Mozilla",
              "ip_classification" => nil,
-             "scroll_depth" => nil
+             "scroll_depth" => nil,
+             "engagement_time" => nil
            }
 
     assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])

@@ -197,9 +197,10 @@ defmodule Plausible.Segments.Segment do
   end
 
   defp dashboard_compatible_filter?(filter) do
-    is_list(filter) and length(filter) === 3 and
-      is_atom(Enum.at(filter, 0)) and
-      is_binary(Enum.at(filter, 1)) and
-      is_list(Enum.at(filter, 2))
+    case filter do
+      [operation, dimension, _clauses] when is_atom(operation) and is_binary(dimension) -> true
+      [:has_not_done, _] -> true
+      _ -> false
+    end
   end
 end

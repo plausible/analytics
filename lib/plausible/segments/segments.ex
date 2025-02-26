@@ -355,4 +355,19 @@ defmodule Plausible.Segments do
 
     Repo.all(query)
   end
+
+  @doc """
+  iex> serialize_first_error([{"name", {"should be at most %{count} byte(s)", [count: 255]}}])
+  "name should be at most 255 byte(s)"
+  """
+  def serialize_first_error(errors) do
+    {field, {message, opts}} = List.first(errors)
+
+    formatted_message =
+      Enum.reduce(opts, message, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+
+    "#{field} #{formatted_message}"
+  end
 end
