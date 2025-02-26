@@ -12,7 +12,6 @@ import {
 
 export type FormattableMetric =
   | Metric
-  | 'total_visitors'
   | 'current_visitors'
   | 'exit_rate'
   | 'conversions'
@@ -26,7 +25,6 @@ export const MetricFormatterShort: Record<
 > = {
   events: nullable(numberShortFormatter),
   pageviews: numberShortFormatter,
-  total_visitors: numberShortFormatter,
   current_visitors: numberShortFormatter,
   views_per_visit: numberShortFormatter,
   visitors: numberShortFormatter,
@@ -54,7 +52,6 @@ export const MetricFormatterLong: Record<
 > = {
   events: nullable(numberLongFormatter),
   pageviews: numberLongFormatter,
-  total_visitors: numberLongFormatter,
   current_visitors: numberShortFormatter,
   views_per_visit: numberLongFormatter,
   visitors: numberLongFormatter,
