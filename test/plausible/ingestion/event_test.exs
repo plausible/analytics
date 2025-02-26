@@ -1,5 +1,5 @@
 defmodule Plausible.Ingestion.EventTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
   use Plausible.Teams.Test
 
   import Phoenix.ConnTest
@@ -282,10 +282,9 @@ defmodule Plausible.Ingestion.EventTest do
 
     test = self()
 
-    very_slow_buffer = fn sessions ->
+    very_slow_buffer = fn _sessions ->
       send(test, :slow_buffer_insert_started)
-      Process.sleep(1000)
-      Plausible.Session.WriteBuffer.insert(sessions)
+      Process.sleep(800)
     end
 
     first_conn =
@@ -315,7 +314,11 @@ defmodule Plausible.Ingestion.EventTest do
 
     receive do
       :slow_buffer_insert_started ->
-        assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(second_request)
+        assert {:ok, %{buffered: [], dropped: [dropped]}} =
+                 Event.build_and_buffer(second_request,
+                   session_write_buffer_insert: very_slow_buffer
+                 )
+
         assert dropped.drop_reason == :lock_timeout
     end
   end
@@ -334,6 +337,24 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, request} = Request.build(conn)
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :no_session_for_engagement
+  end
+
+  test "TEMPORARY: drops engagement if FF not enabled for site" do
+    site = new_site()
+
+    FunWithFlags.disable(:engagements, for_actor: "site:#{site.domain}")
+
+    payload = %{
+      name: "engagement",
+      url: "https://#{site.domain}/123",
+      d: "#{site.domain}"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :engagement_ff_throttle
   end
 
   @tag :ee_only

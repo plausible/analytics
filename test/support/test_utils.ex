@@ -191,7 +191,10 @@ defmodule Plausible.TestUtils do
 
   defp populate_native_stats(events) do
     for event_params <- events do
-      {:ok, session} = Plausible.Session.CacheStore.on_event(event_params, event_params, nil)
+      {:ok, session} =
+        Plausible.Session.CacheStore.on_event(event_params, event_params, nil,
+          skip_balancer?: true
+        )
 
       event_params
       |> Plausible.ClickhouseEventV2.merge_session(session)

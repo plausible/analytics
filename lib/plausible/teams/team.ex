@@ -46,14 +46,19 @@ defmodule Plausible.Teams.Team do
     timestamps()
   end
 
-  def crm_sync_changeset(team, params) do
+  def crm_changeset(team, params) do
     team
-    |> cast(params, [:trial_expiry_date, :allow_next_upgrade_override, :accept_traffic_until])
+    |> cast(params, [
+      :name,
+      :trial_expiry_date,
+      :allow_next_upgrade_override,
+      :accept_traffic_until
+    ])
   end
 
-  def changeset(name, today \\ Date.utc_today()) do
-    %__MODULE__{}
-    |> cast(%{name: name}, [:name])
+  def changeset(team \\ %__MODULE__{}, attrs \\ %{}, today \\ Date.utc_today()) do
+    team
+    |> cast(attrs, [:name])
     |> validate_required(:name)
     |> start_trial(today)
     |> maybe_bump_accept_traffic_until()

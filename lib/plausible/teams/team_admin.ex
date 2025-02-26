@@ -38,6 +38,10 @@ defmodule Plausible.Teams.TeamAdmin do
     )
   end
 
+  def update_changeset(entry, attrs) do
+    Teams.Team.crm_changeset(entry, attrs)
+  end
+
   def index(_) do
     [
       name: %{value: &team_name/1},

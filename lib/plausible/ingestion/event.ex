@@ -36,6 +36,7 @@ defmodule Plausible.Ingestion.Event do
           | :verification_agent
           | :lock_timeout
           | :no_session_for_engagement
+          | :engagement_ff_throttle
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -57,15 +58,15 @@ defmodule Plausible.Ingestion.Event do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
       else
         Enum.reduce(domains, [], fn domain, acc ->
-          case GateKeeper.check(domain) do
-            {:allow, site} ->
-              processed =
-                domain
-                |> new(site, request)
-                |> process_unless_dropped(pipeline(), context)
+          with {:allow, site} <- GateKeeper.check(domain),
+               :ok <- check_engagements_flag(domain, request) do
+            processed =
+              domain
+              |> new(site, request)
+              |> process_unless_dropped(pipeline(), context)
 
-              [processed | acc]
-
+            [processed | acc]
+          else
             {:deny, reason} ->
               [drop(new(domain, request), reason) | acc]
           end
@@ -75,6 +76,16 @@ defmodule Plausible.Ingestion.Event do
     {dropped, buffered} = Enum.split_with(processed_events, & &1.dropped?)
     {:ok, %{dropped: dropped, buffered: buffered}}
   end
+
+  defp check_engagements_flag(domain, %{event_name: "engagement"}) do
+    if FunWithFlags.enabled?(:engagements, for: %Plausible.Site{domain: domain}) do
+      :ok
+    else
+      {:deny, :engagement_ff_throttle}
+    end
+  end
+
+  defp check_engagements_flag(_, _), do: :ok
 
   @spec telemetry_event_buffered() :: [atom()]
   def telemetry_event_buffered() do
@@ -382,7 +393,7 @@ defmodule Plausible.Ingestion.Event do
         event.clickhouse_event,
         event.clickhouse_session_attrs,
         previous_user_id,
-        write_buffer_insert
+        buffer_insert: write_buffer_insert
       )
 
     case session_result do
@@ -463,16 +474,6 @@ defmodule Plausible.Ingestion.Event do
 
       %Device{type: t} when t in @desktop_types ->
         "Desktop"
-
-      %Device{type: :unknown} ->
-        nil
-
-      %Device{type: type} ->
-        Sentry.capture_message("Could not determine device type from UAInspector",
-          extra: %{type: type}
-        )
-
-        nil
 
       _ ->
         nil
