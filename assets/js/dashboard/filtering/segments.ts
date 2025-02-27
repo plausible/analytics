@@ -10,27 +10,31 @@ export enum SegmentType {
   site = 'site'
 }
 
+/** This type signifies that the owner can't be shown. */
+type SegmentOwnershipHidden = { owner_id: null; owner_name: null }
+
+/** This type signifies that the original owner has been removed from the site. */
+type SegmentOwnershipDangling = { owner_id: null; owner_name: null }
+
+type SegmentOwnership =
+  | SegmentOwnershipDangling
+  | { owner_id: number; owner_name: string }
+
 export type SavedSegment = {
   id: number
   name: string
   type: SegmentType
-  /** null owner_id or owner_name signifies that the owner has been removed from the site */
-  owner_id: number | null
-  owner_name: string | null
   /** datetime in site timezone, example 2025-02-26 10:00:00 */
   inserted_at: string
   /** datetime in site timezone, example 2025-02-26 10:00:00 */
   updated_at: string
-}
+} & SegmentOwnership
 
 export type SavedSegmentPublic = Pick<
   SavedSegment,
   'id' | 'type' | 'name' | 'inserted_at' | 'updated_at'
-> & {
-  /** null owner_id signifies that the owner can't be shown */
-  owner_id: null
-  owner_name: null
-}
+> &
+  SegmentOwnershipHidden
 
 export type SegmentDataFromApi = {
   filters: unknown[]
