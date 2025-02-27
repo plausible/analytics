@@ -1,19 +1,25 @@
 /** @format */
 
 import React from 'react'
-import { SavedSegment } from '../filtering/segments'
+import { SavedSegmentPublic, SavedSegment } from '../filtering/segments'
 import { formatDayShort, parseNaiveDate } from '../util/date'
 
-export const SegmentAuthorship = ({
-  className,
-  owner_name,
-  inserted_at,
-  updated_at
-}: Pick<SavedSegment, 'owner_name' | 'inserted_at' | 'updated_at'> & {
-  className?: string
-}) => {
-  const authorLabel = owner_name
+type SegmentAuthorshipProps = { className?: string } & (
+  | { showOnlyPublicData: true; segment: SavedSegmentPublic }
+  | { showOnlyPublicData: false; segment: SavedSegment }
+)
 
+export function SegmentAuthorship({
+  className,
+  showOnlyPublicData,
+  segment
+}: SegmentAuthorshipProps) {
+  const authorLabel =
+    showOnlyPublicData === true
+      ? null
+      : (segment.owner_name ?? '(Removed User)')
+
+  const { updated_at, inserted_at } = segment
   const showUpdatedAt = updated_at !== inserted_at
 
   return (

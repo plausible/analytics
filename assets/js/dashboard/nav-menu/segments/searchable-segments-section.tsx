@@ -8,6 +8,7 @@ import {
   getFilterSegmentsByNameInsensitive,
   handleSegmentResponse,
   isSegmentFilter,
+  SavedSegmentPublic,
   SavedSegment,
   SegmentData,
   SegmentDataFromApi
@@ -24,14 +25,15 @@ import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { MenuSeparator } from '../nav-menu-components'
 import { ErrorPanel } from '../../components/error-panel'
 import { get } from '../../api'
+import { Role, useUserContext } from '../../user-context'
 
-const useSegmentsListQuery = () => {
+function useSegmentsListQuery<T extends boolean>(_isPublicRequest: T) {
   const site = useSiteContext()
-  return useQuery({
+  return useQuery<T extends true ? SavedSegmentPublic[] : SavedSegment[]>({
     queryKey: ['segments'],
     placeholderData: (previousData) => previousData,
     queryFn: async () => {
-      const response: SavedSegment[] = await get(
+      const response = await get(
         `/api/${encodeURIComponent(site.domain)}/segments`
       )
       return response
@@ -56,8 +58,11 @@ export const SearchableSegmentsSection = ({
   const { query, expandedSegment } = useQueryContext()
   const segmentFilter = query.filters.find(isSegmentFilter)
   const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
+  const user = useUserContext()
 
-  const { data, ...listQuery } = useSegmentsListQuery()
+  const isPublicListQuery = !user.loggedIn || user.role === Role.public
+  const { data, ...listQuery } = useSegmentsListQuery(isPublicListQuery)
+
   const [searchValue, setSearch] = useState<string>()
   const [showAll, setShowAll] = useState(false)
 
@@ -114,7 +119,18 @@ export const SearchableSegmentsSection = ({
                       }
                     </div>
 
-                    <SegmentAuthorship {...s} className="font-normal text-xs" />
+                    <SegmentAuthorship
+                      className="font-normal text-xs"
+                      {...(isPublicListQuery
+                        ? {
+                            showOnlyPublicData: true,
+                            segment: s as SavedSegmentPublic
+                          }
+                        : {
+                            showOnlyPublicData: false,
+                            segment: s as SavedSegment
+                          })}
+                    />
                   </div>
                 }
               >
@@ -229,7 +245,10 @@ const SegmentLink = ({
   name,
   appliedSegmentIds,
   closeList
-}: SavedSegment & { appliedSegmentIds: number[]; closeList: () => void }) => {
+}: Pick<SavedSegment, 'id' | 'name'> & {
+  appliedSegmentIds: number[]
+  closeList: () => void
+}) => {
   const { query } = useQueryContext()
 
   const { prefetchSegment } = useSegmentPrefetch({ id: String(id) })

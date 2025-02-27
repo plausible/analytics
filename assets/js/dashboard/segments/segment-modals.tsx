@@ -466,7 +466,11 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
           <>
             <FiltersInSegment segment_data={data.segment_data} />
 
-            <SegmentAuthorship {...data} className="mt-4 text-sm" />
+            <SegmentAuthorship
+              segment={data}
+              showOnlyPublicData={false}
+              className="mt-4 text-sm"
+            />
             <div className="mt-4">
               <ButtonsRow>
                 <AppNavigationLink

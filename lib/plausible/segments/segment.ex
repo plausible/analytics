@@ -202,7 +202,7 @@ defimpl Jason.Encoder, for: Plausible.Segments.Segment do
       type: segment.type,
       segment_data: segment.segment_data,
       owner_id: segment.owner_id,
-      owner_name: if(is_nil(segment.owner_id), do: "(Removed User)", else: segment.owner.name),
+      owner_name: if(is_nil(segment.owner_id), do: nil, else: segment.owner.name),
       inserted_at:
         segment.inserted_at
         |> Plausible.Timezones.to_datetime_in_timezone(segment.site.timezone)

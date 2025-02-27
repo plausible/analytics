@@ -41,10 +41,10 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                      "id" => s.id,
                      "name" => s.name,
                      "type" => Atom.to_string(s.type),
-                     "owner_id" => nil,
-                     "owner_name" => nil,
                      "inserted_at" => Calendar.strftime(s.inserted_at, "%Y-%m-%d %H:%M:%S"),
                      "updated_at" => Calendar.strftime(s.updated_at, "%Y-%m-%d %H:%M:%S"),
+                     "owner_id" => nil,
+                     "owner_name" => nil,
                      "segment_data" => nil
                    }
                  end)
@@ -125,7 +125,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
             type: :site,
             name: "Another region"
           )
-          |> Map.put(:owner_name, "(Removed User)")
+          |> Map.put(:owner_name, nil)
 
         conn =
           get(conn, "/api/#{site.domain}/segments")
