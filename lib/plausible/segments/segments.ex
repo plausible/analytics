@@ -87,7 +87,7 @@ defmodule Plausible.Segments do
            ),
          :ok <-
            Segment.validate_segment_data(site, params["segment_data"], true) do
-      {:ok, Repo.insert!(changeset) |> Repo.preload(:owner)}
+      {:ok, changeset |> Repo.insert!() |> Repo.preload(:owner)}
     else
       %{valid?: false, errors: errors} ->
         {:error, {:invalid_segment, errors}}
@@ -120,12 +120,9 @@ defmodule Plausible.Segments do
              params["segment_data"],
              true
            ) do
-      {:ok,
-       Repo.update!(
-         changeset,
-         preload: :owner,
-         returning: true
-       )}
+      Repo.update!(changeset)
+
+      {:ok, Repo.reload!(segment) |> Repo.preload(:owner)}
     else
       %{valid?: false, errors: errors} ->
         {:error, {:invalid_segment, errors}}

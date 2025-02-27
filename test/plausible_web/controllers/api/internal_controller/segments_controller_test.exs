@@ -617,6 +617,39 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
 
       assert response["updated_at"] > response["inserted_at"]
     end
+
+    test "the last editor of a dangling site segment (segment with owner_id: nil) becomes the new owner",
+         %{
+           conn: conn,
+           user: user
+         } do
+      site = new_site()
+      add_guest(site, user: user, role: :editor)
+
+      segment =
+        insert(:segment,
+          site: site,
+          name: "original name",
+          type: :site,
+          owner: nil
+        )
+
+      response =
+        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{})
+        |> json_response(200)
+
+      assert %{
+               "id" => segment.id,
+               "name" => segment.name,
+               "type" => "#{segment.type}",
+               "owner_id" => user.id,
+               "owner_name" => user.name,
+               "segment_data" => segment.segment_data,
+               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")
+             } == Map.drop(response, ["updated_at"])
+
+      assert response["updated_at"] > response["inserted_at"]
+    end
   end
 
   describe "DELETE /api/:domain/segments/:segment_id" do
