@@ -7,7 +7,7 @@ defmodule Plausible.Application do
   require Logger
 
   def start(_type, _args) do
-    on_ee(do: Plausible.License.ensure_valid_license())
+    # on_ee(do: Plausible.License.ensure_valid_license())
     on_ce(do: :inet_db.set_tcp_module(:happy_tcp))
 
     # in CE we start the endpoint under site_encrypt for automatic https
@@ -16,7 +16,6 @@ defmodule Plausible.Application do
     children =
       [
         Plausible.Session.BalancerSupervisor,
-        Plausible.Cache.Stats,
         Plausible.PromEx,
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         Plausible.Repo,
@@ -126,7 +125,10 @@ defmodule Plausible.Application do
     Plausible.Ingestion.Source.init()
     Plausible.Geo.await_loader()
 
-    Supervisor.start_link(List.flatten(children), opts)
+    with {:ok, _pid} = ok <- Supervisor.start_link(List.flatten(children), opts) do
+      Plausible.Cache.Stats.attach()
+      ok
+    end
   end
 
   def config_change(changed, _new, removed) do

@@ -3,28 +3,13 @@ defmodule Plausible.Cache.Stats do
   Keeps track of hit/miss ratio for various caches.
   """
 
-  use GenServer
-
   @hit :hit
   @miss :miss
   @telemetry_hit ConCache.Operations.telemetry_hit()
   @telemetry_miss ConCache.Operations.telemetry_miss()
   @telemetry_events [@telemetry_hit, @telemetry_miss]
 
-  def start_link(_opts) do
-    GenServer.start_link(__MODULE__, nil)
-  end
-
-  def init(nil) do
-    __MODULE__ =
-      :ets.new(__MODULE__, [
-        :public,
-        :named_table,
-        :set,
-        read_concurrency: true,
-        write_concurrency: true
-      ])
-
+  def attach do
     :telemetry.attach_many(
       "plausible-cache-stats",
       @telemetry_events,
@@ -33,6 +18,16 @@ defmodule Plausible.Cache.Stats do
     )
 
     {:ok, nil}
+  end
+
+  def create_counters(cache_name) do
+    :persistent_term.put({__MODULE__, cache_name, @hit}, :counters.new(1, []))
+    :persistent_term.put({__MODULE__, cache_name, @miss}, :counters.new(1, []))
+  end
+
+  defp counter(cache_name, type) do
+    :persistent_term.get({__MODULE__, cache_name, type}, nil) ||
+      raise "counter not found for #{cache_name} #{type}"
   end
 
   def handle_telemetry_event(@telemetry_hit, _measurments, %{cache: %{name: cache_name}}, _) do
@@ -54,12 +49,7 @@ defmodule Plausible.Cache.Stats do
   defdelegate size(cache_name), to: Plausible.Cache.Adapter
 
   def bump(cache_name, type) do
-    :ets.update_counter(
-      __MODULE__,
-      {cache_name, type},
-      1,
-      {{cache_name, type}, 0}
-    )
+    :counters.add(counter(cache_name, type), 1, 1)
   end
 
   def hit_rate(cache_name) do
@@ -68,23 +58,15 @@ defmodule Plausible.Cache.Stats do
     |> Enum.reduce(
       %{hit: 0, miss: 0, hit_miss: 0.0},
       fn name, acc ->
-        hit =
-          acc.hit + :ets.lookup_element(__MODULE__, {name, @hit}, 2, 0)
-
-        miss =
-          acc.miss + :ets.lookup_element(__MODULE__, {name, @miss}, 2, 0)
-
+        hit = acc.hit + :counters.get(counter(name, @hit), 1)
+        miss = acc.miss + :counters.get(counter(name, @miss), 1)
         hit_miss = hit + miss
-
         hit_miss = if(hit_miss == 0, do: 0.0, else: hit / hit_miss * 100)
 
         acc
         |> Map.put(:hit, hit)
         |> Map.put(:miss, miss)
-        |> Map.put(
-          :hit_miss,
-          hit_miss
-        )
+        |> Map.put(:hit_miss, hit_miss)
       end
     )
     |> Map.fetch!(:hit_miss)
