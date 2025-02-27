@@ -26,11 +26,13 @@ defmodule Plausible.Application do
         Plausible.ImportDeletionRepo,
         Plausible.Cache.Adapter.child_spec(:customer_currency, :cache_customer_currency,
           ttl_check_interval: :timer.minutes(5),
+          n_lock_partitions: 1,
           global_ttl: :timer.minutes(60)
         ),
         Plausible.Cache.Adapter.child_spec(:user_agents, :cache_user_agents,
           ttl_check_interval: :timer.minutes(5),
           global_ttl: :timer.minutes(60),
+          n_lock_partitions: 1,
           ets_options: [read_concurrency: true, write_concurrency: true]
         ),
         Plausible.Cache.Adapter.child_specs(:sessions, :cache_sessions,
@@ -39,7 +41,11 @@ defmodule Plausible.Application do
           ets_options: [read_concurrency: true, write_concurrency: true]
         ),
         warmed_cache(Plausible.Site.Cache,
-          adapter_opts: [ttl_check_interval: false, ets_options: [read_concurrency: true]],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Site.Cache.All,
@@ -49,7 +55,11 @@ defmodule Plausible.Application do
           ]
         ),
         warmed_cache(Plausible.Shield.IPRuleCache,
-          adapter_opts: [ttl_check_interval: false, ets_options: [read_concurrency: true]],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Shield.IPRuleCache.All,
@@ -59,7 +69,11 @@ defmodule Plausible.Application do
           ]
         ),
         warmed_cache(Plausible.Shield.CountryRuleCache,
-          adapter_opts: [ttl_check_interval: false, ets_options: [read_concurrency: true]],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Shield.CountryRuleCache.All,
@@ -69,7 +83,11 @@ defmodule Plausible.Application do
           ]
         ),
         warmed_cache(Plausible.Shield.PageRuleCache,
-          adapter_opts: [ttl_check_interval: false, ets_options: [:bag, read_concurrency: true]],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [:bag, read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Shield.PageRuleCache.All,
@@ -79,7 +97,11 @@ defmodule Plausible.Application do
           ]
         ),
         warmed_cache(Plausible.Shield.HostnameRuleCache,
-          adapter_opts: [ttl_check_interval: false, ets_options: [:bag, read_concurrency: true]],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [:bag, read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Shield.HostnameRuleCache.All,
@@ -90,7 +112,11 @@ defmodule Plausible.Application do
         ),
         on_ee do
           warmed_cache(Plausible.Stats.SamplingCache,
-            adapter_opts: [ttl_check_interval: false, read_concurrency: true],
+            adapter_opts: [
+              n_lock_partitions: 1,
+              ttl_check_interval: false,
+              read_concurrency: true
+            ],
             warmers: [
               refresh_all:
                 {Plausible.Stats.SamplingCache.All,
