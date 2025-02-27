@@ -601,21 +601,24 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       response =
         patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
           "name" => "updated name",
-          "type" => Atom.to_string(:personal)
+          "type" => "personal"
         })
         |> json_response(200)
 
-      assert %{
-               "id" => segment.id,
-               "name" => "updated name",
-               "type" => Atom.to_string(:personal),
-               "owner_id" => user.id,
-               "owner_name" => user.name,
-               "segment_data" => segment.segment_data,
-               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")
-             } == Map.drop(response, ["updated_at"])
-
-      assert response["updated_at"] > response["inserted_at"]
+      assert_matches ^strict_map(%{
+                       "id" => ^segment.id,
+                       "name" => "updated name",
+                       "type" => "personal",
+                       "owner_id" => ^user.id,
+                       "owner_name" => ^user.name,
+                       "segment_data" => ^segment.segment_data,
+                       "inserted_at" =>
+                         ^any(
+                           :string,
+                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")}/
+                         ),
+                       "updated_at" => ^any(:iso8601_naive_datetime)
+                     }) = response
     end
 
     test "the last editor of a dangling site segment (segment with owner_id: nil) becomes the new owner",
@@ -635,20 +638,27 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         )
 
       response =
-        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{})
+        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{"name" => "updated name"})
         |> json_response(200)
 
-      assert %{
-               "id" => segment.id,
-               "name" => segment.name,
-               "type" => "#{segment.type}",
-               "owner_id" => user.id,
-               "owner_name" => user.name,
-               "segment_data" => segment.segment_data,
-               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")
-             } == Map.drop(response, ["updated_at"])
-
-      assert response["updated_at"] > response["inserted_at"]
+      assert_matches ^strict_map(%{
+                       "id" => ^segment.id,
+                       "name" => "updated name",
+                       "type" =>
+                         ^any(
+                           :string,
+                           ~r/#{segment.type}/
+                         ),
+                       "owner_id" => ^user.id,
+                       "owner_name" => ^user.name,
+                       "segment_data" => ^segment.segment_data,
+                       "inserted_at" =>
+                         ^any(
+                           :string,
+                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")}/
+                         ),
+                       "updated_at" => ^any(:iso8601_naive_datetime)
+                     }) = response
     end
   end
 
