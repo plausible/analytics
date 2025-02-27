@@ -11,9 +11,15 @@ import {
   SavedSegmentPublic,
   SavedSegment,
   SegmentData,
-  SegmentDataFromApi
+  SegmentDataFromApi,
+  SEGMENT_TYPE_LABELS
 } from '../../filtering/segments'
-import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  QueryFunction,
+  useQuery,
+  useQueryClient,
+  UseQueryResult
+} from '@tanstack/react-query'
 import { cleanLabels } from '../../util/filters'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
@@ -27,9 +33,13 @@ import { ErrorPanel } from '../../components/error-panel'
 import { get } from '../../api'
 import { Role, useUserContext } from '../../user-context'
 
-function useSegmentsListQuery<T extends boolean>(_isPublicRequest: T) {
+function useSegmentsListQuery(
+  _isPublicRequest: boolean
+): typeof _isPublicRequest extends true
+  ? UseQueryResult<SavedSegmentPublic[]>
+  : UseQueryResult<SavedSegment[]> {
   const site = useSiteContext()
-  return useQuery<T extends true ? SavedSegmentPublic[] : SavedSegment[]>({
+  return useQuery({
     queryKey: ['segments'],
     placeholderData: (previousData) => previousData,
     queryFn: async () => {
@@ -102,21 +112,16 @@ export const SearchableSegmentsSection = ({
             )}
           </div>
 
-          {showableSlice!.map((s) => {
+          {showableSlice!.map((segment) => {
             return (
               <Tooltip
                 className="group"
-                key={s.id}
+                key={segment.id}
                 info={
                   <div className="max-w-60">
-                    <div className="break-all">{s.name}</div>
+                    <div className="break-all">{segment.name}</div>
                     <div className="font-normal text-xs">
-                      {
-                        {
-                          personal: 'Personal segment',
-                          site: 'Site segment'
-                        }[s.type]
-                      }
+                      {SEGMENT_TYPE_LABELS[segment.type]}
                     </div>
 
                     <SegmentAuthorship
@@ -124,18 +129,18 @@ export const SearchableSegmentsSection = ({
                       {...(isPublicListQuery
                         ? {
                             showOnlyPublicData: true,
-                            segment: s as SavedSegmentPublic
+                            segment: segment as SavedSegmentPublic
                           }
                         : {
                             showOnlyPublicData: false,
-                            segment: s as SavedSegment
+                            segment: segment as SavedSegment
                           })}
                     />
                   </div>
                 }
               >
                 <SegmentLink
-                  {...s}
+                  {...segment}
                   appliedSegmentIds={appliedSegmentIds}
                   closeList={closeList}
                 />

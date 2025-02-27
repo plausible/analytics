@@ -5,6 +5,7 @@ import ModalWithRouting from '../stats/modals/modal'
 import {
   isSegmentFilter,
   SavedSegment,
+  SEGMENT_TYPE_LABELS,
   SegmentData,
   SegmentType
 } from '../filtering/segments'
@@ -162,11 +163,7 @@ export const DeleteSegmentModal = ({
   return (
     <SegmentActionModal onClose={onClose}>
       <FormTitle>
-        {
-          { personal: 'Delete personal segment', site: 'Delete site segment' }[
-            segment.type
-          ]
-        }
+        Delete {SEGMENT_TYPE_LABELS[segment.type].toLowerCase()}
         <span className="break-all">{` "${segment.name}"?`}</span>
       </FormTitle>
       {!!segment.segment_data && (
@@ -263,13 +260,13 @@ const SegmentTypeSelector = ({
   const options = [
     {
       type: SegmentType.personal,
-      name: 'Personal segment',
+      name: SEGMENT_TYPE_LABELS[SegmentType.personal],
       description: 'Visible only to you',
       disabled: false
     },
     {
       type: SegmentType.site,
-      name: 'Site segment',
+      name: SEGMENT_TYPE_LABELS[SegmentType.site],
       description: 'Visible to others on the site',
       disabled: !userCanSelectSiteSegment || !siteSegmentsAvailable,
       disabledReason: !userCanSelectSiteSegment ? (
@@ -453,12 +450,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
 
         <div className="mt-2 text-sm/5">
           <Placeholder placeholder={'Segment type'}>
-            {data?.segment_data
-              ? {
-                  [SegmentType.personal]: 'Personal segment',
-                  [SegmentType.site]: 'Site segment'
-                }[data.type]
-              : false}
+            {data?.segment_data ? SEGMENT_TYPE_LABELS[data.type] : false}
           </Placeholder>
         </div>
         <div className="my-4 border-b border-gray-300" />

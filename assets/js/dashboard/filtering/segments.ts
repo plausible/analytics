@@ -114,3 +114,8 @@ export function getSearchToApplySingleSegmentFilter(
     }
   }
 }
+
+export const SEGMENT_TYPE_LABELS = {
+  [SegmentType.personal]: 'Personal segment',
+  [SegmentType.site]: 'Site segment'
+}
