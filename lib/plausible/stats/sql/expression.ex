@@ -265,7 +265,7 @@ defmodule Plausible.Stats.SQL.Expression do
           %{
             __internal_total_time_on_page:
               fragment(
-                "sumIf(?, ? >= ?)",
+                "sumIf(?, ? >= ?) / 1000",
                 e.engagement_time,
                 e.timestamp,
                 ^cutoff
@@ -291,7 +291,7 @@ defmodule Plausible.Stats.SQL.Expression do
                 selected_as(:__internal_total_time_on_page),
                 selected_as(:__internal_total_time_on_page_visits)
               ),
-            __internal_total_time_on_page: fragment("sum(?)", e.engagement_time),
+            __internal_total_time_on_page: fragment("sum(?) / 1000", e.engagement_time),
             __internal_total_time_on_page_visits:
               fragment("uniqIf(?, ? = 'engagement')", e.session_id, e.name)
           }

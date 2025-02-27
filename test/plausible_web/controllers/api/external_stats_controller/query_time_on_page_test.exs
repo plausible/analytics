@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       })
 
     assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/blog"], "metrics" => [100_000]}
+             %{"dimensions" => ["/blog"], "metrics" => [100]}
            ]
   end
 
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
         page: "/blog",
         date: ~D[2021-01-01],
         visitors: 9,
-        total_time_on_page: 9 * 20_000,
+        total_time_on_page: 9 * 20,
         total_time_on_page_visits: 9
       )
     ])
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
     assert_matches %{
                      "results" => [
-                       %{"dimensions" => ["/blog"], "metrics" => [30_000]}
+                       %{"dimensions" => ["/blog"], "metrics" => [30]}
                      ],
                      "meta" =>
                        ^strict_map(%{
