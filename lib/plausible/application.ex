@@ -7,7 +7,7 @@ defmodule Plausible.Application do
   require Logger
 
   def start(_type, _args) do
-    # on_ee(do: Plausible.License.ensure_valid_license())
+    on_ee(do: Plausible.License.ensure_valid_license())
     on_ce(do: :inet_db.set_tcp_module(:happy_tcp))
 
     # in CE we start the endpoint under site_encrypt for automatic https
