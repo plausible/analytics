@@ -9,6 +9,9 @@ import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
+import { isSegmentFilter } from '../filtering/segments'
+import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
+import { DashboardQuery } from '../query'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -25,13 +28,15 @@ export const handleVisibility = ({
   leftoverWidth,
   seeMoreWidth,
   pillWidths,
-  pillGap
+  pillGap,
+  mustShowSeeMoreMenu
 }: {
   setVisibility: (v: VisibilityState) => void
   leftoverWidth: number | null
   pillWidths: (number | null)[] | null
   seeMoreWidth: number
   pillGap: number
+  mustShowSeeMoreMenu: boolean
 }): void => {
   if (leftoverWidth === null || pillWidths === null) {
     return
@@ -56,7 +61,7 @@ export const handleVisibility = ({
   const fits = fitToWidth(leftoverWidth)
 
   const seeMoreWillBePresent =
-    fits.visibleCount < pillWidths.length || pillWidths.length > 1
+    fits.visibleCount < pillWidths.length || mustShowSeeMoreMenu
 
   // Check if the appearance of "See more" would cause overflow
   if (seeMoreWillBePresent) {
@@ -104,12 +109,29 @@ interface FiltersBarProps {
   }
 }
 
+const canShowClearAllAction = ({ filters }: Pick<DashboardQuery, 'filters'>) =>
+  filters.length >= 2
+
+const canShowSaveAsSegmentAction = ({
+  filters,
+  isEditingSegment
+}: Pick<DashboardQuery, 'filters'> & { isEditingSegment: boolean }) =>
+  filters.length >= 1 && !filters.some(isSegmentFilter) && !isEditingSegment
+
 export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
-  const { query } = useQueryContext()
+  const { query, expandedSegment } = useQueryContext()
   const seeMoreRef = useRef<HTMLButtonElement>(null)
+
+  const showingClearAll = canShowClearAllAction({ filters: query.filters })
+  const showingSaveAsSegment = canShowSaveAsSegmentAction({
+    filters: query.filters,
+    isEditingSegment: !!expandedSegment
+  })
+
+  const mustShowSeeMoreMenu = showingClearAll || showingSaveAsSegment
 
   useLayoutEffect(() => {
     const topBar = accessors.topBar(containerRef.current)
@@ -135,7 +157,10 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
               BUFFER_RIGHT_PX
             : null,
         seeMoreWidth:
-          SEE_MORE_LEFT_MARGIN_PX + SEE_MORE_WIDTH_PX + SEE_MORE_RIGHT_MARGIN_PX
+          SEE_MORE_LEFT_MARGIN_PX +
+          SEE_MORE_WIDTH_PX +
+          SEE_MORE_RIGHT_MARGIN_PX,
+        mustShowSeeMoreMenu
       })
     })
 
@@ -146,14 +171,12 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [accessors, query.filters])
+  }, [accessors, query.filters, mustShowSeeMoreMenu])
 
   if (!query.filters.length) {
     // functions as spacer between elements.leftSection and elements.rightSection
     return <div className="w-4" />
   }
-
-  const canClear = query.filters.length > 1
 
   return (
     <div
@@ -178,7 +201,8 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
         />
       </div>
       {visibility !== null &&
-        (query.filters.length !== visibility.visibleCount || canClear) && (
+        (query.filters.length !== visibility.visibleCount ||
+          mustShowSeeMoreMenu) && (
           <Popover className="md:relative">
             <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
             <Popover.Button
@@ -221,7 +245,8 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
                     }}
                   />
                 )}
-                {canClear && <ClearAction />}
+                {showingClearAll && <ClearAction />}
+                {showingSaveAsSegment && <SaveAsSegmentAction />}
               </Popover.Panel>
             </Transition>
           </Popover>
@@ -232,9 +257,8 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
 
 const ClearAction = () => (
   <AppNavigationLink
-    title="Clear all filters"
     className={classNames(
-      'self-start button h-9 !px-3 !py-2 flex !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
+      'button flex self-start h-9 !px-3 !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
     )}
     search={(search) => ({
       ...search,
@@ -245,3 +269,20 @@ const ClearAction = () => (
     Clear all filters
   </AppNavigationLink>
 )
+
+const SaveAsSegmentAction = () => {
+  const { setModal } = useRoutelessModalsContext()
+
+  return (
+    <AppNavigationLink
+      className={classNames(
+        'button flex self-start h-9 !px-3 whitespace-nowrap'
+      )}
+      search={(s) => s}
+      onClick={() => setModal('create')}
+      state={{ expandedSegment: null }}
+    >
+      Save as segment
+    </AppNavigationLink>
+  )
+}
