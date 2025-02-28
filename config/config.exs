@@ -88,5 +88,6 @@ config :sentry,
   root_source_code_path: [File.cwd!()]
 
 config :prom_ex, :storage_adapter, Plausible.PromEx.StripedPeep
+config :peep, :bucket_calculator, Plausible.PromEx.Buckets
 
 import_config "#{config_env()}.exs"
