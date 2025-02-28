@@ -87,4 +87,6 @@ config :sentry,
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()]
 
+config :prom_ex, :storage_adapter, Plausible.PromEx.StripedPeep
+
 import_config "#{config_env()}.exs"
