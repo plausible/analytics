@@ -16,7 +16,6 @@ defmodule Plausible.Application do
     children =
       [
         Plausible.Session.BalancerSupervisor,
-        Plausible.Cache.Stats,
         Plausible.PromEx,
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         Plausible.Repo,
@@ -152,7 +151,10 @@ defmodule Plausible.Application do
     Plausible.Ingestion.Source.init()
     Plausible.Geo.await_loader()
 
-    Supervisor.start_link(List.flatten(children), opts)
+    with {:ok, _pid} = ok <- Supervisor.start_link(List.flatten(children), opts) do
+      Plausible.Cache.Stats.attach()
+      ok
+    end
   end
 
   def config_change(changed, _new, removed) do
