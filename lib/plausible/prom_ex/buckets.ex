@@ -27,16 +27,12 @@ defmodule Plausible.PromEx.Buckets do
 
     number_of_buckets = length(buckets)
 
-    int_buckets = int_buckets(buckets, nil, 0)
+    int_tree = :gb_trees.from_orddict(int_buckets(buckets, nil, 0))
 
-    int_tree = :gb_trees.from_orddict(int_buckets)
-
-    float_buckets =
-      buckets
-      |> Enum.map(&(&1 * 1.0))
+    float_tree =
+      Enum.map(buckets, &(&1 * 1.0))
       |> Enum.with_index()
-
-    float_tree = :gb_trees.from_orddict(float_buckets)
+      |> :gb_trees.from_orddict()
 
     upper_bound =
       buckets
@@ -58,11 +54,17 @@ defmodule Plausible.PromEx.Buckets do
 
   @impl true
   def bucket_for(number, config) when is_integer(number) do
-    elem(:gb_trees.larger(number, config.int_tree), 1)
+    case :gb_trees.larger(number, config.int_tree) do
+      {_, bucket_idx} -> bucket_idx
+      :none -> config.number_of_buckets
+    end
   end
 
   def bucket_for(number, config) when is_float(number) do
-    elem(:gb_trees.larger(number, config.float_tree), 1)
+    case :gb_trees.larger(number, config.float_tree) do
+      {_, bucket_idx} -> bucket_idx
+      :none -> config.number_of_buckets
+    end
   end
 
   @impl true
