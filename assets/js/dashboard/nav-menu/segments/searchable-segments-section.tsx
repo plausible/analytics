@@ -8,11 +8,18 @@ import {
   getFilterSegmentsByNameInsensitive,
   handleSegmentResponse,
   isSegmentFilter,
+  SavedSegmentPublic,
   SavedSegment,
   SegmentData,
-  SegmentDataFromApi
+  SegmentDataFromApi,
+  SEGMENT_TYPE_LABELS
 } from '../../filtering/segments'
-import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  QueryFunction,
+  useQuery,
+  useQueryClient,
+  UseQueryResult
+} from '@tanstack/react-query'
 import { cleanLabels } from '../../util/filters'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
@@ -24,14 +31,19 @@ import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { MenuSeparator } from '../nav-menu-components'
 import { ErrorPanel } from '../../components/error-panel'
 import { get } from '../../api'
+import { Role, useUserContext } from '../../user-context'
 
-const useSegmentsListQuery = () => {
+function useSegmentsListQuery(
+  _isPublicRequest: boolean
+): typeof _isPublicRequest extends true
+  ? UseQueryResult<SavedSegmentPublic[]>
+  : UseQueryResult<SavedSegment[]> {
   const site = useSiteContext()
   return useQuery({
     queryKey: ['segments'],
     placeholderData: (previousData) => previousData,
     queryFn: async () => {
-      const response: SavedSegment[] = await get(
+      const response = await get(
         `/api/${encodeURIComponent(site.domain)}/segments`
       )
       return response
@@ -56,8 +68,11 @@ export const SearchableSegmentsSection = ({
   const { query, expandedSegment } = useQueryContext()
   const segmentFilter = query.filters.find(isSegmentFilter)
   const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
+  const user = useUserContext()
 
-  const { data, ...listQuery } = useSegmentsListQuery()
+  const isPublicListQuery = !user.loggedIn || user.role === Role.public
+  const { data, ...listQuery } = useSegmentsListQuery(isPublicListQuery)
+
   const [searchValue, setSearch] = useState<string>()
   const [showAll, setShowAll] = useState(false)
 
@@ -97,29 +112,35 @@ export const SearchableSegmentsSection = ({
             )}
           </div>
 
-          {showableSlice!.map((s) => {
+          {showableSlice!.map((segment) => {
             return (
               <Tooltip
                 className="group"
-                key={s.id}
+                key={segment.id}
                 info={
                   <div className="max-w-60">
-                    <div className="break-all">{s.name}</div>
+                    <div className="break-all">{segment.name}</div>
                     <div className="font-normal text-xs">
-                      {
-                        {
-                          personal: 'Personal segment',
-                          site: 'Site segment'
-                        }[s.type]
-                      }
+                      {SEGMENT_TYPE_LABELS[segment.type]}
                     </div>
 
-                    <SegmentAuthorship {...s} className="font-normal text-xs" />
+                    <SegmentAuthorship
+                      className="font-normal text-xs"
+                      {...(isPublicListQuery
+                        ? {
+                            showOnlyPublicData: true,
+                            segment: segment as SavedSegmentPublic
+                          }
+                        : {
+                            showOnlyPublicData: false,
+                            segment: segment as SavedSegment
+                          })}
+                    />
                   </div>
                 }
               >
                 <SegmentLink
-                  {...s}
+                  {...segment}
                   appliedSegmentIds={appliedSegmentIds}
                   closeList={closeList}
                 />
@@ -229,7 +250,10 @@ const SegmentLink = ({
   name,
   appliedSegmentIds,
   closeList
-}: SavedSegment & { appliedSegmentIds: number[]; closeList: () => void }) => {
+}: Pick<SavedSegment, 'id' | 'name'> & {
+  appliedSegmentIds: number[]
+  closeList: () => void
+}) => {
   const { query } = useQueryContext()
 
   const { prefetchSegment } = useSegmentPrefetch({ id: String(id) })
