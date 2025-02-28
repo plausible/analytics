@@ -272,7 +272,7 @@
         },
         {
           "const": "scroll_depth",
-          "$comment": "only :internal"
+          "markdownDescription": "Average page scroll depth. Requires: `event:page` filter or `event:page` dimension"
         }
       ]
     },
