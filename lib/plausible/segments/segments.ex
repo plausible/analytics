@@ -318,7 +318,7 @@ defmodule Plausible.Segments do
   def roles_with_maybe_site_segments(), do: [:editor, :admin, :owner, :super_admin]
 
   def site_segments_available?(%Plausible.Site{} = site),
-    do: Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
+    do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
 
   @spec get_public_site_segments(pos_integer(), list(atom())) :: [Segment.t()]
   defp get_public_site_segments(site_id, fields) do
@@ -377,5 +377,14 @@ defmodule Plausible.Segments do
   """
   def enrich_with_site(%Segment{} = segment, %Plausible.Site{} = site) do
     Map.put(segment, :site, site)
+  end
+
+  @spec get_site_segments_usage_query(list(pos_integer())) :: Ecto.Query.t()
+  def get_site_segments_usage_query(site_ids) do
+    from(segment in Plausible.Segments.Segment,
+      as: :segment,
+      where: segment.type == :site,
+      where: segment.site_id in ^site_ids
+    )
   end
 end
