@@ -136,6 +136,7 @@ Plausible.Plugins.API.SharedLinks.html
 Plausible.Plugins.API.Token.html
 Plausible.Plugins.API.Tokens.html
 Plausible.PromEx.Plugins.PlausibleMetrics.html
+Plausible.PromEx.StripedPeep.html
 Plausible.PromEx.html
 Plausible.Props.html
 Plausible.Purge.html
@@ -464,8 +465,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-AD3477E8.js
-dist/sidebar_items-281025FB.js
+dist/search_data-92580895.js
+dist/sidebar_items-999DD4E5.js
 index.html
 readme.html
 search.html
