@@ -29,7 +29,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "Goals" => false,
                    "Props" => false,
                    "RevenueGoals" => false,
-                   "StatsAPI" => false
+                   "StatsAPI" => false,
+                   "SiteSegments" => false
                  }
                }
 
@@ -53,7 +54,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "Goals" => false,
                    "Props" => false,
                    "RevenueGoals" => false,
-                   "StatsAPI" => false
+                   "StatsAPI" => false,
+                   "SiteSegments" => false
                  }
                }
 
@@ -79,7 +81,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "Goals" => true,
                    "Props" => true,
                    "RevenueGoals" => true,
-                   "StatsAPI" => true
+                   "StatsAPI" => true,
+                   "SiteSegments" => true
                  }
                }
 
@@ -107,7 +110,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "Goals" => true,
                    "Props" => false,
                    "RevenueGoals" => false,
-                   "StatsAPI" => false
+                   "StatsAPI" => false,
+                   "SiteSegments" => false
                  }
                }
 

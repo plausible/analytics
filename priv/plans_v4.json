@@ -95,7 +95,7 @@
     "yearly_product_id":"857087",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props","revenue_goals","funnels","stats_api"],
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"],
     "data_retention_in_years": 5
   },
   {
@@ -106,7 +106,7 @@
     "yearly_product_id":"857088",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props","revenue_goals","funnels","stats_api"],
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"],
     "data_retention_in_years": 5
   },
   {
@@ -117,7 +117,7 @@
     "yearly_product_id":"857089",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props","revenue_goals","funnels","stats_api"],
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"],
     "data_retention_in_years": 5
   },
   {
@@ -128,7 +128,7 @@
     "yearly_product_id":"857090",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props","revenue_goals","funnels","stats_api"],
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"],
     "data_retention_in_years": 5
   },
   {
@@ -139,7 +139,7 @@
     "yearly_product_id":"857091",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props","revenue_goals","funnels","stats_api"],
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"],
     "data_retention_in_years": 5
   },
   {
@@ -150,7 +150,7 @@
     "yearly_product_id":"857092",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props","revenue_goals","funnels","stats_api"],
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"],
     "data_retention_in_years": 5
   },
   {
@@ -161,7 +161,7 @@
     "yearly_product_id":"857093",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props","revenue_goals","funnels","stats_api"],
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"],
     "data_retention_in_years": 5
   },
   {
@@ -172,7 +172,7 @@
     "yearly_product_id":"857094",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props","revenue_goals","funnels","stats_api"],
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"],
     "data_retention_in_years": 5
   }
 ]

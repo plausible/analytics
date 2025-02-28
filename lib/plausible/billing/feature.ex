@@ -75,7 +75,8 @@ defmodule Plausible.Billing.Feature do
     Plausible.Billing.Feature.StatsAPI,
     Plausible.Billing.Feature.Props,
     Plausible.Billing.Feature.Funnels,
-    Plausible.Billing.Feature.RevenueGoals
+    Plausible.Billing.Feature.RevenueGoals,
+    Plausible.Billing.Feature.SiteSegments
   ]
 
   # Generate a union type for features
@@ -194,6 +195,13 @@ defmodule Plausible.Billing.Feature.Props do
     name: :props,
     display_name: "Custom Properties",
     toggle_field: :props_enabled
+end
+
+defmodule Plausible.Billing.Feature.SiteSegments do
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :site_segments,
+    display_name: "Site Segments"
 end
 
 defmodule Plausible.Billing.Feature.StatsAPI do

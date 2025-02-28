@@ -28,7 +28,7 @@
       to_string(Plausible.Billing.Feature.Props.check_availability(@site.team) == :ok)
     }
     data-site-segments-available={
-      to_string(Plausible.Billing.Feature.Props.check_availability(@site.team) == :ok)
+      to_string(Plausible.Billing.Feature.SiteSegments.check_availability(@site.team) == :ok)
     }
     data-revenue-goals={Jason.encode!(@revenue_goals)}
     data-funnels={Jason.encode!(@funnels)}
