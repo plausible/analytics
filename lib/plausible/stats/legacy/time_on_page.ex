@@ -54,12 +54,9 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     |> select_join_fields(query, query.dimensions, e)
     |> select_merge_as([e, t], %{
       time_on_page:
-        fragment(
-          "toInt32(round(ifNotFinite((? + ?) / (? + ?), 0)))",
-          e.__internal_total_time_on_page,
-          t.total_time_on_page,
-          e.__internal_total_time_on_page_visits,
-          t.transition_count
+        time_on_page(
+          e.__internal_total_time_on_page + t.total_time_on_page,
+          e.__internal_total_time_on_page_visits + t.transition_count
         )
     })
   end

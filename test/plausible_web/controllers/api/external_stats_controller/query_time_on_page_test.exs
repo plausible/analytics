@@ -247,7 +247,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["/"], "metrics" => [420]},
                %{"dimensions" => ["/blog"], "metrics" => [95]},
-               %{"dimensions" => ["/pricing"], "metrics" => [0]}
+               %{"dimensions" => ["/pricing"], "metrics" => [nil]}
              ]
     end
 
@@ -406,7 +406,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["/A"], "metrics" => [3, 63]},
                %{"dimensions" => ["/B"], "metrics" => [3, 264]},
-               %{"dimensions" => ["/C"], "metrics" => [1, 0]}
+               %{"dimensions" => ["/C"], "metrics" => [1, nil]}
              ]
     end
   end
