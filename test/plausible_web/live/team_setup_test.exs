@@ -46,15 +46,15 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert Repo.reload!(team).name == "Jane Smith's Team"
     end
 
-    test "does not rename the team if different than stock name", %{conn: conn, team: team} do
+    test "renames even if team already has non-default name", %{conn: conn, team: team} do
       assert team.name == "My Personal Sites"
       Repo.update!(Teams.Team.name_changeset(team, %{name: "Foo"}))
       {:ok, _lv, html} = live(conn, @url)
 
       assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
-               "Foo"
+               "Jane Smith's Team"
 
-      assert Repo.reload!(team).name == "Foo"
+      assert Repo.reload!(team).name == "Jane Smith's Team"
     end
 
     test "renders form", %{conn: conn} do
