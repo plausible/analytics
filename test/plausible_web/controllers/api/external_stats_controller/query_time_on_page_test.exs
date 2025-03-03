@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key, :create_site_import]
 
-  test "aggregated new_time_on_page metric based on engagement data", %{
+  test "aggregated time_on_page metric based on engagement data", %{
     conn: conn,
     site: site
   } do
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     conn =
       post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
-        "metrics" => ["new_time_on_page"],
+        "metrics" => ["time_on_page"],
         "date_range" => "all",
         "dimensions" => ["event:page"],
         "include" => %{"imports" => true}
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
            ]
   end
 
-  test "aggregated new_time_on_page metric with imported data", %{
+  test "aggregated time_on_page metric with imported data", %{
     conn: conn,
     site: site,
     site_import: site_import
@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     conn =
       post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
-        "metrics" => ["new_time_on_page"],
+        "metrics" => ["time_on_page"],
         "date_range" => "all",
         "dimensions" => ["event:page"],
         "include" => %{"imports" => true}
@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                    } = json_response(conn, 200)
   end
 
-  test "new_time_on_page time series", %{conn: conn, site: site, site_import: site_import} do
+  test "time_on_page time series", %{conn: conn, site: site, site_import: site_import} do
     populate_stats(site, site_import.id, [
       build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
       build(:engagement,
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     conn =
       post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
-        "metrics" => ["new_time_on_page"],
+        "metrics" => ["time_on_page"],
         "date_range" => ["2021-01-01", "2021-01-04"],
         "dimensions" => ["time:day", "event:page"],
         "include" => %{"imports" => true}
@@ -214,7 +214,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["new_time_on_page"],
+          "metrics" => ["time_on_page"],
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
@@ -235,7 +235,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["new_time_on_page"],
+          "metrics" => ["time_on_page"],
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
@@ -255,7 +255,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["new_time_on_page"],
+          "metrics" => ["time_on_page"],
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
@@ -278,7 +278,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["new_time_on_page"],
+          "metrics" => ["time_on_page"],
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
@@ -297,7 +297,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["new_time_on_page"],
+          "metrics" => ["time_on_page"],
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/blog"]]],
           "include" => %{
@@ -315,7 +315,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["new_time_on_page"],
+          "metrics" => ["time_on_page"],
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/blog"]]],
           "include" => %{
@@ -336,7 +336,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["new_time_on_page"],
+          "metrics" => ["time_on_page"],
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/blog"]]],
           "include" => %{
@@ -368,7 +368,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "metrics" => ["visitors", "time_on_page"],
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/A"]]],
-          "include" => %{"imports" => true}
+          "include" => %{
+            "imports" => true,
+            "combined_time_on_page_cutoff" => "2100-01-01T00:00:00Z"
+          }
         })
 
       assert json_response(conn, 200)["results"] == [
@@ -394,13 +397,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "metrics" => ["visitors", "time_on_page"],
           "date_range" => "all",
           "dimensions" => ["event:page"],
-          "include" => %{"imports" => true}
+          "include" => %{
+            "imports" => true,
+            "combined_time_on_page_cutoff" => "2100-01-01T00:00:00Z"
+          }
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/A"], "metrics" => [3, 63.333333333333336]},
-               %{"dimensions" => ["/B"], "metrics" => [3, 264.5]},
-               %{"dimensions" => ["/C"], "metrics" => [1, nil]}
+               %{"dimensions" => ["/A"], "metrics" => [3, 63]},
+               %{"dimensions" => ["/B"], "metrics" => [3, 264]},
+               %{"dimensions" => ["/C"], "metrics" => [1, 0]}
              ]
     end
   end
