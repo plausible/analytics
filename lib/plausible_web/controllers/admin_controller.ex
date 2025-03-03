@@ -99,14 +99,13 @@ defmodule PlausibleWeb.AdminController do
           select:
             fragment(
               """
-              case when ? = ? then 
+              case when ? = false then 
                 string_agg(concat(?, ' (', ?, ')'), ',') 
               else 
                 concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']') 
               end
               """,
-              t.name,
-              ^Plausible.Teams.default_name(),
+              t.setup_complete,
               o.name,
               o.email,
               t.name,
@@ -156,14 +155,13 @@ defmodule PlausibleWeb.AdminController do
               select: [
                 fragment(
                   """
-                  case when ? = ? then 
+                  case when ? = false then 
                     concat(string_agg(concat(?, ' (', ?, ')'), ','), ' - ', ?)
                   else 
                     concat(concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']'), ' - ', ?)
                   end
                   """,
-                  t.name,
-                  ^Plausible.Teams.default_name(),
+                  t.setup_complete,
                   o.name,
                   o.email,
                   t.identifier,
