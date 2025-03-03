@@ -47,6 +47,12 @@ defmodule PlausibleWeb.AuthPlug do
 
         teams_count = length(user.team_memberships)
 
+        teams =
+          user.team_memberships
+          |> Enum.sort_by(fn tm -> [tm.role != :owner, tm.team_id] end)
+          |> Enum.map(&Map.fetch!(&1, :team))
+          |> Enum.take(3)
+
         Plausible.OpenTelemetry.add_user_attributes(user)
         Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
 
@@ -56,6 +62,7 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:my_team, my_team)
         |> assign(:current_team, current_team || my_team)
         |> assign(:teams_count, teams_count)
+        |> assign(:teams, teams)
         |> assign(:multiple_teams?, teams_count > 1)
 
       _ ->
