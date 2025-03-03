@@ -1,12 +1,12 @@
 defmodule Plausible.Stats.Legacy.TimeOnPage do
   @moduledoc """
-  Calculation methods for legacy time_on_page metric. Note the metric
-  has its own limitations and quirks.
+  Calculation methods for `legacy` time_on_page metric. `Legacy` calculation methods
+  are used when site does not have engagement data for the requested dates.
 
-  Closely coupled with Plausible.Stats.QueryRunner.
+  Query `include.combined_time_on_page_cutoff` is used to determine what time range
+  to use for the legacy time_on_page calculations.
 
-  When `new_time_on_page` metric is requested with `include.combined_time_on_page_cutoff`
-  we need to join the legacy time_on_page calculations if possible.
+  Legacy metric is not exposed in the public API.
   """
 
   use Plausible.ClickhouseRepo
