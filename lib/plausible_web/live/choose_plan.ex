@@ -82,8 +82,24 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     business_plan_to_render =
       assigns.selected_business_plan || List.last(assigns.available_plans.business)
 
+    saved_segments_enabled? =
+      FunWithFlags.enabled?(:saved_segments, for: assigns.current_user)
+
     growth_benefits = PlanBenefits.for_growth(growth_plan_to_render)
-    business_benefits = PlanBenefits.for_business(business_plan_to_render, growth_benefits)
+
+    business_benefits =
+      PlanBenefits.for_business(
+        if(saved_segments_enabled?,
+          do: business_plan_to_render,
+          else:
+            struct!(business_plan_to_render,
+              features:
+                business_plan_to_render.features -- [Plausible.Billing.Feature.SiteSegments]
+            )
+        ),
+        growth_benefits
+      )
+
     enterprise_benefits = PlanBenefits.for_enterprise(business_benefits)
 
     assigns =
