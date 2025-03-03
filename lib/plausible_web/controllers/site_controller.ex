@@ -26,8 +26,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def create_site(conn, %{"site" => site_params}) do
-    current_team = conn.assigns.current_team
-    team = Plausible.Teams.get(site_params["team_id"]) || current_team
+    team = conn.assigns.current_team
     user = conn.assigns.current_user
     first_site? = Plausible.Teams.Billing.site_usage(team) == 0
     flow = conn.params["flow"]
