@@ -106,7 +106,7 @@ defmodule PlausibleWeb.AdminController do
               end
               """,
               t.name,
-              ^Plausible.Teams.name(),
+              ^Plausible.Teams.default_name(),
               o.name,
               o.email,
               t.name,
@@ -163,7 +163,7 @@ defmodule PlausibleWeb.AdminController do
                   end
                   """,
                   t.name,
-                  ^Plausible.Teams.name(),
+                  ^Plausible.Teams.default_name(),
                   o.name,
                   o.email,
                   t.identifier,

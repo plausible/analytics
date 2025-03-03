@@ -12,11 +12,11 @@ defmodule Plausible.Teams do
 
   @accept_traffic_until_free ~D[2135-01-01]
 
-  @spec name() :: String.t()
-  def name(), do: name(nil)
+  @spec default_name() :: String.t()
+  def default_name(), do: "My Personal Sites"
 
   @spec name(nil | Teams.Team.t()) :: String.t()
-  def name(nil), do: "My Personal Sites"
+  def name(nil), do: default_name()
   def name(team), do: team.name
 
   def enabled?(team) do
@@ -283,7 +283,7 @@ defmodule Plausible.Teams do
   defp create_my_team(user) do
     team =
       %Teams.Team{}
-      |> Teams.Team.changeset(%{name: name()})
+      |> Teams.Team.changeset(%{name: default_name()})
       |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
       |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!()

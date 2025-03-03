@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
         {true, %Teams.Team{}, _} ->
           my_team =
-            if Teams.name(my_team) == Teams.name() do
+            if Teams.name(my_team) == Teams.default_name() do
               current_user = socket.assigns.current_user
 
               my_team
