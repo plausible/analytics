@@ -113,7 +113,7 @@
         "combined_time_on_page_cutoff": {
           "$comment": "only :internal",
           "type": "string",
-          "format": "date"
+          "format": "datetime"
         }
       }
     },
