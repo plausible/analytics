@@ -41,9 +41,10 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                      "id" => s.id,
                      "name" => s.name,
                      "type" => Atom.to_string(s.type),
+                     "inserted_at" => Calendar.strftime(s.inserted_at, "%Y-%m-%d %H:%M:%S"),
+                     "updated_at" => Calendar.strftime(s.updated_at, "%Y-%m-%d %H:%M:%S"),
                      "owner_id" => nil,
-                     "inserted_at" => NaiveDateTime.to_iso8601(s.inserted_at),
-                     "updated_at" => NaiveDateTime.to_iso8601(s.updated_at),
+                     "owner_name" => nil,
                      "segment_data" => nil
                    }
                  end)
@@ -73,7 +74,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     for role <- [:viewer, :owner] do
       test "returns list with personal and site segments for #{role}, avoiding segments from other site",
            %{conn: conn, user: user, site: site} do
-        other_user = new_user()
+        other_user = new_user(name: "Other User")
         other_site = new_site(owner: other_user, team: team_of(user))
 
         insert_list(2, :segment,
@@ -97,6 +98,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
             type: :personal,
             name: "a personal segment"
           )
+          |> Map.put(:owner_name, user.name)
 
         emea_site_segment =
           insert(:segment,
@@ -105,6 +107,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
             type: :site,
             name: "EMEA region"
           )
+          |> Map.put(:owner_name, other_user.name)
 
         apac_site_segment =
           insert(:segment,
@@ -113,22 +116,41 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
             type: :site,
             name: "APAC region"
           )
+          |> Map.put(:owner_name, user.name)
+
+        dangling_site_segment =
+          insert(:segment,
+            site: site,
+            owner: nil,
+            type: :site,
+            name: "Another region"
+          )
+          |> Map.put(:owner_name, nil)
 
         conn =
           get(conn, "/api/#{site.domain}/segments")
 
         assert json_response(conn, 200) ==
-                 Enum.map([apac_site_segment, emea_site_segment, personal_segment], fn s ->
-                   %{
-                     "id" => s.id,
-                     "name" => s.name,
-                     "type" => Atom.to_string(s.type),
-                     "owner_id" => s.owner_id,
-                     "inserted_at" => NaiveDateTime.to_iso8601(s.inserted_at),
-                     "updated_at" => NaiveDateTime.to_iso8601(s.updated_at),
-                     "segment_data" => nil
-                   }
-                 end)
+                 Enum.map(
+                   [
+                     dangling_site_segment,
+                     apac_site_segment,
+                     emea_site_segment,
+                     personal_segment
+                   ],
+                   fn s ->
+                     %{
+                       "id" => s.id,
+                       "name" => s.name,
+                       "type" => Atom.to_string(s.type),
+                       "owner_id" => s.owner_id,
+                       "owner_name" => s.owner_name,
+                       "inserted_at" => Calendar.strftime(s.inserted_at, "%Y-%m-%d %H:%M:%S"),
+                       "updated_at" => Calendar.strftime(s.updated_at, "%Y-%m-%d %H:%M:%S"),
+                       "segment_data" => nil
+                     }
+                   end
+                 )
       end
     end
   end
@@ -218,8 +240,9 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     test "serves 200 with segment when user is not the segment owner and segment is not personal",
          %{
            conn: conn,
-           site: site
+           user: user
          } do
+      site = new_site(owner: user, timezone: "Asia/Tokyo")
       other_user = add_guest(site, role: :editor)
 
       segment =
@@ -228,8 +251,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
           owner: other_user,
           site: site,
           name: "any",
-          inserted_at: "2024-09-01T10:00:00",
-          updated_at: "2024-09-01T10:00:00"
+          inserted_at: "2024-09-01T22:00:00.000Z",
+          updated_at: "2024-09-01T23:00:00.000Z"
         )
 
       conn =
@@ -238,11 +261,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       assert json_response(conn, 200) == %{
                "id" => segment.id,
                "owner_id" => other_user.id,
+               "owner_name" => other_user.name,
                "name" => segment.name,
                "type" => Atom.to_string(segment.type),
                "segment_data" => segment.segment_data,
-               "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at),
-               "updated_at" => NaiveDateTime.to_iso8601(segment.updated_at)
+               "inserted_at" => "2024-09-02 07:00:00",
+               "updated_at" => "2024-09-02 08:00:00"
              }
     end
 
@@ -265,11 +289,12 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       assert json_response(conn, 200) == %{
                "id" => segment.id,
                "owner_id" => user.id,
+               "owner_name" => user.name,
                "name" => segment.name,
                "type" => Atom.to_string(segment.type),
                "segment_data" => segment.segment_data,
-               "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at),
-               "updated_at" => NaiveDateTime.to_iso8601(segment.updated_at)
+               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S"),
+               "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%d %H:%M:%S")
              }
     end
   end
@@ -368,6 +393,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                              ]
                            }),
                          "owner_id" => ^user.id,
+                         "owner_name" => ^user.name,
                          "inserted_at" => ^any(:iso8601_naive_datetime),
                          "updated_at" => ^any(:iso8601_naive_datetime)
                        }) = response
@@ -552,6 +578,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                            ]
                          }),
                        "owner_id" => ^user.id,
+                       "owner_name" => ^user.name,
                        "inserted_at" => ^any(:iso8601_naive_datetime),
                        "updated_at" => ^any(:iso8601_naive_datetime)
                      }) = response
@@ -574,20 +601,64 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       response =
         patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{
           "name" => "updated name",
-          "type" => Atom.to_string(:personal)
+          "type" => "personal"
         })
         |> json_response(200)
 
-      assert %{
-               "id" => segment.id,
-               "name" => "updated name",
-               "type" => Atom.to_string(:personal),
-               "owner_id" => user.id,
-               "segment_data" => segment.segment_data,
-               "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at)
-             } == Map.drop(response, ["updated_at"])
+      assert_matches ^strict_map(%{
+                       "id" => ^segment.id,
+                       "name" => "updated name",
+                       "type" => "personal",
+                       "owner_id" => ^user.id,
+                       "owner_name" => ^user.name,
+                       "segment_data" => ^segment.segment_data,
+                       "inserted_at" =>
+                         ^any(
+                           :string,
+                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")}/
+                         ),
+                       "updated_at" => ^any(:iso8601_naive_datetime)
+                     }) = response
+    end
 
-      assert response["updated_at"] > response["inserted_at"]
+    test "the last editor of a dangling site segment (segment with owner_id: nil) becomes the new owner",
+         %{
+           conn: conn,
+           user: user
+         } do
+      site = new_site()
+      add_guest(site, user: user, role: :editor)
+
+      segment =
+        insert(:segment,
+          site: site,
+          name: "original name",
+          type: :site,
+          owner: nil
+        )
+
+      response =
+        patch(conn, "/api/#{site.domain}/segments/#{segment.id}", %{"name" => "updated name"})
+        |> json_response(200)
+
+      assert_matches ^strict_map(%{
+                       "id" => ^segment.id,
+                       "name" => "updated name",
+                       "type" =>
+                         ^any(
+                           :string,
+                           ~r/#{segment.type}/
+                         ),
+                       "owner_id" => ^user.id,
+                       "owner_name" => ^user.name,
+                       "segment_data" => ^segment.segment_data,
+                       "inserted_at" =>
+                         ^any(
+                           :string,
+                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")}/
+                         ),
+                       "updated_at" => ^any(:iso8601_naive_datetime)
+                     }) = response
     end
   end
 
@@ -661,12 +732,13 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
 
         assert %{
                  "owner_id" => user.id,
+                 "owner_name" => user.name,
                  "id" => segment.id,
                  "name" => segment.name,
                  "segment_data" => segment.segment_data,
                  "type" => "#{unquote(type)}",
-                 "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at),
-                 "updated_at" => NaiveDateTime.to_iso8601(segment.updated_at)
+                 "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S"),
+                 "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%d %H:%M:%S")
                } == response
 
         verify_no_segment_in_db(segment)
@@ -691,13 +763,14 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
         |> json_response(200)
 
       assert %{
+               "owner_name" => other_user.name,
                "owner_id" => other_user.id,
                "id" => segment.id,
                "name" => segment.name,
                "segment_data" => segment.segment_data,
                "type" => "site",
-               "inserted_at" => NaiveDateTime.to_iso8601(segment.inserted_at),
-               "updated_at" => NaiveDateTime.to_iso8601(segment.updated_at)
+               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S"),
+               "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%d %H:%M:%S")
              } == response
 
       verify_no_segment_in_db(segment)

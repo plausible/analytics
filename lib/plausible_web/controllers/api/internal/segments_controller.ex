@@ -24,7 +24,10 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         H.not_enough_permissions(conn, "Not enough permissions to get segments")
 
       {:ok, segments} ->
-        json(conn, segments)
+        json(
+          conn,
+          Enum.map(segments, fn segment -> Segments.enrich_with_site(segment, site) end)
+        )
     end
   end
 
@@ -54,7 +57,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         segment_not_found(conn, params["segment_id"])
 
       {:ok, segment} ->
-        json(conn, segment)
+        json(conn, Segments.enrich_with_site(segment, site))
     end
   end
 
@@ -80,7 +83,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         })
 
       {:ok, segment} ->
-        json(conn, segment)
+        json(conn, Segments.enrich_with_site(segment, site))
     end
   end
 
@@ -114,7 +117,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         })
 
       {:ok, segment} ->
-        json(conn, segment)
+        json(conn, Segments.enrich_with_site(segment, site))
     end
   end
 
@@ -141,7 +144,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         segment_not_found(conn, params["segment_id"])
 
       {:ok, segment} ->
-        json(conn, segment)
+        json(conn, Segments.enrich_with_site(segment, site))
     end
   end
 
