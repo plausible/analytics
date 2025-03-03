@@ -23,8 +23,7 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     isDbip: dataset.isDbip === 'true',
     flags: JSON.parse(dataset.flags!),
     validIntervalsByPeriod: JSON.parse(dataset.validIntervalsByPeriod!),
-    shared: !!dataset.sharedLinkAuth,
-    members: JSON.parse(dataset.members!)
+    shared: !!dataset.sharedLinkAuth
   }
 }
 
@@ -57,8 +56,7 @@ const siteContextDefaultValue = {
   isDbip: false,
   flags: {} as FeatureFlags,
   validIntervalsByPeriod: {} as Record<string, Array<string>>,
-  shared: false,
-  members: null as null | Record<number, string>
+  shared: false
 }
 
 export type PlausibleSite = typeof siteContextDefaultValue

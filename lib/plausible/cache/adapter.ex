@@ -67,7 +67,7 @@ defmodule Plausible.Cache.Adapter do
   @spec get(atom(), any(), (-> any())) :: any()
   def get(cache_name, key, fallback_fn) do
     full_cache_name = get_name(cache_name, key)
-    ConCache.get_or_store(full_cache_name, key, fallback_fn)
+    ConCache.dirty_get_or_store(full_cache_name, key, fallback_fn)
   catch
     :exit, _ ->
       Logger.error("Error retrieving key from '#{inspect(cache_name)}'")
@@ -77,7 +77,7 @@ defmodule Plausible.Cache.Adapter do
   @spec fetch(atom(), any(), (-> any())) :: any()
   def fetch(cache_name, key, fallback_fn) do
     full_cache_name = get_name(cache_name, key)
-    ConCache.fetch_or_store(full_cache_name, key, fallback_fn)
+    ConCache.dirty_fetch_or_store(full_cache_name, key, fallback_fn)
   catch
     :exit, _ ->
       Logger.error("Error fetching key from '#{inspect(cache_name)}'")
@@ -85,14 +85,9 @@ defmodule Plausible.Cache.Adapter do
   end
 
   @spec put(atom(), any(), any()) :: any()
-  def put(cache_name, key, value, opts \\ []) do
+  def put(cache_name, key, value, _opts \\ []) do
     full_cache_name = get_name(cache_name, key)
-
-    if opts[:dirty?] do
-      :ok = ConCache.dirty_put(full_cache_name, key, value)
-    else
-      :ok = ConCache.put(full_cache_name, key, value)
-    end
+    :ok = ConCache.dirty_put(full_cache_name, key, value)
 
     value
   catch
@@ -137,22 +132,6 @@ defmodule Plausible.Cache.Adapter do
     :exit, _ ->
       Logger.error("Error retrieving key from '#{inspect(cache_name)}'")
       []
-  end
-
-  @spec with_lock(atom(), any(), pos_integer(), (-> result)) :: {:ok, result} | {:error, :timeout}
-        when result: any()
-  def with_lock(cache_name, key, timeout, fun) do
-    full_cache_name = get_name(cache_name, key)
-    result = ConCache.isolated(full_cache_name, key, timeout, fun)
-    {:ok, result}
-  catch
-    :exit, {:timeout, _} ->
-      Sentry.capture_message(
-        "Timeout while executing with lock on key in '#{inspect(cache_name)}'",
-        extra: %{key: key}
-      )
-
-      {:error, :timeout}
   end
 
   @spec get_names(atom()) :: [atom()]
