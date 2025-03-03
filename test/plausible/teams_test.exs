@@ -77,7 +77,7 @@ defmodule Plausible.TeamsTest do
                |> Map.fetch!(:team_memberships)
     end
 
-    test "creates 'My Team' if user is a non-owner member on existing teams" do
+    test "creates 'My Personal Sites' if user is a non-owner member on existing teams" do
       user = new_user()
       user_id = user.id
       site1 = new_site()
