@@ -87,7 +87,7 @@
     "yearly_product_id":"857482",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "features":["goals","props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"]
   },
   {
     "kind":"business",
@@ -97,7 +97,7 @@
     "yearly_product_id":"857484",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "features":["goals","props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"]
   },
   {
     "kind":"business",
@@ -107,7 +107,7 @@
     "yearly_product_id":"857487",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "features":["goals","props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"]
   },
   {
     "kind":"business",
@@ -117,7 +117,7 @@
     "yearly_product_id":"857491",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "features":["goals","props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"]
   },
   {
     "kind":"business",
@@ -127,7 +127,7 @@
     "yearly_product_id":"857494",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "features":["goals","props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"]
   },
   {
     "kind":"business",
@@ -137,7 +137,7 @@
     "yearly_product_id":"857496",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "features":["goals","props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"]
   },
   {
     "kind":"business",
@@ -147,7 +147,7 @@
     "yearly_product_id":"857500",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "features":["goals","props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"]
   },
   {
     "kind":"business",
@@ -157,6 +157,6 @@
     "yearly_product_id":"857502",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "features":["goals","props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api","site_segments"]
   }
 ]
