@@ -169,7 +169,7 @@ defmodule Plausible.Teams.TeamAdmin do
   defp team_name(team) do
     case team.owners do
       [owner] ->
-        if team.name == Plausible.Teams.name() do
+        if team.name == Plausible.Teams.default_name() do
           owner.name
         else
           team.name
