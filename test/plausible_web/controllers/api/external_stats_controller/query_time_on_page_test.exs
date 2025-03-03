@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
+defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
   use PlausibleWeb.ConnCase
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key, :create_site_import]
@@ -148,6 +148,128 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
              %{"dimensions" => ["2021-01-03", "/"], "metrics" => [100]},
              %{"dimensions" => ["2021-01-04", "/"], "metrics" => [100]}
            ]
+  end
+
+  describe "include.combined_time_on_page_cutoff" do
+    setup %{site: site, site_import: site_import} = context do
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:02:00],
+          engagement_time: 100_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2021-01-01 00:02:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:05:00],
+          engagement_time: 100_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:05:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:10:00],
+          engagement_time: 100_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2021-01-01 00:10:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 100_000
+        ),
+        build(:pageview, user_id: 13, pathname: "/pricing", timestamp: ~N[2021-01-02 01:00:00]),
+        build(:engagement,
+          user_id: 13,
+          pathname: "/pricing",
+          timestamp: ~N[2021-01-02 01:00:00],
+          engagement_time: 30_000
+        ),
+        build(:pageview, user_id: 14, pathname: "/", timestamp: ~N[2021-01-02 01:00:00]),
+        build(:engagement,
+          user_id: 14,
+          pathname: "/",
+          timestamp: ~N[2021-01-02 01:00:00],
+          engagement_time: 30_000
+        ),
+        build(:imported_pages,
+          page: "/blog",
+          date: ~D[2021-01-01],
+          visitors: 9,
+          total_time_on_page: 9 * 20,
+          total_time_on_page_visits: 9
+        )
+      ])
+
+      context
+    end
+
+    test "breakdown with cutoff being before data (new time-on-page query used)", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["new_time_on_page"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{
+            "combined_time_on_page_cutoff" => "1970-01-01T00:00:00Z",
+            "imports" => true
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["/"], "metrics" => [115]},
+               # (2 * 100s + 9 * 20s) / 10 = 38
+               %{"dimensions" => ["/blog"], "metrics" => [38]},
+               %{"dimensions" => ["/pricing"], "metrics" => [30]}
+             ]
+    end
+
+    test "breakdown with cutoff being after data (legacy query used)", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["new_time_on_page"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{
+            "combined_time_on_page_cutoff" => "2021-01-05T00:00:00Z",
+            "imports" => true
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["/"], "metrics" => [420]},
+               %{"dimensions" => ["/blog"], "metrics" => [95]},
+               %{"dimensions" => ["/pricing"], "metrics" => [0]}
+             ]
+    end
+
+    test "breakdown with cutoff being mid-data (two queries joined)", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["new_time_on_page"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{
+            "combined_time_on_page_cutoff" => "2021-01-02T00:00:00Z",
+            "imports" => true
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["/"], "metrics" => [225]},
+               %{"dimensions" => ["/blog"], "metrics" => [95]},
+               %{"dimensions" => ["/pricing"], "metrics" => [30]}
+             ]
+    end
   end
 
   describe "legacy time_on_page metric" do
