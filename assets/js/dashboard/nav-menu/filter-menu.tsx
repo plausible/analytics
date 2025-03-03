@@ -7,7 +7,7 @@ import {
 } from '../util/filters'
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
-import { PlusIcon } from '@heroicons/react/20/solid'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import classNames from 'classnames'
@@ -59,11 +59,11 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         ref={buttonRef}
         className={classNames(
           popover.toggleButton.classNames.rounded,
-          popover.toggleButton.classNames.shadow,
+          popover.toggleButton.classNames.ghost,
           'justify-center gap-1 px-3'
         )}
       >
-        <PlusIcon className="block h-4 w-4" />
+        <MagnifyingGlassIcon className="block h-4 w-4" />
         <span className={popover.toggleButton.classNames.truncatedText}>
           Filter
         </span>
