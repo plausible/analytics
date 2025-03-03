@@ -189,9 +189,12 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp set_time_on_page_combined_data(query) do
     if :new_time_on_page in query.metrics and query.include.combined_time_on_page_cutoff do
-      cutoff =
+      {:ok, cutoff, _} =
         query.include.combined_time_on_page_cutoff
         |> DateTime.from_iso8601()
+
+      cutoff =
+        cutoff
         |> DateTime.shift_zone!("Etc/UTC")
         |> DateTime.truncate(:second)
 

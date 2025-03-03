@@ -20,7 +20,8 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   # end
 
   def merge_legacy_time_on_page(q, query) do
-    if :new_time_on_page in query.metrics and query.time_on_page_combined_data.include_legacy do
+    if :new_time_on_page in query.metrics && query.time_on_page_combined_data &&
+         query.time_on_page_combined_data.include_legacy do
       q |> merge_legacy_time_on_page(query, query.dimensions)
     else
       q
@@ -44,9 +45,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
 
   defp merge_legacy_time_on_page(q, query, ["event:page"]) do
     q
-    |> join(:left, [e], subquery(breakdown_q(query, nil, true)),
-      on: ^SQL.QueryBuilder.build_group_by_join(query)
-    )
+    |> join(:left, [e], t in subquery(breakdown_q(query, nil, true)), on: e.dim0 == t.pathname)
     |> select_merge_as([..., t], %{
       new_time_on_page:
         fragment(
@@ -90,6 +89,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     windowed_pages_q =
       from(e in Base.base_event_query(Query.remove_top_level_filters(query, ["event:page"])),
         where: e.name != "engagement",
+        where: ^filter_by_cutoff(query, check_date_range),
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
@@ -105,7 +105,6 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
           ]
         ]
       )
-      |> conditionally_filter_by_cutoff(query, check_date_range)
 
     event_page_filter = Filters.get_toplevel_filter(query, "event:page")
 
@@ -148,7 +147,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
 
     timed_pages_q
     |> Plausible.ClickhouseRepo.all(query: query)
-    |> Map.new(fn %{dim0: path, time_on_page: value} -> {[path], value} end)
+    |> Map.new(fn %{pathname: path, time_on_page: value} -> {[path], value} end)
   end
 
   defp breakdown_q(query, pages, check_date_range) do
@@ -158,6 +157,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
           Query.remove_top_level_filters(query, ["event:page", "event:props"])
         ),
         where: e.name != "engagement",
+        where: ^filter_by_cutoff(query, check_date_range),
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
@@ -173,19 +173,18 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
           ]
         ]
       )
-      |> conditionally_filter_by_cutoff(query, check_date_range)
 
     timed_page_transitions_q =
       from(e in subquery(windowed_pages_q),
         group_by: [e.pathname, e.next_pathname, e.session_id],
         where: e.next_timestamp != 0,
+        where: ^filter_pages(pages, dynamic([e], e.pathname in ^pages)),
         select: %{
           pathname: e.pathname,
           transition: e.next_pathname != e.pathname,
           duration: sum(e.next_timestamp - e.timestamp)
         }
       )
-      |> conditionally_filter_pages(pages)
 
     no_select_timed_pages_q =
       from e in subquery(timed_page_transitions_q),
@@ -196,16 +195,17 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     if query.include_imported do
       # Imported page views have pre-calculated values
       imported_timed_pages_q =
-        from i in "imported_pages",
+        from(i in "imported_pages",
           group_by: i.page,
           where: i.site_id == ^query.site_id,
           where: i.date >= ^date_range.first and i.date <= ^date_range.last,
-          where: i.page in ^pages,
+          where: ^filter_pages(pages, dynamic([i], i.page in ^pages)),
           select: %{
             page: i.page,
             time_on_page: sum(i.total_time_on_page),
             visits: sum(i.pageviews) - sum(i.exits)
           }
+        )
 
       timed_pages_q =
         from e in no_select_timed_pages_q,
@@ -222,16 +222,16 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
       |> select(
         [t, i],
         %{
-          dim0: fragment("if(empty(?),?,?)", t.page, i.page, t.page),
+          pathname: fragment("if(empty(?),?,?)", t.page, i.page, t.page),
           time_on_page: (t.time_on_page + i.time_on_page) / (t.visits + i.visits),
           total_time_on_page: t.time_on_page + i.time_on_page,
-          transitions: t.visits + i.visits
+          transition_count: t.visits + i.visits
         }
       )
     else
       from(e in no_select_timed_pages_q,
         select: %{
-          dim0: e.pathname,
+          pathname: e.pathname,
           time_on_page: fragment("sum(?)/countIf(?)", e.duration, e.transition),
           total_time_on_page: fragment("sum(?)", e.duration),
           transition_count: fragment("countIf(?)", e.transition)
@@ -240,23 +240,18 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     end
   end
 
-  defp conditionally_filter_by_cutoff(q, query, true = _check_date_range) do
+  defp filter_by_cutoff(query, true = _check_date_range) do
     case query.time_on_page_combined_data do
       %{include_legacy: true, include_main: true, cutoff: cutoff} ->
-        q |> where([e], e.timestamp < ^cutoff)
+        dynamic([e], e.timestamp < ^cutoff)
 
       _ ->
-        q
+        true
     end
   end
 
-  defp conditionally_filter_by_cutoff(q, _query, false), do: q
+  defp filter_by_cutoff(_query, false), do: true
 
-  defp conditionally_filter_pages(q, pages) do
-    if is_list(pages) do
-      q |> where([e], e.pathname in ^pages)
-    else
-      q
-    end
-  end
+  defp filter_pages(pages, expr) when is_list(pages), do: expr
+  defp filter_pages(_pages, _expr), do: true
 end

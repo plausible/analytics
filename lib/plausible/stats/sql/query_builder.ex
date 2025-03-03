@@ -10,6 +10,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   alias Plausible.Stats.{Query, QueryOptimizer, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
+  alias Plausible.Stats.Legacy.TimeOnPage
 
   require Plausible.Stats.SQL.Expression
 
@@ -50,6 +51,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> build_group_by(:events, events_query)
     |> merge_imported(site, events_query)
     |> SQL.SpecialMetrics.add(site, events_query)
+    |> TimeOnPage.merge_legacy_time_on_page(events_query)
   end
 
   defp join_sessions_if_needed(q, query) do
