@@ -15,15 +15,10 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   import Ecto.Query
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Base, Filters, Query, SQL, Util}
-
-  # defp legacy_time_on_page_supported?(query) do
-  #   query.dimensions == [] or query.dimensions == ["event:page"]
-  # end
+  alias Plausible.Stats.{Base, Filters, Query, SQL}
 
   def merge_legacy_time_on_page(q, query) do
-    if :new_time_on_page in query.metrics && query.time_on_page_combined_data &&
-         query.time_on_page_combined_data.include_legacy do
+    if :time_on_page in query.metrics and query.time_on_page_combined_data.include_legacy_metric do
       q |> merge_legacy_time_on_page(query, query.dimensions)
     else
       q
@@ -33,7 +28,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   defp merge_legacy_time_on_page(q, query, []) do
     from(
       e in subquery(q),
-      inner_join: t in subquery(aggregate_time_on_page_q(query, true)),
+      inner_join: t in subquery(aggregate_time_on_page_q(query)),
       on: true
     )
     |> select_metrics_and_dimensions(query)
@@ -42,7 +37,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   defp merge_legacy_time_on_page(q, query, ["event:page"]) do
     from(
       e in subquery(q),
-      left_join: t in subquery(breakdown_q(query, nil, true)),
+      left_join: t in subquery(breakdown_q(query)),
       on: e.dim0 == t.pathname
     )
     |> select_metrics_and_dimensions(query)
@@ -54,10 +49,10 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
 
   defp select_metrics_and_dimensions(q, query) do
     q
-    |> select_join_fields(query, List.delete(query.metrics, :new_time_on_page), e)
+    |> select_join_fields(query, List.delete(query.metrics, :time_on_page), e)
     |> select_join_fields(query, query.dimensions, e)
     |> select_merge_as([e, t], %{
-      new_time_on_page:
+      time_on_page:
         fragment(
           "toInt32(round(ifNotFinite((? + ?) / (? + ?), 0)))",
           e.__internal_total_time_on_page,
@@ -68,34 +63,11 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     })
   end
 
-  def calculate(_site, query, ch_results) do
-    case {:time_on_page in query.metrics, query.dimensions} do
-      {true, []} ->
-        aggregate_time_on_page(query)
-
-      {true, ["event:page"]} ->
-        pages =
-          Enum.map(ch_results, fn entry -> Map.get(entry, Util.shortname(query, "event:page")) end)
-
-        breakdown_time_on_page(query, pages)
-
-      _ ->
-        %{}
-    end
-  end
-
-  defp aggregate_time_on_page(query) do
-    q = aggregate_time_on_page_q(query, false)
-    %{time_on_page: time_on_page} = ClickhouseRepo.one(q, query: query)
-
-    %{[] => time_on_page}
-  end
-
-  defp aggregate_time_on_page_q(query, check_date_range) do
+  defp aggregate_time_on_page_q(query) do
     windowed_pages_q =
       from(e in Base.base_event_query(Query.remove_top_level_filters(query, ["event:page"])),
         where: e.name != "engagement",
-        where: ^filter_by_cutoff(query, check_date_range),
+        where: ^filter_by_cutoff(query),
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
@@ -144,26 +116,14 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     )
   end
 
-  defp breakdown_time_on_page(_query, []) do
-    %{}
-  end
-
-  defp breakdown_time_on_page(query, pages) do
-    timed_pages_q = breakdown_q(query, pages, false)
-
-    timed_pages_q
-    |> Plausible.ClickhouseRepo.all(query: query)
-    |> Map.new(fn %{pathname: path, time_on_page: value} -> {[path], value} end)
-  end
-
-  defp breakdown_q(query, pages, check_date_range) do
+  defp breakdown_q(query) do
     windowed_pages_q =
       from(
         e in Base.base_event_query(
           Query.remove_top_level_filters(query, ["event:page", "event:props"])
         ),
         where: e.name != "engagement",
-        where: ^filter_by_cutoff(query, check_date_range),
+        where: ^filter_by_cutoff(query),
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
@@ -184,7 +144,6 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
       from(e in subquery(windowed_pages_q),
         group_by: [e.pathname, e.next_pathname, e.session_id],
         where: e.next_timestamp != 0,
-        where: ^filter_pages(pages, dynamic([e], e.pathname in ^pages)),
         select: %{
           pathname: e.pathname,
           transition: e.next_pathname != e.pathname,
@@ -205,7 +164,6 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
           group_by: i.page,
           where: i.site_id == ^query.site_id,
           where: i.date >= ^date_range.first and i.date <= ^date_range.last,
-          where: ^filter_pages(pages, dynamic([i], i.page in ^pages)),
           select: %{
             page: i.page,
             time_on_page: sum(i.total_time_on_page),
@@ -246,18 +204,13 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     end
   end
 
-  defp filter_by_cutoff(query, true = _check_date_range) do
+  defp filter_by_cutoff(query) do
     case query.time_on_page_combined_data do
-      %{include_legacy: true, include_main: true, cutoff: cutoff} ->
+      %{include_legacy_metric: true, include_new_metric: true, cutoff: cutoff} ->
         dynamic([e], e.timestamp < ^cutoff)
 
       _ ->
         true
     end
   end
-
-  defp filter_by_cutoff(_query, false), do: true
-
-  defp filter_pages(pages, expr) when is_list(pages), do: expr
-  defp filter_pages(_pages, _expr), do: true
 end

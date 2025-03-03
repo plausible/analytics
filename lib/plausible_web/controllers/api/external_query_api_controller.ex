@@ -11,6 +11,14 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
 
     case Query.build(site, conn.assigns.schema_type, params, debug_metadata(conn)) do
       {:ok, query} ->
+        query =
+          Query.set(query,
+            time_on_page_combined_data: %{
+              include_new_metric: true,
+              include_legacy_metric: false
+            }
+          )
+
         results = Plausible.Stats.query(site, query)
         json(conn, results)
 
