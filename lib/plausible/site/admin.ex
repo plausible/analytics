@@ -210,10 +210,10 @@ defmodule Plausible.SiteAdmin do
     team_name =
       case site.owners do
         [owner] ->
-          if site.team.name == Plausible.Teams.default_name() do
-            owner.name
-          else
+          if site.team.setup_complete do
             site.team.name
+          else
+            owner.name
           end
 
         [_ | _] ->

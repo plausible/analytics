@@ -17,6 +17,7 @@ defmodule Plausible.Teams do
 
   @spec name(nil | Teams.Team.t()) :: String.t()
   def name(nil), do: default_name()
+  def name(%{setup_complete: false}), do: default_name()
   def name(team), do: team.name
 
   def enabled?(team) do
