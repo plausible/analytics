@@ -1129,7 +1129,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      assert html =~ "Team Settings"
+      refute html =~ "Team Settings"
       refute html =~ team.name
     end
 

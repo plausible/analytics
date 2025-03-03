@@ -20,8 +20,17 @@ defmodule Plausible.Teams do
   def name(%{setup_complete: false}), do: default_name()
   def name(team), do: team.name
 
+  @spec setup?(nil | Teams.Team.t()) :: boolean()
+  def setup?(nil), do: false
+  def setup?(%{setup_complete: setup_complete}), do: setup_complete
+
+  @spec enabled?(nil | Teams.Team.t()) :: boolean()
+  def enabled?(nil) do
+    FunWithFlags.enabled?(:teams)
+  end
+
   def enabled?(team) do
-    not is_nil(team) and FunWithFlags.enabled?(:teams, for: team)
+    FunWithFlags.enabled?(:teams, for: team)
   end
 
   @spec get(pos_integer() | binary() | nil) :: Teams.Team.t() | nil

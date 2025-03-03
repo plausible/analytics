@@ -36,7 +36,7 @@
           <% end %>
         </div>
 
-        <div :if={Plausible.Teams.enabled?(@my_team) and @my_team.setup_complete}>
+        <div :if={Plausible.Teams.enabled?(@my_team) and Plausible.Teams.setup?(@my_team)}>
           <div class="mb-4 mt-4 hidden lg:block">
             <h3 class="uppercase text-sm text-indigo-600 font-semibold">Team Settings</h3>
             <p class="text-xs dark:text-gray-400 truncate">{@my_team.name}</p>
