@@ -40,6 +40,11 @@ defmodule PlausibleWeb.Live.TeamSetup do
             my_team: my_team
           )
 
+        {true, nil, _} ->
+          socket
+          |> put_flash(:error, "You cannot set up any team just yet")
+          |> redirect(to: Routes.site_path(socket, :index))
+
         {false, _, _} ->
           socket
           |> put_flash(:error, "You cannot set up any team just yet")

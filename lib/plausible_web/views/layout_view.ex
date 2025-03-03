@@ -1,6 +1,8 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
   use Plausible
+
+  alias Plausible.Teams
   alias PlausibleWeb.Components.Billing.Notice
 
   def plausible_url do
@@ -105,7 +107,9 @@ defmodule PlausibleWeb.LayoutView do
       ]
     }
 
-    if Plausible.Teams.enabled?(conn.assigns[:my_team]) do
+    my_team = conn.assigns[:my_team]
+
+    if Teams.enabled?(my_team) and Teams.setup?(my_team) do
       Map.put(options, "Team Settings", [
         %{key: "General", value: "team/general", icon: :adjustments_horizontal}
       ])
@@ -115,7 +119,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def trial_notification(team) do
-    case Plausible.Teams.trial_days_left(team) do
+    case Teams.trial_days_left(team) do
       days when days > 1 ->
         "#{days} trial days left"
 
