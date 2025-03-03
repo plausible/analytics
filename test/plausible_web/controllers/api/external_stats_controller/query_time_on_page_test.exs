@@ -270,6 +270,84 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                %{"dimensions" => ["/pricing"], "metrics" => [30]}
              ]
     end
+
+    test "breakdown with cutoff being mid-data (two queries joined), no imports", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["new_time_on_page"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{
+            "combined_time_on_page_cutoff" => "2021-01-02T00:00:00Z"
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["/"], "metrics" => [225]},
+               %{"dimensions" => ["/blog"], "metrics" => [180]},
+               %{"dimensions" => ["/pricing"], "metrics" => [30]}
+             ]
+    end
+
+    test "aggregation with cutoff being after data (legacy query used)", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["new_time_on_page"],
+          "date_range" => "all",
+          "filters" => [["is", "event:page", ["/blog"]]],
+          "include" => %{
+            "combined_time_on_page_cutoff" => "2021-01-05T00:00:00Z",
+            "imports" => true
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [180]}
+             ]
+    end
+
+    test "aggregation with cutoff being mid-data (two queries joined)", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["new_time_on_page"],
+          "date_range" => "all",
+          "filters" => [["is", "event:page", ["/blog"]]],
+          "include" => %{
+            "combined_time_on_page_cutoff" => "2021-01-02T00:00:00Z",
+            "imports" => true
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [180]}
+             ]
+    end
+
+    test "aggregation with cutoff being mid-data (two queries joined), no imports", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["new_time_on_page"],
+          "date_range" => "all",
+          "filters" => [["is", "event:page", ["/blog"]]],
+          "include" => %{
+            "combined_time_on_page_cutoff" => "2021-01-02T00:00:00Z"
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [180]}
+             ]
+    end
   end
 
   describe "legacy time_on_page metric" do
