@@ -6,6 +6,26 @@ defmodule Plausible.TeamsTest do
   alias Plausible.Teams
   alias Plausible.Repo
 
+  describe "name/1" do
+    test "returns default name when there's no team" do
+      assert Teams.name(nil) == "My Personal Sites"
+    end
+
+    test "returns default name when team setup is not completed yet" do
+      user = new_user(team: [setup_complete: false, name: "Foo"])
+      team = team_of(user)
+
+      assert Teams.name(team) == "My Personal Sites"
+    end
+
+    test "returns team name for a setup team" do
+      user = new_user(team: [setup_complete: true, name: "Foo"])
+      team = team_of(user)
+
+      assert Teams.name(team) == "Foo"
+    end
+  end
+
   describe "get_or_create/1" do
     test "creates 'My Personal Sites' if user is a member of no teams" do
       today = Date.utc_today()

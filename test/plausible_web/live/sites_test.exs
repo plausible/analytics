@@ -13,6 +13,8 @@ defmodule PlausibleWeb.Live.SitesTest do
     test "renders empty sites page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, "/sites")
 
+      assert text(html) =~ "My Personal Sites"
+
       assert text(html) =~ "You don't have any sites yet"
     end
 
