@@ -84,7 +84,9 @@
                       Account Settings
                     </.dropdown_item>
 
-                    <div :if={Plausible.Teams.enabled?(@my_team) and not @my_team.setup_complete}>
+                    <div :if={
+                      Plausible.Teams.enabled?(@my_team) and not Plausible.Teams.setup?(@my_team)
+                    }>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span class="flex-1">
                           Setup a Team
@@ -96,7 +98,9 @@
                       <.dropdown_divider />
                     </div>
 
-                    <div :if={Plausible.Teams.enabled?(@my_team) and @my_team.setup_complete}>
+                    <div :if={
+                      Plausible.Teams.enabled?(@my_team) and Plausible.Teams.setup?(@my_team)
+                    }>
                       <.dropdown_item
                         class="flex"
                         href={Routes.settings_path(@conn, :team_general)}
