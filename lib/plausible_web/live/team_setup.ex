@@ -23,19 +23,13 @@ defmodule PlausibleWeb.Live.TeamSetup do
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {true, %Teams.Team{}, _} ->
-          my_team =
-            if Teams.name(my_team) == Teams.default_name() do
-              current_user = socket.assigns.current_user
-
-              my_team
-              |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s Team"})
-              |> Repo.update!()
-            else
-              my_team
-            end
+          current_user = socket.assigns.current_user
 
           team_name_form =
-            Teams.Team.name_changeset(my_team, %{})
+            my_team
+            |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s Team"})
+            |> Repo.update!()
+            |> Teams.Team.name_changeset(%{})
             |> to_form()
 
           layout = Layout.init(my_team)
