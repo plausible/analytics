@@ -248,9 +248,9 @@ defmodule Plausible.Stats.SQL.Expression do
   def event_metric(:group_conversion_rate, _query), do: %{}
   def event_metric(:total_visitors, _query), do: %{}
 
-  def event_metric(:new_time_on_page, query) do
+  def event_metric(:time_on_page, query) do
     case query.time_on_page_combined_data do
-      %{include_main: false} ->
+      %{include_new_metric: false} ->
         wrap_alias(
           [e],
           %{
@@ -259,7 +259,7 @@ defmodule Plausible.Stats.SQL.Expression do
           }
         )
 
-      %{include_main: true, include_legacy: true, cutoff: cutoff} ->
+      %{include_new_metric: true, include_legacy_metric: true, cutoff: cutoff} ->
         wrap_alias(
           [e],
           %{
@@ -285,7 +285,7 @@ defmodule Plausible.Stats.SQL.Expression do
         wrap_alias(
           [e],
           %{
-            new_time_on_page:
+            time_on_page:
               fragment(
                 "toInt32(round(ifNotFinite(? / ?, 0)))",
                 selected_as(:__internal_total_time_on_page),

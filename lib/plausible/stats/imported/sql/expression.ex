@@ -122,15 +122,15 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     })
   end
 
-  defp select_metric(:new_time_on_page, "imported_pages", query) do
+  defp select_metric(:time_on_page, "imported_pages", query) do
     case query.time_on_page_combined_data do
-      %{include_main: false} ->
+      %{include_new_metric: false} ->
         wrap_alias([i], %{
           total_time_on_page: 0,
           total_time_on_page_visits: 0
         })
 
-      %{include_main: true, include_legacy: true, cutoff: cutoff} ->
+      %{include_new_metric: true, include_legacy_metric: true, cutoff: cutoff} ->
         cutoff_date = cutoff |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
 
         wrap_alias([i], %{
@@ -389,13 +389,13 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     })
   end
 
-  defp joined_metric(:new_time_on_page, query) do
+  defp joined_metric(:time_on_page, query) do
     wrap_alias([s, i], %{
       __internal_total_time_on_page: s.__internal_total_time_on_page + i.total_time_on_page,
       __internal_total_time_on_page_visits:
         s.__internal_total_time_on_page_visits + i.total_time_on_page_visits
     })
-    |> Map.merge(new_time_on_page_metric(query))
+    |> Map.merge(time_on_page_metric(query))
   end
 
   # Ignored as it's calculated separately
@@ -410,12 +410,10 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
 
   defp dim(dimension), do: Plausible.Stats.Filters.without_prefix(dimension)
 
-  defp new_time_on_page_metric(query) do
-    # :TODO: Maybe move this TimeOnPage module completely?
-    if is_nil(query.time_on_page_combined_data) or
-         not query.time_on_page_combined_data.include_legacy do
+  defp time_on_page_metric(query) do
+    if not query.time_on_page_combined_data.include_legacy_metric do
       wrap_alias([], %{
-        new_time_on_page:
+        time_on_page:
           fragment(
             "toInt32(round(ifNotFinite(? / ?, 0)))",
             selected_as(:__internal_total_time_on_page),

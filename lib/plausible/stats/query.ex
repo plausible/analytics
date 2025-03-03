@@ -27,7 +27,11 @@ defmodule Plausible.Stats.Query do
             remove_unavailable_revenue_metrics: false,
             site_id: nil,
             site_native_stats_start_at: nil,
-            time_on_page_combined_data: nil
+            time_on_page_combined_data: %{
+              include_new_metric: false,
+              include_legacy_metric: true,
+              cutoff: ~U[2100-01-01 00:00:00Z]
+            }
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}

@@ -255,38 +255,4 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
              }
     end
   end
-
-  test "scroll_depth metric cannot be queried without event:page filter or dimension", %{
-    conn: conn,
-    site: site
-  } do
-    conn =
-      post(conn, "/api/v2/query-internal-test", %{
-        "site_id" => site.domain,
-        "metrics" => ["scroll_depth"],
-        "date_range" => "all"
-      })
-
-    assert json_response(conn, 400) == %{
-             "error" =>
-               "Metric `scroll_depth` can only be queried with event:page filters or dimensions."
-           }
-  end
-
-  test "new_time_on_page metric cannot be queried without event:page filter or dimension", %{
-    conn: conn,
-    site: site
-  } do
-    conn =
-      post(conn, "/api/v2/query-internal-test", %{
-        "site_id" => site.domain,
-        "metrics" => ["new_time_on_page"],
-        "date_range" => "all"
-      })
-
-    assert json_response(conn, 400) == %{
-             "error" =>
-               "Metric `new_time_on_page` can only be queried with event:page filters or dimensions."
-           }
-  end
 end

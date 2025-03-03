@@ -611,7 +611,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp validate_metric(metric, query) when metric in [:scroll_depth, :new_time_on_page] do
+  defp validate_metric(:scroll_depth = metric, query) do
     page_dimension? = Enum.member?(query.dimensions, "event:page")
     toplevel_page_filter? = not is_nil(Filters.get_toplevel_filter(query, "event:page"))
 
