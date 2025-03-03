@@ -11,7 +11,9 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
 
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
+
   import Ecto.Query
+  import Plausible.Stats.Util
 
   alias Plausible.Stats.{Base, Filters, Query, SQL, Util}
 
@@ -29,37 +31,41 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   end
 
   defp merge_legacy_time_on_page(q, query, []) do
-    q
-    |> join(:inner, [], subquery(aggregate_time_on_page_q(query, true)), on: true)
-    |> select_merge_as([..., t], %{
-      new_time_on_page:
-        fragment(
-          "toInt32(round(ifNotFinite((? + ?) / (? + ?), 0)))",
-          selected_as(:__internal_total_time_on_page),
-          t.total_time_on_page,
-          selected_as(:__internal_total_time_on_page_visits),
-          t.transition_count
-        )
-    })
+    from(
+      e in subquery(q),
+      inner_join: t in subquery(aggregate_time_on_page_q(query, true)),
+      on: true
+    )
+    |> select_metrics_and_dimensions(query)
   end
 
   defp merge_legacy_time_on_page(q, query, ["event:page"]) do
-    q
-    |> join(:left, [e], t in subquery(breakdown_q(query, nil, true)), on: e.dim0 == t.pathname)
-    |> select_merge_as([..., t], %{
-      new_time_on_page:
-        fragment(
-          "toInt32(round(ifNotFinite((? + ?) / (? + ?), 0)))",
-          selected_as(:__internal_total_time_on_page),
-          t.total_time_on_page,
-          selected_as(:__internal_total_time_on_page_visits),
-          t.transition_count
-        )
-    })
+    from(
+      e in subquery(q),
+      left_join: t in subquery(breakdown_q(query, nil, true)),
+      on: e.dim0 == t.pathname
+    )
+    |> select_metrics_and_dimensions(query)
   end
 
   defp merge_legacy_time_on_page(q, _query, _dimensions) do
     q
+  end
+
+  defp select_metrics_and_dimensions(q, query) do
+    q
+    |> select_join_fields(query, List.delete(query.metrics, :new_time_on_page), e)
+    |> select_join_fields(query, query.dimensions, e)
+    |> select_merge_as([e, t], %{
+      new_time_on_page:
+        fragment(
+          "toInt32(round(ifNotFinite((? + ?) / (? + ?), 0)))",
+          e.__internal_total_time_on_page,
+          t.total_time_on_page,
+          e.__internal_total_time_on_page_visits,
+          t.transition_count
+        )
+    })
   end
 
   def calculate(_site, query, ch_results) do
