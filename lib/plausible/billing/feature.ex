@@ -201,7 +201,7 @@ defmodule Plausible.Billing.Feature.SiteSegments do
   @moduledoc false
   use Plausible.Billing.Feature,
     name: :site_segments,
-    display_name: "Site Segments"
+    display_name: "Shared Segments"
 end
 
 defmodule Plausible.Billing.Feature.StatsAPI do

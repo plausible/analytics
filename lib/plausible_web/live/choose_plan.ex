@@ -85,7 +85,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     saved_segments_enabled? =
       FunWithFlags.enabled?(:saved_segments, for: assigns.current_user)
 
-    growth_benefits = PlanBenefits.for_growth(growth_plan_to_render)
+    growth_benefits =
+      PlanBenefits.for_growth(growth_plan_to_render) ++
+        if(saved_segments_enabled?, do: ["Segments"], else: [])
 
     business_benefits =
       PlanBenefits.for_business(
