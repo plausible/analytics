@@ -159,7 +159,10 @@ export const RoutelessSegmentModals = () => {
           siteSegmentsAvailable={site.siteSegmentsAvailable}
           segment={expandedSegment}
           namePlaceholder={getSegmentNamePlaceholder(query)}
-          onClose={() => setModal(null)}
+          onClose={() => {
+            setModal(null)
+            patchSegment.reset()
+          }}
           onSave={({ id, name, type }) =>
             patchSegment.mutate({
               id,
@@ -182,7 +185,10 @@ export const RoutelessSegmentModals = () => {
           siteSegmentsAvailable={site.siteSegmentsAvailable}
           namePlaceholder={getSegmentNamePlaceholder(query)}
           segment={expandedSegment ?? undefined}
-          onClose={() => setModal(null)}
+          onClose={() => {
+            setModal(null)
+            createSegment.reset()
+          }}
           onSave={({ name, type }) =>
             createSegment.mutate({
               name,
@@ -201,7 +207,10 @@ export const RoutelessSegmentModals = () => {
       {modal === 'delete' && expandedSegment && (
         <DeleteSegmentModal
           segment={expandedSegment}
-          onClose={() => setModal(null)}
+          onClose={() => {
+            setModal(null)
+            deleteSegment.reset()
+          }}
           onSave={({ id }) => deleteSegment.mutate({ id })}
           status={deleteSegment.status}
           error={deleteSegment.error}
