@@ -836,7 +836,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 110,
                  "pageviews" => 160,
                  "bounce_rate" => 0,
-                 "time_on_page" => 0.125,
+                 "time_on_page" => 0,
                  "scroll_depth" => 10
                }
              ]
@@ -1377,7 +1377,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       ])
 
       assert [
-               %{"name" => "/", "time_on_page" => _three_minutes = 180.0},
+               %{"name" => "/", "time_on_page" => _three_minutes = 180},
                %{"name" => "/exit", "time_on_page" => nil}
              ] =
                conn
@@ -1410,9 +1410,9 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       ])
 
       assert [
-               %{"name" => "/a", "time_on_page" => 100.0},
+               %{"name" => "/a", "time_on_page" => 100},
                %{"name" => "/b", "time_on_page" => nil},
-               %{"name" => "/d", "time_on_page" => +0.0}
+               %{"name" => "/d", "time_on_page" => 0}
              ] =
                conn
                |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")

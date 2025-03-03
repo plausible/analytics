@@ -286,8 +286,7 @@ defmodule Plausible.Stats.SQL.Expression do
           [e],
           %{
             time_on_page:
-              fragment(
-                "toInt32(round(ifNotFinite(? / ?, 0)))",
+              time_on_page(
                 selected_as(:__internal_total_time_on_page),
                 selected_as(:__internal_total_time_on_page_visits)
               ),

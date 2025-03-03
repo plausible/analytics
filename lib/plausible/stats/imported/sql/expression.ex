@@ -415,8 +415,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     if not query.time_on_page_combined_data.include_legacy_metric do
       wrap_alias([], %{
         time_on_page:
-          fragment(
-            "toInt32(round(ifNotFinite(? / ?, 0)))",
+          time_on_page(
             selected_as(:__internal_total_time_on_page),
             selected_as(:__internal_total_time_on_page_visits)
           )

@@ -154,6 +154,17 @@ defmodule Plausible.Stats.SQL.Fragments do
   def meta_value_column(:meta), do: :"meta.value"
   def meta_value_column(:entry_meta), do: :"entry_meta.value"
 
+  defmacro time_on_page(total_time_on_page, total_time_on_page_visits) do
+    quote do
+      fragment(
+        "if(? > 0, toInt32(round((?) / (?))), NULL)",
+        unquote(total_time_on_page_visits),
+        unquote(total_time_on_page),
+        unquote(total_time_on_page_visits)
+      )
+    end
+  end
+
   @doc """
   Convenience Ecto macro for wrapping a map passed to select_merge_as such that each
   expression gets wrapped in dynamic and set as selected_as.
