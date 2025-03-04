@@ -228,12 +228,12 @@ native_stats_range
 
       event = Keyword.merge(event, timestamp: timestamp)
 
-      event =
+      to_insert =
         cond do
           event_index > 0 && :rand.uniform() < 0.1 ->
             event
             |> Keyword.merge(name: outbound.event_name)
-            |> then(&Plausible.Factory.build(:event, &1))
+            |> then(&[Plausible.Factory.build(:event, &1)])
 
           event_index > 0 && :rand.uniform() < 0.05 ->
             amount = Decimal.new(:rand.uniform(100))
@@ -244,14 +244,22 @@ native_stats_range
             |> Keyword.merge(revenue_source_amount: amount)
             |> Keyword.merge(revenue_reporting_currency: "USD")
             |> Keyword.merge(revenue_reporting_amount: amount)
-            |> then(&Plausible.Factory.build(:event, &1))
+            |> then(&[Plausible.Factory.build(:event, &1)])
 
           true ->
-            event
-            |> then(&Plausible.Factory.build(:pageview, &1))
+            pageview = Plausible.Factory.build(:pageview, event)
+
+            engagement =
+              Map.merge(pageview, %{
+                name: "engagement",
+                engagement_time: Enum.random(300..10000),
+                scroll_depth: Enum.random(1..100)
+              })
+
+            [engagement, pageview]
         end
 
-      [event | events]
+      to_insert ++ events
     end)
     |> Enum.reverse()
   end)
