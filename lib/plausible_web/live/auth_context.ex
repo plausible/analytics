@@ -47,23 +47,9 @@ defmodule PlausibleWeb.Live.AuthContext do
           nil
 
         %{current_user: user} = context ->
-          current_team = context.team_from_session
-
-          current_team_owner? =
-            (current_team || %{})
-            |> Map.get(:owners, [])
-            |> Enum.any?(&(&1.id == user.id))
-
-          if current_team_owner? do
-            current_team
-          else
-            user.team_memberships
-            # NOTE: my_team should eventually only hold user's personal team. This requires
-            # additional adjustments, which will be done in follow-up work.
-            # |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
-            |> List.first(%{})
-            |> Map.get(:team)
-          end
+          user.team_memberships
+          |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
+          |> Map.get(:team)
       end)
       |> assign_new(:current_team, fn context ->
         context.team_from_session || context.my_team

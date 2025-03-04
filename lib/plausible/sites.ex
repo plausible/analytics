@@ -190,9 +190,8 @@ defmodule Plausible.Sites do
           {:ok, Teams.with_subscription(team)}
 
         is_nil(team) ->
-          with {:ok, team} <- Teams.get_or_create(user) do
-            {:ok, Teams.with_subscription(team)}
-          end
+          team = Teams.force_create_my_team(user)
+          {:ok, Teams.with_subscription(team)}
 
         true ->
           {:error, :permission_denied}
