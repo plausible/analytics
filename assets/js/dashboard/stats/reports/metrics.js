@@ -198,7 +198,7 @@ export const createTimeOnPage = (props) => {
     ...props,
     key: 'time_on_page',
     renderLabel,
-    sortable: false
+    sortable: true
   })
 }
 
