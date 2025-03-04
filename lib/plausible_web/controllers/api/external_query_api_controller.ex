@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
 
     case Query.build(site, conn.assigns.schema_type, params, debug_metadata(conn)) do
       {:ok, query} ->
+        # :TODO: This could use `set_include` instead (if unset)
         query =
           Query.set(query,
             time_on_page_combined_data: %{
