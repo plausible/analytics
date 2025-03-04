@@ -249,52 +249,63 @@ defmodule Plausible.Stats.SQL.Expression do
   def event_metric(:total_visitors, _query), do: %{}
 
   def event_metric(:time_on_page, query) do
-    case query.time_on_page_combined_data do
-      %{include_new_metric: false} ->
-        wrap_alias(
-          [e],
-          %{
-            __internal_total_time_on_page: 0,
-            __internal_total_time_on_page_visits: 0
-          }
-        )
+    selected =
+      case query.time_on_page_combined_data do
+        %{include_new_metric: false} ->
+          wrap_alias(
+            [e],
+            %{
+              __internal_total_time_on_page: 0,
+              __internal_total_time_on_page_visits: 0
+            }
+          )
 
-      %{include_new_metric: true, include_legacy_metric: true, cutoff: cutoff} ->
-        wrap_alias(
-          [e],
-          %{
-            __internal_total_time_on_page:
-              fragment(
-                "sumIf(?, ? >= ?) / 1000",
-                e.engagement_time,
-                e.timestamp,
-                ^cutoff
-              ),
-            __internal_total_time_on_page_visits:
-              fragment(
-                "uniqIf(?, ? = 'engagement' and ? >= ?)",
-                e.session_id,
-                e.name,
-                e.timestamp,
-                ^cutoff
-              )
-          }
-        )
+        %{include_new_metric: true, cutoff: nil} ->
+          wrap_alias(
+            [e],
+            %{
+              __internal_total_time_on_page: fragment("sum(?) / 1000", e.engagement_time),
+              __internal_total_time_on_page_visits:
+                fragment("uniqIf(?, ? = 'engagement')", e.session_id, e.name)
+            }
+          )
 
-      _ ->
-        wrap_alias(
-          [e],
-          %{
-            time_on_page:
-              time_on_page(
-                selected_as(:__internal_total_time_on_page),
-                selected_as(:__internal_total_time_on_page_visits)
-              ),
-            __internal_total_time_on_page: fragment("sum(?) / 1000", e.engagement_time),
-            __internal_total_time_on_page_visits:
-              fragment("uniqIf(?, ? = 'engagement')", e.session_id, e.name)
-          }
-        )
+        %{include_new_metric: true, cutoff: cutoff} ->
+          wrap_alias(
+            [e],
+            %{
+              __internal_total_time_on_page:
+                fragment(
+                  "sumIf(?, ? >= ?) / 1000",
+                  e.engagement_time,
+                  e.timestamp,
+                  ^cutoff
+                ),
+              __internal_total_time_on_page_visits:
+                fragment(
+                  "uniqIf(?, ? = 'engagement' and ? >= ?)",
+                  e.session_id,
+                  e.name,
+                  e.timestamp,
+                  ^cutoff
+                )
+            }
+          )
+      end
+
+    if query.time_on_page_combined_data.include_legacy_metric do
+      selected
+    else
+      Map.merge(
+        selected,
+        wrap_alias([e], %{
+          time_on_page:
+            time_on_page(
+              selected_as(:__internal_total_time_on_page),
+              selected_as(:__internal_total_time_on_page_visits)
+            )
+        })
+      )
     end
   end
 

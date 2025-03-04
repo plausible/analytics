@@ -130,7 +130,13 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
           total_time_on_page_visits: 0
         })
 
-      %{include_new_metric: true, include_legacy_metric: true, cutoff: cutoff} ->
+      %{include_new_metric: true, cutoff: nil} ->
+        wrap_alias([i], %{
+          total_time_on_page: sum(i.total_time_on_page),
+          total_time_on_page_visits: sum(i.total_time_on_page_visits)
+        })
+
+      %{include_new_metric: true, cutoff: cutoff} ->
         cutoff_date = cutoff |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
 
         wrap_alias([i], %{
@@ -138,12 +144,6 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
             fragment("sumIf(?, ? >= ?)", i.total_time_on_page, i.date, ^cutoff_date),
           total_time_on_page_visits:
             fragment("sumIf(?, ? >= ?)", i.total_time_on_page_visits, i.date, ^cutoff_date)
-        })
-
-      _ ->
-        wrap_alias([i], %{
-          total_time_on_page: sum(i.total_time_on_page),
-          total_time_on_page_visits: sum(i.total_time_on_page_visits)
         })
     end
   end

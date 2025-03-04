@@ -205,7 +205,7 @@ defmodule Plausible.Stats.QueryOptimizer do
           include_legacy_metric:
             DateTime.after?(cutoff, query.utc_time_range.first) and
               Legacy.TimeOnPage.can_merge_legacy_time_on_page?(query),
-          cutoff: cutoff
+          cutoff: if(DateTime.after?(cutoff, query.utc_time_range.first), do: cutoff, else: nil)
         }
       )
     else
