@@ -11,6 +11,11 @@ defmodule Plausible.Segments do
 
   @type error_not_enough_permissions() :: {:error, :not_enough_permissions}
   @type error_segment_not_found() :: {:error, :segment_not_found}
+  @type error_segment_limit_reached() :: {:error, :segment_limit_reached}
+  @type error_invalid_segment() :: {:error, {:invalid_segment, Keyword.t()}}
+  @type unknown_error() :: {:error, any()}
+
+  @max_segments 500
 
   @spec index(pos_integer() | nil, Plausible.Site.t(), atom()) ::
           {:ok, [Segment.t()]} | error_not_enough_permissions()
@@ -73,6 +78,13 @@ defmodule Plausible.Segments do
     end
   end
 
+  @spec insert_one(pos_integer(), Plausible.Site.t(), atom(), map()) ::
+          {:ok, Segment.t()}
+          | error_not_enough_permissions()
+          | error_invalid_segment()
+          | error_segment_limit_reached()
+          | unknown_error()
+
   def insert_one(
         user_id,
         %Plausible.Site{} = site,
@@ -99,6 +111,12 @@ defmodule Plausible.Segments do
         error
     end
   end
+
+  @spec update_one(pos_integer(), Plausible.Site.t(), atom(), pos_integer(), map()) ::
+          {:ok, Segment.t()}
+          | error_not_enough_permissions()
+          | error_invalid_segment()
+          | unknown_error()
 
   def update_one(
         user_id,
@@ -301,6 +319,9 @@ defmodule Plausible.Segments do
 
   defp can_insert_one?(%Plausible.Site{} = site, site_role, params) do
     cond do
+      count_segments(site.id) >= @max_segments ->
+        {:error, :segment_limit_reached}
+
       params["type"] == "site" and site_role in roles_with_maybe_site_segments() and
           site_segments_available?(site) ->
         :ok
@@ -314,11 +335,18 @@ defmodule Plausible.Segments do
     end
   end
 
+  defp count_segments(site_id) do
+    from(segment in Segment,
+      where: segment.site_id == ^site_id
+    )
+    |> Repo.aggregate(:count, :id)
+  end
+
   def roles_with_personal_segments(), do: [:viewer, :editor, :admin, :owner, :super_admin]
   def roles_with_maybe_site_segments(), do: [:editor, :admin, :owner, :super_admin]
 
   def site_segments_available?(%Plausible.Site{} = site),
-    do: Plausible.Billing.Feature.Props.check_availability(site.team) == :ok
+    do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
 
   @spec get_public_site_segments(pos_integer(), list(atom())) :: [Segment.t()]
   defp get_public_site_segments(site_id, fields) do
@@ -375,7 +403,17 @@ defmodule Plausible.Segments do
   This function enriches the segment with site, without actually querying the database for the site again.
   Needed for Plausible.Segments.Segment custom JSON serialization.
   """
+  @spec enrich_with_site(Segment.t(), Plausible.Site.t()) :: Segment.t()
   def enrich_with_site(%Segment{} = segment, %Plausible.Site{} = site) do
     Map.put(segment, :site, site)
+  end
+
+  @spec get_site_segments_usage_query(list(pos_integer())) :: Ecto.Query.t()
+  def get_site_segments_usage_query(site_ids) do
+    from(segment in Segment,
+      as: :segment,
+      where: segment.type == :site,
+      where: segment.site_id in ^site_ids
+    )
   end
 end

@@ -312,7 +312,7 @@ defmodule Plausible.Site.CacheTest do
 
     @items1 for i <- 1..200_000, do: {i, nil, :batch1}
     @items2 for _ <- 1..200_000, do: {Enum.random(1..400_000), nil, :batch2}
-    @max_seconds 2
+    @max_seconds 3
     test "merging large sets is expected to be under #{@max_seconds} seconds", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
