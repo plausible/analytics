@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-DC275710.js"></script>
+    <script src="dist/sidebar_items-326EF0D6.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -157,6 +157,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#t:error_invalid_segment/0" data-no-tooltip translate="no">error_invalid_segment()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#t:error_not_enough_permissions/0" data-no-tooltip translate="no">error_not_enough_permissions()</a>
 
       </div>
@@ -165,7 +173,23 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#t:error_segment_limit_reached/0" data-no-tooltip translate="no">error_segment_limit_reached()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#t:error_segment_not_found/0" data-no-tooltip translate="no">error_segment_not_found()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:unknown_error/0" data-no-tooltip translate="no">unknown_error()</a>
 
       </div>
 
@@ -223,6 +247,14 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#get_one/4" data-no-tooltip translate="no">get_one(user_id, site, site_role, segment_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_site_segments_usage_query/1" data-no-tooltip translate="no">get_site_segments_usage_query(site_ids)</a>
 
       </div>
 
@@ -316,6 +348,32 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
       <span class="text">Types</span>
     </h1>
     <div class="types-list">
+<section class="detail" id="t:error_invalid_segment/0">
+
+  <div class="detail-header">
+    <a href="#t:error_invalid_segment/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">error_invalid_segment()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L15" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> error_invalid_segment() :: {:error, {:invalid_segment, <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()}}</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="t:error_not_enough_permissions/0">
 
   <div class="detail-header">
@@ -336,6 +394,32 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> error_not_enough_permissions() :: {:error, :not_enough_permissions}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:error_segment_limit_reached/0">
+
+  <div class="detail-header">
+    <a href="#t:error_segment_limit_reached/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">error_segment_limit_reached()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L14" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> error_segment_limit_reached() :: {:error, :segment_limit_reached}</pre>
 
       </div>
 
@@ -368,6 +452,32 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
 
   </section>
 </section>
+<section class="detail" id="t:unknown_error/0">
+
+  <div class="detail-header">
+    <a href="#t:unknown_error/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">unknown_error()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L16" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> unknown_error() :: {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
 
     </div>
   </section>
@@ -388,7 +498,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
     </a>
     <h1 class="signature" translate="no">after_user_removed_from_site(site, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L186" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L204" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -408,7 +518,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
     </a>
     <h1 class="signature" translate="no">after_user_removed_from_team(team, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L205" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L223" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -428,7 +538,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
     </a>
     <h1 class="signature" translate="no">delete_one(user_id, site, site_role, segment_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L244" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L262" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -448,7 +558,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
     </a>
     <h1 class="signature" translate="no">enrich_with_site(segment, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L378" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L407" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -456,6 +566,13 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p></div>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> enrich_with_site(<a href="Plausible.Segments.Segment.html#t:t/0">Plausible.Segments.Segment.t</a>(), <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) ::
+  <a href="Plausible.Segments.Segment.html#t:t/0">Plausible.Segments.Segment.t</a>()</pre>
+
+      </div>
 
 <p>This function enriches the segment with site, without actually querying the database for the site again.
 Needed for Plausible.Segments.Segment custom JSON serialization.</p>
@@ -469,7 +586,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">get_many(site, segment_ids, opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L42" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L47" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -496,7 +613,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">get_one(user_id, site, site_role, segment_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L65" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L70" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -517,6 +634,32 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
 
   </section>
 </section>
+<section class="detail" id="get_site_segments_usage_query/1">
+
+  <div class="detail-header">
+    <a href="#get_site_segments_usage_query/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">get_site_segments_usage_query(site_ids)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L412" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_site_segments_usage_query([<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()]) :: <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="index/3">
 
   <div class="detail-header">
@@ -525,7 +668,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">index(user_id, site, site_role)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L17" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L22" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -552,7 +695,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">insert_one(user_id, site, site_role, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L76" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L88" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -560,6 +703,17 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> insert_one(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  {:ok, <a href="Plausible.Segments.Segment.html#t:t/0">Plausible.Segments.Segment.t</a>()}
+  | <a href="#t:error_not_enough_permissions/0">error_not_enough_permissions</a>()
+  | <a href="#t:error_invalid_segment/0">error_invalid_segment</a>()
+  | <a href="#t:error_segment_limit_reached/0">error_segment_limit_reached</a>()
+  | <a href="#t:unknown_error/0">unknown_error</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -572,7 +726,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">roles_with_maybe_site_segments()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L318" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L346" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -592,7 +746,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">roles_with_personal_segments()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L317" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L345" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -612,7 +766,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">serialize_first_error(errors)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L363" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L391" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -633,7 +787,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">site_segments_available?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L320" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L348" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -653,7 +807,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">update_goal_in_segments(site, stale_goal, updated_goal)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L138" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L156" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -673,7 +827,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">update_one(user_id, site, site_role, segment_id, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L103" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L121" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -681,6 +835,16 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> update_one(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  {:ok, <a href="Plausible.Segments.Segment.html#t:t/0">Plausible.Segments.Segment.t</a>()}
+  | <a href="#t:error_not_enough_permissions/0">error_not_enough_permissions</a>()
+  | <a href="#t:error_invalid_segment/0">error_invalid_segment</a>()
+  | <a href="#t:unknown_error/0">unknown_error</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -693,7 +857,7 @@ Needed for Plausible.Segments.Segment custom JSON serialization.</p>
     </a>
     <h1 class="signature" translate="no">user_removed(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L233" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/segments/segments.ex#L251" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
