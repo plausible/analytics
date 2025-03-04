@@ -127,7 +127,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
             where: i.page in ^pages,
             select: %{
               page: i.page,
-              time_on_page: sum(i.time_on_page),
+              time_on_page: sum(i.total_time_on_page),
               visits: sum(i.pageviews) - sum(i.exits)
             }
 
