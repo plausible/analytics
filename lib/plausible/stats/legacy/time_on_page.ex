@@ -17,6 +17,10 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
 
   alias Plausible.Stats.{Base, Filters, Query, SQL}
 
+  def can_merge_legacy_time_on_page?(query) do
+    :time_on_page in query.metrics and query.dimensions in [[], ["event:page"]]
+  end
+
   def merge_legacy_time_on_page(q, query) do
     # :TODO: this will likely not work if legacy data is requested with incompatible dimensions.
     if :time_on_page in query.metrics and query.time_on_page_combined_data.include_legacy_metric do
