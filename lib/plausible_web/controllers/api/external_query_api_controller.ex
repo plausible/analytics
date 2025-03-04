@@ -11,14 +11,7 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
 
     case Query.build(site, conn.assigns.schema_type, params, debug_metadata(conn)) do
       {:ok, query} ->
-        # :TODO: This could use `set_include` instead (if unset)
-        query =
-          Query.set(query,
-            time_on_page_combined_data: %{
-              include_new_metric: true,
-              include_legacy_metric: false
-            }
-          )
+        query = update_time_on_page_query_data(query)
 
         results = Plausible.Stats.query(site, query)
         json(conn, results)
@@ -32,5 +25,18 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
 
   def schema(conn, _params) do
     json(conn, Plausible.Stats.JSONSchema.raw_public_schema())
+  end
+
+  defp update_time_on_page_query_data(query) do
+    if not query.include.combined_time_on_page_cutoff do
+      Query.set(query,
+        time_on_page_combined_data: %{
+          include_new_metric: true,
+          include_legacy_metric: false
+        }
+      )
+    else
+      query
+    end
   end
 end
