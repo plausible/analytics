@@ -277,7 +277,8 @@ defmodule Plausible.Factory do
       visitors: 1,
       pageviews: 1,
       exits: 0,
-      time_on_page: 10
+      total_time_on_page: 10,
+      total_time_on_page_visits: 1
     }
   end
 
