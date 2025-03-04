@@ -42,6 +42,17 @@ defmodule PlausibleWeb.TrackerTest do
     assert response == get_script("plausible.outbound-links.file-downloads.compat.hash.js")
   end
 
+  test "pageleave extension" do
+    # Some customers who have participated in the private preview of the
+    # scroll depth feature, have updated their tracking scripts to
+    # `script.pageleave.js` per our request. With the public release of
+    # scroll depth, this functionality is included in the default script,
+    # but we must continue to serve `script.pageleave.js` for as long as
+    # those customers are still using it.
+    assert get_script("script.pageleave.js") == get_script("script.js")
+    assert get_script("script.manual.pageleave.js") == get_script("script.manual.js")
+  end
+
   def get_script(filename) do
     opts = PlausibleWeb.Tracker.init([])
 
