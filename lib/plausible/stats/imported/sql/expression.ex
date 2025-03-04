@@ -147,7 +147,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_group_fields(q, "event:page", key, _query) do
-    select_merge_as(q, [i], %{key => i.page, time_on_page: sum(i.time_on_page)})
+    select_merge_as(q, [i], %{key => i.page, time_on_page: sum(i.total_time_on_page)})
   end
 
   defp select_group_fields(q, dimension, key, _query)

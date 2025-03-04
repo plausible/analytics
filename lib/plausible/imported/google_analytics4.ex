@@ -205,7 +205,8 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       # NOTE: no exits metric in GA4 API currently
       exits: 0,
-      time_on_page: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number()
+      total_time_on_page: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number(),
+      total_time_on_page_visits: row.metrics |> Map.fetch!("sessions") |> parse_number()
     }
   end
 

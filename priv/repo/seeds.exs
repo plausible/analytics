@@ -272,6 +272,8 @@ site_import =
 imported_stats_range
 |> Enum.flat_map(fn date ->
   Enum.flat_map(0..Enum.random(1..50), fn _ ->
+    pages_visits = Enum.random(1..15)
+
     [
       Plausible.Factory.build(:imported_visitors,
         date: date,
@@ -294,10 +296,11 @@ imported_stats_range
         date: date,
         page: Enum.random(long_random_paths),
         visitors: Enum.random(1..10),
-        visits: Enum.random(1..15),
+        visits: pages_visits,
         pageviews: Enum.random(1..50),
         exits: Enum.random(1..10),
-        time_on_page: Enum.random(1000..10000)
+        total_time_on_page: Enum.random(1000..10000),
+        total_time_on_page_visits: pages_visits
       )
     ]
   end)
