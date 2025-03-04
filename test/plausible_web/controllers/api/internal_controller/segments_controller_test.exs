@@ -357,6 +357,27 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
              }
     end
 
+    test "returns error when segment limit is reached", %{conn: conn, user: user, site: site} do
+      insert_list(500, :segment, site: site, owner: user, type: :personal, name: "a segment")
+
+      conn =
+        post(conn, "/api/#{site.domain}/segments", %{
+          "type" => "personal",
+          "segment_data" => %{"filters" => [["is", "visit:entry_page", ["/blog"]]]},
+          "name" => "any name"
+        })
+
+      assert json_response(conn, 403) == %{
+               "error" => "Segment limit reached"
+             }
+
+      assert Repo.aggregate(
+               from(segment in Plausible.Segments.Segment, where: segment.site_id == ^site.id),
+               :count,
+               :id
+             ) == 500
+    end
+
     for %{role: role, type: type} <- [
           %{role: :viewer, type: :personal},
           %{role: :editor, type: :personal},
