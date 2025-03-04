@@ -82,8 +82,8 @@ defmodule PlausibleWeb.Live.AuthContext do
         %{current_user: nil} -> 0
         %{current_user: user} -> length(user.team_memberships)
       end)
-      |> assign_new(:multiple_teams?, fn context ->
-        context.teams_count > 1
+      |> assign_new(:more_teams?, fn context ->
+        context.teams_count > 3
       end)
 
     {:cont, socket}
