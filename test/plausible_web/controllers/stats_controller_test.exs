@@ -276,8 +276,8 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert pages == [
                ["name", "visitors", "pageviews", "bounce_rate", "time_on_page", "scroll_depth"],
-               ["/blog", "3", "4", "33", "60.0", "60"],
-               ["/another", "2", "2", "0", "60.0", "25"],
+               ["/blog", "3", "4", "33", "60", "60"],
+               ["/another", "2", "2", "0", "60", "25"],
                [""]
              ]
     end
@@ -587,7 +587,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                      "time_on_page",
                      "scroll_depth"
                    ],
-                   ["/test", "1", "1", "0.0", "10.0", ""],
+                   ["/test", "1", "1", "0.0", "10", ""],
                    [""]
                  ]
 
