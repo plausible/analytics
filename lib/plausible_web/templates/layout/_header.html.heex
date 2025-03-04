@@ -72,13 +72,14 @@
                         {@conn.assigns[:current_user].email}
                       </p>
                     </.dropdown_item>
-                    <.dropdown_item :if={@conn.assigns[:multiple_teams?]}>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Team</div>
-                      <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
-                        {@current_team.name}
-                      </p>
-                    </.dropdown_item>
-
+                    <.team_switcher
+                      :if={Plausible.Teams.enabled?(@my_team)}
+                      conn={@conn}
+                      teams={@teams}
+                      my_team={@my_team}
+                      current_team={@current_team}
+                      more_teams?={@more_teams?}
+                    />
                     <.dropdown_divider />
                     <.dropdown_item href={Routes.settings_path(@conn, :index)}>
                       Account Settings
@@ -108,12 +109,6 @@
                         <span class="flex-1">
                           Team Settings
                         </span>
-                      </.dropdown_item>
-                      <.dropdown_item
-                        :if={@conn.assigns[:multiple_teams?]}
-                        href={Routes.auth_path(@conn, :select_team)}
-                      >
-                        Switch Team
                       </.dropdown_item>
                       <.dropdown_divider />
                     </div>
