@@ -246,7 +246,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
 
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["/"], "metrics" => [420]},
-               %{"dimensions" => ["/blog"], "metrics" => [95]},
+               %{"dimensions" => ["/blog"], "metrics" => [180]},
                %{"dimensions" => ["/pricing"], "metrics" => [nil]}
              ]
     end
@@ -266,7 +266,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
 
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["/"], "metrics" => [225]},
-               %{"dimensions" => ["/blog"], "metrics" => [95]},
+               %{"dimensions" => ["/blog"], "metrics" => [180]},
                %{"dimensions" => ["/pricing"], "metrics" => [30]}
              ]
     end
@@ -358,8 +358,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
         build(:pageview, pathname: "/A", user_id: 999, timestamp: ~N[2021-01-02 00:00:00]),
         build(:pageview, pathname: "/B", user_id: 999, timestamp: ~N[2021-01-02 00:01:30]),
         # These are ignored for time_on_page metric
-        build(:imported_pages, page: "/A", time_on_page: 40, date: ~D[2021-01-01]),
-        build(:imported_pages, page: "/B", time_on_page: 499, date: ~D[2021-01-01])
+        build(:imported_pages, page: "/A", total_time_on_page: 40, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/B", total_time_on_page: 499, date: ~D[2021-01-01])
       ])
 
       conn =
@@ -387,8 +387,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
         build(:pageview, pathname: "/B", user_id: 999, timestamp: ~N[2021-01-02 00:01:30]),
         build(:pageview, pathname: "/C", user_id: 999, timestamp: ~N[2021-01-02 00:02:00]),
         # :TODO: include imported data to show it's not used
-        build(:imported_pages, page: "/A", time_on_page: 40, date: ~D[2021-01-01]),
-        build(:imported_pages, page: "/B", time_on_page: 499, date: ~D[2021-01-01])
+        build(:imported_pages, page: "/A", total_time_on_page: 40, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/B", total_time_on_page: 499, date: ~D[2021-01-01])
       ])
 
       conn =
