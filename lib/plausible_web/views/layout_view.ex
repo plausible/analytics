@@ -125,27 +125,25 @@ defmodule PlausibleWeb.LayoutView do
       current_team = assigns[:current_team]
       my_team = assigns[:my_team]
       current_included? = current_team && Enum.any?(teams, &(&1.id == current_team.id))
-      my_included? = my_team && Enum.any?(teams, &(&1.id == my_team.id))
+      current_is_my? = current_team && my_team && current_team.id == my_team.id
 
       teams =
-        if current_included? do
-          teams
-        else
-          [current_team | teams]
-        end
+        cond do
+          current_included? ->
+            teams
 
-      teams =
-        if my_included? do
-          teams
-        else
-          teams ++ [my_team]
+          !current_is_my? ->
+            [current_team | teams]
+
+          true ->
+            teams
         end
 
       teams =
         if my_team do
-          teams
+          teams ++ [my_team]
         else
-          teams ++ [%Teams.Team{name: Teams.default_name()}]
+          teams ++ [%Teams.Team{identifier: "none", name: Teams.default_name()}]
         end
 
       selected_id = current_team && current_team.id
