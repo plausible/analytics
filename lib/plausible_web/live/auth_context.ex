@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.AuthContext do
         %{current_user: user} ->
           if current_team_id = session["current_team_id"] do
             user.team_memberships
-            |> Enum.find(%{}, &(&1.team_id == current_team_id))
+            |> Enum.find(%{}, &(&1.team.identifier == current_team_id))
             |> Map.get(:team)
           end
       end)

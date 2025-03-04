@@ -24,7 +24,7 @@ defmodule PlausibleWeb.AuthPlug do
         current_team =
           if current_team_id do
             user.team_memberships
-            |> Enum.find(%{}, &(&1.team_id == current_team_id))
+            |> Enum.find(%{}, &(&1.team.identifier == current_team_id))
             |> Map.get(:team)
           end
 
