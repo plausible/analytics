@@ -78,7 +78,7 @@ defmodule Plausible.CrmExtensions do
             if (teamPicker) {
               teamPicker.style.display = "none";
             }
-            const teamIdField = document.querySelector("#enterprise_plan_team_id") || 
+            const teamIdField = document.querySelector("#enterprise_plan_team_id") ||
                             document.querySelector("#team_id")
             const teamIdLabel = document.querySelector("label[for=enterprise_plan_team_id]")
             const dataList = document.createElement("datalist")
@@ -202,7 +202,7 @@ defmodule Plausible.CrmExtensions do
                 field.dispatchEvent(new Event("change"))
               });
 
-              ['stats_api', 'props', 'funnels', 'revenue_goals'].forEach(feature => {
+              ['stats_api', 'props', 'funnels', 'revenue_goals', 'site_segments'].forEach(feature => {
                 const checked = result.features.includes(feature)
                 const field = document.querySelector(`input[type=checkbox][value=${feature}]`)
                 if (field) {
