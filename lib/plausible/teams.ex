@@ -180,6 +180,7 @@ defmodule Plausible.Teams do
       from(tm in Teams.Membership,
         inner_join: t in assoc(tm, :team),
         where: tm.user_id == ^user_id and tm.role == :owner,
+        where: t.setup_complete == false,
         select: t,
         order_by: t.id
       )
