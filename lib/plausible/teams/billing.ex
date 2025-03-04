@@ -510,7 +510,8 @@ defmodule Plausible.Teams.Billing do
         [
           {Feature.Props, props_usage_q},
           {Feature.Funnels, funnels_usage_q},
-          {Feature.RevenueGoals, revenue_goals_usage_q}
+          {Feature.RevenueGoals, revenue_goals_usage_q},
+          {Feature.SiteSegments, Plausible.Segments.get_site_segments_usage_query(site_ids)}
         ]
       else
         [

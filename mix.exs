@@ -38,12 +38,13 @@ defmodule Plausible.MixProject do
   def application do
     [
       mod: {Plausible.Application, []},
-      extra_applications: [
-        :logger,
-        :runtime_tools,
-        :tls_certificate_check,
-        :opentelemetry_exporter
-      ]
+      extra_applications:
+        [
+          :logger,
+          :runtime_tools,
+          :tls_certificate_check,
+          :opentelemetry_exporter
+        ] ++ if(Mix.env() == :dev, do: [:observer, :wx], else: [])
     ]
   end
 
@@ -82,7 +83,7 @@ defmodule Plausible.MixProject do
       {:eqrcode, "~> 0.1.10"},
       {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test]},
       {:excoveralls, "~> 0.10", only: :test},
-      {:finch, "~> 0.17.0"},
+      {:finch, "~> 0.19.0"},
       {:floki, "~> 0.36"},
       {:fun_with_flags, "~> 1.11.0"},
       {:fun_with_flags_ui, "~> 1.0"},
@@ -115,6 +116,7 @@ defmodule Plausible.MixProject do
       {:plug_cowboy, "~> 2.3"},
       {:postgrex, "~> 0.19.0"},
       {:prom_ex, "~> 1.8"},
+      {:peep, "~> 3.4"},
       {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
       {:ref_inspector, "~> 2.0"},
       {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
@@ -141,7 +143,8 @@ defmodule Plausible.MixProject do
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7.4"},
       {:zstream, "~> 0.6.4"},
-      {:con_cache, "~> 1.1.1"},
+      {:con_cache,
+       git: "https://github.com/aerosol/con_cache", branch: "ensure-dirty-ops-emit-telemetry"},
       {:req, "~> 0.5.0"},
       {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]},
       {:ex_json_schema, "~> 0.10.2"},
