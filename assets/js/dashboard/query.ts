@@ -44,7 +44,8 @@ export const queryDefaultValue = {
   compare_to: null as Dayjs | null,
   filters: [] as Filter[],
   labels: {} as FilterClauseLabels,
-  with_imported: true
+  with_imported: true,
+  include: undefined as Record<string, unknown> | undefined
 }
 
 export type DashboardQuery = typeof queryDefaultValue
