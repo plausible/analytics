@@ -150,7 +150,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
            ]
   end
 
-  describe "include.combined_time_on_page_cutoff" do
+  describe "include.legacy_time_on_page_cutoff" do
     setup %{site: site, site_import: site_import} = context do
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
@@ -218,7 +218,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
-            "combined_time_on_page_cutoff" => "1970-01-01T00:00:00Z",
+            "legacy_time_on_page_cutoff" => "1970-01-01T00:00:00Z",
             "imports" => true
           }
         })
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
-            "combined_time_on_page_cutoff" => "2021-01-05T00:00:00Z",
+            "legacy_time_on_page_cutoff" => "2021-01-05T00:00:00Z",
             "imports" => true
           }
         })
@@ -259,7 +259,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
-            "combined_time_on_page_cutoff" => "2021-01-02T00:00:00Z",
+            "legacy_time_on_page_cutoff" => "2021-01-02T00:00:00Z",
             "imports" => true
           }
         })
@@ -282,7 +282,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
-            "combined_time_on_page_cutoff" => "2021-01-02T00:00:00Z"
+            "legacy_time_on_page_cutoff" => "2021-01-02T00:00:00Z"
           }
         })
 
@@ -301,7 +301,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/blog"]]],
           "include" => %{
-            "combined_time_on_page_cutoff" => "2021-01-05T00:00:00Z",
+            "legacy_time_on_page_cutoff" => "2021-01-05T00:00:00Z",
             "imports" => true
           }
         })
@@ -319,7 +319,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/blog"]]],
           "include" => %{
-            "combined_time_on_page_cutoff" => "2021-01-02T00:00:00Z",
+            "legacy_time_on_page_cutoff" => "2021-01-02T00:00:00Z",
             "imports" => true
           }
         })
@@ -340,7 +340,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/blog"]]],
           "include" => %{
-            "combined_time_on_page_cutoff" => "2021-01-02T00:00:00Z"
+            "legacy_time_on_page_cutoff" => "2021-01-02T00:00:00Z"
           }
         })
 
@@ -370,7 +370,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "filters" => [["is", "event:page", ["/A"]]],
           "include" => %{
             "imports" => true,
-            "combined_time_on_page_cutoff" => "2100-01-01T00:00:00Z"
+            "legacy_time_on_page_cutoff" => "2100-01-01T00:00:00Z"
           }
         })
 
@@ -399,7 +399,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "dimensions" => ["event:page"],
           "include" => %{
             "imports" => true,
-            "combined_time_on_page_cutoff" => "2100-01-01T00:00:00Z"
+            "legacy_time_on_page_cutoff" => "2100-01-01T00:00:00Z"
           }
         })
 

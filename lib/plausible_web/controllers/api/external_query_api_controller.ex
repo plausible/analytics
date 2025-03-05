@@ -28,9 +28,9 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   end
 
   defp update_time_on_page_query_data(query) do
-    if not query.include.combined_time_on_page_cutoff do
+    if not query.include.legacy_time_on_page_cutoff do
       Query.set(query,
-        time_on_page_combined_data: %{
+        time_on_page_data: %{
           include_new_metric: true,
           include_legacy_metric: false
         }
