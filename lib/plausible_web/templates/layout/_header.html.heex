@@ -86,8 +86,8 @@
                     </.dropdown_item>
 
                     <div :if={
-                      Plausible.Teams.enabled?(@current_team) and
-                        not Plausible.Teams.setup?(@current_team)
+                      @my_team && Plausible.Teams.enabled?(@current_team) &&
+                        @my_team.id == @current_team.id
                     }>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span class="flex-1">
