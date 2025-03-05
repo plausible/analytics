@@ -86,7 +86,7 @@ defmodule PlausibleWeb.AuthController do
         }
       end)
 
-    render(conn, "select_team.html", teams: teams)
+    render(conn, "select_team.html", teams_selection: teams)
   end
 
   def switch_team(conn, params) do

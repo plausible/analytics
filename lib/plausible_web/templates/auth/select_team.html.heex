@@ -6,7 +6,7 @@
   <div>
     <ul>
       <li
-        :for={team <- @teams}
+        :for={team <- @teams_selection}
         class={if team.current?, do: ["border-indigo-400 border-l-4 m-2"], else: ["m-2"]}
       >
         <.unstyled_link
