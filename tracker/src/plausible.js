@@ -69,8 +69,10 @@
   }
 
   function getCurrentScrollDepthPx() {
-    var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
-    var scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+    var body = document.body || {}
+    var el = document.documentElement || {}
+    var viewportHeight = window.innerHeight || el.clientHeight || 0
+    var scrollTop = window.scrollY || el.scrollTop || body.scrollTop || 0
 
     return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
   }
