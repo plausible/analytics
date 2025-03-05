@@ -45,7 +45,7 @@ export const queryDefaultValue = {
   filters: [] as Filter[],
   labels: {} as FilterClauseLabels,
   with_imported: true,
-  include: undefined as Record<string, unknown> | undefined
+  legacy_time_on_page_cutoff: undefined as string | undefined
 }
 
 export type DashboardQuery = typeof queryDefaultValue
