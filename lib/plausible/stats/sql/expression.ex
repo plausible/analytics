@@ -250,7 +250,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def event_metric(:time_on_page, query) do
     selected =
-      case query.time_on_page_combined_data do
+      case query.time_on_page_data do
         %{include_new_metric: false} ->
           wrap_alias(
             [e],
@@ -293,7 +293,7 @@ defmodule Plausible.Stats.SQL.Expression do
           )
       end
 
-    if query.time_on_page_combined_data.include_legacy_metric do
+    if query.time_on_page_data.include_legacy_metric do
       selected
     else
       Map.merge(

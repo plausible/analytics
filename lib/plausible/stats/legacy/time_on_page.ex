@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   Calculation methods for `legacy` time_on_page metric. `Legacy` calculation methods
   are used when site does not have engagement data for the requested dates.
 
-  Query `include.combined_time_on_page_cutoff` is used to determine what time range
+  Query `include.legacy_time_on_page_cutoff` is used to determine what time range
   to use for the legacy time_on_page calculations.
 
   Legacy metric is not exposed in the public API.
@@ -23,7 +23,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
 
   def merge_legacy_time_on_page(q, query) do
     # :TODO: this will likely not work if legacy data is requested with incompatible dimensions.
-    if :time_on_page in query.metrics and query.time_on_page_combined_data.include_legacy_metric do
+    if :time_on_page in query.metrics and query.time_on_page_data.include_legacy_metric do
       q |> merge_legacy_time_on_page(query, query.dimensions)
     else
       q
@@ -207,7 +207,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   end
 
   defp filter_by_cutoff(query) do
-    case query.time_on_page_combined_data do
+    case query.time_on_page_data do
       %{include_legacy_metric: true, include_new_metric: true, cutoff: cutoff} ->
         dynamic([e], e.timestamp < ^cutoff)
 

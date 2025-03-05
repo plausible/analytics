@@ -54,7 +54,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     time_labels: false,
     total_rows: false,
     comparisons: nil,
-    combined_time_on_page_cutoff: nil
+    legacy_time_on_page_cutoff: nil
   }
 
   def check_success(params, site, expected_result, schema_type \\ :public) do
@@ -877,7 +877,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           time_labels: true,
           total_rows: true,
           comparisons: nil,
-          combined_time_on_page_cutoff: nil
+          legacy_time_on_page_cutoff: nil
         },
         pagination: %{limit: 10_000, offset: 0}
       })
@@ -942,7 +942,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports_meta: false,
             time_labels: false,
             total_rows: false,
-            combined_time_on_page_cutoff: nil
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },
@@ -974,7 +974,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports_meta: false,
             time_labels: false,
             total_rows: false,
-            combined_time_on_page_cutoff: nil
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },
@@ -1009,7 +1009,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports: false,
             time_labels: false,
             total_rows: false,
-            combined_time_on_page_cutoff: nil
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },

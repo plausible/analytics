@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     time_labels: false,
     total_rows: false,
     comparisons: nil,
-    combined_time_on_page_cutoff: nil
+    legacy_time_on_page_cutoff: nil
   }
 
   @default_pagination %{
