@@ -4900,20 +4900,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   describe "segment filters" do
     setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
-    test "segment filters are (not yet) available in public API", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/v2/query", %{
-          "site_id" => site.domain,
-          "filters" => [["is", "segment", [1]]],
-          "date_range" => "all",
-          "metrics" => ["visitors"]
-        })
-
-      assert json_response(conn, 400) == %{
-               "error" => "#/filters/0: Invalid filter [\"is\", \"segment\", [1]]"
-             }
-    end
-
     test "site segments of other sites don't resolve", %{
       conn: conn,
       site: site
@@ -4933,7 +4919,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         )
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "segment", [segment.id]]],
           "date_range" => "all",
@@ -4987,7 +4973,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "segment", [segment.id]]],
           "date_range" => "all",
