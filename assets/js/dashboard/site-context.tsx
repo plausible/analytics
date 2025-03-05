@@ -14,6 +14,7 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
     propsOptedOut: dataset.propsOptedOut === 'true',
+    legacyTimeOnPageCutoff: dataset.legacyTimeOnPageCutoff,
     revenueGoals: JSON.parse(dataset.revenueGoals!),
     funnels: JSON.parse(dataset.funnels!),
     statsBegin: dataset.statsBegin!,
@@ -30,6 +31,7 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
 type FeatureFlags = {
   saved_segments?: boolean
   saved_segments_fe?: boolean
+  new_time_on_page?: boolean
 }
 
 const siteContextDefaultValue = {
@@ -56,7 +58,8 @@ const siteContextDefaultValue = {
   isDbip: false,
   flags: {} as FeatureFlags,
   validIntervalsByPeriod: {} as Record<string, Array<string>>,
-  shared: false
+  shared: false,
+  legacyTimeOnPageCutoff: undefined as string | undefined
 }
 
 export type PlausibleSite = typeof siteContextDefaultValue
