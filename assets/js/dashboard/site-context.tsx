@@ -32,6 +32,7 @@ type FeatureFlags = {
   channels?: boolean
   saved_segments?: boolean
   saved_segments_fe?: boolean
+  new_time_on_page?: boolean
 }
 
 const siteContextDefaultValue = {
