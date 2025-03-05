@@ -24,8 +24,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       refute element_exists?(resp, ~s|button[phx-click="save-team-layout"]|)
     end
 
-    test "renders existing guests under Guest divider", %{conn: conn, user: user} do
-      site = new_site(owner: user)
+    test "renders existing guests under Guest divider", %{conn: conn, team: team, user: user} do
+      site = new_site(team: team)
       add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
 
       resp =
@@ -102,11 +102,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(member2, team, :viewer)
     end
 
-    test "allows updating guest membership so it moves sections", %{
-      conn: conn,
-      user: user
-    } do
-      site = new_site(owner: user)
+    test "allows updating guest membership so it moves sections", %{conn: conn, team: team} do
+      site = new_site(team: team)
       add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
 
       lv = get_liveview(conn)
@@ -154,7 +151,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       member2 = add_member(team, role: :admin)
       _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
 
-      site = new_site(owner: user)
+      site = new_site(team: team)
 
       guest =
         add_guest(site,
@@ -223,7 +220,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
            user: user,
            team: team
          } do
-      site = new_site(owner: user)
+      site = new_site(team: team)
 
       member2 =
         add_guest(site,

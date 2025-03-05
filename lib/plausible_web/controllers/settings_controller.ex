@@ -17,7 +17,7 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def update_team_name(conn, %{"team" => params}) do
-    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.my_team, params)
+    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.current_team, params)
 
     case Repo.update(changeset) do
       {:ok, _user} ->
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.SettingsController do
       Keyword.get(
         opts,
         :team_name_changeset,
-        Plausible.Teams.Team.name_changeset(conn.assigns.my_team)
+        Plausible.Teams.Team.name_changeset(conn.assigns.current_team)
       )
 
     render(conn, :team_general,
@@ -54,23 +54,23 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def subscription(conn, _params) do
-    my_team = conn.assigns.my_team
-    subscription = Teams.Billing.get_subscription(my_team)
+    team = conn.assigns.current_team
+    subscription = Teams.Billing.get_subscription(team)
 
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
       subscription: subscription,
       pageview_limit: Teams.Billing.monthly_pageview_limit(subscription),
-      pageview_usage: Teams.Billing.monthly_pageview_usage(my_team),
-      site_usage: Teams.Billing.site_usage(my_team),
-      site_limit: Teams.Billing.site_limit(my_team),
-      team_member_limit: Teams.Billing.team_member_limit(my_team),
-      team_member_usage: Teams.Billing.team_member_usage(my_team)
+      pageview_usage: Teams.Billing.monthly_pageview_usage(team),
+      site_usage: Teams.Billing.site_usage(team),
+      site_limit: Teams.Billing.site_limit(team),
+      team_member_limit: Teams.Billing.team_member_limit(team),
+      team_member_usage: Teams.Billing.team_member_usage(team)
     )
   end
 
   def invoices(conn, _params) do
-    subscription = Teams.Billing.get_subscription(conn.assigns.my_team)
+    subscription = Teams.Billing.get_subscription(conn.assigns.current_team)
 
     invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
     render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings}, invoices: invoices)
