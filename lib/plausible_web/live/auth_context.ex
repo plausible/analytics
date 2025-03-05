@@ -58,11 +58,16 @@ defmodule PlausibleWeb.Live.AuthContext do
         %{team_from_session: %{} = team_from_session} ->
           team_from_session
 
+        %{my_team: %{} = my_team} ->
+          my_team
+
         %{current_user: user} ->
-          user.team_memberships
-          |> Enum.sort_by(& &1.team_id)
-          |> List.first(%{})
-          |> Map.get(:team)
+          if not Plausible.Teams.enabled?(nil) do
+            user.team_memberships
+            |> Enum.sort_by(& &1.team_id)
+            |> List.first(%{})
+            |> Map.get(:team)
+          end
       end)
       |> assign_new(:teams, fn
         %{current_user: nil} ->

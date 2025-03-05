@@ -128,15 +128,10 @@ defmodule PlausibleWeb.LayoutView do
       current_is_my? = current_team && my_team && current_team.id == my_team.id
 
       teams =
-        cond do
-          current_included? ->
-            teams
-
-          !current_is_my? ->
-            [current_team | teams]
-
-          true ->
-            teams
+        if current_team && !current_included? && !current_is_my? do
+          [current_team | teams]
+        else
+          teams
         end
 
       teams =
