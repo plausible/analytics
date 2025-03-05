@@ -123,7 +123,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_metric(:time_on_page, "imported_pages", query) do
-    case query.time_on_page_combined_data do
+    case query.time_on_page_data do
       %{include_new_metric: false} ->
         wrap_alias([i], %{
           total_time_on_page: 0,
@@ -412,7 +412,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   defp dim(dimension), do: Plausible.Stats.Filters.without_prefix(dimension)
 
   defp time_on_page_metric(query) do
-    if not query.time_on_page_combined_data.include_legacy_metric do
+    if not query.time_on_page_data.include_legacy_metric do
       wrap_alias([], %{
         time_on_page:
           time_on_page(
