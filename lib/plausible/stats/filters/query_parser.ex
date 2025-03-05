@@ -46,7 +46,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
            Plausible.Segments.Filters.resolve_segments(filters, preloaded_segments),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
-         {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
+         {:ok, include} <- parse_include(Map.get(params, "include", %{}), site),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
          {preloaded_goals, revenue_warning, revenue_currencies} <-
            preload_goals_and_revenue(site, metrics, filters, dimensions),
@@ -310,12 +310,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
     )
   end
 
-  defp parse_order_by(order_by) when is_list(order_by) do
+  def parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)
   end
 
-  defp parse_order_by(nil), do: {:ok, nil}
-  defp parse_order_by(order_by), do: {:error, "Invalid order_by '#{i(order_by)}'."}
+  def parse_order_by(nil), do: {:ok, nil}
+  def parse_order_by(order_by), do: {:error, "Invalid order_by '#{i(order_by)}'."}
 
   defp parse_order_by_entry(entry) do
     with {:ok, value} <- parse_metric_or_dimension(entry),
@@ -359,14 +359,22 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_order_direction([_, "desc"]), do: {:ok, :desc}
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
-  defp parse_include(site, include) when is_map(include) do
-    parsed =
-      include
-      |> atomize_keys()
-      |> update_comparisons_date_range(site)
-
-    with {:ok, include} <- parsed do
+  def parse_include(include, site) when is_map(include) do
+    with {:ok, include} <- atomize_include_keys(include),
+         {:ok, include} <- update_comparisons_date_range(include, site) do
       {:ok, Map.merge(@default_include, include)}
+    end
+  end
+
+  def parse_include(include, _site), do: {:error, "Invalid include '#{i(include)}'."}
+
+  defp atomize_include_keys(map) do
+    expected_keys = @default_include |> Map.keys() |> Enum.map(&Atom.to_string/1)
+
+    if Map.keys(map) |> Enum.all?(&(&1 in expected_keys)) do
+      {:ok, atomize_keys(map)}
+    else
+      {:error, "Invalid include '#{i(map)}'."}
     end
   end
 

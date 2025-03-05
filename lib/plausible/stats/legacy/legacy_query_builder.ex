@@ -6,7 +6,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange, Metrics}
+  alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange}
 
   def from(site, params, debug_metadata, now \\ nil) do
     now = now || DateTime.utc_now(:second)
@@ -219,7 +219,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp put_include(query, site, params) do
+    include = parse_include(site, params["include"])
+
     query
+    |> struct!(include: include)
     |> Query.set_include(:comparisons, parse_comparison_params(site, params))
     |> Query.set_include(:imports, params["with_imported"] == "true")
   end
@@ -250,30 +253,36 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     iex> QueryBuilder.parse_order_by(~s([["visitors","asc"],["visit:source","desc"]]))
     [{:visitors, :asc}, {"visit:source", :desc}]
   """
-  def parse_order_by(order_by) when is_binary(order_by) do
-    case Jason.decode(order_by) do
-      {:ok, parsed} when is_list(parsed) ->
-        Enum.flat_map(parsed, &parse_order_by_pair/1)
-
-      _ ->
-        []
-    end
+  def parse_order_by(order_by) do
+    json_decode(order_by)
+    |> unwrap([])
+    |> Filters.QueryParser.parse_order_by()
+    |> unwrap([])
   end
 
-  def parse_order_by(_) do
-    []
+  @doc """
+  ### Examples:
+    iex> QueryBuilder.parse_include(%{}, nil)
+    QueryParser.default_include()
+
+    iex> QueryBuilder.parse_include(%{}, ~s({"total_rows": true}))
+    Map.merge(QueryParser.default_include(), %{total_rows: true})
+  """
+  def parse_include(site, include) do
+    json_decode(include)
+    |> unwrap(%{})
+    |> Filters.QueryParser.parse_include(site)
+    |> unwrap(Filters.QueryParser.default_include())
   end
 
-  defp parse_order_by_pair([metric_or_dimension, direction]) when direction in ["asc", "desc"] do
-    case Metrics.from_string(metric_or_dimension) do
-      {:ok, metric} -> [{metric, String.to_existing_atom(direction)}]
-      :error -> [{metric_or_dimension, String.to_existing_atom(direction)}]
-    end
+  defp json_decode(string) when is_binary(string) do
+    Jason.decode(string)
   end
 
-  defp parse_order_by_pair(_) do
-    []
-  end
+  defp json_decode(_other), do: :error
+
+  defp unwrap({:ok, result}, _default), do: result
+  defp unwrap(_, default), do: default
 
   defp put_order_by(query, %{} = params) do
     struct!(query, order_by: parse_order_by(params["order_by"]))
