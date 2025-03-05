@@ -164,8 +164,11 @@ defmodule PlausibleWeb.LayoutView do
       >
         <p
           class={[
-            if(team.id == @selected_id, do: "font-bold", else: "font-medium"),
-            "truncate text-gray-900 dark:text-gray-100"
+            if(team.id == @selected_id,
+              do: "border-r-4 border-indigo-400 font-bold",
+              else: "font-medium"
+            ),
+            "truncate text-gray-900 dark:text-gray-100 pr-4"
           ]}
           role="none"
         >
