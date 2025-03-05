@@ -74,6 +74,12 @@ export function serializeQuery(
     queryObj.match_day_of_week = String(query.match_day_of_week)
   }
 
+  if (site.flags.new_time_on_page && site.legacyTimeOnPageCutoff) {
+    queryObj.include = JSON.stringify({
+      legacy_time_on_page_cutoff: site.legacyTimeOnPageCutoff
+    })
+  }
+
   Object.assign(queryObj, ...extraQuery)
 
   return '?' + serialize(queryObj)
