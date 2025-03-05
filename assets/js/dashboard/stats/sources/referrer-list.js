@@ -20,7 +20,7 @@ export default function Referrers({ source }) {
   useEffect(() => setLoading(true), [query])
 
   function fetchReferrers() {
-    return api.get(url.apiPath(site, `/referrers/${encodeURIComponent(source)}`), query, { limit: 9 })
+    return api.get(site, url.apiPath(site,  `/referrers/${encodeURIComponent(source)}`), query, { limit: 9 })
   }
 
   function afterFetchReferrers(apiResponse) {

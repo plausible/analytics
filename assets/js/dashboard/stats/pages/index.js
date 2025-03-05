@@ -15,7 +15,7 @@ function EntryPages({ afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
   function fetchData() {
-    return api.get(url.apiPath(site, '/entry-pages'), query, { limit: 9 })
+    return api.get(site, url.apiPath(site,  '/entry-pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {
@@ -54,7 +54,7 @@ function ExitPages({ afterFetchData }) {
   const site = useSiteContext();
   const { query } = useQueryContext();
   function fetchData() {
-    return api.get(url.apiPath(site, '/exit-pages'), query, { limit: 9 })
+    return api.get(site, url.apiPath(site,  '/exit-pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {
@@ -93,7 +93,7 @@ function TopPages({ afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
   function fetchData() {
-    return api.get(url.apiPath(site, '/pages'), query, { limit: 9 })
+    return api.get(site, url.apiPath(site,  '/pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {

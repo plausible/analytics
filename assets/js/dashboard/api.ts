@@ -1,5 +1,6 @@
 /** @format */
 import { DashboardQuery } from './query'
+import { PlausibleSite } from './site-context'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
 
@@ -35,6 +36,7 @@ export function cancelAll() {
 }
 
 export function queryToSearchParams(
+  site: PlausibleSite,
   query: DashboardQuery,
   extraQuery: unknown[] = []
 ): string {
@@ -97,12 +99,13 @@ function getSharedLinkSearchParams(): Record<string, string> {
 }
 
 export async function get(
+  site: PlausibleSite,
   url: string,
   query?: DashboardQuery,
   ...extraQueryParams: unknown[]
 ) {
   const queryString = query
-    ? queryToSearchParams(query, [...extraQueryParams])
+    ? queryToSearchParams(site, aquery, [...extraQueryParams])
     : serializeUrlParams(getSharedLinkSearchParams())
 
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {

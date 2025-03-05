@@ -40,7 +40,7 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
   const { query } = useQueryContext();
 
   function fetchData() {
-    return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
+    return api.get(site, url.apiPath(site,  `/custom-prop-values/${prop}`), query)
   }
 
   function externalLinkDest() {

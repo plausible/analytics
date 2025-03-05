@@ -28,7 +28,7 @@ function AllSources({ afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
   function fetchData() {
-    return api.get(url.apiPath(site, '/sources'), query, { limit: 9 })
+    return api.get(site, url.apiPath(site,  '/sources'), query, { limit: 9 })
   }
 
   function getFilterFor(listItem) {
@@ -74,7 +74,7 @@ function Channels({ onClick, afterFetchData }) {
   const site = useSiteContext();
 
   function fetchData() {
-    return api.get(url.apiPath(site, '/channels'), query, { limit: 9 })
+    return api.get(site, url.apiPath(site,  '/channels'), query, { limit: 9 })
   }
 
   function getFilterFor(listItem) {
@@ -119,7 +119,7 @@ function UTMSources({ tab, afterFetchData }) {
     }[tab]
 
   function fetchData() {
-    return api.get(url.apiPath(site, utmTag.endpoint), query, { limit: 9 })
+    return api.get(site, url.apiPath(site,  utmTag.endpoint), query, { limit: 9 })
   }
 
   function getFilterFor(listItem) {

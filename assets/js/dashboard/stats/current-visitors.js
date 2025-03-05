@@ -21,7 +21,7 @@ export default function CurrentVisitors({
 
   const updateCount = useCallback(() => {
     api
-      .get(`/api/stats/${encodeURIComponent(site.domain)}/current-visitors`)
+      .get(site, `/api/stats/${encodeURIComponent(site.domain)}/current-visitors`)
       .then((res) => setCurrentVisitors(res))
   }, [site.domain])
 

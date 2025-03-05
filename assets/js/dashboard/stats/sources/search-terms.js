@@ -44,7 +44,7 @@ export default class SearchTerms extends React.Component {
   }
 
   fetchSearchTerms() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.props.query)
+    api.get(this.props.site, `/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.props.query)
       .then((res) => this.setState({
         loading: false,
         searchTerms: res.results,

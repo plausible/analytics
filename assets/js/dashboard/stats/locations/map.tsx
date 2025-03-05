@@ -59,7 +59,7 @@ const WorldMap = ({
     queryFn: async (): Promise<{
       results: CountryData[]
     }> => {
-      return await api.get(apiPath(site, '/countries'), query, {
+      return await api.get(site, apiPath(site, '/countries'), query, {
         limit: 300
       })
     }

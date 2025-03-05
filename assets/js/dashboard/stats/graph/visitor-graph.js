@@ -22,12 +22,12 @@ function fetchTopStats(site, query) {
     q.comparison = 'previous_period'
   }
 
-  return api.get(url.apiPath(site, '/top-stats'), q)
+  return api.get(site, url.apiPath(site,  '/top-stats'), q)
 }
 
 function fetchMainGraph(site, query, metric, interval) {
   const params = { metric, interval }
-  return api.get(url.apiPath(site, '/main-graph'), query, params)
+  return api.get(site, url.apiPath(site,  '/main-graph'), query, params)
 }
 
 export default function VisitorGraph({ updateImportedDataInView }) {
