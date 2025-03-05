@@ -33,6 +33,11 @@ defmodule PlausibleWeb.AuthPlug do
           |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
           |> Map.get(:team)
 
+        fallback_team =
+          user.team_memberships
+          |> List.first(%{})
+          |> Map.get(:team)
+
         teams_count = length(user.team_memberships)
 
         teams =
@@ -49,7 +54,7 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:current_user, user)
         |> assign(:current_user_session, user_session)
         |> assign(:my_team, my_team)
-        |> assign(:current_team, current_team || my_team)
+        |> assign(:current_team, current_team || fallback_team)
         |> assign(:teams_count, teams_count)
         |> assign(:teams, teams)
         |> assign(:more_teams?, teams_count > 3)

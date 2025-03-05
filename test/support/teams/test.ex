@@ -19,19 +19,24 @@ defmodule Plausible.Teams.Test do
 
   def new_site(args \\ []) do
     args =
-      if user = args[:owner] do
-        {owner, args} = Keyword.pop(args, :owner)
-        {:ok, team} = Teams.get_or_create(user)
+      cond do
+        args[:team] ->
+          args
 
-        args
-        |> Keyword.put(:owners, [owner])
-        |> Keyword.put(:team, team)
-      else
-        user = new_user()
-        {:ok, team} = Teams.get_or_create(user)
+        user = args[:owner] ->
+          {owner, args} = Keyword.pop(args, :owner)
+          {:ok, team} = Teams.get_or_create(user)
 
-        args
-        |> Keyword.put(:team, team)
+          args
+          |> Keyword.put(:owners, [owner])
+          |> Keyword.put(:team, team)
+
+        true ->
+          user = new_user()
+          {:ok, team} = Teams.get_or_create(user)
+
+          args
+          |> Keyword.put(:team, team)
       end
 
     :site

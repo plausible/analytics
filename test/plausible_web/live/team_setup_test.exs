@@ -21,15 +21,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
     test "redirects to /team/general if team is already set up", %{conn: conn, user: user} do
       {:ok, team} = Teams.get_or_create(user)
-      team |> Teams.Team.setup_changeset() |> Repo.update!()
+      Teams.complete_setup(team)
       assert {:error, {:redirect, %{to: "/settings/team/general"}}} = live(conn, @url)
-    end
-
-    test "does not redirect to /team/general if dev mode", %{conn: conn, user: user} do
-      {:ok, team} = Teams.get_or_create(user)
-      team |> Teams.Team.setup_changeset() |> Repo.update!()
-      assert {:ok, lv, _} = live(conn, @url <> "?dev=1")
-      _ = render(lv)
     end
   end
 

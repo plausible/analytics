@@ -44,14 +44,14 @@
                 </.styled_link>
               </li>
               <li
-                :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:my_team])}
+                :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team])}
                 class="hidden mr-6 sm:block"
               >
                 <.styled_link
                   class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
                   href={Routes.settings_path(@conn, :subscription)}
                 >
-                  {trial_notification(@conn.assigns[:my_team])}
+                  {trial_notification(@conn.assigns[:current_team])}
                 </.styled_link>
               </li>
               <li class="w-full sm:w-auto">
@@ -73,7 +73,7 @@
                       </p>
                     </.dropdown_item>
                     <.team_switcher
-                      :if={Plausible.Teams.enabled?(@my_team)}
+                      :if={Plausible.Teams.enabled?(@current_team)}
                       conn={@conn}
                       teams={@teams}
                       my_team={@my_team}
@@ -86,7 +86,8 @@
                     </.dropdown_item>
 
                     <div :if={
-                      Plausible.Teams.enabled?(@my_team) and not Plausible.Teams.setup?(@my_team)
+                      Plausible.Teams.enabled?(@current_team) and
+                        not Plausible.Teams.setup?(@current_team)
                     }>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span class="flex-1">
@@ -100,7 +101,8 @@
                     </div>
 
                     <div :if={
-                      Plausible.Teams.enabled?(@my_team) and Plausible.Teams.setup?(@my_team)
+                      Plausible.Teams.enabled?(@current_team) and
+                        Plausible.Teams.setup?(@current_team)
                     }>
                       <.dropdown_item
                         class="flex"
