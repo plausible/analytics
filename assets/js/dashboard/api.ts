@@ -76,9 +76,9 @@ export function queryToSearchParams(
     queryObj.auth = sharedLinkParams.auth
   }
 
-  if (site.flags.new_time_on_page && site.legacyTimeOnPageCutoff) {
+  if (site.flags.new_time_on_page && query.legacy_time_on_page_cutoff) {
     queryObj.include = JSON.stringify({
-      legacy_time_on_page_cutoff: site.legacyTimeOnPageCutoff
+      legacy_time_on_page_cutoff: query.legacy_time_on_page_cutoff
     })
   }
 
