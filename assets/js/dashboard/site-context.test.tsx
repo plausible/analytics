@@ -25,6 +25,7 @@ describe('parseSiteFromDataset', () => {
       data-logged-in="true"
       data-stats-begin="2021-09-07"
       data-native-stats-begin="2022-09-02"
+      data-legacy-time-on-page-cutoff="2022-01-01T00:00:00Z"
       data-embedded=""
       data-is-dbip="false"
       data-current-user-role="owner"

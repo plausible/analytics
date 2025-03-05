@@ -37,6 +37,7 @@
     data-logged-in={to_string(!!@conn.assigns[:current_user])}
     data-stats-begin={@stats_start_date}
     data-native-stats-begin={@native_stats_start_date}
+    data-legacy-time-on-page-cutoff={@legacy_time_on_page_cutoff}
     data-shared-link-auth={assigns[:shared_link_auth]}
     data-embedded={to_string(@conn.assigns[:embedded])}
     data-background={@conn.assigns[:background]}
