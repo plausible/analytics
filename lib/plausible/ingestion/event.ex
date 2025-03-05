@@ -428,7 +428,17 @@ defmodule Plausible.Ingestion.Event do
 
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
     Plausible.Cache.Adapter.get(:user_agents, user_agent, fn ->
-      UAInspector.parse(user_agent)
+      case Plausible.Session.Balancer.dispatch(
+             user_agent,
+             fn -> UAInspector.parse(user_agent) end,
+             timeout: 200
+           ) do
+        {:error, :timeout} ->
+          :unknown
+
+        value ->
+          value
+      end
     end)
   end
 

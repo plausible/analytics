@@ -13,31 +13,32 @@ defmodule Plausible.Session.CacheStore do
     skip_balancer? = Keyword.get(opts, :skip_balancer?, false)
     lock_requested_at = System.monotonic_time()
 
-    try do
-      response =
-        Plausible.Session.Balancer.dispatch(
-          event.user_id,
-          fn ->
-            lock_duration = System.monotonic_time() - lock_requested_at
-            :telemetry.execute(@lock_telemetry_event, %{duration: lock_duration}, %{})
+    response =
+      Plausible.Session.Balancer.dispatch(
+        event.user_id,
+        fn ->
+          lock_duration = System.monotonic_time() - lock_requested_at
+          :telemetry.execute(@lock_telemetry_event, %{duration: lock_duration}, %{})
 
-            found_session =
-              find_session(event, event.user_id) || find_session(event, prev_user_id)
+          found_session =
+            find_session(event, event.user_id) || find_session(event, prev_user_id)
 
-            handle_event(event, found_session, session_attributes, buffer_insert)
-          end,
-          timeout: @lock_timeout,
-          local?: skip_balancer?
-        )
+          handle_event(event, found_session, session_attributes, buffer_insert)
+        end,
+        timeout: @lock_timeout,
+        local?: skip_balancer?
+      )
 
-      case response do
-        {:error, e} -> raise e
-        _ -> {:ok, response}
-      end
-    catch
-      :exit, {:timeout, _} ->
+    case response do
+      {:error, :timeout} ->
         Sentry.capture_message("Timeout while handling session event")
         {:error, :timeout}
+
+      {:error, e} ->
+        raise e
+
+      _ ->
+        {:ok, response}
     end
   end
 

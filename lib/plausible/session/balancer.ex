@@ -20,7 +20,13 @@ defmodule Plausible.Session.Balancer do
     else
       worker = :erlang.phash2(user_id, Plausible.Session.BalancerSupervisor.size()) + 1
       [{pid, _}] = Registry.lookup(Plausible.Session.Balancer.Registry, worker)
-      GenServer.call(pid, {:process, fun}, timeout)
+
+      try do
+        GenServer.call(pid, {:process, fun}, timeout)
+      catch
+        _, _ ->
+          {:error, :timeout}
+      end
     end
   end
 
