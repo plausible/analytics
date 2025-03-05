@@ -30,6 +30,7 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
 type FeatureFlags = {
   channels?: boolean
   saved_segments?: boolean
+  saved_segments_fe?: boolean
 }
 
 const siteContextDefaultValue = {
