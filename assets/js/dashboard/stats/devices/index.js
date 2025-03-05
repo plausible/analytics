@@ -54,7 +54,7 @@ function Browsers({ afterFetchData }) {
   const site = useSiteContext();
   const { query } = useQueryContext();
   function fetchData() {
-    return api.get(url.apiPath(site, '/browsers'), query)
+    return api.get(site, url.apiPath(site,  '/browsers'), query)
   }
 
   function getFilterFor(listItem) {
@@ -93,7 +93,7 @@ function BrowserVersions({ afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
   function fetchData() {
-    return api.get(url.apiPath(site, '/browser-versions'), query)
+    return api.get(site, url.apiPath(site,  '/browser-versions'), query)
   }
 
   function renderIcon(listItem) {
@@ -167,7 +167,7 @@ function OperatingSystems({ afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
   function fetchData() {
-    return api.get(url.apiPath(site, '/operating-systems'), query)
+    return api.get(site, url.apiPath(site,  '/operating-systems'), query)
   }
 
   function getFilterFor(listItem) {
@@ -207,7 +207,7 @@ function OperatingSystemVersions({ afterFetchData }) {
   const site = useSiteContext();
 
   function fetchData() {
-    return api.get(url.apiPath(site, '/operating-system-versions'), query)
+    return api.get(site, url.apiPath(site,  '/operating-system-versions'), query)
   }
 
   function renderIcon(listItem) {
@@ -251,7 +251,7 @@ function ScreenSizes({ afterFetchData }) {
   const site = useSiteContext();
 
   function fetchData() {
-    return api.get(url.apiPath(site, '/screen-sizes'), query)
+    return api.get(site, url.apiPath(site,  '/screen-sizes'), query)
   }
 
   function renderIcon(listItem) {

@@ -129,7 +129,7 @@ export default function Funnel({ funnelName, tabs }) {
     if (typeof funnelMeta === 'undefined') {
       throw new Error('Could not fetch the funnel. Perhaps it was deleted?')
     } else {
-      return api.get(`/api/stats/${encodeURIComponent(site.domain)}/funnels/${funnelMeta.id}`, query)
+      return api.get(site, `/api/stats/${encodeURIComponent(site.domain)}/funnels/${funnelMeta.id}`, query)
     }
   }
 

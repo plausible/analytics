@@ -13,7 +13,7 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
   const { query } = useQueryContext()
 
   function fetchConversions() {
-    return api.get(url.apiPath(site, '/conversions'), query, { limit: 9 })
+    return api.get(site, url.apiPath(site, '/conversions'), query, { limit: 9 })
   }
 
   function getFilterFor(listItem) {

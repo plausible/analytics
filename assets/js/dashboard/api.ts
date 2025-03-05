@@ -1,5 +1,6 @@
 /** @format */
 import { DashboardQuery } from './query'
+import { PlausibleSite } from './site-context'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
 
@@ -35,6 +36,7 @@ export function cancelAll() {
 }
 
 export function serializeQuery(
+  site: PlausibleSite,
   query: DashboardQuery,
   extraQuery: unknown[] = []
 ) {
@@ -91,12 +93,13 @@ async function handleApiResponse(response: Response) {
 }
 
 export async function get(
+  site: PlausibleSite,
   url: string,
   query?: DashboardQuery,
   ...extraQuery: unknown[]
 ) {
   const response = await fetch(
-    query ? url + serializeQuery(query, extraQuery) : url,
+    query ? url + serializeQuery(site, query, extraQuery) : url,
     {
       signal: abortController.signal,
       headers: { ...getHeaders(), Accept: 'application/json' }

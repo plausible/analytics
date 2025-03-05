@@ -67,12 +67,12 @@ export default function Properties({ afterFetchData }) {
   }
 
   function fetchProps() {
-    return api.get(url.apiPath(site, `/custom-prop-values/${encodeURIComponent(propKey)}`), query)
+    return api.get(site, url.apiPath(site,  `/custom-prop-values/${encodeURIComponent(propKey)}`), query)
   }
 
   const fetchPropKeyOptions = useCallback(() => {
     return (input) => {
-      return api.get(url.apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
+      return api.get(site, url.apiPath(site,  "/suggestions/prop_key"), query, { q: input.trim() })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])

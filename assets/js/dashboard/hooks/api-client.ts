@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-query'
 import * as api from '../api'
 import { DashboardQuery } from '../query'
+import { useSiteContext } from '../site-context'
 
 const LIMIT = 100
 
@@ -43,6 +44,7 @@ export function usePaginatedGetAPI<
 }) {
   const [endpoint] = key
   const queryClient = useQueryClient()
+  const site = useSiteContext()
 
   useEffect(() => {
     const onDismountCleanToPageOne = () => {
@@ -57,7 +59,7 @@ export function usePaginatedGetAPI<
     queryFn: async ({ pageParam, queryKey }): Promise<TResponse['results']> => {
       const [query, params] = getRequestParams(queryKey)
 
-      const response: TResponse = await api.get(endpoint, query, {
+      const response: TResponse = await api.get(site, endpoint, query, {
         ...params,
         limit: LIMIT,
         page: pageParam

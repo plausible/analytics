@@ -205,7 +205,7 @@ export const useSegmentPrefetch = ({ id }: { id: string }) => {
   > = useCallback(
     async ({ queryKey: [_, id] }) => {
       const response: SavedSegment & { segment_data: SegmentDataFromApi } =
-        await get(`/api/${encodeURIComponent(site.domain)}/segments/${id}`)
+        await get(site, `/api/${encodeURIComponent(site.domain)}/segments/${id}`)
       return handleSegmentResponse(response)
     },
     [site]
