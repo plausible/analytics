@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-326EF0D6.js"></script>
+    <script src="dist/sidebar_items-8FC9B969.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -173,14 +173,6 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/0" data-no-tooltip translate="no">init()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#paid_source?/1" data-no-tooltip translate="no">paid_source?(source)</a>
 
       </div>
@@ -213,6 +205,14 @@ Pages
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#src/1" data-no-tooltip translate="no">src(arg1)</a>
+
+      </div>
+
+    </div>
+
 </div>
 
   </section>
@@ -234,7 +234,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">find_mapping(source)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L107" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L93" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -254,27 +254,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">format_referrer(request)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L116" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="init/0">
-
-  <div class="detail-header">
-    <a href="#init/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">init()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L18" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L102" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -294,7 +274,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">paid_source?(source)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L44" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L49" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -314,7 +294,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">paid_sources()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L40" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L45" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -334,7 +314,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">parse(ref)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L96" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L82" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -354,7 +334,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">resolve(request)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L80" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L66" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -367,28 +347,27 @@ Pages
 back to using <code class="inline">Referer</code> to determine the source. This module also takes care of certain transformations to make the data more useful for the user:</p><ol><li>The RefInspector library is used to categorize referrers into &quot;known&quot; sources. For example, when the referrer is google.com or google.co.uk,
 it will always be stored as &quot;Google&quot; which is more useful for marketers.</li><li>On top of the standard RefInspector behaviour, we also keep a list of <code class="inline">custom_sources.json</code> which extends it with referrers that we have seen in the wild.
 For example, Wikipedia has many domains that need to be combined into a single known source. These could all in theory be <a href="https://github.com/snowplow-referer-parser/referer-parser">upstreamed</a>.</li><li>When a known source is supplied in utm_source (or source, ref) query parameter, we merge it with our known sources in a case-insensitive manner.</li><li>Our list of <code class="inline">custom_sources.json</code> also contains some commonly used utm_source shorthands for certain sources. URL tagging is a mess, and we can never do it
-perfectly, but at least we're making an effort for the most commonly used ones. For example, <code class="inline">ig -&gt; Instagram</code> and <code class="inline">adwords -&gt; Google</code>.</li></ol><h3 id="resolve/1-examples" class="section-heading">
-  <a href="#resolve/1-examples" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Examples:</span>
-</h3>
-<p>  iex&gt; alias Plausible.Ingestion.{Source, Request}
-  iex&gt; base_request = %Request{uri: URI.parse(&quot;<a href="https://plausible.io%22)%7D">https://plausible.io&quot;)}</a>
-  iex&gt; Source.resolve(%{base_request | referrer: &quot;<a href="https://google.com%22%7D">https://google.com&quot;}</a>) # Known referrer from RefInspector
-  &quot;Google&quot;
-  iex&gt; Source.resolve(%{base_request | query_params: %{&quot;utm_source&quot; =&gt; &quot;google&quot;}}) # Known source from RefInspector supplied as downcased utm_source by user
-  &quot;Google&quot;
-  iex&gt; Source.resolve(%{base_request | query_params: %{&quot;utm_source&quot; =&gt; &quot;GOOGLE&quot;}}) # Known source from RefInspector supplied as uppercased utm_source by user
-  &quot;Google&quot;
-  iex&gt; Source.resolve(%{base_request | referrer: &quot;<a href="https://en.m.wikipedia.org%22%7D">https://en.m.wikipedia.org&quot;}</a>) # Known referrer from custom_sources.json
-  &quot;Wikipedia&quot;
-  iex&gt; Source.resolve(%{base_request | query_params: %{&quot;utm_source&quot; =&gt; &quot;wikipedia&quot;}}) # Known source from custom_sources.json supplied as downcased utm_source by user
-  &quot;Wikipedia&quot;
-  iex&gt; Source.resolve(%{base_request | query_params: %{&quot;utm_source&quot; =&gt; &quot;ig&quot;}}) # Known utm_source from custom_sources.json
-  &quot;Instagram&quot;
-  iex&gt; Source.resolve(%{base_request | referrer: &quot;<a href="https://www.markosaric.com%22%7D">https://www.markosaric.com&quot;}</a>) # Unknown source, it is just stored as the domain name
-  &quot;markosaric.com&quot;</p>
+perfectly, but at least we're making an effort for the most commonly used ones. For example, <code class="inline">ig -&gt; Instagram</code> and <code class="inline">adwords -&gt; Google</code>.</li></ol>
+  </section>
+</section>
+<section class="detail" id="src/1">
+
+  <div class="detail-header">
+    <a href="#src/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">src(arg1)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L40" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 
