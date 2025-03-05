@@ -48,10 +48,7 @@ defmodule Plausible.TestUtils do
   end
 
   def setup_team(%{team: team}) do
-    team =
-      team
-      |> Plausible.Teams.Team.setup_changeset()
-      |> Repo.update!()
+    team = Plausible.Teams.complete_setup(team)
 
     {:ok, team: team}
   end

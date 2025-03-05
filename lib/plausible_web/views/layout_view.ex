@@ -107,9 +107,9 @@ defmodule PlausibleWeb.LayoutView do
       ]
     }
 
-    my_team = conn.assigns[:my_team]
+    current_team = conn.assigns[:current_team]
 
-    if Teams.enabled?(my_team) and Teams.setup?(my_team) do
+    if Teams.enabled?(current_team) and Teams.setup?(current_team) do
       Map.put(options, "Team Settings", [
         %{key: "General", value: "team/general", icon: :adjustments_horizontal}
       ])
