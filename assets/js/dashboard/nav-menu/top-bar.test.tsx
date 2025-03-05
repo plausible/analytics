@@ -14,7 +14,8 @@ import { TopBar } from './top-bar'
 import { MockAPI } from '../../../test-utils/mock-api'
 
 const flags = {
-  saved_segments: true
+  saved_segments: true,
+  saved_segments_fe: true
 }
 const domain = 'dummy.site'
 const domains = [domain, 'example.com', 'blog.example.com']

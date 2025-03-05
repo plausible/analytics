@@ -22,7 +22,8 @@ export function getAvailableFilterModals(site) {
   return {
     ...rest,
     ...(site.propsAvailable && { props }),
-    ...(site.flags.saved_segments && { segment })
+    ...(site.flags.saved_segments &&
+      site.flags.saved_segments_fe && { segment })
   }
 }
 
