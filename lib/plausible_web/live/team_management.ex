@@ -47,13 +47,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     <.flash_messages flash={@flash} />
 
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
-      :if={
-        (not @team_layout_changed? or @attempted_save?) and
-          not Plausible.Billing.Quota.below_limit?(
-            Layout.active_count(@layout) - 1,
-            @team_members_limit
-          )
-      }
+      :if={at_limit?(@layout, @team_members_limit)}
       current_user={@current_user}
       billable_user={@current_user}
       current_team={@my_team}
@@ -71,6 +65,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
               value={@input_email}
               placeholder="Enter e-mail to send invitation to"
               phx-debounce={200}
+              readonly={at_limit?(@layout, @team_members_limit)}
               mt?={false}
             />
           </div>
@@ -115,7 +110,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
             </:menu>
           </.dropdown>
 
-          <.button id="invite-member" type="submit" mt?={false}>
+          <.button
+            id="invite-member"
+            type="submit"
+            mt?={false}
+            disabled={at_limit?(@layout, @team_members_limit)}
+          >
             Invite
           </.button>
         </div>
@@ -319,4 +319,11 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp entry_label(%Layout.Entry{type: :invitation_sent}, _), do: "Invitation Sent"
   defp entry_label(%Layout.Entry{meta: %{user: %{id: id}}}, %{id: id}), do: "You"
   defp entry_label(_, _), do: "Team Member"
+
+  def at_limit?(layout, limit) do
+    not Plausible.Billing.Quota.below_limit?(
+      Layout.active_count(layout) - 1,
+      limit
+    )
+  end
 end
