@@ -26,6 +26,8 @@ All notable changes to this project will be documented in this file.
 - Plausible script now uses `fetch` with keepalive flag as default over `XMLHttpRequest`. This will ensure more reliable tracking. Reminder to use `compat` script variant if tracking Internet Explorer is required.
 - The old `/api/health` healtcheck is soft-deprecated in favour of separate `/api/system/health/live` and `/api/system/health/ready` checks
 - Changed top bar filter menu and how applied filters wrap
+- Main graph now shows revenue with relevant currency symbol when hovering a data point
+- Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
 
 ### Fixed
 

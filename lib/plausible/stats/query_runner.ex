@@ -18,6 +18,7 @@ defmodule Plausible.Stats.QueryRunner do
     QueryOptimizer,
     QueryResult,
     Legacy,
+    Metrics,
     SQL,
     Util,
     Time
@@ -203,7 +204,7 @@ defmodule Plausible.Stats.QueryRunner do
       |> Enum.reject(fn dimension_value -> Map.has_key?(indexed_results, [dimension_value]) end)
       |> Enum.map(fn dimension_value ->
         %{
-          metrics: empty_metrics(query),
+          metrics: empty_metrics(query, [dimension_value]),
           dimensions: [dimension_value]
         }
       end)
@@ -260,22 +261,13 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp get_comparison_metrics(comparison_map, dimensions, query) do
-    Map.get_lazy(comparison_map, dimensions, fn -> empty_metrics(query) end)
+    Map.get_lazy(comparison_map, dimensions, fn -> empty_metrics(query, dimensions) end)
   end
 
-  defp empty_metrics(query) do
+  defp empty_metrics(query, dimensions) do
     query.metrics
-    |> Enum.map(fn metric -> empty_metric_value(metric) end)
+    |> Enum.map(fn metric -> Metrics.default_value(metric, query, dimensions) end)
   end
-
-  on_ee do
-    defp empty_metric_value(metric)
-         when metric in [:total_revenue, :average_revenue],
-         do: nil
-  end
-
-  defp empty_metric_value(:scroll_depth), do: nil
-  defp empty_metric_value(_), do: 0
 
   defp total_rows([]), do: 0
   defp total_rows([first_row | _rest]), do: first_row.total_rows

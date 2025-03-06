@@ -631,7 +631,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert plot == [40, 20, 0, 0, 0, 0, 0]
+      assert plot == [40, 20, nil, nil, nil, nil, nil]
     end
 
     test "returns scroll depth per day with imported data", %{conn: conn, site: site} do
@@ -676,7 +676,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert plot == [40, 30, 90, 0, 0, 0, 0]
+      assert plot == [40, 30, 90, nil, nil, nil, nil]
     end
   end
 
@@ -922,7 +922,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"plot" => plot} = json_response(conn, 200)
 
       assert Enum.count(plot) == 31
-      assert List.first(plot) == 0
+      assert List.first(plot) == nil
       assert List.last(plot) == 300
     end
 
@@ -1431,37 +1431,37 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"plot" => plot} = json_response(conn, 200)
 
       assert plot == [
-               13.29,
-               0.0,
-               0.0,
-               0.0,
-               19.9,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               30.31
+               %{"currency" => "USD", "long" => "$13.29", "short" => "$13.3", "value" => 13.29},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$30.31", "short" => "$30.3", "value" => 30.31}
              ]
     end
 
@@ -1516,8 +1516,25 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot, "comparison_plot" => prev} = json_response(conn, 200)
 
-      assert plot == [0.0, 0.0, 10.31, 0.0, 30.0, 0.0, 0.0]
-      assert prev == [13.29, 0.0, 0.0, 0.0, 19.9, 0.0, 0.0]
+      assert plot == [
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$10.31", "short" => "$10.3", "value" => 10.31},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$30.00", "short" => "$30.0", "value" => 30.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0}
+             ]
+
+      assert prev == [
+               %{"currency" => "USD", "long" => "$13.29", "short" => "$13.3", "value" => 13.29},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0}
+             ]
     end
   end
 
@@ -1572,37 +1589,37 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"plot" => plot} = json_response(conn, 200)
 
       assert plot == [
-               31.895,
-               0.0,
-               0.0,
-               0.0,
-               19.9,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               0.0,
-               15.155
+               %{"currency" => "USD", "long" => "$31.90", "short" => "$31.9", "value" => 31.895},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$15.16", "short" => "$15.2", "value" => 15.155}
              ]
     end
 
@@ -1657,8 +1674,25 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot, "comparison_plot" => prev} = json_response(conn, 200)
 
-      assert plot == [0.0, 0.0, 10.31, 0.0, 15.0, 0.0, 0.0]
-      assert prev == [13.29, 0.0, 0.0, 0.0, 19.9, 0.0, 0.0]
+      assert plot == [
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$10.31", "short" => "$10.3", "value" => 10.31},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$15.00", "short" => "$15.0", "value" => 15.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0}
+             ]
+
+      assert prev == [
+               %{"currency" => "USD", "long" => "$13.29", "short" => "$13.3", "value" => 13.29},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$19.90", "short" => "$19.9", "value" => 19.9},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0},
+               %{"currency" => "USD", "long" => "$0.00", "short" => "$0.0", "value" => 0.0}
+             ]
     end
   end
 
