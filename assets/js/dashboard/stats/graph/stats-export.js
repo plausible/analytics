@@ -34,8 +34,8 @@ export default function StatsExport() {
 
   function renderExportLink() {
     const interval = getCurrentInterval(site, query)
-    const queryParams = api.serializeQuery(query, [{ interval, comparison: undefined }])
-    const endpoint = `/${encodeURIComponent(site.domain)}/export${queryParams}`
+    const queryParams = api.serializeUrlParams(api.queryToSearchParams(query, [{ interval, comparison: undefined }]))
+    const endpoint = `/${encodeURIComponent(site.domain)}/export?${queryParams}`
 
     return (
       <a href={endpoint} download onClick={startExport}>
