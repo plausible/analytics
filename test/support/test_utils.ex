@@ -47,10 +47,14 @@ defmodule Plausible.TestUtils do
     {:ok, team: team}
   end
 
-  def setup_team(%{team: team}) do
+  def setup_team(%{conn: conn, team: team}) do
     team = Plausible.Teams.complete_setup(team)
 
-    {:ok, team: team}
+    conn =
+      conn
+      |> Plug.Conn.put_session(:current_team_id, team.identifier)
+
+    {:ok, conn: conn, team: team}
   end
 
   def create_legacy_site_import(%{site: site}) do

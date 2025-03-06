@@ -1118,7 +1118,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "renders team settings, when team assigned and set up", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
-      team |> Plausible.Teams.Team.setup_changeset() |> Repo.update!()
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
       assert html =~ "Team Settings"

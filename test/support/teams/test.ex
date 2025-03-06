@@ -17,12 +17,13 @@ defmodule Plausible.Teams.Test do
     end
   end
 
+  def set_current_team(conn, team) do
+    Plug.Conn.put_session(conn, :current_team_id, team.identifier)
+  end
+
   def new_site(args \\ []) do
     args =
       cond do
-        args[:team] ->
-          args
-
         user = args[:owner] ->
           {owner, args} = Keyword.pop(args, :owner)
           {:ok, team} = Teams.get_or_create(user)
@@ -30,6 +31,9 @@ defmodule Plausible.Teams.Test do
           args
           |> Keyword.put(:owners, [owner])
           |> Keyword.put(:team, team)
+
+        args[:team] ->
+          args
 
         true ->
           user = new_user()
