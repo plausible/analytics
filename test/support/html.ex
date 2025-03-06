@@ -45,6 +45,16 @@ defmodule Plausible.Test.Support.HTML do
     |> String.replace(~r/\s+/, " ")
   end
 
+  def attr_defined?(html, element, attr) do
+    empty? =
+      html
+      |> find(element)
+      |> Floki.attribute(attr)
+      |> Enum.empty?()
+
+    not empty?
+  end
+
   def class_of_element(html, element) do
     html
     |> find(element)
