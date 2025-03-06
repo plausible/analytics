@@ -35,6 +35,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
+    const warning = data.meta.metric_warnings?.[stat.graph_metric]
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
     return (
@@ -65,15 +66,25 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
           </p>
         )}
 
-        {stat.name === 'Scroll depth' &&
-          data.meta.metric_warnings?.scroll_depth?.code ===
-            'no_imported_scroll_depth' && (
-            <p className="font-normal text-xs whitespace-nowrap">
-              * Does not include imported data
-            </p>
-          )}
+        {warning ? (
+          <p className="font-normal text-xs whitespace-nowrap">
+            * {warningText(stat.graph_metric, warning)}
+          </p>
+        ) : null}
       </div>
     )
+  }
+
+  function warningText(metric, warning) {
+    if (metric === 'scroll_depth' && warning.code === 'no_imported_scroll_depth') {
+      return "Does not include imported data"
+    }
+
+    if (metric === 'time_on_page') {
+      return warning.message
+    }
+
+    return null
   }
 
   function canMetricBeGraphed(stat) {
