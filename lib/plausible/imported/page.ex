@@ -14,8 +14,9 @@ defmodule Plausible.Imported.Page do
     field :active_visitors, Ch, type: "UInt64"
     field :pageviews, Ch, type: "UInt64"
     field :exits, Ch, type: "UInt64"
-    field :time_on_page, Ch, type: "UInt64"
     field :total_scroll_depth, Ch, type: "UInt64"
     field :total_scroll_depth_visits, Ch, type: "UInt64"
+    field :total_time_on_page, Ch, type: "UInt64"
+    field :total_time_on_page_visits, Ch, type: "UInt64"
   end
 end

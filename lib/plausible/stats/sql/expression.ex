@@ -189,32 +189,32 @@ defmodule Plausible.Stats.SQL.Expression do
   def select_dimension(q, key, "visit:city_name", _table, _query),
     do: select_merge_as(q, [t], %{key => t.city_name})
 
-  def event_metric(:pageviews) do
+  def event_metric(:pageviews, _query) do
     wrap_alias([e], %{
       pageviews: scale_sample(fragment("countIf(? = 'pageview')", e.name))
     })
   end
 
-  def event_metric(:events) do
+  def event_metric(:events, _query) do
     wrap_alias([e], %{
       events: scale_sample(fragment("countIf(? != 'engagement')", e.name))
     })
   end
 
-  def event_metric(:visitors) do
+  def event_metric(:visitors, _query) do
     wrap_alias([e], %{
       visitors: scale_sample(fragment("uniq(?)", e.user_id))
     })
   end
 
-  def event_metric(:visits) do
+  def event_metric(:visits, _query) do
     wrap_alias([e], %{
       visits: scale_sample(fragment("uniq(?)", e.session_id))
     })
   end
 
   on_ee do
-    def event_metric(:total_revenue) do
+    def event_metric(:total_revenue, _query) do
       wrap_alias(
         [e],
         %{
@@ -224,7 +224,7 @@ defmodule Plausible.Stats.SQL.Expression do
       )
     end
 
-    def event_metric(:average_revenue) do
+    def event_metric(:average_revenue, _query) do
       wrap_alias(
         [e],
         %{
@@ -235,20 +235,81 @@ defmodule Plausible.Stats.SQL.Expression do
     end
   end
 
-  def event_metric(:sample_percent) do
+  def event_metric(:sample_percent, _query) do
     wrap_alias([], %{
       sample_percent:
         fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
     })
   end
 
-  def event_metric(:percentage), do: %{}
-  def event_metric(:conversion_rate), do: %{}
-  def event_metric(:scroll_depth), do: %{}
-  def event_metric(:group_conversion_rate), do: %{}
-  def event_metric(:total_visitors), do: %{}
+  def event_metric(:percentage, _query), do: %{}
+  def event_metric(:conversion_rate, _query), do: %{}
+  def event_metric(:scroll_depth, _query), do: %{}
+  def event_metric(:group_conversion_rate, _query), do: %{}
+  def event_metric(:total_visitors, _query), do: %{}
 
-  def event_metric(unknown), do: raise("Unknown metric: #{unknown}")
+  def event_metric(:time_on_page, query) do
+    selected =
+      case query.time_on_page_data do
+        %{include_new_metric: false} ->
+          wrap_alias(
+            [e],
+            %{
+              __internal_total_time_on_page: 0,
+              __internal_total_time_on_page_visits: 0
+            }
+          )
+
+        %{include_new_metric: true, cutoff: nil} ->
+          wrap_alias(
+            [e],
+            %{
+              __internal_total_time_on_page: fragment("sum(?) / 1000", e.engagement_time),
+              __internal_total_time_on_page_visits:
+                fragment("uniqIf(?, ? = 'engagement')", e.session_id, e.name)
+            }
+          )
+
+        %{include_new_metric: true, cutoff: cutoff} ->
+          wrap_alias(
+            [e],
+            %{
+              __internal_total_time_on_page:
+                fragment(
+                  "sumIf(?, ? >= ?) / 1000",
+                  e.engagement_time,
+                  e.timestamp,
+                  ^cutoff
+                ),
+              __internal_total_time_on_page_visits:
+                fragment(
+                  "uniqIf(?, ? = 'engagement' and ? >= ?)",
+                  e.session_id,
+                  e.name,
+                  e.timestamp,
+                  ^cutoff
+                )
+            }
+          )
+      end
+
+    if query.time_on_page_data.include_legacy_metric do
+      selected
+    else
+      Map.merge(
+        selected,
+        wrap_alias([e], %{
+          time_on_page:
+            time_on_page(
+              selected_as(:__internal_total_time_on_page),
+              selected_as(:__internal_total_time_on_page_visits)
+            )
+        })
+      )
+    end
+  end
+
+  def event_metric(unknown, _query), do: raise("Unknown metric: #{unknown}")
 
   def session_metric(:bounce_rate, query) do
     # :TRICKY: If page is passed to query, we only count bounce rate where users _entered_ at page.

@@ -2526,9 +2526,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         )
 
       populate_stats(site, site_import.id, [
-        build(:imported_pages, page: "/A", time_on_page: 40, date: ~D[2021-01-01]),
-        build(:imported_pages, page: "/A", time_on_page: 110, date: ~D[2021-01-01]),
-        build(:imported_pages, page: "/B", time_on_page: 499, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/A", total_time_on_page: 40, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/A", total_time_on_page: 110, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/B", total_time_on_page: 499, date: ~D[2021-01-01]),
         build(:pageview, pathname: "/A", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00])
       ])
