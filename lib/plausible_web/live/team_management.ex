@@ -31,7 +31,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
       team_members_limit = Plausible.Teams.Billing.team_member_limit(my_team)
 
       assign(socket,
-        attempted_save?: false,
         team_members_limit: team_members_limit,
         layout: layout,
         my_role: my_role,
@@ -286,8 +285,6 @@ defmodule PlausibleWeb.Live.TeamManagement do
          %{assigns: %{layout: layout, my_team: my_team, current_user: current_user}} = socket
        ) do
     result = Layout.persist(layout, %{current_user: current_user, my_team: my_team})
-
-    socket = assign(socket, attempted_save?: true)
 
     case {result, socket.assigns.mode} do
       {{:ok, _}, :team_setup} ->
