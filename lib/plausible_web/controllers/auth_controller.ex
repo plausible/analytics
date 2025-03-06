@@ -98,10 +98,6 @@ defmodule PlausibleWeb.AuthController do
         {:ok, role} when role != :guest ->
           conn
           |> put_session("current_team_id", team.identifier)
-          |> put_flash(
-            :success,
-            "You have switched to \"#{conn.assigns.current_team.name}\" team"
-          )
           |> redirect(to: Routes.site_path(conn, :index))
 
         _ ->
