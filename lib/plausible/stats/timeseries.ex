@@ -5,6 +5,7 @@ defmodule Plausible.Stats.Timeseries do
   Avoid adding new logic here - update QueryBuilder etc instead.
   """
 
+  use Plausible
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.{Comparisons, Query, QueryRunner, QueryOptimizer, Time}
 
@@ -70,28 +71,52 @@ defmodule Plausible.Stats.Timeseries do
       Map.get(
         results_map,
         key,
-        empty_row(key, query.metrics)
+        empty_row(key, query.metrics, query)
       )
     end)
     |> transform_realtime_labels(query)
     |> transform_keys(%{group_conversion_rate: :conversion_rate})
   end
 
-  defp empty_row(date, metrics) do
+  defp empty_row(date, metrics, query) do
     Enum.reduce(metrics, %{date: date}, fn metric, row ->
       case metric do
-        :pageviews -> Map.merge(row, %{pageviews: 0})
-        :events -> Map.merge(row, %{events: 0})
-        :visitors -> Map.merge(row, %{visitors: 0})
-        :visits -> Map.merge(row, %{visits: 0})
-        :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
-        :conversion_rate -> Map.merge(row, %{conversion_rate: 0.0})
-        :group_conversion_rate -> Map.merge(row, %{group_conversion_rate: 0.0})
-        :scroll_depth -> Map.merge(row, %{scroll_depth: nil})
-        :bounce_rate -> Map.merge(row, %{bounce_rate: 0.0})
-        :visit_duration -> Map.merge(row, %{visit_duration: nil})
-        :average_revenue -> Map.merge(row, %{average_revenue: 0.0})
-        :total_revenue -> Map.merge(row, %{total_revenue: 0.0})
+        :pageviews ->
+          Map.merge(row, %{pageviews: 0})
+
+        :events ->
+          Map.merge(row, %{events: 0})
+
+        :visitors ->
+          Map.merge(row, %{visitors: 0})
+
+        :visits ->
+          Map.merge(row, %{visits: 0})
+
+        :views_per_visit ->
+          Map.merge(row, %{views_per_visit: 0.0})
+
+        :conversion_rate ->
+          Map.merge(row, %{conversion_rate: 0.0})
+
+        :group_conversion_rate ->
+          Map.merge(row, %{group_conversion_rate: 0.0})
+
+        :scroll_depth ->
+          Map.merge(row, %{scroll_depth: nil})
+
+        :bounce_rate ->
+          Map.merge(row, %{bounce_rate: 0.0})
+
+        :visit_duration ->
+          Map.merge(row, %{visit_duration: nil})
+
+        metric when metric in [:average_revenue, :total_revenue] ->
+          on_ee do
+            value = Plausible.Stats.Goal.Revenue.format_revenue_metric(nil, query, [date])
+
+            Map.merge(row, %{metric => value})
+          end
       end
     end)
   end

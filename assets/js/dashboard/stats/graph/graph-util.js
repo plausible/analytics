@@ -34,13 +34,25 @@ export const METRIC_LABELS = {
   'conversion_rate': 'Conversion Rate',
   'average_revenue': 'Average Revenue',
   'total_revenue': 'Total Revenue',
+  'scroll_depth': 'Scroll Depth',
+}
+
+function plottable(dataArray) {
+  return dataArray?.map((value) => {
+    if (typeof value === 'object' && value !== null) {
+      // Revenue metrics are returned as objects with a `value` property
+      return value.value
+    }
+
+    return value || 0
+  })
 }
 
 const buildComparisonDataset = function(comparisonPlot) {
   if (!comparisonPlot) return []
 
   return [{
-    data: comparisonPlot,
+    data: plottable(comparisonPlot),
     borderColor: 'rgba(60,70,110,0.2)',
     pointBackgroundColor: 'rgba(60,70,110,0.2)',
     pointHoverBackgroundColor: 'rgba(60, 70, 110)',
@@ -55,7 +67,7 @@ const buildDashedDataset = function(plot, presentIndex) {
   const dashedPlot = (new Array(presentIndex - 1)).concat(dashedPart)
 
   return [{
-    data: dashedPlot,
+    data: plottable(dashedPlot),
     borderDash: [3, 3],
     borderColor: 'rgba(101,116,205)',
     pointHoverBackgroundColor: 'rgba(71, 87, 193)',
@@ -67,7 +79,7 @@ const buildMainPlotDataset = function(plot, presentIndex) {
   const data = presentIndex ? plot.slice(0, presentIndex) : plot
 
   return [{
-    data: data,
+    data: plottable(data),
     borderColor: 'rgba(101,116,205)',
     pointBackgroundColor: 'rgba(101,116,205)',
     pointHoverBackgroundColor: 'rgba(71, 87, 193)',
