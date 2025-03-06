@@ -156,6 +156,22 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
+  defp metric_warning(:time_on_page, %Query{} = query) do
+    case query.time_on_page_data do
+      %{include_legacy_metric: true, cutoff: cutoff} ->
+        cutoff_time =
+          cutoff |> DateTime.shift_zone!(query.timezone) |> Calendar.strftime("%Y-%m-%d %H:%M:%S")
+
+        %{
+          code: :legacy_time_on_page_used,
+          message: "Contains less accurate legacy time-on-page data up to #{cutoff_time}"
+        }
+
+      _ ->
+        nil
+    end
+  end
+
   defp metric_warning(_metric, _query), do: nil
 
   defp to_iso8601(datetime, timezone) do
