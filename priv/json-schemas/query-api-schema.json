@@ -462,10 +462,7 @@
         { "$ref": "#/definitions/filter_without_goals" },
         { "$ref": "#/definitions/filter_with_goals" },
         { "$ref": "#/definitions/filter_with_pattern" },
-        {
-          "$ref": "#/definitions/filter_for_segment",
-          "$comment": "only :internal"
-        }
+        { "$ref": "#/definitions/filter_for_segment" }
       ]
     },
     "filter_tree": {

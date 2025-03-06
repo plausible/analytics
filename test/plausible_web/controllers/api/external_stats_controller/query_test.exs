@@ -4900,20 +4900,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   describe "segment filters" do
     setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
-    test "segment filters are (not yet) available in public API", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/v2/query", %{
-          "site_id" => site.domain,
-          "filters" => [["is", "segment", [1]]],
-          "date_range" => "all",
-          "metrics" => ["visitors"]
-        })
-
-      assert json_response(conn, 400) == %{
-               "error" => "#/filters/0: Invalid filter [\"is\", \"segment\", [1]]"
-             }
-    end
-
     test "site segments of other sites don't resolve", %{
       conn: conn,
       site: site
@@ -4933,7 +4919,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         )
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "segment", [segment.id]]],
           "date_range" => "all",
@@ -4943,6 +4929,63 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 400) == %{
                "error" => "Invalid filters. Some segments don't exist or aren't accessible."
              }
+    end
+
+    test ":has_not_done filter resolves in /api/v2/query endpoint when it is part of a segment",
+         %{
+           conn: conn,
+           site: site
+         } do
+      other_user = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: other_user,
+          site: site,
+          name: "Signups",
+          segment_data: %{
+            "filters" => [["has_not_done", ["is", "event:goal", ["Signup"]]]]
+          }
+        )
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "AnyOtherEvent",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "filters" => [["is", "segment", [segment.id]]],
+          "date_range" => "all",
+          "metrics" => ["events"]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [1]}]
+
+      # response shows what filters the segment was resolved to
+      assert json_response(conn, 200)["query"]["filters"] == [
+               ["has_not_done", ["is", "event:goal", ["Signup"]]]
+             ]
     end
 
     test "even personal segments of other users of the same site resolve to filters, with segments expanded in response",
@@ -4987,7 +5030,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "segment", [segment.id]]],
           "date_range" => "all",
