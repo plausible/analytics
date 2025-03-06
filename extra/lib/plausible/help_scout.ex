@@ -122,7 +122,7 @@ defmodule Plausible.HelpScout do
       {:ok,
        %{
          email: user.email,
-         notes: user.notes,
+         notes: notes(user, team),
          status_label: status_label(team, subscription),
          status_link: status_link,
          plan_label: plan_label(subscription, plan),
@@ -392,5 +392,17 @@ defmodule Plausible.HelpScout do
 
   defp config() do
     Application.fetch_env!(:plausible, __MODULE__)
+  end
+
+  defp notes(user, team) do
+    notes =
+      [
+        user && user.notes,
+        team && team.notes
+      ]
+      |> Enum.reject(&is_nil/1)
+      |> Enum.join("\n")
+
+    if notes != "", do: notes
   end
 end
