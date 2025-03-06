@@ -48,14 +48,7 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.{Filters, Query}
   alias PlausibleWeb.Api
 
-  @all_site_roles PlausibleWeb.Plugs.AuthorizeSiteAccess.all_roles()
-
-  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action == :stats)
-
-  plug(
-    PlausibleWeb.Plugs.AuthorizeSiteAccess,
-    @all_site_roles -- [:public] when action == :csv_export
-  )
+  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owners)
