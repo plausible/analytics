@@ -397,7 +397,7 @@ defmodule Plausible.HelpScout do
   defp notes(user, team) do
     notes =
       [
-        user && user.notes,
+        user.notes,
         team && team.notes
       ]
       |> Enum.reject(&is_nil/1)
