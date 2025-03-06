@@ -29,6 +29,9 @@ defmodule Plausible.Teams.Team do
     field :setup_complete, :boolean, default: false
     field :setup_at, :naive_datetime
 
+    # Field for purely informational purposes in CRM context
+    field :notes, :string
+
     embeds_one :grace_period, Plausible.Teams.GracePeriod, on_replace: :update
 
     has_many :sites, Plausible.Site
@@ -50,6 +53,7 @@ defmodule Plausible.Teams.Team do
     team
     |> cast(params, [
       :name,
+      :notes,
       :trial_expiry_date,
       :allow_next_upgrade_override,
       :accept_traffic_until
