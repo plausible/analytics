@@ -66,22 +66,24 @@ defmodule Plausible.Imported do
     @goals_with_path
   end
 
-  @spec any_completed_imports?(Site.t()) :: boolean()
-  def any_completed_imports?(site) do
-    get_completed_imports(site) != []
+  @spec completed_imports(Site.t()) :: [SiteImport.t()]
+  def completed_imports(site) do
+    site
+    |> Repo.preload(:completed_imports)
+    |> Map.fetch!(:completed_imports)
   end
 
   @spec earliest_import_start_date(Site.t()) :: Date.t() | nil
   def earliest_import_start_date(site) do
     site
-    |> get_completed_imports()
+    |> completed_imports()
     |> Enum.map(& &1.start_date)
     |> Enum.min(Date, fn -> nil end)
   end
 
   @spec complete_import_ids(Site.t()) :: [non_neg_integer()]
   def complete_import_ids(site) do
-    imports = get_completed_imports(site)
+    imports = completed_imports(site)
     has_legacy? = Enum.any?(imports, fn %{legacy: legacy?} -> legacy? end)
     ids = Enum.map(imports, fn %{id: id} -> id end)
 
@@ -93,12 +95,11 @@ defmodule Plausible.Imported do
     end
   end
 
-  @spec completed_imports_in_query_range(Site.t(), Query.t()) :: [SiteImport.t()]
-  def completed_imports_in_query_range(%Site{} = site, %Query{} = query) do
+  @spec completed_imports_in_query_range(Query.t()) :: [SiteImport.t()]
+  def completed_imports_in_query_range(%Query{} = query) do
     date_range = Query.date_range(query)
 
-    site
-    |> get_completed_imports()
+    query.completed_imports
     |> Enum.reject(fn site_import ->
       Date.after?(site_import.start_date, date_range.last) or
         Date.before?(site_import.end_date, date_range.first)
@@ -217,11 +218,5 @@ defmodule Plausible.Imported do
 
   defp in_range?(date, range) do
     Date.before?(range.first, date) && Date.after?(range.last, date)
-  end
-
-  defp get_completed_imports(site) do
-    site
-    |> Repo.preload(:completed_imports)
-    |> Map.fetch!(:completed_imports)
   end
 end

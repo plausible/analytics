@@ -192,10 +192,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     params = realtime_period_to_30m(params)
 
-    query =
-      site
-      |> Query.from(params, debug_metadata(conn))
-      |> Query.set_include(:imports_meta, true)
+    query = Query.from(site, params, debug_metadata(conn))
 
     %{
       top_stats: top_stats,
@@ -220,18 +217,19 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp with_imported_switch_info(%Jason.OrderedObject{} = meta) do
-    case {meta[:imports_included], meta[:imports_skip_reason]} do
-      {true, nil} ->
-        %{visible: true, togglable: true, tooltip_msg: "Click to exclude imported data"}
-
-      {false, nil} ->
-        %{visible: true, togglable: true, tooltip_msg: "Click to include imported data"}
-
-      {false, :unsupported_query} ->
+    case Map.new(meta) do
+      %{imports_included: false, imports_skip_reason: :unsupported_query} ->
         %{visible: true, togglable: false, tooltip_msg: "Imported data cannot be included"}
 
-      {false, reason} when reason in [:no_imported_data, :out_of_range] ->
+      %{imports_included: false, imports_skip_reason: reason}
+      when reason in [:no_imported_data, :out_of_range] ->
         %{visible: false, togglable: false, tooltip_msg: nil}
+
+      %{imports_included_for_main_query: true} ->
+        %{visible: true, togglable: true, tooltip_msg: "Click to exclude imported data"}
+
+      %{imports_included_for_main_query: false} ->
+        %{visible: true, togglable: true, tooltip_msg: "Click to include imported data"}
     end
   end
 

@@ -50,7 +50,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   @default_include %{
     imports: false,
-    imports_meta: false,
+    dashboard_imports_meta: false,
     time_labels: false,
     total_rows: false,
     comparisons: nil
@@ -872,7 +872,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         timezone: site.timezone,
         include: %{
           imports: true,
-          imports_meta: false,
+          dashboard_imports_meta: false,
           time_labels: true,
           total_rows: true,
           comparisons: nil
@@ -937,7 +937,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
               mode: "previous_period"
             },
             imports: false,
-            imports_meta: false,
+            dashboard_imports_meta: false,
             time_labels: false,
             total_rows: false
           },
@@ -968,7 +968,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
               mode: "year_over_year"
             },
             imports: false,
-            imports_meta: false,
+            dashboard_imports_meta: false,
             time_labels: false,
             total_rows: false
           },
@@ -1001,7 +1001,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
               mode: "custom",
               date_range: @date_range_30d
             },
-            imports_meta: false,
+            dashboard_imports_meta: false,
             imports: false,
             time_labels: false,
             total_rows: false
