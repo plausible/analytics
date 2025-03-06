@@ -34,6 +34,7 @@ defmodule Plausible.Stats.Metrics do
 
   def default_value(:visit_duration, _query, _dimensions), do: nil
   def default_value(:scroll_depth, _query, _dimensions), do: nil
+  def default_value(:time_on_page, _query, _dimensions), do: nil
 
   @float_metrics [
     :views_per_visit,
