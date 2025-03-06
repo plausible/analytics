@@ -15,12 +15,14 @@ export class ApiError extends Error {
   }
 }
 
-export function serialize(obj: Record<string, string | boolean | number>) {
+export function serializeUrlParams(
+  params: Record<string, string | boolean | number>
+) {
   const str: string[] = []
   /* eslint-disable-next-line no-prototype-builtins */
-  for (const p in obj)
-    if (obj.hasOwnProperty(p)) {
-      str.push(`${encodeURIComponent(p)}=${encodeURIComponent(obj[p])}`)
+  for (const p in params)
+    if (params.hasOwnProperty(p)) {
+      str.push(`${encodeURIComponent(p)}=${encodeURIComponent(params[p])}`)
     }
   return str.join('&')
 }
@@ -99,10 +101,10 @@ export async function get(
   const sharedLinkParams = getSharedLinkSearchParams()
 
   const queryString = query
-    ? serialize(
+    ? serializeUrlParams(
         queryToSearchParams(query, [...extraQueryParams, sharedLinkParams])
       )
-    : serialize(sharedLinkParams)
+    : serializeUrlParams(sharedLinkParams)
 
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     signal: abortController.signal,
@@ -120,7 +122,7 @@ export const mutation = async <
     | { body: TBody; method: 'PATCH' | 'PUT' | 'POST' }
     | { method: 'DELETE' }
 ) => {
-  const queryString = serialize(getSharedLinkSearchParams())
+  const queryString = serializeUrlParams(getSharedLinkSearchParams())
   const fetchOptions =
     options.method === 'DELETE'
       ? {}
