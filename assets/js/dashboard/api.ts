@@ -57,9 +57,6 @@ export function serializeQuery(
   if (query.with_imported) {
     queryObj.with_imported = String(query.with_imported)
   }
-  if (SHARED_LINK_AUTH) {
-    queryObj.auth = SHARED_LINK_AUTH
-  }
 
   if (query.comparison) {
     queryObj.comparison = query.comparison
@@ -74,7 +71,7 @@ export function serializeQuery(
 
   Object.assign(queryObj, ...extraQuery)
 
-  return '?' + serialize(queryObj)
+  return serialize(queryObj)
 }
 
 function getHeaders(): Record<string, string> {
@@ -90,18 +87,26 @@ async function handleApiResponse(response: Response) {
   return payload
 }
 
+function getSharedLinkQueryParams(): Record<string, string> {
+  return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
+}
+
 export async function get(
   url: string,
   query?: DashboardQuery,
-  ...extraQuery: unknown[]
+  ...extraQueryParams: unknown[]
 ) {
-  const response = await fetch(
-    query ? url + serializeQuery(query, extraQuery) : url,
-    {
-      signal: abortController.signal,
-      headers: { ...getHeaders(), Accept: 'application/json' }
-    }
-  )
+  const sharedLinkParams = getSharedLinkQueryParams()
+
+  const queryString = query
+    ? serializeQuery(query, [...extraQueryParams, sharedLinkParams])
+    : new URLSearchParams(sharedLinkParams).toString()
+
+  const response = await fetch(queryString ? `${url}?${queryString}` : url, {
+    signal: abortController.signal,
+    headers: { ...getHeaders(), Accept: 'application/json' }
+  })
+
   return handleApiResponse(response)
 }
 
@@ -113,6 +118,8 @@ export const mutation = async <
     | { body: TBody; method: 'PATCH' | 'PUT' | 'POST' }
     | { method: 'DELETE' }
 ) => {
+  const sharedLinkParams = getSharedLinkQueryParams()
+  const queryString = new URLSearchParams(sharedLinkParams).toString()
   const fetchOptions =
     options.method === 'DELETE'
       ? {}
@@ -120,7 +127,7 @@ export const mutation = async <
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(options.body)
         }
-  const response = await fetch(url, {
+  const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     method: options.method,
     headers: {
       ...getHeaders(),
