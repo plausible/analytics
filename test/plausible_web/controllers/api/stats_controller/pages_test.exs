@@ -1708,7 +1708,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "comparison" => %{
                    "bounce_rate" => 0,
                    "pageviews" => 0,
-                   "time_on_page" => 0,
+                   "time_on_page" => nil,
                    "visitors" => 0,
                    "scroll_depth" => nil,
                    "change" => %{
