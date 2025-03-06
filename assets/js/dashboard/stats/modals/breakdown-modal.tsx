@@ -238,11 +238,15 @@ const ExternalLinkIcon = ({ url }: { url?: string }) =>
 const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
   const warnings = meta?.metric_warnings
 
-  if (warnings) {
-    const code = warnings[metric.key]?.code
+  if (warnings && warnings[metric.key]) {
+    const { code, message } = warnings[metric.key]
 
-    if (code == 'no_imported_scroll_depth') {
+    if (metric.key == 'scroll_depth' && code == 'no_imported_scroll_depth') {
       return 'Does not include imported data'
+    }
+
+    if (metric.key == 'time_on_page' && code) {
+      return message
     }
   }
 }
