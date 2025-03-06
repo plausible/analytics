@@ -296,9 +296,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         |> redirect(to: Routes.settings_path(socket, :team_general))
 
       {{:ok, _}, :team_management} ->
-        socket
-        |> reset()
-        |> put_live_flash(:success, "Team layout updated successfully")
+        reset(socket)
 
       {{:error, :only_one_owner}, _} ->
         socket
