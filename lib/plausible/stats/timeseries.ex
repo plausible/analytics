@@ -90,8 +90,8 @@ defmodule Plausible.Stats.Timeseries do
         :scroll_depth -> Map.merge(row, %{scroll_depth: nil})
         :bounce_rate -> Map.merge(row, %{bounce_rate: 0.0})
         :visit_duration -> Map.merge(row, %{visit_duration: nil})
-        :average_revenue -> Map.merge(row, %{average_revenue: nil})
-        :total_revenue -> Map.merge(row, %{total_revenue: nil})
+        :average_revenue -> Map.merge(row, %{average_revenue: 0.0})
+        :total_revenue -> Map.merge(row, %{total_revenue: 0.0})
       end
     end)
   end
