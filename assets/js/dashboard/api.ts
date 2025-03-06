@@ -15,7 +15,7 @@ export class ApiError extends Error {
   }
 }
 
-function serialize(obj: Record<string, string | boolean | number>) {
+export function serialize(obj: Record<string, string | boolean | number>) {
   const str: string[] = []
   /* eslint-disable-next-line no-prototype-builtins */
   for (const p in obj)
@@ -34,7 +34,7 @@ export function cancelAll() {
   abortController = new AbortController()
 }
 
-export function serializeQuery(
+export function queryToSearchParams(
   query: DashboardQuery,
   extraQuery: unknown[] = []
 ) {
@@ -71,7 +71,7 @@ export function serializeQuery(
 
   Object.assign(queryObj, ...extraQuery)
 
-  return serialize(queryObj)
+  return queryObj
 }
 
 function getHeaders(): Record<string, string> {
@@ -87,7 +87,7 @@ async function handleApiResponse(response: Response) {
   return payload
 }
 
-function getSharedLinkQueryParams(): Record<string, string> {
+function getSharedLinkSearchParams(): Record<string, string> {
   return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
 }
 
@@ -96,11 +96,13 @@ export async function get(
   query?: DashboardQuery,
   ...extraQueryParams: unknown[]
 ) {
-  const sharedLinkParams = getSharedLinkQueryParams()
+  const sharedLinkParams = getSharedLinkSearchParams()
 
   const queryString = query
-    ? serializeQuery(query, [...extraQueryParams, sharedLinkParams])
-    : new URLSearchParams(sharedLinkParams).toString()
+    ? serialize(
+        queryToSearchParams(query, [...extraQueryParams, sharedLinkParams])
+      )
+    : serialize(sharedLinkParams)
 
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     signal: abortController.signal,
@@ -118,8 +120,7 @@ export const mutation = async <
     | { body: TBody; method: 'PATCH' | 'PUT' | 'POST' }
     | { method: 'DELETE' }
 ) => {
-  const sharedLinkParams = getSharedLinkQueryParams()
-  const queryString = new URLSearchParams(sharedLinkParams).toString()
+  const queryString = serialize(getSharedLinkSearchParams())
   const fetchOptions =
     options.method === 'DELETE'
       ? {}
