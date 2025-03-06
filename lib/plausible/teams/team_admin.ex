@@ -69,7 +69,8 @@ defmodule Plausible.Teams.TeamAdmin do
       allow_next_upgrade_override: nil,
       accept_traffic_until: %{
         help_text: "Change will take up to 15 minutes to propagate"
-      }
+      },
+      notes: %{type: :textarea, rows: 6}
     ]
   end
 
