@@ -18,6 +18,7 @@ defmodule Plausible.Stats.QueryRunner do
     QueryOptimizer,
     QueryResult,
     Legacy,
+    Metrics,
     SQL,
     Util,
     Time
@@ -265,17 +266,8 @@ defmodule Plausible.Stats.QueryRunner do
 
   defp empty_metrics(query, dimensions) do
     query.metrics
-    |> Enum.map(fn metric -> empty_metric_value(metric, query, dimensions) end)
+    |> Enum.map(fn metric -> Metrics.default_value(metric, query, dimensions) end)
   end
-
-  on_ee do
-    defp empty_metric_value(metric, query, dimensions)
-         when metric in [:total_revenue, :average_revenue],
-         do: Plausible.Stats.Goal.Revenue.format_revenue_metric(nil, query, dimensions)
-  end
-
-  defp empty_metric_value(:scroll_depth, _query, _dimensions), do: nil
-  defp empty_metric_value(_metric, _query, _dimensions), do: 0
 
   defp total_rows([]), do: 0
   defp total_rows([first_row | _rest]), do: first_row.total_rows
