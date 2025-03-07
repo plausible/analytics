@@ -18,11 +18,11 @@ function EntryPages({ afterFetchData }) {
     return api.get(url.apiPath(site, '/entry-pages'), query, { limit: 9 })
   }
 
-  function externalLinkDest(page) {
+  function getExternalLinkUrl(page) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: 'entry_page',
       filter: ["is", "entry_page", [listItem['name']]]
@@ -40,11 +40,11 @@ function EntryPages({ afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Entry page"
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: entryPagesRoute.path, search: (search) => search }}
-      externalLinkDest={externalLinkDest}
+      getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50"
     />
   )
@@ -57,11 +57,11 @@ function ExitPages({ afterFetchData }) {
     return api.get(url.apiPath(site, '/exit-pages'), query, { limit: 9 })
   }
 
-  function externalLinkDest(page) {
+  function getExternalLinkUrl(page) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: 'exit_page',
       filter: ["is", "exit_page", [listItem['name']]]
@@ -79,11 +79,11 @@ function ExitPages({ afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Exit page"
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: exitPagesRoute.path, search: (search) => search }}
-      externalLinkDest={externalLinkDest}
+      getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50"
     />
   )
@@ -96,11 +96,11 @@ function TopPages({ afterFetchData }) {
     return api.get(url.apiPath(site, '/pages'), query, { limit: 9 })
   }
 
-  function externalLinkDest(page) {
+  function getExternalLinkUrl(page) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: 'page',
       filter: ["is", "page", [listItem['name']]]
@@ -118,11 +118,11 @@ function TopPages({ afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Page"
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: topPagesRoute.path, search: (search) => search }}
-      externalLinkDest={externalLinkDest}
+      getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50"
     />
   )
