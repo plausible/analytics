@@ -90,6 +90,7 @@ export function getPropertyKeyFromFilterKey(filterKey) {
   return filterKey.slice(EVENT_PROPS_PREFIX.length)
 }
 
+/** WIP: investigate all occurrences */
 export function getFiltersByKeyPrefix(query, prefix) {
   return query.filters.filter(([_operation, filterKey, _clauses]) =>
     filterKey.startsWith(prefix)
@@ -102,10 +103,12 @@ function omitFiltersByKeyPrefix(query, prefix) {
   )
 }
 
+/** WIP: investigate all occurrences */
 export function replaceFilterByPrefix(query, prefix, filter) {
   return omitFiltersByKeyPrefix(query, prefix).concat([filter])
 }
 
+/** WIP: investigate all occurrences */
 export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
   const filters = query.filters.filter(([_operation, key]) => filterKey == key)
   if (filters.length == 1) {
@@ -131,6 +134,7 @@ export function isRealTimeDashboard(query) {
   return query?.period === 'realtime'
 }
 
+/** WIP: investigate all occurrences */
 // Note: Currently only a single goal filter can be applied at a time.
 export function getGoalFilter(query) {
   return getFiltersByKeyPrefix(query, 'goal')[0] || null
@@ -264,6 +268,7 @@ export function fetchSuggestions(apiPath, query, input, additionalFilter) {
   return api.get(apiPath, updatedQuery, { q: input.trim() })
 }
 
+/** WIP: how well does it work with segments actually */
 function queryForSuggestions(query, additionalFilter) {
   let filters = query.filters
   if (additionalFilter) {

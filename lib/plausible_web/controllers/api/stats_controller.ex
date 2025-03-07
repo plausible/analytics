@@ -500,7 +500,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -534,7 +539,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -618,7 +628,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -648,7 +663,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -678,7 +698,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -708,7 +733,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -738,7 +768,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -768,7 +803,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -852,7 +892,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     json(conn, %{
       results: referrers,
-      meta: Stats.Breakdown.formatted_date_ranges(query),
+      meta:
+        Map.put(
+          Stats.Breakdown.formatted_date_ranges(query),
+          :situation,
+          get_situation(query, metrics)
+        ),
       skip_imported_reason: meta[:imports_skip_reason]
     })
   end
@@ -903,7 +948,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: pages,
-        meta: Map.merge(meta, Stats.Breakdown.formatted_date_ranges(query)),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -940,7 +990,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: entry_pages,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -978,7 +1033,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: exit_pages,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1067,7 +1127,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: countries,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1108,7 +1173,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: regions,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1154,7 +1224,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: cities,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1188,7 +1263,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: browsers,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1231,7 +1311,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: results,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1265,7 +1350,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: systems,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1308,7 +1398,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: results,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1342,7 +1437,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: sizes,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1376,7 +1476,12 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: conversions,
-        meta: Stats.Breakdown.formatted_date_ranges(query),
+        meta:
+          Map.put(
+            Stats.Breakdown.formatted_date_ranges(query),
+            :situation,
+            get_situation(query, metrics)
+          ),
         skip_imported_reason: meta[:imports_skip_reason]
       })
     end
@@ -1454,7 +1559,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{
       results: props,
-      meta: Stats.Breakdown.formatted_date_ranges(query),
+      meta:
+        Map.put(
+          Stats.Breakdown.formatted_date_ranges(query),
+          :situation,
+          get_situation(query, metrics)
+        ),
       skip_imported_reason: meta[:imports_skip_reason]
     }
   end
@@ -1678,5 +1788,58 @@ defmodule PlausibleWeb.Api.StatsController do
       max_depth: 0,
       behavioral_filters: :ignore
     )
+  end
+
+  defp get_situation(query, metrics) do
+    acc =
+      Enum.reduce(
+        Filters.traverse(query.filters),
+        [fixed_browser: nil, fixed_os: nil, fixed_source: nil],
+        fn {filter, _}, acc ->
+          case filter do
+            [:is, "visit:browser", [browser]] ->
+              Keyword.put(
+                acc,
+                :fixed_browser,
+                if(is_nil(Keyword.get(acc, :fixed_browser)), do: browser, else: false)
+              )
+
+            [_, "visit:browser", _] ->
+              Keyword.put(acc, :fixed_browser, false)
+
+            [:is, "visit:os", [os]] ->
+              Keyword.put(
+                acc,
+                :fixed_os,
+                if(is_nil(Keyword.get(acc, :fixed_os)), do: os, else: false)
+              )
+
+            [_, "visit:os", _] ->
+              Keyword.put(acc, :fixed_os, false)
+
+            [:is, "visit:source", [source]] ->
+              Keyword.put(
+                acc,
+                :fixed_source,
+                if(is_nil(Keyword.get(acc, :fixed_source)), do: source, else: false)
+              )
+
+            [_, "visit:source", _] ->
+              Keyword.put(acc, :fixed_source, false)
+
+            _ ->
+              acc
+          end
+        end
+      )
+
+    %{
+      fixed_browser: Keyword.get(acc, :fixed_browser),
+      fixed_os: Keyword.get(acc, :fixed_os),
+      fixed_source: Keyword.get(acc, :fixed_source),
+      metrics_in_query: metrics,
+      is_filtering_on_goal: toplevel_goal_filter?(query),
+      is_realtime_period: query.period == "30m"
+    }
   end
 end

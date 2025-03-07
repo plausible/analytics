@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import * as api from '../../api';
 import * as url from '../../util/url';
 import * as metrics from '../reports/metrics';
-import { hasConversionGoalFilter } from "../../util/filters";
 import ListReport from '../reports/list';
 import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsupported-warning';
 import { useQueryContext } from '../../query-context';
@@ -53,13 +52,6 @@ export default function Referrers({ source }) {
     )
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
-
   return (
     <div className="flex flex-col flex-grow">
       <div className="flex gap-x-1">
@@ -71,7 +63,7 @@ export default function Referrers({ source }) {
         afterFetchData={afterFetchReferrers}
         getFilterInfo={getFilterInfo}
         keyLabel="Referrer"
-        metrics={chooseMetrics()}
+        getMetrics={chooseMetrics}
         detailsLinkProps={{ path: referrersDrilldownRoute.path, params: {referrer: url.maybeEncodeRouteParam(source)}, search: (search) => search }}
         getExternalLinkUrl={getExternalLinkUrl}
         renderIcon={renderIcon}
@@ -79,4 +71,11 @@ export default function Referrers({ source }) {
       />
     </div>
   )
+}
+
+function chooseMetrics({situation}) {
+  return [
+    metrics.createVisitors({ meta: { plot: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+  ].filter(metric => !!metric)
 }

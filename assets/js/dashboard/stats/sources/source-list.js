@@ -6,7 +6,7 @@ import * as api from '../../api';
 import usePrevious from '../../hooks/use-previous';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { getFiltersByKeyPrefix, hasConversionGoalFilter } from "../../util/filters";
+import { getFiltersByKeyPrefix } from "../../util/filters";
 import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
@@ -22,6 +22,13 @@ const UTM_TAGS = {
   utm_campaign: { title: 'UTM Campaigns', label: 'Campaign', endpoint: '/utm_campaigns' },
   utm_content: { title: 'UTM Contents', label: 'Content', endpoint: '/utm_contents' },
   utm_term: { title: 'UTM Terms', label: 'Term', endpoint: '/utm_terms' },
+}
+
+function chooseAllSourcesMetrics({situation}) {
+  return [
+    metrics.createVisitors({ meta: { plot: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+  ].filter(metric => !!metric)
 }
 
 function AllSources({ afterFetchData }) {
@@ -48,20 +55,13 @@ function AllSources({ afterFetchData }) {
     )
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel="Source"
-      metrics={chooseMetrics()}
+      getMetrics={chooseAllSourcesMetrics}
       detailsLinkProps={{ path: sourcesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
       color="bg-blue-50"
@@ -84,12 +84,6 @@ function Channels({ onClick, afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
 
   return (
     <ListReport
@@ -98,7 +92,7 @@ function Channels({ onClick, afterFetchData }) {
       getFilterInfo={getFilterInfo}
       keyLabel="Channel"
       onClick={onClick}
-      metrics={chooseMetrics()}
+      getMetrics={chooseAllSourcesMetrics}
       detailsLinkProps={{ path: channelsRoute.path, search: (search) => search }}
       color="bg-blue-50"
     />
@@ -129,20 +123,13 @@ function UTMSources({ tab, afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel={utmTag.label}
-      metrics={chooseMetrics()}
+      getMetrics={chooseAllSourcesMetrics}
       detailsLinkProps={{ path: route?.path, search: (search) => search }}
       color="bg-blue-50"
     />

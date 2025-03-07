@@ -5,7 +5,11 @@ import * as metrics from '../reports/metrics';
 import * as api from '../../api';
 import * as url from '../../util/url';
 import * as storage from "../../util/storage";
-import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasConversionGoalFilter } from "../../util/filters";
+import {
+  EVENT_PROPS_PREFIX,
+  getGoalFilter,
+  FILTER_OPERATIONS
+} from '../../util/filters'
 import classNames from "classnames";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
@@ -90,18 +94,6 @@ export default function Properties({ afterFetchData }) {
     }
   }
 
-  /*global BUILD_EXTRA*/
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: { plot: true } }),
-      metrics.createEvents({ renderLabel: (_query) => "Events", meta: { hiddenOnMobile: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage(),
-      BUILD_EXTRA && metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
-      BUILD_EXTRA && metrics.createAverageRevenue({ meta: { hiddenOnMobile: true } })
-    ].filter(metric => !!metric)
-  }
-
   function renderBreakdown() {
     return (
       <ListReport
@@ -109,7 +101,7 @@ export default function Properties({ afterFetchData }) {
         afterFetchData={afterFetchData}
         getFilterInfo={getFilterInfo}
         keyLabel={propKey}
-        metrics={chooseMetrics()}
+        getMetrics={chooseMetrics}
         detailsLinkProps={{ path: customPropsRoute.path, params: { propKey }, search: (search) => search }}
         maybeHideDetails={true}
         color="bg-red-50"
@@ -141,3 +133,15 @@ export default function Properties({ afterFetchData }) {
     </div>
   )
 }
+
+/*global BUILD_EXTRA*/
+function chooseMetrics({ situation }) {
+  return [
+    metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: { plot: true } }),
+    metrics.createEvents({ renderLabel: (_query) => "Events", meta: { hiddenOnMobile: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+    !situation.is_filtering_on_goal && metrics.createPercentage(),
+    BUILD_EXTRA && metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
+    BUILD_EXTRA && metrics.createAverageRevenue({ meta: { hiddenOnMobile: true } })
+  ].filter(metric => !!metric)
+}  

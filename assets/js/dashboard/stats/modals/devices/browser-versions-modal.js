@@ -10,7 +10,6 @@ import chooseMetrics from './choose-metrics';
 import { SortDirection } from "../../../hooks/use-order-by";
 
 function BrowserVersionsModal() {
-  const { query } = useQueryContext();
   const site = useSiteContext();
 
   const reportInfo = {
@@ -38,7 +37,7 @@ function BrowserVersionsModal() {
     <Modal>
       <BreakdownModal
         reportInfo={reportInfo}
-        metrics={chooseMetrics(query)}
+        getMetrics={chooseMetrics}
         getFilterInfo={getFilterInfo}
         addSearchFilter={addSearchFilter}
         renderIcon={renderIcon}

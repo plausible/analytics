@@ -4,13 +4,25 @@ import { useParams } from "react-router-dom";
 import Modal from './modal'
 import { addFilter, revenueAvailable } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
-import { EVENT_PROPS_PREFIX, hasConversionGoalFilter } from "../../util/filters"
+import { EVENT_PROPS_PREFIX } from "../../util/filters"
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
 import * as url from "../../util/url";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
 import { SortDirection } from "../../hooks/use-order-by";
+
+function chooseMetricsFactory(showRevenueMetrics) {
+  return function chooseMetrics({situation}) {
+  return [
+    metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
+    metrics.createEvents({ renderLabel: (_query) => "Events" }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+    !situation.is_filtering_on_goal && metrics.createPercentage(),
+    showRevenueMetrics && metrics.createAverageRevenue(),
+    showRevenueMetrics && metrics.createTotalRevenue(),
+  ].filter(metric => !!metric)}
+}
 
 function PropsModal() {
   const { query } = useQueryContext();
@@ -39,22 +51,12 @@ function PropsModal() {
     return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString], { case_sensitive: false }])
   }, [propKey])
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
-      metrics.createEvents({ renderLabel: (_query) => "Events" }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage(),
-      showRevenueMetrics && metrics.createAverageRevenue(),
-      showRevenueMetrics && metrics.createTotalRevenue(),
-    ].filter(metric => !!metric)
-  }
 
   return (
     <Modal>
       <BreakdownModal
         reportInfo={reportInfo}
-        metrics={chooseMetrics()}
+        getMetrics={chooseMetricsFactory(showRevenueMetrics)}
         getFilterInfo={getFilterInfo}
         addSearchFilter={addSearchFilter}
       />

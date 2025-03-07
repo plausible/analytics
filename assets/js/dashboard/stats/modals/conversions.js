@@ -31,15 +31,15 @@ function ConversionsModal() {
     return addFilter(query, ['contains', reportInfo.dimension, [searchString], { case_sensitive: false }])
   }, [reportInfo.dimension])
 
-  function chooseMetrics() {
+  const chooseMetrics = useCallback(() => {
     return [
-      metrics.createVisitors({ renderLabel: (_query) => "Uniques" }),
-      metrics.createEvents({ renderLabel: (_query) => "Total" }),
+      metrics.createVisitors({ renderLabel: () => "Uniques" }),
+      metrics.createEvents({ renderLabel: () => "Total" }),
       metrics.createConversionRate(),
       showRevenue && metrics.createAverageRevenue(),
       showRevenue && metrics.createTotalRevenue(),
     ].filter(metric => !!metric)
-  }
+  }, [showRevenue])
 
   // After a successful API response, we want to scan the rows of the
   // response and update the internal `showRevenue` state, which decides
@@ -62,7 +62,7 @@ function ConversionsModal() {
     <Modal>
       <BreakdownModal
         reportInfo={reportInfo}
-        metrics={chooseMetrics()}
+        getMetrics={chooseMetrics}
         afterFetchData={BUILD_EXTRA ? afterFetchData : undefined}
         afterFetchNextPage={BUILD_EXTRA ? afterFetchNextPage : undefined}
         getFilterInfo={getFilterInfo}
