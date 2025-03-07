@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - Fix database mismatch between event and session user_ids after rotating salts
 - `/api/v2/query` no longer returns a 500 when querying percentage metric without `visitors`
 - Fix current visitors loading when viewing a dashboard with a shared link  
+- Fix Conversion Rate graph being unselectable when "Goal is ..." filter is within a segment
 
 ## v2.1.5-rc.1 - 2025-01-17
 

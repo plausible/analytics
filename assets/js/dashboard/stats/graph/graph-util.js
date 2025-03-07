@@ -1,27 +1,3 @@
-import { getFiltersByKeyPrefix, hasConversionGoalFilter } from '../../util/filters'
-import { revenueAvailable } from '../../query'
-
-export function getGraphableMetrics(query, site) {
-  const isRealtime = query.period === 'realtime'
-  const isGoalFilter = hasConversionGoalFilter(query)
-  const isPageFilter = getFiltersByKeyPrefix(query, "page").length > 0
-
-  if (isRealtime && isGoalFilter) {
-    return ["visitors"]
-  } else if (isRealtime) {
-    return ["visitors", "pageviews"]
-  } else if (isGoalFilter && revenueAvailable(query, site)) {
-    return ["visitors", "events", "average_revenue", "total_revenue", "conversion_rate"]
-  } else if (isGoalFilter) {
-    return ["visitors", "events", "conversion_rate"]
-  } else if (isPageFilter) {
-    const pageFilterMetrics = ["visitors", "visits", "pageviews", "bounce_rate"]
-    return site.scrollDepthVisible ? [...pageFilterMetrics, "scroll_depth"] : pageFilterMetrics
-  } else {
-    return ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"]
-  }
-}
-
 export const METRIC_LABELS = {
   'visitors': 'Visitors',
   'pageviews': 'Pageviews',

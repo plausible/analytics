@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as api from '../../api';
 import * as storage from '../../util/storage';
-import { getGraphableMetrics } from './graph-util';
 import TopStats from './top-stats';
 import { IntervalPicker, getCurrentInterval } from './interval-picker';
 import StatsExport from './stats-export';
@@ -84,18 +83,11 @@ export default function VisitorGraph({ updateImportedDataInView }) {
     if (topStatData) { storeTopStatsContainerHeight() }
   }, [topStatData])
 
-  function fetchTopStatsAndGraphData() {
-    fetchTopStats(site, query)
-      .then((res) => {
-        if (updateImportedDataInView) {
-          updateImportedDataInView(res.includes_imported)
-        }
-        setTopStatData(res)
-        setTopStatsLoading(false)
-      })
-
+  async function fetchTopStatsAndGraphData() {
+    const response = await fetchTopStats(site, query)
+    
     let metric = getStoredMetric()
-    const availableMetrics = getGraphableMetrics(query, site)
+    const availableMetrics = response.graphable_metrics
 
     if (!availableMetrics.includes(metric)) {
       metric = availableMetrics[0]
@@ -103,6 +95,13 @@ export default function VisitorGraph({ updateImportedDataInView }) {
     }
 
     const interval = getCurrentInterval(site, query)
+    
+    if (response.updateImportedDataInView) {
+      updateImportedDataInView(response.includes_imported)
+    }
+    
+    setTopStatData(response)
+    setTopStatsLoading(false)
 
     fetchGraphData(metric, interval)
   }
@@ -159,6 +158,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
       <FadeIn show={!(topStatsLoading || graphLoading)}>
         <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }}>
           <TopStats
+            graphableMetrics={topStatData?.graphable_metrics || []}
             data={topStatData}
             onMetricUpdate={onMetricUpdate}
             tooltipBoundary={topStatsBoundary.current}
