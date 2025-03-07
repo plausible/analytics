@@ -1388,7 +1388,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "scroll_depth"],
           "date_range" => "all",
@@ -1476,7 +1476,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "scroll_depth"],
           "date_range" => "all",
@@ -1510,7 +1510,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "scroll_depth"],
           "date_range" => ["2022-01-01", "2022-01-31"],
@@ -1554,7 +1554,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "scroll_depth"],
           "date_range" => "all",
