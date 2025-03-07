@@ -1,6 +1,8 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
   use Plausible
+
+  alias Plausible.Teams
   alias PlausibleWeb.Components.Billing.Notice
 
   def plausible_url do
@@ -105,7 +107,9 @@ defmodule PlausibleWeb.LayoutView do
       ]
     }
 
-    if Plausible.Teams.enabled?(conn.assigns[:my_team]) do
+    current_team = conn.assigns[:current_team]
+
+    if Teams.enabled?(current_team) and Teams.setup?(current_team) do
       Map.put(options, "Team Settings", [
         %{key: "General", value: "team/general", icon: :adjustments_horizontal}
       ])
@@ -114,8 +118,69 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def team_switcher(assigns) do
+    teams = assigns[:teams]
+
+    if teams && length(teams) > 1 do
+      current_team = assigns[:current_team]
+      my_team = assigns[:my_team]
+      current_included? = current_team && Enum.any?(teams, &(&1.id == current_team.id))
+      current_is_my? = current_team && my_team && current_team.id == my_team.id
+
+      teams =
+        if current_team && !current_included? && !current_is_my? do
+          [current_team | teams]
+        else
+          teams
+        end
+
+      teams =
+        if my_team do
+          teams ++ [my_team]
+        else
+          teams ++ [%Teams.Team{identifier: "none", name: Teams.default_name()}]
+        end
+
+      selected_id = current_team && current_team.id
+
+      assigns =
+        assigns
+        |> assign(:teams, teams)
+        |> assign(:selected_id, selected_id)
+
+      ~H"""
+      <.dropdown_item>
+        <div class="text-xs text-gray-500 dark:text-gray-400">Teams</div>
+      </.dropdown_item>
+      <.dropdown_item
+        :for={team <- @teams}
+        href={Routes.auth_path(@conn, :switch_team, team.identifier)}
+        method="post"
+      >
+        <p
+          class={[
+            if(team.id == @selected_id,
+              do: "border-r-4 border-indigo-400 font-bold",
+              else: "font-medium"
+            ),
+            "truncate text-gray-900 dark:text-gray-100 pr-4"
+          ]}
+          role="none"
+        >
+          {Teams.name(team)}
+        </p>
+      </.dropdown_item>
+      <.dropdown_item :if={@more_teams?} href={Routes.auth_path(@conn, :select_team)}>
+        Switch to Another Team
+      </.dropdown_item>
+      """
+    else
+      ~H""
+    end
+  end
+
   def trial_notification(team) do
-    case Plausible.Teams.trial_days_left(team) do
+    case Teams.trial_days_left(team) do
       days when days > 1 ->
         "#{days} trial days left"
 

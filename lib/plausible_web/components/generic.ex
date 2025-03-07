@@ -273,6 +273,7 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr(:href, :string)
+  attr(:method, :string, default: "get")
   attr(:class, :string, default: "")
   attr(:id, :string, default: nil)
   attr(:new_tab, :boolean, default: false)
@@ -299,6 +300,7 @@ defmodule PlausibleWeb.Components.Generic do
         class={@class}
         new_tab={@new_tab}
         href={@href}
+        method={@method}
         x-on:click="close()"
         data-ui-state={@state}
         {@rest}
