@@ -60,7 +60,7 @@ type BreakdownModalProps = {
 
 export default function BreakdownModal<TListItem extends { name: string }>({
   reportInfo,
-  metrics,
+  getMetrics,
   renderIcon,
   getExternalLinkUrl,
   searchEnabled = true,
@@ -72,7 +72,11 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   const site = useSiteContext()
   const { query } = useQueryContext()
   const [meta, setMeta] = useState<BreakdownResultMeta | null>(null)
-
+  const situation = meta?.situation
+  const metrics = useMemo(
+    () => situation ? getMetrics({ site, situation: situation }) : [],
+    [getMetrics, situation, site]
+  )
   const [search, setSearch] = useState('')
   const defaultOrderBy = getStoredOrderBy({
     domain: site.domain,

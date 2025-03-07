@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as storage from '../../util/storage';
-import { getFiltersByKeyPrefix, hasConversionGoalFilter, isFilteringOnFixedValue } from '../../util/filters';
+import { getFiltersByKeyPrefix } from '../../util/filters';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
 import * as api from '../../api';
@@ -50,6 +50,23 @@ export function browserIconFor(browser) {
   )
 }
 
+function chooseMetrics({situation}) {
+  return [
+    metrics.createVisitors({ meta: { plot: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+    !situation.is_filtering_on_goal && metrics.createPercentage()
+  ].filter(metric => !!metric)
+}
+
+function chooseOperatingSystemMetrics({situation}) {
+  return [
+    metrics.createVisitors({ meta: { plot: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+    !situation.is_filtering_on_goal && metrics.createPercentage({ meta: { hiddenonMobile: true } })
+  ].filter(metric => !!metric)
+}
+
+
 function Browsers({ afterFetchData }) {
   const site = useSiteContext();
   const { query } = useQueryContext();
@@ -68,21 +85,13 @@ function Browsers({ afterFetchData }) {
     return browserIconFor(listItem.name)
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
-    ].filter(metric => !!metric)
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel="Browser"
-      metrics={chooseMetrics()}
+      getMetrics={chooseMetrics}
       renderIcon={renderIcon}
       detailsLinkProps={{ path: browsersRoute.path, search: (search) => search }}
     />
@@ -110,21 +119,13 @@ function BrowserVersions({ afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
-    ].filter(metric => !!metric)
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel="Browser version"
-      metrics={chooseMetrics()}
+      getMetrics={chooseMetrics}
       renderIcon={renderIcon}
       detailsLinkProps={{ path: browserVersionsRoute.path, search: (search) => search }}
     />
@@ -177,14 +178,6 @@ function OperatingSystems({ afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage({ meta: { hiddenonMobile: true } })
-    ].filter(metric => !!metric)
-  }
-
   function renderIcon(listItem) {
     return osIconFor(listItem.name)
   }
@@ -196,7 +189,7 @@ function OperatingSystems({ afterFetchData }) {
       getFilterInfo={getFilterInfo}
       renderIcon={renderIcon}
       keyLabel="Operating system"
-      metrics={chooseMetrics()}
+      getMetrics={chooseOperatingSystemMetrics}
       detailsLinkProps={{ path: operatingSystemsRoute.path, search: (search) => search }}
     />
   )
@@ -224,14 +217,6 @@ function OperatingSystemVersions({ afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
-    ].filter(metric => !!metric)
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
@@ -239,7 +224,7 @@ function OperatingSystemVersions({ afterFetchData }) {
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel="Operating System Version"
-      metrics={chooseMetrics()}
+      getMetrics={chooseMetrics}
       detailsLinkProps={{ path: operatingSystemVersionsRoute.path, search: (search) => search }}
     />
   )
@@ -265,21 +250,13 @@ function ScreenSizes({ afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-      !hasConversionGoalFilter(query) && metrics.createPercentage()
-    ].filter(metric => !!metric)
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel="Screen size"
-      metrics={chooseMetrics()}
+      getMetrics={chooseMetrics}
       renderIcon={renderIcon}
       detailsLinkProps={{ path: screenSizesRoute.path, search: (search) => search }}
     />
@@ -311,6 +288,7 @@ export default function Devices() {
   const [mode, setMode] = useState(storedTab || 'browser')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const [meta, setMeta] = useState(null);
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
@@ -320,6 +298,7 @@ export default function Devices() {
   function afterFetchData(apiResponse) {
     setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
+    setMeta(apiResponse.meta)
   }
 
   useEffect(() => setLoading(true), [query, mode])
@@ -327,12 +306,12 @@ export default function Devices() {
   function renderContent() {
     switch (mode) {
       case 'browser':
-        if (isFilteringOnFixedValue(query, 'browser')) {
+        if (meta?.situation?.fixed_browser) {
           return <BrowserVersions afterFetchData={afterFetchData} />
         }
         return <Browsers afterFetchData={afterFetchData} />
       case 'os':
-        if (isFilteringOnFixedValue(query, 'os')) {
+        if (meta?.situation?.fixed_os) {
           return <OperatingSystemVersions afterFetchData={afterFetchData} />
         }
         return <OperatingSystems afterFetchData={afterFetchData} />

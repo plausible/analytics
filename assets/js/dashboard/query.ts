@@ -49,10 +49,19 @@ export const queryDefaultValue = {
 
 export type DashboardQuery = typeof queryDefaultValue
 
+export interface Situation {
+  is_filtering_on_goal: boolean
+  is_realtime_period: boolean
+  fixed_os: string | null | false
+  fixed_source: string | null | false
+  fixed_browser: string | null | false
+}
+
 export type BreakdownResultMeta = {
   date_range_label: string
   comparison_date_range_label?: string
-  metric_warnings: Record<string, Record<string, string>> | undefined
+  metric_warnings: Record<string, Record<string, string>> | undefined,
+  situation: Situation
 }
 
 export function addFilter(

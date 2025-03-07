@@ -58,21 +58,13 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: { plot: true } }),
-      metrics.createEvents({ renderLabel: (_query) => "Events", meta: { hiddenOnMobile: true } }),
-      metrics.createConversionRate()
-    ].filter(metric => !!metric)
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel={prop}
-      metrics={chooseMetrics()}
+      getMetrics={chooseMetrics}
       detailsLinkProps={{ path: customPropsRoute.path, params: {propKey: url.maybeEncodeRouteParam(prop)}, search: (search) => search }}
       getExternalLinkUrl={getExternalLinkUrlFactory()}
       maybeHideDetails={true}
@@ -80,6 +72,14 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
       colMinWidth={90}
     />
   )
+}
+
+function chooseMetrics() {
+  return [
+    metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: { plot: true } }),
+    metrics.createEvents({ renderLabel: (_query) => "Events", meta: { hiddenOnMobile: true } }),
+    metrics.createConversionRate()
+  ].filter(metric => !!metric)
 }
 
 export default function GoalConversions({ afterFetchData, onGoalFilterClick }) {

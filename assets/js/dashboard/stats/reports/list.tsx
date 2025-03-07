@@ -1,6 +1,12 @@
 /** @format */
 
-import React, { useState, useEffect, useCallback, ReactNode } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+  useMemo
+} from 'react'
 import { AppNavigationLinkProps } from '../../navigation/use-app-navigate'
 import FlipMove from 'react-flip-move'
 
@@ -16,6 +22,8 @@ import {
 import { useQueryContext } from '../../query-context'
 import { Metric } from './metrics'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
+import { PlausibleSite, useSiteContext } from '../../site-context'
+import { BreakdownResultMeta } from '../../query'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 380
@@ -58,9 +66,12 @@ function ExternalLink<T>({
 
 export interface SharedReportProps<
   TListItem extends Record<string, unknown> = Record<string, unknown>,
-  TResponse = { results: TListItem[]; meta: unknown }
+  TResponse = { results: TListItem[]; meta: BreakdownResultMeta }
 > {
-  metrics: Metric[]
+  getMetrics: (options: {
+    site: PlausibleSite
+    situation: { is_filtering_on_goal: boolean; is_realtime_period: boolean }
+  }) => Metric[]
   /** A function that takes a list item and returns the
    *    that should be applied when the list item is clicked. All existing filters matching prefix
    *    are removed. If a list item is not supposed to be clickable, this function should
@@ -124,7 +135,7 @@ export default function ListReport<
   TListItem extends Record<string, unknown> & { name: string }
 >({
   keyLabel,
-  metrics,
+  getMetrics,
   colMinWidth = COL_MIN_WIDTH,
   afterFetchData,
   detailsLinkProps,
@@ -136,11 +147,12 @@ export default function ListReport<
   getExternalLinkUrl,
   fetchData
 }: ListReportProps & SharedReportProps<TListItem>) {
+  const site = useSiteContext()
   const { query } = useQueryContext()
   const [state, setState] = useState<{
     loading: boolean
     list: TListItem[] | null
-    meta: unknown | null
+    meta: BreakdownResultMeta | null
   }>({ loading: true, list: null, meta: null })
   const [visible, setVisible] = useState(false)
 
@@ -189,6 +201,11 @@ export default function ListReport<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyLabel, query, visible])
 
+  const metrics = useMemo(
+    () =>
+      !state.meta ? [] : getMetrics({ site, situation: state.meta.situation }),
+    [site, getMetrics, state.meta]
+  )
   // returns a filtered `metrics` list. Since currently, the backend can return different
   // metrics based on filters and existing data, this function validates that the metrics
   // we want to display are actually there in the API response.

@@ -23,17 +23,6 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ renderLabel: (_query) => "Uniques", meta: { plot: true } }),
-      metrics.createEvents({ renderLabel: (_query) => "Total", meta: { hiddenOnMobile: true } }),
-      metrics.createConversionRate(),
-      BUILD_EXTRA && metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
-      BUILD_EXTRA && metrics.createAverageRevenue({ meta: { hiddenOnMobile: true } })
-    ].filter(metric => !!metric)
-  }
-
-  /*global BUILD_EXTRA*/
   return (
     <ListReport
       fetchData={fetchConversions}
@@ -41,10 +30,21 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
       getFilterInfo={getFilterInfo}
       keyLabel="Goal"
       onClick={onGoalFilterClick}
-      metrics={chooseMetrics()}
+      getMetrics={chooseMetrics}
       detailsLinkProps={{ path: conversionsRoute.path, search: (search) => search }}
       color="bg-red-50"
       colMinWidth={90}
     />
   )
+}
+
+/* global BUILD_EXTRA */
+function chooseMetrics() {
+  return [
+    metrics.createVisitors({ renderLabel: (_query) => "Uniques", meta: { plot: true } }),
+    metrics.createEvents({ renderLabel: (_query) => "Total", meta: { hiddenOnMobile: true } }),
+    metrics.createConversionRate(),
+    BUILD_EXTRA && metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
+    BUILD_EXTRA && metrics.createAverageRevenue({ meta: { hiddenOnMobile: true } })
+  ].filter(metric => !!metric)
 }

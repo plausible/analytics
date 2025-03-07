@@ -7,11 +7,18 @@ import * as api from '../../api';
 import { apiPath } from '../../util/url';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasConversionGoalFilter, getFiltersByKeyPrefix } from '../../util/filters';
+import { getFiltersByKeyPrefix } from '../../util/filters';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
+
+function chooseMetrics({ situation }) {
+  return [
+    metrics.createVisitors({ meta: { plot: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate()
+  ].filter((metric) => !!metric)
+}
 
 function Countries({ query, site, onClick, afterFetchData }) {
 	function fetchData() {
@@ -30,13 +37,6 @@ function Countries({ query, site, onClick, afterFetchData }) {
 		}
 	}
 
-	function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: {plot: true}}),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
-
 	return (
 		<ListReport
 			fetchData={fetchData}
@@ -44,7 +44,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
 			getFilterInfo={getFilterInfo}
 			onClick={onClick}
 			keyLabel="Country"
-			metrics={chooseMetrics()}
+			getMetrics={chooseMetrics}
 			detailsLinkProps={{ path: countriesRoute.path, search: (search) => search }}
 			renderIcon={renderIcon}
 			color="bg-orange-50"
@@ -69,13 +69,6 @@ function Regions({ query, site, onClick, afterFetchData }) {
 		}
 	}
 
-	function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: {plot: true}}),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
-
 	return (
 		<ListReport
 			fetchData={fetchData}
@@ -83,7 +76,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
 			getFilterInfo={getFilterInfo}
 			onClick={onClick}
 			keyLabel="Region"
-			metrics={chooseMetrics()}
+			getMetrics={chooseMetrics}
 			detailsLinkProps={{ path: regionsRoute.path, search: (search) => search }}
 			renderIcon={renderIcon}
 			color="bg-orange-50"
@@ -108,20 +101,13 @@ function Cities({ query, site, afterFetchData }) {
 		}
 	}
 
-	function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: {plot: true}}),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
-
 	return (
 		<ListReport
 			fetchData={fetchData}
 			afterFetchData={afterFetchData}
 			getFilterInfo={getFilterInfo}
 			keyLabel="City"
-			metrics={chooseMetrics()}
+			getMetrics={chooseMetrics}
 			detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}
 			renderIcon={renderIcon}
 			color="bg-orange-50"

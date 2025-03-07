@@ -1790,10 +1790,56 @@ defmodule PlausibleWeb.Api.StatsController do
     )
   end
 
-  defp get_situation(query, metrics),
-    do: %{
+  defp get_situation(query, metrics) do
+    acc =
+      Enum.reduce(
+        Filters.traverse(query.filters),
+        [fixed_browser: nil, fixed_os: nil, fixed_source: nil],
+        fn {filter, _}, acc ->
+          case filter do
+            [:is, "visit:browser", [browser]] ->
+              Keyword.put(
+                acc,
+                :fixed_browser,
+                if(is_nil(Keyword.get(acc, :fixed_browser)), do: browser, else: false)
+              )
+
+            [_, "visit:browser", _] ->
+              Keyword.put(acc, :fixed_browser, false)
+
+            [:is, "visit:os", [os]] ->
+              Keyword.put(
+                acc,
+                :fixed_os,
+                if(is_nil(Keyword.get(acc, :fixed_os)), do: os, else: false)
+              )
+
+            [_, "visit:os", _] ->
+              Keyword.put(acc, :fixed_os, false)
+
+            [:is, "visit:source", [source]] ->
+              Keyword.put(
+                acc,
+                :fixed_source,
+                if(is_nil(Keyword.get(acc, :fixed_source)), do: source, else: false)
+              )
+
+            [_, "visit:source", _] ->
+              Keyword.put(acc, :fixed_source, false)
+
+            _ ->
+              acc
+          end
+        end
+      )
+
+    %{
+      fixed_browser: Keyword.get(acc, :fixed_browser),
+      fixed_os: Keyword.get(acc, :fixed_os),
+      fixed_source: Keyword.get(acc, :fixed_source),
       metrics_in_query: metrics,
       is_filtering_on_goal: toplevel_goal_filter?(query),
       is_realtime_period: query.period == "30m"
     }
+  end
 end

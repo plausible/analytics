@@ -6,10 +6,16 @@ import * as api from '../../api';
 import ListReport from './../reports/list';
 import * as metrics from './../reports/metrics';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
-import { hasConversionGoalFilter } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { entryPagesRoute, exitPagesRoute, topPagesRoute } from '../../router';
+
+function chooseEntryPagesMetrics({situation}) {
+  return [
+    metrics.createVisitors({ defaultLabel: 'Unique Entrances', width: 'w-36', meta: { plot: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+  ].filter(metric => !!metric)
+}
 
 function EntryPages({ afterFetchData }) {
   const { query } = useQueryContext();
@@ -29,12 +35,6 @@ function EntryPages({ afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ defaultLabel: 'Unique Entrances', width: 'w-36', meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
 
   return (
     <ListReport
@@ -42,12 +42,19 @@ function EntryPages({ afterFetchData }) {
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel="Entry page"
-      metrics={chooseMetrics()}
+      getMetrics={chooseEntryPagesMetrics}
       detailsLinkProps={{ path: entryPagesRoute.path, search: (search) => search }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50"
     />
   )
+}
+
+function chooseExitPagesMetrics({situation}) {
+  return [
+    metrics.createVisitors({ defaultLabel: 'Unique Exits', width: 'w-36', meta: { plot: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+  ].filter(metric => !!metric)
 }
 
 function ExitPages({ afterFetchData }) {
@@ -68,12 +75,6 @@ function ExitPages({ afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ defaultLabel: 'Unique Exits', width: 'w-36', meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
 
   return (
     <ListReport
@@ -81,12 +82,19 @@ function ExitPages({ afterFetchData }) {
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel="Exit page"
-      metrics={chooseMetrics()}
+      getMetrics={chooseExitPagesMetrics}
       detailsLinkProps={{ path: exitPagesRoute.path, search: (search) => search }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50"
     />
   )
+}
+
+function chooseTopPagesMetrics({situation}) {
+  return [
+    metrics.createVisitors({ meta: { plot: true } }),
+    situation.is_filtering_on_goal && metrics.createConversionRate(),
+  ].filter(metric => !!metric)
 }
 
 function TopPages({ afterFetchData }) {
@@ -107,20 +115,13 @@ function TopPages({ afterFetchData }) {
     }
   }
 
-  function chooseMetrics() {
-    return [
-      metrics.createVisitors({ meta: { plot: true } }),
-      hasConversionGoalFilter(query) && metrics.createConversionRate(),
-    ].filter(metric => !!metric)
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterInfo={getFilterInfo}
       keyLabel="Page"
-      metrics={chooseMetrics()}
+      getMetrics={chooseTopPagesMetrics}
       detailsLinkProps={{ path: topPagesRoute.path, search: (search) => search }}
       getExternalLinkUrl={getExternalLinkUrl}
       color="bg-orange-50"
