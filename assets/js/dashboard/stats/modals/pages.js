@@ -60,6 +60,7 @@ function PagesModal() {
   return (
     <Modal>
       <BreakdownModal
+      
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}

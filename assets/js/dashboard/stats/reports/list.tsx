@@ -84,6 +84,7 @@ export interface SharedReportProps<
    *     example, the parent component might want to control what happens when imported data
    *     is included or not. */
   afterFetchData?: (response: TResponse) => void
+  afterFetchNextPage?: (response: { results: TListItem[] }) => void
 }
 
 type ListReportProps = {
