@@ -43,7 +43,7 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
     return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
   }
 
-  function externalLinkDest() {
+  function getExternalLinkUrlFactory() {
     if (prop === 'path') {
       return (listItem) => url.externalLinkForPage(site.domain, listItem.name)
     } else {
@@ -51,7 +51,7 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
     }
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: EVENT_PROPS_PREFIX,
       filter: ["is", `${EVENT_PROPS_PREFIX}${prop}`, [listItem['name']]]
@@ -70,11 +70,11 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel={prop}
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: customPropsRoute.path, params: {propKey: url.maybeEncodeRouteParam(prop)}, search: (search) => search }}
-      externalLinkDest={externalLinkDest()}
+      getExternalLinkUrl={getExternalLinkUrlFactory()}
       maybeHideDetails={true}
       color="bg-red-50"
       colMinWidth={90}
