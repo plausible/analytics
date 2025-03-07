@@ -6,7 +6,6 @@ import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date'
-import { getGraphableMetrics } from './graph-util'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
@@ -26,7 +25,12 @@ function topStatNumberLong(metric, value) {
   return formatter(value)
 }
 
-export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
+export default function TopStats({
+  data,
+  onMetricUpdate,
+  tooltipBoundary,
+  graphableMetrics
+}) {
   const { query } = useQueryContext()
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
@@ -77,7 +81,6 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
   }
 
   function canMetricBeGraphed(stat) {
-    const graphableMetrics = getGraphableMetrics(query, site)
     return graphableMetrics.includes(stat.graph_metric)
   }
 
