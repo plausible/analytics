@@ -16,7 +16,7 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
     return api.get(url.apiPath(site, '/conversions'), query, { limit: 9 })
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: "goal",
       filter: ["is", "goal", [listItem.name]],
@@ -38,7 +38,7 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
     <ListReport
       fetchData={fetchConversions}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Goal"
       onClick={onGoalFilterClick}
       metrics={chooseMetrics()}

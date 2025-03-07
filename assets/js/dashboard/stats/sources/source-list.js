@@ -31,7 +31,7 @@ function AllSources({ afterFetchData }) {
     return api.get(url.apiPath(site, '/sources'), query, { limit: 9 })
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: 'source',
       filter: ["is", "source", [listItem['name']]]
@@ -59,7 +59,7 @@ function AllSources({ afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Source"
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: sourcesRoute.path, search: (search) => search }}
@@ -77,7 +77,7 @@ function Channels({ onClick, afterFetchData }) {
     return api.get(url.apiPath(site, '/channels'), query, { limit: 9 })
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: 'channel',
       filter: ["is", "channel", [listItem['name']]]
@@ -95,7 +95,7 @@ function Channels({ onClick, afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Channel"
       onClick={onClick}
       metrics={chooseMetrics()}
@@ -122,7 +122,7 @@ function UTMSources({ tab, afterFetchData }) {
     return api.get(url.apiPath(site, utmTag.endpoint), query, { limit: 9 })
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: tab,
       filter: ["is", tab, [listItem['name']]]
@@ -140,7 +140,7 @@ function UTMSources({ tab, afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel={utmTag.label}
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: route?.path, search: (search) => search }}

@@ -107,7 +107,7 @@ export default function Properties({ afterFetchData }) {
       <ListReport
         fetchData={fetchProps}
         afterFetchData={afterFetchData}
-        getFilterFor={getFilterFor}
+        getFilterInfo={getFilterInfo}
         keyLabel={propKey}
         metrics={chooseMetrics()}
         detailsLinkProps={{ path: customPropsRoute.path, params: { propKey }, search: (search) => search }}
@@ -118,7 +118,7 @@ export default function Properties({ afterFetchData }) {
     )
   }
 
-  const getFilterFor = (listItem) => ({
+  const getFilterInfo = (listItem) => ({
     prefix: `${EVENT_PROPS_PREFIX}${propKey}`,
     filter: ["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]
   })
