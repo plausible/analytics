@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.AuthContext do
         %{current_user: user} ->
           if current_team_id = session["current_team_id"] do
             user.team_memberships
-            |> Enum.find(%{}, &(&1.team_id == current_team_id))
+            |> Enum.find(%{}, &(&1.team.identifier == current_team_id))
             |> Map.get(:team)
           end
       end)
@@ -46,34 +46,45 @@ defmodule PlausibleWeb.Live.AuthContext do
         %{current_user: nil} ->
           nil
 
-        %{current_user: user} = context ->
-          current_team = context.team_from_session
+        %{current_user: user} ->
+          user.team_memberships
+          |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
+          |> Map.get(:team)
+      end)
+      |> assign_new(:current_team, fn
+        %{current_user: nil} ->
+          nil
 
-          current_team_owner? =
-            (current_team || %{})
-            |> Map.get(:owners, [])
-            |> Enum.any?(&(&1.id == user.id))
+        %{team_from_session: %{} = team_from_session} ->
+          team_from_session
 
-          if current_team_owner? do
-            current_team
-          else
+        %{my_team: %{} = my_team} ->
+          my_team
+
+        %{current_user: user} ->
+          if not Plausible.Teams.enabled?(nil) do
             user.team_memberships
-            # NOTE: my_team should eventually only hold user's personal team. This requires
-            # additional adjustments, which will be done in follow-up work.
-            # |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
+            |> Enum.sort_by(& &1.team_id)
             |> List.first(%{})
             |> Map.get(:team)
           end
       end)
-      |> assign_new(:current_team, fn context ->
-        context.team_from_session || context.my_team
+      |> assign_new(:teams, fn
+        %{current_user: nil} ->
+          []
+
+        %{current_user: user} ->
+          user.team_memberships
+          |> Enum.sort_by(fn tm -> [tm.role != :owner, tm.team_id] end)
+          |> Enum.map(&Map.fetch!(&1, :team))
+          |> Enum.take(3)
       end)
       |> assign_new(:teams_count, fn
         %{current_user: nil} -> 0
         %{current_user: user} -> length(user.team_memberships)
       end)
-      |> assign_new(:multiple_teams?, fn context ->
-        context.teams_count > 1
+      |> assign_new(:more_teams?, fn context ->
+        context.teams_count > 3
       end)
 
     {:cont, socket}

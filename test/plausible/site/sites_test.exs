@@ -470,12 +470,12 @@ defmodule Plausible.SitesTest do
 
       invite_guest(site3, user1, role: :viewer, inviter: user3)
       invite_transfer(site2, user1, inviter: user2)
-      add_member(site4.team, user: user1, role: :editor)
+      team4 = Plausible.Teams.complete_setup(site4.team)
+      add_member(team4, user: user1, role: :editor)
 
       assert_matches %{
                        entries: [
-                         %{id: ^site1.id},
-                         %{id: ^site4.id}
+                         %{id: ^site1.id}
                        ]
                      } = Sites.list(user1, %{})
 
@@ -483,8 +483,7 @@ defmodule Plausible.SitesTest do
                        entries: [
                          %{id: ^site3.id},
                          %{id: ^site2.id},
-                         %{id: ^site1.id},
-                         %{id: ^site4.id}
+                         %{id: ^site1.id}
                        ]
                      } = Sites.list_with_invitations(user1, %{})
 
@@ -492,15 +491,14 @@ defmodule Plausible.SitesTest do
                        entries: [
                          %{id: ^site4.id}
                        ]
-                     } = Sites.list(user1, %{}, team: site4.team)
+                     } = Sites.list(user1, %{}, team: team4)
 
       assert_matches %{
                        entries: [
-                         %{id: ^site3.id},
                          %{id: ^site2.id},
                          %{id: ^site4.id}
                        ]
-                     } = Sites.list_with_invitations(user1, %{}, team: site4.team)
+                     } = Sites.list_with_invitations(user1, %{}, team: team4)
     end
 
     test "handles pagination correctly" do
