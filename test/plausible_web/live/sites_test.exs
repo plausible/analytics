@@ -25,6 +25,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       new_site(owner: user)
       team = team_of(user)
+      team = Plausible.Teams.complete_setup(team)
 
       conn = set_current_team(conn, team)
 

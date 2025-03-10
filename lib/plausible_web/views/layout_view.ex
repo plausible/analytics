@@ -154,7 +154,7 @@ defmodule PlausibleWeb.LayoutView do
       </.dropdown_item>
       <.dropdown_item
         :for={team <- @teams}
-        href={Routes.site_path(@conn, :index, team: team.identifier)}
+        href={Routes.site_path(@conn, :index, __team: team.identifier)}
       >
         <p
           class={[

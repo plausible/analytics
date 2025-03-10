@@ -292,7 +292,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         socket
         |> put_flash(:success, "Your team is now setup")
         |> redirect(
-          to: Routes.settings_path(socket, :team_general, team: current_team.identifier)
+          to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
         )
 
       {{:ok, _}, :team_management} ->

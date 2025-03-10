@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       save_layout(lv)
 
-      assert_redirect(lv, "/settings/team/general?team=" <> team.identifier)
+      assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
 
       team = Repo.reload!(team)
 

@@ -1136,6 +1136,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "GET /settings/team/general", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
       conn = get(conn, Routes.settings_path(conn, :team_general))
       html = html_response(conn, 200)
       assert html =~ "Team Information"
@@ -1159,7 +1161,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "POST /settings/team/general/name - changeset error", %{conn: conn, user: user} do
-      {:ok, _team} = Plausible.Teams.get_or_create(user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
 
       conn =
         post(conn, Routes.settings_path(conn, :update_team_name), %{

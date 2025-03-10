@@ -12,7 +12,7 @@
         <.unstyled_link href={
           if team.current?,
             do: "#",
-            else: Routes.site_path(@conn, :index, team: team.identifier)
+            else: Routes.site_path(@conn, :index, __team: team.identifier)
         }>
           <div class="hover:bg-indigo-100 dark:hover:bg-gray-700 p-4">
             <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">

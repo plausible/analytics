@@ -56,7 +56,7 @@ defmodule PlausibleWeb.AuthPlugTest do
 
     conn =
       conn
-      |> Plug.Adapters.Test.Conn.conn(:get, "/", %{team: team.identifier})
+      |> Plug.Adapters.Test.Conn.conn(:get, "/", %{__team: team.identifier})
       |> AuthPlug.call(%{})
 
     assert conn.assigns[:current_team].id == team.id
