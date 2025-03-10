@@ -21,14 +21,14 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:ok, socket |> assign(mode: mode) |> reset()}
   end
 
-  defp reset(%{assigns: %{current_user: current_user, my_team: my_team}} = socket) do
-    {:ok, my_role} = Teams.Memberships.team_role(my_team, current_user)
+  defp reset(%{assigns: %{current_user: current_user, current_team: current_team}} = socket) do
+    {:ok, my_role} = Teams.Memberships.team_role(current_team, current_user)
 
     if my_role not in [:owner, :admin] do
       redirect(socket, to: Routes.settings_path(socket, :team_general))
     else
-      layout = Layout.init(my_team)
-      team_members_limit = Plausible.Teams.Billing.team_member_limit(my_team)
+      layout = Layout.init(current_team)
+      team_members_limit = Plausible.Teams.Billing.team_member_limit(current_team)
 
       assign(socket,
         team_members_limit: team_members_limit,
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
       :if={at_limit?(@layout, @team_members_limit)}
       current_user={@current_user}
       billable_user={@current_user}
-      current_team={@my_team}
+      current_team={@current_team}
       limit={@team_members_limit}
       resource="team members"
       class="mb-4"
@@ -160,7 +160,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         phx-click="save-team-layout"
         class="mt-8 w-full"
       >
-        Create Team
+        Setup Team
       </.button>
     </div>
     """
@@ -282,15 +282,18 @@ defmodule PlausibleWeb.Live.TeamManagement do
   end
 
   defp save_team_layout(
-         %{assigns: %{layout: layout, my_team: my_team, current_user: current_user}} = socket
+         %{assigns: %{layout: layout, current_team: current_team, current_user: current_user}} =
+           socket
        ) do
-    result = Layout.persist(layout, %{current_user: current_user, my_team: my_team})
+    result = Layout.persist(layout, %{current_user: current_user, current_team: current_team})
 
     case {result, socket.assigns.mode} do
       {{:ok, _}, :team_setup} ->
         socket
         |> put_flash(:success, "Your team is now setup")
-        |> redirect(to: Routes.settings_path(socket, :team_general))
+        |> redirect(
+          to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
+        )
 
       {{:ok, _}, :team_management} ->
         reset(socket)

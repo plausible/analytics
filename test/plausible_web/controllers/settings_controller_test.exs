@@ -1118,7 +1118,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "renders team settings, when team assigned and set up", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
-      team |> Plausible.Teams.Team.setup_changeset() |> Repo.update!()
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
       assert html =~ "Team Settings"
@@ -1129,17 +1130,20 @@ defmodule PlausibleWeb.SettingsControllerTest do
       {:ok, team} = Plausible.Teams.get_or_create(user)
       conn = get(conn, Routes.settings_path(conn, :preferences))
       html = html_response(conn, 200)
-      assert html =~ "Team Settings"
+      refute html =~ "Team Settings"
       refute html =~ team.name
     end
 
     test "GET /settings/team/general", %{conn: conn, user: user} do
       {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
       conn = get(conn, Routes.settings_path(conn, :team_general))
       html = html_response(conn, 200)
-      assert html =~ "Team Name"
+      assert html =~ "Team Information"
       assert html =~ "Change the name of your team"
       assert text_of_attr(html, "input#team_name", "value") == team.name
+      assert text_of_attr(html, "input#team-identifier", "value") == team.identifier
     end
 
     test "POST /settings/team/general/name", %{conn: conn, user: user} do
@@ -1157,7 +1161,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "POST /settings/team/general/name - changeset error", %{conn: conn, user: user} do
-      {:ok, _team} = Plausible.Teams.get_or_create(user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      team = Plausible.Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
 
       conn =
         post(conn, Routes.settings_path(conn, :update_team_name), %{

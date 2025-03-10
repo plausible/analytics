@@ -18,6 +18,7 @@ defmodule PlausibleWeb.Plugs.UserSessionTouchTest do
 
     assert %{assigns: %{current_user_session: user_session}} =
              conn
+             |> Plug.Conn.fetch_query_params()
              |> AuthPlug.call([])
              |> UserSessionTouch.call([])
 
