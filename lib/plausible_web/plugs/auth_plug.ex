@@ -30,10 +30,15 @@ defmodule PlausibleWeb.AuthPlug do
           end
 
         conn =
-          if current_team && current_team_id != current_team_id_from_session do
-            Plug.Conn.put_session(conn, "current_team_id", current_team_id)
-          else
-            conn
+          cond do
+            current_team && current_team_id != current_team_id_from_session ->
+              Plug.Conn.put_session(conn, "current_team_id", current_team_id)
+
+            is_nil(current_team) && not is_nil(current_team_id_from_session) ->
+              Plug.Conn.delete_session(conn, "current_team_id")
+
+            true ->
+              conn
           end
 
         my_team =
