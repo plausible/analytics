@@ -295,7 +295,7 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr(:hourly_stats, :map, required: true)
+  attr(:hourly_stats, :any, required: true)
 
   def site_stats(assigns) do
     ~H"""
@@ -648,6 +648,13 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
+  defp loading(sites) do
+    sites.entries
+    |> Enum.into(%{}, fn site ->
+      {site.domain, :loading}
+    end)
+  end
+
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
       Sites.list_with_invitations(assigns.current_user, assigns.params,
@@ -657,12 +664,13 @@ defmodule PlausibleWeb.Live.Sites do
 
     hourly_stats =
       if connected?(socket) do
+        try do
         Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+        catch _, _ -> 
+            loading(sites)
+        end
       else
-        sites.entries
-        |> Enum.into(%{}, fn site ->
-          {site.domain, :loading}
-        end)
+          loading(sites)
       end
 
     invitations = extract_invitations(sites.entries, assigns.current_team)
