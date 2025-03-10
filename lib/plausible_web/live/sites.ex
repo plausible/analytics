@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Live.Sites do
         <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
           <span :if={Teams.enabled?(@current_team)}>
             {Teams.name(@current_team)}
-            <.unstyled_link href={Routes.settings_path(@socket, :team_general)}>
+            <.unstyled_link :if={@current_team} href={Routes.settings_path(@socket, :team_general)}>
               <Heroicons.cog_6_tooth class="hidden group-hover:inline size-4 dark:text-gray-100 text-gray-900" />
             </.unstyled_link>
           </span>
