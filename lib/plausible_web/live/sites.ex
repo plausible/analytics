@@ -193,7 +193,7 @@ defmodule PlausibleWeb.Live.Sites do
   def site(assigns) do
     ~H"""
     <li
-      class="group relative hidden"
+      class="group relative"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
       data-pin-toggled={
@@ -208,7 +208,6 @@ defmodule PlausibleWeb.Live.Sites do
           time: 200
         )
       }
-      phx-mounted={JS.show()}
     >
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
         <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
