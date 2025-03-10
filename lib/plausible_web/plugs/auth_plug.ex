@@ -19,14 +19,21 @@ defmodule PlausibleWeb.AuthPlug do
       {:ok, user_session} ->
         user = user_session.user
 
-        current_team_id =
-          Plug.Conn.get_session(conn, "current_team_id")
+        current_team_id_from_session = Plug.Conn.get_session(conn, "current_team_id")
+        current_team_id = conn.params["team"] || current_team_id_from_session
 
         current_team =
           if current_team_id do
             user.team_memberships
             |> Enum.find(%{}, &(&1.team.identifier == current_team_id))
             |> Map.get(:team)
+          end
+
+        conn =
+          if current_team && current_team_id != current_team_id_from_session do
+            Plug.Conn.put_session(conn, "current_team_id", current_team_id)
+          else
+            conn
           end
 
         my_team =
