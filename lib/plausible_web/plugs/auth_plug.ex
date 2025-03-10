@@ -20,7 +20,7 @@ defmodule PlausibleWeb.AuthPlug do
         user = user_session.user
 
         current_team_id_from_session = Plug.Conn.get_session(conn, "current_team_id")
-        current_team_id = conn.params["__team"] || current_team_id_from_session 
+        current_team_id = conn.params["__team"] || current_team_id_from_session
 
         current_team =
           if current_team_id do
