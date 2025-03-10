@@ -154,8 +154,7 @@ defmodule PlausibleWeb.LayoutView do
       </.dropdown_item>
       <.dropdown_item
         :for={team <- @teams}
-        href={Routes.auth_path(@conn, :switch_team, team.identifier)}
-        method="post"
+        href={Routes.site_path(@conn, :index, team: team.identifier)}
       >
         <p
           class={[
