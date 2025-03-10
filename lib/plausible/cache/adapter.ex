@@ -32,6 +32,7 @@ defmodule Plausible.Cache.Adapter do
     cache_name = Keyword.get(opts, :cache_name, name)
     child_id = Keyword.get(opts, :child_id, child_id)
     ttl_check_interval = Keyword.get(opts, :ttl_check_interval, false)
+    Plausible.Cache.Stats.create_counters(cache_name)
 
     opts =
       opts
