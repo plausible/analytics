@@ -91,4 +91,17 @@ defmodule PlausibleWeb.AuthPlugTest do
     refute conn.assigns[:current_team]
     refute get_session(conn, "current_team_id")
   end
+
+  test "falls back to my_team when there's no current team picked", %{conn: conn, user: user} do
+    subscribe_to_plan(user, "123", inserted_at: NaiveDateTime.utc_now())
+    team = team_of(user)
+
+    conn =
+      conn
+      |> Plug.Adapters.Test.Conn.conn(:get, "/", %{})
+      |> AuthPlug.call(%{})
+
+    assert conn.assigns[:current_team].id == team.id
+    refute get_session(conn, "current_team_id")
+  end
 end
