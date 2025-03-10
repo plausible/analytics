@@ -118,6 +118,12 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  attr :conn, :map, required: true
+  attr :teams, :list, required: true
+  attr :my_team, :any, default: nil
+  attr :current_team, :any, default: nil
+  attr :more_teams?, :boolean, required: true
+
   def team_switcher(assigns) do
     teams = assigns[:teams]
 
