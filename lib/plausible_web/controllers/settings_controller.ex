@@ -31,18 +31,23 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   defp render_team_general(conn, opts \\ []) do
-    name_changeset =
-      Keyword.get(
-        opts,
-        :team_name_changeset,
-        Plausible.Teams.Team.name_changeset(conn.assigns.current_team)
-      )
+    if Plausible.Teams.setup?(conn.assigns.current_team) do
+      name_changeset =
+        Keyword.get(
+          opts,
+          :team_name_changeset,
+          Plausible.Teams.Team.name_changeset(conn.assigns.current_team)
+        )
 
-    render(conn, :team_general,
-      team_name_changeset: name_changeset,
-      layout: {PlausibleWeb.LayoutView, :settings},
-      connect_live_socket: true
-    )
+      render(conn, :team_general,
+        team_name_changeset: name_changeset,
+        layout: {PlausibleWeb.LayoutView, :settings},
+        connect_live_socket: true
+      )
+    else
+      conn
+      |> redirect(to: Routes.site_path(conn, :index))
+    end
   end
 
   def preferences(conn, _params) do

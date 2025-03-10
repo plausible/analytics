@@ -18,6 +18,21 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text(html) =~ "You don't have any sites yet"
     end
 
+    test "renders settings link when current team is set", %{user: user, conn: conn} do
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute element_exists?(html, ~s|a[data-test-id="team-settings-link"]|)
+
+      new_site(owner: user)
+      team = team_of(user)
+
+      conn = set_current_team(conn, team)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert element_exists?(html, ~s|a[data-test-id="team-settings-link"]|)
+    end
+
     test "renders team invitations", %{user: user, conn: conn} do
       owner1 = new_user(name: "G.I. Joe")
       new_site(owner: owner1)
