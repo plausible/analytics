@@ -57,6 +57,7 @@ defmodule PlausibleWeb.AuthController do
 
   def select_team(conn, _params) do
     current_user = conn.assigns.current_user
+    current_team = conn.assigns[:current_team]
 
     owner_name_fn = fn owner ->
       if owner.id == current_user.id do
@@ -71,7 +72,7 @@ defmodule PlausibleWeb.AuthController do
       |> Teams.Users.teams()
       |> Enum.filter(& &1.setup_complete)
       |> Enum.map(fn team ->
-        current_team? = team.id == conn.assigns.current_team.id
+        current_team? = current_team && team.id == current_team.id
 
         owners =
           Enum.map_join(team.owners, ", ", &owner_name_fn.(&1))
