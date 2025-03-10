@@ -140,9 +140,6 @@ class FilterModal extends React.Component {
 
   getFilterGroups() {
     const groups = FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType]
-    if (this.props.modalType === 'source' && !this.props.site.flags.channels) {
-      return groups.filter((group) => group !== 'channel')
-    }
     return groups
   }
 
