@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Pagination
+  require Logger
 
   alias Plausible.Sites
 
@@ -665,12 +666,17 @@ defmodule PlausibleWeb.Live.Sites do
     hourly_stats =
       if connected?(socket) do
         try do
-        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
-        catch _, _ -> 
+          Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+        catch
+          kind, value ->
+            Logger.error(
+              "Could not render 24h visitors hourly intervals: #{inspect(kind)} #{inspect(value)}"
+            )
+
             loading(sites)
         end
       else
-          loading(sites)
+        loading(sites)
       end
 
     invitations = extract_invitations(sites.entries, assigns.current_team)
