@@ -151,16 +151,20 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
     test "fails to save layout with limits breached", %{conn: conn} do
       lv = get_child_lv(conn)
+      html = render(lv)
+      refute attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
+      refute attr_defined?(html, ~s|#invite-member|, "disabled")
+
       add_invite(lv, "new1@example.com", "admin")
       add_invite(lv, "new2@example.com", "admin")
       add_invite(lv, "new3@example.com", "admin")
       add_invite(lv, "new4@example.com", "admin")
 
-      refute lv |> render() |> text() =~ "Your account is limited to 3 team members"
+      html = render(lv)
 
-      save_layout(lv)
-
-      assert lv |> render() |> text() =~ "Your account is limited to 3 team members"
+      assert attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
+      assert attr_defined?(html, ~s|#invite-member|, "disabled")
+      assert text(html) =~ "Your account is limited to 3 team members"
     end
 
     test "all options are disabled for the sole owner", %{conn: conn} do

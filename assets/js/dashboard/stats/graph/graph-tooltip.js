@@ -44,13 +44,14 @@ const buildTooltipData = function(query, graphData, metric, tooltipModel) {
   const label = data && renderBucketLabel(query, graphData, graphData.labels[data.dataIndex])
   const comparisonLabel = comparisonData && renderBucketLabel(query, graphData, graphData.comparison_labels[comparisonData.dataIndex], true)
 
-  const value = data?.raw || 0
-  const comparisonValue = comparisonData?.raw || 0
-  const comparisonDifference = label && comparisonLabel && calculatePercentageDifference(comparisonValue, value)
+  const value = graphData.plot[data.dataIndex]
 
-  const metricFormatter = MetricFormatterShort[metric]
-  const formattedValue = metricFormatter(value)
-  const formattedComparisonValue = comparisonData && metricFormatter(comparisonValue)
+  const formatter = MetricFormatterShort[metric]
+  const comparisonValue = graphData.comparison_plot?.[comparisonData.dataIndex]
+  const comparisonDifference = label && comparisonData && calculatePercentageDifference(comparisonValue, value)
+
+  const formattedValue = formatter(value)
+  const formattedComparisonValue = comparisonData && formatter(comparisonValue)
 
   return { label, formattedValue, comparisonLabel, formattedComparisonValue, comparisonDifference }
 }

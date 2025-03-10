@@ -113,9 +113,6 @@ export const CreateSegmentModal = ({
         userCanSelectSiteSegment={userCanSelectSiteSegment}
       />
       <ButtonsRow>
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
         <button
           className={primaryNeutralButtonClassName}
           onClick={
@@ -131,6 +128,9 @@ export const CreateSegmentModal = ({
           }
         >
           Save
+        </button>
+        <button className={secondaryButtonClassName} onClick={onClose}>
+          Cancel
         </button>
       </ButtonsRow>
       {error !== null && (
@@ -171,9 +171,6 @@ export const DeleteSegmentModal = ({
       )}
 
       <ButtonsRow>
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
         <button
           className={primaryNegativeButtonClassName}
           disabled={status === 'pending'}
@@ -186,6 +183,9 @@ export const DeleteSegmentModal = ({
           }
         >
           Delete
+        </button>
+        <button className={secondaryButtonClassName} onClick={onClose}>
+          Cancel
         </button>
       </ButtonsRow>
       {error !== null && (
@@ -353,9 +353,6 @@ export const UpdateSegmentModal = ({
         userCanSelectSiteSegment={userCanSelectSiteSegment}
       />
       <ButtonsRow>
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
         <button
           className={primaryNeutralButtonClassName}
           disabled={status === 'pending'}
@@ -372,6 +369,9 @@ export const UpdateSegmentModal = ({
           }
         >
           Save
+        </button>
+        <button className={secondaryButtonClassName} onClick={onClose}>
+          Cancel
         </button>
       </ButtonsRow>
       {error !== null && (

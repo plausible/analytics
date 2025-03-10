@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 - Add text version to emails plausible/analytics#4674
 - Add acquisition channels report
 - Add filter `is not` for goals in dashboard plausible/analytics#4983
+- Add Segments feature
+- Support `["is", "segment", [<segment ID>]]` filter in Stats API
 
 ### Removed
 
@@ -25,6 +27,9 @@ All notable changes to this project will be documented in this file.
 - Improved report performance in cases where site has a lot of unique pathnames
 - Plausible script now uses `fetch` with keepalive flag as default over `XMLHttpRequest`. This will ensure more reliable tracking. Reminder to use `compat` script variant if tracking Internet Explorer is required.
 - The old `/api/health` healtcheck is soft-deprecated in favour of separate `/api/system/health/live` and `/api/system/health/ready` checks
+- Changed top bar filter menu and how applied filters wrap
+- Main graph now shows revenue with relevant currency symbol when hovering a data point
+- Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
 
 ### Fixed
 
@@ -36,6 +41,8 @@ All notable changes to this project will be documented in this file.
 - Breakdown modals now display correct comparison values instead of 0 after pagination
 - Fix database mismatch between event and session user_ids after rotating salts
 - `/api/v2/query` no longer returns a 500 when querying percentage metric without `visitors`
+- Fix current visitors loading when viewing a dashboard with a shared link  
+- Fix Conversion Rate graph being unselectable when "Goal is ..." filter is within a segment
 
 ## v2.1.5-rc.1 - 2025-01-17
 

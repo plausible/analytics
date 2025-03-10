@@ -48,14 +48,7 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.{Filters, Query}
   alias PlausibleWeb.Api
 
-  @all_site_roles PlausibleWeb.Plugs.AuthorizeSiteAccess.all_roles()
-
-  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action == :stats)
-
-  plug(
-    PlausibleWeb.Plugs.AuthorizeSiteAccess,
-    @all_site_roles -- [:public] when action == :csv_export
-  )
+  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owners)
@@ -395,7 +388,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user, site),
     do:
-      [:saved_segments, :scroll_depth]
+      [:saved_segments, :saved_segments_fe, :scroll_depth]
       |> Enum.map(fn flag ->
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)

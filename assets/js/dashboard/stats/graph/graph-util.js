@@ -1,27 +1,3 @@
-import { getFiltersByKeyPrefix, hasConversionGoalFilter } from '../../util/filters'
-import { revenueAvailable } from '../../query'
-
-export function getGraphableMetrics(query, site) {
-  const isRealtime = query.period === 'realtime'
-  const isGoalFilter = hasConversionGoalFilter(query)
-  const isPageFilter = getFiltersByKeyPrefix(query, "page").length > 0
-
-  if (isRealtime && isGoalFilter) {
-    return ["visitors"]
-  } else if (isRealtime) {
-    return ["visitors", "pageviews"]
-  } else if (isGoalFilter && revenueAvailable(query, site)) {
-    return ["visitors", "events", "average_revenue", "total_revenue", "conversion_rate"]
-  } else if (isGoalFilter) {
-    return ["visitors", "events", "conversion_rate"]
-  } else if (isPageFilter) {
-    const pageFilterMetrics = ["visitors", "visits", "pageviews", "bounce_rate"]
-    return site.scrollDepthVisible ? [...pageFilterMetrics, "scroll_depth"] : pageFilterMetrics
-  } else {
-    return ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"]
-  }
-}
-
 export const METRIC_LABELS = {
   'visitors': 'Visitors',
   'pageviews': 'Pageviews',
@@ -34,13 +10,25 @@ export const METRIC_LABELS = {
   'conversion_rate': 'Conversion Rate',
   'average_revenue': 'Average Revenue',
   'total_revenue': 'Total Revenue',
+  'scroll_depth': 'Scroll Depth',
+}
+
+function plottable(dataArray) {
+  return dataArray?.map((value) => {
+    if (typeof value === 'object' && value !== null) {
+      // Revenue metrics are returned as objects with a `value` property
+      return value.value
+    }
+
+    return value || 0
+  })
 }
 
 const buildComparisonDataset = function(comparisonPlot) {
   if (!comparisonPlot) return []
 
   return [{
-    data: comparisonPlot,
+    data: plottable(comparisonPlot),
     borderColor: 'rgba(60,70,110,0.2)',
     pointBackgroundColor: 'rgba(60,70,110,0.2)',
     pointHoverBackgroundColor: 'rgba(60, 70, 110)',
@@ -55,7 +43,7 @@ const buildDashedDataset = function(plot, presentIndex) {
   const dashedPlot = (new Array(presentIndex - 1)).concat(dashedPart)
 
   return [{
-    data: dashedPlot,
+    data: plottable(dashedPlot),
     borderDash: [3, 3],
     borderColor: 'rgba(101,116,205)',
     pointHoverBackgroundColor: 'rgba(71, 87, 193)',
@@ -67,7 +55,7 @@ const buildMainPlotDataset = function(plot, presentIndex) {
   const data = presentIndex ? plot.slice(0, presentIndex) : plot
 
   return [{
-    data: data,
+    data: plottable(data),
     borderColor: 'rgba(101,116,205)',
     pointBackgroundColor: 'rgba(101,116,205)',
     pointHoverBackgroundColor: 'rgba(71, 87, 193)',

@@ -3,17 +3,11 @@ import * as api from '../../api';
 import { getCurrentInterval } from "./interval-picker";
 import { useSiteContext } from "../../site-context";
 import { useQueryContext } from "../../query-context";
-import { useUserContext, Role } from '../../user-context'
 
 export default function StatsExport() {
   const site = useSiteContext();
   const { query } = useQueryContext();
   const [exporting, setExporting] = useState(false)
-  const user = useUserContext();
-
-  if (!user.loggedIn || user.role == Role.public) {
-    return null
-  }
 
   function startExport() {
     setExporting(true)
@@ -40,8 +34,8 @@ export default function StatsExport() {
 
   function renderExportLink() {
     const interval = getCurrentInterval(site, query)
-    const queryParams = api.serializeQuery(query, [{ interval, comparison: undefined }])
-    const endpoint = `/${encodeURIComponent(site.domain)}/export${queryParams}`
+    const queryParams = api.serializeUrlParams(api.queryToSearchParams(query, [{ interval, comparison: undefined }]))
+    const endpoint = `/${encodeURIComponent(site.domain)}/export?${queryParams}`
 
     return (
       <a href={endpoint} download onClick={startExport}>

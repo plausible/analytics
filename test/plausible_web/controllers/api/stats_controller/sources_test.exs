@@ -650,8 +650,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "comparison" => %{
                    "visitors" => 0,
                    "bounce_rate" => 0,
-                   "visit_duration" => 0,
-                   "change" => %{"visitors" => 100, "bounce_rate" => nil, "visit_duration" => 0}
+                   "visit_duration" => nil,
+                   "change" => %{"visitors" => 100, "bounce_rate" => nil, "visit_duration" => nil}
                  }
                },
                %{

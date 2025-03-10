@@ -123,13 +123,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp plot_timeseries(timeseries, metric) do
-    Enum.map(timeseries, fn row ->
-      case row[metric] do
-        nil -> 0
-        %{value: value} -> value
-        value -> value
-      end
-    end)
+    Enum.map(timeseries, & &1[metric])
   end
 
   defp label_timeseries(main_result, nil) do
@@ -200,7 +194,8 @@ defmodule PlausibleWeb.Api.StatsController do
     %{
       top_stats: top_stats,
       meta: meta,
-      sample_percent: sample_percent
+      sample_percent: sample_percent,
+      graphable_metrics: graphable_metrics
     } = fetch_top_stats(site, query, current_user)
 
     comparison_query = comparison_query(query)
@@ -208,6 +203,7 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, %{
       top_stats: top_stats,
       meta: meta,
+      graphable_metrics: graphable_metrics,
       interval: query.interval,
       sample_percent: sample_percent,
       with_imported_switch: with_imported_switch_info(meta),
@@ -282,7 +278,8 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, query, current_user) do
-    goal_filter? = toplevel_goal_filter?(query)
+    goal_filter? =
+      toplevel_goal_filter?(query)
 
     cond do
       query.period == "30m" && goal_filter? ->
@@ -328,7 +325,12 @@ defmodule PlausibleWeb.Api.StatsController do
       }
     ]
 
-    %{top_stats: top_stats, meta: meta, sample_percent: 100}
+    %{
+      top_stats: top_stats,
+      meta: meta,
+      graphable_metrics: [:visitors, :events],
+      sample_percent: 100
+    }
   end
 
   defp fetch_realtime_top_stats(site, query) do
@@ -360,7 +362,12 @@ defmodule PlausibleWeb.Api.StatsController do
       }
     ]
 
-    %{top_stats: top_stats, meta: meta, sample_percent: 100}
+    %{
+      top_stats: top_stats,
+      meta: meta,
+      sample_percent: 100,
+      graphable_metrics: [:visitors, :pageviews]
+    }
   end
 
   defp fetch_goal_top_stats(site, query) do
@@ -383,7 +390,7 @@ defmodule PlausibleWeb.Api.StatsController do
       ]
       |> Enum.reject(&is_nil/1)
 
-    %{top_stats: top_stats, meta: meta, sample_percent: 100}
+    %{top_stats: top_stats, meta: meta, graphable_metrics: metrics, sample_percent: 100}
   end
 
   defp fetch_other_top_stats(site, query, current_user) do
@@ -434,7 +441,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     sample_percent = results[:sample_percent][:value]
 
-    %{top_stats: top_stats, meta: meta, sample_percent: sample_percent}
+    %{
+      top_stats: top_stats,
+      meta: meta,
+      graphable_metrics: metrics -- [:time_on_page],
+      sample_percent: sample_percent
+    }
   end
 
   defp top_stats_entry(current_results, name, key, opts \\ []) do
@@ -1662,6 +1674,9 @@ defmodule PlausibleWeb.Api.StatsController do
   defp realtime_period_to_30m(params), do: params
 
   defp toplevel_goal_filter?(query) do
-    Filters.filtering_on_dimension?(query, "event:goal", max_depth: 0)
+    Filters.filtering_on_dimension?(query, "event:goal",
+      max_depth: 0,
+      behavioral_filters: :ignore
+    )
   end
 end

@@ -7,7 +7,7 @@ describe(`${getAvailableFilterModals.name}`, () => {
     expect(
       getAvailableFilterModals({
         propsAvailable: false,
-        flags: { saved_segments: null }
+        flags: { saved_segments: null, saved_segments_fe: null }
       })
     ).toEqual({
       browser: ['browser', 'browser_version'],
@@ -32,7 +32,7 @@ describe(`${getAvailableFilterModals.name}`, () => {
     expect(
       getAvailableFilterModals({
         propsAvailable: true,
-        flags: { saved_segments: true }
+        flags: { saved_segments: true, saved_segments_fe: true }
       })
     ).toEqual({
       browser: ['browser', 'browser_version'],
