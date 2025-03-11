@@ -503,4 +503,143 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
              ]
     end
   end
+
+  describe "timeseries" do
+    setup %{site: site} = context do
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:05:00],
+          engagement_time: 100_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-02 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-02 00:05:00],
+          engagement_time: 200_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-03 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-03 00:05:00],
+          engagement_time: 250_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-04 00:05:00],
+          engagement_time: 200_000
+        ),
+        build(:pageview, user_id: 13, pathname: "/", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:engagement,
+          user_id: 13,
+          pathname: "/",
+          timestamp: ~N[2021-01-04 00:05:00],
+          engagement_time: 100_000
+        )
+      ])
+
+      context
+    end
+
+    test "reports average new time-on-page per day", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => ["2021-01-01", "2021-01-04"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "dimensions" => ["time:day"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [100]},
+               %{"dimensions" => ["2021-01-02"], "metrics" => [200]},
+               %{"dimensions" => ["2021-01-03"], "metrics" => [250]},
+               %{"dimensions" => ["2021-01-04"], "metrics" => [150]}
+             ]
+    end
+
+    test "reports legacy time-on-page as nulls per day", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => ["2021-01-01", "2021-01-04"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "dimensions" => ["time:day"],
+          "include" => %{"legacy_time_on_page_cutoff" => "2100-01-01T00:00:00Z"}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-02"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-03"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-04"], "metrics" => [nil]}
+             ]
+    end
+
+    test "respects `legacy_time_on_page_cutoff`", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => ["2021-01-01", "2021-01-04"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "dimensions" => ["time:day"],
+          "include" => %{"legacy_time_on_page_cutoff" => "2021-01-02T23:59:59Z"}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-02"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-03"], "metrics" => [250]},
+               %{"dimensions" => ["2021-01-04"], "metrics" => [150]}
+             ]
+    end
+
+    test "can use comparisons together with `legacy_time_on_page_cutoff`", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => ["2021-01-03", "2021-01-04"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "dimensions" => ["time:day"],
+          "include" => %{
+            "legacy_time_on_page_cutoff" => "2021-01-01T23:59:59Z",
+            "comparisons" => %{"mode" => "previous_period"}
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "dimensions" => ["2021-01-03"],
+                 "metrics" => [250],
+                 "comparison" => %{
+                   "dimensions" => ["2021-01-01"],
+                   "metrics" => [nil],
+                   "change" => [nil]
+                 }
+               },
+               %{
+                 "dimensions" => ["2021-01-04"],
+                 "metrics" => [150],
+                 "comparison" => %{
+                   "dimensions" => ["2021-01-02"],
+                   "metrics" => [200],
+                   "change" => [-25]
+                 }
+               }
+             ]
+    end
+  end
 end
