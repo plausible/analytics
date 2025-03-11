@@ -20,9 +20,15 @@
           value={@current_team.identifier}
         />
       </div>
-      <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
+      <.input
+        readonly={@my_role not in [:owner, :admin]}
+        type="text"
+        field={f[:name]}
+        label="Name"
+        width="w-1/2"
+      />
 
-      <.button type="submit">
+      <.button type="submit" disabled={@my_role not in [:owner, :admin]}>
         Change Name
       </.button>
     </.form>
