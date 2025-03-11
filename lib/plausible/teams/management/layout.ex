@@ -107,12 +107,16 @@ defmodule Plausible.Teams.Management.Layout do
     end)
   end
 
-  @spec persist(t(), %{current_user: User.t(), current_team: Teams.Team.t()}) ::
+  @spec persist(t(), %{current_user: User.t(), my_team: Teams.Team.t()}) ::
           {:ok, integer()} | {:error, any()}
   def persist(layout, context) do
     result =
       Repo.transaction(fn ->
-        Teams.complete_setup(context.current_team)
+        if not context.my_team.setup_complete do
+          context.my_team
+          |> Teams.Team.setup_changeset()
+          |> Repo.update!()
+        end
 
         layout
         |> sorted_for_persistence()

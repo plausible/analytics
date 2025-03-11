@@ -175,7 +175,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     change_plan_link_text = change_plan_link_text(assigns)
 
     subscription =
-      Plausible.Teams.Billing.get_subscription(assigns.current_team)
+      Plausible.Teams.Billing.get_subscription(assigns.my_team)
 
     billing_details_expired =
       Subscription.Status.in?(subscription, [
@@ -225,14 +225,10 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> assign(:confirm_message, losing_features_message(feature_usage_check))
 
     ~H"""
-    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@current_team.subscription) do %>
+    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@my_team.subscription) do %>
       <.change_plan_link {assigns} />
     <% else %>
-      <PlausibleWeb.Components.Billing.paddle_button
-        user={@current_user}
-        team={@current_team}
-        {assigns}
-      >
+      <PlausibleWeb.Components.Billing.paddle_button user={@current_user} team={@my_team} {assigns}>
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
@@ -264,18 +260,18 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   defp check_usage_within_plan_limits(%{
          available: true,
          usage: usage,
-         current_team: current_team,
+         my_team: my_team,
          plan_to_render: plan
        }) do
     # At this point, the user is *not guaranteed* to have a team,
     # with ongoing trial.
     trial_active_or_ended_recently? =
-      not is_nil(current_team) and not is_nil(current_team.trial_expiry_date) and
-        Plausible.Teams.trial_days_left(current_team) >= -10
+      not is_nil(my_team) and not is_nil(my_team.trial_expiry_date) and
+        Plausible.Teams.trial_days_left(my_team) >= -10
 
     limit_checking_opts =
       cond do
-        current_team && current_team.allow_next_upgrade_override ->
+        my_team && my_team.allow_next_upgrade_override ->
           [ignore_pageview_limit: true]
 
         trial_active_or_ended_recently? && plan.volume == "10k" ->

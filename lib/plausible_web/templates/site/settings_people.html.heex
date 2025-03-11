@@ -1,6 +1,6 @@
 <.settings_tiles>
   <PlausibleWeb.Team.Notice.inviting_banner :if={
-    @site_role in [:owner, :admin] and Plausible.Teams.setup?(@current_team)
+    @site_role in [:owner, :admin] and @my_team.setup_complete
   } />
 
   <.tile docs="users-roles">
@@ -17,7 +17,7 @@
     </.filter_bar>
 
     <PlausibleWeb.Team.Notice.team_members_notice :if={
-      @site_role in [:owner, :admin] and Plausible.Teams.setup?(@current_team)
+      @site_role in [:owner, :admin] and @my_team.setup_complete
     } />
 
     <div class="flow-root">

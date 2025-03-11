@@ -62,10 +62,6 @@ site =
 add_guest(site, user: new_user(name: "Arnold Wallaby", password: "plausible"), role: :viewer)
 add_guest(site, user: new_user(name: "Lois Lane", password: "plausible"), role: :editor)
 
-user2 = new_user(name: "Mary Jane", email: "user2@plausible.test", password: "plausible")
-site2 = new_site(domain: "computer.example.com", owner: user2)
-invite_guest(site2, user, inviter: user2, role: :viewer)
-
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
 Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")
 Plausible.Factory.insert(:country_rule, site: site, country_code: "EE")

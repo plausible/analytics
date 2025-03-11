@@ -104,7 +104,7 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   def remove_team_invitation(conn, %{"invitation_id" => invitation_id}) do
-    %{current_team: team, current_user: current_user} = conn.assigns
+    %{my_team: team, current_user: current_user} = conn.assigns
 
     case Plausible.Teams.Invitations.Remove.remove(team, invitation_id, current_user) do
       {:ok, invitation} ->

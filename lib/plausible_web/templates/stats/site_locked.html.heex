@@ -49,7 +49,7 @@
               unlock the stats.
             </p>
             <div
-              :if={not Plausible.Teams.enabled?(@conn.assigns[:current_team])}
+              :if={not Plausible.Teams.enabled?(@conn.assigns[:my_team])}
               class="mt-6 text-sm text-gray-500"
             >
               <p>Want to pay for this site with the account you're logged in with?</p>

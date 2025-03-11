@@ -9,13 +9,13 @@
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={@site_limit_exceeded?}
       current_user={@current_user}
-      current_team={@current_team}
+      current_team={@my_team}
       billable_user={@current_user}
       limit={@site_limit}
       resource="sites"
     />
 
-    <%= if is_nil(@current_team) or is_nil(@current_team.trial_expiry_date) do %>
+    <%= if is_nil(@my_team) or is_nil(@my_team.trial_expiry_date) do %>
       <div class="rounded-md bg-blue-50 dark:bg-transparent dark:border border-blue-200 p-4">
         <div class="flex">
           <div class="flex-shrink-0">

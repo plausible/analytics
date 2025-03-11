@@ -259,7 +259,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "fails to create site when not allowed to in selected team", %{conn: conn, user: user} do
       site = new_site()
       add_member(site.team, user: user, role: :viewer)
-      conn = set_current_team(conn, site.team)
 
       conn =
         post(conn, "/sites", %{
@@ -592,9 +591,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute resp =~ "You can also invite people to your team"
       refute resp =~ "Team members automatically have access to this site."
 
-      team = team_of(user)
-      Teams.complete_setup(team)
-      conn = set_current_team(conn, team)
+      user |> team_of() |> Teams.Team.setup_changeset() |> Repo.update!()
 
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
       assert resp =~ "You can also invite people to your team"

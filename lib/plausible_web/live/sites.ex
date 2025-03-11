@@ -8,7 +8,6 @@ defmodule PlausibleWeb.Live.Sites do
   require Logger
 
   alias Plausible.Sites
-  alias Plausible.Teams
 
   def mount(params, _session, socket) do
     uri =
@@ -20,7 +19,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:uri, uri)
       |> assign(
         :team_invitations,
-        Teams.Invitations.all(socket.assigns.current_user)
+        Plausible.Teams.Invitations.all(socket.assigns.current_user)
       )
       |> assign(:filter_text, params["filter_text"] || "")
 
@@ -33,14 +32,14 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:params, params)
       |> load_sites()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
-        Teams.Users.has_sites?(current_user, include_pending?: true)
+        Plausible.Teams.Users.has_sites?(current_user, include_pending?: true)
       end)
       |> assign_new(:needs_to_upgrade, fn %{
                                             current_user: current_user,
-                                            current_team: current_team
+                                            my_team: my_team
                                           } ->
-        Teams.Users.owns_sites?(current_user, include_pending?: true) &&
-          Teams.Billing.check_needs_to_upgrade(current_team)
+        Plausible.Teams.Users.owns_sites?(current_user, include_pending?: true) &&
+          Plausible.Teams.Billing.check_needs_to_upgrade(my_team)
       end)
 
     {:noreply, socket}
@@ -57,19 +56,9 @@ defmodule PlausibleWeb.Live.Sites do
       <PlausibleWeb.Live.Components.Visitors.gradient_defs />
       <.upgrade_nag_screen :if={@needs_to_upgrade == {:needs_to_upgrade, :no_active_subscription}} />
 
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
+      <div class="mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
         <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
-          <span :if={Teams.enabled?(@current_team)}>
-            {Teams.name(@current_team)}
-            <.unstyled_link
-              :if={Teams.setup?(@current_team)}
-              data-test-id="team-settings-link"
-              href={Routes.settings_path(@socket, :team_general)}
-            >
-              <Heroicons.cog_6_tooth class="hidden group-hover:inline size-4 dark:text-gray-100 text-gray-900" />
-            </.unstyled_link>
-          </span>
-          <span :if={not Teams.enabled?(@current_team)}>My Sites</span>
+          My Sites
         </h2>
       </div>
 
@@ -722,7 +711,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp check_limits(invitation, _), do: %{invitation: invitation}
 
-  defdelegate ensure_can_take_ownership(site, team), to: Teams.Invitations
+  defdelegate ensure_can_take_ownership(site, team), to: Plausible.Teams.Invitations
 
   def check_features(%{role: :owner, site: site} = invitation, team) do
     case check_feature_access(site, team) do
@@ -742,7 +731,7 @@ defmodule PlausibleWeb.Live.Sites do
   on_ee do
     defp check_feature_access(site, new_team) do
       missing_features =
-        Teams.Billing.features_usage(nil, [site.id])
+        Plausible.Teams.Billing.features_usage(nil, [site.id])
         |> Enum.filter(&(&1.check_availability(new_team) != :ok))
 
       if missing_features == [] do

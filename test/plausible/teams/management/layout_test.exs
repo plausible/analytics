@@ -240,7 +240,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
       assert {:ok, 0} =
                team
                |> Layout.init()
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert_no_emails_delivered()
     end
@@ -249,7 +249,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
       refute team.setup_complete
       refute team.setup_at
 
-      team |> Layout.init() |> Layout.persist(%{current_user: user, current_team: team})
+      team |> Layout.init() |> Layout.persist(%{current_user: user, my_team: team})
 
       team = Repo.reload!(team)
 
@@ -268,7 +268,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       assert setup_at = team.setup_at
 
-      team |> Layout.init() |> Layout.persist(%{current_user: user, current_team: team})
+      team |> Layout.init() |> Layout.persist(%{current_user: user, my_team: team})
 
       team = Repo.reload!(team)
 
@@ -280,7 +280,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
                team
                |> Layout.init()
                |> Layout.schedule_send("test@example.com", :admin)
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert_email_delivered_with(
         to: [nil: "test@example.com"],
@@ -298,7 +298,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
                team
                |> Layout.init()
                |> Layout.schedule_delete("test@example.com")
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert_email_delivered_with(
         to: [nil: "test@example.com"],
@@ -314,7 +314,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
                |> Layout.schedule_send("test2@example.com", :admin)
                |> Layout.schedule_send("test3@example.com", :admin)
                |> Layout.schedule_send("test4@example.com", :admin)
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert {:error, :only_one_owner} =
                team
@@ -322,19 +322,19 @@ defmodule Plausible.Teams.Management.LayoutTest do
                |> Layout.schedule_delete(user.email)
                |> put(invitation_pending("00-invitation-pending@example.com", role: :owner))
                |> put(invitation_sent("00-invitation-sent@example.com", role: :owner))
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert {:error, :only_one_owner} =
                team
                |> Layout.init()
                |> Layout.update_role(user.email, :viewer)
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert {:error, :already_a_member} =
                team
                |> Layout.init()
                |> Layout.schedule_send(user.email, :admin)
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert_no_emails_delivered()
     end
@@ -350,7 +350,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
                |> Layout.schedule_send("new@example.com", :admin)
                |> Layout.schedule_delete("test1@example.com")
                |> Layout.schedule_delete("test2@example.com")
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
     end
 
     test "multiple ops queue", %{user: user, team: team} do
@@ -363,7 +363,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
                |> Layout.schedule_send("new@example.com", :admin)
                |> Layout.schedule_delete("test1@example.com")
                |> Layout.update_role("test2@example.com", :viewer)
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert {:error, :not_a_member} = Teams.Memberships.team_role(team, member1)
       assert {:ok, :viewer} = Teams.Memberships.team_role(team, member2)
@@ -388,7 +388,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
                |> Layout.init()
                |> Layout.schedule_send("new@example.com", :admin)
                |> Layout.schedule_delete("new@example.com")
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
     end
 
     test "idempotence", %{user: user, team: team} do
@@ -404,7 +404,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
                |> Layout.update_role("test2@example.com", :viewer)
                |> Layout.schedule_delete("test1@example.com")
                |> Layout.update_role("test2@example.com", :viewer)
-               |> Layout.persist(%{current_user: user, current_team: team})
+               |> Layout.persist(%{current_user: user, my_team: team})
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
@@ -431,7 +431,7 @@ defmodule Plausible.Teams.Management.LayoutTest do
 
       layout
       |> Layout.update_role(u2.email, :viewer)
-      |> Layout.persist(%{current_user: user, current_team: team})
+      |> Layout.persist(%{current_user: user, my_team: team})
 
       refute team |> Layout.init() |> Layout.has_guests?()
 

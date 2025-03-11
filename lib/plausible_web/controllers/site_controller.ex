@@ -14,19 +14,20 @@ defmodule PlausibleWeb.SiteController do
 
   def new(conn, params) do
     flow = params["flow"] || PlausibleWeb.Flows.register()
-    team = conn.assigns.current_team
+    my_team = conn.assigns.my_team
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      site_limit: Plausible.Teams.Billing.site_limit(team),
-      site_limit_exceeded?: Plausible.Teams.Billing.ensure_can_add_new_site(team) != :ok,
+      site_limit: Plausible.Teams.Billing.site_limit(my_team),
+      site_limit_exceeded?: Plausible.Teams.Billing.ensure_can_add_new_site(my_team) != :ok,
       form_submit_url: "/sites?flow=#{flow}",
       flow: flow
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
-    team = conn.assigns.current_team
+    current_team = conn.assigns.current_team
+    team = Plausible.Teams.get(site_params["team_id"]) || current_team
     user = conn.assigns.current_user
     first_site? = Plausible.Teams.Billing.site_usage(team) == 0
     flow = conn.params["flow"]

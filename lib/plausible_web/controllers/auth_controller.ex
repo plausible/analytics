@@ -57,7 +57,6 @@ defmodule PlausibleWeb.AuthController do
 
   def select_team(conn, _params) do
     current_user = conn.assigns.current_user
-    current_team = conn.assigns[:current_team]
 
     owner_name_fn = fn owner ->
       if owner.id == current_user.id do
@@ -70,9 +69,8 @@ defmodule PlausibleWeb.AuthController do
     teams =
       current_user
       |> Teams.Users.teams()
-      |> Enum.filter(& &1.setup_complete)
       |> Enum.map(fn team ->
-        current_team? = current_team && team.id == current_team.id
+        current_team? = team.id == conn.assigns.current_team.id
 
         owners =
           Enum.map_join(team.owners, ", ", &owner_name_fn.(&1))
@@ -88,7 +86,30 @@ defmodule PlausibleWeb.AuthController do
         }
       end)
 
-    render(conn, "select_team.html", teams_selection: teams)
+    render(conn, "select_team.html", teams: teams)
+  end
+
+  def switch_team(conn, params) do
+    current_user = conn.assigns.current_user
+    team = Teams.get(params["team_id"])
+
+    if team do
+      case Teams.Memberships.team_role(team, current_user) do
+        {:ok, role} when role != :guest ->
+          conn
+          |> put_session("current_team_id", team.identifier)
+          |> redirect(to: Routes.site_path(conn, :index))
+
+        _ ->
+          conn
+          |> put_flash(:error, "You have select an invalid team")
+          |> redirect(to: Routes.site_path(conn, :index))
+      end
+    else
+      conn
+      |> put_flash(:error, "You have select an invalid team")
+      |> redirect(to: Routes.site_path(conn, :index))
+    end
   end
 
   def activate_form(conn, params) do

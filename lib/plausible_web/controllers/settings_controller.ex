@@ -17,7 +17,7 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def update_team_name(conn, %{"team" => params}) do
-    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.current_team, params)
+    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.my_team, params)
 
     case Repo.update(changeset) do
       {:ok, _user} ->
@@ -31,23 +31,18 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   defp render_team_general(conn, opts \\ []) do
-    if Plausible.Teams.setup?(conn.assigns.current_team) do
-      name_changeset =
-        Keyword.get(
-          opts,
-          :team_name_changeset,
-          Plausible.Teams.Team.name_changeset(conn.assigns.current_team)
-        )
-
-      render(conn, :team_general,
-        team_name_changeset: name_changeset,
-        layout: {PlausibleWeb.LayoutView, :settings},
-        connect_live_socket: true
+    name_changeset =
+      Keyword.get(
+        opts,
+        :team_name_changeset,
+        Plausible.Teams.Team.name_changeset(conn.assigns.my_team)
       )
-    else
-      conn
-      |> redirect(to: Routes.site_path(conn, :index))
-    end
+
+    render(conn, :team_general,
+      team_name_changeset: name_changeset,
+      layout: {PlausibleWeb.LayoutView, :settings},
+      connect_live_socket: true
+    )
   end
 
   def preferences(conn, _params) do
@@ -59,23 +54,23 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def subscription(conn, _params) do
-    team = conn.assigns.current_team
-    subscription = Teams.Billing.get_subscription(team)
+    my_team = conn.assigns.my_team
+    subscription = Teams.Billing.get_subscription(my_team)
 
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
       subscription: subscription,
       pageview_limit: Teams.Billing.monthly_pageview_limit(subscription),
-      pageview_usage: Teams.Billing.monthly_pageview_usage(team),
-      site_usage: Teams.Billing.site_usage(team),
-      site_limit: Teams.Billing.site_limit(team),
-      team_member_limit: Teams.Billing.team_member_limit(team),
-      team_member_usage: Teams.Billing.team_member_usage(team)
+      pageview_usage: Teams.Billing.monthly_pageview_usage(my_team),
+      site_usage: Teams.Billing.site_usage(my_team),
+      site_limit: Teams.Billing.site_limit(my_team),
+      team_member_limit: Teams.Billing.team_member_limit(my_team),
+      team_member_usage: Teams.Billing.team_member_usage(my_team)
     )
   end
 
   def invoices(conn, _params) do
-    subscription = Teams.Billing.get_subscription(conn.assigns.current_team)
+    subscription = Teams.Billing.get_subscription(conn.assigns.my_team)
 
     invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
     render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings}, invoices: invoices)

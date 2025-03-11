@@ -98,7 +98,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       other_owner = new_user() |> subscribe_to_growth_plan()
       new_team = team_of(other_owner)
       add_member(new_team, user: user, role: :viewer)
-      conn = set_current_team(conn, new_team)
 
       transfer = invite_transfer(site, user, inviter: old_owner)
 
@@ -285,7 +284,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         _site = new_site(owner: owner)
         team = team_of(owner)
         add_member(team, user: user, role: unquote(role))
-        conn = set_current_team(conn, team)
 
         invitation =
           invite_member(team, "jane@example.com", inviter: owner, role: unquote(invitee_role))
@@ -356,7 +354,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       _site = new_site(owner: owner)
       team = team_of(owner)
       add_member(team, user: user, role: :editor)
-      conn = set_current_team(conn, team)
 
       remove_invitation_path =
         Routes.invitation_path(

@@ -616,7 +616,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       user: user,
       site: site
     } do
-      Plausible.Teams.complete_setup(site.team)
+      site.team
+      |> Plausible.Teams.Team.setup_changeset()
+      |> Repo.update!()
 
       conn = delete(conn, "/me")
 
@@ -633,7 +635,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       user: user,
       site: site
     } do
-      Plausible.Teams.complete_setup(site.team)
+      site.team
+      |> Plausible.Teams.Team.setup_changeset()
+      |> Repo.update!()
 
       another_owner = new_user()
       another_site = new_site(owner: another_owner)

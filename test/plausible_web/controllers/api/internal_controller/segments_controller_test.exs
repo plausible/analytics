@@ -74,10 +74,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
     for role <- [:viewer, :owner] do
       test "returns list with personal and site segments for #{role}, avoiding segments from other site",
            %{conn: conn, user: user, site: site} do
-        team = team_of(user)
         other_user = new_user(name: "Other User")
-        other_site = new_site(team: team)
-        add_member(team, user: other_user, role: :owner)
+        other_site = new_site(owner: other_user, team: team_of(user))
 
         insert_list(2, :segment,
           site: other_site,
