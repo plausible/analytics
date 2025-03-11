@@ -44,7 +44,12 @@ defmodule Plausible.Teams.Team do
       where: [role: :owner],
       preload_order: [asc: :id]
 
+    has_many :billing_memberships, Plausible.Teams.Membership,
+      where: [role: :billing],
+      preload_order: [asc: :id]
+
     has_many :owners, through: [:ownerships, :user]
+    has_many :billing_members, through: [:billing_memberships, :user]
 
     timestamps()
   end
