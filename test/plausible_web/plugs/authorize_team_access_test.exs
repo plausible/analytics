@@ -31,10 +31,21 @@ defmodule PlausibleWeb.Plugs.AuthorizeTeamAccessTest do
   test "redirects to /sites on mismatch" do
     conn =
       build_conn()
+      |> assign(:current_team, :some)
       |> assign(:current_role, :admin)
       |> AuthorizeTeamAccess.call([:owner])
 
     assert conn.halted
     assert redirected_to(conn, 302) == "/sites"
+  end
+
+  test "is permissive when no :current_team assigned" do
+    conn =
+      build_conn()
+      |> assign(:current_team, nil)
+      |> assign(:current_role, :admin)
+      |> AuthorizeTeamAccess.call([:owner])
+
+    refute conn.halted
   end
 end
