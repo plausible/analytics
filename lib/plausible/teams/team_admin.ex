@@ -170,10 +170,10 @@ defmodule Plausible.Teams.TeamAdmin do
   defp team_name(team) do
     case team.owners do
       [owner] ->
-        if team.name == "My Team" do
-          owner.name
-        else
+        if team.setup_complete do
           team.name
+        else
+          owner.name
         end
 
       [_ | _] ->

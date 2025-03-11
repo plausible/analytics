@@ -145,7 +145,7 @@ defmodule Plausible.Billing do
         # this could result in assigning this new subscription to the newly owned team,
         # effectively "shadowing" any old one.
         #
-        # That's why we are always defaulting to creating a new "My Team" team regardless
+        # That's why we are always defaulting to creating a new "My Personal Sites" team regardless
         # if they were owner of one before or not.
         Auth.User
         |> Repo.get!(user_id)

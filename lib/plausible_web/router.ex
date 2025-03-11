@@ -404,7 +404,6 @@ defmodule PlausibleWeb.Router do
     delete "/me", AuthController, :delete_me
 
     get "/team/select", AuthController, :select_team
-    post "/team/select/:team_id", AuthController, :switch_team
 
     get "/auth/google/callback", AuthController, :google_auth_callback
 

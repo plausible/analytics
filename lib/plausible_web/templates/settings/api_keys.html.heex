@@ -10,13 +10,13 @@
     <PlausibleWeb.Components.Billing.Notice.premium_feature
       billable_user={@current_user}
       current_user={@current_user}
-      current_team={@my_team}
+      current_team={@current_team}
       feature_mod={Plausible.Billing.Feature.StatsAPI}
     />
 
     <.filter_bar filtering_enabled?={false}>
       <.button_link
-        :if={Plausible.Billing.Feature.StatsAPI.check_availability(@my_team) == :ok}
+        :if={Plausible.Billing.Feature.StatsAPI.check_availability(@current_team) == :ok}
         href={Routes.settings_path(@conn, :new_api_key)}
       >
         New API Key

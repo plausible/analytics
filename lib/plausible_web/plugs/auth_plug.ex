@@ -19,33 +19,41 @@ defmodule PlausibleWeb.AuthPlug do
       {:ok, user_session} ->
         user = user_session.user
 
-        current_team_id = Plug.Conn.get_session(conn, "current_team_id")
+        current_team_id_from_session = Plug.Conn.get_session(conn, "current_team_id")
+        current_team_id = conn.params["__team"] || current_team_id_from_session
 
         current_team =
           if current_team_id do
             user.team_memberships
-            |> Enum.find(%{}, &(&1.team_id == current_team_id))
+            |> Enum.find(%{}, &(&1.team.identifier == current_team_id))
             |> Map.get(:team)
           end
 
-        current_team_owner? =
-          (current_team || %{})
-          |> Map.get(:owners, [])
-          |> Enum.any?(&(&1.id == user.id))
+        conn =
+          cond do
+            current_team && current_team_id != current_team_id_from_session ->
+              Plug.Conn.put_session(conn, "current_team_id", current_team_id)
+
+            is_nil(current_team) && not is_nil(current_team_id_from_session) ->
+              Plug.Conn.delete_session(conn, "current_team_id")
+
+            true ->
+              conn
+          end
 
         my_team =
-          if current_team_owner? do
-            current_team
-          else
-            user.team_memberships
-            # NOTE: my_team should eventually only hold user's personal team. This requires
-            # additional adjustments, which will be done in follow-up work.
-            # |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
-            |> List.first(%{})
-            |> Map.get(:team)
-          end
+          user.team_memberships
+          |> Enum.find(%{}, &(&1.role == :owner and &1.team.setup_complete == false))
+          |> Map.get(:team)
 
         teams_count = length(user.team_memberships)
+
+        teams =
+          user.team_memberships
+          |> Enum.filter(& &1.team.setup_complete)
+          |> Enum.sort_by(fn tm -> [tm.role != :owner, tm.team_id] end)
+          |> Enum.map(&Map.fetch!(&1, :team))
+          |> Enum.take(3)
 
         Plausible.OpenTelemetry.add_user_attributes(user)
         Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
@@ -56,7 +64,8 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:my_team, my_team)
         |> assign(:current_team, current_team || my_team)
         |> assign(:teams_count, teams_count)
-        |> assign(:multiple_teams?, teams_count > 1)
+        |> assign(:teams, teams)
+        |> assign(:more_teams?, teams_count > 3)
 
       _ ->
         conn

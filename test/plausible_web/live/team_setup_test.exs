@@ -21,20 +21,35 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
     test "redirects to /team/general if team is already set up", %{conn: conn, user: user} do
       {:ok, team} = Teams.get_or_create(user)
-      team |> Teams.Team.setup_changeset() |> Repo.update!()
+      Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
       assert {:error, {:redirect, %{to: "/settings/team/general"}}} = live(conn, @url)
-    end
-
-    test "does not redirect to /team/general if dev mode", %{conn: conn, user: user} do
-      {:ok, team} = Teams.get_or_create(user)
-      team |> Teams.Team.setup_changeset() |> Repo.update!()
-      assert {:ok, lv, _} = live(conn, @url <> "?dev=1")
-      _ = render(lv)
     end
   end
 
   describe "/team/setup - main differences from team management" do
     setup [:create_user, :log_in, :create_team]
+
+    test "renames the team on first render", %{conn: conn, team: team} do
+      assert team.name == "My Personal Sites"
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's Team"
+
+      assert Repo.reload!(team).name == "Jane Smith's Team"
+    end
+
+    test "renames even if team already has non-default name", %{conn: conn, team: team} do
+      assert team.name == "My Personal Sites"
+      Repo.update!(Teams.Team.name_changeset(team, %{name: "Foo"}))
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "Jane Smith's Team"
+
+      assert Repo.reload!(team).name == "Jane Smith's Team"
+    end
 
     test "renders form", %{conn: conn} do
       {:ok, lv, html} = live(conn, @url)
@@ -50,6 +65,23 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert Repo.reload!(team).name == "New Team Name"
 
       _ = render(lv)
+    end
+
+    test "setting team name to 'My Personal Sites' is reserved", %{
+      conn: conn,
+      team: team,
+      user: user
+    } do
+      {:ok, lv, html} = live(conn, @url)
+
+      assert text_of_attr(html, ~s|input#update-team-form_name[name="team[name]"]|, "value") ==
+               "#{user.name}'s Team"
+
+      type_into_input(lv, "team[name]", "Team Name 1")
+      _ = render(lv)
+      type_into_input(lv, "team[name]", "My Personal Sites")
+      _ = render(lv)
+      assert Repo.reload!(team).name == "Team Name 1"
     end
   end
 
@@ -78,7 +110,9 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       save_layout(lv)
 
-      assert_redirect(lv, "/settings/team/general")
+      assert_redirect(lv, "/settings/team/general?__team=" <> team.identifier)
+
+      team = Repo.reload!(team)
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
@@ -101,6 +135,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert text_of_element(html, "#{member_el()}:nth-of-type(1) button") == "Viewer"
 
       save_layout(lv)
+
+      team = Repo.reload!(team)
 
       assert_email_delivered_with(
         to: [nil: "new@example.com"],
@@ -251,6 +287,8 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       refute html =~ "Guest"
 
       save_layout(lv)
+
+      team = Repo.reload!(team)
 
       assert_email_delivered_with(
         to: [nil: guest.email],
