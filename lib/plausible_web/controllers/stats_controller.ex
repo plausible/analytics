@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Filters, Query}
+  alias Plausible.Stats.{Filters, Query, TimeOnPage}
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.StatsController do
           scroll_depth_visible: scroll_depth_visible?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
-          legacy_time_on_page_cutoff: legacy_time_on_page_cutoff(),
+          legacy_time_on_page_cutoff: TimeOnPage.legacy_time_on_page_cutoff(),
           title: title(conn, site),
           demo: demo,
           flags: flags,
@@ -362,7 +362,7 @@ defmodule PlausibleWeb.StatsController do
           scroll_depth_visible: scroll_depth_visible?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
-          legacy_time_on_page_cutoff: legacy_time_on_page_cutoff(),
+          legacy_time_on_page_cutoff: TimeOnPage.legacy_time_on_page_cutoff(),
           title: title(conn, shared_link.site),
           demo: false,
           dogfood_page_path: "/share/:dashboard",
@@ -387,12 +387,6 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
-
-  defp legacy_time_on_page_cutoff() do
-    # Placeholder until we implement a more sophisticated way to determine the cutoff
-    # Only used when `new_time_on_page` flag is enabled
-    DateTime.utc_now() |> DateTime.shift(day: -4) |> DateTime.to_iso8601()
-  end
 
   defp get_flags(user, site),
     do:

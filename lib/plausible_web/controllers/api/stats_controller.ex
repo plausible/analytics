@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb.Plugs.ErrorHandler
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider}
+  alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider, TimeOnPage}
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -444,7 +444,11 @@ defmodule PlausibleWeb.Api.StatsController do
     %{
       top_stats: top_stats,
       meta: meta,
-      graphable_metrics: metrics -- [:time_on_page],
+      graphable_metrics:
+        if(TimeOnPage.new_time_on_page_enabled?(site, current_user),
+          do: metrics,
+          else: metrics -- [:time_on_page]
+        ),
       sample_percent: sample_percent
     }
   end
