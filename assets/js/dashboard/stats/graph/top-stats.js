@@ -82,6 +82,10 @@ export default function TopStats({
   }
 
   function warningText(metric, warning, site) {
+    if (!warning) {
+      return null
+    }
+
     if (
       metric === 'scroll_depth' &&
       warning.code === 'no_imported_scroll_depth'
