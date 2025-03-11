@@ -11,7 +11,7 @@ defmodule Plausible.Plugs.AuthorizeTeamAccess do
 
   import Plug.Conn
 
-  @all_roles Plausible.Teams.Membership.roles()
+  @all_roles Plausible.Teams.Membership.roles() -- [:guest]
 
   def init([]), do: @all_roles
 
