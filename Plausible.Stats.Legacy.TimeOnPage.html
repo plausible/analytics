@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-786E9832.js"></script>
+    <script src="dist/sidebar_items-BBB018B8.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,8 +138,9 @@ Pages
 
 
     <section id="moduledoc">
-<p>Calculation methods for legacy time_on_page metric. Note the metric
-has its own limitations and quirks.</p><p>Closely coupled with Plausible.Stats.QueryRunner.</p>
+<p>Calculation methods for <code class="inline">legacy</code> time_on_page metric. <code class="inline">Legacy</code> calculation methods
+are used when site does not have engagement data for the requested dates.</p><p>Query <code class="inline">include.legacy_time_on_page_cutoff</code> is used to determine what time range
+to use for the legacy time_on_page calculations.</p><p>Legacy metric is not exposed in the public API.</p>
     </section>
 
 </div>
@@ -158,7 +159,15 @@ has its own limitations and quirks.</p><p>Closely coupled with Plausible.Stats.Q
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#calculate/3" data-no-tooltip translate="no">calculate(site, query, ch_results)</a>
+        <a href="#can_merge_legacy_time_on_page?/1" data-no-tooltip translate="no">can_merge_legacy_time_on_page?(query)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#merge_legacy_time_on_page/2" data-no-tooltip translate="no">merge_legacy_time_on_page(q, query)</a>
 
       </div>
 
@@ -177,15 +186,35 @@ has its own limitations and quirks.</p><p>Closely coupled with Plausible.Stats.Q
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="calculate/3">
+<section class="detail" id="can_merge_legacy_time_on_page?/1">
 
   <div class="detail-header">
-    <a href="#calculate/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#can_merge_legacy_time_on_page?/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">calculate(site, query, ch_results)</h1>
+    <h1 class="signature" translate="no">can_merge_legacy_time_on_page?(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/legacy/time_on_page.ex#L14" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/legacy/time_on_page.ex#L20" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="merge_legacy_time_on_page/2">
+
+  <div class="detail-header">
+    <a href="#merge_legacy_time_on_page/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">merge_legacy_time_on_page(q, query)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/legacy/time_on_page.ex#L24" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
