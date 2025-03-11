@@ -16,7 +16,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     |> maybe_add_percentage_metric(site, query)
     |> maybe_add_global_conversion_rate(site, query)
     |> maybe_add_group_conversion_rate(site, query)
-    |> maybe_add_scroll_depth(site, query)
+    |> maybe_add_scroll_depth(query)
   end
 
   defp maybe_add_percentage_metric(q, site, query) do
@@ -127,10 +127,10 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     end
   end
 
-  def maybe_add_scroll_depth(q, site, query) do
+  def maybe_add_scroll_depth(q, query) do
     if :scroll_depth in query.metrics do
       max_per_session_q =
-        Base.base_event_query(site, query)
+        Base.base_event_query(query)
         |> where([e], e.name == "engagement" and e.scroll_depth <= 100)
         |> select([e], %{
           session_id: e.session_id,
@@ -222,14 +222,14 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   defp total_visitors_subquery(site, query, true = _include_imported) do
     wrap_alias([], %{
       total_visitors:
-        subquery(total_visitors(site, query)) +
+        subquery(total_visitors(query)) +
           subquery(Plausible.Stats.Imported.total_imported_visitors(site, query))
     })
   end
 
-  defp total_visitors_subquery(site, query, false = _include_imported) do
+  defp total_visitors_subquery(_site, query, false = _include_imported) do
     wrap_alias([], %{
-      total_visitors: subquery(total_visitors(site, query))
+      total_visitors: subquery(total_visitors(query))
     })
   end
 
@@ -243,8 +243,8 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     Query.set(query, filters: totals_query_filters)
   end
 
-  defp total_visitors(site, query) do
-    Base.base_event_query(site, query)
+  defp total_visitors(query) do
+    Base.base_event_query(query)
     |> select([e],
       total_visitors: scale_sample(fragment("uniq(?)", e.user_id))
     )

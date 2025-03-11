@@ -41,7 +41,7 @@ defmodule Plausible.Stats.GoalSuggestions do
     query = Query.from(site, params)
 
     native_q =
-      from(e in base_event_query(site, query),
+      from(e in base_event_query(query),
         where: fragment("? ilike ?", e.name, ^matches),
         where: e.name not in ["pageview", "engagement"],
         where: fragment("trim(?)", e.name) != "",

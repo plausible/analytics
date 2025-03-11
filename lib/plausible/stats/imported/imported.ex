@@ -226,7 +226,7 @@ defmodule Plausible.Stats.Imported do
     imported_q =
       site
       |> Imported.Base.query_imported(query)
-      |> select_imported_metrics(query.metrics)
+      |> select_imported_metrics(query)
       |> paginate_optimization(query)
 
     from(
@@ -234,7 +234,7 @@ defmodule Plausible.Stats.Imported do
       cross_join: i in subquery(imported_q),
       select: %{}
     )
-    |> select_joined_metrics(query.metrics)
+    |> select_joined_metrics(query)
   end
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query) do
@@ -253,7 +253,7 @@ defmodule Plausible.Stats.Imported do
               i.name
             )
         })
-        |> select_imported_metrics(query.metrics)
+        |> select_imported_metrics(query)
         |> group_by([], selected_as(:dim0))
         |> where([], selected_as(:dim0) != 0)
 
@@ -282,10 +282,10 @@ defmodule Plausible.Stats.Imported do
         |> select_merge_as([_i, index], %{
           dim0: fragment("CAST(?, 'UInt64')", index)
         })
-        |> select_imported_metrics(query.metrics)
+        |> select_imported_metrics(query)
     end)
     |> Enum.reduce(q, fn imports_q, q ->
-      naive_dimension_join(q, imports_q, query.metrics)
+      naive_dimension_join(q, imports_q, query)
     end)
   end
 
@@ -298,7 +298,7 @@ defmodule Plausible.Stats.Imported do
         |> Imported.Base.query_imported(query)
         |> where([i], i.visitors > 0)
         |> group_imported_by(query)
-        |> select_imported_metrics(query.metrics)
+        |> select_imported_metrics(query)
         |> paginate_optimization(query)
 
       from(s in subquery(q),
@@ -307,7 +307,7 @@ defmodule Plausible.Stats.Imported do
         select: %{}
       )
       |> select_joined_dimensions(query)
-      |> select_joined_metrics(query.metrics)
+      |> select_joined_metrics(query)
     else
       q
     end
@@ -319,7 +319,7 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
   end
 
-  defp naive_dimension_join(q1, q2, metrics) do
+  defp naive_dimension_join(q1, q2, query) do
     from(a in subquery(q1),
       full_join: b in subquery(q2),
       on: a.dim0 == b.dim0,
@@ -328,7 +328,7 @@ defmodule Plausible.Stats.Imported do
     |> select_merge_as([a, b], %{
       dim0: fragment("if(? != 0, ?, ?)", a.dim0, a.dim0, b.dim0)
     })
-    |> select_joined_metrics(metrics)
+    |> select_joined_metrics(query)
   end
 
   # Optimization for cases when grouping by a very high cardinality column.

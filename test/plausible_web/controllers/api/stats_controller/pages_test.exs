@@ -692,7 +692,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           date: ~D[2020-01-01],
           visitors: 3,
           pageviews: 3,
-          time_on_page: 90,
+          total_time_on_page: 90,
+          total_time_on_page_visits: 3,
           page: "/blog",
           total_scroll_depth: 120,
           total_scroll_depth_visits: 3
@@ -748,7 +749,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           date: ~D[2020-01-01],
           visitors: 4,
           pageviews: 4,
-          time_on_page: 180,
+          total_time_on_page: 180,
+          total_time_on_page_visits: 4,
           page: "/native-and-imported",
           total_scroll_depth: 120,
           total_scroll_depth_visits: 3
@@ -757,7 +759,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           date: ~D[2020-01-01],
           visitors: 20,
           pageviews: 30,
-          time_on_page: 300,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 10,
           page: "/imported-only",
           total_scroll_depth: 100,
           total_scroll_depth_visits: 10
@@ -833,7 +836,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 110,
                  "pageviews" => 160,
                  "bounce_rate" => 0,
-                 "time_on_page" => 0.125,
+                 "time_on_page" => 0,
                  "scroll_depth" => 10
                }
              ]
@@ -1374,7 +1377,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       ])
 
       assert [
-               %{"name" => "/", "time_on_page" => _three_minutes = 180.0},
+               %{"name" => "/", "time_on_page" => _three_minutes = 180},
                %{"name" => "/exit", "time_on_page" => nil}
              ] =
                conn
@@ -1407,9 +1410,9 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       ])
 
       assert [
-               %{"name" => "/a", "time_on_page" => 100.0},
+               %{"name" => "/a", "time_on_page" => 100},
                %{"name" => "/b", "time_on_page" => nil},
-               %{"name" => "/d", "time_on_page" => +0.0}
+               %{"name" => "/d", "time_on_page" => 0}
              ] =
                conn
                |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
@@ -1439,7 +1442,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:imported_pages,
           page: "/",
           date: ~D[2021-01-01],
-          time_on_page: 700
+          total_time_on_page: 700,
+          total_time_on_page_visits: 3
         ),
         build(:imported_entry_pages,
           entry_page: "/",
@@ -1450,7 +1454,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:imported_pages,
           page: "/some-other-page",
           date: ~D[2021-01-01],
-          time_on_page: 60
+          total_time_on_page: 60,
+          total_time_on_page_visits: 1
         )
       ])
 
@@ -1529,7 +1534,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           page: "/",
           visitors: 3,
           pageviews: 3,
-          time_on_page: 300,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 3,
           date: ~D[2021-01-01]
         ),
         build(:imported_pages, page: "/ignored", visitors: 10, date: ~D[2021-01-01])
@@ -1574,7 +1580,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           page: "/",
           visitors: 3,
           pageviews: 3,
-          time_on_page: 300,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 3,
           date: ~D[2021-01-01]
         ),
         build(:imported_pages,
@@ -1632,7 +1639,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           page: "/aaa",
           visitors: 3,
           pageviews: 3,
-          time_on_page: 300,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 3,
           date: ~D[2021-01-01]
         ),
         build(:imported_pages,
@@ -1700,7 +1708,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "comparison" => %{
                    "bounce_rate" => 0,
                    "pageviews" => 0,
-                   "time_on_page" => 0,
+                   "time_on_page" => nil,
                    "visitors" => 0,
                    "scroll_depth" => nil,
                    "change" => %{

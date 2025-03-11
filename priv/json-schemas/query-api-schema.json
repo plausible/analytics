@@ -109,6 +109,11 @@
               "additionalProperties": false
             }
           ]
+        },
+        "legacy_time_on_page_cutoff": {
+          "$comment": "only :internal",
+          "type": "string",
+          "format": "datetime"
         }
       }
     },
