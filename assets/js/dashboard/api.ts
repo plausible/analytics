@@ -103,7 +103,7 @@ export async function get(
 ) {
   const queryString = query
     ? queryToSearchParams(query, [...extraQueryParams])
-    : null
+    : serializeUrlParams(getSharedLinkSearchParams())
 
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     signal: abortController.signal,
