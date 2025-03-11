@@ -411,7 +411,9 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   defp dim(dimension), do: Plausible.Stats.Filters.without_prefix(dimension)
 
   defp time_on_page_metric(query) do
-    if not query.time_on_page_data.include_legacy_metric do
+    if query.time_on_page_data.include_legacy_metric do
+      %{}
+    else
       wrap_alias([], %{
         time_on_page:
           time_on_page(
@@ -419,8 +421,6 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
             selected_as(:__internal_total_time_on_page_visits)
           )
       })
-    else
-      %{}
     end
   end
 end
