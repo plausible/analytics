@@ -122,6 +122,7 @@ export default function QueryContextProvider({
     period,
     to,
     with_imported,
+    legacy_time_on_page_cutoff,
     site,
     expandedSegment
   ])
