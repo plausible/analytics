@@ -20,6 +20,10 @@ import {
   GoToSites,
   SomethingWentWrongMessage
 } from './dashboard/error/something-went-wrong'
+import {
+  InitialLoadContextProvider,
+  parseInitialLoadDataFromDataset
+} from './dashboard/initial-load-context'
 
 timer.start()
 
@@ -67,7 +71,11 @@ if (container && container.dataset) {
                   : { loggedIn: false, role: null, id: null }
               }
             >
-              <RouterProvider router={router} />
+              <InitialLoadContextProvider
+                data={parseInitialLoadDataFromDataset(container.dataset)}
+              >
+                <RouterProvider router={router} />
+              </InitialLoadContextProvider>
             </UserContextProvider>
           </SiteContextProvider>
         </ThemeContextProvider>

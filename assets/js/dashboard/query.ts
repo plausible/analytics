@@ -43,6 +43,7 @@ export const queryDefaultValue = {
   compare_from: null as Dayjs | null,
   compare_to: null as Dayjs | null,
   filters: [] as Filter[],
+  resolvedFilters: [] as Filter[],
   labels: {} as FilterClauseLabels,
   with_imported: true
 }

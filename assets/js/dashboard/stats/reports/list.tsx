@@ -16,6 +16,7 @@ import {
 import { useQueryContext } from '../../query-context'
 import { Metric } from './metrics'
 import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
+import { BreakdownResultMeta } from '../../query'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 380
@@ -58,7 +59,7 @@ function ExternalLink<T>({
 
 export interface SharedReportProps<
   TListItem extends Record<string, unknown> = Record<string, unknown>,
-  TResponse = { results: TListItem[]; meta: unknown }
+  TResponse = { results: TListItem[]; meta: BreakdownResultMeta }
 > {
   metrics: Metric[]
   /** A function that takes a list item and returns the
@@ -84,6 +85,7 @@ export interface SharedReportProps<
    *     example, the parent component might want to control what happens when imported data
    *     is included or not. */
   afterFetchData?: (response: TResponse) => void
+  afterFetchNextPage?: (response: TResponse) => void
 }
 
 type ListReportProps = {
@@ -139,7 +141,7 @@ export default function ListReport<
   const [state, setState] = useState<{
     loading: boolean
     list: TListItem[] | null
-    meta: unknown | null
+    meta: BreakdownResultMeta | null
   }>({ loading: true, list: null, meta: null })
   const [visible, setVisible] = useState(false)
 

@@ -90,11 +90,15 @@ export function getPropertyKeyFromFilterKey(filterKey) {
   return filterKey.slice(EVENT_PROPS_PREFIX.length)
 }
 
+/** WIP: investigate all occurrences */
 export function getFiltersByKeyPrefix(query, prefix) {
-  return query.filters.filter(([_operation, filterKey, _clauses]) =>
-    filterKey.startsWith(prefix)
-  )
+  return query.filters.filter(hasDimensionPrefix(prefix))
 }
+
+const hasDimensionPrefix =
+  (prefix) =>
+  ([_operation, dimension, _clauses]) =>
+    dimension.startsWith(prefix)
 
 function omitFiltersByKeyPrefix(query, prefix) {
   return query.filters.filter(
@@ -102,10 +106,12 @@ function omitFiltersByKeyPrefix(query, prefix) {
   )
 }
 
+/** WIP: investigate all occurrences */
 export function replaceFilterByPrefix(query, prefix, filter) {
   return omitFiltersByKeyPrefix(query, prefix).concat([filter])
 }
 
+/** WIP: investigate all occurrences */
 export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
   const filters = query.filters.filter(([_operation, key]) => filterKey == key)
   if (filters.length == 1) {
@@ -119,10 +125,13 @@ export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
   return false
 }
 
+/** WIP: investigate all occurrences */
 export function hasConversionGoalFilter(query) {
-  const goalFilters = getFiltersByKeyPrefix(query, 'goal')
+  const resolvedGoalFilters = query.resolvedFilters.filter(
+    hasDimensionPrefix('goal')
+  )
 
-  return goalFilters.some(([operation, _filterKey, _clauses]) => {
+  return resolvedGoalFilters.some(([operation, _filterKey, _clauses]) => {
     return operation !== FILTER_OPERATIONS.has_not_done
   })
 }
@@ -131,6 +140,7 @@ export function isRealTimeDashboard(query) {
   return query?.period === 'realtime'
 }
 
+/** WIP: investigate all occurrences */
 // Note: Currently only a single goal filter can be applied at a time.
 export function getGoalFilter(query) {
   return getFiltersByKeyPrefix(query, 'goal')[0] || null
@@ -264,6 +274,7 @@ export function fetchSuggestions(apiPath, query, input, additionalFilter) {
   return api.get(apiPath, updatedQuery, { q: input.trim() })
 }
 
+/** WIP: how well does it work with segments actually */
 function queryForSuggestions(query, additionalFilter) {
   let filters = query.filters
   if (additionalFilter) {

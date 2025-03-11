@@ -90,7 +90,11 @@ export function formatSegmentIdAsLabelKey(id: number): string {
   return `${SEGMENT_LABEL_KEY_PREFIX}${id}`
 }
 
-export const isSegmentFilter = (f: Filter): boolean => f[1] === 'segment'
+export const isSegmentFilter = (f: Filter): f is ['is', 'segment', [number]] =>
+  f[0] === 'is' &&
+  f[1] === 'segment' &&
+  Array.isArray(f[2]) &&
+  f[2].length === 1
 
 export const parseApiSegmentData = ({
   filters,

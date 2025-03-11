@@ -214,7 +214,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
              }
     end
 
-    test "serves 404 when user is not the segment owner and segment is personal",
+    test "serves 200 when user is not the segment owner and segment is personal",
          %{
            conn: conn,
            site: site
@@ -232,8 +232,15 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
       conn =
         get(conn, "/api/#{site.domain}/segments/#{segment.id}")
 
-      assert json_response(conn, 404) == %{
-               "error" => "Segment not found with ID \"#{segment.id}\""
+      assert json_response(conn, 200) == %{
+               "id" => segment.id,
+               "owner_id" => other_user.id,
+               "owner_name" => other_user.name,
+               "name" => segment.name,
+               "type" => Atom.to_string(segment.type),
+               "segment_data" => segment.segment_data,
+               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S"),
+               "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%d %H:%M:%S")
              }
     end
 

@@ -1,5 +1,11 @@
 /* @format */
-import React, { createContext, useMemo, useContext, ReactNode } from 'react'
+import React, {
+  createContext,
+  useMemo,
+  useContext,
+  ReactNode,
+  useEffect
+} from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
@@ -19,9 +25,15 @@ import {
   queryDefaultValue,
   postProcessFilters
 } from './query'
-import { SavedSegment, SegmentData } from './filtering/segments'
+import {
+  isSegmentFilter,
+  SavedSegment,
+  SegmentData
+} from './filtering/segments'
 import { useDefiniteLocationState } from './navigation/use-definite-location-state'
 import { useClearExpandedSegmentModeOnFilterClear } from './nav-menu/segments/segment-menu'
+import { useInitialLoadContext } from './initial-load-context'
+import { useSegmentPrefetch } from './nav-menu/segments/searchable-segments-section'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
@@ -42,6 +54,7 @@ export default function QueryContextProvider({
 }: {
   children: ReactNode
 }) {
+  const initialLoadData = useInitialLoadContext()
   const location = useLocation()
   const { definiteValue: expandedSegment } = useDefiniteLocationState<
     SavedSegment & { segment_data: SegmentData }
@@ -62,6 +75,42 @@ export default function QueryContextProvider({
     with_imported,
     ...otherSearch
   } = useMemo(() => parseSearch(location.search), [location.search])
+
+  const appliedSegmentFilters = (
+    (filters ?? queryDefaultValue.filters) as Filter[]
+  ).filter(([operator, dimension, clauses]) =>
+    isSegmentFilter([operator, dimension, clauses])
+  )
+
+  const appliedSegmentId =
+    appliedSegmentFilters.length === 1 ? appliedSegmentFilters[0][2][0] : null
+
+  const {
+    data: appliedSegmentData,
+    prefetchSegment,
+    isStale: isSegmentStale
+  } = useSegmentPrefetch({
+    id: appliedSegmentId
+  })
+
+  useEffect(() => {
+    if (
+      appliedSegmentId !== null ||
+      (appliedSegmentId !== null && isSegmentStale)
+    ) {
+      prefetchSegment()
+    }
+  }, [appliedSegmentId, prefetchSegment, isSegmentStale])
+
+  const resolvedFilters = useMemo(() => {
+    return appliedSegmentId !== null && appliedSegmentData
+      ? (filters as Array<Filter>).flatMap((f) =>
+          isSegmentFilter(f) && f[2][0] === appliedSegmentId
+            ? appliedSegmentData.segment_data.filters
+            : [f]
+        )
+      : initialLoadData.resolvedFilters
+  }, [filters, initialLoadData, appliedSegmentData, appliedSegmentId])
 
   const query = useMemo(() => {
     const defaultValues = queryDefaultValue
@@ -105,6 +154,7 @@ export default function QueryContextProvider({
       filters: Array.isArray(filters)
         ? postProcessFilters(filters as Filter[])
         : defaultValues.filters,
+      resolvedFilters: resolvedFilters,
       labels: (labels as FilterClauseLabels) || defaultValues.labels
     }
   }, [
@@ -120,7 +170,8 @@ export default function QueryContextProvider({
     to,
     with_imported,
     site,
-    expandedSegment
+    expandedSegment,
+    resolvedFilters
   ])
 
   useClearExpandedSegmentModeOnFilterClear({ expandedSegment, query })

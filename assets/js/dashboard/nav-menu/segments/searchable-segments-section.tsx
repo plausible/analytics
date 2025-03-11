@@ -194,7 +194,7 @@ export const SearchableSegmentsSection = ({
   )
 }
 
-export const useSegmentPrefetch = ({ id }: { id: string }) => {
+export const useSegmentPrefetch = ({ id }: { id: number | string | null }) => {
   const site = useSiteContext()
   const queryClient = useQueryClient()
   const queryKey = useMemo(() => ['segments', id] as const, [id])
@@ -241,7 +241,8 @@ export const useSegmentPrefetch = ({ id }: { id: string }) => {
     data: getSegment.data,
     fetchSegment,
     error: getSegment.error,
-    status: getSegment.status
+    status: getSegment.status,
+    isStale: getSegment.isStale
   }
 }
 

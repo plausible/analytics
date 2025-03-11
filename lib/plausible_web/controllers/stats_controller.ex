@@ -82,6 +82,7 @@ defmodule PlausibleWeb.StatsController do
           flags: flags,
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
+          resolved_query: resolve_dashboard_query(conn, site),
           load_dashboard_js: true
         )
 
@@ -370,6 +371,7 @@ defmodule PlausibleWeb.StatsController do
           theme: conn.params["theme"],
           flags: flags,
           is_dbip: is_dbip(),
+          resolved_query: resolve_dashboard_query(conn, shared_link.site),
           load_dashboard_js: true
         )
 
@@ -410,5 +412,44 @@ defmodule PlausibleWeb.StatsController do
 
   defp title(_conn, site) do
     "Plausible · " <> site.domain
+  end
+
+  defp parse_dashboard_filters_syntax(conn) do
+    conn.query_string
+    |> String.split("&")
+    |> Enum.map(fn s -> String.split(s, "=") end)
+    |> Enum.filter(fn [key | _] -> key == "f" end)
+    |> Enum.flat_map(fn [_, v] ->
+      dashboard_filter = String.split(v, ",") |> Enum.map(fn v -> URI.decode(v) end)
+
+      case dashboard_filter do
+        [_operation, _dimension_shorthand | clauses] when length(clauses) < 1 ->
+          []
+
+        ["has_not_done", "goal", clause] ->
+          [["has_not_done", ["is", "event:goal", clause]]]
+
+        ["is", "segment", clause] ->
+          [["is", "segment", [String.to_integer(clause)]]]
+
+        [operation, dimension_shorthand | clauses]
+        when dimension_shorthand in ["name", "page", "goal", "hostname"] ->
+          [[operation, "event:" <> dimension_shorthand, clauses]]
+
+        [operation, "props:" <> _ = dimension_shorthand | clauses] ->
+          [[operation, "event:" <> dimension_shorthand, clauses]]
+
+        [operation, dimension_shorthand | clauses] ->
+          [[operation, "visit:" <> dimension_shorthand, clauses]]
+
+        _ ->
+          []
+      end
+    end)
+  end
+
+  defp resolve_dashboard_query(conn, site) do
+    filters = parse_dashboard_filters_syntax(conn)
+    Query.from(site, Map.put(conn.params, "filters", filters), debug_metadata(conn))
   end
 end

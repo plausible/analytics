@@ -282,12 +282,12 @@ defmodule Plausible.Segments do
     nil
   end
 
-  defp do_get_one(user_id, site_id, segment_id) do
+  defp do_get_one(_user_id, site_id, segment_id) do
     query =
       from(segment in Segment,
         where: segment.site_id == ^site_id,
         where: segment.id == ^segment_id,
-        where: segment.type == :site or segment.owner_id == ^user_id,
+        # where: segment.type == :site or segment.owner_id == ^user_id,
         preload: [:owner]
       )
 
