@@ -110,7 +110,6 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
     from(
       e in subquery(avg_time_per_page_transition_q),
       select: %{
-        time_on_page: fragment("avg(ifNotFinite(?,NULL))", e.avg),
         total_time_on_page: fragment("sum(?)", e.duration),
         transition_count: fragment("sum(?)", e.transition_count)
       }
@@ -188,7 +187,6 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
         [t, i],
         %{
           pathname: fragment("if(empty(?),?,?)", t.page, i.page, t.page),
-          time_on_page: (t.time_on_page + i.time_on_page) / (t.visits + i.visits),
           total_time_on_page: t.time_on_page + i.time_on_page,
           transition_count: t.visits + i.visits
         }
@@ -197,7 +195,6 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
       from(e in no_select_timed_pages_q,
         select: %{
           pathname: e.pathname,
-          time_on_page: fragment("sum(?)/countIf(?)", e.duration, e.transition),
           total_time_on_page: fragment("sum(?)", e.duration),
           transition_count: fragment("countIf(?)", e.transition)
         }
