@@ -6,7 +6,7 @@ defmodule Plausible.Segments do
   alias Plausible.Repo
   import Ecto.Query
 
-  @roles_with_personal_segments [:viewer, :editor, :admin, :owner, :super_admin]
+  @roles_with_personal_segments [:billing, :viewer, :editor, :admin, :owner, :super_admin]
   @roles_with_maybe_site_segments [:editor, :admin, :owner, :super_admin]
 
   @type error_not_enough_permissions() :: {:error, :not_enough_permissions}
