@@ -13,14 +13,18 @@ defmodule Plausible.Plugs.AuthorizeTeamAccess do
   end
 
   def call(conn, roles \\ @all_roles) do
-    current_role = conn.assigns[:current_role]
+    if Plausible.Teams.enabled?(conn.assigns[:current_team]) do
+      current_role = conn.assigns[:current_role]
 
-    if current_role in roles do
-      conn
+      if current_role in roles do
+        conn
+      else
+        conn
+        |> Phoenix.Controller.redirect(to: Routes.site_path(conn, :index))
+        |> halt()
+      end
     else
       conn
-      |> Phoenix.Controller.redirect(to: Routes.site_path(conn, :index))
-      |> halt()
     end
   end
 end
