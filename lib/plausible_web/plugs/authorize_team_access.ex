@@ -1,4 +1,12 @@
 defmodule Plausible.Plugs.AuthorizeTeamAccess do
+  @moduledoc """
+  Enforce team role to be within the declared set.
+  `:current_role` is assumed to be populated by `PlausibleWeb.AuthPlug`.
+
+  For cases where no `:current_team` exists, the plug is permissive,
+  so that existing notices can be displayed still.
+  """
+
   alias PlausibleWeb.Router.Helpers, as: Routes
 
   import Plug.Conn
