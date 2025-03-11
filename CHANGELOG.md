@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Add filter `is not` for goals in dashboard plausible/analytics#4983
 - Add Segments feature
 - Support `["is", "segment", [<segment ID>]]` filter in Stats API
+- Time on page metric is now sortable in reports
 
 ### Removed
 
@@ -41,7 +42,7 @@ All notable changes to this project will be documented in this file.
 - Breakdown modals now display correct comparison values instead of 0 after pagination
 - Fix database mismatch between event and session user_ids after rotating salts
 - `/api/v2/query` no longer returns a 500 when querying percentage metric without `visitors`
-- Fix current visitors loading when viewing a dashboard with a shared link  
+- Fix current visitors loading when viewing a dashboard with a shared link
 - Fix Conversion Rate graph being unselectable when "Goal is ..." filter is within a segment
 - Fix Channels filter input appearing when clicking Sources in filter menu or clicking an applied "Channel is..." filter
 
