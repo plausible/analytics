@@ -39,7 +39,11 @@ export default function TopStats({
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
-    const warning = warningText(stat.graph_metric, data.meta.metric_warnings?.[stat.graph_metric], site)
+    const warning = warningText(
+      stat.graph_metric,
+      data.meta.metric_warnings?.[stat.graph_metric],
+      site
+    )
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
     return (
@@ -71,17 +75,18 @@ export default function TopStats({
         )}
 
         {warning ? (
-          <p className="font-normal text-xs whitespace-nowrap">
-            * {warning}
-          </p>
+          <p className="font-normal text-xs whitespace-nowrap">* {warning}</p>
         ) : null}
       </div>
     )
   }
 
   function warningText(metric, warning, site) {
-    if (metric === 'scroll_depth' && warning.code === 'no_imported_scroll_depth') {
-      return "Does not include imported data"
+    if (
+      metric === 'scroll_depth' &&
+      warning.code === 'no_imported_scroll_depth'
+    ) {
+      return 'Does not include imported data'
     }
 
     if (metric === 'time_on_page' && site.flags.new_time_on_page) {
