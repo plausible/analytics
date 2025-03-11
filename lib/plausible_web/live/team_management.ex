@@ -22,9 +22,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
   end
 
   defp reset(%{assigns: %{current_user: current_user, current_team: current_team}} = socket) do
-    {:ok, my_role} =
-      Teams.Memberships.team_role(current_team, current_user)
-      |> IO.inspect(label: :my_role)
+    {:ok, my_role} = Teams.Memberships.team_role(current_team, current_user)
 
     layout = Layout.init(current_team)
     team_members_limit = Plausible.Teams.Billing.team_member_limit(current_team)

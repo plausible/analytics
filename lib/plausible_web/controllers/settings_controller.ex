@@ -8,6 +8,10 @@ defmodule PlausibleWeb.SettingsController do
 
   require Logger
 
+  # XXX carry on
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner, :admin] when action in [:update_team_name]
+
   def index(conn, _params) do
     redirect(conn, to: Routes.settings_path(conn, :preferences))
   end
@@ -32,12 +36,6 @@ defmodule PlausibleWeb.SettingsController do
 
   defp render_team_general(conn, opts \\ []) do
     if Plausible.Teams.setup?(conn.assigns.current_team) do
-      my_role =
-        Plausible.Teams.Memberships.team_role(
-          conn.assigns.current_team,
-          conn.assigns.current_user
-        )
-
       name_changeset =
         Keyword.get(
           opts,
@@ -48,8 +46,7 @@ defmodule PlausibleWeb.SettingsController do
       render(conn, :team_general,
         team_name_changeset: name_changeset,
         layout: {PlausibleWeb.LayoutView, :settings},
-        connect_live_socket: true,
-        my_role: my_role
+        connect_live_socket: true
       )
     else
       conn
