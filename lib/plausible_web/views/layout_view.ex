@@ -96,22 +96,25 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def account_settings_sidebar(conn) do
+    current_team = conn.assigns[:current_team]
+
     options = %{
       "Account Settings" => [
         %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
         %{key: "Security", value: "security", icon: :lock_closed},
-        %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
-        %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
+        if(not Teams.setup?(current_team), do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}),
+        if(not Teams.setup?(current_team), do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}),
         %{key: "API Keys", value: "api-keys", icon: :key},
         %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
-      ]
+      ] |> Enum.reject(&is_nil/1)
     }
 
-    current_team = conn.assigns[:current_team]
 
     if Teams.enabled?(current_team) and Teams.setup?(current_team) do
       Map.put(options, "Team Settings", [
-        %{key: "General", value: "team/general", icon: :adjustments_horizontal}
+        %{key: "General", value: "team/general", icon: :adjustments_horizontal},
+        %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
+        %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
       ])
     else
       options
