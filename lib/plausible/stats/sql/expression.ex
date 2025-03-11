@@ -255,8 +255,10 @@ defmodule Plausible.Stats.SQL.Expression do
           wrap_alias(
             [e],
             %{
-              __internal_total_time_on_page: 0,
-              __internal_total_time_on_page_visits: 0
+              # :KLUDGE: We would like to but can't use constant 0 here as it leads to cyclic aliases if there's no other
+              # metrics selected other than time_on_page.
+              __internal_total_time_on_page: fragment("count() * 0"),
+              __internal_total_time_on_page_visits: fragment("count() * 0")
             }
           )
 
