@@ -7,7 +7,7 @@ defmodule Plausible.Teams.Membership do
 
   import Ecto.Changeset
 
-  @roles [:guest, :viewer, :editor, :admin, :owner]
+  @roles [:guest, :viewer, :editor, :admin, :owner, :billing]
 
   @type t() :: %__MODULE__{}
 

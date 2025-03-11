@@ -64,6 +64,23 @@ defmodule PlausibleWeb.Live.AuthContext do
         _ ->
           nil
       end)
+      |> assign_new(
+        :current_role,
+        fn
+          %{current_user: user = %{}, current_team: current_team = %{}} ->
+            Enum.find_value(user.team_memberships, fn team_membership ->
+              if team_membership.team_id == current_team.id do
+                team_membership.role
+              end
+            end)
+
+          %{my_team: %{}} ->
+            :owner
+
+          _ ->
+            nil
+        end
+      )
       |> assign_new(:teams, fn
         %{current_user: nil} ->
           []

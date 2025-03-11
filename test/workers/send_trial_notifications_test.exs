@@ -58,6 +58,21 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       assert_delivered_email(PlausibleWeb.Email.trial_one_week_reminder(user))
     end
 
+    test "includes billing member in recipients" do
+      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 7))
+      site = new_site(owner: user)
+      team = team_of(user)
+      billing_member = new_user()
+      add_member(team, user: billing_member, role: :billing)
+
+      populate_stats(site, [build(:pageview)])
+
+      perform_job(SendTrialNotifications, %{})
+
+      assert_delivered_email(PlausibleWeb.Email.trial_one_week_reminder(user))
+      assert_delivered_email(PlausibleWeb.Email.trial_one_week_reminder(billing_member))
+    end
+
     test "sends an upgrade email the day before the trial ends" do
       user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: 1))
       site = new_site(owner: user)

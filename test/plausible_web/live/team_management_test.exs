@@ -257,26 +257,38 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(user, team, :owner)
       assert_team_membership(member2, team, :owner)
     end
-  end
 
-  describe "to be revisited" do
-    setup [:create_user, :log_in, :create_team, :setup_team]
-
-    @tag :capture_log
-    test "billing role is currently not supported by the underlying services",
+    test "billing role is supported",
          %{
            conn: conn,
            team: team
          } do
-      Process.flag(:trap_exit, true)
-      _member2 = add_member(team, role: :admin)
+      member2 = add_member(team, role: :admin)
 
       lv = get_liveview(conn)
 
-      assert :unsupported == change_role(lv, 2, "billing")
-    catch
-      _, _ ->
-        :unsupported
+      change_role(lv, 2, "billing")
+      assert_team_membership(member2, team, :billing)
+    end
+
+    test "degrading owner to non-admin makes everything read-only", %{conn: conn, team: team} do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, 1, "billing")
+
+      html = render(lv)
+
+      options =
+        lv
+        |> render()
+        |> find("#{member_el()} a")
+
+      assert Enum.empty?(options)
+
+      assert attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
+      assert attr_defined?(html, ~s|#invite-member|, "disabled")
     end
   end
 

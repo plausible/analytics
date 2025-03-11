@@ -73,20 +73,26 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   defp can_grant_role_to_self?(:owner, :admin), do: true
   defp can_grant_role_to_self?(:owner, :editor), do: true
   defp can_grant_role_to_self?(:owner, :viewer), do: true
+  defp can_grant_role_to_self?(:owner, :billing), do: true
   defp can_grant_role_to_self?(:admin, :editor), do: true
   defp can_grant_role_to_self?(:admin, :viewer), do: true
+  defp can_grant_role_to_self?(:admin, :billing), do: true
   defp can_grant_role_to_self?(_, _), do: false
 
   defp can_grant_role_to_other?(:owner, _, _), do: true
   defp can_grant_role_to_other?(:admin, :admin, :admin), do: true
   defp can_grant_role_to_other?(:admin, :admin, :editor), do: true
   defp can_grant_role_to_other?(:admin, :admin, :viewer), do: true
+  defp can_grant_role_to_other?(:admin, :admin, :billing), do: true
   defp can_grant_role_to_other?(:admin, :editor, :admin), do: true
   defp can_grant_role_to_other?(:admin, :editor, :editor), do: true
   defp can_grant_role_to_other?(:admin, :editor, :viewer), do: true
+  defp can_grant_role_to_other?(:admin, :editor, :billing), do: true
   defp can_grant_role_to_other?(:admin, :viewer, :admin), do: true
   defp can_grant_role_to_other?(:admin, :viewer, :editor), do: true
   defp can_grant_role_to_other?(:admin, :viewer, :viewer), do: true
+  defp can_grant_role_to_other?(:admin, :viewer, :billing), do: true
+  defp can_grant_role_to_other?(:admin, :billing, :billing), do: true
   defp can_grant_role_to_other?(_, _, _), do: false
 
   defp maybe_prune_guest_memberships(%Teams.Membership{role: :guest}),

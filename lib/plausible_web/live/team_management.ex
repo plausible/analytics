@@ -24,21 +24,17 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp reset(%{assigns: %{current_user: current_user, current_team: current_team}} = socket) do
     {:ok, my_role} = Teams.Memberships.team_role(current_team, current_user)
 
-    if my_role not in [:owner, :admin] do
-      redirect(socket, to: Routes.settings_path(socket, :team_general))
-    else
-      layout = Layout.init(current_team)
-      team_members_limit = Plausible.Teams.Billing.team_member_limit(current_team)
+    layout = Layout.init(current_team)
+    team_members_limit = Plausible.Teams.Billing.team_member_limit(current_team)
 
-      assign(socket,
-        team_members_limit: team_members_limit,
-        layout: layout,
-        my_role: my_role,
-        team_layout_changed?: false,
-        input_role: :viewer,
-        input_email: ""
-      )
-    end
+    assign(socket,
+      team_members_limit: team_members_limit,
+      layout: layout,
+      my_role: my_role,
+      team_layout_changed?: false,
+      input_role: :viewer,
+      input_email: ""
+    )
   end
 
   def render(assigns) do
@@ -64,7 +60,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
               value={@input_email}
               placeholder="Enter e-mail to send invitation to"
               phx-debounce={200}
-              readonly={at_limit?(@layout, @team_members_limit)}
+              readonly={at_limit?(@layout, @team_members_limit) or @my_role not in [:admin, :owner]}
               mt?={false}
             />
           </div>
@@ -113,7 +109,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
             id="invite-member"
             type="submit"
             mt?={false}
-            disabled={at_limit?(@layout, @team_members_limit)}
+            disabled={at_limit?(@layout, @team_members_limit) or @my_role not in [:admin, :owner]}
           >
             Invite
           </.button>
@@ -129,7 +125,10 @@ defmodule PlausibleWeb.Live.TeamManagement do
           label={entry_label(entry, @current_user)}
           my_role={@my_role}
           remove_disabled={not Layout.removable?(@layout, email)}
-          disabled={entry.role == :owner && Layout.owners_count(@layout) == 1}
+          disabled={
+            (entry.role == :owner && Layout.owners_count(@layout) == 1) or
+              @my_role not in [:owner, :admin]
+          }
         />
       </div>
 
@@ -297,6 +296,13 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
       {{:ok, _}, :team_management} ->
         reset(socket)
+
+      {{:error, :permission_denied}, _} ->
+        socket
+        |> put_live_flash(
+          :error,
+          "Permission denied"
+        )
 
       {{:error, :only_one_owner}, _} ->
         socket

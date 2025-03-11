@@ -104,6 +104,28 @@ defmodule Plausible.Billing.SiteLockerTest do
       )
     end
 
+    test "sends email to billing members if grace period has ended" do
+      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      user = new_user(team: [grace_period: grace_period])
+      subscribe_to_plan(user, "123")
+      new_site(owner: user)
+      team = team_of(user)
+      billing_member = new_user()
+      add_member(team, user: billing_member, role: :billing)
+
+      assert SiteLocker.update_sites_for(team) == {:locked, :grace_period_ended_now}
+
+      assert_email_delivered_with(
+        to: [user],
+        subject: "[Action required] Your Plausible dashboard is now locked"
+      )
+
+      assert_email_delivered_with(
+        to: [billing_member],
+        subject: "[Action required] Your Plausible dashboard is now locked"
+      )
+    end
+
     test "does not send grace period email if site is already locked" do
       grace_period = %Plausible.Teams.GracePeriod{
         end_date: Timex.shift(Timex.today(), days: -1),

@@ -15,33 +15,36 @@ defmodule Plausible.Workers.SendTrialNotifications do
       Repo.all(
         from t in Teams.Team,
           inner_join: o in assoc(t, :owners),
+          left_join: bm in assoc(t, :billing_members),
           left_join: s in assoc(t, :subscription),
           where: not is_nil(t.trial_expiry_date),
           where: is_nil(s.id),
           order_by: t.inserted_at,
-          preload: [owners: o]
+          preload: [owners: o, billing_members: bm]
       )
 
     for team <- teams do
+      recipients = team.owners ++ team.billing_members
+
       case Date.diff(team.trial_expiry_date, Date.utc_today()) do
         7 ->
           if Teams.has_active_sites?(team) do
-            send_one_week_reminder(team.owners)
+            send_one_week_reminder(recipients)
           end
 
         1 ->
           if Teams.has_active_sites?(team) do
-            send_tomorrow_reminder(team.owners, team)
+            send_tomorrow_reminder(recipients, team)
           end
 
         0 ->
           if Teams.has_active_sites?(team) do
-            send_today_reminder(team.owners, team)
+            send_today_reminder(recipients, team)
           end
 
         -1 ->
           if Teams.has_active_sites?(team) do
-            send_over_reminder(team.owners)
+            send_over_reminder(recipients)
           end
 
         _ ->

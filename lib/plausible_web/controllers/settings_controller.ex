@@ -8,6 +8,12 @@ defmodule PlausibleWeb.SettingsController do
 
   require Logger
 
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner, :admin] when action in [:update_team_name]
+
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner, :admin, :billing] when action in [:invoices]
+
   def index(conn, _params) do
     redirect(conn, to: Routes.settings_path(conn, :preferences))
   end

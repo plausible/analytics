@@ -22,11 +22,14 @@ defmodule PlausibleWeb.AuthPlug do
         current_team_id_from_session = Plug.Conn.get_session(conn, "current_team_id")
         current_team_id = conn.params["__team"] || current_team_id_from_session
 
-        current_team =
+        {current_team, current_role} =
           if current_team_id do
-            user.team_memberships
-            |> Enum.find(%{}, &(&1.team.identifier == current_team_id))
-            |> Map.get(:team)
+            team_membership =
+              Enum.find(user.team_memberships, %{}, &(&1.team.identifier == current_team_id))
+
+            {Map.get(team_membership, :team), Map.get(team_membership, :role)}
+          else
+            {nil, nil}
           end
 
         conn =
@@ -63,6 +66,7 @@ defmodule PlausibleWeb.AuthPlug do
         |> assign(:current_user_session, user_session)
         |> assign(:my_team, my_team)
         |> assign(:current_team, current_team || my_team)
+        |> assign(:current_role, current_role || (my_team && :owner))
         |> assign(:teams_count, teams_count)
         |> assign(:teams, teams)
         |> assign(:more_teams?, teams_count > 3)
