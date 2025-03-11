@@ -15,9 +15,7 @@ export class ApiError extends Error {
   }
 }
 
-export function serializeUrlParams(
-  params: Record<string, string | boolean | number>
-) {
+function serializeUrlParams(params: Record<string, string | boolean | number>) {
   const str: string[] = []
   /* eslint-disable-next-line no-prototype-builtins */
   for (const p in params)
@@ -39,7 +37,7 @@ export function cancelAll() {
 export function queryToSearchParams(
   query: DashboardQuery,
   extraQuery: unknown[] = []
-) {
+): string {
   const queryObj: Record<string, string> = {}
   if (query.period) {
     queryObj.period = query.period
@@ -71,9 +69,14 @@ export function queryToSearchParams(
     queryObj.match_day_of_week = String(query.match_day_of_week)
   }
 
+  const sharedLinkParams = getSharedLinkSearchParams()
+  if (sharedLinkParams.auth) {
+    queryObj.auth = sharedLinkParams.auth
+  }
+
   Object.assign(queryObj, ...extraQuery)
 
-  return queryObj
+  return serializeUrlParams(queryObj)
 }
 
 function getHeaders(): Record<string, string> {
@@ -98,13 +101,9 @@ export async function get(
   query?: DashboardQuery,
   ...extraQueryParams: unknown[]
 ) {
-  const sharedLinkParams = getSharedLinkSearchParams()
-
   const queryString = query
-    ? serializeUrlParams(
-        queryToSearchParams(query, [...extraQueryParams, sharedLinkParams])
-      )
-    : serializeUrlParams(sharedLinkParams)
+    ? queryToSearchParams(query, [...extraQueryParams])
+    : null
 
   const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     signal: abortController.signal,
