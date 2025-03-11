@@ -17,7 +17,7 @@ import { Metric } from '../reports/metrics'
 import { BreakdownResultMeta, DashboardQuery } from '../../query'
 import { ColumnConfiguraton } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
-import { useSiteContext } from '../../site-context'
+import { PlausibleSite, useSiteContext } from '../../site-context'
 
 export type ReportInfo = {
   /** Title of the report to render on the top left. */
@@ -152,7 +152,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           key: m.key,
           width: m.width,
           align: 'right',
-          metricWarning: getMetricWarning(m, meta),
+          metricWarning: getMetricWarning(m, meta, site),
           renderValue: (item) => m.renderValue(item, meta),
           onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
           sortDirection: orderByDictionary[m.key]
@@ -235,7 +235,7 @@ const ExternalLinkIcon = ({ url }: { url?: string }) =>
     </a>
   ) : null
 
-const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
+const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null, site: PlausibleSite) => {
   const warnings = meta?.metric_warnings
 
   if (warnings && warnings[metric.key]) {
@@ -245,7 +245,7 @@ const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
       return 'Does not include imported data'
     }
 
-    if (metric.key == 'time_on_page' && code) {
+    if (metric.key == 'time_on_page' && code && site.flags.new_time_on_page) {
       return message
     }
   }
