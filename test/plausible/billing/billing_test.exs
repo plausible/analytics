@@ -489,13 +489,25 @@ defmodule Plausible.BillingTest do
       user = new_user()
       subscribe_to_growth_plan(user, status: Subscription.Status.active())
 
+      team = team_of(user)
+      billing_member = new_user()
+      add_member(team, user: billing_member, role: :billing)
+
       Billing.subscription_cancelled(%{
         "alert_name" => "subscription_cancelled",
         "subscription_id" => subscription_of(user).paddle_subscription_id,
         "status" => "deleted"
       })
 
-      assert_email_delivered_with(subject: "Mind sharing your thoughts on Plausible?")
+      assert_email_delivered_with(
+        to: [nil: user.email],
+        subject: "Mind sharing your thoughts on Plausible?"
+      )
+
+      assert_email_delivered_with(
+        to: [nil: billing_member.email],
+        subject: "Mind sharing your thoughts on Plausible?"
+      )
     end
   end
 

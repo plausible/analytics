@@ -89,7 +89,7 @@ defmodule Plausible.Billing do
     subscription =
       Subscription
       |> Repo.get_by(paddle_subscription_id: params["subscription_id"])
-      |> Repo.preload(team: :owners)
+      |> Repo.preload(team: [:owners, :billing_members])
 
     if subscription do
       changeset =
@@ -99,8 +99,8 @@ defmodule Plausible.Billing do
 
       updated = Repo.update!(changeset)
 
-      for owner <- subscription.team.owners do
-        owner
+      for recipient <- subscription.team.owners ++ subscription.team.billing_members do
+        recipient
         |> PlausibleWeb.Email.cancellation_email()
         |> Plausible.Mailer.send()
       end
