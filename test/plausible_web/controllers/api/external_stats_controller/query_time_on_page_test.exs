@@ -92,35 +92,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       build(:engagement,
         user_id: 12,
         pathname: "/",
-        timestamp: ~N[2021-01-01 00:00:00],
+        timestamp: ~N[2021-01-01 00:03:00],
         engagement_time: 100_000
       ),
       build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-02 00:00:00]),
       build(:engagement,
         user_id: 12,
         pathname: "/",
-        timestamp: ~N[2021-01-02 00:00:00],
+        timestamp: ~N[2021-01-02 00:03:00],
         engagement_time: 100_000
       ),
       build(:pageview, user_id: 13, pathname: "/", timestamp: ~N[2021-01-02 00:00:00]),
       build(:engagement,
         user_id: 13,
         pathname: "/",
-        timestamp: ~N[2021-01-02 00:00:00],
+        timestamp: ~N[2021-01-02 00:10:00],
         engagement_time: 300_000
       ),
       build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-03 00:00:00]),
       build(:engagement,
         user_id: 12,
         pathname: "/",
-        timestamp: ~N[2021-01-03 00:00:00],
+        timestamp: ~N[2021-01-03 00:03:00],
         engagement_time: 100_000
       ),
       build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-04 00:00:00]),
       build(:engagement,
         user_id: 12,
         pathname: "/",
-        timestamp: ~N[2021-01-04 00:00:00],
+        timestamp: ~N[2021-01-04 00:03:00],
         engagement_time: 100_000
       ),
       build(:imported_pages,
@@ -185,14 +185,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
         build(:engagement,
           user_id: 13,
           pathname: "/pricing",
-          timestamp: ~N[2021-01-02 01:00:00],
+          timestamp: ~N[2021-01-02 01:02:00],
           engagement_time: 30_000
         ),
         build(:pageview, user_id: 14, pathname: "/", timestamp: ~N[2021-01-02 01:00:00]),
         build(:engagement,
           user_id: 14,
           pathname: "/",
-          timestamp: ~N[2021-01-02 01:00:00],
+          timestamp: ~N[2021-01-02 01:02:00],
           engagement_time: 30_000
         ),
         build(:imported_pages,
@@ -386,7 +386,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
         build(:pageview, pathname: "/A", user_id: 999, timestamp: ~N[2021-01-02 00:00:00]),
         build(:pageview, pathname: "/B", user_id: 999, timestamp: ~N[2021-01-02 00:01:30]),
         build(:pageview, pathname: "/C", user_id: 999, timestamp: ~N[2021-01-02 00:02:00]),
-        # :TODO: include imported data to show it's not used
         build(:imported_pages, page: "/A", total_time_on_page: 40, date: ~D[2021-01-01]),
         build(:imported_pages, page: "/B", total_time_on_page: 499, date: ~D[2021-01-01])
       ])
