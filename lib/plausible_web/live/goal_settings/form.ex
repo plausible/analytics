@@ -35,6 +35,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         event_name_options_count: length(assigns.event_name_options),
         event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
         current_user: assigns.current_user,
+        current_role: assigns.current_role,
         site_team: assigns.site_team,
         domain: assigns.domain,
         selected_tab: selected_tab,
@@ -71,7 +72,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         :if={@selected_tab == "custom_events"}
         f={f}
         suffix={@context_unique_id}
-        current_user={@current_user}
+        current_role={@current_role}
         site_team={@site_team}
         site={@site}
         goal={@goal}
@@ -121,7 +122,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-show="!tabSelectionInProgress"
         f={f}
         suffix={suffix(@context_unique_id, @tab_sequence_id)}
-        current_user={@current_user}
+        current_role={@current_role}
         site_team={@site_team}
         site={@site}
         existing_goals={@existing_goals}
@@ -314,7 +315,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
-  attr(:current_user, Plausible.Auth.User)
+  attr(:current_role, :atom)
   attr(:site_team, Plausible.Teams.Team)
   attr(:suffix, :string)
   attr(:existing_goals, :list)
@@ -375,7 +376,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           :if={ee?()}
           f={@f}
           site={@site}
-          current_user={@current_user}
+          current_role={@current_role}
           site_team={@site_team}
           has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
           goal={@goal}
@@ -398,8 +399,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div class="mt-6 space-y-3" x-data={@js_data}>
       <PlausibleWeb.Components.Billing.Notice.premium_feature
-        billable_user={List.first(@site.owners)}
-        current_user={@current_user}
+        current_role={@current_role}
         current_team={@site_team}
         feature_mod={Plausible.Billing.Feature.RevenueGoals}
         class="rounded-b-md"

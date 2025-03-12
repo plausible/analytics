@@ -60,6 +60,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
           domain={@domain}
           site={@site}
           current_user={@current_user}
+          current_role={@current_role}
           site_team={@site_team}
           existing_goals={@all_goals}
           goal={@form_goal}

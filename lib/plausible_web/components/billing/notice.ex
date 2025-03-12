@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   use PlausibleWeb, :component
 
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Auth.User
   alias Plausible.Billing.{Subscription, Plans, Subscriptions, Feature}
 
   def active_grace_period(assigns) do
@@ -61,8 +60,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  attr(:billable_user, User, required: true)
-  attr(:current_user, User, required: true)
+  attr(:current_role, :atom, required: true)
   attr(:current_team, :any, required: true)
   attr(:feature_mod, :atom, required: true, values: Feature.list())
   attr(:grandfathered?, :boolean, default: false)
@@ -76,19 +74,14 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       title="Notice"
       {@rest}
     >
-      {account_label(@current_user, @billable_user)} does not have access to {@feature_mod.display_name()}. To get access to this feature,
-      <.upgrade_call_to_action
-        current_team={@current_team}
-        current_user={@current_user}
-        billable_user={@billable_user}
-      />.
+      {account_label(@current_role)} does not have access to {@feature_mod.display_name()}. To get access to this feature,
+      <.upgrade_call_to_action current_role={@current_role} current_team={@current_team} />.
     </.notice>
     """
   end
 
-  attr(:billable_user, User, required: true)
-  attr(:current_user, User, required: true)
   attr(:current_team, :any, required: true)
+  attr(:current_role, :atom, required: true)
   attr(:limit, :integer, required: true)
   attr(:resource, :string, required: true)
   attr(:rest, :global)
@@ -96,12 +89,8 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def limit_exceeded(assigns) do
     ~H"""
     <.notice {@rest} title="Notice">
-      {account_label(@current_user, @billable_user)} is limited to {@limit} {@resource}. To increase this limit,
-      <.upgrade_call_to_action
-        current_team={@current_team}
-        current_user={@current_user}
-        billable_user={@billable_user}
-      />.
+      {account_label(@current_role)} is limited to {@limit} {@resource}. To increase this limit,
+      <.upgrade_call_to_action current_team={@current_team} current_role={@current_role} />.
     </.notice>
     """
   end
@@ -306,9 +295,8 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  attr(:current_user, :map)
+  attr(:current_role, :atom)
   attr(:current_team, :any)
-  attr(:billable_user, :map)
 
   defp upgrade_call_to_action(assigns) do
     team = Plausible.Teams.with_subscription(assigns.current_team)
@@ -321,7 +309,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       end
 
     cond do
-      assigns.billable_user.id !== assigns.current_user.id ->
+      assigns.current_role not in [:owner, :billing] ->
         ~H"please reach out to the site owner to upgrade their subscription"
 
       upgrade_assistance_required? ->
@@ -343,8 +331,8 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     end
   end
 
-  defp account_label(current_user, billable_user) do
-    if current_user.id == billable_user.id do
+  defp account_label(current_role) do
+    if current_role in [:owner, :billing] do
       "Your account"
     else
       "The owner of this site"
