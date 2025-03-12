@@ -15,10 +15,10 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
         [],
         :all_roles,
         {:all_roles, nil},
-        {[:public, :viewer, :admin, :editor, :super_admin, :owner], nil}
+        {[:public, :viewer, :admin, :editor, :super_admin, :owner, :billing], nil}
       ] do
     test "init resolves to expected options with argument #{inspect(init_argument)}" do
-      assert {[:public, :viewer, :admin, :editor, :super_admin, :owner], nil} ==
+      assert {[:public, :viewer, :admin, :editor, :super_admin, :owner, :billing], nil} ==
                AuthorizeSiteAccess.init(unquote(init_argument))
     end
   end
