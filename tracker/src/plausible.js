@@ -51,9 +51,9 @@
 
   // Timestamp indicating when this particular page last became visible.
   // Reset during pageviews, set to null when page is closed.
-  var runningEnagementStart
+  var runningEngagementStart = null
   // When page is hidden, this 'engaged' time is saved to this variable
-  var currentEngagementTime
+  var currentEngagementTime = 0
 
   function getDocumentHeight() {
     var body = document.body || {}
@@ -78,8 +78,8 @@
   }
 
   function getEngagementTime() {
-    if (runningEnagementStart) {
-      return currentEngagementTime + (Date.now() - runningEnagementStart)
+    if (runningEngagementStart) {
+      return currentEngagementTime + (Date.now() - runningEngagementStart)
     } else {
       return currentEngagementTime
     }
@@ -139,7 +139,7 @@
       }
 
       // Reset current engagement time metrics. They will restart upon when page becomes visible or the next SPA pageview
-      runningEnagementStart = null
+      runningEngagementStart = null
       currentEngagementTime = 0
 
       {{#if hash}}
@@ -156,12 +156,12 @@
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
           // Tab went back to background. Save the engaged time so far
-          currentEngagementTime += (Date.now() - runningEnagementStart)
-          runningEnagementStart = null
+          currentEngagementTime = getEngagementTime()
+          runningEngagementStart = null
 
           triggerEngagement()
-        } else {
-          runningEnagementStart = Date.now()
+        } else if (document.visibilityState === 'visible' && runningEngagementStart === null) {
+          runningEngagementStart = Date.now()
         }
       })
       listeningOnEngagement = true
@@ -259,7 +259,7 @@
       currentEngagementProps = payload.p
       currentEngagementMaxScrollDepth = -1
       currentEngagementTime = 0
-      runningEnagementStart = Date.now()
+      runningEngagementStart = Date.now()
       registerEngagementListener()
     }
 
