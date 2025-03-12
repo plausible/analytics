@@ -39,11 +39,7 @@ export default function TopStats({
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
-    const warning = warningText(
-      stat.graph_metric,
-      data.meta.metric_warnings?.[stat.graph_metric],
-      site
-    )
+    const warning = warningText(stat.graph_metric, site)
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
     return (
@@ -81,7 +77,8 @@ export default function TopStats({
     )
   }
 
-  function warningText(metric, warning, site) {
+  function warningText(metric, site) {
+    const warning = data.meta.metric_warnings?.[metric]
     if (!warning) {
       return null
     }
@@ -146,7 +143,9 @@ export default function TopStats({
         {statExtraName && (
           <span className="hidden sm:inline-block ml-1">{statExtraName}</span>
         )}
-        {stat.warning_code && <span className="inline-block ml-1">*</span>}
+        {warningText(stat.graph_metric, site) && (
+          <span className="inline-block ml-1">*</span>
+        )}
       </div>
     )
   }
