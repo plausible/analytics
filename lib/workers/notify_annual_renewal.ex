@@ -57,8 +57,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
 
         _ ->
           Sentry.capture_message("Invalid subscription for renewal",
-            team: team,
-            user: List.first(team.owner)
+            team: team
           )
       end
 
