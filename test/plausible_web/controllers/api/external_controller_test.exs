@@ -660,6 +660,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "engagement",
         url: "http://ab.cd/",
         domain: site.domain,
+        sd: 50,
+        e: 1000,
         props: %{
           bool_test: true,
           number_test: 12
@@ -1319,13 +1321,21 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       {:ok, site: site}
     end
 
-    test "ingests scroll_depth and engagement_time when not in params", %{conn: conn, site: site} do
+    test "ingests scroll_depth as 255 when not in params", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, e: 200})
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
       assert engagement.scroll_depth == 255
+    end
+
+    test "ingests engagement_time as 0 when not in params", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: 50})
+
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
+
       assert engagement.engagement_time == 0
     end
 
@@ -1379,37 +1389,73 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert engagement.scroll_depth == 100
     end
 
-    test "ingests scroll_depth as 255 when sd is a string", %{conn: conn, site: site} do
+    test "parses scroll_depth from a string", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: "1"})
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert engagement.scroll_depth == 255
+      assert engagement.scroll_depth == 1
     end
 
     test "ingests scroll_depth as 255 when sd is a negative integer", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: -1})
+
+      post(conn, "/api/event", %{
+        n: "engagement",
+        u: "https://test.com",
+        d: site.domain,
+        sd: -1,
+        e: 100
+      })
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
       assert engagement.scroll_depth == 255
     end
 
-    test "ingests engagement_time as 0 when e is a string", %{conn: conn, site: site} do
+    test "ingests scroll_depth as 255 when sd is a non-number string", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
 
-      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, e: "789"})
+      post(conn, "/api/event", %{
+        n: "engagement",
+        u: "https://test.com",
+        d: site.domain,
+        sd: "12asd",
+        e: 100
+      })
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert engagement.engagement_time == 0
+      assert engagement.scroll_depth == 255
+    end
+
+    test "ingests engagement_time from a string", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+
+      post(conn, "/api/event", %{
+        n: "engagement",
+        u: "https://test.com",
+        d: site.domain,
+        e: "789",
+        sd: 40
+      })
+
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
+
+      assert engagement.engagement_time == 789
     end
 
     test "ingests engagement_time as 0 when e is a negative integer", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
-      post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, e: -100})
+
+      post(conn, "/api/event", %{
+        n: "engagement",
+        u: "https://test.com",
+        d: site.domain,
+        e: -100,
+        sd: 50
+      })
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
