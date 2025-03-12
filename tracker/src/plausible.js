@@ -51,9 +51,9 @@
 
   // Timestamp indicating when this particular page last became visible.
   // Reset during pageviews, set to null when page is closed.
-  var runningEnagementStart
+  var runningEnagementStart = null
   // When page is hidden, this 'engaged' time is saved to this variable
-  var currentEngagementTime
+  var currentEngagementTime = 0
 
   function getDocumentHeight() {
     var body = document.body || {}
@@ -156,11 +156,11 @@
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
           // Tab went back to background. Save the engaged time so far
-          currentEngagementTime += (Date.now() - runningEnagementStart)
+          currentEngagementTime = getEngagementTime()
           runningEnagementStart = null
 
           triggerEngagement()
-        } else {
+        } else if (document.visibilityState === 'visible' && runningEnagementStart === null) {
           runningEnagementStart = Date.now()
         }
       })
