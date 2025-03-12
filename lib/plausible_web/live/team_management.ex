@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
 
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={at_limit?(@layout, @team_members_limit)}
-      current_role={@current_role}
+      current_role={@current_team_role}
       current_team={@current_team}
       limit={@team_members_limit}
       resource="team members"

@@ -8,7 +8,7 @@
   <.form :let={f} for={@changeset} action={@form_submit_url}>
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={@site_limit_exceeded?}
-      current_role={@current_role}
+      current_role={@current_team_role}
       current_team={@current_team}
       limit={@site_limit}
       resource="sites"

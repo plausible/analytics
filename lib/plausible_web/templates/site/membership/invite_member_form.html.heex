@@ -11,7 +11,7 @@
   <.form :let={f} for={@conn} action={Routes.membership_path(@conn, :invite_member, @site.domain)}>
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={Map.get(assigns, :is_at_limit, false)}
-      current_role={@current_role}
+      current_role={@current_team_role}
       current_team={@site_team}
       limit={Map.get(assigns, :team_member_limit, 0)}
       resource="team members"
