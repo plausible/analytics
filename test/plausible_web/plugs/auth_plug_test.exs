@@ -25,7 +25,7 @@ defmodule PlausibleWeb.AuthPlugTest do
 
     assert conn.assigns[:current_user].id == user.id
     assert conn.assigns[:my_team].subscription.paddle_plan_id == "123"
-    assert conn.assigns[:current_role] == :owner
+    assert conn.assigns[:current_team_role] == :owner
   end
 
   test "looks up the latest subscription", %{conn: conn, user: user} do
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.AuthPlugTest do
       |> AuthPlug.call(%{})
 
     assert conn.assigns[:current_team].id == team.id
-    assert conn.assigns[:current_role] == :owner
+    assert conn.assigns[:current_team_role] == :owner
     assert get_session(conn, "current_team_id") == team.identifier
   end
 
@@ -121,6 +121,6 @@ defmodule PlausibleWeb.AuthPlugTest do
       |> AuthPlug.call(%{})
 
     assert conn.assigns[:current_team].id == team.id
-    assert conn.assigns[:current_role] == :editor
+    assert conn.assigns[:current_team_role] == :editor
   end
 end

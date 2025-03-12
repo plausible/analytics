@@ -1,7 +1,7 @@
 defmodule Plausible.Plugs.AuthorizeTeamAccess do
   @moduledoc """
   Enforce team role to be within the declared set.
-  `:current_role` is assumed to be populated by `PlausibleWeb.AuthPlug`.
+  `:current_team_role` is assumed to be populated by `PlausibleWeb.AuthPlug`.
 
   For cases where no `:current_team` exists, the plug is permissive,
   so that existing notices can be displayed still.
@@ -24,9 +24,9 @@ defmodule Plausible.Plugs.AuthorizeTeamAccess do
     current_team = conn.assigns[:current_team]
 
     if current_team && Plausible.Teams.enabled?(current_team) do
-      current_role = conn.assigns[:current_role]
+      current_team_role = conn.assigns[:current_team_role]
 
-      if current_role in roles do
+      if current_team_role in roles do
         conn
       else
         conn
