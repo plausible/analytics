@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Filters, Query}
+  alias Plausible.Stats.{Filters, Query, TimeOnPage}
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -77,6 +77,7 @@ defmodule PlausibleWeb.StatsController do
           scroll_depth_visible: scroll_depth_visible?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
+          legacy_time_on_page_cutoff: TimeOnPage.legacy_time_on_page_cutoff(),
           title: title(conn, site),
           demo: demo,
           flags: flags,
@@ -361,6 +362,7 @@ defmodule PlausibleWeb.StatsController do
           scroll_depth_visible: scroll_depth_visible?,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
+          legacy_time_on_page_cutoff: TimeOnPage.legacy_time_on_page_cutoff(),
           title: title(conn, shared_link.site),
           demo: false,
           dogfood_page_path: "/share/:dashboard",
@@ -388,7 +390,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user, site),
     do:
-      [:saved_segments, :saved_segments_fe, :scroll_depth]
+      [:saved_segments, :saved_segments_fe, :scroll_depth, :new_time_on_page]
       |> Enum.map(fn flag ->
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)

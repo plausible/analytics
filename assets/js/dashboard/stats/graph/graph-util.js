@@ -11,6 +11,7 @@ export const METRIC_LABELS = {
   'average_revenue': 'Average Revenue',
   'total_revenue': 'Total Revenue',
   'scroll_depth': 'Scroll Depth',
+  'time_on_page': 'Time on Page',
 }
 
 function plottable(dataArray) {

@@ -43,7 +43,8 @@ export const TestContextProviders = ({
     isDbip: false,
     flags: {},
     validIntervalsByPeriod: {},
-    shared: false
+    shared: false,
+    legacyTimeOnPageCutoff: undefined
   }
 
   const site = { ...defaultSite, ...siteOptions }

@@ -39,9 +39,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
         "include" => %{"imports" => true}
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/blog"], "metrics" => [100]}
-           ]
+    assert_matches %{
+                     "results" => [
+                       %{"dimensions" => ["/blog"], "metrics" => [100]}
+                     ],
+                     "meta" =>
+                       ^strict_map(%{
+                         "imports_included" => true
+                       })
+                   } = json_response(conn, 200)
   end
 
   test "aggregated time_on_page metric with imported data", %{
@@ -141,13 +147,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
         "include" => %{"imports" => true}
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["2021-01-01", "/"], "metrics" => [100]},
-             %{"dimensions" => ["2021-01-01", "/blog"], "metrics" => [20]},
-             %{"dimensions" => ["2021-01-02", "/"], "metrics" => [200]},
-             %{"dimensions" => ["2021-01-03", "/"], "metrics" => [100]},
-             %{"dimensions" => ["2021-01-04", "/"], "metrics" => [100]}
-           ]
+    assert_matches %{
+                     "results" => [
+                       %{"dimensions" => ["2021-01-01", "/"], "metrics" => [100]},
+                       %{"dimensions" => ["2021-01-01", "/blog"], "metrics" => [20]},
+                       %{"dimensions" => ["2021-01-02", "/"], "metrics" => [200]},
+                       %{"dimensions" => ["2021-01-03", "/"], "metrics" => [100]},
+                       %{"dimensions" => ["2021-01-04", "/"], "metrics" => [100]}
+                     ],
+                     "meta" =>
+                       ^strict_map(%{
+                         "imports_included" => true
+                       })
+                   } = json_response(conn, 200)
   end
 
   describe "include.legacy_time_on_page_cutoff" do
@@ -223,12 +235,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           }
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/"], "metrics" => [115]},
-               # (2 * 100s + 9 * 20s) / 10 = 38
-               %{"dimensions" => ["/blog"], "metrics" => [38]},
-               %{"dimensions" => ["/pricing"], "metrics" => [30]}
-             ]
+      assert_matches %{
+                       "results" => [
+                         %{"dimensions" => ["/"], "metrics" => [115]},
+                         # (2 * 100s + 9 * 20s) / 10 = 38
+                         %{"dimensions" => ["/blog"], "metrics" => [38]},
+                         %{"dimensions" => ["/pricing"], "metrics" => [30]}
+                       ],
+                       "meta" =>
+                         ^strict_map(%{
+                           "imports_included" => true
+                         })
+                     } = json_response(conn, 200)
     end
 
     test "breakdown with cutoff being after data (legacy query used)", %{conn: conn, site: site} do
@@ -244,11 +262,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           }
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/"], "metrics" => [420]},
-               %{"dimensions" => ["/blog"], "metrics" => [180]},
-               %{"dimensions" => ["/pricing"], "metrics" => [nil]}
-             ]
+      assert_matches %{
+                       "results" => [
+                         %{"dimensions" => ["/"], "metrics" => [420]},
+                         %{"dimensions" => ["/blog"], "metrics" => [180]},
+                         %{"dimensions" => ["/pricing"], "metrics" => [nil]}
+                       ],
+                       "meta" =>
+                         ^strict_map(%{
+                           "imports_included" => true,
+                           "metric_warnings" => %{
+                             "time_on_page" => %{
+                               "code" => "legacy_time_on_page_used",
+                               "message" =>
+                                 "Contains less accurate legacy time-on-page data up to 2021-01-05 00:00:00"
+                             }
+                           }
+                         })
+                     } = json_response(conn, 200)
     end
 
     test "breakdown with cutoff being mid-data (two queries joined)", %{conn: conn, site: site} do
@@ -264,11 +295,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           }
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/"], "metrics" => [225]},
-               %{"dimensions" => ["/blog"], "metrics" => [180]},
-               %{"dimensions" => ["/pricing"], "metrics" => [30]}
-             ]
+      assert_matches %{
+                       "results" => [
+                         %{"dimensions" => ["/"], "metrics" => [225]},
+                         %{"dimensions" => ["/blog"], "metrics" => [180]},
+                         %{"dimensions" => ["/pricing"], "metrics" => [30]}
+                       ],
+                       "meta" =>
+                         ^strict_map(%{
+                           "imports_included" => true,
+                           "metric_warnings" => %{
+                             "time_on_page" => %{
+                               "code" => "legacy_time_on_page_used",
+                               "message" =>
+                                 "Contains less accurate legacy time-on-page data up to 2021-01-02 00:00:00"
+                             }
+                           }
+                         })
+                     } = json_response(conn, 200)
     end
 
     test "breakdown with cutoff being mid-data (two queries joined), no imports", %{
@@ -286,11 +330,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           }
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/"], "metrics" => [225]},
-               %{"dimensions" => ["/blog"], "metrics" => [180]},
-               %{"dimensions" => ["/pricing"], "metrics" => [30]}
-             ]
+      assert_matches %{
+                       "results" => [
+                         %{"dimensions" => ["/"], "metrics" => [225]},
+                         %{"dimensions" => ["/blog"], "metrics" => [180]},
+                         %{"dimensions" => ["/pricing"], "metrics" => [30]}
+                       ],
+                       "meta" =>
+                         ^strict_map(%{
+                           "metric_warnings" => %{
+                             "time_on_page" => %{
+                               "code" => "legacy_time_on_page_used",
+                               "message" =>
+                                 "Contains less accurate legacy time-on-page data up to 2021-01-02 00:00:00"
+                             }
+                           }
+                         })
+                     } = json_response(conn, 200)
     end
 
     test "aggregation with cutoff being after data (legacy query used)", %{conn: conn, site: site} do
@@ -306,9 +362,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           }
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [180]}
-             ]
+      assert_matches %{
+                       "results" => [
+                         %{"dimensions" => [], "metrics" => [180]}
+                       ],
+                       "meta" =>
+                         ^strict_map(%{
+                           "imports_included" => true,
+                           "metric_warnings" => %{
+                             "time_on_page" => %{
+                               "code" => "legacy_time_on_page_used",
+                               "message" =>
+                                 "Contains less accurate legacy time-on-page data up to 2021-01-05 00:00:00"
+                             }
+                           }
+                         })
+                     } = json_response(conn, 200)
     end
 
     test "aggregation with cutoff being mid-data (two queries joined)", %{conn: conn, site: site} do
@@ -324,9 +393,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           }
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [180]}
-             ]
+      assert_matches %{
+                       "results" => [
+                         %{"dimensions" => [], "metrics" => [180]}
+                       ],
+                       "meta" =>
+                         ^strict_map(%{
+                           "imports_included" => true,
+                           "metric_warnings" => %{
+                             "time_on_page" => %{
+                               "code" => "legacy_time_on_page_used",
+                               "message" =>
+                                 "Contains less accurate legacy time-on-page data up to 2021-01-02 00:00:00"
+                             }
+                           }
+                         })
+                     } = json_response(conn, 200)
     end
 
     test "aggregation with cutoff being mid-data (two queries joined), no imports", %{
@@ -344,9 +426,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           }
         })
 
-      assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => [], "metrics" => [180]}
-             ]
+      assert_matches %{
+                       "results" => [
+                         %{"dimensions" => [], "metrics" => [180]}
+                       ],
+                       "meta" =>
+                         ^strict_map(%{
+                           "metric_warnings" => %{
+                             "time_on_page" => %{
+                               "code" => "legacy_time_on_page_used",
+                               "message" =>
+                                 "Contains less accurate legacy time-on-page data up to 2021-01-02 00:00:00"
+                             }
+                           }
+                         })
+                     } = json_response(conn, 200)
     end
   end
 
@@ -406,6 +500,145 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                %{"dimensions" => ["/A"], "metrics" => [3, 63]},
                %{"dimensions" => ["/B"], "metrics" => [3, 264]},
                %{"dimensions" => ["/C"], "metrics" => [1, nil]}
+             ]
+    end
+  end
+
+  describe "timeseries" do
+    setup %{site: site} = context do
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:05:00],
+          engagement_time: 100_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-02 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-02 00:05:00],
+          engagement_time: 200_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-03 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-03 00:05:00],
+          engagement_time: 250_000
+        ),
+        build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/",
+          timestamp: ~N[2021-01-04 00:05:00],
+          engagement_time: 200_000
+        ),
+        build(:pageview, user_id: 13, pathname: "/", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:engagement,
+          user_id: 13,
+          pathname: "/",
+          timestamp: ~N[2021-01-04 00:05:00],
+          engagement_time: 100_000
+        )
+      ])
+
+      context
+    end
+
+    test "reports average new time-on-page per day", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => ["2021-01-01", "2021-01-04"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "dimensions" => ["time:day"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [100]},
+               %{"dimensions" => ["2021-01-02"], "metrics" => [200]},
+               %{"dimensions" => ["2021-01-03"], "metrics" => [250]},
+               %{"dimensions" => ["2021-01-04"], "metrics" => [150]}
+             ]
+    end
+
+    test "reports legacy time-on-page as nulls per day", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => ["2021-01-01", "2021-01-04"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "dimensions" => ["time:day"],
+          "include" => %{"legacy_time_on_page_cutoff" => "2100-01-01T00:00:00Z"}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-02"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-03"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-04"], "metrics" => [nil]}
+             ]
+    end
+
+    test "respects `legacy_time_on_page_cutoff`", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => ["2021-01-01", "2021-01-04"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "dimensions" => ["time:day"],
+          "include" => %{"legacy_time_on_page_cutoff" => "2021-01-02T23:59:59Z"}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-02"], "metrics" => [nil]},
+               %{"dimensions" => ["2021-01-03"], "metrics" => [250]},
+               %{"dimensions" => ["2021-01-04"], "metrics" => [150]}
+             ]
+    end
+
+    test "can use comparisons together with `legacy_time_on_page_cutoff`", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["time_on_page"],
+          "date_range" => ["2021-01-03", "2021-01-04"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "dimensions" => ["time:day"],
+          "include" => %{
+            "legacy_time_on_page_cutoff" => "2021-01-01T23:59:59Z",
+            "comparisons" => %{"mode" => "previous_period"}
+          }
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "dimensions" => ["2021-01-03"],
+                 "metrics" => [250],
+                 "comparison" => %{
+                   "dimensions" => ["2021-01-01"],
+                   "metrics" => [nil],
+                   "change" => [nil]
+                 }
+               },
+               %{
+                 "dimensions" => ["2021-01-04"],
+                 "metrics" => [150],
+                 "comparison" => %{
+                   "dimensions" => ["2021-01-02"],
+                   "metrics" => [200],
+                   "change" => [-25]
+                 }
+               }
              ]
     end
   end

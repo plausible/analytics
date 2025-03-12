@@ -44,7 +44,8 @@ export const queryDefaultValue = {
   compare_to: null as Dayjs | null,
   filters: [] as Filter[],
   labels: {} as FilterClauseLabels,
-  with_imported: true
+  with_imported: true,
+  legacy_time_on_page_cutoff: undefined as string | undefined
 }
 
 export type DashboardQuery = typeof queryDefaultValue

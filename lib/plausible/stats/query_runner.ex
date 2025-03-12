@@ -64,6 +64,7 @@ defmodule Plausible.Stats.QueryRunner do
       query
       |> Comparisons.get_comparison_query()
       |> Comparisons.add_comparison_filters(main_results)
+      |> QueryOptimizer.optimize()
 
     struct!(runner, comparison_query: comparison_query)
   end
