@@ -77,10 +77,13 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
         insert(:user, email: "hs.match@plausible.test")
         insert(:user, email: "hs.nomatch@plausible.test")
 
+        token = sign_conversation_token("123")
+
         conn =
           conn
-          |> set_conversation_cookie("123")
-          |> get("/helpscout/search?conversation_id=123&customer_id=500&term=hs.match")
+          |> get(
+            "/helpscout/search?conversation_id=123&customer_id=500&term=hs.match&token=#{token}"
+          )
 
         html = html_response(conn, 200)
 
@@ -88,17 +91,24 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
         refute html =~ "hs.nomatch@plausible.test"
       end
 
-      test "returns error when cookie is missing", %{conn: conn} do
-        conn = get(conn, "/helpscout/search?conversation_id=123&customer_id=500&term=hs.match")
+      test "returns error when token is invalid", %{conn: conn} do
+        conn =
+          get(
+            conn,
+            "/helpscout/search?conversation_id=123&customer_id=500&term=hs.match&token=invalid"
+          )
 
-        assert html_response(conn, 200) =~ "invalid_conversation"
+        assert html_response(conn, 200) =~ "invalid_token"
       end
 
-      test "returns error when cookie does not match", %{conn: conn} do
+      test "returns error when token does not match", %{conn: conn} do
+        token = sign_conversation_token("456")
+
         conn =
           conn
-          |> set_conversation_cookie("456")
-          |> get("/helpscout/search?conversation_id=123&customer_id=500&term=hs.match")
+          |> get(
+            "/helpscout/search?conversation_id=123&customer_id=500&term=hs.match&token=#{token}"
+          )
 
         assert html_response(conn, 200) =~ "invalid_conversation"
       end
@@ -108,11 +118,12 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
       test "returns details on success", %{conn: conn} do
         user = insert(:user, email: "hs.match@plausible.test", notes: "Some note\nwith new line")
 
+        token = sign_conversation_token("123")
+
         conn =
           conn
-          |> set_conversation_cookie("123")
           |> get(
-            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test"
+            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test&token=#{token}"
           )
 
         assert html = html_response(conn, 200)
@@ -120,40 +131,31 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
         assert html =~ "Some note<br>\nwith new line"
       end
 
-      test "returns error when cookie is missing", %{conn: conn} do
+      test "returns error when token is invalid", %{conn: conn} do
         conn =
           get(
             conn,
-            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test"
+            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test&token=invalid"
           )
 
-        assert html_response(conn, 200) =~ "invalid_conversation"
+        assert html_response(conn, 200) =~ "invalid_token"
       end
 
-      test "returns error when cookie does not match", %{conn: conn} do
+      test "returns error when token does not match", %{conn: conn} do
+        token = sign_conversation_token("456")
+
         conn =
           conn
-          |> set_conversation_cookie("456")
           |> get(
-            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test"
+            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test&token=#{token}"
           )
 
         assert html_response(conn, 200) =~ "invalid_conversation"
       end
     end
 
-    defp set_conversation_cookie(conn, conversation_id) do
-      conn
-      |> PlausibleWeb.HelpScoutController.set_cookie(conversation_id)
-      |> recycle()
-      |> Map.put(:secret_key_base, secret_key_base())
-      |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
-    end
-
-    defp secret_key_base() do
-      :plausible
-      |> Application.fetch_env!(PlausibleWeb.Endpoint)
-      |> Keyword.fetch!(:secret_key_base)
+    defp sign_conversation_token(conversation_id) do
+      PlausibleWeb.HelpScoutController.sign_token(conversation_id)
     end
   end
 end

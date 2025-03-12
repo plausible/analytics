@@ -10,6 +10,7 @@ defmodule PlausibleWeb.HelpScoutView do
             <input type="text" name="term" value={assigns[:email]} />
             <input type="submit" name="search" value="&nbsp;&#x1F50E;&nbsp;" />
           </p>
+          <input type="hidden" name="token" value={@token} />
           <input type="hidden" name="conversation_id" value={@conversation_id} />
           <input type="hidden" name="customer_id" value={@customer_id} />
         </form>
@@ -73,13 +74,14 @@ defmodule PlausibleWeb.HelpScoutView do
               <input type="text" name="term" value={@term} />
               <input type="submit" name="search" value="&nbsp;&#x1F50E;&nbsp;" />
             </p>
+            <input type="hidden" name="token" value={@token} />
             <input type="hidden" name="conversation_id" value={@conversation_id} />
             <input type="hidden" name="customer_id" value={@customer_id} />
           </form>
           <ul :if={length(@users) > 0}>
             <li :for={user <- @users}>
               <a
-                onclick={"loadContent('/helpscout/show?#{URI.encode_query(email: user.email, conversation_id: @conversation_id, customer_id: @customer_id)}')"}
+                onclick={"loadContent('/helpscout/show?#{URI.encode_query(email: user.email, conversation_id: @conversation_id, customer_id: @customer_id, token: @token)}')"}
                 href="#"
               >
                 {user.email} ({user.sites_count} sites)
@@ -182,37 +184,6 @@ defmodule PlausibleWeb.HelpScoutView do
             }
 
             const appContainer = document.getElementById("content")
-
-            const isSafari = !!(
-              navigator.vendor &&
-              navigator.vendor.indexOf('Apple') > -1 &&
-              navigator.userAgent &&
-              navigator.userAgent.indexOf('CriOS') == -1 &&
-              navigator.userAgent.indexOf('FxiOS') == -1
-            )
-
-            /*
-             * Using cookies within iframe requires requesting storage access
-             * in Safari. Unfortunately, the storage access check sometimes
-             * falsely returns true in FireFox and requesting storage access
-             * in FF seems to break the cookies. That's why there's an extra
-             * check for Safari.
-             */
-            window.addEventListener('load', async () => {
-              const hasStorageAccess = await document.hasStorageAccess()
-              if (isSafari && !hasStorageAccess) {
-                const paragraph = document.createElement('p')
-                paragraph.style = "text-align: center; margin-bottom: 0.4em;"
-                const button = document.createElement('button')
-                button.innerHTML = 'Grant cookie access'
-                button.onclick = async (e) => {
-                  await document.requestStorageAccess()
-                  paragraph.remove()
-                }
-                paragraph.append(button)
-                appContainer.prepend(paragraph)
-              }
-            })
 
             async function loadContent(uri) {
               const response = await fetch(uri)
