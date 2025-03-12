@@ -203,14 +203,8 @@ defimpl Jason.Encoder, for: Plausible.Segments.Segment do
       segment_data: segment.segment_data,
       owner_id: segment.owner_id,
       owner_name: if(is_nil(segment.owner_id), do: nil, else: segment.owner.name),
-      inserted_at:
-        segment.inserted_at
-        |> Plausible.Timezones.to_datetime_in_timezone(segment.site.timezone)
-        |> Calendar.strftime("%Y-%m-%d %H:%M:%S"),
-      updated_at:
-        segment.updated_at
-        |> Plausible.Timezones.to_datetime_in_timezone(segment.site.timezone)
-        |> Calendar.strftime("%Y-%m-%d %H:%M:%S")
+      inserted_at: segment.inserted_at,
+      updated_at: segment.updated_at
     }
     |> Jason.Encode.map(opts)
   end

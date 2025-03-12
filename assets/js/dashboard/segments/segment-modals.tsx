@@ -1,15 +1,15 @@
 /** @format */
 
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
+  isListableSegment,
   isSegmentFilter,
   SavedSegment,
   SEGMENT_TYPE_LABELS,
   SegmentData,
   SegmentType
 } from '../filtering/segments'
-import { useSegmentPrefetch } from '../nav-menu/segments/searchable-segments-section'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { cleanLabels } from '../util/filters'
@@ -22,6 +22,9 @@ import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { MutationStatus } from '@tanstack/react-query'
 import { ApiError } from '../api'
 import { ErrorPanel } from '../components/error-panel'
+import { useSegmentsContext } from '../filtering/segments-context'
+import { useSiteContext } from '../site-context'
+import { useUserContext } from '../user-context'
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -427,15 +430,18 @@ const Placeholder = ({
 )
 
 export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
+  const site = useSiteContext()
+  const user = useUserContext()
   const { query } = useQueryContext()
-
-  const { data, fetchSegment, status, error } = useSegmentPrefetch({
-    id: String(id)
-  })
-
-  useEffect(() => {
-    fetchSegment()
-  }, [fetchSegment])
+  const { segments } = useSegmentsContext()
+  const data = segments
+    .filter((segment) => isListableSegment({ segment, site, user }))
+    .find((s) => String(s.id) === String(id))
+  const error = !data
+    ? new ApiError('Error loading segment', {
+        error: `Segment not found with with ID "${id}"`
+      })
+    : null
 
   return (
     <ModalWithRouting maxWidth="460px">
@@ -506,13 +512,6 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
             </div>
           </>
         )}
-        {status === 'pending' && (
-          <div className="flex items-center justify-center">
-            <div className="loading">
-              <div />
-            </div>
-          </div>
-        )}
         {error !== null && (
           <ErrorPanel
             className="mt-4"
@@ -521,7 +520,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                 ? error.message
                 : 'Something went wrong loading segment'
             }
-            onRetry={() => fetchSegment()}
+            onRetry={() => window.location.reload()}
           />
         )}
       </div>

@@ -1,25 +1,17 @@
 /** @format */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import {
   formatSegmentIdAsLabelKey,
   getFilterSegmentsByNameInsensitive,
-  handleSegmentResponse,
   isSegmentFilter,
   SavedSegmentPublic,
   SavedSegment,
-  SegmentData,
-  SegmentDataFromApi,
-  SEGMENT_TYPE_LABELS
+  SEGMENT_TYPE_LABELS,
+  isListableSegment
 } from '../../filtering/segments'
-import {
-  QueryFunction,
-  useQuery,
-  useQueryClient,
-  UseQueryResult
-} from '@tanstack/react-query'
 import { cleanLabels } from '../../util/filters'
 import classNames from 'classnames'
 import { Tooltip } from '../../util/tooltip'
@@ -29,27 +21,8 @@ import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import { popover } from '../../components/popover'
 import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { MenuSeparator } from '../nav-menu-components'
-import { ErrorPanel } from '../../components/error-panel'
-import { get } from '../../api'
 import { Role, useUserContext } from '../../user-context'
-
-function useSegmentsListQuery(
-  _isPublicRequest: boolean
-): typeof _isPublicRequest extends true
-  ? UseQueryResult<SavedSegmentPublic[]>
-  : UseQueryResult<SavedSegment[]> {
-  const site = useSiteContext()
-  return useQuery({
-    queryKey: ['segments'],
-    placeholderData: (previousData) => previousData,
-    queryFn: async () => {
-      const response = await get(
-        `/api/${encodeURIComponent(site.domain)}/segments`
-      )
-      return response
-    }
-  })
-}
+import { useSegmentsContext } from '../../filtering/segments-context'
 
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -65,13 +38,19 @@ export const SearchableSegmentsSection = ({
 }: {
   closeList: () => void
 }) => {
+  const site = useSiteContext()
+  const segmentsContext = useSegmentsContext()
+
   const { query, expandedSegment } = useQueryContext()
   const segmentFilter = query.filters.find(isSegmentFilter)
   const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
   const user = useUserContext()
 
   const isPublicListQuery = !user.loggedIn || user.role === Role.public
-  const { data, ...listQuery } = useSegmentsListQuery(isPublicListQuery)
+
+  const data = segmentsContext.segments.filter((segment) =>
+    isListableSegment({ segment, site, user })
+  )
 
   const [searchValue, setSearch] = useState<string>()
   const [showAll, setShowAll] = useState(false)
@@ -174,75 +153,8 @@ export const SearchableSegmentsSection = ({
           </div>
         </Tooltip>
       )}
-
-      {listQuery.status === 'pending' && (
-        <div className="p-4 flex justify-center items-center">
-          <div className="loading sm">
-            <div />
-          </div>
-        </div>
-      )}
-      {listQuery.error && (
-        <div className="p-4">
-          <ErrorPanel
-            errorMessage="Loading segments failed"
-            onRetry={() => listQuery.refetch()}
-          />
-        </div>
-      )}
     </>
   )
-}
-
-export const useSegmentPrefetch = ({ id }: { id: string }) => {
-  const site = useSiteContext()
-  const queryClient = useQueryClient()
-  const queryKey = useMemo(() => ['segments', id] as const, [id])
-
-  const getSegmentFn: QueryFunction<
-    SavedSegment & { segment_data: SegmentData },
-    typeof queryKey
-  > = useCallback(
-    async ({ queryKey: [_, id] }) => {
-      const response: SavedSegment & { segment_data: SegmentDataFromApi } =
-        await get(`/api/${encodeURIComponent(site.domain)}/segments/${id}`)
-      return handleSegmentResponse(response)
-    },
-    [site]
-  )
-
-  const getSegment = useQuery({
-    enabled: false,
-    queryKey: queryKey,
-    queryFn: getSegmentFn
-  })
-
-  const prefetchSegment = useCallback(
-    () =>
-      queryClient.prefetchQuery({
-        queryKey,
-        queryFn: getSegmentFn,
-        staleTime: 120_000
-      }),
-    [queryClient, getSegmentFn, queryKey]
-  )
-
-  const fetchSegment = useCallback(
-    () =>
-      queryClient.fetchQuery({
-        queryKey,
-        queryFn: getSegmentFn
-      }),
-    [queryClient, getSegmentFn, queryKey]
-  )
-
-  return {
-    prefetchSegment,
-    data: getSegment.data,
-    fetchSegment,
-    error: getSegment.error,
-    status: getSegment.status
-  }
 }
 
 const SegmentLink = ({
@@ -256,13 +168,10 @@ const SegmentLink = ({
 }) => {
   const { query } = useQueryContext()
 
-  const { prefetchSegment } = useSegmentPrefetch({ id: String(id) })
-
   return (
     <AppNavigationLink
       className={linkClassName}
       key={id}
-      onMouseEnter={prefetchSegment}
       onClick={closeList}
       search={(search) => {
         const otherFilters = query.filters.filter((f) => !isSegmentFilter(f))

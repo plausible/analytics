@@ -7,8 +7,16 @@ import {
   getSearchToApplySingleSegmentFilter,
   getSegmentNamePlaceholder,
   isSegmentIdLabelKey,
-  parseApiSegmentData
+  parseApiSegmentData,
+  isListableSegment,
+  resolveFilters,
+  SegmentType,
+  SavedSegment,
+  SegmentData
 } from './segments'
+import { Filter } from '../query'
+import { PlausibleSite } from '../site-context'
+import { Role, UserContextValue } from '../user-context'
 
 describe(`${getFilterSegmentsByNameInsensitive.name}`, () => {
   const unfilteredSegments = [
@@ -107,5 +115,84 @@ describe(`${getSearchToApplySingleSegmentFilter.name}`, () => {
       filters: [['is', 'segment', [500]]],
       labels: { 'segment-500': 'APAC' }
     })
+  })
+})
+
+describe(`${isListableSegment.name}`, () => {
+  const site: Pick<PlausibleSite, 'siteSegmentsAvailable'> = {
+    siteSegmentsAvailable: true
+  }
+  const user: UserContextValue = { loggedIn: true, id: 1, role: Role.editor }
+
+  it('should return true for site segment when siteSegmentsAvailable is true', () => {
+    const segment = { id: 1, type: SegmentType.site, owner_id: 1 }
+    expect(isListableSegment({ segment, site, user })).toBe(true)
+  })
+
+  it('should return false for personal segment when user is not logged in', () => {
+    const segment = { id: 1, type: SegmentType.personal, owner_id: 1 }
+    expect(
+      isListableSegment({
+        segment,
+        site,
+        user: { loggedIn: false, role: Role.public, id: null }
+      })
+    ).toBe(false)
+  })
+
+  it('should return true for personal segment when user is the owner', () => {
+    const segment = { id: 1, type: SegmentType.personal, owner_id: 1 }
+    expect(isListableSegment({ segment, site, user })).toBe(true)
+  })
+
+  it('should return false for personal segment when user is not the owner', () => {
+    const segment = { id: 1, type: SegmentType.personal, owner_id: 2 }
+    expect(isListableSegment({ segment, site, user })).toBe(false)
+  })
+})
+
+describe(`${resolveFilters.name}`, () => {
+  const segmentData: SegmentData = {
+    filters: [['is', 'browser', ['Chrome']]],
+    labels: {}
+  }
+  const segments: Array<
+    Pick<SavedSegment, 'id'> & { segment_data: SegmentData }
+  > = [{ id: 1, segment_data: segmentData }]
+
+  it('should resolve segment filters to their actual filters', () => {
+    const resolvedFilters = resolveFilters(
+      [
+        ['is', 'segment', [1]],
+        ['is', 'browser', ['Firefox']]
+      ],
+      segments
+    )
+    expect(resolvedFilters).toEqual([
+      ...segmentData.filters,
+      ['is', 'browser', ['Firefox']]
+    ])
+  })
+
+  it('should return the original filter if it is not a segment filter', () => {
+    const filters: Filter[] = [['is', 'browser', ['Firefox']]]
+    const resolvedFilters = resolveFilters(filters, segments)
+    expect(resolvedFilters).toEqual(filters)
+  })
+
+  it('should return the original filter if the segment is not found', () => {
+    const filters: Filter[] = [['is', 'segment', [2]]]
+    const resolvedFilters = resolveFilters(filters, segments)
+    expect(resolvedFilters).toEqual(filters)
+  })
+
+  it('should throw an error if more than one segment filter is applied', () => {
+    const filters: Filter[] = [
+      ['is', 'segment', [1]],
+      ['is', 'segment', [2]]
+    ]
+    expect(() => resolveFilters(filters, segments)).toThrow(
+      'Only one segment filter can be applied'
+    )
   })
 })

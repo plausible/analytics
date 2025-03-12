@@ -4,6 +4,8 @@ import { DashboardQuery, Filter } from '../query'
 import { cleanLabels, remapFromApiFilters } from '../util/filters'
 import { plainFilterText } from '../util/filter-text'
 import { AppNavigationTarget } from '../navigation/use-app-navigate'
+import { PlausibleSite } from '../site-context'
+import { Role, UserContextValue } from '../user-context'
 
 export enum SegmentType {
   personal = 'personal',
@@ -86,11 +88,21 @@ export function isSegmentIdLabelKey(labelKey: string): boolean {
   return labelKey.startsWith(SEGMENT_LABEL_KEY_PREFIX)
 }
 
-export function formatSegmentIdAsLabelKey(id: number): string {
+export function formatSegmentIdAsLabelKey(id: number | string): string {
   return `${SEGMENT_LABEL_KEY_PREFIX}${id}`
 }
 
-export const isSegmentFilter = (f: Filter): boolean => f[1] === 'segment'
+export const isSegmentFilter = (
+  filter: Filter
+): filter is ['is', 'segment', [number | string]] => {
+  const [operation, dimension, clauses] = filter
+  return (
+    operation === 'is' &&
+    dimension === 'segment' &&
+    Array.isArray(clauses) &&
+    clauses.length === 1
+  )
+}
 
 export const parseApiSegmentData = ({
   filters,
@@ -122,4 +134,51 @@ export function getSearchToApplySingleSegmentFilter(
 export const SEGMENT_TYPE_LABELS = {
   [SegmentType.personal]: 'Personal segment',
   [SegmentType.site]: 'Site segment'
+}
+
+export function resolveFilters(
+  filters: Filter[],
+  segments: Array<Pick<SavedSegment, 'id'> & { segment_data: SegmentData }>
+): Filter[] {
+  let segmentsInFilter = 0
+  return filters.flatMap((filter): Filter[] => {
+    if (isSegmentFilter(filter)) {
+      segmentsInFilter++
+      if (segmentsInFilter > 1) {
+        throw new Error('Only one segment filter can be applied')
+      }
+      const [_operation, _dimension, [segmentId]] = filter
+      const segment = segments.find(
+        (segment) => String(segment.id) == String(segmentId)
+      )
+      return segment ? segment.segment_data.filters : [filter]
+    } else {
+      return [filter]
+    }
+  })
+}
+
+export function isListableSegment({
+  segment,
+  site,
+  user
+}: {
+  segment:
+    | Pick<SavedSegment, 'id' | 'type' | 'owner_id'>
+    | Pick<SavedSegmentPublic, 'id' | 'type' | 'owner_id'>
+  site: Pick<PlausibleSite, 'siteSegmentsAvailable'>
+  user: UserContextValue
+}) {
+  if (segment.type === SegmentType.site && site.siteSegmentsAvailable) {
+    return true
+  }
+
+  if (segment.type === SegmentType.personal) {
+    if (!user.loggedIn || user.id === null || user.role === Role.public) {
+      return false
+    }
+    return segment.owner_id === user.id
+  }
+
+  return false
 }

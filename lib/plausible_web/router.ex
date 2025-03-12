@@ -221,9 +221,7 @@ defmodule PlausibleWeb.Router do
     end
 
     scope "/:domain/segments", PlausibleWeb.Api.Internal do
-      get "/", SegmentsController, :index
       post "/", SegmentsController, :create
-      get "/:segment_id", SegmentsController, :get
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
     end

@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import QueryContextProvider from '../js/dashboard/query-context'
 import { getRouterBasepath } from '../js/dashboard/router'
 import { RoutelessModalsContextProvider } from '../js/dashboard/navigation/routeless-modals-context'
+import { SegmentsContextProvider } from '../js/dashboard/filtering/segments-context'
 
 type TestContextProvidersProps = {
   children: ReactNode
@@ -62,18 +63,20 @@ export const TestContextProviders = ({
   return (
     // <ThemeContextProvider> not interactive component, default value is suitable
     <SiteContextProvider site={site}>
-      <UserContextProvider user={{ role: Role.admin, loggedIn: true, id: 1 }}>
-        <MemoryRouter
-          basename={getRouterBasepath(site)}
-          initialEntries={defaultInitialEntries}
-          {...routerProps}
-        >
-          <QueryClientProvider client={queryClient}>
-            <RoutelessModalsContextProvider>
-              <QueryContextProvider>{children}</QueryContextProvider>
-            </RoutelessModalsContextProvider>
-          </QueryClientProvider>
-        </MemoryRouter>
+      <UserContextProvider user={{ role: Role.editor, loggedIn: true, id: 1 }}>
+        <SegmentsContextProvider preloadedSegments={[]}>
+          <MemoryRouter
+            basename={getRouterBasepath(site)}
+            initialEntries={defaultInitialEntries}
+            {...routerProps}
+          >
+            <QueryClientProvider client={queryClient}>
+              <RoutelessModalsContextProvider>
+                <QueryContextProvider>{children}</QueryContextProvider>
+              </RoutelessModalsContextProvider>
+            </QueryClientProvider>
+          </MemoryRouter>
+        </SegmentsContextProvider>
       </UserContextProvider>
     </SiteContextProvider>
     // </ThemeContextProvider>
