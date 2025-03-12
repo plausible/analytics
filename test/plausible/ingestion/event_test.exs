@@ -329,7 +329,9 @@ defmodule Plausible.Ingestion.EventTest do
     payload = %{
       name: "engagement",
       url: "https://#{site.domain}/123",
-      d: "#{site.domain}"
+      d: "#{site.domain}",
+      sd: 25,
+      et: 1000
     }
 
     conn = build_conn(:post, "/api/events", payload)
@@ -339,10 +341,8 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :no_session_for_engagement
   end
 
-  test "TEMPORARY: drops engagement if FF not enabled for site" do
+  test "blank engagements (i.e. both 'sd' and 'e' missing) get dropped" do
     site = new_site()
-
-    FunWithFlags.disable(:engagements, for_actor: "site:#{site.domain}")
 
     payload = %{
       name: "engagement",
@@ -354,7 +354,7 @@ defmodule Plausible.Ingestion.EventTest do
 
     assert {:ok, request} = Request.build(conn)
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
-    assert dropped.drop_reason == :engagement_ff_throttle
+    assert dropped.drop_reason == :blank_engagement
   end
 
   @tag :ee_only

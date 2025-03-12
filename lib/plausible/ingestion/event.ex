@@ -36,7 +36,7 @@ defmodule Plausible.Ingestion.Event do
           | :verification_agent
           | :lock_timeout
           | :no_session_for_engagement
-          | :engagement_ff_throttle
+          | :blank_engagement
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -59,7 +59,7 @@ defmodule Plausible.Ingestion.Event do
       else
         Enum.reduce(domains, [], fn domain, acc ->
           with {:allow, site} <- GateKeeper.check(domain),
-               :ok <- check_engagements_flag(domain, request) do
+               :ok <- maybe_drop_blank_engagement(request) do
             processed =
               domain
               |> new(site, request)
@@ -77,15 +77,15 @@ defmodule Plausible.Ingestion.Event do
     {:ok, %{dropped: dropped, buffered: buffered}}
   end
 
-  defp check_engagements_flag(domain, %{event_name: "engagement"}) do
-    if FunWithFlags.enabled?(:engagements, for: %Plausible.Site{domain: domain}) do
-      :ok
-    else
-      {:deny, :engagement_ff_throttle}
-    end
+  defp maybe_drop_blank_engagement(%{
+         event_name: "engagement",
+         scroll_depth: 255,
+         engagement_time: 0
+       }) do
+    {:deny, :blank_engagement}
   end
 
-  defp check_engagements_flag(_, _), do: :ok
+  defp maybe_drop_blank_engagement(_), do: :ok
 
   @spec telemetry_event_buffered() :: [atom()]
   def telemetry_event_buffered() do
