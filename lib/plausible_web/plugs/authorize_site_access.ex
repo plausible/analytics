@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   import Plug.Conn
   import Phoenix.Controller, only: [get_format: 1]
 
-  @all_roles [:public, :viewer, :admin, :editor, :super_admin, :owner]
+  @all_roles [:public, :viewer, :admin, :editor, :super_admin, :owner, :billing]
 
   def init([]), do: {@all_roles, nil}
 

@@ -134,10 +134,43 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
-    test "shows locked page if page is locked", %{conn: conn, user: user} do
+    test "shows locked page if site is locked", %{conn: conn, user: user} do
       locked_site = new_site(locked: true, owner: user)
       conn = get(conn, "/" <> locked_site.domain)
-      assert html_response(conn, 200) =~ "Dashboard locked"
+      resp = html_response(conn, 200)
+      assert resp =~ "Dashboard locked"
+      assert resp =~ "Please subscribe to the appropriate tier with the link below"
+    end
+
+    test "shows locked page if site is locked for billing role", %{conn: conn, user: user} do
+      other_user = new_user()
+      locked_site = new_site(locked: true, owner: other_user)
+      add_member(team_of(other_user), user: user, role: :billing)
+
+      conn = get(conn, "/" <> locked_site.domain)
+      resp = html_response(conn, 200)
+      assert resp =~ "Dashboard locked"
+      assert resp =~ "Please subscribe to the appropriate tier with the link below"
+    end
+
+    test "shows locked page if site is locked for viewer role", %{conn: conn, user: user} do
+      other_user = new_user()
+      locked_site = new_site(locked: true, owner: other_user)
+      add_member(team_of(other_user), user: user, role: :viewer)
+
+      conn = get(conn, "/" <> locked_site.domain)
+      resp = html_response(conn, 200)
+      assert resp =~ "Dashboard locked"
+      refute resp =~ "Please subscribe to the appropriate tier with the link below"
+      assert resp =~ "Owner of this site must upgrade their subscription plan"
+    end
+
+    test "shows locked page for anonymous" do
+      locked_site = new_site(locked: true, public: true)
+      conn = get(build_conn(), "/" <> locked_site.domain)
+      resp = html_response(conn, 200)
+      assert resp =~ "Dashboard locked"
+      assert resp =~ "You can check back later or contact the site owner"
     end
 
     test "can not view stats of someone else's website", %{conn: conn} do
