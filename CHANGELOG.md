@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Add Segments feature
 - Support `["is", "segment", [<segment ID>]]` filter in Stats API
 - Time on page metric is now sortable in reports
+- Plausible tracker script now reports maximum scroll depth reached and time engaged with the site in an `engagement` event. These are reported as `sd` and `e` integer parameters to /api/event endpoint respectively. If you're using a custom proxy for plausible script, please ensure that these parameters are being passed forward.
 
 ### Removed
 
