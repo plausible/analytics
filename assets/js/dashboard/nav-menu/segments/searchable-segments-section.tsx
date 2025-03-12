@@ -41,9 +41,7 @@ export const SearchableSegmentsSection = ({
   const site = useSiteContext()
   const segmentsContext = useSegmentsContext()
 
-  const { query, expandedSegment } = useQueryContext()
-  const segmentFilter = query.filters.find(isSegmentFilter)
-  const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
+  const { expandedSegment } = useQueryContext()
   const user = useUserContext()
 
   const isPublicListQuery = !user.loggedIn || user.role === Role.public
@@ -118,11 +116,7 @@ export const SearchableSegmentsSection = ({
                   </div>
                 }
               >
-                <SegmentLink
-                  {...segment}
-                  appliedSegmentIds={appliedSegmentIds}
-                  closeList={closeList}
-                />
+                <SegmentLink {...segment} closeList={closeList} />
               </Tooltip>
             )
           })}
@@ -160,10 +154,8 @@ export const SearchableSegmentsSection = ({
 const SegmentLink = ({
   id,
   name,
-  appliedSegmentIds,
   closeList
 }: Pick<SavedSegment, 'id' | 'name'> & {
-  appliedSegmentIds: number[]
   closeList: () => void
 }) => {
   const { query } = useQueryContext()
@@ -175,19 +167,8 @@ const SegmentLink = ({
       onClick={closeList}
       search={(search) => {
         const otherFilters = query.filters.filter((f) => !isSegmentFilter(f))
-        const updatedSegmentIds = appliedSegmentIds.includes(id) ? [] : [id]
-        if (!updatedSegmentIds.length) {
-          return {
-            ...search,
-            filters: otherFilters,
-            labels: cleanLabels(otherFilters, query.labels)
-          }
-        }
 
-        const updatedFilters = [
-          ['is', 'segment', updatedSegmentIds],
-          ...otherFilters
-        ]
+        const updatedFilters = [['is', 'segment', [id]], ...otherFilters]
 
         return {
           ...search,

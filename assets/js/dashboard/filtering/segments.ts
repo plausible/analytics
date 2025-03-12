@@ -94,14 +94,9 @@ export function formatSegmentIdAsLabelKey(id: number | string): string {
 
 export const isSegmentFilter = (
   filter: Filter
-): filter is ['is', 'segment', [number | string]] => {
+): filter is ['is', 'segment', (number | string)[]] => {
   const [operation, dimension, clauses] = filter
-  return (
-    operation === 'is' &&
-    dimension === 'segment' &&
-    Array.isArray(clauses) &&
-    clauses.length === 1
-  )
+  return operation === 'is' && dimension === 'segment' && Array.isArray(clauses)
 }
 
 export const parseApiSegmentData = ({
@@ -144,12 +139,12 @@ export function resolveFilters(
   return filters.flatMap((filter): Filter[] => {
     if (isSegmentFilter(filter)) {
       segmentsInFilter++
-      if (segmentsInFilter > 1) {
-        throw new Error('Only one segment filter can be applied')
+      const [_operation, _dimension, clauses] = filter
+      if (segmentsInFilter > 1 || clauses.length !== 1) {
+        throw new Error('Dashboard can be filtered by only one segment')
       }
-      const [_operation, _dimension, [segmentId]] = filter
       const segment = segments.find(
-        (segment) => String(segment.id) == String(segmentId)
+        (segment) => String(segment.id) == String(clauses[0])
       )
       return segment ? segment.segment_data.filters : [filter]
     } else {
@@ -181,4 +176,16 @@ export function isListableSegment({
   }
 
   return false
+}
+
+export function findAppliedSegmentFilter({ filters }: { filters: Filter[] }) {
+  const segmentFilter = filters.find(isSegmentFilter)
+  if (!segmentFilter) {
+    return undefined
+  }
+  const [_operation, _dimension, clauses] = segmentFilter
+  if (clauses.length !== 1) {
+    throw new Error('Dashboard can be filtered by only one segment')
+  }
+  return segmentFilter
 }

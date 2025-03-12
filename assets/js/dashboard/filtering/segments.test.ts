@@ -186,13 +186,21 @@ describe(`${resolveFilters.name}`, () => {
     expect(resolvedFilters).toEqual(filters)
   })
 
-  it('should throw an error if more than one segment filter is applied', () => {
-    const filters: Filter[] = [
-      ['is', 'segment', [1]],
-      ['is', 'segment', [2]]
-    ]
-    expect(() => resolveFilters(filters, segments)).toThrow(
-      'Only one segment filter can be applied'
-    )
-  })
+  const cases: Array<{ filters: Filter[] }> = [
+    {
+      filters: [
+        ['is', 'segment', [1]],
+        ['is', 'segment', [2]]
+      ]
+    },
+    { filters: [['is', 'segment', [1, 2]]] }
+  ]
+  it.each(cases)(
+    'should throw an error if more than one segment filter is applied, as in %p',
+    ({ filters }) => {
+      expect(() => resolveFilters(filters, segments)).toThrow(
+        'Dashboard can be filtered by only one segment'
+      )
+    }
+  )
 })
