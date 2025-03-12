@@ -42,7 +42,9 @@
     data-embedded={to_string(@conn.assigns[:embedded])}
     data-background={@conn.assigns[:background]}
     data-is-dbip={to_string(@is_dbip)}
-    data-current-user-role={@conn.assigns[:site_role]}
+    data-current-user-role={
+      if site_role = @conn.assigns[:site_role], do: site_role, else: :public
+    }
     data-current-user-id={
       if user = @conn.assigns[:current_user], do: user.id, else: Jason.encode!(nil)
     }

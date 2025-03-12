@@ -61,10 +61,14 @@ if (container && container.dataset) {
                 container.dataset.loggedIn === 'true'
                   ? {
                       loggedIn: true,
-                      role: container.dataset.currentUserRole! as Role,
-                      id: parseInt(container.dataset.currentUserId!, 10)
+                      id: parseInt(container.dataset.currentUserId!, 10),
+                      role: container.dataset.currentUserRole as Role
                     }
-                  : { loggedIn: false, role: null, id: null }
+                  : {
+                      loggedIn: false,
+                      id: null,
+                      role: container.dataset.currentUserRole as Role
+                    }
               }
             >
               <RouterProvider router={router} />

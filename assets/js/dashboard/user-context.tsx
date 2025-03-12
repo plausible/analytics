@@ -11,14 +11,14 @@ export enum Role {
 }
 
 const userContextDefaultValue = {
+  loggedIn: false,
   id: null,
-  role: null,
-  loggedIn: false
+  role: Role.public
 } as
-  | { loggedIn: false; id: null; role: null }
+  | { loggedIn: false; id: null; role: Role }
   | { loggedIn: true; id: number; role: Role }
 
-type UserContextValue = typeof userContextDefaultValue
+export type UserContextValue = typeof userContextDefaultValue
 
 const UserContext = createContext<UserContextValue>(userContextDefaultValue)
 

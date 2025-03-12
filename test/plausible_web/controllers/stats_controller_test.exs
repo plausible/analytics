@@ -26,6 +26,8 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-funnels-available") == "true"
       assert text_of_attr(resp, @react_container, "data-has-props") == "false"
       assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
+      assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
       assert text_of_attr(resp, @react_container, "data-embedded") == ""
 
       [{"div", attrs, _}] = find(resp, @react_container)
@@ -116,11 +118,13 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /:domain - as a logged in user" do
     setup [:create_user, :log_in, :create_site]
 
-    test "can view stats of a website I've created", %{conn: conn, site: site} do
+    test "can view stats of a website I've created", %{conn: conn, site: site, user: user} do
       populate_stats(site, [build(:pageview)])
       conn = get(conn, "/" <> site.domain)
       resp = html_response(conn, 200)
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "owner"
+      assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
     test "can view stats of a website I've created, enforcing pageviews check skip", %{
@@ -156,12 +160,16 @@ defmodule PlausibleWeb.StatsControllerTest do
     @describetag :ee_only
     setup [:create_user, :make_user_super_admin, :log_in]
 
-    test "can view a private dashboard with stats", %{conn: conn} do
+    test "can view a private dashboard with stats", %{conn: conn, user: user} do
       site = new_site()
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "stats-react-container"
+      resp = html_response(conn, 200)
+      assert resp =~ "stats-react-container"
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "super_admin"
+      assert text_of_attr(resp, @react_container, "data-current-user-id") == "#{user.id}"
     end
 
     test "can enter verification when site is without stats", %{conn: conn} do
@@ -1036,7 +1044,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       link = insert(:shared_link, site: site)
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
-      assert html_response(conn, 200) =~ "stats-react-container"
+      resp = html_response(conn, 200)
+      assert resp =~ "stats-react-container"
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
     end
 
     test "returns page with X-Frame-Options disabled so it can be embedded in an iframe", %{
@@ -1060,6 +1072,9 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}&embed=true")
       resp = html_response(conn, 200)
       assert text_of_attr(resp, @react_container, "data-embedded") == "true"
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
       assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
 
       [{"div", attrs, _}] = find(resp, @react_container)
