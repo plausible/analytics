@@ -58,6 +58,7 @@ defmodule Plausible.Ingestion.Event do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
       else
         Enum.reduce(domains, [], fn domain, acc ->
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           case GateKeeper.check(domain) do
             {:allow, site} ->
               processed =
