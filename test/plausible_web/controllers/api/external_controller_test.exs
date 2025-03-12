@@ -1414,7 +1414,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert engagement.scroll_depth == 255
     end
 
-    test "ingests engagement_time as 0 when e is a string", %{conn: conn, site: site} do
+    test "ingests engagement_time from a string", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
 
       post(conn, "/api/event", %{
@@ -1427,7 +1427,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert engagement.engagement_time == 0
+      assert engagement.engagement_time == 789
     end
 
     test "ingests engagement_time as 0 when e is a negative integer", %{conn: conn, site: site} do

@@ -262,11 +262,7 @@ defmodule Plausible.Ingestion.Request do
 
   defp put_engagement_time(changeset, %{} = request_body) do
     if Changeset.get_field(changeset, :event_name) == "engagement" do
-      engagement_time =
-        case request_body["e"] do
-          e when is_integer(e) and e >= 0 -> e
-          _ -> 0
-        end
+      engagement_time = parse_engagement_time(request_body["e"])
 
       Changeset.put_change(changeset, :engagement_time, engagement_time)
     else
@@ -346,6 +342,18 @@ defmodule Plausible.Ingestion.Request do
   defp parse_scroll_depth(sd) when is_integer(sd) and sd >= 0 and sd <= 100, do: sd
   defp parse_scroll_depth(sd) when is_integer(sd) and sd > 100, do: 100
   defp parse_scroll_depth(_), do: @missing_scroll_depth
+
+  @missing_engagement_time 0
+
+  defp parse_engagement_time(et) when is_binary(et) do
+    case Integer.parse(et) do
+      {et_int, ""} -> parse_engagement_time(et_int)
+      _ -> @missing_engagement_time
+    end
+  end
+
+  defp parse_engagement_time(et) when is_integer(et) and et >= 0, do: et
+  defp parse_engagement_time(_), do: @missing_engagement_time
 end
 
 defimpl Jason.Encoder, for: URI do
