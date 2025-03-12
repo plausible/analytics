@@ -97,7 +97,7 @@ defmodule PlausibleWeb.LayoutView do
 
   def account_settings_sidebar(conn) do
     current_team = conn.assigns[:current_team]
-    current_role = conn.assigns[:current_role]
+    current_team_role = conn.assigns[:current_team_role]
 
     options = %{
       "Account Settings" =>
@@ -123,7 +123,7 @@ defmodule PlausibleWeb.LayoutView do
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
           %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
-          if(current_role in [:owner, :admin, :billing],
+          if(current_team_role in [:owner, :admin, :billing],
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           )
         ]

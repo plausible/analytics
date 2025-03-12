@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.AuthContext do
           nil
       end)
       |> assign_new(
-        :current_role,
+        :current_team_role,
         fn
           %{current_user: user = %{}, current_team: current_team = %{}} ->
             Enum.find_value(user.team_memberships, fn team_membership ->

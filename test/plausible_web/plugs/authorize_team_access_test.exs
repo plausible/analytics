@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeTeamAccessTest do
     test "passes when valid current role: #{role}" do
       conn =
         build_conn()
-        |> assign(:current_role, unquote(role))
+        |> assign(:current_team_role, unquote(role))
         |> AuthorizeTeamAccess.call()
 
       refute conn.halted
@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeTeamAccessTest do
     conn =
       build_conn()
       |> assign(:current_team, :some)
-      |> assign(:current_role, :admin)
+      |> assign(:current_team_role, :admin)
       |> AuthorizeTeamAccess.call([:owner])
 
     assert conn.halted
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeTeamAccessTest do
     conn =
       build_conn()
       |> assign(:current_team, nil)
-      |> assign(:current_role, :admin)
+      |> assign(:current_team_role, :admin)
       |> AuthorizeTeamAccess.call([:owner])
 
     refute conn.halted
