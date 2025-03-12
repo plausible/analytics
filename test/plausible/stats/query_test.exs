@@ -167,7 +167,10 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "defaults to 30 days format", %{site: site} do
-    assert Query.from(site, %{}) == Query.from(site, %{"period" => "30d"})
+    query_default = Query.from(site, %{}) |> Map.delete(:now)
+    query_30d = Query.from(site, %{"period" => "30d"}) |> Map.delete(:now)
+
+    assert query_default == query_30d
   end
 
   test "parses custom format", %{site: site} do
