@@ -5,6 +5,8 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
   @moduletag :ee_only
 
   on_ee do
+    import Plausible.Teams.Test
+
     alias Plausible.HelpScout
 
     describe "callback/2" do
@@ -129,6 +131,97 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
         assert html = html_response(conn, 200)
         assert html =~ "/crm/auth/user/#{user.id}"
         assert html =~ "Some note<br>\nwith new line"
+      end
+
+      test "returns teams list when the match is an owner in multiple teams", %{conn: conn} do
+        user = new_user(email: "hs.match@plausible.test", notes: "Some user notes")
+        other_user = new_user()
+        _site1 = new_site(owner: user)
+        _site2 = new_site(owner: other_user)
+        _team1 = team_of(user)
+        team2 = team_of(other_user)
+
+        team2 =
+          team2
+          |> Plausible.Teams.complete_setup()
+          |> Ecto.Changeset.change(name: "HS Integration Test Team")
+          |> Plausible.Repo.update!()
+
+        add_member(team2, user: user, role: :owner)
+
+        token = sign_conversation_token("123")
+
+        conn =
+          conn
+          |> get(
+            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test&token=#{token}"
+          )
+
+        assert html = html_response(conn, 200)
+        assert html =~ "/crm/auth/user/#{user.id}"
+        assert html =~ "Some user notes"
+        assert html =~ "My Personal Sites"
+        assert html =~ "HS Integration Test Team"
+      end
+
+      test "returns personal team details when identifier passed explicitly", %{conn: conn} do
+        user = new_user(email: "hs.match@plausible.test", notes: "Some user notes")
+        other_user = new_user()
+        _site1 = new_site(owner: user)
+        _site2 = new_site(owner: other_user)
+        team1 = team_of(user)
+        team2 = team_of(other_user)
+
+        team2 =
+          team2
+          |> Plausible.Teams.complete_setup()
+          |> Ecto.Changeset.change(name: "HS Integration Test Team")
+          |> Plausible.Repo.update!()
+
+        add_member(team2, user: user, role: :owner)
+
+        token = sign_conversation_token("123")
+
+        conn =
+          conn
+          |> get(
+            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test&team_identifier=#{team1.identifier}&token=#{token}"
+          )
+
+        assert html = html_response(conn, 200)
+        refute html =~ "HS Integration Test Team"
+        refute html =~ "My Personal Sites"
+        assert html =~ "Some user notes"
+      end
+
+      test "returns setup team details when identifier passed explicitly", %{conn: conn} do
+        user = new_user(email: "hs.match@plausible.test", notes: "Some user notes")
+        other_user = new_user()
+        _site1 = new_site(owner: user)
+        _site2 = new_site(owner: other_user)
+        _team1 = team_of(user)
+        team2 = team_of(other_user)
+
+        team2 =
+          team2
+          |> Plausible.Teams.complete_setup()
+          |> Ecto.Changeset.change(name: "HS Integration Test Team")
+          |> Plausible.Repo.update!()
+
+        add_member(team2, user: user, role: :owner)
+
+        token = sign_conversation_token("123")
+
+        conn =
+          conn
+          |> get(
+            "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test&team_identifier=#{team2.identifier}&token=#{token}"
+          )
+
+        assert html = html_response(conn, 200)
+        assert html =~ "HS Integration Test Team"
+        refute html =~ "My Personal Sites"
+        assert html =~ "Some user notes"
       end
 
       test "returns error when token is invalid", %{conn: conn} do

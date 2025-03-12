@@ -16,45 +16,89 @@ defmodule PlausibleWeb.HelpScoutView do
         </form>
       </div>
 
-      <%= if @conn.assigns[:error] do %>
-        <p>
-          Failed to get details: {@error}
-        </p>
-      <% else %>
-        <div class="status">
-          <p class="label">
-            Status
+      <%= cond do %>
+        <% @conn.assigns[:error] -> %>
+          <p>
+            Failed to get details: {@error}
           </p>
-          <p class="value">
-            <a href={@status_link} target="_blank">{@status_label}</a>
-          </p>
-        </div>
+        <% @multiple_teams? -> %>
+          <div class="teams">
+            <p class="label">
+              <a href={@user_link} target="_blank">Owner</a> of teams:
+            </p>
 
-        <div class="plan">
-          <p class="label">
-            Plan
-          </p>
-          <p class="value">
-            <a href={@plan_link} target="_blank">{@plan_label}</a>
-          </p>
-        </div>
-
-        <div class="sites">
-          <p class="label">
-            Owner of <b><a href={@sites_link} target="_blank">{@sites_count} sites</a></b>
-          </p>
-          <p class="value"></p>
-        </div>
-
-        <div :if={@notes} class="notes">
-          <p class="label">
-            <b>Notes</b>
-          </p>
-
-          <div class="value">
-            {PhoenixHTMLHelpers.Format.text_to_html(@notes, escape: true)}
+            <div class="value">
+              <ul>
+                <li :for={team <- @teams}>
+                  <a
+                    onclick={"loadContent('/helpscout/show?#{URI.encode_query(
+                    email: @email, 
+                    conversation_id: @conversation_id, 
+                    customer_id: @customer_id, 
+                    team_identifier: team.identifier, 
+                    token: @token)}')"}
+                    href="#"
+                  >
+                    {team.name} ({team.sites_count} sites)
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
+
+          <div :if={@notes} class="notes">
+            <p class="label">
+              <b>User notes</b>
+            </p>
+
+            <div class="value">
+              {PhoenixHTMLHelpers.Format.text_to_html(@notes, escape: true)}
+            </div>
+          </div>
+        <% true -> %>
+          <div :if={@team_setup?} class="team-name">
+            <p class="label">
+              Team name
+            </p>
+            <p class="value">
+              <a href={@status_link} target="_blank">{@team_name}</a>
+            </p>
+          </div>
+
+          <div class="status">
+            <p class="label">
+              Status
+            </p>
+            <p class="value">
+              <a href={@status_link} target="_blank">{@status_label}</a>
+            </p>
+          </div>
+
+          <div class="plan">
+            <p class="label">
+              Plan
+            </p>
+            <p class="value">
+              <a href={@plan_link} target="_blank">{@plan_label}</a>
+            </p>
+          </div>
+
+          <div class="sites">
+            <p class="label">
+              Owner of <b><a href={@sites_link} target="_blank">{@sites_count} sites</a></b>
+            </p>
+            <p class="value"></p>
+          </div>
+
+          <div :if={@notes} class="notes">
+            <p class="label">
+              <b>Notes</b>
+            </p>
+
+            <div class="value">
+              {PhoenixHTMLHelpers.Format.text_to_html(@notes, escape: true)}
+            </div>
+          </div>
       <% end %>
     </.layout>
     """
@@ -147,6 +191,10 @@ defmodule PlausibleWeb.HelpScoutView do
 
             ul li, .entry {
               margin-bottom: 1.25em;
+            }
+
+            .teams .label {
+              margin-bottom: 1em;
             }
 
             .value {

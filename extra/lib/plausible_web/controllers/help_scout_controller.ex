@@ -48,7 +48,8 @@ defmodule PlausibleWeb.HelpScoutController do
     }
 
     with :ok <- match_conversation(token, conversation_id),
-         {:ok, details} <- HelpScout.get_details_for_emails([email], customer_id) do
+         {:ok, details} <-
+           HelpScout.get_details_for_emails([email], customer_id, params["team_identifier"]) do
       render(conn, "callback.html", Map.merge(assigns, details))
     else
       {:error, error} ->
