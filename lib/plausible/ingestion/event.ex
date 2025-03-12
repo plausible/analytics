@@ -58,15 +58,15 @@ defmodule Plausible.Ingestion.Event do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
       else
         Enum.reduce(domains, [], fn domain, acc ->
-          with {:allow, site} <- GateKeeper.check(domain),
-               :ok <- maybe_drop_blank_engagement(request) do
-            processed =
-              domain
-              |> new(site, request)
-              |> process_unless_dropped(pipeline(), context)
+          case GateKeeper.check(domain) do
+            {:allow, site} ->
+              processed =
+                domain
+                |> new(site, request)
+                |> process_unless_dropped(pipeline(), context)
 
-            [processed | acc]
-          else
+              [processed | acc]
+
             {:deny, reason} ->
               [drop(new(domain, request), reason) | acc]
           end
@@ -76,16 +76,6 @@ defmodule Plausible.Ingestion.Event do
     {dropped, buffered} = Enum.split_with(processed_events, & &1.dropped?)
     {:ok, %{dropped: dropped, buffered: buffered}}
   end
-
-  defp maybe_drop_blank_engagement(%{
-         event_name: "engagement",
-         scroll_depth: 255,
-         engagement_time: 0
-       }) do
-    {:deny, :blank_engagement}
-  end
-
-  defp maybe_drop_blank_engagement(_), do: :ok
 
   @spec telemetry_event_buffered() :: [atom()]
   def telemetry_event_buffered() do
@@ -124,6 +114,7 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
+      drop_blank_engagement: &drop_blank_engagement/2,
       drop_verification_agent: &drop_verification_agent/2,
       drop_datacenter_ip: &drop_datacenter_ip/2,
       drop_shield_rule_hostname: &drop_shield_rule_hostname/2,
@@ -186,6 +177,16 @@ defmodule Plausible.Ingestion.Event do
 
   defp update_session_attrs(%__MODULE__{} = event, %{} = attrs) do
     struct!(event, clickhouse_session_attrs: Map.merge(event.clickhouse_session_attrs, attrs))
+  end
+
+  defp drop_blank_engagement(%__MODULE__{} = event, _context) do
+    case event.request do
+      %{event_name: "engagement", scroll_depth: 255, engagement_time: 0} ->
+        drop(event, :blank_engagement)
+
+      _ ->
+        event
+    end
   end
 
   defp drop_verification_agent(%__MODULE__{} = event, _context) do
