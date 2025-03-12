@@ -1379,13 +1379,13 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert engagement.scroll_depth == 100
     end
 
-    test "ingests scroll_depth as 255 when sd is a string", %{conn: conn, site: site} do
+    test "parses scroll_depth from a string", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, sd: "1"})
 
       engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
 
-      assert engagement.scroll_depth == 255
+      assert engagement.scroll_depth == 1
     end
 
     test "ingests scroll_depth as 255 when sd is a negative integer", %{conn: conn, site: site} do

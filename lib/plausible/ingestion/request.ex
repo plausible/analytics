@@ -253,13 +253,7 @@ defmodule Plausible.Ingestion.Request do
 
   defp put_scroll_depth(changeset, %{} = request_body) do
     if Changeset.get_field(changeset, :event_name) == "engagement" do
-      scroll_depth =
-        case request_body["sd"] do
-          sd when is_integer(sd) and sd >= 0 and sd <= 100 -> sd
-          sd when is_integer(sd) and sd > 100 -> 100
-          _ -> 255
-        end
-
+      scroll_depth = parse_scroll_depth(request_body["sd"])
       Changeset.put_change(changeset, :scroll_depth, scroll_depth)
     else
       changeset
@@ -339,6 +333,19 @@ defmodule Plausible.Ingestion.Request do
   def sanitize_hostname(nil) do
     nil
   end
+
+  @missing_scroll_depth 255
+
+  defp parse_scroll_depth(sd) when is_binary(sd) do
+    case Integer.parse(sd) do
+      {sd_int, ""} -> parse_scroll_depth(sd_int)
+      _ -> @missing_scroll_depth
+    end
+  end
+
+  defp parse_scroll_depth(sd) when is_integer(sd) and sd >= 0 and sd <= 100, do: sd
+  defp parse_scroll_depth(sd) when is_integer(sd) and sd > 100, do: 100
+  defp parse_scroll_depth(_), do: @missing_scroll_depth
 end
 
 defimpl Jason.Encoder, for: URI do
