@@ -36,7 +36,6 @@ export const TestContextProviders = ({
     offset: 0,
     hasGoals: false,
     hasProps: false,
-    scrollDepthVisible: false,
     funnelsAvailable: false,
     propsAvailable: false,
     siteSegmentsAvailable: false,

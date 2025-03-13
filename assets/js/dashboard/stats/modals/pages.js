@@ -47,14 +47,13 @@ function PagesModal() {
       ]
     }
 
-    const defaultMetrics = [
+    return [
       metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
       metrics.createPageviews(),
       metrics.createBounceRate(),
-      metrics.createTimeOnPage()
+      metrics.createTimeOnPage(),
+      metrics.createScrollDepth()
     ]
-
-    return site.scrollDepthVisible ? [...defaultMetrics, metrics.createScrollDepth()] : defaultMetrics
   }
 
   return (
