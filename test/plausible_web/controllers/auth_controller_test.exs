@@ -587,7 +587,6 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       insert(:google_auth, site: site, user: user)
       subscribe_to_growth_plan(user, status: Subscription.Status.deleted())
-      subscribe_to_growth_plan(user, status: Subscription.Status.active())
       subscribe_to_enterprise_plan(user, site_limit: 1, subscription?: false)
 
       {:ok, team} = Plausible.Teams.get_or_create(user)
@@ -599,6 +598,22 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Repo.all(Plausible.Billing.Subscription) == []
       assert Repo.all(Plausible.Billing.EnterprisePlan) == []
       refute Repo.get(Plausible.Teams.Team, team.id)
+    end
+
+    test "refuses to delete when a personal team has an active subscription", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_growth_plan(user, status: Subscription.Status.active())
+
+      conn = delete(conn, "/me")
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :danger_zone)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "You have an active subscription which must be canceled first"
+
+      assert Repo.reload(user)
     end
 
     test "deletes sites that the user owns", %{conn: conn, user: user, site: owner_site} do

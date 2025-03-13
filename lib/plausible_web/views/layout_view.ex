@@ -125,6 +125,9 @@ defmodule PlausibleWeb.LayoutView do
           %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
           if(current_team_role in [:owner, :admin, :billing],
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
+          ),
+          if(current_team_role == :owner,
+            do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
           )
         ]
         |> Enum.reject(&is_nil/1)
