@@ -9,8 +9,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       :create_user,
       :log_in,
       :create_site,
-      :create_legacy_site_import,
-      :set_scroll_depth_visible_at
+      :create_legacy_site_import
     ]
 
     test "returns top pages by visitors", %{conn: conn, site: site} do
@@ -1120,8 +1119,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     end
 
     test "returns scroll depth warning code", %{conn: conn, site: site} do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-
       conn =
         get(conn, "/api/stats/#{site.domain}/pages?period=day&detailed=true&with_imported=true")
 

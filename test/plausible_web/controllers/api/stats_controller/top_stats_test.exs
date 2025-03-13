@@ -482,8 +482,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       :create_user,
       :log_in,
       :create_site,
-      :create_legacy_site_import,
-      :set_scroll_depth_visible_at
+      :create_legacy_site_import
     ]
 
     test "puts scroll depth warning code", %{conn: conn, site: site} do
@@ -917,7 +916,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - filters" do
-    setup [:create_user, :log_in, :create_site, :set_scroll_depth_visible_at]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns graph_metric key for top stats with a page filter", %{
       conn: conn,
