@@ -24,13 +24,9 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
              granting_to_self?
            ),
          :ok <- check_owner_can_get_demoted(team, team_membership.role, new_role) do
-      team_membership =
-        team_membership
-        |> Ecto.Changeset.change(role: new_role)
-        |> Repo.update!()
-        |> Repo.preload(:user)
+      team_membership = Repo.preload(team_membership, :user)
 
-      with {:ok, true} <- maybe_prune_guest_memberships(team_membership) do
+      if team_membership.role == :guest and new_role != :guest do
         team_membership.user.email
         |> PlausibleWeb.Email.guest_to_team_member_promotion(
           team,
@@ -38,6 +34,13 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
         )
         |> Plausible.Mailer.send()
       end
+
+      team_membership =
+        team_membership
+        |> Ecto.Changeset.change(role: new_role)
+        |> Repo.update!()
+
+      :ok = maybe_prune_guest_memberships(team_membership)
 
       {:ok, team_membership}
     end
@@ -103,14 +106,13 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
   defp can_grant_role_to_other?(_, _, _), do: false
 
   defp maybe_prune_guest_memberships(%Teams.Membership{role: :guest}),
-    do: {:ok, false}
+    do: :ok
 
   defp maybe_prune_guest_memberships(%Teams.Membership{} = team_membership) do
-    {count, _} =
-      team_membership
-      |> Ecto.assoc(:guest_memberships)
-      |> Repo.delete_all()
+    team_membership
+    |> Ecto.assoc(:guest_memberships)
+    |> Repo.delete_all()
 
-    {:ok, count > 0}
+    :ok
   end
 end
