@@ -144,6 +144,9 @@ defmodule Plausible.SiteAdmin do
     else
       {:error, :user_not_found} ->
         {:error, "User could not be found"}
+
+      {:error, %Ecto.Changeset{}} ->
+        {:error, "Site transfer request has failed for one of the sites"}
     end
   end
 

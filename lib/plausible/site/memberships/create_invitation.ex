@@ -13,7 +13,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   @type invite_error() ::
           Ecto.Changeset.t()
           | :already_a_member
-          | :no_plan
           | {:over_limit, non_neg_integer()}
           | :forbidden
 
