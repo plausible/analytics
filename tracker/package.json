@@ -1,4 +1,5 @@
 {
+  "reportedVersion": 1,
   "scripts": {
     "deploy": "node compile.js",
     "test": "npm run deploy && npx playwright test",
