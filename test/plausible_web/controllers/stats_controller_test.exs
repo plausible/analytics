@@ -41,6 +41,41 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_element(resp, "title") == "Plausible · #{site.domain}"
     end
 
+    test "public site - all segments (personal or site) are stuffed into dataset, without their owner_id and owner_name",
+         %{conn: conn} do
+      user = new_user()
+      site = new_site(owner: user, public: true)
+
+      populate_stats(site, [build(:pageview)])
+
+      emea_site_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :site,
+          name: "EMEA region"
+        )
+        |> Map.put(:owner_name, nil)
+        |> Map.put(:owner_id, nil)
+
+      foo_personal_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :personal,
+          name: "FOO"
+        )
+        |> Map.put(:owner_name, nil)
+        |> Map.put(:owner_id, nil)
+
+      conn = get(conn, "/#{site.domain}")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, @react_container)
+
+      assert text_of_attr(resp, @react_container, "data-segments") ==
+               Jason.encode!([foo_personal_segment, emea_site_segment])
+    end
+
     test "plausible.io live demo - shows site stats", %{conn: conn} do
       site = new_site(domain: "plausible.io", public: true)
       populate_stats(site, [build(:pageview)])
@@ -186,6 +221,36 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "does not show CRM link to the site", %{conn: conn, site: site} do
       conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
       refute html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
+    end
+
+    test "all segments (personal or site) are stuffed into dataset, with associated their owner_id and owner_name",
+         %{conn: conn, site: site, user: user} do
+      populate_stats(site, [build(:pageview)])
+
+      emea_site_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :site,
+          name: "EMEA region"
+        )
+        |> Map.put(:owner_name, user.name)
+
+      foo_personal_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :personal,
+          name: "FOO"
+        )
+        |> Map.put(:owner_name, user.name)
+
+      conn = get(conn, "/#{site.domain}")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, @react_container)
+
+      assert text_of_attr(resp, @react_container, "data-segments") ==
+               Jason.encode!([foo_personal_segment, emea_site_segment])
     end
   end
 
@@ -1171,6 +1236,39 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
       assert not is_nil(Repo.reload!(site).scroll_depth_visible_at)
+    end
+
+    test "all segments (personal or site) are stuffed into dataset, without their owner_id and owner_name",
+         %{conn: conn} do
+      user = new_user()
+      site = new_site(domain: "test-site.com", owner: user)
+      link = insert(:shared_link, site: site)
+
+      emea_site_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :site,
+          name: "EMEA region"
+        )
+        |> Map.put(:owner_name, nil)
+        |> Map.put(:owner_id, nil)
+
+      foo_personal_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :personal,
+          name: "FOO"
+        )
+        |> Map.put(:owner_name, nil)
+        |> Map.put(:owner_id, nil)
+
+      conn = get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-segments") ==
+               Jason.encode!([foo_personal_segment, emea_site_segment])
     end
   end
 

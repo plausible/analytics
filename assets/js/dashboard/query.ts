@@ -33,22 +33,43 @@ export type Filter = [FilterOperator, FilterKey, FilterClause[]]
  * */
 export type FilterClauseLabels = Record<string, string>
 
-export const queryDefaultValue = {
-  period: '30d' as QueryPeriod,
-  comparison: null as ComparisonMode | null,
-  match_day_of_week: true,
-  date: null as Dayjs | null,
-  from: null as Dayjs | null,
-  to: null as Dayjs | null,
-  compare_from: null as Dayjs | null,
-  compare_to: null as Dayjs | null,
-  filters: [] as Filter[],
-  labels: {} as FilterClauseLabels,
-  with_imported: true,
-  legacy_time_on_page_cutoff: undefined as string | undefined
+export type DashboardQuery = {
+  period: QueryPeriod
+  comparison: ComparisonMode | null
+  match_day_of_week: boolean
+  date: Dayjs | null
+  from: Dayjs | null
+  to: Dayjs | null
+  compare_from: Dayjs | null
+  compare_to: Dayjs | null
+  filters: Filter[]
+  /**
+   * This property is the same as `filters` always, except when
+   * `filters` contains a "Segment is {segment ID}" filter. In this case,
+   * `resolvedFilters` has the segment filter replaced with its constituent filters,
+   * so the FE could be aware of what filters are applied.
+   */
+  resolvedFilters: Filter[]
+  labels: FilterClauseLabels
+  with_imported: boolean
+  legacy_time_on_page_cutoff: string | undefined
 }
 
-export type DashboardQuery = typeof queryDefaultValue
+export const queryDefaultValue: DashboardQuery = {
+  period: '30d' as QueryPeriod,
+  comparison: null,
+  match_day_of_week: true,
+  date: null,
+  from: null,
+  to: null,
+  compare_from: null,
+  compare_to: null,
+  filters: [],
+  resolvedFilters: [],
+  labels: {},
+  with_imported: true,
+  legacy_time_on_page_cutoff: undefined
+}
 
 export type BreakdownResultMeta = {
   date_range_label: string

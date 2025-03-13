@@ -20,6 +20,10 @@ import {
   GoToSites,
   SomethingWentWrongMessage
 } from './dashboard/error/something-went-wrong'
+import {
+  parsePreloadedSegments,
+  SegmentsContextProvider
+} from './dashboard/filtering/segments-context'
 
 timer.start()
 
@@ -71,7 +75,11 @@ if (container && container.dataset) {
                     }
               }
             >
-              <RouterProvider router={router} />
+              <SegmentsContextProvider
+                preloadedSegments={parsePreloadedSegments(container.dataset)}
+              >
+                <RouterProvider router={router} />
+              </SegmentsContextProvider>
             </UserContextProvider>
           </SiteContextProvider>
         </ThemeContextProvider>

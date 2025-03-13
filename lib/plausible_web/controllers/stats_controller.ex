@@ -52,15 +52,18 @@ defmodule PlausibleWeb.StatsController do
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owners)
+    site_role = conn.assigns[:site_role]
     current_user = conn.assigns[:current_user]
     stats_start_date = Plausible.Sites.stats_start_date(site)
-    can_see_stats? = not Sites.locked?(site) or conn.assigns[:site_role] == :super_admin
+    can_see_stats? = not Sites.locked?(site) or site_role == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
 
     scroll_depth_visible? =
       Plausible.Stats.ScrollDepth.check_feature_visible!(site, current_user)
+
+    {:ok, segments} = Plausible.Segments.get_all_for_site(site, site_role)
 
     cond do
       (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
@@ -70,6 +73,7 @@ defmodule PlausibleWeb.StatsController do
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> render("stats.html",
           site: site,
+          site_role: site_role,
           has_goals: Plausible.Sites.has_goals?(site),
           revenue_goals: list_revenue_goals(site),
           funnels: list_funnels(site),
@@ -83,6 +87,7 @@ defmodule PlausibleWeb.StatsController do
           flags: flags,
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
+          segments: segments,
           load_dashboard_js: true
         )
 
@@ -342,6 +347,7 @@ defmodule PlausibleWeb.StatsController do
     cond do
       !shared_link.site.locked ->
         current_user = conn.assigns[:current_user]
+        site_role = get_fallback_site_role(conn)
         shared_link = Plausible.Repo.preload(shared_link, site: :owners)
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
@@ -350,11 +356,14 @@ defmodule PlausibleWeb.StatsController do
 
         flags = get_flags(current_user, shared_link.site)
 
+        {:ok, segments} = Plausible.Segments.get_all_for_site(shared_link.site, site_role)
+
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
         |> render("stats.html",
           site: shared_link.site,
+          site_role: site_role,
           has_goals: Sites.has_goals?(shared_link.site),
           revenue_goals: list_revenue_goals(shared_link.site),
           funnels: list_funnels(shared_link.site),
@@ -372,6 +381,7 @@ defmodule PlausibleWeb.StatsController do
           theme: conn.params["theme"],
           flags: flags,
           is_dbip: is_dbip(),
+          segments: segments,
           load_dashboard_js: true
         )
 
@@ -385,6 +395,9 @@ defmodule PlausibleWeb.StatsController do
         )
     end
   end
+
+  defp get_fallback_site_role(conn),
+    do: if(role = conn.assigns[:site_role], do: role, else: :public)
 
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 

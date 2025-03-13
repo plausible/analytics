@@ -8,59 +8,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
   alias PlausibleWeb.Api.Helpers, as: H
   alias Plausible.Segments
 
-  def index(
-        %Plug.Conn{
-          assigns: %{
-            site: site,
-            site_role: site_role
-          }
-        } = conn,
-        %{} = _params
-      ) do
-    user_id = normalize_current_user_id(conn)
-
-    case Segments.index(user_id, site, site_role) do
-      {:error, :not_enough_permissions} ->
-        H.not_enough_permissions(conn, "Not enough permissions to get segments")
-
-      {:ok, segments} ->
-        json(
-          conn,
-          Enum.map(segments, fn segment -> Segments.enrich_with_site(segment, site) end)
-        )
-    end
-  end
-
-  def get(
-        %Plug.Conn{
-          assigns: %{
-            site: site,
-            site_role: site_role
-          }
-        } = conn,
-        %{} = params
-      ) do
-    segment_id = normalize_segment_id_param(params["segment_id"])
-
-    user_id = normalize_current_user_id(conn)
-
-    case Segments.get_one(
-           user_id,
-           site,
-           site_role,
-           segment_id
-         ) do
-      {:error, :not_enough_permissions} ->
-        H.not_enough_permissions(conn, "Not enough permissions to get segment data")
-
-      {:error, :segment_not_found} ->
-        segment_not_found(conn, params["segment_id"])
-
-      {:ok, segment} ->
-        json(conn, Segments.enrich_with_site(segment, site))
-    end
-  end
-
   def create(
         %Plug.Conn{
           assigns: %{
@@ -86,7 +33,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         })
 
       {:ok, segment} ->
-        json(conn, Segments.enrich_with_site(segment, site))
+        json(conn, segment)
     end
   end
 
@@ -120,7 +67,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         })
 
       {:ok, segment} ->
-        json(conn, Segments.enrich_with_site(segment, site))
+        json(conn, segment)
     end
   end
 
@@ -147,15 +94,11 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
         segment_not_found(conn, params["segment_id"])
 
       {:ok, segment} ->
-        json(conn, Segments.enrich_with_site(segment, site))
+        json(conn, segment)
     end
   end
 
   def delete(%Plug.Conn{} = conn, _params), do: invalid_request(conn)
-
-  @spec normalize_current_user_id(Plug.Conn.t()) :: nil | pos_integer()
-  defp normalize_current_user_id(conn),
-    do: if(is_nil(conn.assigns[:current_user]), do: nil, else: conn.assigns[:current_user].id)
 
   @spec normalize_segment_id_param(any()) :: nil | pos_integer()
   defp normalize_segment_id_param(input) do

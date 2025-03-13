@@ -91,10 +91,13 @@ export function getPropertyKeyFromFilterKey(filterKey) {
 }
 
 export function getFiltersByKeyPrefix(query, prefix) {
-  return query.filters.filter(([_operation, filterKey, _clauses]) =>
-    filterKey.startsWith(prefix)
-  )
+  return query.filters.filter(hasDimensionPrefix(prefix))
 }
+
+const hasDimensionPrefix =
+  (prefix) =>
+  ([_operation, dimension, _clauses]) =>
+    dimension.startsWith(prefix)
 
 function omitFiltersByKeyPrefix(query, prefix) {
   return query.filters.filter(
@@ -120,9 +123,11 @@ export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
 }
 
 export function hasConversionGoalFilter(query) {
-  const goalFilters = getFiltersByKeyPrefix(query, 'goal')
+  const resolvedGoalFilters = query.resolvedFilters.filter(
+    hasDimensionPrefix('goal')
+  )
 
-  return goalFilters.some(([operation, _filterKey, _clauses]) => {
+  return resolvedGoalFilters.some(([operation, _filterKey, _clauses]) => {
     return operation !== FILTER_OPERATIONS.has_not_done
   })
 }
