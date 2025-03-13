@@ -352,7 +352,14 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp parse_engagement_time(et) when is_integer(et) and et >= 0, do: et
+  # :KLUDGE: Old version of tracker script sent huge values for engagement time. Ignore
+  # these while users might still have the old script cached.
+  @too_large_engagement_time :timer.hours(30 * 24)
+
+  defp parse_engagement_time(et)
+       when is_integer(et) and et >= 0 and et < @too_large_engagement_time,
+       do: et
+
   defp parse_engagement_time(_), do: @missing_engagement_time
 end
 
