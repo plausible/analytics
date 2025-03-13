@@ -142,13 +142,14 @@ defmodule Plausible.CrmExtensions do
         Phoenix.HTML.raw("""
         <script type="text/javascript">
           (() => {
-            const monthlyPageviewLimitField = document.getElementById("enterprise_plan_monthly_pageview_limit")
+            const fields = ["monthly_pageview_limit", "site_limit"].map(p => document.getElementById(`enterprise_plan_${p}`))
+            fields.forEach(field => {
+              field.type = "input"
+              field.addEventListener("keyup", numberFormatCallback)
+              field.addEventListener("change", numberFormatCallback)
 
-            monthlyPageviewLimitField.type = "input"
-            monthlyPageviewLimitField.addEventListener("keyup", numberFormatCallback)
-            monthlyPageviewLimitField.addEventListener("change", numberFormatCallback)
-
-            monthlyPageviewLimitField.dispatchEvent(new Event("change"))
+              field.dispatchEvent(new Event("change"))
+            })
 
             function numberFormatCallback(e) {
               const numeric = Number(e.target.value.replace(/[^0-9]/g, ''))
