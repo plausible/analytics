@@ -476,6 +476,14 @@ defmodule PlausibleWeb.AuthController do
       {:ok, :deleted} ->
         logout(conn, params)
 
+      {:error, :active_subscription} ->
+        conn
+        |> put_flash(
+          :error,
+          "You have an active subscription which must be canceled first."
+        )
+        |> redirect(to: Routes.settings_path(conn, :danger_zone))
+
       {:error, :is_only_team_owner} ->
         conn
         |> put_flash(
