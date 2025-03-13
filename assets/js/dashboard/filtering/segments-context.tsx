@@ -10,25 +10,20 @@ import {
   handleSegmentResponse,
   SavedSegment,
   SavedSegmentPublic,
+  SavedSegments,
   SegmentData
 } from './segments'
 
-export function parsePreloadedSegments(dataset: DOMStringMap): Segments {
+export function parsePreloadedSegments(dataset: DOMStringMap): SavedSegments {
   return JSON.parse(dataset.segments!).map(handleSegmentResponse)
 }
 
-type Segments = Array<
-  (SavedSegment | SavedSegmentPublic) & {
-    segment_data: SegmentData
-  }
->
-
 type ChangeSegmentState = (
-  segment: SavedSegment & { segment_data: SegmentData }
+  segment: (SavedSegment | SavedSegmentPublic) & { segment_data: SegmentData }
 ) => void
 
 const initialValue: {
-  segments: Segments
+  segments: SavedSegments
   updateOne: ChangeSegmentState
   addOne: ChangeSegmentState
   removeOne: ChangeSegmentState
@@ -49,7 +44,7 @@ export const SegmentsContextProvider = ({
   preloadedSegments,
   children
 }: {
-  preloadedSegments: Segments
+  preloadedSegments: SavedSegments
   children: ReactNode
 }) => {
   const [segments, setSegments] = useState(preloadedSegments)

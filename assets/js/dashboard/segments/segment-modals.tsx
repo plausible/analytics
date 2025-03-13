@@ -3,6 +3,7 @@
 import React, { ReactNode, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
+  canSeeSegmentDetails,
   isListableSegment,
   isSegmentFilter,
   SavedSegment,
@@ -434,14 +435,24 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
   const user = useUserContext()
   const { query } = useQueryContext()
   const { segments } = useSegmentsContext()
-  const data = segments
-    .filter((segment) => isListableSegment({ segment, site, user }))
+
+  const segment = segments
+    .filter((s) => isListableSegment({ segment: s, site, user }))
     .find((s) => String(s.id) === String(id))
-  const error = !data
-    ? new ApiError('Error loading segment', {
-        error: `Segment not found with with ID "${id}"`
-      })
-    : null
+
+  let error: ApiError | null = null
+
+  if (!segment) {
+    error = new ApiError(`Segment not found with with ID "${id}"`, {
+      error: `Segment not found with with ID "${id}"`
+    })
+  } else if (!canSeeSegmentDetails({ user })) {
+    error = new ApiError('Not enough permissions to see segment details', {
+      error: `Not enough permissions to see segment details`
+    })
+  }
+
+  const data = !error ? segment : null
 
   return (
     <ModalWithRouting maxWidth="460px">

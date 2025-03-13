@@ -12,7 +12,8 @@ import {
   resolveFilters,
   SegmentType,
   SavedSegment,
-  SegmentData
+  SegmentData,
+  canSeeSegmentDetails
 } from './segments'
 import { Filter } from '../query'
 import { PlausibleSite } from '../site-context'
@@ -203,4 +204,25 @@ describe(`${resolveFilters.name}`, () => {
       )
     }
   )
+})
+
+describe(`${canSeeSegmentDetails.name}`, () => {
+  it('should return true if the user is logged in and not a public role', () => {
+    const user: UserContextValue = { loggedIn: true, role: Role.admin, id: 1 }
+    expect(canSeeSegmentDetails({ user })).toBe(true)
+  })
+
+  it('should return false if the user is not logged in', () => {
+    const user: UserContextValue = {
+      loggedIn: false,
+      role: Role.editor,
+      id: null
+    }
+    expect(canSeeSegmentDetails({ user })).toBe(false)
+  })
+
+  it('should return false if the user has a public role', () => {
+    const user: UserContextValue = { loggedIn: true, role: Role.public, id: 1 }
+    expect(canSeeSegmentDetails({ user })).toBe(false)
+  })
 })

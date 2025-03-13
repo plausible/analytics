@@ -49,6 +49,12 @@ export type SegmentData = {
   labels: Record<string, string>
 }
 
+export type SavedSegments = Array<
+  (SavedSegment | SavedSegmentPublic) & {
+    segment_data: SegmentData
+  }
+>
+
 const SEGMENT_LABEL_KEY_PREFIX = 'segment-'
 
 export function handleSegmentResponse(
@@ -176,6 +182,10 @@ export function isListableSegment({
   }
 
   return false
+}
+
+export function canSeeSegmentDetails({ user }: { user: UserContextValue }) {
+  return user.loggedIn && user.role !== Role.public
 }
 
 export function findAppliedSegmentFilter({ filters }: { filters: Filter[] }) {
