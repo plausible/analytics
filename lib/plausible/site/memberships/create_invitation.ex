@@ -13,7 +13,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   @type invite_error() ::
           Ecto.Changeset.t()
           | :already_a_member
-          | :transfer_to_self
           | :no_plan
           | {:over_limit, non_neg_integer()}
           | :forbidden
@@ -65,12 +64,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
              invitee_email
            ),
          invitee = Plausible.Auth.find_user_by(email: invitee_email),
-         :ok <-
-           Teams.Invitations.ensure_transfer_valid(
-             site.team,
-             invitee,
-             role
-           ),
          :ok <-
            Teams.Invitations.ensure_new_membership(
              site,

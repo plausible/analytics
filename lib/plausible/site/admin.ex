@@ -144,9 +144,6 @@ defmodule Plausible.SiteAdmin do
     else
       {:error, :user_not_found} ->
         {:error, "User could not be found"}
-
-      {:error, :transfer_to_self} ->
-        {:error, "User is already an owner of one of the sites"}
     end
   end
 
@@ -169,7 +166,7 @@ defmodule Plausible.SiteAdmin do
         {:error, "User could not be found"}
 
       {:error, :transfer_to_self} ->
-        {:error, "User is already an owner of one of the sites"}
+        {:error, "The site is already in the picked team"}
 
       {:error, :no_plan} ->
         {:error, "The new owner does not have a subscription"}

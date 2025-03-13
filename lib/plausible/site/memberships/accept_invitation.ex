@@ -75,8 +75,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   defp transfer_ownership(site, new_owner, team) do
     site = Repo.preload(site, :team)
 
-    with :ok <- Teams.Invitations.ensure_transfer_valid(site.team, new_owner, :owner),
-         {:ok, new_team} <- maybe_get_team(new_owner, team),
+    with {:ok, new_team} <- maybe_get_team(new_owner, team),
+         :ok <- Teams.Invitations.ensure_transfer_valid(site.team, new_team, :owner),
          :ok <- check_can_transfer_site(new_team, new_owner),
          :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team),
          :ok <- Teams.Invitations.transfer_site(site, new_team) do
@@ -89,8 +89,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   defp do_accept_ownership_transfer(site_transfer, new_owner, team) do
     site = Repo.preload(site_transfer.site, :team)
 
-    with :ok <- Teams.Invitations.ensure_transfer_valid(site.team, new_owner, :owner),
-         {:ok, new_team} <- maybe_get_team(new_owner, team),
+    with {:ok, new_team} <- maybe_get_team(new_owner, team),
+         :ok <- Teams.Invitations.ensure_transfer_valid(site.team, new_team, :owner),
          :ok <- check_can_transfer_site(new_team, new_owner),
          :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team),
          :ok <- Teams.Invitations.accept_site_transfer(site_transfer, new_team) do

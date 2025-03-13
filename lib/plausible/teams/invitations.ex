@@ -233,10 +233,11 @@ defmodule Plausible.Teams.Invitations do
   @doc false
   def ensure_transfer_valid(_team, nil, :owner), do: :ok
 
-  def ensure_transfer_valid(team, new_owner, :owner) do
-    case Teams.Memberships.team_role(team, new_owner) do
-      {:ok, :owner} -> {:error, :transfer_to_self}
-      _ -> :ok
+  def ensure_transfer_valid(team, new_team, :owner) do
+    if team.id == new_team.id do
+      {:error, :transfer_to_self}
+    else
+      :ok
     end
   end
 

@@ -110,6 +110,49 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
                "You can't add sites in the current team"
     end
 
+    test "fails when transferring to the same team", %{conn: conn, user: user} do
+      current_owner = user |> subscribe_to_growth_plan()
+      site = new_site(owner: current_owner)
+
+      transfer = invite_transfer(site, current_owner, inviter: current_owner)
+
+      conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
+
+      assert redirected_to(conn, 302) == "/sites"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "The site is already in the current team"
+    end
+
+    test "allows transferring between different teams of the same owner", %{
+      conn: conn,
+      user: user
+    } do
+      current_owner = user |> subscribe_to_growth_plan()
+      site = new_site(owner: current_owner)
+
+      another_owner = new_user() |> subscribe_to_growth_plan()
+      new_team = team_of(another_owner)
+      add_member(new_team, user: current_owner, role: :owner)
+
+      transfer = invite_transfer(site, current_owner, inviter: current_owner)
+
+      conn = set_current_team(conn, new_team)
+
+      conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
+
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
+               "You now have access to"
+
+      refute Repo.reload(transfer)
+
+      assert_team_membership(current_owner, new_team, :owner)
+
+      assert_team_attached(site, new_team.id)
+    end
+
     @tag :ee_only
     test "fails when new owner has no plan", %{conn: conn, user: user} do
       old_owner = new_user()
