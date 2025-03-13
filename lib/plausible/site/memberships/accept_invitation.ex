@@ -33,6 +33,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           | Billing.Quota.Limits.over_limits_error()
           | Ecto.Changeset.t()
           | :no_plan
+          | :transfer_to_self
           | :multiple_teams
           | :permission_denied
 
