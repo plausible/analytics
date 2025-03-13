@@ -787,8 +787,6 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         site: site,
         import_id: import_id
       } do
-        Plausible.Sites.set_scroll_depth_visible_at(site)
-
         populate_stats(site, [
           build(:pageview,
             pathname: "/",

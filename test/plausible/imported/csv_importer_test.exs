@@ -1095,9 +1095,6 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> upload_csvs()
         |> run_import()
 
-      assert %NaiveDateTime{} =
-               Plausible.Repo.reload!(exported_site).scroll_depth_visible_at
-
       assert %SiteImport{
                start_date: start_date,
                end_date: end_date,
@@ -1178,42 +1175,6 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       assert query_scroll_depth_per_page.(conn, exported_site) == expected_results
       assert query_scroll_depth_per_page.(conn, imported_site) == expected_results
-    end
-
-    @tag :tmp_dir
-    test "does not include scroll depth without existing engagement data", %{
-      user: user,
-      tmp_dir: tmp_dir
-    } do
-      exported_site = new_site(owner: user)
-
-      populate_stats(exported_site, [build(:pageview, timestamp: ~N[2021-01-01 00:00:00])])
-
-      context = %{
-        user: user,
-        tmp_dir: tmp_dir,
-        exported_site: exported_site,
-        imported_site: new_site(owner: user)
-      }
-
-      %{exported_files: exported_files, site_import: site_import} =
-        context
-        |> export_archive()
-        |> download_archive()
-        |> unzip_archive()
-        |> upload_csvs()
-        |> run_import()
-
-      assert %SiteImport{has_scroll_depth: false} = site_import
-
-      imported_pages_content =
-        exported_files
-        |> Enum.find(&String.contains?(&1, "imported_pages"))
-        |> File.read!()
-
-      assert is_nil(Plausible.Repo.reload!(exported_site).scroll_depth_visible_at)
-
-      refute imported_pages_content =~ "scroll_depth"
     end
   end
 

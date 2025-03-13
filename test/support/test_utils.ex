@@ -74,11 +74,6 @@ defmodule Plausible.TestUtils do
     {:ok, site_import: site_import}
   end
 
-  def set_scroll_depth_visible_at(%{site: site}) do
-    Plausible.Sites.set_scroll_depth_visible_at(site)
-    :ok
-  end
-
   def create_api_key(%{user: user}) do
     api_key = Factory.insert(:api_key, user: user)
 

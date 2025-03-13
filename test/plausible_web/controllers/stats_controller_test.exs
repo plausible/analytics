@@ -117,37 +117,6 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/test-site.com")
       assert html_response(conn, 404) =~ "There's nothing here"
     end
-
-    test "site.scroll_depth_visible_at gets updated correctly", %{conn: conn} do
-      site = new_site(public: true)
-
-      populate_stats(site, [build(:pageview)])
-
-      # No engagements yet - `scroll_depth_visible_at` will remain `nil`
-      html =
-        conn
-        |> get("/#{site.domain}")
-        |> html_response(200)
-
-      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "false"
-
-      site = Repo.reload!(site)
-      assert is_nil(site.scroll_depth_visible_at)
-
-      populate_stats(site, [
-        build(:pageview, user_id: 123),
-        build(:engagement, user_id: 123, scroll_depth: 20)
-      ])
-
-      # engagements exist now - `scroll_depth_visible_at` gets set to `utc_now`
-      html =
-        conn
-        |> get("/#{site.domain}")
-        |> html_response(200)
-
-      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
-      assert not is_nil(Repo.reload!(site).scroll_depth_visible_at)
-    end
   end
 
   describe "GET /:domain - as a logged in user" do
@@ -321,7 +290,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export" do
-    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "exports all the necessary CSV files", %{conn: conn, site: site} do
       conn = get(conn, "/" <> site.domain <> "/export")
@@ -775,7 +744,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - via shared link" do
-    setup [:create_user, :create_site, :set_scroll_depth_visible_at]
+    setup [:create_user, :create_site]
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       link = insert(:shared_link, site: site)
@@ -787,7 +756,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - for past 6 months" do
-    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
@@ -797,7 +766,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - with path filter" do
-    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
@@ -859,34 +828,6 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["2020-01-06", "0", "0", "0", "0.0", "0.0", "", ""],
                ["2020-01-07", "1", "1", "1", "1.0", "100", "0", "90"],
                [""]
-             ]
-    end
-
-    test "does not export scroll depth in visitors.csv if site.scroll_depth_visible_at=nil", %{
-      conn: conn,
-      user: user
-    } do
-      site = new_site(owner: user)
-
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-
-      column_headers =
-        conn
-        |> get(
-          "/#{site.domain}/export?period=custom&from=2021-01-01&to=2021-01-02&filters=#{filters}"
-        )
-        |> response(200)
-        |> unzip_and_parse_csv(~c"visitors.csv")
-        |> List.first()
-
-      assert column_headers == [
-               "date",
-               "visitors",
-               "pageviews",
-               "visits",
-               "views_per_visit",
-               "bounce_rate",
-               "visit_duration"
              ]
     end
   end
@@ -1206,36 +1147,6 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/share/#{site2.domain}/?auth=#{site1_link.slug}")
       assert response(conn, 404) =~ "nothing here"
-    end
-
-    test "site.scroll_depth_visible_at gets updated correctly", %{conn: conn} do
-      site = insert(:site)
-      link = insert(:shared_link, site: site)
-
-      # No engagements yet - `scroll_depth_visible_at` will remain `nil`
-      html =
-        conn
-        |> get("/share/#{site.domain}/?auth=#{link.slug}")
-        |> html_response(200)
-
-      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "false"
-
-      site = Repo.reload!(site)
-      assert is_nil(site.scroll_depth_visible_at)
-
-      populate_stats(site, [
-        build(:pageview, user_id: 123),
-        build(:engagement, user_id: 123, scroll_depth: 20)
-      ])
-
-      # engagements exist now - `scroll_depth_visible_at` gets set to `utc_now`
-      html =
-        conn
-        |> get("/share/#{site.domain}/?auth=#{link.slug}")
-        |> html_response(200)
-
-      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
-      assert not is_nil(Repo.reload!(site).scroll_depth_visible_at)
     end
 
     test "all segments (personal or site) are stuffed into dataset, without their owner_id and owner_name",

@@ -311,14 +311,6 @@ defmodule Plausible.Sites do
     |> Repo.update!()
   end
 
-  def set_scroll_depth_visible_at(site) do
-    utc_now = NaiveDateTime.utc_now(:second)
-
-    site
-    |> Ecto.Changeset.change(%{scroll_depth_visible_at: utc_now})
-    |> Repo.update()
-  end
-
   def has_goals?(site) do
     Repo.exists?(
       from(g in Plausible.Goal,
