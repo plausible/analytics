@@ -22,7 +22,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
 		return <span className="mr-2">{country.flag}</span>
 	}
 
-	function getFilterFor(listItem) {
+	function getFilterInfo(listItem) {
 		return {
 			prefix: "country",
 			filter: ["is", "country", [listItem['code']]],
@@ -41,7 +41,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
 		<ListReport
 			fetchData={fetchData}
 			afterFetchData={afterFetchData}
-			getFilterFor={getFilterFor}
+			getFilterInfo={getFilterInfo}
 			onClick={onClick}
 			keyLabel="Country"
 			metrics={chooseMetrics()}
@@ -61,7 +61,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
 		return <span className="mr-2">{region.country_flag}</span>
 	}
 
-	function getFilterFor(listItem) {
+	function getFilterInfo(listItem) {
 		return {
 			prefix: "region",
 			filter: ["is", "region", [listItem['code']]],
@@ -80,7 +80,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
 		<ListReport
 			fetchData={fetchData}
 			afterFetchData={afterFetchData}
-			getFilterFor={getFilterFor}
+			getFilterInfo={getFilterInfo}
 			onClick={onClick}
 			keyLabel="Region"
 			metrics={chooseMetrics()}
@@ -100,7 +100,7 @@ function Cities({ query, site, afterFetchData }) {
 		return <span className="mr-2">{city.country_flag}</span>
 	}
 
-	function getFilterFor(listItem) {
+	function getFilterInfo(listItem) {
 		return {
 			prefix: "city",
 			filter: ["is", "city", [listItem['code']]],
@@ -119,7 +119,7 @@ function Cities({ query, site, afterFetchData }) {
 		<ListReport
 			fetchData={fetchData}
 			afterFetchData={afterFetchData}
-			getFilterFor={getFilterFor}
+			getFilterInfo={getFilterInfo}
 			keyLabel="City"
 			metrics={chooseMetrics()}
 			detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}

@@ -57,7 +57,7 @@ function Browsers({ afterFetchData }) {
     return api.get(url.apiPath(site, '/browsers'), query)
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: 'browser',
       filter: ["is", "browser", [listItem['name']]]
@@ -80,7 +80,7 @@ function Browsers({ afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Browser"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
@@ -100,7 +100,7 @@ function BrowserVersions({ afterFetchData }) {
     return browserIconFor(listItem.browser)
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     if (getSingleFilter(query, "browser") == '(not set)') {
       return null
     }
@@ -122,7 +122,7 @@ function BrowserVersions({ afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Browser version"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
@@ -170,7 +170,7 @@ function OperatingSystems({ afterFetchData }) {
     return api.get(url.apiPath(site, '/operating-systems'), query)
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: 'os',
       filter: ["is", "os", [listItem['name']]]
@@ -193,7 +193,7 @@ function OperatingSystems({ afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       renderIcon={renderIcon}
       keyLabel="Operating system"
       metrics={chooseMetrics()}
@@ -214,7 +214,7 @@ function OperatingSystemVersions({ afterFetchData }) {
     return osIconFor(listItem.os)
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     if (getSingleFilter(query, "os") == '(not set)') {
       return null
     }
@@ -237,7 +237,7 @@ function OperatingSystemVersions({ afterFetchData }) {
       fetchData={fetchData}
       renderIcon={renderIcon}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Operating System Version"
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: operatingSystemVersionsRoute.path, search: (search) => search }}
@@ -258,7 +258,7 @@ function ScreenSizes({ afterFetchData }) {
     return screenSizeIconFor(listItem.name)
   }
 
-  function getFilterFor(listItem) {
+  function getFilterInfo(listItem) {
     return {
       prefix: 'screen',
       filter: ["is", "screen", [listItem['name']]]
@@ -277,7 +277,7 @@ function ScreenSizes({ afterFetchData }) {
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
-      getFilterFor={getFilterFor}
+      getFilterInfo={getFilterInfo}
       keyLabel="Screen size"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}

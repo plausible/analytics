@@ -28,12 +28,12 @@ export default function Referrers({ source }) {
     setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
-  function externalLinkDest(referrer) {
+  function getExternalLinkUrl(referrer) {
     if (referrer.name === NO_REFERRER) { return null }
     return `https://${referrer.name}`
   }
 
-  function getFilterFor(referrer) {
+  function getFilterInfo(referrer) {
     if (referrer.name === NO_REFERRER) { return null }
 
     return {
@@ -69,11 +69,11 @@ export default function Referrers({ source }) {
       <ListReport
         fetchData={fetchReferrers}
         afterFetchData={afterFetchReferrers}
-        getFilterFor={getFilterFor}
+        getFilterInfo={getFilterInfo}
         keyLabel="Referrer"
         metrics={chooseMetrics()}
         detailsLinkProps={{ path: referrersDrilldownRoute.path, params: {referrer: url.maybeEncodeRouteParam(source)}, search: (search) => search }}
-        externalLinkDest={externalLinkDest}
+        getExternalLinkUrl={getExternalLinkUrl}
         renderIcon={renderIcon}
         color="bg-blue-50"
       />
