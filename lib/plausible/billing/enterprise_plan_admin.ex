@@ -71,7 +71,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
   def create_changeset(schema, attrs) do
     attrs = sanitize_attrs(attrs)
 
-    Plausible.Billing.EnterprisePlan.changeset(struct(schema, %{}), attrs)
+    Plausible.Billing.EnterprisePlan.changeset(struct(schema, site_limit: 10_000), attrs)
   end
 
   def update_changeset(enterprise_plan, attrs) do
