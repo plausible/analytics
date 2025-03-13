@@ -221,7 +221,6 @@ Plausible.Stats.SQL.SpecialMetrics.html
 Plausible.Stats.SQL.WhereBuilder.html
 Plausible.Stats.Sampling.html
 Plausible.Stats.SamplingCache.html
-Plausible.Stats.ScrollDepth.html
 Plausible.Stats.TableDecider.html
 Plausible.Stats.Time.html
 Plausible.Stats.TimeOnPage.html
@@ -467,8 +466,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-5F44280C.js
-dist/sidebar_items-8410719A.js
+dist/search_data-90F6FFB1.js
+dist/sidebar_items-695ED9D9.js
 index.html
 readme.html
 search.html
