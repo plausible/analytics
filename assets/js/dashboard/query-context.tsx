@@ -109,7 +109,7 @@ export default function QueryContextProvider({
       labels: (labels as FilterClauseLabels) || defaultValues.labels,
       legacy_time_on_page_cutoff: site.flags.new_time_on_page
         ? (legacy_time_on_page_cutoff as string) || site.legacyTimeOnPageCutoff
-        : undefined
+        : defaultValues.legacy_time_on_page_cutoff
     }
   }, [
     compare_from,
