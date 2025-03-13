@@ -118,13 +118,6 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> put_flash(:success, "Site transfer request has been sent to #{email}")
         |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
 
-      {:error, :transfer_to_self} ->
-        conn
-        |> put_flash(:ttl, :timer.seconds(5))
-        |> put_flash(:error_title, "Transfer error")
-        |> put_flash(:error, "Can't transfer ownership to existing owner")
-        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
-
       {:error, changeset} ->
         errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
 

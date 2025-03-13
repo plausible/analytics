@@ -150,14 +150,6 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.create_invitation(site, inviter, invitee.email, :owner)
     end
 
-    test "does not allow transferring ownership to existing owner" do
-      inviter = new_user(email: "vini@plausible.test")
-      site = new_site(owner: inviter)
-
-      assert {:error, :transfer_to_self} =
-               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
-    end
-
     test "allows creating an ownership transfer even when at team member limit" do
       inviter = new_user()
       site = new_site(owner: inviter)

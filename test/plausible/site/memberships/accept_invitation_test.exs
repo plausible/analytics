@@ -65,6 +65,24 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                )
     end
 
+    test "allows transferring between teams of the same owner" do
+      current_owner = new_user() |> subscribe_to_growth_plan()
+      another_owner = new_user() |> subscribe_to_growth_plan()
+
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      new_team = team_of(another_owner)
+      add_member(new_team, user: current_owner, role: :owner)
+
+      assert {:ok, _} =
+               AcceptInvitation.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 current_owner,
+                 new_team
+               )
+    end
+
     test "does not allow transferring ownership to a team where user has no permission" do
       other_owner = new_user() |> subscribe_to_growth_plan()
       other_team = team_of(other_owner)
@@ -662,6 +680,20 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert {:error, :transfer_to_self} =
                AcceptInvitation.accept_invitation(transfer.transfer_id, current_owner)
+    end
+
+    test "allows transferring between different teams of the same owner" do
+      current_owner = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: current_owner)
+
+      another_owner = new_user() |> subscribe_to_growth_plan()
+      new_team = team_of(another_owner)
+      add_member(new_team, user: current_owner, role: :owner)
+
+      transfer = invite_transfer(site, current_owner, inviter: current_owner)
+
+      assert {:ok, _} =
+               AcceptInvitation.accept_invitation(transfer.transfer_id, current_owner, new_team)
     end
 
     @tag :ee_only

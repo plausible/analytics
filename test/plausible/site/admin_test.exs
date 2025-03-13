@@ -38,14 +38,6 @@ defmodule Plausible.Site.AdminTest do
                {:error, "User could not be found"}
     end
 
-    test "new owner can't be the same as old owner", %{conn: conn, transfer_action: action} do
-      current_owner = new_user()
-      site = new_site(owner: current_owner)
-
-      assert {:error, "User is already an owner of one of the sites"} =
-               action.(conn, [site], %{"email" => current_owner.email})
-    end
-
     test "initiates ownership transfer for multiple sites in one action", %{
       conn: conn,
       transfer_action: action
@@ -81,11 +73,14 @@ defmodule Plausible.Site.AdminTest do
                {:error, "User could not be found"}
     end
 
-    test "new owner can't be the same as old owner", %{conn: conn, transfer_direct_action: action} do
+    test "new team (via owner) can't be the same as old team", %{
+      conn: conn,
+      transfer_direct_action: action
+    } do
       current_owner = new_user()
       site = new_site(owner: current_owner)
 
-      assert {:error, "User is already an owner of one of the sites"} =
+      assert {:error, "The site is already in the picked team"} =
                action.(conn, [site], %{"email" => current_owner.email})
     end
 
@@ -143,6 +138,29 @@ defmodule Plausible.Site.AdminTest do
       assert {:error, "The new owner can't add sites in the selected team"} =
                action.(conn, [site], %{
                  "email" => new_owner.email,
+                 "team_id" => new_team.identifier
+               })
+    end
+
+    test "the new owner can be the same as old owner given selected team is different", %{
+      conn: conn,
+      transfer_direct_action: action
+    } do
+      today = Date.utc_today()
+      current_owner = new_user()
+      site = new_site(owner: current_owner)
+
+      another_owner =
+        new_user()
+        |> subscribe_to_growth_plan(last_bill_date: Date.shift(today, day: -5))
+
+      another_site = new_site(owner: another_owner)
+      new_team = another_site.team
+      add_member(new_team, user: current_owner, role: :owner)
+
+      assert :ok =
+               action.(conn, [site], %{
+                 "email" => current_owner.email,
                  "team_id" => new_team.identifier
                })
     end

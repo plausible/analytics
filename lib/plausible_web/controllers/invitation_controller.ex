@@ -41,6 +41,11 @@ defmodule PlausibleWeb.InvitationController do
         |> put_flash(:error, "Invitation missing or already accepted")
         |> redirect(to: "/sites")
 
+      {:error, :transfer_to_self} ->
+        conn
+        |> put_flash(:error, "The site is already in the current team")
+        |> redirect(to: "/sites")
+
       {:error, :permission_denied} ->
         conn
         |> put_flash(:error, "You can't add sites in the current team")
