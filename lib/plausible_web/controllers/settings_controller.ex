@@ -14,6 +14,9 @@ defmodule PlausibleWeb.SettingsController do
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner, :admin, :billing] when action in [:invoices]
 
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner] when action in [:team_danger_zone, :delete_team]
+
   def index(conn, _params) do
     redirect(conn, to: Routes.settings_path(conn, :preferences))
   end
