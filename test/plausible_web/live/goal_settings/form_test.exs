@@ -34,12 +34,6 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert "goal[page_path]" in input_names
       assert "goal[display_name]" in input_names
     end
-
-    test "does not render scroll tab if scroll_depth feature not visible for site/user",
-         %{conn: conn, site: site} do
-      html = get_liveview(conn, site) |> render()
-      refute element_exists?(html, ~s/a#scroll-tab/)
-    end
   end
 
   describe "Goal submission" do

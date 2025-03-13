@@ -476,11 +476,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     <div class="my-2 text-sm w-full flex rounded border border-gray-300 dark:border-gray-500 overflow-hidden">
       <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
       <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
-      <.scroll_tab
-        :if={Plausible.Stats.ScrollDepth.feature_visible?(@site, @current_user)}
-        selected?={@selected_tab == "scroll"}
-        myself={@myself}
-      />
+      <.scroll_tab selected?={@selected_tab == "scroll"} myself={@myself} />
     </div>
     """
   end

@@ -1337,29 +1337,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                "top_stats"
              ]
     end
-
-    test "does not return scroll depth when site.scroll_depth_visible_at=nil", %{
-      conn: conn,
-      user: user
-    } do
-      site = new_site(owner: user)
-
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-
-      top_stats =
-        conn
-        |> get("/api/stats/#{site.domain}/top-stats?filters=#{filters}")
-        |> json_response(200)
-        |> Map.get("top_stats")
-
-      assert [
-               %{"name" => "Unique visitors"},
-               %{"name" => "Total visits"},
-               %{"name" => "Total pageviews"},
-               %{"name" => "Bounce rate"},
-               %{"name" => "Time on page"}
-             ] = top_stats
-    end
   end
 
   describe "GET /api/stats/top-stats - filtered for goal" do

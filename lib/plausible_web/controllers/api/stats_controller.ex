@@ -397,23 +397,15 @@ defmodule PlausibleWeb.Api.StatsController do
     page_filter? =
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 
-    include_scroll_depth? = Plausible.Stats.ScrollDepth.feature_visible?(site, current_user)
-
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
       cond do
-        page_filter? && include_scroll_depth? && query.include_imported ->
+        page_filter? && query.include_imported ->
           metrics ++ [:scroll_depth]
 
-        page_filter? && include_scroll_depth? ->
-          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
-
-        page_filter? && query.include_imported ->
-          metrics
-
         page_filter? ->
-          metrics ++ [:bounce_rate, :time_on_page]
+          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
 
         true ->
           metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
@@ -863,23 +855,15 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def pages(conn, params) do
     site = conn.assigns[:site]
-    current_user = conn.assigns[:current_user]
 
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
-    include_scroll_depth? = Plausible.Stats.ScrollDepth.feature_visible?(site, current_user)
-
     extra_metrics =
-      cond do
-        params["detailed"] && include_scroll_depth? ->
-          [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
-
-        params["detailed"] ->
-          [:pageviews, :bounce_rate, :time_on_page]
-
-        true ->
-          []
+      if params["detailed"] do
+        [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
+      else
+        []
       end
 
     metrics = breakdown_metrics(query, extra_metrics)
@@ -897,11 +881,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
       else
-        cols = [:name, :visitors, :pageviews, :bounce_rate, :time_on_page]
-
-        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-        cols = if include_scroll_depth?, do: cols ++ [:scroll_depth], else: cols
-
+        cols = [:name, :visitors, :pageviews, :bounce_rate, :time_on_page, :scroll_depth]
         pages |> to_csv(cols)
       end
     else

@@ -655,27 +655,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "does not return scroll depth (in detailed mode) when site.scroll_depth_visible_at=nil",
-         %{conn: conn, user: user} do
-      site = new_site(owner: user)
-
-      populate_stats(site, [build(:pageview)])
-
-      pages =
-        conn
-        |> get("/api/stats/#{site.domain}/pages?detailed=true")
-        |> json_response(200)
-        |> Map.get("results")
-
-      assert List.first(pages) == %{
-               "bounce_rate" => 100,
-               "name" => "/",
-               "pageviews" => 1,
-               "time_on_page" => nil,
-               "visitors" => 1
-             }
-    end
-
     test "calculates scroll_depth from native and imported data combined", %{
       conn: conn,
       site: site
