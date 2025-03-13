@@ -107,8 +107,9 @@ export default function QueryContextProvider({
         ? postProcessFilters(filters as Filter[])
         : defaultValues.filters,
       labels: (labels as FilterClauseLabels) || defaultValues.labels,
-      legacy_time_on_page_cutoff:
-        (legacy_time_on_page_cutoff as string) || site.legacyTimeOnPageCutoff
+      legacy_time_on_page_cutoff: site.flags.new_time_on_page
+        ? (legacy_time_on_page_cutoff as string) || site.legacyTimeOnPageCutoff
+        : undefined
     }
   }, [
     compare_from,
