@@ -1339,6 +1339,26 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert engagement.engagement_time == 0
     end
 
+    test "ingests engagement_time as 0 when tracker is sending invalid high values", %{
+      conn: conn,
+      site: site
+    } do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+
+      post(conn, "/api/event", %{
+        n: "engagement",
+        u: "https://test.com",
+        d: site.domain,
+        sd: 50,
+        e: 1_741_850_224_785
+      })
+
+      engagement = get_events(site) |> Enum.find(&(&1.name == "engagement"))
+
+      assert engagement.engagement_time == 0
+      assert engagement.scroll_depth == 50
+    end
+
     test "sd and e fields are ignored if name is not engagement", %{conn: conn, site: site} do
       post(conn, "/api/event", %{
         n: "pageview",
