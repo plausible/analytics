@@ -3,8 +3,11 @@ defmodule Plausible.TeamsTest do
   use Plausible
   use Plausible.Teams.Test
 
+  alias Plausible.Billing.Subscription
   alias Plausible.Teams
   alias Plausible.Repo
+
+  require Plausible.Billing.Subscription.Status
 
   describe "name/1" do
     test "returns default name when there's no team" do
@@ -321,6 +324,73 @@ defmodule Plausible.TeamsTest do
       user = new_user() |> subscribe_to_plan("free_10k")
 
       assert Teams.accept_traffic_until(team_of(user)) == ~D[2135-01-01]
+    end
+  end
+
+  describe "delete/1" do
+    test "deletes a team" do
+      user = new_user()
+      subscribe_to_growth_plan(user, status: Subscription.Status.deleted())
+      subscribe_to_enterprise_plan(user, site_limit: 1, subscription?: false)
+      team = team_of(user)
+      team = Teams.complete_setup(team)
+
+      another_user = new_user()
+      another_site = new_site(owner: another_user)
+      another_team = team_of(another_user)
+      add_member(another_team, user: user, role: :owner)
+
+      site1 = new_site(team: team)
+      site2 = new_site(team: team)
+
+      viewer_member = new_user()
+      add_member(team, user: viewer_member, role: :viewer)
+      owner_member = new_user()
+      add_member(team, user: owner_member, role: :owner)
+
+      guest_member = new_user()
+      add_guest(site1, user: guest_member, role: :editor)
+
+      team_invitee = new_user()
+      invite_member(team, team_invitee, inviter: user, role: :admin)
+      guest_invitee = new_user()
+      invite_guest(site2, guest_invitee, inviter: user, role: :viewer)
+
+      assert {:ok, :deleted} = Teams.delete(team)
+
+      refute Repo.reload(team)
+
+      assert Repo.reload(another_user)
+      assert Repo.reload(another_team)
+      assert Repo.reload(another_site)
+
+      refute Repo.reload(site1)
+      refute Repo.reload(site2)
+
+      assert Repo.reload(viewer_member)
+      refute_team_member(viewer_member, team)
+
+      assert Repo.reload(owner_member)
+      refute_team_member(owner_member, team)
+
+      assert Repo.reload(guest_member)
+      refute_team_member(guest_member, team)
+
+      assert Repo.reload(team_invitee)
+      refute_team_invitation(team, team_invitee.email)
+
+      assert Repo.reload(guest_invitee)
+      refute_team_invitation(team, guest_invitee.email)
+    end
+
+    test "does not delete a team with active subscription" do
+      user = new_user()
+      subscribe_to_growth_plan(user, status: Subscription.Status.active())
+      team = team_of(user)
+
+      assert {:error, :active_subscription} = Teams.delete(team)
+
+      assert Repo.reload(team)
     end
   end
 end
