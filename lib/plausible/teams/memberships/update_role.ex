@@ -24,11 +24,21 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
              granting_to_self?
            ),
          :ok <- check_owner_can_get_demoted(team, team_membership.role, new_role) do
+      team_membership = Repo.preload(team_membership, :user)
+
+      if team_membership.role == :guest and new_role != :guest do
+        team_membership.user.email
+        |> PlausibleWeb.Email.guest_to_team_member_promotion(
+          team,
+          current_user
+        )
+        |> Plausible.Mailer.send()
+      end
+
       team_membership =
         team_membership
         |> Ecto.Changeset.change(role: new_role)
         |> Repo.update!()
-        |> Repo.preload(:user)
 
       :ok = maybe_prune_guest_memberships(team_membership)
 

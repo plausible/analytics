@@ -278,6 +278,14 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def guest_to_team_member_promotion(email, team, inviter) do
+    priority_email()
+    |> to(email)
+    |> tag("guest-to-team-member-promotion")
+    |> subject("[#{Plausible.product_name()}] Welcome to \"#{team.name}\" team")
+    |> render("guest_to_team_member_promotion.html", inviter: inviter, team: team)
+  end
+
   def ownership_transfer_request(email, invitation_id, site, inviter, new_owner_account) do
     priority_email()
     |> to(email)
