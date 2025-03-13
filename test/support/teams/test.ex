@@ -340,6 +340,13 @@ defmodule Plausible.Teams.Test do
            )
   end
 
+  def refute_team_invitation(team, email) do
+    refute Repo.get_by(Plausible.Teams.Invitation,
+             email: email,
+             team_id: team.id
+           )
+  end
+
   def assert_site_transfer(site, %Plausible.Auth.User{} = user) do
     assert_site_transfer(site, user.email)
   end
