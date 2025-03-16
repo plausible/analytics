@@ -30,35 +30,35 @@ jobs:
       - name: Install jq
         run: sudo apt-get install jq -y
 
-      - name: Compare and increment reportedVersion
+      - name: Compare and increment tracker_script_version
         id: increment
         run: |
           cd tracker
           # Get current version from PR branch
-          PR_VERSION=$(jq '.reportedVersion' package.json)
+          PR_VERSION=$(jq '.tracker_script_version' package.json)
 
           # Get version from master, default to 0 if not present
-          MASTER_VERSION=$(jq '.reportedVersion // 0' ../master-branch/tracker/package.json)
+          MASTER_VERSION=$(jq '.tracker_script_version // 0' ../master-branch/tracker/package.json)
 
-          echo "PR reportedVersion: $PR_VERSION"
-          echo "Master reportedVersion: $MASTER_VERSION"
+          echo "PR tracker_script_version: $PR_VERSION"
+          echo "Master tracker_script_version: $MASTER_VERSION"
 
           # Calculate new version
           NEW_VERSION=$((PR_VERSION + 1))
 
           # Check version conditions
           if [ $PR_VERSION -lt $MASTER_VERSION ]; then
-            echo "::error::PR tracker reportedVersion ($PR_VERSION) is less than master ($MASTER_VERSION) and cannot be incremented."
+            echo "::error::PR tracker tracker_script_version ($PR_VERSION) is less than master ($MASTER_VERSION) and cannot be incremented."
             echo "::error::Rebase or merge master into your PR to fix this."
             exit 1
           elif [ $NEW_VERSION -eq $((MASTER_VERSION + 1)) ]; then
             echo "Incrementing version from $PR_VERSION to $NEW_VERSION"
-            jq ".reportedVersion = $NEW_VERSION" package.json > package.json.tmp
+            jq ".tracker_script_version = $NEW_VERSION" package.json > package.json.tmp
             mv package.json.tmp package.json
             echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
             echo "changed=true" >> $GITHUB_OUTPUT
           else
-            echo "Already incremented reportedVersion in PR, skipping."
+            echo "Already incremented tracker_script_version in PR, skipping."
             echo "version=$PR_VERSION" >> $GITHUB_OUTPUT
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
@@ -67,7 +67,7 @@ jobs:
         uses: EndBug/add-and-commit@v9
         if: steps.increment.outputs.changed == 'true'
         with:
-          message: 'chore: Bump tracker reportedVersion to ${{ steps.increment.outputs.version }}'
+          message: 'chore: Bump tracker_script_version to ${{ steps.increment.outputs.version }}'
           github_token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
           # Uncomment this once they're whitelisted by CLA agent
           # default_author: github_actions

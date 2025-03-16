@@ -135,7 +135,8 @@
         d: dataDomain,
         u: currentEngagementURL,
         p: currentEngagementProps,
-        e: engagementTime
+        e: engagementTime,
+        v: {{TRACKER_SCRIPT_VERSION}}
       }
 
       // Reset current engagement time metrics. They will restart upon when page becomes visible or the next SPA pageview
@@ -210,6 +211,7 @@
 
     var payload = {}
     payload.n = eventName
+    payload.v = {{TRACKER_SCRIPT_VERSION}}
 
     {{#if manual}}
     var customURL = options && options.u
