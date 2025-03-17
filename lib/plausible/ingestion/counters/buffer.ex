@@ -5,7 +5,7 @@ defmodule Plausible.Ingestion.Counters.Buffer do
   See `Plausible.Ingestion.Counters` for integration.
 
   Flushing is by default possible only once the 10s bucket is complete
-  (its window has moved). This is to avoid race conditions 
+  (its window has moved). This is to avoid race conditions
   when clearing up the buffer on dequeue - because there is no atomic "get and delete",
   and items are buffered concurrently, there is a gap between get and delete
   in which items written may disappear otherwise.
@@ -45,21 +45,28 @@ defmodule Plausible.Ingestion.Counters.Buffer do
     }
   end
 
-  @spec aggregate(t(), binary(), binary(), timestamp :: NaiveDateTime.t()) :: t()
+  @spec aggregate(
+          t(),
+          binary(),
+          binary(),
+          timestamp :: NaiveDateTime.t(),
+          tracker_script_version :: integer()
+        ) :: t()
   def aggregate(
         %__MODULE__{buffer_name: buffer_name, aggregate_bucket_fn: bucket_fn} = buffer,
         metric,
         domain,
-        timestamp
+        timestamp,
+        tracker_script_version
       ) do
     bucket =
       bucket_fn.(timestamp)
 
     :ets.update_counter(
       buffer_name,
-      {bucket, metric, domain},
+      {bucket, metric, domain, tracker_script_version},
       {2, 1},
-      {{bucket, metric, domain}, 0}
+      {{bucket, metric, domain, tracker_script_version}, 0}
     )
 
     buffer
@@ -72,9 +79,9 @@ defmodule Plausible.Ingestion.Counters.Buffer do
       ) do
     boundary = flush_boundary_fn.(now)
 
-    match = {{:"$1", :"$2", :"$3"}, :"$4"}
+    match = {{:"$1", :"$2", :"$3", :"$4"}, :"$5"}
     guard = {:"=<", :"$1", boundary}
-    select = {{:"$1", :"$2", :"$3", :"$4"}}
+    select = {{:"$1", :"$2", :"$3", :"$4", :"$5"}}
 
     match_specs_read = [{match, [guard], [select]}]
     match_specs_delete = [{match, [guard], [true]}]

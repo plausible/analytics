@@ -159,7 +159,8 @@ defmodule Plausible.Ingestion.RequestTest do
       props: %{
         "custom1" => "property1",
         "custom2" => "property2"
-      }
+      },
+      v: 137
     }
 
     conn = build_conn(:post, "/api/events", payload)
@@ -169,6 +170,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.hash_mode == 1
     assert request.props["custom1"] == "property1"
     assert request.props["custom2"] == "property2"
+    assert request.tracker_script_version == 137
   end
 
   @tag :ee_only
@@ -491,7 +493,8 @@ defmodule Plausible.Ingestion.RequestTest do
              "user_agent" => "Mozilla",
              "ip_classification" => nil,
              "scroll_depth" => nil,
-             "engagement_time" => nil
+             "engagement_time" => nil,
+             "tracker_script_version" => nil
            }
 
     assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])

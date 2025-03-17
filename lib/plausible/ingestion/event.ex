@@ -96,7 +96,8 @@ defmodule Plausible.Ingestion.Event do
   def emit_telemetry_buffered(event) do
     :telemetry.execute(telemetry_event_buffered(), %{}, %{
       domain: event.domain,
-      request_timestamp: event.request.timestamp
+      request_timestamp: event.request.timestamp,
+      tracker_script_version: event.request.tracker_script_version || 0
     })
   end
 
@@ -108,7 +109,8 @@ defmodule Plausible.Ingestion.Event do
       %{
         domain: event.domain,
         reason: reason,
-        request_timestamp: event.request.timestamp
+        request_timestamp: event.request.timestamp,
+        tracker_script_version: event.request.tracker_script_version || 0
       }
     )
   end

@@ -43,6 +43,7 @@ defmodule Plausible.Ingestion.Request do
     field :props, :map
     field :scroll_depth, :integer
     field :engagement_time, :integer
+    field :tracker_script_version, :integer
 
     on_ee do
       field :revenue_source, :map
@@ -84,6 +85,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_pathname()
         |> put_query_params()
         |> put_revenue_source(request_body)
+        |> put_tracker_script_version(request_body)
         |> map_domains(request_body)
         |> Changeset.validate_required([
           :event_name,
@@ -267,6 +269,16 @@ defmodule Plausible.Ingestion.Request do
       Changeset.put_change(changeset, :engagement_time, engagement_time)
     else
       changeset
+    end
+  end
+
+  defp put_tracker_script_version(changeset, %{} = request_body) do
+    case request_body["v"] do
+      version when is_integer(version) ->
+        Changeset.put_change(changeset, :tracker_script_version, version)
+
+      _ ->
+        changeset
     end
   end
 
