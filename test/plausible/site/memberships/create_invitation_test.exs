@@ -130,7 +130,21 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       )
     end
 
-    test "only allows owners to transfer ownership" do
+    test "admin initiate ownership transfer too" do
+      inviter = new_user()
+      site = new_site()
+      add_member(site.team, user: inviter, role: :admin)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
+
+      assert_email_delivered_with(
+        to: [nil: "vini@plausible.test"],
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
+      )
+    end
+
+    test "only allows owners and admins to transfer ownership" do
       inviter = new_user()
 
       site = new_site()

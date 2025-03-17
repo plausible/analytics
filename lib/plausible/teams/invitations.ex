@@ -494,11 +494,11 @@ defmodule Plausible.Teams.Invitations do
 
     if check_permissions? do
       case Teams.Memberships.site_role(site, inviter) do
-        {:ok, :owner} when invitation_role == :owner ->
+        {:ok, inviter_role} when inviter_role in [:owner, :admin] and invitation_role == :owner ->
           :ok
 
         {:ok, inviter_role}
-        when inviter_role in [:owner, :editor, :admin] and invitation_role != :owner ->
+        when inviter_role in [:owner, :admin, :editor] and invitation_role != :owner ->
           :ok
 
         _ ->
