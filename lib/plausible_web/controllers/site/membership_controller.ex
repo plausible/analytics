@@ -15,13 +15,15 @@ defmodule PlausibleWeb.Site.MembershipController do
   use Plausible
   alias Plausible.Site.Memberships
 
-  @only_owner_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
+  @only_owner_and_admin_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
 
   plug PlausibleWeb.RequireAccountPlug
-  plug PlausibleWeb.Plugs.AuthorizeSiteAccess, [:owner] when action in @only_owner_is_allowed_to
 
   plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
-       [:owner, :editor, :admin] when action not in @only_owner_is_allowed_to
+       [:owner, :admin] when action in @only_owner_and_admin_is_allowed_to
+
+  plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
+       [:owner, :admin, :editor] when action not in @only_owner_and_admin_is_allowed_to
 
   def invite_member_form(conn, _params) do
     site =
