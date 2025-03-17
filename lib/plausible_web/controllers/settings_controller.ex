@@ -132,7 +132,18 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def danger_zone(conn, _params) do
-    render(conn, :danger_zone, layout: {PlausibleWeb.LayoutView, :settings})
+    solely_owned_teams =
+      conn.assigns.current_user
+      |> Teams.Users.owned_teams()
+      |> Enum.filter(& &1.setup_complete)
+      |> Enum.reject(fn team ->
+        Teams.Memberships.owners_count(team) > 1
+      end)
+
+    render(conn, :danger_zone,
+      solely_owned_teams: solely_owned_teams,
+      layout: {PlausibleWeb.LayoutView, :settings}
+    )
   end
 
   def team_danger_zone(conn, _params) do
