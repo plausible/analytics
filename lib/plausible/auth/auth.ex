@@ -116,8 +116,12 @@ defmodule Plausible.Auth do
   end
 
   defp delete_user!(user) do
-    Plausible.Segments.user_removed(user)
-    Repo.delete!(user)
+    Repo.transaction(fn ->
+      Plausible.Segments.user_removed(user)
+      Repo.delete!(user)
+    end)
+
+    :ok
   end
 
   defp check_can_leave_teams(teams) do
