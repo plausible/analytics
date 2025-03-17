@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
     <.focus_box>
       <:title>Create a new team</:title>
       <:subtitle>
-        Add members and assign roles to manage different sites access efficiently
+        Add your team members and assign their roles
       </:subtitle>
 
       <.form

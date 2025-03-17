@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
               name="input-email"
               type="email"
               value={@input_email}
-              placeholder="Enter e-mail to send invitation to"
+              placeholder="Enter e-mail"
               phx-debounce={200}
               readonly={at_limit?(@layout, @team_members_limit) or @my_role not in [:admin, :owner]}
               mt?={false}
