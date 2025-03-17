@@ -151,20 +151,24 @@
     }
   }
 
+  function onVisibilityChange() {
+    if (document.visibilityState === 'visible' && document.hasFocus() && runningEngagementStart === null) {
+      runningEngagementStart = Date.now()
+    } else if (document.visibilityState === 'hidden' || !document.hasFocus()) {
+      // Tab went back to background or lost focus. Save the engaged time so far
+      currentEngagementTime = getEngagementTime()
+      runningEngagementStart = null
+
+      triggerEngagement()
+    }
+  }
+
   function registerEngagementListener() {
     if (!listeningOnEngagement) {
       // Only register visibilitychange listener only after initial page load and pageview
-      document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'hidden') {
-          // Tab went back to background. Save the engaged time so far
-          currentEngagementTime = getEngagementTime()
-          runningEngagementStart = null
-
-          triggerEngagement()
-        } else if (document.visibilityState === 'visible' && runningEngagementStart === null) {
-          runningEngagementStart = Date.now()
-        }
-      })
+      document.addEventListener('visibilitychange', onVisibilityChange)
+      window.addEventListener('blur', onVisibilityChange)
+      window.addEventListener('focus', onVisibilityChange)
       listeningOnEngagement = true
     }
   }

@@ -1,5 +1,5 @@
 const { expect } = require("@playwright/test")
-const { expectPlausibleInAction, engagementCooldown, hideAndShowCurrentTab } = require('./support/test-utils')
+const { expectPlausibleInAction, engagementCooldown, hideAndShowCurrentTab, focus, blur, blurAndFocusPage } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 const { tracker_script_version } = require('../package.json')
@@ -310,5 +310,37 @@ test.describe('engagement events', () => {
 
     expect(request4.e).toBeGreaterThan(3000)
     expect(request4.e).toBeLessThan(3500)
+  })
+
+  test('tracks engagement time whilst tab gains and loses focus', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement.html'),
+      expectedRequests: [{n: 'pageview'}],
+    })
+
+    const [request1] = await expectPlausibleInAction(page, {
+      action: () => blur(page),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+    })
+    expect(request1.e).toBeLessThan(500)
+
+    await focus(page)
+    await page.waitForTimeout(1000)
+
+    await expectPlausibleInAction(page, {
+      action: () => blurAndFocusPage(page, { delay: 3000 }),
+      refutedRequests: [{n: 'engagement'}],
+      mockRequestTimeout: 100
+    })
+
+    await page.waitForTimeout(2500)
+
+    const [request2] = await expectPlausibleInAction(page, {
+      action: () => blur(page),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+    })
+
+    expect(request2.e).toBeGreaterThan(3500)
+    expect(request2.e).toBeLessThan(4000)
   })
 })
