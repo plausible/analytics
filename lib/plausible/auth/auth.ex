@@ -87,7 +87,7 @@ defmodule Plausible.Auth do
         teams = Teams.Users.owned_teams(user)
 
         with :ok <- check_can_leave_teams(teams) do
-          personal_team = Enum.find(teams, & &1.setup_complete)
+          personal_team = Enum.find(teams, &(not Teams.setup?(&1)))
           delete_team_and_user(personal_team, user)
         end
 

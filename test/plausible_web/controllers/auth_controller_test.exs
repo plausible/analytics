@@ -749,11 +749,31 @@ defmodule PlausibleWeb.AuthControllerTest do
     } do
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
+      team = team_of(another_owner)
       add_member(another_site.team, user: user, role: :owner)
 
       delete(conn, "/me")
 
       refute Repo.reload(user)
+      assert Repo.reload(team)
+    end
+
+    test "deletes personal team in multiple teams case as well", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+      personal_team = team_of(user)
+      another_owner = new_user()
+      _another_site = new_site(owner: another_owner)
+      another_team = team_of(another_owner)
+      add_member(another_team, user: user, role: :owner)
+
+      delete(conn, "/me")
+
+      refute Repo.reload(user)
+      assert Repo.reload(another_team)
+      refute Repo.reload(personal_team)
     end
   end
 
