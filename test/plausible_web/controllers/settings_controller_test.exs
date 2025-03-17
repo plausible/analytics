@@ -1128,6 +1128,22 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html =~ "Your account cannot be deleted because you have an active subscription"
       refute html =~ "Delete my account"
     end
+
+    test "with a setup team", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      _team =
+        user
+        |> team_of()
+        |> Plausible.Teams.complete_setup()
+
+      conn = get(conn, Routes.settings_path(conn, :danger_zone))
+
+      assert html = html_response(conn, 200)
+
+      assert html =~ "You are the sole owner of one or more teams"
+      refute html =~ "Delete my account"
+    end
   end
 
   describe "Team Settings" do

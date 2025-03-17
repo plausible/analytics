@@ -10,7 +10,7 @@
     <%= cond do %>
       <% length(@solely_owned_teams) > 0 -> %>
         <.notice theme={:gray} title="Cannot delete account at this time">
-          Your are the sole owner of one or more teams. If you want to delete your account, please either add another owner or delete each of the following teams:
+          You are the sole owner of one or more teams. If you want to delete your account, please either add another owner or delete each of the following teams:
           <ul class="w-full py-4">
             <li :for={team <- @solely_owned_teams} class="pt-1">
               <.styled_link href={
