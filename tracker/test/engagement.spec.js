@@ -2,6 +2,7 @@ const { expect } = require("@playwright/test")
 const { expectPlausibleInAction, engagementCooldown, hideAndShowCurrentTab } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
+const { tracker_script_version } = require('../package.json')
 
 test.describe('engagement events', () => {
   test('sends an engagement event with time measurement when navigating to the next page', async ({ page }) => {
@@ -14,7 +15,7 @@ test.describe('engagement events', () => {
 
     const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}]
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`, v: tracker_script_version}]
     })
 
     expect(request.e).toBeGreaterThan(1000)
