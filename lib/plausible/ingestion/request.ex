@@ -43,7 +43,7 @@ defmodule Plausible.Ingestion.Request do
     field :props, :map
     field :scroll_depth, :integer
     field :engagement_time, :integer
-    field :tracker_script_version, :integer
+    field :tracker_script_version, :integer, default: 0
 
     on_ee do
       field :revenue_source, :map
