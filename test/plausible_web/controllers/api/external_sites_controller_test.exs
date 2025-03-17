@@ -634,6 +634,95 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
     end
 
+    describe "GET /api/v1/sites/guests" do
+      test "returns empty when there are no guests for site", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        conn = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{
+                 "guests" => [],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => nil,
+                   "limit" => 100
+                 }
+               }
+      end
+
+      test "returns guests when present", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        guest1 = add_guest(site, site: site, role: :editor)
+        guest2 = add_guest(site, site: site, role: :viewer)
+        guest3 = invite_guest(site, "third@example.com", inviter: user, role: :viewer)
+
+        conn = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{
+                 "guests" => [
+                   %{"email" => guest2.email, "accepted" => true, "role" => "viewer"},
+                   %{"email" => guest1.email, "accepted" => true, "role" => "editor"},
+                   %{
+                     "email" => guest3.team_invitation.email,
+                     "accepted" => false,
+                     "role" => "viewer"
+                   }
+                 ],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => nil,
+                   "limit" => 100
+                 }
+               }
+      end
+
+      test "returns guests paginated", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        %{email: guest1_email} = add_guest(site, site: site, role: :editor)
+        %{email: guest2_email} = add_guest(site, site: site, role: :viewer)
+        invite_guest(site, "third@example.com", inviter: user, role: :viewer)
+
+        conn1 = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}&limit=2")
+
+        assert %{
+                 "guests" => [
+                   %{"email" => ^guest2_email, "accepted" => true, "role" => "viewer"},
+                   %{"email" => ^guest1_email, "accepted" => true, "role" => "editor"}
+                 ],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => after_cursor,
+                   "limit" => 2
+                 }
+               } = json_response(conn1, 200)
+
+        conn2 =
+          get(
+            conn,
+            "/api/v1/sites/guests?site_id=#{site.domain}&limit=2&after=#{after_cursor}"
+          )
+
+        assert %{
+                 "guests" => [
+                   %{
+                     "email" => "third@example.com",
+                     "accepted" => false,
+                     "role" => "viewer"
+                   }
+                 ],
+                 "meta" => %{
+                   "before" => before_cursor,
+                   "after" => nil,
+                   "limit" => 2
+                 }
+               } =
+                 json_response(conn2, 200)
+
+        assert is_binary(before_cursor)
+      end
+    end
+
     describe "GET /api/v1/sites/:site_id" do
       setup :create_site
 

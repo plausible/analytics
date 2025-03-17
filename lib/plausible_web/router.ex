@@ -267,6 +267,7 @@ defmodule PlausibleWeb.Router do
 
         get "/", ExternalSitesController, :index
         get "/goals", ExternalSitesController, :goals_index
+        get "/guests", ExternalSitesController, :guests_index
         get "/:site_id", ExternalSitesController, :get_site
       end
 

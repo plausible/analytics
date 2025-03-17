@@ -28,6 +28,30 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     })
   end
 
+  def guests_index(conn, params) do
+    user = conn.assigns.current_user
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, site} <- get_site(user, site_id, [:owner, :admin, :editor, :viewer]) do
+      opts = [cursor_fields: [id: :desc, inserted_at: :desc], limit: 100, maximum_limit: 1000]
+      page = site |> Sites.list_guests_query() |> paginate(params, opts)
+
+      json(conn, %{
+        guests:
+          Enum.map(page.entries, fn entry ->
+            Map.take(entry, [:email, :role, :accepted])
+          end),
+        meta: pagination_meta(page.metadata)
+      })
+    else
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to list goals")
+
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+    end
+  end
+
   def goals_index(conn, params) do
     user = conn.assigns.current_user
 
