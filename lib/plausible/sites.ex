@@ -151,8 +151,8 @@ defmodule Plausible.Sites do
     %{memberships: memberships, invitations: site_transfers ++ invitations}
   end
 
-  @spec list_guests_query(Site.t()) :: Ecto.Query.t()
-  def list_guests_query(site) do
+  @spec list_guests_query(Site.t(), Keyword.t()) :: Ecto.Query.t()
+  def list_guests_query(site, opts \\ []) do
     guest_memberships =
       from(
         gm in Teams.GuestMembership,
@@ -168,6 +168,13 @@ defmodule Plausible.Sites do
         }
       )
 
+    guest_memberships =
+      if email = opts[:email] do
+        guest_memberships |> where([..., u], u.email == ^email)
+      else
+        guest_memberships
+      end
+
     guest_invitations =
       from(
         gi in Teams.GuestInvitation,
@@ -181,6 +188,13 @@ defmodule Plausible.Sites do
           accepted: false
         }
       )
+
+    guest_invitations =
+      if email = opts[:email] do
+        guest_invitations |> where([..., ti], ti.email == ^email)
+      else
+        guest_invitations
+      end
 
     guests = union_all(guest_memberships, ^guest_invitations)
 

@@ -261,6 +261,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         res = json_response(conn, 200)
+
         assert res["goal_type"] == "event"
         assert res["display_name"] == "Signup"
         assert res["event_name"] == "Signup"
@@ -720,6 +721,81 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  json_response(conn2, 200)
 
         assert is_binary(before_cursor)
+      end
+    end
+
+    describe "PUT /api/v1/sites/guests" do
+      test "creates new invitation", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "viewer",
+            "email" => "test@example.com"
+          })
+
+        assert json_response(conn, 200) == %{
+                 "accepted" => false,
+                 "email" => "test@example.com",
+                 "role" => "viewer"
+               }
+      end
+
+      test "is idempotent", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn1 =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "viewer",
+            "email" => "test@example.com"
+          })
+
+        assert json_response(conn1, 200)
+
+        conn2 =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "editor",
+            "email" => "test@example.com"
+          })
+
+        assert %{"role" => "viewer", "accepted" => false} = json_response(conn2, 200)
+
+        assert %{memberships: [_], invitations: [%{role: "viewer"}]} =
+                 Plausible.Sites.list_people(site)
+      end
+
+      test "is idempotent when membership already present", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        guest = new_user(email: "guest@example.com")
+
+        add_guest(site, role: :viewer, user: guest)
+
+        conn =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "editor",
+            "email" => "guest@example.com"
+          })
+
+        assert %{"role" => "viewer", "accepted" => true} = json_response(conn, 200)
+
+        assert %{
+                 memberships: [%{user: _}, %{user: %{email: "guest@example.com"}}],
+                 invitations: []
+               } =
+                 Plausible.Sites.list_people(site)
+      end
+
+      test "fails for unknown role", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "owner",
+            "email" => "test@example.com"
+          })
+
+        assert %{"error" => error} = json_response(conn, 400)
+        assert error =~ "Parameter `role` is required to create guest. Possible values: `viewer` or `editor`"
       end
     end
 

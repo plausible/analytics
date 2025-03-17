@@ -277,6 +277,7 @@ defmodule PlausibleWeb.Router do
         post "/", ExternalSitesController, :create_site
         put "/shared-links", ExternalSitesController, :find_or_create_shared_link
         put "/goals", ExternalSitesController, :find_or_create_goal
+        put "/guests", ExternalSitesController, :find_or_create_guest
         delete "/goals/:goal_id", ExternalSitesController, :delete_goal
         put "/:site_id", ExternalSitesController, :update_site
         delete "/:site_id", ExternalSitesController, :delete_site
