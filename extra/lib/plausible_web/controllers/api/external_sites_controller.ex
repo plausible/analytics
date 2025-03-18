@@ -219,7 +219,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           end
 
         %{accepted: true, email: email} ->
-          with user when not is_nil(user) <- Repo.get_by(Plausible.Auth.User, email: email) do
+          with %{} = user <- Repo.get_by(Plausible.Auth.User, email: email) do
             Teams.Memberships.remove(site, user)
           end
 
