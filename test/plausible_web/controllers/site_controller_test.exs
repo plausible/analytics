@@ -552,7 +552,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert owner_row =~ "Owner"
 
       assert editor_row =~ editor.email
-      assert editor_row_button == "Guest Admin"
+      assert editor_row_button == "Guest Editor"
       refute editor_row =~ "Owner"
 
       assert viewer_row =~ viewer.email
@@ -567,7 +567,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") == "admin@example.com Admin"
+      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") ==
+               "admin@example.com Editor"
 
       assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
                "viewer@example.com Viewer"
