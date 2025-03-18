@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
@@ -1736,6 +1737,86 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     end
   end
 
+  describe "GET /api/stats/:domain/referrer-drilldown (Google Search Terms)" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "gets keywords from Google", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day")
+
+      assert %{
+               "results" => [
+                 %{"name" => "simple web analytics", "count" => 6},
+                 %{"name" => "open-source analytics", "count" => 2}
+               ]
+             } = json_response(conn, 200)
+    end
+
+    test "returns 200 with empty keywords list when no data returned from last 30d", %{
+      conn: conn,
+      site: site
+    } do
+      filters = Jason.encode!([[:is, "event:page", ["/empty"]]])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=30d&filters=#{filters}")
+
+      assert json_response(conn, 200) == %{"results" => []}
+    end
+
+    test "returns 422 with error when no data returned and queried range is too recent", %{
+      conn: conn,
+      site: site
+    } do
+      filters = Jason.encode!([[:is, "event:page", ["/empty"]]])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+
+      assert json_response(conn, 422) == %{"error_code" => "period_too_recent"}
+    end
+
+    test "returns 422 with error when Google account not connected (admin)", %{
+      conn: conn,
+      site: site
+    } do
+      filters = Jason.encode!([[:is, "event:page", ["/not-configured"]]])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+
+      assert %{"error_code" => "not_configured", "is_admin" => true} = json_response(conn, 422)
+    end
+
+    test "returns 422 with error when Google account not connected (non-admin)", %{conn: conn} do
+      site = new_site(public: true)
+
+      filters = Jason.encode!([[:is, "event:page", ["/not-configured"]]])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+
+      %{
+        "error_code" => "not_configured",
+        "is_admin" => false
+      } = json_response(conn, 422)
+    end
+
+    test "returns 422 with error when unsupported filters used", %{conn: conn, site: site} do
+      filters = Jason.encode!([[:is, "event:page", ["/unsupported-filters"]]])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+
+      assert %{"error_code" => "unsupported_filters"} = json_response(conn, 422)
+    end
+
+    test "returns 502 when Google API responds with an unexpected error", %{
+      conn: conn,
+      site: site
+    } do
+      filters = Jason.encode!([[:is, "event:page", ["/unexpected-error"]]])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day&filters=#{filters}")
+
+      assert %{"error_code" => "not_configured"} = json_response(conn, 502)
+    end
+  end
+
   describe "GET /api/stats/:domain/referrer-drilldown" do
     setup [:create_user, :log_in, :create_site]
 
@@ -1856,28 +1937,6 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visit_duration" => 450
                }
              ]
-    end
-
-    test "gets keywords from Google", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          referrer_source: "DuckDuckGo",
-          referrer: "duckduckgo.com"
-        ),
-        build(:pageview,
-          referrer_source: "Google",
-          referrer: "google.com"
-        ),
-        build(:pageview,
-          referrer_source: "Google",
-          referrer: "google.com"
-        )
-      ])
-
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day")
-      {:ok, terms} = Plausible.Google.API.Mock.fetch_stats(nil, nil, nil, nil)
-
-      assert json_response(conn, 200) == %{"results" => terms}
     end
 
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do
