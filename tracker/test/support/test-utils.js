@@ -1,11 +1,5 @@
 const { expect, Page } = require("@playwright/test");
 
-// Since engagement events in the Plausible script are throttled to 300ms, we
-// often need to wait for an artificial timeout before navigating in tests.
-exports.engagementCooldown = async function(page) {
-  return page.waitForTimeout(400)
-}
-
 // Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
 // data. If the request is not made, resolves to null after 3 seconds.
 const mockRequest = function (page, path) {

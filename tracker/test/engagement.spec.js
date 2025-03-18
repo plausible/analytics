@@ -1,5 +1,5 @@
 const { expect } = require("@playwright/test")
-const { expectPlausibleInAction, engagementCooldown, hideAndShowCurrentTab, focus, blur, blurAndFocusPage } = require('./support/test-utils')
+const { expectPlausibleInAction, hideAndShowCurrentTab, focus, blur, blurAndFocusPage } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 const { tracker_script_version } = require('../package.json')
@@ -100,8 +100,6 @@ test.describe('engagement events', () => {
       expectedRequests: [{n: 'engagement', u: pageBaseURL, h: 1}]
     })
 
-    await engagementCooldown(page)
-
     // Navigate from ignored page to a tracked page ->
     // no engagement from the current page, pageview on the next page
     await expectPlausibleInAction(page, {
@@ -109,8 +107,6 @@ test.describe('engagement events', () => {
       expectedRequests: [{n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1}],
       refutedRequests: [{n: 'engagement'}]
     })
-
-    await engagementCooldown(page)
 
     // Navigate from a tracked page to another tracked page ->
     // engagement with the last page URL, pageview with the new URL
@@ -163,8 +159,6 @@ test.describe('engagement events', () => {
       ]
     })
 
-    await engagementCooldown(page)
-
     await expectPlausibleInAction(page, {
       action: () => page.click('#jane-post'),
       expectedRequests: [
@@ -172,8 +166,6 @@ test.describe('engagement events', () => {
         {n: 'pageview', p: {author: 'jane'}}
       ]
     })
-
-    await engagementCooldown(page)
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#home'),

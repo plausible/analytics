@@ -42,16 +42,10 @@
   // prevents registering multiple listeners in those cases.
   var listeningOnEngagement = false
 
-  // In SPA-s, multiple listeners that trigger the engagement event
-  // might fire nearly at the same time. E.g. when navigating back
-  // in browser history while using hash-based routing - a popstate
-  // and hashchange will be fired in a very quick succession. This
-  // flag prevents sending multiple engagement events in those cases.
-  var engagementCooldown = false
-
   // Timestamp indicating when this particular page last became visible.
   // Reset during pageviews, set to null when page is closed.
   var runningEngagementStart = null
+
   // When page is hidden, this 'engaged' time is saved to this variable
   var currentEngagementTime = 0
 
@@ -121,13 +115,10 @@
 
     The first engagement event is always sent due to containing at least the initial scroll depth.
 
-    We don't send engagements if:
-    - Less than 300ms have passed since the last engagement event
-    - The current pageview is ignored (onIgnoredEvent)
+    Also, we don't send engagements if the current pageview is ignored (onIgnoredEvent)
     */
-    if (!engagementCooldown && !currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime >= 3000)) {
+    if (!currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime >= 3000)) {
       currentEngagementMaxScrollDepth = maxScrollDepthPx
-      setTimeout(function () {engagementCooldown = false}, 300)
 
       var payload = {
         n: 'engagement',
