@@ -161,7 +161,7 @@ defmodule Plausible.Sites do
         as: :user,
         where: gm.site_id == ^site.id,
         select: %{
-          id: tm.id,
+          id: gm.id,
           inserted_at: gm.inserted_at,
           email: u.email,
           role: gm.role,
