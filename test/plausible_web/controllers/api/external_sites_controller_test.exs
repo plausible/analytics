@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
   use Plausible.Teams.Test
+  use Bamboo.Test
 
   on_ee do
     setup :create_user
@@ -739,6 +740,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "email" => "test@example.com",
                  "role" => "viewer"
                }
+
+        assert_email_delivered_with(to: [nil: "test@example.com"], subject: ~r/You've been invited to #{site.domain}/)
       end
 
       test "is idempotent", %{conn: conn, user: user} do
@@ -750,6 +753,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "email" => "test@example.com"
           })
 
+        assert_email_delivered_with(to: [nil: "test@example.com"])
         assert json_response(conn1, 200)
 
         conn2 =
@@ -762,6 +766,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert %{memberships: [_], invitations: [%{role: "viewer"}]} =
                  Plausible.Sites.list_people(site)
+
+        assert_no_emails_delivered()
       end
 
       test "is idempotent when membership already present", %{conn: conn, user: user} do
@@ -783,6 +789,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  invitations: []
                } =
                  Plausible.Sites.list_people(site)
+
+        assert_no_emails_delivered()
       end
 
       test "fails for unknown role", %{conn: conn, user: user} do
@@ -798,6 +806,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert error =~
                  "Parameter `role` is required to create guest. Possible values: `viewer` or `editor`"
+
+        assert_no_emails_delivered()
       end
     end
 
