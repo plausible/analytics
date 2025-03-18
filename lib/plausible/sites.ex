@@ -158,6 +158,7 @@ defmodule Plausible.Sites do
         gm in Teams.GuestMembership,
         inner_join: tm in assoc(gm, :team_membership),
         inner_join: u in assoc(tm, :user),
+        as: :user,
         where: gm.site_id == ^site.id,
         select: %{
           id: tm.id,
@@ -179,6 +180,7 @@ defmodule Plausible.Sites do
       from(
         gi in Teams.GuestInvitation,
         inner_join: ti in assoc(gi, :team_invitation),
+        as: :team_invitation,
         where: gi.site_id == ^site.id,
         select: %{
           id: gi.id,
@@ -191,7 +193,7 @@ defmodule Plausible.Sites do
 
     guest_invitations =
       if email = opts[:email] do
-        guest_invitations |> where([..., ti], ti.email == ^email)
+        guest_invitations |> where([team_invitation: ti], ti.email == ^email)
       else
         guest_invitations
       end
