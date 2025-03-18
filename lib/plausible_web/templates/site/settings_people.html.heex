@@ -7,7 +7,7 @@
     <:title>People</:title>
     <:subtitle>Invite your friends or coworkers</:subtitle>
 
-    <.filter_bar filtering_enabled?={false}>
+    <.filter_bar :if={@site_role in [:owner, :admin]} filtering_enabled?={false}>
       <.button_link
         mt?={false}
         href={Routes.membership_path(@conn, :invite_member_form, @site.domain)}
@@ -89,7 +89,7 @@
                         )
                       }
                       method="put"
-                      disabled={membership.role == "editor"}
+                      disabled={@site_role not in [:owner, :admin] or membership.role == "editor"}
                     >
                       <div>Guest Editor</div>
                       <div class="text-gray-500 dark:text-gray-400 text-xs/5">
@@ -107,7 +107,7 @@
                         )
                       }
                       method="put"
-                      disabled={membership.role == "viewer"}
+                      disabled={@site_role not in [:owner, :admin] or membership.role == "viewer"}
                     >
                       <div>Guest Viewer</div>
                       <div class="text-gray-500 dark:text-gray-400 text-xs/5">
@@ -126,6 +126,7 @@
                       }
                       class="text-red-600 hover:text-red-600"
                       method="delete"
+                      disabled={@site_role not in [:owner, :admin]}
                     >
                       Remove member
                     </.dropdown_item>
@@ -157,6 +158,7 @@
         <.td hide_on_mobile>{Phoenix.Naming.humanize(invitation.role)}</.td>
         <.td actions>
           <.delete_button
+            :if={@site_role in [:owner, :admin]}
             href={
               Routes.invitation_path(
                 @conn,
