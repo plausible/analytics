@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, site} <- get_site(user, site_id, [:owner, :admin, :editor, :viewer]) do
-      opts = [cursor_fields: [id: :desc, inserted_at: :desc], limit: 100, maximum_limit: 1000]
+      opts = [cursor_fields: [inserted_at: :desc, id: :desc], limit: 100, maximum_limit: 1000]
       page = site |> Sites.list_guests_query() |> paginate(params, opts)
 
       json(conn, %{

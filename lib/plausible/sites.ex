@@ -208,7 +208,7 @@ defmodule Plausible.Sites do
         role: g.role,
         accepted: g.accepted
       },
-      order_by: [desc: g.id]
+      order_by: [desc: g.inserted_at, desc: g.id]
     )
   end
 
