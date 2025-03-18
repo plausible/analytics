@@ -5,11 +5,22 @@ defmodule PlausibleWeb.SiteController do
 
   alias Plausible.Sites
 
+  @unrestricted_actions [:new, :create_site]
+  @destructive_actions [:settings_danger_zone, :reset_stats, :delete_site]
+
+  @special_cased_actions @unrestricted_actions ++ @destructive_actions
+
   plug(PlausibleWeb.RequireAccountPlug)
 
   plug(
     PlausibleWeb.Plugs.AuthorizeSiteAccess,
-    [:owner, :admin, :editor, :super_admin] when action not in [:new, :create_site]
+    [:owner, :admin, :editor, :super_admin]
+    when action not in @special_cased_actions
+  )
+
+  plug(
+    PlausibleWeb.Plugs.AuthorizeSiteAccess,
+    [:owner, :admin, :super_admin] when action in @destructive_actions
   )
 
   def new(conn, params) do
