@@ -741,7 +741,10 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "role" => "viewer"
                }
 
-        assert_email_delivered_with(to: [nil: "test@example.com"], subject: ~r/You've been invited to #{site.domain}/)
+        assert_email_delivered_with(
+          to: [nil: "test@example.com"],
+          subject: ~r/You've been invited to #{site.domain}/
+        )
       end
 
       test "is idempotent", %{conn: conn, user: user} do
