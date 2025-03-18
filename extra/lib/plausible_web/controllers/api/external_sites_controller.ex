@@ -334,21 +334,22 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     %{"error" => error_msg}
   end
 
-  defp expect_param_key(params, key, inclusion \\ []) do
-    case Map.get(params, key) do
-      nil ->
-        {:missing, key}
+  defp expect_param_key(params, key, inclusion \\ [])
 
-      res ->
-        if Enum.empty?(inclusion) do
-          {:ok, res}
-        else
-          if res in inclusion do
-            {:ok, res}
-          else
-            {:missing, key}
-          end
-        end
+  defp expect_param_key(params, key, []) do
+    case Map.fetch(params, key) do
+      :error -> {:missing, key}
+      res -> res
+    end
+  end
+
+  defp expect_param_key(params, key, inclusion) do
+    case expect_param_key(params, key, []) do
+      {:ok, value} = ok ->
+        if value in inclusion, do: ok, else: {:missing, key}
+
+      _ ->
+        {:missing, key}
     end
   end
 end
