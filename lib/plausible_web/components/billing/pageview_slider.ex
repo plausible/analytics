@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Components.Billing.PageviewSlider do
             phx-change="slide"
             id="slider"
             name="slider"
-            class="shadow mt-8 dark:bg-gray-600 dark:border-none"
+            class="shadow dark:bg-gray-600 dark:border-none"
             type="range"
             min="0"
             max={length(@available_volumes)}
@@ -101,13 +101,15 @@ defmodule PlausibleWeb.Components.Billing.PageviewSlider do
     ~H"""
     <style>
       input[type="range"] {
+        vertical-align: middle;
         -moz-appearance: none;
         -webkit-appearance: none;
         background: white;
         border-radius: 3px;
         height: 6px;
         width: 100%;
-        margin-bottom: 9px;
+        margin-top: 15px;
+        margin-bottom: 15px;
         outline: none;
       }
 
