@@ -300,6 +300,20 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert_guest_membership(site.team, site, collaborator, :viewer)
     end
 
+    test "team admin can update a site member's role by user id", %{conn: conn, user: user} do
+      site = new_site()
+      team = Plausible.Teams.complete_setup(site.team)
+      add_member(team, user: user, role: :admin)
+      collaborator = add_guest(site, role: :editor)
+      assert_guest_membership(team, site, collaborator, :editor)
+
+      conn = set_current_team(conn, team)
+
+      put(conn, "/sites/#{site.domain}/memberships/u/#{collaborator.id}/role/viewer")
+
+      assert_guest_membership(team, site, collaborator, :viewer)
+    end
+
     test "can downgrade yourself from admin to viewer, redirects to stats", %{
       conn: conn,
       user: user
