@@ -42,16 +42,10 @@
   // prevents registering multiple listeners in those cases.
   var listeningOnEngagement = false
 
-  // In SPA-s, multiple listeners that trigger the engagement event
-  // might fire nearly at the same time. E.g. when navigating back
-  // in browser history while using hash-based routing - a popstate
-  // and hashchange will be fired in a very quick succession. This
-  // flag prevents sending multiple engagement events in those cases.
-  var engagementCooldown = false
-
   // Timestamp indicating when this particular page last became visible.
   // Reset during pageviews, set to null when page is closed.
   var runningEngagementStart = null
+
   // When page is hidden, this 'engaged' time is saved to this variable
   var currentEngagementTime = 0
 
@@ -121,13 +115,10 @@
 
     The first engagement event is always sent due to containing at least the initial scroll depth.
 
-    We don't send engagements if:
-    - Less than 300ms have passed since the last engagement event
-    - The current pageview is ignored (onIgnoredEvent)
+    Also, we don't send engagements if the current pageview is ignored (onIgnoredEvent)
     */
-    if (!engagementCooldown && !currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime >= 3000)) {
+    if (!currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime >= 3000)) {
       currentEngagementMaxScrollDepth = maxScrollDepthPx
-      setTimeout(function () {engagementCooldown = false}, 300)
 
       var payload = {
         n: 'engagement',
@@ -135,7 +126,8 @@
         d: dataDomain,
         u: currentEngagementURL,
         p: currentEngagementProps,
-        e: engagementTime
+        e: engagementTime,
+        v: {{TRACKER_SCRIPT_VERSION}}
       }
 
       // Reset current engagement time metrics. They will restart upon when page becomes visible or the next SPA pageview
@@ -150,20 +142,24 @@
     }
   }
 
+  function onVisibilityChange() {
+    if (document.visibilityState === 'visible' && document.hasFocus() && runningEngagementStart === null) {
+      runningEngagementStart = Date.now()
+    } else if (document.visibilityState === 'hidden' || !document.hasFocus()) {
+      // Tab went back to background or lost focus. Save the engaged time so far
+      currentEngagementTime = getEngagementTime()
+      runningEngagementStart = null
+
+      triggerEngagement()
+    }
+  }
+
   function registerEngagementListener() {
     if (!listeningOnEngagement) {
       // Only register visibilitychange listener only after initial page load and pageview
-      document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'hidden') {
-          // Tab went back to background. Save the engaged time so far
-          currentEngagementTime = getEngagementTime()
-          runningEngagementStart = null
-
-          triggerEngagement()
-        } else if (document.visibilityState === 'visible' && runningEngagementStart === null) {
-          runningEngagementStart = Date.now()
-        }
-      })
+      document.addEventListener('visibilitychange', onVisibilityChange)
+      window.addEventListener('blur', onVisibilityChange)
+      window.addEventListener('focus', onVisibilityChange)
       listeningOnEngagement = true
     }
   }
@@ -210,6 +206,7 @@
 
     var payload = {}
     payload.n = eventName
+    payload.v = {{TRACKER_SCRIPT_VERSION}}
 
     {{#if manual}}
     var customURL = options && options.u
