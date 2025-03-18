@@ -170,7 +170,7 @@ defmodule Plausible.Sites do
 
     guest_memberships =
       if email = opts[:email] do
-        guest_memberships |> where([..., u], u.email == ^email)
+        guest_memberships |> where([user: u], u.email == ^email)
       else
         guest_memberships
       end
