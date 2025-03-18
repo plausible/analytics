@@ -4,7 +4,7 @@ defmodule Plausible.Ingestion.Counters.BufferTest do
 
   test "10s buckets are created from input datetime" do
     # time (...) :58 :59 :00 :01 :02 :03 :04 :05 :06 :07 :08 :09 :10 :11 :12 :13 (...)
-    # bucket      50  50  00  00  00  00  00  00  00  00  00  00  10  10  10  10 
+    # bucket      50  50  00  00  00  00  00  00  00  00  00  00  10  10  10  10
 
     test_input = [
       %{input: ~N[2023-02-14 01:00:00], bucket: ~U[2023-02-14 01:00:00Z]},
@@ -25,9 +25,9 @@ defmodule Plausible.Ingestion.Counters.BufferTest do
 
   test "aggregates metrics every 10 seconds", %{test: test} do
     # time (...) :58 :59 :00 :01 :02 :03 :04 :05 :06 :07 :08 :09 :10 :11 :12 :13 (...)
-    # bucket      50  50  00  00  00  00  00  00  00  00  00  00  10  10  10  10 
-    # metric           x       x       x                       x     
-    # value            1       1       2                       3                
+    # bucket      50  50  00  00  00  00  00  00  00  00  00  00  10  10  10  10
+    # metric           x       x       x                       x
+    # value            1       1       2                       3
 
     timestamps = [
       ~N[2023-02-14 01:00:59],
@@ -39,12 +39,12 @@ defmodule Plausible.Ingestion.Counters.BufferTest do
     buffer = Buffer.new(test)
 
     for ts <- timestamps do
-      Buffer.aggregate(buffer, "metric", "example.com", ts)
+      Buffer.aggregate(buffer, "metric", "example.com", ts, 0)
     end
 
     assert [
-             {bucket1, "metric", "example.com", 1},
-             {bucket2, "metric", "example.com", 3}
+             {bucket1, "metric", "example.com", 0, 1},
+             {bucket2, "metric", "example.com", 0, 3}
            ] = Buffer.flush(buffer)
 
     assert bucket2 - bucket1 == 10
@@ -52,9 +52,9 @@ defmodule Plausible.Ingestion.Counters.BufferTest do
 
   test "allows flushing only complete buckets", %{test: test} do
     # time (...) :58 :59 :00 :01 :02 :03 :04 :05 :06 :07 :08 :09 :10 :11 :12 :13 (...)
-    # bucket      50  50  00  00  00  00  00  00  00  00  00  00  10  10  10  10 
-    # metric           x       x       x                       x     
-    # aggregate        1   0   1   1   2   2   2   2   2   2   3   3   0        
+    # bucket      50  50  00  00  00  00  00  00  00  00  00  00  10  10  10  10
+    # metric           x       x       x                       x
+    # aggregate        1   0   1   1   2   2   2   2   2   2   3   3   0
     # flush attempt    x   x                   x                       x
     # flushed count    0   1                   0                       3
 
@@ -68,12 +68,19 @@ defmodule Plausible.Ingestion.Counters.BufferTest do
     buffer = Buffer.new(test)
 
     for ts <- timestamps do
-      Buffer.aggregate(buffer, "metric", "example.com", ts)
+      Buffer.aggregate(buffer, "metric", "example.com", ts, 0)
     end
 
     assert [] = Buffer.flush(buffer, ~U[2023-02-14 01:00:59.999999Z])
-    assert [{_, _, _, 1}] = Buffer.flush(buffer, ~U[2023-02-14 01:01:00.999999Z])
+    assert [{_, _, _, 0, 1}] = Buffer.flush(buffer, ~U[2023-02-14 01:01:00.999999Z])
     assert [] = Buffer.flush(buffer, ~U[2023-02-14 01:01:05.999999Z])
-    assert [{_, _, _, 3}] = Buffer.flush(buffer, ~U[2023-02-14 01:01:11.999999Z])
+    assert [{_, _, _, 0, 3}] = Buffer.flush(buffer, ~U[2023-02-14 01:01:11.999999Z])
+  end
+
+  test "allows setting tracker script version", %{test: test} do
+    buffer = Buffer.new(test)
+
+    Buffer.aggregate(buffer, "metric", "example.com", ~N[2023-02-14 01:00:59], 137)
+    assert [{_, "metric", "example.com", 137, 1}] = Buffer.flush(buffer)
   end
 end

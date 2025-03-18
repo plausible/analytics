@@ -70,12 +70,13 @@ defmodule Plausible.Ingestion.Counters do
 
       records ->
         records =
-          Enum.map(records, fn {bucket, metric, domain, value} ->
+          Enum.map(records, fn {bucket, metric, domain, tracker_script_version, value} ->
             %{
               event_timebucket: to_0_minute_datetime(bucket),
               metric: metric,
               site_id: Plausible.Site.Cache.get_site_id(domain),
               domain: domain,
+              tracker_script_version: tracker_script_version,
               value: value
             }
           end)
