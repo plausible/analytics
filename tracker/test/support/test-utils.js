@@ -161,12 +161,37 @@ exports.showCurrentTab = async function(page) {
   return toggleTabVisibility(page, false)
 }
 
+async function setFocus(page, focus) {
+  await page.evaluate((focus) => {
+    Object.defineProperty(document, 'hasFocus', { value: () => focus, writable: true })
+
+    const eventName = focus ? 'focus' : 'blur'
+    window.dispatchEvent(new Event(eventName))
+  }, focus)
+}
+
+exports.focus = async function(page) {
+  return setFocus(page, true)
+}
+
+exports.blur = async function(page) {
+  return setFocus(page, false)
+}
+
 exports.hideAndShowCurrentTab = async function(page, options = {}) {
   await exports.hideCurrentTab(page)
   if (options.delay > 0) {
     await delay(options.delay)
   }
   await exports.showCurrentTab(page)
+}
+
+exports.blurAndFocusPage = async function(page, options = {}) {
+  await exports.blur(page)
+  if (options.delay > 0) {
+    await delay(options.delay)
+  }
+  await exports.focus(page)
 }
 
 function includesSubset(body, subset) {
