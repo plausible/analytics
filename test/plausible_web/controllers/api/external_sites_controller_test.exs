@@ -795,7 +795,74 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         assert %{"error" => error} = json_response(conn, 400)
-        assert error =~ "Parameter `role` is required to create guest. Possible values: `viewer` or `editor`"
+
+        assert error =~
+                 "Parameter `role` is required to create guest. Possible values: `viewer` or `editor`"
+      end
+    end
+
+    describe "DELETE /api/v1/sites/guests" do
+      test "no-op when nothing to delete", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn = delete(conn, "/api/v1/sites/guests/test@example.com?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+      end
+
+      test "deletes invitation", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        invite_guest(site, "invite@example.com", inviter: user, role: :viewer)
+
+        assert %{invitations: [_]} = Plausible.Sites.list_people(site)
+
+        conn = delete(conn, "/api/v1/sites/guests/invite@example.com?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+
+        assert %{invitations: []} = Plausible.Sites.list_people(site)
+      end
+
+      test "deletes guest membership", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        guest = new_user(email: "guest@example.com")
+        add_guest(site, role: :viewer, user: guest)
+
+        assert %{memberships: [_, _]} = Plausible.Sites.list_people(site)
+
+        conn = delete(conn, "/api/v1/sites/guests/#{guest.email}?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+
+        assert %{memberships: [_]} = Plausible.Sites.list_people(site)
+      end
+
+      test "is idempotent", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        invite_guest(site, "third@example.com", inviter: user, role: :viewer)
+
+        assert %{invitations: [_]} = Plausible.Sites.list_people(site)
+
+        conn1 = delete(conn, "/api/v1/sites/guests/third@example.com?site_id=#{site.domain}")
+        assert json_response(conn1, 200) == %{"deleted" => true}
+
+        conn2 = delete(conn, "/api/v1/sites/guests/third@example.com?site_id=#{site.domain}")
+        assert json_response(conn2, 200) == %{"deleted" => true}
+      end
+
+      test "won't delete non-guest membership", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        assert %{memberships: [_]} = Plausible.Sites.list_people(site)
+
+        conn = delete(conn, "/api/v1/sites/guests/#{user.email}?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+
+        assert %{memberships: [_]} = Plausible.Sites.list_people(site)
       end
     end
 

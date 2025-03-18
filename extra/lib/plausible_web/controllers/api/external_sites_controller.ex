@@ -205,6 +205,38 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def delete_guest(conn, params) do
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, email} <- expect_param_key(params, "email"),
+         {:ok, site} <- get_site(conn.assigns.current_user, site_id, [:owner, :admin]) do
+      existing = Repo.one(Sites.list_guests_query(site, email: email))
+
+      case existing do
+        %{accepted: false, id: id} ->
+          with guest_invitation when not is_nil(guest_invitation) <-
+                 Repo.get(Teams.GuestInvitation, id) do
+            Teams.Invitations.remove_guest_invitation(guest_invitation)
+          end
+
+        %{accepted: true, email: email} ->
+          with user when not is_nil(user) <- Repo.get_by(Plausible.Auth.User, email: email) do
+            Teams.Memberships.remove(site, user)
+          end
+
+        _ ->
+          :ignore
+      end
+
+      json(conn, %{"deleted" => true})
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, param} ->
+        H.bad_request(conn, "Parameter `#{param}` is required to delete a guest")
+    end
+  end
+
   def find_or_create_shared_link(conn, params) do
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, link_name} <- expect_param_key(params, "name"),
