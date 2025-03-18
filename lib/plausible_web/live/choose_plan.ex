@@ -115,7 +115,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
     ~H"""
     <div class="pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
-      <div class="mx-auto max-w-7xl px-6 lg:px-20">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <Notice.pending_site_ownerships_notice
           class="pb-6"
           pending_ownership_count={length(@pending_ownership_site_ids)}
