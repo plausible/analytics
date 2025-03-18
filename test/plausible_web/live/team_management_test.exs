@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         |> html_response(200)
         |> text()
 
-      assert resp =~ "Add, remove or change your team memberships"
+      assert resp =~ "Add or remove team members and adjust their roles"
 
       refute element_exists?(resp, ~s|button[phx-click="save-team-layout"]|)
     end
