@@ -231,7 +231,7 @@ defmodule Plausible.Sites do
       where(
         query,
         [team_memberships: tm, guest_memberships: gm, site: s],
-        (tm.role != :guest and tm.team_id == ^team.id) or gm.site_id == s.id
+        tm.role != :guest and tm.team_id == ^team.id
       )
     else
       where(

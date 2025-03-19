@@ -580,8 +580,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert_matches %{
                          "sites" => [
-                           %{"domain" => ^other_team_site.domain},
-                           %{"domain" => ^other_site.domain}
+                           %{"domain" => ^other_team_site.domain}
                          ]
                        } = json_response(conn, 200)
       end
