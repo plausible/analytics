@@ -59,7 +59,14 @@ defmodule PlausibleWeb.Live.TeamSetup do
   def render(assigns) do
     ~H"""
     <.focus_box>
-      <:title>Create a new team</:title>
+      <:title>
+        <div class="flex justify-between">
+          <div>Create a new team</div>
+          <div class="ml-auto">
+            <.docs_info slug="user-roles" />
+          </div>
+        </div>
+      </:title>
       <:subtitle>
         Add your team members and assign their roles
       </:subtitle>

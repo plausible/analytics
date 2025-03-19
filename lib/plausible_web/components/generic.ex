@@ -132,11 +132,15 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr(:slug, :string, required: true)
+  attr(:class, :string, default: nil)
 
   def docs_info(assigns) do
     ~H"""
     <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
-      <Heroicons.information_circle class="text-gray-500 dark:text-indigo-500 w-6 h-6 stroke-2 absolute top-4 right-4 hover:text-indigo-500 dark:hover:text-indigo-300" />
+      <Heroicons.information_circle class={[
+        "text-gray-500 dark:text-indigo-500 w-6 h-6 stroke-2 hover:text-indigo-500 dark:hover:text-indigo-300",
+        @class
+      ]} />
     </a>
     """
   end
@@ -418,7 +422,7 @@ defmodule PlausibleWeb.Components.Generic do
         <.title>
           {render_slot(@title)}
 
-          <.docs_info :if={@docs} slug={@docs} />
+          <.docs_info :if={@docs} slug={@docs} class="absolute top-4 right-4" />
         </.title>
         <div class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           {render_slot(@subtitle)}
