@@ -11,8 +11,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
   alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(_params, _session, socket) do
+    current_user = socket.assigns.current_user
     current_team = socket.assigns.current_team
-    enabled? = Teams.enabled?(current_team)
+    enabled? = Teams.enabled?(current_user)
 
     socket =
       case {enabled?, current_team} do

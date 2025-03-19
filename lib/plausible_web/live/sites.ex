@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
         <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
-          <span :if={Teams.enabled?(@current_team)}>
+          <span :if={Teams.enabled?(@current_user)}>
             {Teams.name(@current_team)}
             <.unstyled_link
               :if={Teams.setup?(@current_team)}
@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.Sites do
               <Heroicons.cog_6_tooth class="hidden group-hover:inline size-4 dark:text-gray-100 text-gray-900" />
             </.unstyled_link>
           </span>
-          <span :if={not Teams.enabled?(@current_team)}>My Sites</span>
+          <span :if={not Teams.enabled?(@current_user)}>My Sites</span>
         </h2>
       </div>
 

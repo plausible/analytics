@@ -25,13 +25,13 @@ defmodule Plausible.Teams do
   def setup?(nil), do: false
   def setup?(%{setup_complete: setup_complete}), do: setup_complete
 
-  @spec enabled?(nil | Teams.Team.t()) :: boolean()
+  @spec enabled?(nil | Auth.User.t()) :: boolean()
   def enabled?(nil) do
     FunWithFlags.enabled?(:teams)
   end
 
-  def enabled?(team) do
-    FunWithFlags.enabled?(:teams, for: team)
+  def enabled?(user) do
+    FunWithFlags.enabled?(:teams, for: user)
   end
 
   @spec get(pos_integer() | binary() | nil) :: Teams.Team.t() | nil
