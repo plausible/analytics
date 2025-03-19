@@ -257,7 +257,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="scroll-form" class="py-2" x-data={@js} {@rest}>
       <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
-        Scroll Depth goals allow you to see how many people scroll beyond you desired scroll depth percentage threshold. Learn more in
+        Scroll Depth goals allow you to see how many people scroll beyond your desired scroll depth percentage threshold. Learn more in
         <.styled_link href="https://plausible.io/docs/scroll-depth" new_tab={true}>
           our docs
         </.styled_link>.
