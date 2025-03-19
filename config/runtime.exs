@@ -714,8 +714,8 @@ cloud_cron = [
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
   # First sunday of the month, 4:00 UTC
   {"0 4 1-7 * SUN", Plausible.Workers.ClickhouseCleanSites},
-  # Daily at 10
-  {"0 10 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff}
+  # Daily at 4:00 UTC
+  {"0 4 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff}
 ]
 
 crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
