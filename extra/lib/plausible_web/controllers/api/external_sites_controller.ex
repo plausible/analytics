@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       teams:
         Enum.map(page.entries, fn team ->
           api_available? =
-            Plausible.Billing.Feature.StatsAPI in Teams.Billing.allowed_features_for(team)
+            Plausible.Billing.Feature.StatsAPI.check_availability(team) == :ok
 
           %{
             id: team.identifier,
