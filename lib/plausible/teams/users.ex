@@ -21,16 +21,36 @@ defmodule Plausible.Teams.Users do
   end
 
   def teams(user) do
-    from(
-      tm in Teams.Membership,
-      inner_join: t in assoc(tm, :team),
-      where: tm.user_id == ^user.id,
-      where: tm.role != :guest,
-      select: t,
-      order_by: [t.name, t.id]
-    )
+    user
+    |> teams_query(order_by: :name)
     |> Repo.all()
     |> Repo.preload(:owners)
+  end
+
+  def teams_query(user, opts \\ []) do
+    order_by = Keyword.get(opts, :order_by, :name)
+
+    query =
+      from(
+        tm in Teams.Membership,
+        as: :team_membership,
+        inner_join: t in assoc(tm, :team),
+        as: :team,
+        where: tm.user_id == ^user.id,
+        where: tm.role != :guest,
+        select: t
+      )
+
+    case order_by do
+      :name ->
+        order_by(query, [team: t], [t.name, t.id])
+
+      :id_desc ->
+        order_by(query, [team: t], desc: t.id)
+
+      _ ->
+        query
+    end
   end
 
   def team_member?(user, opts \\ []) do
