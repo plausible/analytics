@@ -14,6 +14,15 @@ defmodule Plausible.SitesTest do
                Sites.create(user, params)
     end
 
+    test "creating a site sets `legacy_time_on_page_cutoff`" do
+      user = new_user()
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: %{legacy_time_on_page_cutoff: ~D[1970-01-01]}}} =
+               Sites.create(user, params)
+    end
+
     test "does not start a trial for pre-teams guest users without trial expiry date" do
       user = new_user() |> subscribe_to_growth_plan()
       new_site(owner: user)
