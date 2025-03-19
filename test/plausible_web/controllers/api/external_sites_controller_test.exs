@@ -28,6 +28,45 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                }
       end
 
+      test "can't create site in a team where not permitted to", %{conn: conn, user: user} do
+        owner = new_user() |> subscribe_to_growth_plan()
+        team = owner |> team_of() |> Plausible.Teams.complete_setup()
+        add_member(team, user: user, role: :viewer)
+
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "team_id" => team.identifier,
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn"
+          })
+
+        assert json_response(conn, 403) == %{
+                 "error" => "You can't add sites to the selected team."
+               }
+      end
+
+      test "can create a site under a specific team if permitted", %{conn: conn, user: user} do
+        _site = new_site(owner: user)
+
+        owner = new_user() |> subscribe_to_growth_plan()
+        team = owner |> team_of() |> Plausible.Teams.complete_setup()
+        add_member(team, user: user, role: :owner)
+
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "team_id" => team.identifier,
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn"
+          })
+
+        assert json_response(conn, 200) == %{
+                 "domain" => "some-site.domain",
+                 "timezone" => "Europe/Tallinn"
+               }
+
+        assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == team.id
+      end
+
       test "timezone is validated", %{conn: conn} do
         conn =
           post(conn, "/api/v1/sites", %{
