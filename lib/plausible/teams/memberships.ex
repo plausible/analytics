@@ -158,6 +158,8 @@ defmodule Plausible.Teams.Memberships do
   defp can_grant_role_to_other?(:owner, :editor), do: true
   defp can_grant_role_to_other?(:owner, :admin), do: true
   defp can_grant_role_to_other?(:owner, :viewer), do: true
+  defp can_grant_role_to_other?(:admin, :editor), do: true
+  defp can_grant_role_to_other?(:admin, :viewer), do: true
   defp can_grant_role_to_other?(:editor, :editor), do: true
   defp can_grant_role_to_other?(:editor, :viewer), do: true
   defp can_grant_role_to_other?(_, _), do: false
