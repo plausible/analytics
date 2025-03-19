@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         <div class="flex justify-between">
           <div>Create a new team</div>
           <div class="ml-auto">
-            <.docs_info slug="user-roles" />
+            <.docs_info slug="users-roles" />
           </div>
         </div>
       </:title>
