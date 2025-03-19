@@ -47,7 +47,7 @@ defmodule Plausible.Workers.SetLegacyTimeOnPageCutoffTest do
     assert Repo.reload!(site).legacy_time_on_page_cutoff == Date.utc_today()
   end
 
-  test "does not update large site site with incomplete engagement" do
+  test "does not update large site with incomplete engagement" do
     site = create_site_with_cutoff(nil)
 
     1..2500
