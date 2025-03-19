@@ -7,7 +7,7 @@ defmodule Plausible.SentryFilter do
   def before_send(event)
 
   def before_send(%{original_exception: %Bamboo.PostmarkAdapter.Error{} = e} = event) do
-    if not Bamboo.PostmarkAdapter.Error.is_hard_bounce(e), do: event
+    if Bamboo.PostmarkAdapter.Error.is_hard_bounce(e), do: false, else: event
   end
 
   def before_send(%{original_exception: %Phoenix.NotAcceptableError{}}), do: false
