@@ -88,7 +88,7 @@ defmodule Plausible.Site do
 
   def changeset(site, attrs \\ %{}) do
     site
-    |> cast(attrs, [:domain, :timezone])
+    |> cast(attrs, [:domain, :timezone, :legacy_time_on_page_cutoff])
     |> clean_domain()
     |> validate_required([:domain, :timezone])
     |> validate_timezone()
