@@ -28,6 +28,30 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     })
   end
 
+  def guests_index(conn, params) do
+    user = conn.assigns.current_user
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, site} <- get_site(user, site_id, [:owner, :admin, :editor, :viewer]) do
+      opts = [cursor_fields: [inserted_at: :desc, id: :desc], limit: 100, maximum_limit: 1000]
+      page = site |> Sites.list_guests_query() |> paginate(params, opts)
+
+      json(conn, %{
+        guests:
+          Enum.map(page.entries, fn entry ->
+            Map.take(entry, [:email, :role, :status])
+          end),
+        meta: pagination_meta(page.metadata)
+      })
+    else
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to list goals")
+
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+    end
+  end
+
   def goals_index(conn, params) do
     user = conn.assigns.current_user
 
@@ -138,6 +162,81 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def find_or_create_guest(conn, params) do
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, email} <- expect_param_key(params, "email"),
+         {:ok, role} <- expect_param_key(params, "role", ["viewer", "editor"]),
+         {:ok, site} <- get_site(conn.assigns.current_user, site_id, [:owner, :admin]) do
+      existing = Repo.one(Sites.list_guests_query(site, email: email))
+
+      if existing do
+        json(conn, %{
+          role: existing.role,
+          email: existing.email,
+          status: existing.status
+        })
+      else
+        case Plausible.Site.Memberships.CreateInvitation.create_invitation(
+               site,
+               conn.assigns.current_user,
+               email,
+               role
+             ) do
+          {:ok, invitation} ->
+            json(conn, %{
+              role: invitation.role,
+              email: invitation.team_invitation.email,
+              status: "invited"
+            })
+        end
+      end
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, "role"} ->
+        H.bad_request(
+          conn,
+          "Parameter `role` is required to create guest. Possible values: `viewer` or `editor`"
+        )
+
+      {:missing, param} ->
+        H.bad_request(conn, "Parameter `#{param}` is required to create guest")
+    end
+  end
+
+  def delete_guest(conn, params) do
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, email} <- expect_param_key(params, "email"),
+         {:ok, site} <- get_site(conn.assigns.current_user, site_id, [:owner, :admin]) do
+      existing = Repo.one(Sites.list_guests_query(site, email: email))
+
+      case existing do
+        %{status: "invited", id: id} ->
+          with guest_invitation when not is_nil(guest_invitation) <-
+                 Repo.get(Teams.GuestInvitation, id) do
+            Teams.Invitations.remove_guest_invitation(guest_invitation)
+          end
+
+        %{status: "accepted", email: email} ->
+          with %{} = user <- Repo.get_by(Plausible.Auth.User, email: email) do
+            Teams.Memberships.remove(site, user)
+          end
+
+        _ ->
+          :ignore
+      end
+
+      json(conn, %{"deleted" => true})
+    else
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+
+      {:missing, param} ->
+        H.bad_request(conn, "Parameter `#{param}` is required to delete a guest")
+    end
+  end
+
   def find_or_create_shared_link(conn, params) do
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, link_name} <- expect_param_key(params, "name"),
@@ -235,10 +334,22 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     %{"error" => error_msg}
   end
 
-  defp expect_param_key(params, key) do
+  defp expect_param_key(params, key, inclusion \\ [])
+
+  defp expect_param_key(params, key, []) do
     case Map.fetch(params, key) do
       :error -> {:missing, key}
       res -> res
+    end
+  end
+
+  defp expect_param_key(params, key, inclusion) do
+    case expect_param_key(params, key, []) do
+      {:ok, value} = ok ->
+        if value in inclusion, do: ok, else: {:missing, key}
+
+      _ ->
+        {:missing, key}
     end
   end
 end

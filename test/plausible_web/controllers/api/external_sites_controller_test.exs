@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
   use Plausible.Teams.Test
+  use Bamboo.Test
 
   on_ee do
     setup :create_user
@@ -261,6 +262,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         res = json_response(conn, 200)
+
         assert res["goal_type"] == "event"
         assert res["display_name"] == "Signup"
         assert res["event_name"] == "Signup"
@@ -631,6 +633,249 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           |> get("/api/v1/sites")
 
         assert %{"sites" => [%{"domain" => ^site_domain}]} = json_response(conn, 200)
+      end
+    end
+
+    describe "GET /api/v1/sites/guests" do
+      test "returns empty when there are no guests for site", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        conn = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{
+                 "guests" => [],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => nil,
+                   "limit" => 100
+                 }
+               }
+      end
+
+      test "returns guests when present", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        guest1 = add_guest(site, site: site, role: :editor)
+        guest2 = add_guest(site, site: site, role: :viewer)
+        guest3 = invite_guest(site, "third@example.com", inviter: user, role: :viewer)
+
+        conn = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{
+                 "guests" => [
+                   %{"email" => guest2.email, "status" => "accepted", "role" => "viewer"},
+                   %{"email" => guest1.email, "status" => "accepted", "role" => "editor"},
+                   %{
+                     "email" => guest3.team_invitation.email,
+                     "status" => "invited",
+                     "role" => "viewer"
+                   }
+                 ],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => nil,
+                   "limit" => 100
+                 }
+               }
+      end
+
+      test "returns guests paginated", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        %{email: guest1_email} = add_guest(site, site: site, role: :editor)
+        %{email: guest2_email} = add_guest(site, site: site, role: :viewer)
+        invite_guest(site, "third@example.com", inviter: user, role: :viewer)
+
+        conn1 = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}&limit=2")
+
+        assert %{
+                 "guests" => [
+                   %{"email" => ^guest2_email, "status" => "accepted", "role" => "viewer"},
+                   %{"email" => ^guest1_email, "status" => "accepted", "role" => "editor"}
+                 ],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => after_cursor,
+                   "limit" => 2
+                 }
+               } = json_response(conn1, 200)
+
+        conn2 =
+          get(
+            conn,
+            "/api/v1/sites/guests?site_id=#{site.domain}&limit=2&after=#{after_cursor}"
+          )
+
+        assert %{
+                 "guests" => [
+                   %{
+                     "email" => "third@example.com",
+                     "status" => "invited",
+                     "role" => "viewer"
+                   }
+                 ],
+                 "meta" => %{
+                   "before" => before_cursor,
+                   "after" => nil,
+                   "limit" => 2
+                 }
+               } =
+                 json_response(conn2, 200)
+
+        assert is_binary(before_cursor)
+      end
+    end
+
+    describe "PUT /api/v1/sites/guests" do
+      test "creates new invitation", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "viewer",
+            "email" => "test@example.com"
+          })
+
+        assert json_response(conn, 200) == %{
+                 "status" => "invited",
+                 "email" => "test@example.com",
+                 "role" => "viewer"
+               }
+
+        assert_email_delivered_with(
+          to: [nil: "test@example.com"],
+          subject: ~r/You've been invited to #{site.domain}/
+        )
+      end
+
+      test "is idempotent", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn1 =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "viewer",
+            "email" => "test@example.com"
+          })
+
+        assert_email_delivered_with(to: [nil: "test@example.com"])
+        assert json_response(conn1, 200)
+
+        conn2 =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "editor",
+            "email" => "test@example.com"
+          })
+
+        assert %{"role" => "viewer", "status" => "invited"} = json_response(conn2, 200)
+
+        assert %{memberships: [_], invitations: [%{role: "viewer"}]} =
+                 Plausible.Sites.list_people(site)
+
+        assert_no_emails_delivered()
+      end
+
+      test "is idempotent when membership already present", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+        guest = new_user(email: "guest@example.com")
+
+        add_guest(site, role: :viewer, user: guest)
+
+        conn =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "editor",
+            "email" => "guest@example.com"
+          })
+
+        assert %{"role" => "viewer", "status" => "accepted"} = json_response(conn, 200)
+
+        assert %{
+                 memberships: [%{user: _}, %{user: %{email: "guest@example.com"}}],
+                 invitations: []
+               } =
+                 Plausible.Sites.list_people(site)
+
+        assert_no_emails_delivered()
+      end
+
+      test "fails for unknown role", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "owner",
+            "email" => "test@example.com"
+          })
+
+        assert %{"error" => error} = json_response(conn, 400)
+
+        assert error =~
+                 "Parameter `role` is required to create guest. Possible values: `viewer` or `editor`"
+
+        assert_no_emails_delivered()
+      end
+    end
+
+    describe "DELETE /api/v1/sites/guests" do
+      test "no-op when nothing to delete", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        conn = delete(conn, "/api/v1/sites/guests/test@example.com?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+      end
+
+      test "deletes invitation", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        invite_guest(site, "invite@example.com", inviter: user, role: :viewer)
+
+        assert %{invitations: [_]} = Plausible.Sites.list_people(site)
+
+        conn = delete(conn, "/api/v1/sites/guests/invite@example.com?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+
+        assert %{invitations: []} = Plausible.Sites.list_people(site)
+      end
+
+      test "deletes guest membership", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        guest = new_user(email: "guest@example.com")
+        add_guest(site, role: :viewer, user: guest)
+
+        assert %{memberships: [_, _]} = Plausible.Sites.list_people(site)
+
+        conn = delete(conn, "/api/v1/sites/guests/#{guest.email}?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+
+        assert %{memberships: [_]} = Plausible.Sites.list_people(site)
+      end
+
+      test "is idempotent", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        invite_guest(site, "third@example.com", inviter: user, role: :viewer)
+
+        assert %{invitations: [_]} = Plausible.Sites.list_people(site)
+
+        conn1 = delete(conn, "/api/v1/sites/guests/third@example.com?site_id=#{site.domain}")
+        assert json_response(conn1, 200) == %{"deleted" => true}
+
+        conn2 = delete(conn, "/api/v1/sites/guests/third@example.com?site_id=#{site.domain}")
+        assert json_response(conn2, 200) == %{"deleted" => true}
+      end
+
+      test "won't delete non-guest membership", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        assert %{memberships: [_]} = Plausible.Sites.list_people(site)
+
+        conn = delete(conn, "/api/v1/sites/guests/#{user.email}?site_id=#{site.domain}")
+
+        assert json_response(conn, 200) == %{"deleted" => true}
+
+        assert %{memberships: [_]} = Plausible.Sites.list_people(site)
       end
     end
 

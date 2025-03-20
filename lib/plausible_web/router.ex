@@ -267,6 +267,7 @@ defmodule PlausibleWeb.Router do
 
         get "/", ExternalSitesController, :index
         get "/goals", ExternalSitesController, :goals_index
+        get "/guests", ExternalSitesController, :guests_index
         get "/:site_id", ExternalSitesController, :get_site
       end
 
@@ -275,8 +276,13 @@ defmodule PlausibleWeb.Router do
 
         post "/", ExternalSitesController, :create_site
         put "/shared-links", ExternalSitesController, :find_or_create_shared_link
+
         put "/goals", ExternalSitesController, :find_or_create_goal
         delete "/goals/:goal_id", ExternalSitesController, :delete_goal
+
+        put "/guests", ExternalSitesController, :find_or_create_guest
+        delete "/guests/:email", ExternalSitesController, :delete_guest
+
         put "/:site_id", ExternalSitesController, :update_site
         delete "/:site_id", ExternalSitesController, :delete_site
       end
