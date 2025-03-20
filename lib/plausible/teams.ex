@@ -7,6 +7,7 @@ defmodule Plausible.Teams do
 
   alias __MODULE__
   alias Plausible.Auth
+  alias Plausible.Billing
   alias Plausible.Repo
   use Plausible
 
@@ -24,13 +25,13 @@ defmodule Plausible.Teams do
   def setup?(nil), do: false
   def setup?(%{setup_complete: setup_complete}), do: setup_complete
 
-  @spec enabled?(nil | Teams.Team.t()) :: boolean()
+  @spec enabled?(nil | Auth.User.t()) :: boolean()
   def enabled?(nil) do
     FunWithFlags.enabled?(:teams)
   end
 
-  def enabled?(team) do
-    FunWithFlags.enabled?(:teams, for: team)
+  def enabled?(user) do
+    FunWithFlags.enabled?(:teams, for: user)
   end
 
   @spec get(pos_integer() | binary() | nil) :: Teams.Team.t() | nil
@@ -182,6 +183,29 @@ defmodule Plausible.Teams do
       team
     else
       team
+    end
+  end
+
+  @spec delete(Teams.Team.t()) :: {:ok, :deleted} | {:error, :active_subscription}
+  def delete(team) do
+    team = Teams.with_subscription(team)
+
+    if Billing.Subscription.Status.active?(team.subscription) do
+      {:error, :active_subscription}
+    else
+      Repo.transaction(fn ->
+        for site <- Teams.owned_sites(team) do
+          Plausible.Site.Removal.run(site)
+        end
+
+        Repo.delete_all(from s in Billing.Subscription, where: s.team_id == ^team.id)
+
+        Repo.delete_all(from ep in Billing.EnterprisePlan, where: ep.team_id == ^team.id)
+
+        Repo.delete!(team)
+
+        :deleted
+      end)
     end
   end
 

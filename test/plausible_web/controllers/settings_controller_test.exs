@@ -1107,6 +1107,45 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  describe "GET /settings/danger-zone" do
+    setup [:create_user, :log_in, :create_team]
+
+    test "without active subscription", %{conn: conn} do
+      conn = get(conn, Routes.settings_path(conn, :danger_zone))
+
+      assert html = html_response(conn, 200)
+
+      refute html =~ "Your account cannot be deleted because you have an active subscription"
+      assert html =~ "Delete my account"
+    end
+
+    test "with active subscription", %{conn: conn, user: user} do
+      subscribe_to_growth_plan(user)
+      conn = get(conn, Routes.settings_path(conn, :danger_zone))
+
+      assert html = html_response(conn, 200)
+
+      assert html =~ "Your account cannot be deleted because you have an active subscription"
+      refute html =~ "Delete my account"
+    end
+
+    test "with a setup team", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      _team =
+        user
+        |> team_of()
+        |> Plausible.Teams.complete_setup()
+
+      conn = get(conn, Routes.settings_path(conn, :danger_zone))
+
+      assert html = html_response(conn, 200)
+
+      assert html =~ "You are the sole owner of one or more teams"
+      refute html =~ "Delete my account"
+    end
+  end
+
   describe "Team Settings" do
     setup [:create_user, :log_in]
 
@@ -1171,6 +1210,101 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert text(html_response(conn, 200)) =~ "can't be blank"
+    end
+
+    test "GET /settings/team/delete - without active subscription", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      team =
+        team
+        |> Plausible.Teams.complete_setup()
+        |> Ecto.Changeset.change(name: "Foo Crew")
+        |> Repo.update!()
+
+      conn = set_current_team(conn, team)
+      conn = get(conn, Routes.settings_path(conn, :team_danger_zone))
+
+      assert html = html_response(conn, 200)
+
+      refute html =~ "The team cannot be deleted because it has an active subscription"
+      assert html =~ "Delete \"Foo Crew\""
+    end
+
+    test "GET /settings/team/delete - with active subscription", %{conn: conn, user: user} do
+      user = subscribe_to_growth_plan(user)
+      team = team_of(user)
+
+      team =
+        team
+        |> Plausible.Teams.complete_setup()
+        |> Ecto.Changeset.change(name: "Foo Crew")
+        |> Repo.update!()
+
+      conn = set_current_team(conn, team)
+      conn = get(conn, Routes.settings_path(conn, :team_danger_zone))
+
+      assert html = html_response(conn, 200)
+
+      assert html =~ "The team cannot be deleted because it has an active subscription"
+      refute html =~ "Delete \"Foo Crew\""
+    end
+
+    test "GET /settings/team/delete - permission denied", %{conn: conn, user: user} do
+      another_user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(another_user)
+      add_member(team, user: user, role: :admin)
+      conn = set_current_team(conn, team)
+      conn = get(conn, Routes.settings_path(conn, :team_danger_zone))
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+    end
+
+    test "DELETE /settings/team/delete - deletes a team", %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      team =
+        team
+        |> Plausible.Teams.complete_setup()
+        |> Ecto.Changeset.change(name: "Foo Crew")
+        |> Repo.update!()
+
+      conn = set_current_team(conn, team)
+      conn = delete(conn, Routes.settings_path(conn, :delete_team))
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: "none")
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Team \"Foo Crew\" deleted"
+    end
+
+    test "DELETE /settings/team/delete - fails when there's an active subscription", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_growth_plan(user)
+      team = team_of(user)
+
+      team =
+        team
+        |> Plausible.Teams.complete_setup()
+        |> Ecto.Changeset.change(name: "Foo Crew")
+        |> Repo.update!()
+
+      conn = set_current_team(conn, team)
+      conn = delete(conn, Routes.settings_path(conn, :delete_team))
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :team_danger_zone)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Team has an active subscription"
+    end
+
+    test "DELETE /settings/team/delete - permission denied", %{conn: conn, user: user} do
+      another_user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(another_user)
+      add_member(team, user: user, role: :admin)
+      conn = set_current_team(conn, team)
+      conn = delete(conn, Routes.settings_path(conn, :delete_team))
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
     end
   end
 

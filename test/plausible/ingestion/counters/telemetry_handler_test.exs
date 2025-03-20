@@ -34,9 +34,20 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
     buffer = Buffer.new(test)
     assert :ok = TelemetryHandler.install(buffer)
 
-    e1 = %{domain: "a.example.com", request: %{timestamp: NaiveDateTime.utc_now()}}
-    e2 = %{domain: "b.example.com", request: %{timestamp: NaiveDateTime.utc_now()}}
-    e3 = %{domain: "c.example.com", request: %{timestamp: NaiveDateTime.utc_now()}}
+    e1 = %{
+      domain: "a.example.com",
+      request: %{timestamp: NaiveDateTime.utc_now(), tracker_script_version: 137}
+    }
+
+    e2 = %{
+      domain: "b.example.com",
+      request: %{timestamp: NaiveDateTime.utc_now(), tracker_script_version: 137}
+    }
+
+    e3 = %{
+      domain: "c.example.com",
+      request: %{timestamp: NaiveDateTime.utc_now(), tracker_script_version: 137}
+    }
 
     :ok = Event.emit_telemetry_dropped(e1, :invalid)
     :ok = Event.emit_telemetry_dropped(e2, :not_found)
@@ -47,8 +58,8 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
 
     assert aggregates = Buffer.flush(buffer, future)
 
-    assert Enum.find(aggregates, &match?({_, "dropped_invalid", "a.example.com", 1}, &1))
-    assert Enum.find(aggregates, &match?({_, "dropped_not_found", "b.example.com", 2}, &1))
-    assert Enum.find(aggregates, &match?({_, "buffered", "c.example.com", 1}, &1))
+    assert Enum.find(aggregates, &match?({_, "dropped_invalid", "a.example.com", 137, 1}, &1))
+    assert Enum.find(aggregates, &match?({_, "dropped_not_found", "b.example.com", 137, 2}, &1))
+    assert Enum.find(aggregates, &match?({_, "buffered", "c.example.com", 137, 1}, &1))
   end
 end

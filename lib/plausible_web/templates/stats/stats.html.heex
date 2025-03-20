@@ -33,7 +33,6 @@
     data-revenue-goals={Jason.encode!(@revenue_goals)}
     data-funnels={Jason.encode!(@funnels)}
     data-has-props={to_string(@has_props)}
-    data-scroll-depth-visible={to_string(@scroll_depth_visible)}
     data-logged-in={to_string(!!@conn.assigns[:current_user])}
     data-stats-begin={@stats_start_date}
     data-native-stats-begin={@native_stats_start_date}
@@ -42,13 +41,12 @@
     data-embedded={to_string(@conn.assigns[:embedded])}
     data-background={@conn.assigns[:background]}
     data-is-dbip={to_string(@is_dbip)}
-    data-current-user-role={
-      if site_role = @conn.assigns[:site_role], do: site_role, else: :public
-    }
+    data-current-user-role={@site_role}
     data-current-user-id={
       if user = @conn.assigns[:current_user], do: user.id, else: Jason.encode!(nil)
     }
     data-flags={Jason.encode!(@flags)}
+    data-segments={Jason.encode!(@segments)}
     data-valid-intervals-by-period={
       Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!()
     }

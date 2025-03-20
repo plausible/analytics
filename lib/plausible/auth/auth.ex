@@ -70,52 +70,76 @@ defmodule Plausible.Auth do
     end
   end
 
+  @spec delete_user(Auth.User.t()) ::
+          {:ok, :deleted} | {:error, :is_only_team_owner | :active_subscription}
   def delete_user(user) do
+    case Teams.get_by_owner(user) do
+      {:ok, %{setup_complete: false} = team} ->
+        delete_team_and_user(team, user)
+
+      {:ok, team} ->
+        with :ok <- check_can_leave_team(team) do
+          delete_user!(user)
+          {:ok, :deleted}
+        end
+
+      {:error, :multiple_teams} ->
+        teams = Teams.Users.owned_teams(user)
+
+        with :ok <- check_can_leave_teams(teams) do
+          personal_team = Enum.find(teams, &(not Teams.setup?(&1)))
+          delete_team_and_user(personal_team, user)
+        end
+
+      {:error, :no_team} ->
+        delete_user!(user)
+        {:ok, :deleted}
+    end
+  end
+
+  defp delete_team_and_user(nil, user) do
+    delete_user!(user)
+    {:ok, :deleted}
+  end
+
+  defp delete_team_and_user(team, user) do
     Repo.transaction(fn ->
-      case Teams.get_by_owner(user) do
-        {:ok, %{setup_complete: false} = team} ->
-          for site <- Teams.owned_sites(team) do
-            Plausible.Site.Removal.run(site)
-          end
+      case Teams.delete(team) do
+        {:ok, :deleted} ->
+          delete_user!(user)
+          :deleted
 
-          Repo.delete_all(from s in Plausible.Billing.Subscription, where: s.team_id == ^team.id)
-
-          Repo.delete_all(
-            from ep in Plausible.Billing.EnterprisePlan, where: ep.team_id == ^team.id
-          )
-
-          Plausible.Segments.user_removed(user)
-          Repo.delete!(team)
-          Repo.delete!(user)
-
-        {:ok, team} ->
-          check_can_leave_team!(team)
-          Repo.delete!(user)
-
-        {:error, :multiple_teams} ->
-          check_can_leave_teams!(user)
-          Repo.delete!(user)
-
-        {:error, :no_team} ->
-          Repo.delete!(user)
+        {:error, error} ->
+          Repo.rollback(error)
       end
-
-      :deleted
     end)
   end
 
-  defp check_can_leave_teams!(user) do
-    user
-    |> Teams.Users.owned_teams()
-    |> Enum.reject(&(&1.setup_complete == false))
-    |> Enum.map(fn team ->
-      check_can_leave_team!(team)
+  defp delete_user!(user) do
+    Repo.transaction(fn ->
+      Plausible.Segments.user_removed(user)
+      Repo.delete!(user)
+    end)
+
+    :ok
+  end
+
+  defp check_can_leave_teams(teams) do
+    teams
+    |> Enum.filter(& &1.setup_complete)
+    |> Enum.reduce_while(:ok, fn team, :ok ->
+      case check_can_leave_team(team) do
+        :ok -> {:cont, :ok}
+        {:error, error} -> {:halt, {:error, error}}
+      end
     end)
   end
 
-  defp check_can_leave_team!(team) do
-    if Teams.Memberships.owners_count(team) <= 1 do
-      Repo.rollback(:is_only_team_owner)
+  defp check_can_leave_team(team) do
+    if Teams.Memberships.owners_count(team) > 1 do
+      :ok
+    else
+      {:error, :is_only_team_owner}
     end
   end
 

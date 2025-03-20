@@ -73,7 +73,7 @@ defmodule PlausibleWeb.LayoutView do
         ]
       },
       %{key: "Email Reports", value: "email-reports", icon: :envelope},
-      if conn.assigns[:site_role] == :owner do
+      if conn.assigns[:site_role] in [:owner, :admin] do
         %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]
@@ -96,6 +96,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def account_settings_sidebar(conn) do
+    current_user = conn.assigns[:current_user]
     current_team = conn.assigns[:current_team]
     current_team_role = conn.assigns[:current_team_role]
 
@@ -116,7 +117,7 @@ defmodule PlausibleWeb.LayoutView do
         |> Enum.reject(&is_nil/1)
     }
 
-    if Teams.enabled?(current_team) and Teams.setup?(current_team) do
+    if Teams.enabled?(current_user) and Teams.setup?(current_team) do
       Map.put(
         options,
         "Team Settings",
@@ -125,6 +126,9 @@ defmodule PlausibleWeb.LayoutView do
           %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
           if(current_team_role in [:owner, :admin, :billing],
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
+          ),
+          if(current_team_role == :owner,
+            do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
           )
         ]
         |> Enum.reject(&is_nil/1)

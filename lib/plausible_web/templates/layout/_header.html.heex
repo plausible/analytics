@@ -73,7 +73,7 @@
                       </p>
                     </.dropdown_item>
                     <.team_switcher
-                      :if={Plausible.Teams.enabled?(@current_team)}
+                      :if={Plausible.Teams.enabled?(@current_user)}
                       conn={@conn}
                       teams={@teams}
                       my_team={@my_team}
@@ -86,12 +86,12 @@
                     </.dropdown_item>
 
                     <div :if={
-                      @my_team && Plausible.Teams.enabled?(@current_team) &&
+                      @my_team && Plausible.Teams.enabled?(@current_user) &&
                         @my_team.id == @current_team.id
                     }>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span class="flex-1">
-                          Setup a Team
+                          Create a Team
                         </span>
                         <span class="ml-1 bg-indigo-700 text-gray-100 text-xs p-1 rounded">
                           NEW
@@ -101,7 +101,7 @@
                     </div>
 
                     <div :if={
-                      Plausible.Teams.enabled?(@current_team) and
+                      Plausible.Teams.enabled?(@current_user) and
                         Plausible.Teams.setup?(@current_team)
                     }>
                       <.dropdown_item

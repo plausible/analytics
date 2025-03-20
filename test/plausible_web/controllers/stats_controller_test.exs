@@ -41,6 +41,41 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_element(resp, "title") == "Plausible · #{site.domain}"
     end
 
+    test "public site - all segments (personal or site) are stuffed into dataset, without their owner_id and owner_name",
+         %{conn: conn} do
+      user = new_user()
+      site = new_site(owner: user, public: true)
+
+      populate_stats(site, [build(:pageview)])
+
+      emea_site_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :site,
+          name: "EMEA region"
+        )
+        |> Map.put(:owner_name, nil)
+        |> Map.put(:owner_id, nil)
+
+      foo_personal_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :personal,
+          name: "FOO"
+        )
+        |> Map.put(:owner_name, nil)
+        |> Map.put(:owner_id, nil)
+
+      conn = get(conn, "/#{site.domain}")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, @react_container)
+
+      assert text_of_attr(resp, @react_container, "data-segments") ==
+               Jason.encode!([foo_personal_segment, emea_site_segment])
+    end
+
     test "plausible.io live demo - shows site stats", %{conn: conn} do
       site = new_site(domain: "plausible.io", public: true)
       populate_stats(site, [build(:pageview)])
@@ -81,37 +116,6 @@ defmodule PlausibleWeb.StatsControllerTest do
       _ = insert(:user)
       conn = get(conn, "/test-site.com")
       assert html_response(conn, 404) =~ "There's nothing here"
-    end
-
-    test "site.scroll_depth_visible_at gets updated correctly", %{conn: conn} do
-      site = new_site(public: true)
-
-      populate_stats(site, [build(:pageview)])
-
-      # No engagements yet - `scroll_depth_visible_at` will remain `nil`
-      html =
-        conn
-        |> get("/#{site.domain}")
-        |> html_response(200)
-
-      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "false"
-
-      site = Repo.reload!(site)
-      assert is_nil(site.scroll_depth_visible_at)
-
-      populate_stats(site, [
-        build(:pageview, user_id: 123),
-        build(:engagement, user_id: 123, scroll_depth: 20)
-      ])
-
-      # engagements exist now - `scroll_depth_visible_at` gets set to `utc_now`
-      html =
-        conn
-        |> get("/#{site.domain}")
-        |> html_response(200)
-
-      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
-      assert not is_nil(Repo.reload!(site).scroll_depth_visible_at)
     end
   end
 
@@ -187,6 +191,36 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
       refute html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
     end
+
+    test "all segments (personal or site) are stuffed into dataset, with associated their owner_id and owner_name",
+         %{conn: conn, site: site, user: user} do
+      populate_stats(site, [build(:pageview)])
+
+      emea_site_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :site,
+          name: "EMEA region"
+        )
+        |> Map.put(:owner_name, user.name)
+
+      foo_personal_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :personal,
+          name: "FOO"
+        )
+        |> Map.put(:owner_name, user.name)
+
+      conn = get(conn, "/#{site.domain}")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, @react_container)
+
+      assert text_of_attr(resp, @react_container, "data-segments") ==
+               Jason.encode!([foo_personal_segment, emea_site_segment])
+    end
   end
 
   describe "GET /:domain - as a super admin" do
@@ -256,7 +290,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export" do
-    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "exports all the necessary CSV files", %{conn: conn, site: site} do
       conn = get(conn, "/" <> site.domain <> "/export")
@@ -710,7 +744,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - via shared link" do
-    setup [:create_user, :create_site, :set_scroll_depth_visible_at]
+    setup [:create_user, :create_site]
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       link = insert(:shared_link, site: site)
@@ -722,7 +756,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - for past 6 months" do
-    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
@@ -732,7 +766,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:domain/export - with path filter" do
-    setup [:create_user, :create_site, :set_scroll_depth_visible_at, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
@@ -794,34 +828,6 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["2020-01-06", "0", "0", "0", "0.0", "0.0", "", ""],
                ["2020-01-07", "1", "1", "1", "1.0", "100", "0", "90"],
                [""]
-             ]
-    end
-
-    test "does not export scroll depth in visitors.csv if site.scroll_depth_visible_at=nil", %{
-      conn: conn,
-      user: user
-    } do
-      site = new_site(owner: user)
-
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-
-      column_headers =
-        conn
-        |> get(
-          "/#{site.domain}/export?period=custom&from=2021-01-01&to=2021-01-02&filters=#{filters}"
-        )
-        |> response(200)
-        |> unzip_and_parse_csv(~c"visitors.csv")
-        |> List.first()
-
-      assert column_headers == [
-               "date",
-               "visitors",
-               "pageviews",
-               "visits",
-               "views_per_visit",
-               "bounce_rate",
-               "visit_duration"
              ]
     end
   end
@@ -1143,34 +1149,37 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert response(conn, 404) =~ "nothing here"
     end
 
-    test "site.scroll_depth_visible_at gets updated correctly", %{conn: conn} do
-      site = insert(:site)
+    test "all segments (personal or site) are stuffed into dataset, without their owner_id and owner_name",
+         %{conn: conn} do
+      user = new_user()
+      site = new_site(domain: "test-site.com", owner: user)
       link = insert(:shared_link, site: site)
 
-      # No engagements yet - `scroll_depth_visible_at` will remain `nil`
-      html =
-        conn
-        |> get("/share/#{site.domain}/?auth=#{link.slug}")
-        |> html_response(200)
+      emea_site_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :site,
+          name: "EMEA region"
+        )
+        |> Map.put(:owner_name, nil)
+        |> Map.put(:owner_id, nil)
 
-      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "false"
+      foo_personal_segment =
+        insert(:segment,
+          site: site,
+          owner: user,
+          type: :personal,
+          name: "FOO"
+        )
+        |> Map.put(:owner_name, nil)
+        |> Map.put(:owner_id, nil)
 
-      site = Repo.reload!(site)
-      assert is_nil(site.scroll_depth_visible_at)
+      conn = get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
 
-      populate_stats(site, [
-        build(:pageview, user_id: 123),
-        build(:engagement, user_id: 123, scroll_depth: 20)
-      ])
-
-      # engagements exist now - `scroll_depth_visible_at` gets set to `utc_now`
-      html =
-        conn
-        |> get("/share/#{site.domain}/?auth=#{link.slug}")
-        |> html_response(200)
-
-      assert text_of_attr(html, @react_container, "data-scroll-depth-visible") == "true"
-      assert not is_nil(Repo.reload!(site).scroll_depth_visible_at)
+      assert text_of_attr(resp, @react_container, "data-segments") ==
+               Jason.encode!([foo_personal_segment, emea_site_segment])
     end
   end
 

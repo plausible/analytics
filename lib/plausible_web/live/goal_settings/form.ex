@@ -257,7 +257,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="scroll-form" class="py-2" x-data={@js} {@rest}>
       <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
-        Scroll Depth goals allow you to see how many people scroll beyond you desired scroll depth percentage threshold. Learn more in
+        Scroll Depth goals allow you to see how many people scroll beyond your desired scroll depth percentage threshold. Learn more in
         <.styled_link href="https://plausible.io/docs/scroll-depth" new_tab={true}>
           our docs
         </.styled_link>.
@@ -476,11 +476,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     <div class="my-2 text-sm w-full flex rounded border border-gray-300 dark:border-gray-500 overflow-hidden">
       <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
       <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
-      <.scroll_tab
-        :if={Plausible.Stats.ScrollDepth.feature_visible?(@site, @current_user)}
-        selected?={@selected_tab == "scroll"}
-        myself={@myself}
-      />
+      <.scroll_tab selected?={@selected_tab == "scroll"} myself={@myself} />
     </div>
     """
   end

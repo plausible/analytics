@@ -43,6 +43,7 @@ defmodule Plausible.Ingestion.Request do
     field :props, :map
     field :scroll_depth, :integer
     field :engagement_time, :integer
+    field :tracker_script_version, :integer, default: 0
 
     on_ee do
       field :revenue_source, :map
@@ -84,6 +85,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_pathname()
         |> put_query_params()
         |> put_revenue_source(request_body)
+        |> put_tracker_script_version(request_body)
         |> map_domains(request_body)
         |> Changeset.validate_required([
           :event_name,
@@ -270,6 +272,16 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
+  defp put_tracker_script_version(changeset, %{} = request_body) do
+    case request_body["v"] do
+      version when is_integer(version) ->
+        Changeset.put_change(changeset, :tracker_script_version, version)
+
+      _ ->
+        changeset
+    end
+  end
+
   defp put_query_params(changeset) do
     case Changeset.get_field(changeset, :uri) do
       %{query: query} when is_binary(query) ->
@@ -352,7 +364,14 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp parse_engagement_time(et) when is_integer(et) and et >= 0, do: et
+  # :KLUDGE: Old version of tracker script sent huge values for engagement time. Ignore
+  # these while users might still have the old script cached.
+  @too_large_engagement_time :timer.hours(30 * 24)
+
+  defp parse_engagement_time(et)
+       when is_integer(et) and et >= 0 and et < @too_large_engagement_time,
+       do: et
+
   defp parse_engagement_time(_), do: @missing_engagement_time
 end
 

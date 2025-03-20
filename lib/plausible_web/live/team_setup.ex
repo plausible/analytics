@@ -11,14 +11,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
   alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(_params, _session, socket) do
+    current_user = socket.assigns.current_user
     current_team = socket.assigns.current_team
-    enabled? = Teams.enabled?(current_team)
+    enabled? = Teams.enabled?(current_user)
 
     socket =
       case {enabled?, current_team} do
         {true, %Teams.Team{setup_complete: true}} ->
           socket
-          |> put_flash(:success, "Your team is now setup")
+          |> put_flash(:success, "Your team is now created")
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
         {true, %Teams.Team{}} ->
@@ -41,7 +42,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
         {_, _} ->
           socket
-          |> put_flash(:error, "You cannot set up any team just yet")
+          |> put_flash(:error, "You cannot create any team just yet")
           |> redirect(to: Routes.site_path(socket, :index))
       end
 
@@ -59,9 +60,16 @@ defmodule PlausibleWeb.Live.TeamSetup do
   def render(assigns) do
     ~H"""
     <.focus_box>
-      <:title>Setup a new team</:title>
+      <:title>
+        <div class="flex justify-between">
+          <div>Create a new team</div>
+          <div class="ml-auto">
+            <.docs_info slug="users-roles" />
+          </div>
+        </div>
+      </:title>
       <:subtitle>
-        Add members and assign roles to manage different sites access efficiently
+        Add your team members and assign their roles
       </:subtitle>
 
       <.form

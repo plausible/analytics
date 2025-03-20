@@ -48,7 +48,6 @@ describe('parseSiteFromDataset', () => {
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
     hasProps: true,
-    scrollDepthVisible: true,
     statsBegin: '2021-09-07',
     nativeStatsBegin: '2022-09-02',
     embedded: false,

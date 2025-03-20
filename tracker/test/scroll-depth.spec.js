@@ -1,4 +1,4 @@
-const { engagementCooldown, expectPlausibleInAction, hideCurrentTab, hideAndShowCurrentTab } = require('./support/test-utils')
+const { expectPlausibleInAction, hideCurrentTab, hideAndShowCurrentTab } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
@@ -31,8 +31,6 @@ test.describe('scroll depth (engagement events)', () => {
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`}
       ]
     })
-
-    await engagementCooldown(page)
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#home-link'),

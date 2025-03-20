@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         |> html_response(200)
         |> text()
 
-      assert resp =~ "Add, remove or change your team memberships"
+      assert resp =~ "Add or remove team members and adjust their roles"
 
       refute element_exists?(resp, ~s|button[phx-click="save-team-layout"]|)
     end
@@ -237,6 +237,11 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert_team_membership(user, team, :owner)
       assert_team_membership(member2, team, :owner)
+
+      assert_email_delivered_with(
+        to: [nil: member2.email],
+        subject: @subject_prefix <> "Welcome to \"#{team.name}\" team"
+      )
     end
 
     test "multiple-owners",

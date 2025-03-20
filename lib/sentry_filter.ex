@@ -6,6 +6,10 @@ defmodule Plausible.SentryFilter do
   @spec before_send(Sentry.Event.t()) :: Sentry.Event.t()
   def before_send(event)
 
+  def before_send(%{original_exception: %Bamboo.PostmarkAdapter.Error{} = e} = event) do
+    if Bamboo.PostmarkAdapter.Error.is_hard_bounce(e), do: false, else: event
+  end
+
   def before_send(%{original_exception: %Phoenix.NotAcceptableError{}}), do: false
   def before_send(%{original_exception: %Plug.CSRFProtection.InvalidCSRFTokenError{}}), do: false
   def before_send(%{original_exception: %Plug.Static.InvalidPathError{}}), do: false

@@ -1,7 +1,7 @@
 <.settings_tiles>
-  <.tile>
+  <.tile docs="users-roles">
     <:title>
-      <a id="update-name">Team Information</a>
+      <a id="update-name#changing-the-name-of-a-team">Team Information</a>
     </:title>
     <:subtitle>
       Change the name of your team
@@ -33,12 +33,12 @@
       </.button>
     </.form>
   </.tile>
-  <.tile>
+  <.tile docs="users-roles#managing-team-member-roles">
     <:title>
       <a id="team-members">Team Members</a>
     </:title>
     <:subtitle>
-      Add, remove or change your team memberships
+      Add or remove team members and adjust their roles
     </:subtitle>
     {live_render(@conn, PlausibleWeb.Live.TeamManagement,
       id: "team-setup",

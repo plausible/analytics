@@ -30,20 +30,36 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandler do
   def handle_event(
         @event_dropped,
         _measurements,
-        %{domain: domain, reason: reason, request_timestamp: timestamp},
+        %{
+          domain: domain,
+          reason: reason,
+          request_timestamp: timestamp,
+          tracker_script_version: tracker_script_version
+        },
         buffer
       ) do
-    Counters.Buffer.aggregate(buffer, "dropped_#{reason}", domain, timestamp)
+    Counters.Buffer.aggregate(
+      buffer,
+      "dropped_#{reason}",
+      domain,
+      timestamp,
+      tracker_script_version
+    )
+
     :ok
   end
 
   def handle_event(
         @event_buffered,
         _measurements,
-        %{domain: domain, request_timestamp: timestamp},
+        %{
+          domain: domain,
+          request_timestamp: timestamp,
+          tracker_script_version: tracker_script_version
+        },
         buffer
       ) do
-    Counters.Buffer.aggregate(buffer, "buffered", domain, timestamp)
+    Counters.Buffer.aggregate(buffer, "buffered", domain, timestamp, tracker_script_version)
     :ok
   end
 end

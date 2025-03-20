@@ -65,7 +65,7 @@
                     </.dropdown_item>
                     <.dropdown_divider />
                     <.dropdown_item
-                      :if={@conn.assigns[:site_role] == :owner}
+                      :if={@site_role in [:owner, :admin]}
                       class="text-red-600 dark:text-red-500 hover:text-red-600"
                       href={
                         Routes.membership_path(

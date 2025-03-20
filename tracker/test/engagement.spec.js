@@ -1,7 +1,8 @@
 const { expect } = require("@playwright/test")
-const { expectPlausibleInAction, engagementCooldown, hideAndShowCurrentTab } = require('./support/test-utils')
+const { expectPlausibleInAction, hideAndShowCurrentTab, focus, blur, blurAndFocusPage } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
+const { tracker_script_version } = require('../package.json')
 
 test.describe('engagement events', () => {
   test('sends an engagement event with time measurement when navigating to the next page', async ({ page }) => {
@@ -14,7 +15,7 @@ test.describe('engagement events', () => {
 
     const [request] = await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}]
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`, v: tracker_script_version}]
     })
 
     expect(request.e).toBeGreaterThan(1000)
@@ -99,8 +100,6 @@ test.describe('engagement events', () => {
       expectedRequests: [{n: 'engagement', u: pageBaseURL, h: 1}]
     })
 
-    await engagementCooldown(page)
-
     // Navigate from ignored page to a tracked page ->
     // no engagement from the current page, pageview on the next page
     await expectPlausibleInAction(page, {
@@ -108,8 +107,6 @@ test.describe('engagement events', () => {
       expectedRequests: [{n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1}],
       refutedRequests: [{n: 'engagement'}]
     })
-
-    await engagementCooldown(page)
 
     // Navigate from a tracked page to another tracked page ->
     // engagement with the last page URL, pageview with the new URL
@@ -162,8 +159,6 @@ test.describe('engagement events', () => {
       ]
     })
 
-    await engagementCooldown(page)
-
     await expectPlausibleInAction(page, {
       action: () => page.click('#jane-post'),
       expectedRequests: [
@@ -171,8 +166,6 @@ test.describe('engagement events', () => {
         {n: 'pageview', p: {author: 'jane'}}
       ]
     })
-
-    await engagementCooldown(page)
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#home'),
@@ -309,5 +302,37 @@ test.describe('engagement events', () => {
 
     expect(request4.e).toBeGreaterThan(3000)
     expect(request4.e).toBeLessThan(3500)
+  })
+
+  test('tracks engagement time whilst tab gains and loses focus', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement.html'),
+      expectedRequests: [{n: 'pageview'}],
+    })
+
+    const [request1] = await expectPlausibleInAction(page, {
+      action: () => blur(page),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+    })
+    expect(request1.e).toBeLessThan(500)
+
+    await focus(page)
+    await page.waitForTimeout(1000)
+
+    await expectPlausibleInAction(page, {
+      action: () => blurAndFocusPage(page, { delay: 3000 }),
+      refutedRequests: [{n: 'engagement'}],
+      mockRequestTimeout: 100
+    })
+
+    await page.waitForTimeout(2500)
+
+    const [request2] = await expectPlausibleInAction(page, {
+      action: () => blur(page),
+      expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],
+    })
+
+    expect(request2.e).toBeGreaterThan(3500)
+    expect(request2.e).toBeLessThan(4000)
   })
 })

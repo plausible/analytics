@@ -397,23 +397,15 @@ defmodule PlausibleWeb.Api.StatsController do
     page_filter? =
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 
-    include_scroll_depth? = Plausible.Stats.ScrollDepth.feature_visible?(site, current_user)
-
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
       cond do
-        page_filter? && include_scroll_depth? && query.include_imported ->
+        page_filter? && query.include_imported ->
           metrics ++ [:scroll_depth]
 
-        page_filter? && include_scroll_depth? ->
-          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
-
-        page_filter? && query.include_imported ->
-          metrics
-
         page_filter? ->
-          metrics ++ [:bounce_rate, :time_on_page]
+          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
 
         true ->
           metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
@@ -797,34 +789,48 @@ defmodule PlausibleWeb.Api.StatsController do
 
     search = params["search"] || ""
 
+    # TODO: stop returning `error` and `reason` (not needed anymore)
     not_configured_error_payload =
       %{
+        error_code: :not_configured,
         error: "The site is not connected to Google Search Keywords",
         reason: :not_configured,
         is_admin: is_admin
       }
 
+    # TODO: stop returning `error` and `reason` (not needed anymore)
     unsupported_filters_error_payload = %{
+      error_code: :unsupported_filters,
       error:
         "Unable to fetch keyword data from Search Console because it does not support the current set of filters",
       reason: :unsupported_filters
     }
 
-    case google_api().fetch_stats(site, query, pagination, search) do
-      {:error, :google_property_not_configured} ->
+    search_terms = google_api().fetch_stats(site, query, pagination, search)
+    period_too_recent? = DateTime.diff(query.now, query.utc_time_range.first, :hour) < 72
+
+    case {search_terms, period_too_recent?} do
+      {{:error, :google_property_not_configured}, _} ->
         conn
         |> put_status(422)
         |> json(not_configured_error_payload)
 
-      {:error, :unsupported_filters} ->
+      {{:error, :unsupported_filters}, _} ->
         conn
         |> put_status(422)
         |> json(unsupported_filters_error_payload)
 
-      {:ok, terms} ->
+      {{:ok, []}, _period_too_recent? = true} ->
+        # We consider this an error case because Google Search Console
+        # data is usually delayed 1-3 days.
+        conn
+        |> put_status(422)
+        |> json(%{error_code: :period_too_recent})
+
+      {{:ok, terms}, _} ->
         json(conn, %{results: terms})
 
-      {:error, error} ->
+      {{:error, error}, _} ->
         Logger.error("Plausible.Google.API.fetch_stats failed with error: `#{inspect(error)}`")
 
         conn
@@ -863,23 +869,15 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def pages(conn, params) do
     site = conn.assigns[:site]
-    current_user = conn.assigns[:current_user]
 
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
-    include_scroll_depth? = Plausible.Stats.ScrollDepth.feature_visible?(site, current_user)
-
     extra_metrics =
-      cond do
-        params["detailed"] && include_scroll_depth? ->
-          [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
-
-        params["detailed"] ->
-          [:pageviews, :bounce_rate, :time_on_page]
-
-        true ->
-          []
+      if params["detailed"] do
+        [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
+      else
+        []
       end
 
     metrics = breakdown_metrics(query, extra_metrics)
@@ -897,11 +895,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> transform_keys(%{visitors: :conversions})
         |> to_csv([:name, :conversions, :conversion_rate])
       else
-        cols = [:name, :visitors, :pageviews, :bounce_rate, :time_on_page]
-
-        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-        cols = if include_scroll_depth?, do: cols ++ [:scroll_depth], else: cols
-
+        cols = [:name, :visitors, :pageviews, :bounce_rate, :time_on_page, :scroll_depth]
         pages |> to_csv(cols)
       end
     else

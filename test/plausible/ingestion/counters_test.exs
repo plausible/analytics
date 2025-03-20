@@ -116,7 +116,8 @@ defmodule Plausible.Ingestion.CountersTest do
 
     payload = %{
       name: "pageview",
-      url: "http://#{site.domain}"
+      url: "http://#{site.domain}",
+      v: 137
     }
 
     conn = build_conn(:post, "/api/event", payload)
@@ -133,7 +134,8 @@ defmodule Plausible.Ingestion.CountersTest do
 
     payload = %{
       name: "pageview",
-      url: "http://#{site.domain}"
+      url: "http://#{site.domain}",
+      v: 137
     }
 
     conn = build_conn(:post, "/api/event", payload)
@@ -152,8 +154,8 @@ defmodule Plausible.Ingestion.CountersTest do
   defp verify_record_written(domain, metric, value, site_id \\ nil) do
     query =
       from(r in Record,
-        group_by: [:site_id, :domain, :metric, :event_timebucket],
-        where: r.domain == ^domain and r.metric == ^metric,
+        group_by: [:site_id, :domain, :metric, :event_timebucket, :tracker_script_version],
+        where: r.domain == ^domain and r.metric == ^metric and r.tracker_script_version == 137,
         select: sum(r.value)
       )
 

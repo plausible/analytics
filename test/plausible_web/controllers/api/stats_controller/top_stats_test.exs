@@ -482,8 +482,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       :create_user,
       :log_in,
       :create_site,
-      :create_legacy_site_import,
-      :set_scroll_depth_visible_at
+      :create_legacy_site_import
     ]
 
     test "puts scroll depth warning code", %{conn: conn, site: site} do
@@ -917,7 +916,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - filters" do
-    setup [:create_user, :log_in, :create_site, :set_scroll_depth_visible_at]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns graph_metric key for top stats with a page filter", %{
       conn: conn,
@@ -1336,29 +1335,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"name" => "Total pageviews", "value" => 4, "graph_metric" => "pageviews"} in res[
                "top_stats"
              ]
-    end
-
-    test "does not return scroll depth when site.scroll_depth_visible_at=nil", %{
-      conn: conn,
-      user: user
-    } do
-      site = new_site(owner: user)
-
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-
-      top_stats =
-        conn
-        |> get("/api/stats/#{site.domain}/top-stats?filters=#{filters}")
-        |> json_response(200)
-        |> Map.get("top_stats")
-
-      assert [
-               %{"name" => "Unique visitors"},
-               %{"name" => "Total visits"},
-               %{"name" => "Total pageviews"},
-               %{"name" => "Bounce rate"},
-               %{"name" => "Time on page"}
-             ] = top_stats
     end
   end
 

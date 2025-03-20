@@ -14,6 +14,9 @@ defmodule PlausibleWeb.SettingsController do
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner, :admin, :billing] when action in [:invoices]
 
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner] when action in [:team_danger_zone, :delete_team]
+
   def index(conn, _params) do
     redirect(conn, to: Routes.settings_path(conn, :preferences))
   end
@@ -129,7 +132,41 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def danger_zone(conn, _params) do
-    render(conn, :danger_zone, layout: {PlausibleWeb.LayoutView, :settings})
+    solely_owned_teams =
+      conn.assigns.current_user
+      |> Teams.Users.owned_teams()
+      |> Enum.filter(& &1.setup_complete)
+      |> Enum.reject(fn team ->
+        Teams.Memberships.owners_count(team) > 1
+      end)
+
+    render(conn, :danger_zone,
+      solely_owned_teams: solely_owned_teams,
+      layout: {PlausibleWeb.LayoutView, :settings}
+    )
+  end
+
+  def team_danger_zone(conn, _params) do
+    render(conn, :team_danger_zone, layout: {PlausibleWeb.LayoutView, :settings})
+  end
+
+  def delete_team(conn, _params) do
+    team = conn.assigns.current_team
+
+    case Plausible.Teams.delete(team) do
+      {:ok, :deleted} ->
+        conn
+        |> put_flash(:success, ~s|Team "#{Plausible.Teams.name(team)}" deleted|)
+        |> redirect(to: Routes.site_path(conn, :index, __team: "none"))
+
+      {:error, :active_subscription} ->
+        conn
+        |> put_flash(
+          :error,
+          "Team has an active subscription. You must cancel it first."
+        )
+        |> redirect(to: Routes.settings_path(conn, :team_danger_zone))
+    end
   end
 
   # Preferences actions

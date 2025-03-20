@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
               name="input-email"
               type="email"
               value={@input_email}
-              placeholder="Enter e-mail to send invitation to"
+              placeholder="Enter e-mail"
               phx-debounce={200}
               readonly={at_limit?(@layout, @team_members_limit) or @my_role not in [:admin, :owner]}
               mt?={false}
@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
         phx-click="save-team-layout"
         class="mt-8 w-full"
       >
-        Setup Team
+        Create Team
       </.button>
     </div>
     """
@@ -288,7 +288,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
     case {result, socket.assigns.mode} do
       {{:ok, _}, :team_setup} ->
         socket
-        |> put_flash(:success, "Your team is now setup")
+        |> put_flash(:success, "Your team is now created")
         |> redirect(
           to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
         )

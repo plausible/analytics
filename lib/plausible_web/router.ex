@@ -221,9 +221,7 @@ defmodule PlausibleWeb.Router do
     end
 
     scope "/:domain/segments", PlausibleWeb.Api.Internal do
-      get "/", SegmentsController, :index
       post "/", SegmentsController, :create
-      get "/:segment_id", SegmentsController, :get
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
     end
@@ -395,6 +393,8 @@ defmodule PlausibleWeb.Router do
     post "/team/invitations/:invitation_id/accept", InvitationController, :accept_invitation
     post "/team/invitations/:invitation_id/reject", InvitationController, :reject_invitation
     delete "/team/invitations/:invitation_id", InvitationController, :remove_team_invitation
+    get "/team/delete", SettingsController, :team_danger_zone
+    delete "/team/delete", SettingsController, :delete_team
   end
 
   scope "/", PlausibleWeb do
