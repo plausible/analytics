@@ -29,6 +29,9 @@ defmodule Plausible.Teams.Team do
     field :setup_complete, :boolean, default: false
     field :setup_at, :naive_datetime
 
+    # Field kept in sync with current subscription plan, if any
+    field :hourly_request_limit, :integer, default: on_ee(do: 600, else: 1_000_000)
+
     # Field for purely informational purposes in CRM context
     field :notes, :string
 

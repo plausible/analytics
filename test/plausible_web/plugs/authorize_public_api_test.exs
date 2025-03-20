@@ -171,14 +171,16 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   test "halts with error when API rate limit hit", %{conn: conn} do
-    user = insert(:user)
-    api_key = insert(:api_key, user: user, hourly_request_limit: 1)
+    user = new_user(team: [hourly_request_limit: 1])
+    site = new_site(owner: user)
+    api_key = insert(:api_key, user: user)
 
     conn =
       conn
       |> put_req_header("authorization", "Bearer #{api_key.key}")
-      |> get("/")
+      |> get("/?site_id=#{site.domain}")
       |> assign(:api_scope, "sites:read:*")
+      |> assign(:api_context, :site)
 
     first_resp = AuthorizePublicAPI.call(conn, nil)
     second_resp = AuthorizePublicAPI.call(conn, nil)

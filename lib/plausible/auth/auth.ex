@@ -175,8 +175,16 @@ defmodule Plausible.Auth do
     end
   end
 
-  @spec find_api_key(String.t()) :: {:ok, Auth.ApiKey.t()} | {:error, :invalid_api_key}
-  def find_api_key(raw_key) do
+  @spec find_api_key(String.t(), Keyword.t()) ::
+          {:ok, Auth.ApiKey.t() | %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
+          | {:error, :invalid_api_key | :missing_site_id}
+  def find_api_key(raw_key, opts \\ []) do
+    {team_scope, id} = Keyword.get(opts, :team_by, {nil, nil})
+
+    find_api_key(raw_key, team_scope, id)
+  end
+
+  defp find_api_key(raw_key, nil, _) do
     hashed_key = Auth.ApiKey.do_hash(raw_key)
 
     query =
@@ -191,6 +199,28 @@ defmodule Plausible.Auth do
     else
       {:error, :invalid_api_key}
     end
+  end
+
+  defp find_api_key(raw_key, :site, nil) do
+    with {:ok, api_key} <- find_api_key(raw_key, nil, nil) do
+      {:ok, %{api_key: api_key, team: nil}}
+    end
+  end
+
+  defp find_api_key(raw_key, :site, domain) do
+    with {:ok, api_key} <- find_api_key(raw_key, nil, nil) do
+      team = find_team_by_site(domain)
+      {:ok, %{api_key: api_key, team: team}}
+    end
+  end
+
+  defp find_team_by_site(domain) do
+    Repo.one(
+      from s in Plausible.Site,
+        inner_join: t in assoc(s, :team),
+        where: s.domain == ^domain or s.domain_changed_from == ^domain,
+        select: t
+    )
   end
 
   defp check_stats_api_available(user) do

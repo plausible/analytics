@@ -47,10 +47,11 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   def call(conn, _opts) do
     requested_scope = Map.fetch!(conn.assigns, :api_scope)
+    context = conn.assigns[:api_context]
 
     with {:ok, token} <- get_bearer_token(conn),
-         {:ok, api_key} <- Auth.find_api_key(token),
-         :ok <- check_api_key_rate_limit(api_key),
+         {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
+         :ok <- check_api_key_rate_limit(limit_key, hourly_limit),
          {:ok, conn} <- verify_by_scope(conn, api_key, requested_scope) do
       assign(conn, :current_user, api_key.user)
     else
@@ -59,6 +60,25 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   ### Verification dispatched by scope
+
+  defp find_api_key(conn, token, :site) do
+    case Auth.find_api_key(token, team_by: {:site, conn.params["site_id"]}) do
+      {:ok, %{api_key: api_key, team: nil}} ->
+        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+
+      {:ok, %{api_key: api_key, team: team}} ->
+        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_request_limit}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp find_api_key(_conn, token, _) do
+    with {:ok, api_key} <- Auth.find_api_key(token) do
+      {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+    end
+  end
 
   defp verify_by_scope(conn, api_key, "stats:read:" <> _ = scope) do
     with :ok <- check_scope(api_key, scope),
@@ -107,14 +127,22 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     end
   end
 
-  defp check_api_key_rate_limit(api_key) do
+  defp limit_key(api_key, nil) do
+    "api_request:#{api_key.id}"
+  end
+
+  defp limit_key(api_key, team_id) do
+    "api_request:#{api_key.id}:#{team_id}"
+  end
+
+  defp check_api_key_rate_limit(limit_key, hourly_limit) do
     case RateLimit.check_rate(
-           "api_request:#{api_key.id}",
+           limit_key,
            to_timeout(hour: 1),
-           api_key.hourly_request_limit
+           hourly_limit
          ) do
       {:allow, _} -> :ok
-      {:deny, _} -> {:error, :rate_limit, api_key.hourly_request_limit}
+      {:deny, _} -> {:error, :rate_limit, hourly_limit}
     end
   end
 
