@@ -19,8 +19,6 @@ beforeEach(() => {
   document.body.appendChild(modalRoot)
 })
 
-const flags = { saved_segments: true, saved_segments_fe: true }
-
 describe('Segment details modal - errors', () => {
   const anySiteSegment: SavedSegment & { segment_data: SegmentData } = {
     id: 1,
@@ -56,7 +54,7 @@ describe('Segment details modal - errors', () => {
       segmentId: 202020,
       user: { loggedIn: true, id: 1, role: Role.owner },
       message: `Segment not found with with ID "202020"`,
-      siteOptions: { flags, siteSegmentsAvailable: true }
+      siteOptions: { siteSegmentsAvailable: true }
     },
     {
       case: 'site segment is in list but not listable because site segments are not available',
@@ -64,7 +62,7 @@ describe('Segment details modal - errors', () => {
       segmentId: anySiteSegment.id,
       user: { loggedIn: true, id: 1, role: Role.owner },
       message: `Segment not found with with ID "${anySiteSegment.id}"`,
-      siteOptions: { flags, siteSegmentsAvailable: false }
+      siteOptions: { siteSegmentsAvailable: false }
     },
     {
       case: 'personal segment is in list but not listable because it is a public dashboard',
@@ -72,7 +70,7 @@ describe('Segment details modal - errors', () => {
       segmentId: anyPersonalSegment.id,
       user: { loggedIn: false, id: null, role: Role.public },
       message: `Segment not found with with ID "${anyPersonalSegment.id}"`,
-      siteOptions: { flags, siteSegmentsAvailable: true }
+      siteOptions: { siteSegmentsAvailable: true }
     },
     {
       case: 'segment is in list and listable, but detailed view is not available because user is not logged in',
@@ -80,7 +78,7 @@ describe('Segment details modal - errors', () => {
       segmentId: anySiteSegment.id,
       user: { loggedIn: false, id: null, role: Role.public },
       message: 'Not enough permissions to see segment details',
-      siteOptions: { flags, siteSegmentsAvailable: true }
+      siteOptions: { siteSegmentsAvailable: true }
     }
   ]
   it.each(cases)(
@@ -126,7 +124,7 @@ describe('Segment details modal - other cases', () => {
           preloaded={{
             segments: [anySiteSegment]
           }}
-          siteOptions={{ flags, siteSegmentsAvailable: true }}
+          siteOptions={{ siteSegmentsAvailable: true }}
           {...props}
         />
       )

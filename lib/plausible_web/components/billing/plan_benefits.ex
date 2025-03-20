@@ -45,7 +45,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
       data_retention_benefit(plan),
       "Intuitive, fast and privacy-friendly dashboard",
       "Email/Slack reports",
-      "Google Analytics import"
+      "Google Analytics import",
+      "Segments"
     ]
     |> Kernel.++(feature_benefits(plan))
     |> Enum.filter(& &1)
