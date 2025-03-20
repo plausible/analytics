@@ -662,11 +662,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert json_response(conn, 200) == %{
                  "guests" => [
-                   %{"email" => guest2.email, "accepted" => true, "role" => "viewer"},
-                   %{"email" => guest1.email, "accepted" => true, "role" => "editor"},
+                   %{"email" => guest2.email, "status" => "accepted", "role" => "viewer"},
+                   %{"email" => guest1.email, "status" => "accepted", "role" => "editor"},
                    %{
                      "email" => guest3.team_invitation.email,
-                     "accepted" => false,
+                     "status" => "invited",
                      "role" => "viewer"
                    }
                  ],
@@ -689,8 +689,8 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert %{
                  "guests" => [
-                   %{"email" => ^guest2_email, "accepted" => true, "role" => "viewer"},
-                   %{"email" => ^guest1_email, "accepted" => true, "role" => "editor"}
+                   %{"email" => ^guest2_email, "status" => "accepted", "role" => "viewer"},
+                   %{"email" => ^guest1_email, "status" => "accepted", "role" => "editor"}
                  ],
                  "meta" => %{
                    "before" => nil,
@@ -709,7 +709,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "guests" => [
                    %{
                      "email" => "third@example.com",
-                     "accepted" => false,
+                     "status" => "invited",
                      "role" => "viewer"
                    }
                  ],
@@ -736,7 +736,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         assert json_response(conn, 200) == %{
-                 "accepted" => false,
+                 "status" => "invited",
                  "email" => "test@example.com",
                  "role" => "viewer"
                }
@@ -765,7 +765,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "email" => "test@example.com"
           })
 
-        assert %{"role" => "viewer", "accepted" => false} = json_response(conn2, 200)
+        assert %{"role" => "viewer", "status" => "invited"} = json_response(conn2, 200)
 
         assert %{memberships: [_], invitations: [%{role: "viewer"}]} =
                  Plausible.Sites.list_people(site)
@@ -785,7 +785,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
             "email" => "guest@example.com"
           })
 
-        assert %{"role" => "viewer", "accepted" => true} = json_response(conn, 200)
+        assert %{"role" => "viewer", "status" => "accepted"} = json_response(conn, 200)
 
         assert %{
                  memberships: [%{user: _}, %{user: %{email: "guest@example.com"}}],

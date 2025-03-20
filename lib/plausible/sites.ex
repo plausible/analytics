@@ -165,7 +165,7 @@ defmodule Plausible.Sites do
           inserted_at: gm.inserted_at,
           email: u.email,
           role: gm.role,
-          accepted: true
+          status: "accepted"
         }
       )
 
@@ -187,7 +187,7 @@ defmodule Plausible.Sites do
           inserted_at: gi.inserted_at,
           email: ti.email,
           role: gi.role,
-          accepted: false
+          status: "invited"
         }
       )
 
@@ -206,7 +206,7 @@ defmodule Plausible.Sites do
         inserted_at: g.inserted_at,
         email: g.email,
         role: g.role,
-        accepted: g.accepted
+        status: g.status
       },
       order_by: [desc: g.inserted_at, desc: g.id]
     )

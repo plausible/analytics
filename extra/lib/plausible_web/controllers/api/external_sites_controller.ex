@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       json(conn, %{
         guests:
           Enum.map(page.entries, fn entry ->
-            Map.take(entry, [:email, :role, :accepted])
+            Map.take(entry, [:email, :role, :status])
           end),
         meta: pagination_meta(page.metadata)
       })
@@ -173,7 +173,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         json(conn, %{
           role: existing.role,
           email: existing.email,
-          accepted: existing.accepted
+          status: existing.status
         })
       else
         case Plausible.Site.Memberships.CreateInvitation.create_invitation(
@@ -186,7 +186,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
             json(conn, %{
               role: invitation.role,
               email: invitation.team_invitation.email,
-              accepted: false
+              status: "invited"
             })
         end
       end
@@ -212,13 +212,13 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       existing = Repo.one(Sites.list_guests_query(site, email: email))
 
       case existing do
-        %{accepted: false, id: id} ->
+        %{status: "invited", id: id} ->
           with guest_invitation when not is_nil(guest_invitation) <-
                  Repo.get(Teams.GuestInvitation, id) do
             Teams.Invitations.remove_guest_invitation(guest_invitation)
           end
 
-        %{accepted: true, email: email} ->
+        %{status: "accepted", email: email} ->
           with %{} = user <- Repo.get_by(Plausible.Auth.User, email: email) do
             Teams.Memberships.remove(site, user)
           end
