@@ -151,7 +151,7 @@ export function SearchTerms() {
               path: referrersGoogleRoute.path,
               search: (search: Record<string, unknown>) => search
             }}
-            className="w-full pb-4 absolute bottom-0 left-0"
+            className="w-full mt-2"
             onClick={undefined}
           />
         </React.Fragment>

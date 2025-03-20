@@ -789,22 +789,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     search = params["search"] || ""
 
-    # TODO: stop returning `error` and `reason` (not needed anymore)
-    not_configured_error_payload =
-      %{
-        error_code: :not_configured,
-        error: "The site is not connected to Google Search Keywords",
-        reason: :not_configured,
-        is_admin: is_admin
-      }
-
-    # TODO: stop returning `error` and `reason` (not needed anymore)
-    unsupported_filters_error_payload = %{
-      error_code: :unsupported_filters,
-      error:
-        "Unable to fetch keyword data from Search Console because it does not support the current set of filters",
-      reason: :unsupported_filters
-    }
+    not_configured_error_payload = %{error_code: :not_configured, is_admin: is_admin}
 
     search_terms = google_api().fetch_stats(site, query, pagination, search)
     period_too_recent? = DateTime.diff(query.now, query.utc_time_range.first, :hour) < 72
@@ -818,7 +803,7 @@ defmodule PlausibleWeb.Api.StatsController do
       {{:error, :unsupported_filters}, _} ->
         conn
         |> put_status(422)
-        |> json(unsupported_filters_error_payload)
+        |> json(%{error_code: :unsupported_filters})
 
       {{:ok, []}, _period_too_recent? = true} ->
         # We consider this an error case because Google Search Console
