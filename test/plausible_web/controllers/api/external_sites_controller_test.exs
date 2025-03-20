@@ -14,6 +14,68 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       {:ok, api_key: api_key, conn: conn}
     end
 
+    describe "GET /api/v1/sites/teams" do
+      test "shows empty list when user is not a member of any team", %{conn: conn} do
+        conn = get(conn, "/api/v1/sites/teams")
+
+        assert json_response(conn, 200) == %{
+                 "teams" => [],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => nil,
+                   "limit" => 100
+                 }
+               }
+      end
+
+      test "shows list of teams user is a member of with api availability reflecting team state",
+           %{conn: conn, user: user} do
+        user |> subscribe_to_growth_plan()
+
+        personal_team = team_of(user)
+
+        owner1 =
+          new_user(
+            trial_expiry_date: Date.add(Date.utc_today(), -1),
+            team: [name: "Team Without Stats API"]
+          )
+          |> subscribe_to_enterprise_plan(features: [])
+
+        team_without_stats = owner1 |> team_of() |> Plausible.Teams.complete_setup()
+        add_member(team_without_stats, user: user, role: :editor)
+        owner2 = new_user(team: [name: "Team With Stats API"])
+        team_with_stats = owner2 |> team_of() |> Plausible.Teams.complete_setup()
+        add_member(team_with_stats, user: user, role: :owner)
+
+        conn = get(conn, "/api/v1/sites/teams")
+
+        assert json_response(conn, 200) == %{
+                 "teams" => [
+                   %{
+                     "id" => team_with_stats.identifier,
+                     "name" => "Team With Stats API",
+                     "api_available" => true
+                   },
+                   %{
+                     "id" => team_without_stats.identifier,
+                     "name" => "Team Without Stats API",
+                     "api_available" => false
+                   },
+                   %{
+                     "id" => personal_team.identifier,
+                     "name" => "My Personal Sites",
+                     "api_available" => false
+                   }
+                 ],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => nil,
+                   "limit" => 100
+                 }
+               }
+      end
+    end
+
     describe "POST /api/v1/sites" do
       test "can create a site", %{conn: conn} do
         conn =
@@ -26,6 +88,45 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "domain" => "some-site.domain",
                  "timezone" => "Europe/Tallinn"
                }
+      end
+
+      test "can't create site in a team where not permitted to", %{conn: conn, user: user} do
+        owner = new_user() |> subscribe_to_growth_plan()
+        team = owner |> team_of() |> Plausible.Teams.complete_setup()
+        add_member(team, user: user, role: :viewer)
+
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "team_id" => team.identifier,
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn"
+          })
+
+        assert json_response(conn, 403) == %{
+                 "error" => "You can't add sites to the selected team."
+               }
+      end
+
+      test "can create a site under a specific team if permitted", %{conn: conn, user: user} do
+        _site = new_site(owner: user)
+
+        owner = new_user() |> subscribe_to_growth_plan()
+        team = owner |> team_of() |> Plausible.Teams.complete_setup()
+        add_member(team, user: user, role: :owner)
+
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "team_id" => team.identifier,
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn"
+          })
+
+        assert json_response(conn, 200) == %{
+                 "domain" => "some-site.domain",
+                 "timezone" => "Europe/Tallinn"
+               }
+
+        assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == team.id
       end
 
       test "timezone is validated", %{conn: conn} do
@@ -580,8 +681,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert_matches %{
                          "sites" => [
-                           %{"domain" => ^other_team_site.domain},
-                           %{"domain" => ^other_site.domain}
+                           %{"domain" => ^other_team_site.domain}
                          ]
                        } = json_response(conn, 200)
       end

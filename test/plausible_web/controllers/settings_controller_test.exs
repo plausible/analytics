@@ -1182,7 +1182,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html =~ "Team Information"
       assert html =~ "Change the name of your team"
       assert text_of_attr(html, "input#team_name", "value") == team.name
-      assert text_of_attr(html, "input#team-identifier", "value") == team.identifier
     end
 
     test "POST /settings/team/general/name", %{conn: conn, user: user} do

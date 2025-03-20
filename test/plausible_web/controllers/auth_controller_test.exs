@@ -707,7 +707,8 @@ defmodule PlausibleWeb.AuthControllerTest do
     } do
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
-      add_member(another_site.team, user: user, role: :admin)
+      another_team = another_owner |> team_of() |> Plausible.Teams.complete_setup()
+      add_member(another_team, user: user, role: :admin)
 
       segment =
         insert(:segment,
@@ -728,7 +729,8 @@ defmodule PlausibleWeb.AuthControllerTest do
     } do
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
-      add_member(another_site.team, user: user, role: :admin)
+      another_team = another_owner |> team_of() |> Plausible.Teams.complete_setup()
+      add_member(another_team, user: user, role: :admin)
 
       segment =
         insert(:segment,
@@ -749,7 +751,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     } do
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
-      team = team_of(another_owner)
+      team = another_owner |> team_of() |> Plausible.Teams.complete_setup()
       add_member(another_site.team, user: user, role: :owner)
 
       delete(conn, "/me")
@@ -766,7 +768,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       personal_team = team_of(user)
       another_owner = new_user()
       _another_site = new_site(owner: another_owner)
-      another_team = team_of(another_owner)
+      another_team = another_owner |> team_of() |> Plausible.Teams.complete_setup()
       add_member(another_team, user: user, role: :owner)
 
       delete(conn, "/me")

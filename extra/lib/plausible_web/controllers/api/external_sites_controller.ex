@@ -52,6 +52,30 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def teams_index(conn, params) do
+    user = conn.assigns.current_user
+
+    page =
+      user
+      |> Teams.Users.teams_query(order_by: :id_desc)
+      |> paginate(params, @pagination_opts)
+
+    json(conn, %{
+      teams:
+        Enum.map(page.entries, fn team ->
+          api_available? =
+            Plausible.Billing.Feature.StatsAPI.check_availability(team) == :ok
+
+          %{
+            id: team.identifier,
+            name: Teams.name(team),
+            api_available: api_available?
+          }
+        end),
+      meta: pagination_meta(page.metadata)
+    })
+  end
+
   def goals_index(conn, params) do
     user = conn.assigns.current_user
 

@@ -12,14 +12,6 @@
       for={@team_name_changeset}
       method="post"
     >
-      <div class="w-1/2">
-        <.input_with_clipboard
-          name="team-identifier"
-          id="team-identifier"
-          label="Team Identifier"
-          value={@current_team.identifier}
-        />
-      </div>
       <.input
         readonly={@current_team_role not in [:owner, :admin]}
         type="text"
