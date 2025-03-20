@@ -12,6 +12,8 @@ defmodule Plausible.Teams.Team do
   use Ecto.Schema
   use Plausible
 
+  alias Plausible.Auth
+
   import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
@@ -28,6 +30,9 @@ defmodule Plausible.Teams.Team do
 
     field :setup_complete, :boolean, default: false
     field :setup_at, :naive_datetime
+
+    # Field kept in sync with current subscription plan, if any
+    field :hourly_api_request_limit, :integer, default: Auth.ApiKey.hourly_request_limit()
 
     # Field for purely informational purposes in CRM context
     field :notes, :string
