@@ -2,7 +2,7 @@
 
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import classNames from 'classnames'
-import React, { useRef, useState, useLayoutEffect } from 'react'
+import React, { useRef, useState, useLayoutEffect, ReactNode } from 'react'
 import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
@@ -109,13 +109,14 @@ interface FiltersBarProps {
   }
 }
 
-const canShowClearAllAction = ({ filters }: Pick<DashboardQuery, 'filters'>) =>
-  filters.length >= 2
+const canShowClearAllAction = ({
+  filters
+}: Pick<DashboardQuery, 'filters'>): boolean => filters.length >= 2
 
 const canShowSaveAsSegmentAction = ({
   filters,
   isEditingSegment
-}: Pick<DashboardQuery, 'filters'> & { isEditingSegment: boolean }) =>
+}: Pick<DashboardQuery, 'filters'> & { isEditingSegment: boolean }): boolean =>
   filters.length >= 1 && !filters.some(isSegmentFilter) && !isEditingSegment
 
 export const FiltersBar = ({ accessors }: FiltersBarProps) => {
@@ -123,7 +124,6 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { query, expandedSegment } = useQueryContext()
-  const seeMoreRef = useRef<HTMLButtonElement>(null)
 
   const showingClearAll = canShowClearAllAction({ filters: query.filters })
   const showingSaveAsSegment = canShowSaveAsSegmentAction({
@@ -203,55 +203,87 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
       {visibility !== null &&
         (query.filters.length !== visibility.visibleCount ||
           mustShowSeeMoreMenu) && (
-          <Popover className="md:relative">
-            <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
-            <Popover.Button
-              title="See more"
-              ref={seeMoreRef}
-              className={classNames(
-                popover.toggleButton.classNames.rounded,
-                popover.toggleButton.classNames.shadow,
-                'justify-center'
-              )}
-              style={{
-                height: SEE_MORE_WIDTH_PX,
-                width: SEE_MORE_WIDTH_PX,
-                marginLeft: SEE_MORE_LEFT_MARGIN_PX,
-                marginRight: SEE_MORE_RIGHT_MARGIN_PX
-              }}
-            >
-              <EllipsisHorizontalIcon className="block h-5 w-5" />
-            </Popover.Button>
-            <Transition
-              {...popover.transition.props}
-              className={classNames(
-                'mt-2',
-                popover.transition.classNames.fullwidth,
-                'md:right-auto'
-              )}
-            >
-              <Popover.Panel
-                className={classNames(
-                  popover.panel.classNames.roundedSheet,
-                  'flex flex-col p-4 gap-y-2'
-                )}
-              >
-                {query.filters.length !== visibility.visibleCount && (
-                  <AppliedFilterPillsList
-                    direction="vertical"
-                    slice={{
-                      type: 'no-render-outside',
-                      start: visibility.visibleCount
-                    }}
-                  />
-                )}
-                {showingClearAll && <ClearAction />}
-                {showingSaveAsSegment && <SaveAsSegmentAction />}
-              </Popover.Panel>
-            </Transition>
-          </Popover>
+          <SeeMoreMenu
+            className="md:relative"
+            filtersCount={query.filters.length}
+            visibleFiltersCount={visibility.visibleCount}
+          >
+            {showingClearAll && <ClearAction />}
+            {showingSaveAsSegment && <SaveAsSegmentAction />}
+          </SeeMoreMenu>
         )}
     </div>
+  )
+}
+
+const SeeMoreMenu = ({
+  className,
+  filtersCount,
+  visibleFiltersCount,
+  children
+}: {
+  className?: string
+  filtersCount: number
+  visibleFiltersCount: number
+  children: ReactNode
+}) => {
+  const seeMoreRef = useRef<HTMLButtonElement>(null)
+  const filtersInMenuCount = filtersCount - visibleFiltersCount
+
+  const title =
+    filtersInMenuCount === 1
+      ? 'See 1 more filter and actions'
+      : filtersInMenuCount > 1
+        ? `See ${filtersInMenuCount} more filters and actions`
+        : 'See actions'
+
+  return (
+    <Popover className={className}>
+      <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
+      <Popover.Button
+        title={title}
+        ref={seeMoreRef}
+        className={classNames(
+          popover.toggleButton.classNames.rounded,
+          popover.toggleButton.classNames.shadow,
+          'justify-center'
+        )}
+        style={{
+          height: SEE_MORE_WIDTH_PX,
+          width: SEE_MORE_WIDTH_PX,
+          marginLeft: SEE_MORE_LEFT_MARGIN_PX,
+          marginRight: SEE_MORE_RIGHT_MARGIN_PX
+        }}
+      >
+        <EllipsisHorizontalIcon className="block h-5 w-5" />
+      </Popover.Button>
+      <Transition
+        {...popover.transition.props}
+        className={classNames(
+          'mt-2',
+          popover.transition.classNames.fullwidth,
+          'md:right-auto'
+        )}
+      >
+        <Popover.Panel
+          className={classNames(
+            popover.panel.classNames.roundedSheet,
+            'flex flex-col p-4 gap-y-2'
+          )}
+        >
+          {filtersCount !== visibleFiltersCount && (
+            <AppliedFilterPillsList
+              direction="vertical"
+              slice={{
+                type: 'no-render-outside',
+                start: visibleFiltersCount
+              }}
+            />
+          )}
+          {children}
+        </Popover.Panel>
+      </Transition>
+    </Popover>
   )
 }
 
