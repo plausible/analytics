@@ -45,6 +45,22 @@ defmodule Plausible.TeamsTest do
              ] = Repo.preload(team, :team_memberships).team_memberships
     end
 
+    @tag :ee_only
+    test "sets hourly API request limit to 600 in EE" do
+      user = new_user()
+      assert {:ok, team} = Teams.get_or_create(user)
+
+      assert team.hourly_request_limit == 600
+    end
+
+    @tag :ce_build_only
+    test "sets hourly API request limit to 1000000 in CE" do
+      user = new_user()
+      assert {:ok, team} = Teams.get_or_create(user)
+
+      assert team.hourly_request_limit == 1_000_000
+    end
+
     test "returns existing team if user already owns one" do
       user = new_user(trial_expiry_date: ~D[2020-04-01])
       user_id = user.id
