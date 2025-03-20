@@ -34,6 +34,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   alias Plausible.Sites
   alias PlausibleWeb.Api.Helpers, as: H
 
+  require Logger
+
   # Scopes permitted implicitly for every API key. Existing API keys
   # have _either_ `["stats:read:*"]` (the default) or `["sites:provision:*"]`
   # set as their valid scopes. We always consider implicit scopes as
@@ -67,6 +69,21 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
         {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
 
       {:ok, %{api_key: api_key, team: team}} ->
+        case Plausible.Teams.Memberships.team_role(team, api_key.user) do
+          {:ok, :guest} ->
+            Logger.warning(
+              "[#{inspect(__MODULE__)}] API key #{api_key.id} user accessing #{conn.params["site_id"]} as a guest"
+            )
+
+          {:error, :not_a_member} ->
+            Logger.warning(
+              "[#{inspect(__MODULE__)}] API key #{api_key.id} user trying to access #{conn.params["site_id"]} as a non-member"
+            )
+
+          _ ->
+            :pass
+        end
+
         {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_request_limit}
 
       {:error, _} = error ->
