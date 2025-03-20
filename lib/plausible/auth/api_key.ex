@@ -7,10 +7,13 @@ defmodule Plausible.Auth.ApiKey do
 
   @required [:user_id, :name]
   @optional [:key, :scopes, :hourly_request_limit]
+
+  @hourly_request_limit on_ee(do: 600, else: 1_000_000)
+
   schema "api_keys" do
     field :name, :string
     field :scopes, {:array, :string}, default: ["stats:read:*"]
-    field :hourly_request_limit, :integer, default: on_ee(do: 600, else: 1_000_000)
+    field :hourly_request_limit, :integer, default: @hourly_request_limit
 
     field :key, :string, virtual: true
     field :key_hash, :string
@@ -20,6 +23,8 @@ defmodule Plausible.Auth.ApiKey do
 
     timestamps()
   end
+
+  def hourly_request_limit(), do: @hourly_request_limit
 
   def changeset(schema, attrs \\ %{}) do
     schema
