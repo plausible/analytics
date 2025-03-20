@@ -96,6 +96,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def account_settings_sidebar(conn) do
+    current_user = conn.assigns[:current_user]
     current_team = conn.assigns[:current_team]
     current_team_role = conn.assigns[:current_team_role]
 
@@ -116,7 +117,7 @@ defmodule PlausibleWeb.LayoutView do
         |> Enum.reject(&is_nil/1)
     }
 
-    if Teams.enabled?(current_team) and Teams.setup?(current_team) do
+    if Teams.enabled?(current_user) and Teams.setup?(current_team) do
       Map.put(
         options,
         "Team Settings",
