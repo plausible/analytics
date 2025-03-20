@@ -31,10 +31,7 @@ export type ReportInfo = {
   defaultOrder?: Order
 }
 
-type BreakdownModalProps<TListItem extends Record<string, unknown>> = Omit<
-  SharedReportProps<TListItem>,
-  'fetchData'
-> & {
+type BreakdownModalProps = {
   /** Dimension and title of the breakdown. */
   reportInfo: ReportInfo
   /** Function that must return a new query that contains appropriate search filter for searchValue param. */
@@ -71,7 +68,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   afterFetchNextPage,
   addSearchFilter,
   getFilterInfo
-}: BreakdownModalProps<TListItem>) {
+}: Omit<SharedReportProps<TListItem>, 'fetchData'> & BreakdownModalProps) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const [meta, setMeta] = useState<BreakdownResultMeta | null>(null)

@@ -62,11 +62,11 @@ export interface SharedReportProps<
   TResponse = { results: TListItem[]; meta: BreakdownResultMeta }
 > {
   metrics: Metric[]
-  /** A function that takes a list item and returns the
+  /** A function that takes a list item and returns the filter
    *    that should be applied when the list item is clicked. All existing filters matching prefix
    *    are removed. If a list item is not supposed to be clickable, this function should
    *    return `null` for that list item. */
-  getFilterInfo: (item: TListItem) => FilterInfo
+  getFilterInfo: (item: TListItem) => FilterInfo | null
   /** A function that takes a list item and returns the HTML of an icon */
   renderIcon?: (item: TListItem) => ReactNode
   /** A function that takes a list item and returns an external URL
@@ -79,11 +79,6 @@ export interface SharedReportProps<
    *    configurable through the `metrics` prop, which also defines the keys under which
    *    column values are read, and how they're rendered. */
   fetchData: () => Promise<TResponse>
-  /** A function to be called directly after `fetchData`. Receives the
-   *     raw API response as an argument. The return value is ignored by ListReport. Allows
-   *     hooking into the request lifecycle and doing actions with returned metadata. For
-   *     example, the parent component might want to control what happens when imported data
-   *     is included or not. */
   afterFetchData?: (response: TResponse) => void
   afterFetchNextPage?: (response: TResponse) => void
 }
@@ -93,11 +88,7 @@ type ListReportProps = {
   keyLabel: string
   metrics: Metric[]
   colMinWidth?: number
-  /** A function to be called directly after `fetchData`. Receives the
-   *     raw API response as an argument. The return value is ignored by ListReport. Allows
-   *     hooking into the request lifecycle and doing actions with returned metadata. For
-   *     example, the parent component might want to control what happens when imported data
-   *     is included or not. */
+  /** Navigation props to be passed to "More" link, if any. */
   detailsLinkProps?: AppNavigationLinkProps
   /** Set this to `true` if the details button should be hidden on
    *     the condition that there are less than MAX_ITEMS entries in the list (i.e. nothing
@@ -108,10 +99,6 @@ type ListReportProps = {
   onClick?: () => void
   /** Color of the comparison bars in light-mode. */
   color?: string
-  /** A function that takes a list item and returns [prefix, filter, labels]
-   *    that should be applied when the list item is clicked. All existing filters matching prefix
-   *    are removed. If a list item is not supposed to be clickable, this function should
-   *    return `null` for that list item. */
 }
 
 /**
@@ -136,7 +123,7 @@ export default function ListReport<
   renderIcon,
   getExternalLinkUrl,
   fetchData
-}: ListReportProps & SharedReportProps<TListItem>) {
+}: Omit<SharedReportProps<TListItem>, 'afterFetchNextPage'> & ListReportProps) {
   const { query } = useQueryContext()
   const [state, setState] = useState<{
     loading: boolean
