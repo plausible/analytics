@@ -2,9 +2,8 @@ defmodule PlausibleWeb.Site.MembershipController do
   @moduledoc """
     This controller deals with user management via the UI in Site Settings -> People. It's important to enforce permissions in this controller.
 
-    Owner - Can manage users, can trigger a 'transfer ownership' request
-    Admin and Editor - Can manage users
-    Viewer - Can not access user management settings
+    Owner and Admin - Can manage users, can trigger a 'transfer ownership' request
+    Editor and Viewer - Can not access user management settings
     Anyone - Can accept invitations
 
     Everything else should be explicitly disallowed.
@@ -15,15 +14,9 @@ defmodule PlausibleWeb.Site.MembershipController do
   use Plausible
   alias Plausible.Site.Memberships
 
-  @only_owner_and_admin_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
-
   plug PlausibleWeb.RequireAccountPlug
 
-  plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
-       [:owner, :admin] when action in @only_owner_and_admin_is_allowed_to
-
-  plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
-       [:owner, :admin, :editor] when action not in @only_owner_and_admin_is_allowed_to
+  plug PlausibleWeb.Plugs.AuthorizeSiteAccess, [:owner, :admin]
 
   def invite_member_form(conn, _params) do
     site =
