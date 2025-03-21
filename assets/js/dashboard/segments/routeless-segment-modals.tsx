@@ -145,11 +145,7 @@ export const RoutelessSegmentModals = () => {
     }
   })
 
-  if (
-    !user.loggedIn ||
-    !site.flags.saved_segments ||
-    !site.flags.saved_segments_fe
-  ) {
+  if (!user.loggedIn) {
     return null
   }
 

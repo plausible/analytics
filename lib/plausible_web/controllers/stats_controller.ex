@@ -394,7 +394,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user, site),
     do:
-      [:saved_segments, :saved_segments_fe, :new_time_on_page]
+      [:new_time_on_page]
       |> Enum.map(fn flag ->
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)

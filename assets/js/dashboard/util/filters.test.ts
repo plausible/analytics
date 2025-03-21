@@ -3,11 +3,10 @@
 import { getAvailableFilterModals, serializeApiFilters } from './filters'
 
 describe(`${getAvailableFilterModals.name}`, () => {
-  it('gives limited object when props and segments are not available', () => {
+  it('gives limited object when props are not available', () => {
     expect(
       getAvailableFilterModals({
-        propsAvailable: false,
-        flags: { saved_segments: null, saved_segments_fe: null }
+        propsAvailable: false
       })
     ).toEqual({
       browser: ['browser', 'browser_version'],
@@ -24,15 +23,15 @@ describe(`${getAvailableFilterModals.name}`, () => {
         'utm_campaign',
         'utm_term',
         'utm_content'
-      ]
+      ],
+      segment: ['segment']
     })
   })
 
   it('gives full object when props and segments are available', () => {
     expect(
       getAvailableFilterModals({
-        propsAvailable: true,
-        flags: { saved_segments: true, saved_segments_fe: true }
+        propsAvailable: true
       })
     ).toEqual({
       browser: ['browser', 'browser_version'],

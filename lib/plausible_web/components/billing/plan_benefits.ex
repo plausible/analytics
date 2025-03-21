@@ -48,6 +48,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
       "Google Analytics import"
     ]
     |> Kernel.++(feature_benefits(plan))
+    |> Kernel.++(["Saved Segments"])
     |> Enum.filter(& &1)
   end
 
