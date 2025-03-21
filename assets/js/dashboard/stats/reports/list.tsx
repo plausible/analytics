@@ -1,23 +1,22 @@
 /** @format */
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { AppNavigationLink } from '../../navigation/use-app-navigate'
+import React, { useState, useEffect, useCallback, ReactNode } from 'react'
+import { AppNavigationLinkProps } from '../../navigation/use-app-navigate'
 import FlipMove from 'react-flip-move'
 
 import FadeIn from '../../fade-in'
 import MoreLink from '../more-link'
 import Bar from '../bar'
 import LazyLoader from '../../components/lazy-loader'
-import classNames from 'classnames'
 import { trimURL } from '../../util/url'
 import {
-  cleanLabels,
-  replaceFilterByPrefix,
   isRealTimeDashboard,
   hasConversionGoalFilter
 } from '../../util/filters'
-import { plainFilterText } from '../../util/filter-text'
 import { useQueryContext } from '../../query-context'
+import { Metric } from './metrics'
+import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
+import { BreakdownResultMeta } from '../../query'
 
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 380
@@ -27,45 +26,14 @@ const DATA_CONTAINER_HEIGHT =
   (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
-export function FilterLink({
-  path,
-  filterInfo,
-  onClick,
-  children,
-  extraClass
+function ExternalLink<T>({
+  item,
+  getExternalLinkUrl
+}: {
+  item: T
+  getExternalLinkUrl?: (item: T) => string
 }) {
-  const { query } = useQueryContext()
-  const className = classNames(`${extraClass}`, {
-    'hover:underline': !!filterInfo
-  })
-
-  if (filterInfo) {
-    const { prefix, filter, labels } = filterInfo
-    const newFilters = replaceFilterByPrefix(query, prefix, filter)
-    const newLabels = cleanLabels(newFilters, query.labels, filter[1], labels)
-
-    return (
-      <AppNavigationLink
-        title={`Add filter: ${plainFilterText({ ...query, labels: newLabels }, filter)}`}
-        className={className}
-        path={path}
-        onClick={onClick}
-        search={(search) => ({
-          ...search,
-          filters: newFilters,
-          labels: newLabels
-        })}
-      >
-        {children}
-      </AppNavigationLink>
-    )
-  } else {
-    return <span className={className}>{children}</span>
-  }
-}
-
-function ExternalLink({ item, externalLinkDest }) {
-  const dest = externalLinkDest && externalLinkDest(item)
+  const dest = getExternalLinkUrl && getExternalLinkUrl(item)
   if (dest) {
     return (
       <a
@@ -89,51 +57,60 @@ function ExternalLink({ item, externalLinkDest }) {
   return null
 }
 
+export interface SharedReportProps<
+  TListItem extends Record<string, unknown> = Record<string, unknown>,
+  TResponse = { results: TListItem[]; meta: BreakdownResultMeta }
+> {
+  metrics: Metric[]
+  /** A function that takes a list item and returns the filter
+   *    that should be applied when the list item is clicked. All existing filters matching prefix
+   *    are removed. If a list item is not supposed to be clickable, this function should
+   *    return `null` for that list item. */
+  getFilterInfo: (item: TListItem) => FilterInfo | null
+  /** A function that takes a list item and returns the HTML of an icon */
+  renderIcon?: (item: TListItem) => ReactNode
+  /** A function that takes a list item and returns an external URL
+   *     to navigate to. If this prop is given, an additional icon is rendered upon hovering
+   *     the entry. */
+  getExternalLinkUrl?: (item: TListItem) => string
+  /** A function that defines the data
+   *    to be rendered, and should return a list of objects under a `results` key. Think of
+   *    these objects as rows. The number of columns that are **actually rendered** is also
+   *    configurable through the `metrics` prop, which also defines the keys under which
+   *    column values are read, and how they're rendered. */
+  fetchData: () => Promise<TResponse>
+  afterFetchData?: (response: TResponse) => void
+  afterFetchNextPage?: (response: TResponse) => void
+}
+
+type ListReportProps = {
+  /** What each entry in the list represents (for UI only). */
+  keyLabel: string
+  metrics: Metric[]
+  colMinWidth?: number
+  /** Navigation props to be passed to "More" link, if any. */
+  detailsLinkProps?: AppNavigationLinkProps
+  /** Set this to `true` if the details button should be hidden on
+   *     the condition that there are less than MAX_ITEMS entries in the list (i.e. nothing
+   *     more to show).
+   */
+  maybeHideDetails?: boolean
+  /** Function with additional action to be taken when a list entry is clicked. */
+  onClick?: () => void
+  /** Color of the comparison bars in light-mode. */
+  color?: string
+}
+
 /**
- *
- * REQUIRED PROPS
- *
- * @param {Function} fetchData - A function that defines the data
- *    to be rendered, and should return a list of objects under a `results` key. Think of
- *    these objects as rows. The number of columns that are **actually rendered** is also
- *    configurable through the `metrics` prop, which also defines the keys under which
- *    column values are read, and how they're rendered.
- * @param {*} keyLabel - What each entry in the list represents (for UI only).
- * @param {Array.<Metric>} metrics - A list of `Metric` class objects, containing at least the `key,`
- *    `renderLabel`, and `renderValue` fields. Optionally, a Metric object can contain
- *    the keys `meta.plot` and `meta.hiddenOnMobile` to represent additional behavior
- *    for this metric in the ListReport.
- * @param {Function} getFilterFor - A function that takes a list item and returns [prefix, filter, labels]
- *    that should be applied when the list item is clicked. All existing filters matching prefix
- *    are removed. If a list item is not supposed to be clickable, this function should
- *    return `null` for that list item.
- *
- * OPTIONAL PROPS
- *
- * @param {Function} [onClick] - Function with additional action to be taken when a list entry is clicked.
- * @param {Object} [detailsLinkProps] - Navigation props to be passed to "More" link, if any.
- * @param {boolean} [maybeHideDetails] - Set this to `true` if the details button should be hidden on
- *     the condition that there are less than MAX_ITEMS entries in the list (i.e. nothing
- *     more to show).
- * @param {Function} [externalLinkDest] - A function that takes a list item and returns an external URL
- *     to navigate to. If this prop is given, an additional icon is rendered upon hovering
- *     the entry.
- * @param {Function} [renderIcon] - A function that takes a list item and returns the
- *     HTML of an icon (such as a flag, favicon, or a screen size icon) for a list item.
- * @param {string} [color] - Color of the comparison bars in light-mode.
- * @param {Function} [afterFetchData] - A function to be called directly after `fetchData`. Receives the
- *     raw API response as an argument. The return value is ignored by ListReport. Allows
- *     hooking into the request lifecycle and doing actions with returned metadata. For
- *     example, the parent component might want to control what happens when imported data
- *     is included or not.
- *
  * @returns {HTMLElement} Table of metrics, in the following format:
  * | keyLabel           | METRIC_1.renderLabel(query) | METRIC_2.renderLabel(query) | ...
  * |--------------------|-----------------------------|-----------------------------| ---
  * | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]    | LISTITEM_1[METRIC_2.key]    | ...
  * | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]    | LISTITEM_2[METRIC_2.key]    | ...
  */
-export default function ListReport({
+export default function ListReport<
+  TListItem extends Record<string, unknown> & { name: string }
+>({
   keyLabel,
   metrics,
   colMinWidth = COL_MIN_WIDTH,
@@ -142,13 +119,17 @@ export default function ListReport({
   maybeHideDetails,
   onClick,
   color,
-  getFilterFor,
+  getFilterInfo,
   renderIcon,
-  externalLinkDest,
+  getExternalLinkUrl,
   fetchData
-}) {
+}: Omit<SharedReportProps<TListItem>, 'afterFetchNextPage'> & ListReportProps) {
   const { query } = useQueryContext()
-  const [state, setState] = useState({ loading: true, list: null, meta: null })
+  const [state, setState] = useState<{
+    loading: boolean
+    list: TListItem[] | null
+    meta: BreakdownResultMeta | null
+  }>({ loading: true, list: null, meta: null })
   const [visible, setVisible] = useState(false)
 
   const isRealtime = isRealTimeDashboard(query)
@@ -200,12 +181,14 @@ export default function ListReport({
   // metrics based on filters and existing data, this function validates that the metrics
   // we want to display are actually there in the API response.
   function getAvailableMetrics() {
-    return metrics.filter((metric) => {
-      return state.list.some((listItem) => listItem[metric.key] != null)
-    })
+    return metrics.filter((metric) =>
+      state.list
+        ? state.list.some((listItem) => listItem[metric.key] != null)
+        : false
+    )
   }
 
-  function hiddenOnMobileClass(metric) {
+  function hiddenOnMobileClass(metric: Metric) {
     if (metric.meta.hiddenOnMobile) {
       return 'hidden md:block'
     } else {
@@ -220,10 +203,21 @@ export default function ListReport({
           <div style={{ height: ROW_HEIGHT }}>{renderReportHeader()}</div>
 
           <div style={{ minHeight: DATA_CONTAINER_HEIGHT }}>
-            {renderReportBody()}
+            <FlipMove className="flex-grow">
+              {state.list.slice(0, MAX_ITEMS).map(renderRow)}
+            </FlipMove>
           </div>
 
-          {maybeRenderDetailsLink()}
+          {!!detailsLinkProps &&
+            !state.loading &&
+            !(maybeHideDetails && !(state.list.length >= MAX_ITEMS)) && (
+              <MoreLink
+                onClick={undefined}
+                className={'mt-2'}
+                linkProps={detailsLinkProps}
+                list={state.list}
+              />
+            )}
         </div>
       )
     }
@@ -251,15 +245,7 @@ export default function ListReport({
     )
   }
 
-  function renderReportBody() {
-    return (
-      <FlipMove className="flex-grow">
-        {state.list.slice(0, MAX_ITEMS).map(renderRow)}
-      </FlipMove>
-    )
-  }
-
-  function renderRow(listItem) {
+  function renderRow(listItem: TListItem) {
     return (
       <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
         <div className="flex w-full" style={{ marginTop: ROW_GAP_HEIGHT }}>
@@ -270,21 +256,22 @@ export default function ListReport({
     )
   }
 
-  function renderBarFor(listItem) {
+  function renderBarFor(listItem: TListItem) {
     const lightBackground = color || 'bg-green-50'
-    const metricToPlot = metrics.find((metric) => metric.meta.plot).key
+    const metricToPlot = metrics.find((metric) => metric.meta.plot)?.key
 
     return (
       <div className="flex-grow w-full overflow-hidden">
         <Bar
+          maxWidthDeduction={undefined}
           count={listItem[metricToPlot]}
           all={state.list}
           bg={`${lightBackground} dark:bg-gray-500 dark:bg-opacity-15`}
           plot={metricToPlot}
         >
           <div className="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
-            <FilterLink
-              filterInfo={getFilterFor(listItem)}
+            <DrilldownLink
+              filterInfo={getFilterInfo(listItem)}
               onClick={onClick}
               extraClass="max-w-max w-full flex items-center md:overflow-hidden"
             >
@@ -293,21 +280,24 @@ export default function ListReport({
               <span className="w-full md:truncate">
                 {trimURL(listItem.name, colMinWidth)}
               </span>
-            </FilterLink>
-            <ExternalLink item={listItem} externalLinkDest={externalLinkDest} />
+            </DrilldownLink>
+            <ExternalLink
+              item={listItem}
+              getExternalLinkUrl={getExternalLinkUrl}
+            />
           </div>
         </Bar>
       </div>
     )
   }
 
-  function maybeRenderIconFor(listItem) {
+  function maybeRenderIconFor(listItem: TListItem) {
     if (renderIcon) {
       return renderIcon(listItem)
     }
   }
 
-  function renderMetricValuesFor(listItem) {
+  function renderMetricValuesFor(listItem: TListItem) {
     return getAvailableMetrics().map((metric) => {
       return (
         <div
@@ -346,22 +336,6 @@ export default function ListReport({
           No data yet
         </div>
       </div>
-    )
-  }
-
-  function maybeRenderDetailsLink() {
-    const moreResultsAvailable = state.list.length >= MAX_ITEMS
-    const hideDetails = maybeHideDetails && !moreResultsAvailable
-
-    const showDetails = !!detailsLinkProps && !state.loading && !hideDetails
-    return (
-      showDetails && (
-        <MoreLink
-          className={'mt-2'}
-          linkProps={detailsLinkProps}
-          list={state.list}
-        />
-      )
     )
   }
 
