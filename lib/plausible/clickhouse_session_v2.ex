@@ -17,9 +17,9 @@ defmodule Plausible.ClickhouseSessionV2 do
     def type, do: unquote(Macro.escape(u8))
 
     @impl true
-    def cast(true), do: {:ok, 1}
-    def cast(false), do: {:ok, 0}
-    def cast(nil), do: {:ok, 0}
+    def cast(v) when v in [true, false, 0, 1, nil] do
+      {:ok, v}
+    end
 
     @impl true
     def load(1), do: {:ok, true}

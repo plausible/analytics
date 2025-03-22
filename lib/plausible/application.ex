@@ -42,6 +42,11 @@ defmodule Plausible.Application do
           global_ttl: :timer.minutes(30),
           ets_options: [read_concurrency: true, write_concurrency: true]
         ),
+        Supervisor.child_spec(
+          {Plausible.Session.Transfer,
+           base_path: Application.get_env(:plausible, :session_transfer_dir)},
+          shutdown: :timer.seconds(15)
+        ),
         warmed_cache(Plausible.Site.Cache,
           adapter_opts: [
             n_lock_partitions: 1,

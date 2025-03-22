@@ -78,6 +78,20 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         counter(
           metric_prefix ++ [:ingest, :user_agent_parse, :timeout, :total],
           event_name: Ingestion.Event.telemetry_ua_parse_timeout()
+        ),
+        counter(
+          metric_prefix ++ [:sessions, :transfer, :count],
+          event_name: Plausible.Session.Transfer.telemetry_event(),
+          measurement: :count
+        ),
+        distribution(
+          metric_prefix ++ [:sessions, :transfer, :duration],
+          event_name: Plausible.Session.Transfer.telemetry_event(),
+          reporter_options: [
+            buckets: [10, 50, 100, 250, 500, 1000, 5000, 10_000]
+          ],
+          unit: {:native, :millisecond},
+          measurement: :duration
         )
       ]
     )
