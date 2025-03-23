@@ -324,8 +324,16 @@
       "markdownDescription": "Goal dimension"
     },
     "time_dimensions": {
-      "type": "string",
-      "enum": ["time", "time:month", "time:week", "time:day", "time:hour"]
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["time", "time:month", "time:week", "time:day", "time:hour"]
+        },
+        {
+          "const": "time:minute",
+          "$comment": "only :internal"
+        }
+      ]
     },
     "dimensions": {
       "oneOf": [
