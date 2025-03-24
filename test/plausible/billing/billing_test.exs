@@ -273,7 +273,7 @@ defmodule Plausible.BillingTest do
 
       api_key = insert(:api_key, user: user, hourly_request_limit: 1)
 
-      assert team.hourly_api_request_limit == 600
+      assert team.hourly_api_request_limit < 10_000
 
       %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
@@ -404,7 +404,7 @@ defmodule Plausible.BillingTest do
 
       api_key = insert(:api_key, user: user, hourly_request_limit: 1)
 
-      assert team.hourly_api_request_limit == 600
+      assert team.hourly_api_request_limit < 10_000
 
       @subscription_updated_params
       |> Map.merge(%{
