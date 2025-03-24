@@ -16,12 +16,12 @@ defmodule Plausible.BillingTest do
       team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1)) |> team_of()
 
       assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
     test "is true for a user with empty trial expiry date" do
       assert Plausible.Teams.Billing.check_needs_to_upgrade(nil) ==
-               {:needs_to_upgrade, :no_trial}
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
     test "is false for user with empty trial expiry date but with an active subscription" do
@@ -66,7 +66,7 @@ defmodule Plausible.BillingTest do
         |> team_of()
 
       assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
     test "is true for a deleted subscription if no next_bill_date specified" do
@@ -79,10 +79,10 @@ defmodule Plausible.BillingTest do
         |> team_of()
 
       assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
-    test "is true for a user past their grace period" do
+    test "needs to upgrade if subscription active and grace period ended when usage still over limits" do
       user =
         new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
         |> subscribe_to_growth_plan(
@@ -92,8 +92,24 @@ defmodule Plausible.BillingTest do
 
       team = user |> team_of() |> Repo.reload!() |> Plausible.Teams.end_grace_period()
 
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
+      over_limits_usage_stub = monthly_pageview_usage_stub(100_000_000, 100_000_000)
+
+      assert Plausible.Teams.Billing.check_needs_to_upgrade(team, over_limits_usage_stub) ==
                {:needs_to_upgrade, :grace_period_ended}
+    end
+
+    test "no upgrade needed if subscription active and grace period ended but usage below limits" do
+      user =
+        new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
+        |> subscribe_to_growth_plan(
+          status: Subscription.Status.deleted(),
+          next_bill_date: Date.utc_today()
+        )
+
+      team = user |> team_of() |> Repo.reload!() |> Plausible.Teams.end_grace_period()
+
+      assert Plausible.Teams.Billing.check_needs_to_upgrade(team, Plausible.Teams.Billing) ==
+               :no_upgrade_needed
     end
   end
 

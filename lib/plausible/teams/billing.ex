@@ -128,31 +128,39 @@ defmodule Plausible.Teams.Billing do
     |> Repo.one()
   end
 
-  @spec check_needs_to_upgrade(Teams.Team.t() | nil) ::
-          {:needs_to_upgrade, :no_trial | :no_active_subscription | :grace_period_ended}
+  @spec check_needs_to_upgrade(Teams.Team.t() | nil, atom()) ::
+          {:needs_to_upgrade, :no_active_trial_or_subscription | :grace_period_ended}
           | :no_upgrade_needed
-  def check_needs_to_upgrade(nil), do: {:needs_to_upgrade, :no_trial}
+  def check_needs_to_upgrade(team_or_nil, usage_mod \\ Teams.Billing)
 
-  def check_needs_to_upgrade(team) do
+  def check_needs_to_upgrade(nil, _usage_mod),
+    do: {:needs_to_upgrade, :no_active_trial_or_subscription}
+
+  def check_needs_to_upgrade(team, usage_mod) do
     team = Teams.with_subscription(team)
 
-    trial_over? =
-      not is_nil(team.trial_expiry_date) and
-        Date.before?(team.trial_expiry_date, Date.utc_today())
-
-    subscription_active? = Subscriptions.active?(team.subscription)
-
     cond do
-      is_nil(team.trial_expiry_date) and not subscription_active? ->
-        {:needs_to_upgrade, :no_trial}
+      Plausible.Teams.on_trial?(team) ->
+        :no_upgrade_needed
 
-      trial_over? and not subscription_active? ->
-        {:needs_to_upgrade, :no_active_subscription}
+      not Subscriptions.active?(team.subscription) ->
+        {:needs_to_upgrade, :no_active_trial_or_subscription}
 
       Teams.GracePeriod.expired?(team) ->
-        {:needs_to_upgrade, :grace_period_ended}
+        check_usage_last_chance(team, usage_mod)
 
       true ->
+        :no_upgrade_needed
+    end
+  end
+
+  defp check_usage_last_chance(team, usage_mod) do
+    case Plausible.Workers.CheckUsage.check_pageview_usage_two_cycles(team, usage_mod) do
+      {:over_limit, _} ->
+        {:needs_to_upgrade, :grace_period_ended}
+
+      {:below_limit, _} ->
+        Plausible.Teams.remove_grace_period(team)
         :no_upgrade_needed
     end
   end
