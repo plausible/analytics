@@ -147,14 +147,14 @@ defmodule Plausible.Teams.Billing do
         {:needs_to_upgrade, :no_active_trial_or_subscription}
 
       Teams.GracePeriod.expired?(team) ->
-        check_usage_last_chance(team, usage_mod)
+        revise_pageview_usage(team, usage_mod)
 
       true ->
         :no_upgrade_needed
     end
   end
 
-  defp check_usage_last_chance(team, usage_mod) do
+  defp revise_pageview_usage(team, usage_mod) do
     case Plausible.Workers.CheckUsage.check_pageview_usage_two_cycles(team, usage_mod) do
       {:over_limit, _} ->
         {:needs_to_upgrade, :grace_period_ended}
