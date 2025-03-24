@@ -5,6 +5,8 @@ defmodule Plausible.Billing.SiteLockerTest do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{SiteLocker, Subscription}
 
+  @moduletag :ee_only
+
   @v4_growth_plan_id "857097"
 
   describe "update_sites_for/1" do

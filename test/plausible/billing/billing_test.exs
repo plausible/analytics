@@ -7,6 +7,8 @@ defmodule Plausible.BillingTest do
   alias Plausible.Billing.Subscription
 
   describe "check_needs_to_upgrade" do
+    @describetag :ee_only
+
     test "is false for a trial user" do
       team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
       assert Plausible.Teams.Billing.check_needs_to_upgrade(team) == :no_upgrade_needed
