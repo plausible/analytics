@@ -104,7 +104,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      over_limits_usage_stub = monthly_pageview_usage_stub(15_000, 15_000)
+      over_limits_usage_stub = Plausible.BillingTest.monthly_pageview_usage_stub(15_000, 15_000)
 
       assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
                {:locked, :grace_period_ended_now}
@@ -136,7 +136,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       billing_member = new_user()
       add_member(team, user: billing_member, role: :billing)
 
-      over_limits_usage_stub = monthly_pageview_usage_stub(15_000, 15_000)
+      over_limits_usage_stub = Plausible.BillingTest.monthly_pageview_usage_stub(15_000, 15_000)
 
       assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
                {:locked, :grace_period_ended_now}
@@ -164,7 +164,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       new_site(owner: user)
       team = team_of(user)
 
-      over_limits_usage_stub = monthly_pageview_usage_stub(15_000, 15_000)
+      over_limits_usage_stub = Plausible.BillingTest.monthly_pageview_usage_stub(15_000, 15_000)
 
       assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
                {:locked, :grace_period_ended_now}
