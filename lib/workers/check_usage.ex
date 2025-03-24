@@ -146,7 +146,7 @@ defmodule Plausible.Workers.CheckUsage do
     end
   end
 
-  defp check_pageview_usage_two_cycles(subscriber, usage_mod) do
+  def check_pageview_usage_two_cycles(subscriber, usage_mod) do
     usage = usage_mod.monthly_pageview_usage(subscriber)
     limit = Teams.Billing.monthly_pageview_limit(subscriber.subscription)
 

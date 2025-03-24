@@ -141,6 +141,7 @@ defmodule PlausibleWeb.SiteControllerTest do
              )
     end
 
+    @tag :ee_only
     test "shows upgrade nag message to expired trial user without subscription", %{
       conn: initial_conn,
       user: user
