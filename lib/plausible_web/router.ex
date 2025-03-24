@@ -227,7 +227,8 @@ defmodule PlausibleWeb.Router do
     end
   end
 
-  scope "/api/v1/stats", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
+  scope "/api/v1/stats", PlausibleWeb.Api,
+    assigns: %{api_scope: "stats:read:*", api_context: :site} do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     get "/realtime/visitors", ExternalStatsController, :realtime_visitors
@@ -236,7 +237,8 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*", schema_type: :public} do
+  scope "/api/v2", PlausibleWeb.Api,
+    assigns: %{api_scope: "stats:read:*", api_context: :site, schema_type: :public} do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
@@ -267,25 +269,31 @@ defmodule PlausibleWeb.Router do
 
         get "/", ExternalSitesController, :index
         get "/teams", ExternalSitesController, :teams_index
-        get "/goals", ExternalSitesController, :goals_index
-        get "/guests", ExternalSitesController, :guests_index
-        get "/:site_id", ExternalSitesController, :get_site
+
+        scope assigns: %{api_context: :site} do
+          get "/goals", ExternalSitesController, :goals_index
+          get "/guests", ExternalSitesController, :guests_index
+          get "/:site_id", ExternalSitesController, :get_site
+        end
       end
 
       scope assigns: %{api_scope: "sites:provision:*"} do
         pipe_through PlausibleWeb.Plugs.AuthorizePublicAPI
 
         post "/", ExternalSitesController, :create_site
-        put "/shared-links", ExternalSitesController, :find_or_create_shared_link
 
-        put "/goals", ExternalSitesController, :find_or_create_goal
-        delete "/goals/:goal_id", ExternalSitesController, :delete_goal
+        scope assigns: %{api_context: :site} do
+          put "/shared-links", ExternalSitesController, :find_or_create_shared_link
 
-        put "/guests", ExternalSitesController, :find_or_create_guest
-        delete "/guests/:email", ExternalSitesController, :delete_guest
+          put "/goals", ExternalSitesController, :find_or_create_goal
+          delete "/goals/:goal_id", ExternalSitesController, :delete_goal
 
-        put "/:site_id", ExternalSitesController, :update_site
-        delete "/:site_id", ExternalSitesController, :delete_site
+          put "/guests", ExternalSitesController, :find_or_create_guest
+          delete "/guests/:email", ExternalSitesController, :delete_guest
+
+          put "/:site_id", ExternalSitesController, :update_site
+          delete "/:site_id", ExternalSitesController, :delete_site
+        end
       end
     end
   end

@@ -245,10 +245,6 @@ defmodule Plausible.Billing do
       )
 
     if plan do
-      owner_ids = Enum.map(team.owners, & &1.id)
-      api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id in ^owner_ids)
-      Repo.update_all(api_keys, set: [hourly_request_limit: plan.hourly_api_request_limit])
-
       Repo.update_all(
         from(t in Teams.Team, where: t.id == ^team.id),
         set: [hourly_api_request_limit: plan.hourly_api_request_limit]
