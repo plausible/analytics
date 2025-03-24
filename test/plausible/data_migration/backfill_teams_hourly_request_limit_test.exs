@@ -4,8 +4,8 @@ defmodule Plausible.DataMigration.BackfillTeamsHourlyRequestLimitTest do
 
   import ExUnit.CaptureIO
 
+  alias Plausible.Auth
   alias Plausible.DataMigration.BackfillTeamsHourlyRequestLimit
-
   alias Plausible.Repo
 
   describe "run/1" do
@@ -59,9 +59,10 @@ defmodule Plausible.DataMigration.BackfillTeamsHourlyRequestLimitTest do
       assert real_run_output =~ "Done!"
 
       assert Repo.reload(team1).hourly_api_request_limit == 5000
-      assert Repo.reload(team2).hourly_api_request_limit == 600
-      assert Repo.reload(team3).hourly_api_request_limit == 600
-      assert Repo.reload(team4).hourly_api_request_limit == 600
+
+      assert Repo.reload(team2).hourly_api_request_limit == Auth.ApiKey.hourly_request_limit()
+      assert Repo.reload(team3).hourly_api_request_limit == Auth.ApiKey.hourly_request_limit()
+      assert Repo.reload(team4).hourly_api_request_limit == Auth.ApiKey.hourly_request_limit()
     end
   end
 end
