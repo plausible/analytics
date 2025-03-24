@@ -69,18 +69,23 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
         {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
 
       {:ok, %{api_key: api_key, team: team}} ->
-        case Plausible.Teams.Memberships.team_role(team, api_key.user) do
-          {:ok, :guest} ->
+        team_role_result = Plausible.Teams.Memberships.team_role(team, api_key.user)
+
+        cond do
+          Auth.is_super_admin?(api_key.user) ->
+            :pass
+
+          team_role_result == {:ok, :guest} ->
             Logger.warning(
               "[#{inspect(__MODULE__)}] API key #{api_key.id} user accessing #{conn.params["site_id"]} as a guest"
             )
 
-          {:error, :not_a_member} ->
+          team_role_result == {:error, :not_a_member} ->
             Logger.warning(
               "[#{inspect(__MODULE__)}] API key #{api_key.id} user trying to access #{conn.params["site_id"]} as a non-member"
             )
 
-          _ ->
+          true ->
             :pass
         end
 
