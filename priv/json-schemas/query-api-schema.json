@@ -198,8 +198,16 @@
           "description": "Last 7 days relative to today"
         },
         {
+          "const": "28d",
+          "description": "Last 28 days relative to today"
+        },
+        {
           "const": "30d",
           "description": "Last 30 days relative to today"
+        },
+        {
+          "const": "90d",
+          "description": "Last 90 days relative to today"
         },
         {
           "const": "month",
