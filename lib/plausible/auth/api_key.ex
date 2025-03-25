@@ -18,6 +18,7 @@ defmodule Plausible.Auth.ApiKey do
     field :key_hash, :string
     field :key_prefix, :string
 
+    belongs_to :team, Plausible.Teams.Team
     belongs_to :user, Plausible.Auth.User
 
     timestamps()
@@ -25,13 +26,15 @@ defmodule Plausible.Auth.ApiKey do
 
   def hourly_request_limit(), do: @hourly_request_limit
 
-  def changeset(schema, attrs \\ %{}) do
+  def changeset(schema, team, attrs \\ %{}) do
     schema
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> maybe_put_key()
     |> process_key()
+    |> put_assoc(:team, team)
     |> unique_constraint(:key_hash, error_key: :key)
+    |> unique_constraint([:team_id, :user_id], error_key: :team)
   end
 
   def update(schema, attrs \\ %{}) do

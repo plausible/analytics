@@ -154,11 +154,11 @@ defmodule Plausible.Auth do
     def is_super_admin?(_), do: false
   end
 
-  @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
+  @spec create_api_key(Auth.User.t(), Teams.Team.t(), String.t(), String.t()) ::
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
-  def create_api_key(user, name, key) do
+  def create_api_key(user, team, name, key) do
     params = %{name: name, user_id: user.id, key: key}
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, team, params)
 
     with :ok <- check_stats_api_available(user) do
       Repo.insert(changeset)
