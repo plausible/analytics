@@ -346,8 +346,8 @@ const ClearAction = ({ className }: { className?: string }) => (
       labels: null
     })}
   >
-    <span className="ml-1">Clear all filters</span>
-    <KeybindHint>Esc</KeybindHint>
+    <span className="#ml-1">Clear all filters</span>
+    <KeybindHint className="ml-4">Esc</KeybindHint>
   </AppNavigationLink>
 )
 
@@ -361,7 +361,7 @@ const SaveAsSegmentAction = ({ className }: { className?: string }) => {
       onClick={() => setModal('create')}
       state={{ expandedSegment: null }}
     >
-      <span className="ml-1">Save as segment</span>
+      <span className="#ml-1">Save as segment</span>
     </AppNavigationLink>
   )
 }
