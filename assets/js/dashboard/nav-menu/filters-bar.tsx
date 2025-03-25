@@ -10,6 +10,7 @@ import { BlurMenuButtonOnEscape } from '../keybinding'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardQuery } from '../query'
+import { removeFilterButtonClassname } from '../components/remove-filter-button'
 
 // Component structure is
 // `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
@@ -206,8 +207,8 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
             filtersCount={query.filters.length}
             visibleFiltersCount={visibility.visibleCount}
           >
-            {showingClearAll && <ClearAction />}
             {showingSaveAsSegment && <SaveAsSegmentAction />}
+            {showingClearAll && <ClearAction />}
           </SeeMoreMenu>
         )}
     </div>
@@ -287,9 +288,7 @@ const SeeMoreMenu = ({
 
 const ClearAction = () => (
   <AppNavigationLink
-    className={classNames(
-      'button flex self-start h-9 !px-3 !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
-    )}
+    className={classNames(removeFilterButtonClassname, 'self-start')}
     search={(search) => ({
       ...search,
       filters: null,

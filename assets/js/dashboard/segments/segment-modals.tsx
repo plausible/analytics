@@ -17,13 +17,14 @@ import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
-import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { MutationStatus } from '@tanstack/react-query'
 import { ApiError } from '../api'
 import { ErrorPanel } from '../components/error-panel'
 import { useSegmentsContext } from '../filtering/segments-context'
 import { useSiteContext } from '../site-context'
 import { useUserContext } from '../user-context'
+import { removeFilterButtonClassname } from '../components/remove-filter-button'
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -496,7 +497,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                 </AppNavigationLink>
 
                 <AppNavigationLink
-                  className={primaryNegativeButtonClassName}
+                  className={removeFilterButtonClassname}
                   path={rootRoute.path}
                   search={(s) => {
                     const nonSegmentFilters = query.filters.filter(
@@ -514,7 +515,6 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                     }
                   }}
                 >
-                  <TrashIcon className="w-4 h-4 mr-2" />
                   Remove filter
                 </AppNavigationLink>
               </ButtonsRow>
