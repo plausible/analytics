@@ -73,8 +73,7 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp put_last_week_query(%{site: site} = assigns) do
-    today = DateTime.now!(site.timezone) |> DateTime.to_date()
-    date = Date.shift(today, week: -1) |> Timex.end_of_week() |> Date.to_iso8601()
+    date = DateTime.now!(site.timezone) |> Timex.beginning_of_week() |> Date.to_iso8601()
     query = Query.from(site, %{"period" => "7d", "date" => date})
 
     Map.put(assigns, :query, query)

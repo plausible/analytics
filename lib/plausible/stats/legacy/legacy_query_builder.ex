@@ -92,7 +92,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp put_period(query, site, %{"period" => "7d"} = params) do
-    end_date = parse_single_date(query, params)
+    end_date = parse_single_date(query, params) |> Date.shift(day: -1)
     start_date = end_date |> Date.shift(day: -6)
 
     datetime_range =
@@ -103,8 +103,8 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp put_period(query, site, %{"period" => "30d"} = params) do
-    end_date = parse_single_date(query, params)
-    start_date = end_date |> Date.shift(day: -30)
+    end_date = parse_single_date(query, params) |> Date.shift(day: -1)
+    start_date = end_date |> Date.shift(day: -29)
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)

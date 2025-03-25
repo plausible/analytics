@@ -373,7 +373,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"labels" => labels} = json_response(conn, 200)
 
       {:ok, first} = Timex.today() |> Timex.shift(days: -30) |> Timex.format("{ISOdate}")
-      {:ok, last} = Timex.today() |> Timex.format("{ISOdate}")
+      {:ok, last} = Timex.today() |> Timex.shift(days: -1) |> Timex.format("{ISOdate}")
       assert List.first(labels) == first
       assert List.last(labels) == last
     end
@@ -382,8 +382,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=7d&metric=visitors")
       assert %{"labels" => labels} = json_response(conn, 200)
 
-      {:ok, first} = Timex.today() |> Timex.shift(days: -6) |> Timex.format("{ISOdate}")
-      {:ok, last} = Timex.today() |> Timex.format("{ISOdate}")
+      {:ok, first} = Timex.today() |> Timex.shift(days: -7) |> Timex.format("{ISOdate}")
+      {:ok, last} = Timex.today() |> Timex.shift(days: -1) |> Timex.format("{ISOdate}")
       assert List.first(labels) == first
       assert List.last(labels) == last
     end
@@ -553,7 +553,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-07&metric=visitors&interval=day"
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-08&metric=visitors&interval=day"
         )
 
       assert %{"plot" => plot} = json_response(conn, 200)
@@ -626,7 +626,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=7d&date=2020-01-07&metric=scroll_depth&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2020-01-08&metric=scroll_depth&filters=#{filters}"
         )
 
       assert %{"plot" => plot} = json_response(conn, 200)
@@ -671,7 +671,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=7d&date=2020-01-07&metric=scroll_depth&filters=#{filters}&with_imported=true"
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2020-01-08&metric=scroll_depth&filters=#{filters}&with_imported=true"
         )
 
       assert %{"plot" => plot} = json_response(conn, 200)
@@ -1227,12 +1227,12 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                json_response(conn, 200)
 
       {:ok, first} = Timex.today() |> Timex.shift(days: -30) |> Timex.format("{ISOdate}")
-      {:ok, last} = Timex.today() |> Timex.format("{ISOdate}")
+      {:ok, last} = Timex.today() |> Timex.shift(days: -1) |> Timex.format("{ISOdate}")
 
       assert List.first(labels) == first
       assert List.last(labels) == last
 
-      {:ok, first} = Timex.today() |> Timex.shift(days: -61) |> Timex.format("{ISOdate}")
+      {:ok, first} = Timex.today() |> Timex.shift(days: -60) |> Timex.format("{ISOdate}")
       {:ok, last} = Timex.today() |> Timex.shift(days: -31) |> Timex.format("{ISOdate}")
 
       assert List.first(comparison_labels) == first
@@ -1375,7 +1375,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&comparison=previous_period&metric=conversion_rate&filters=#{filters}"
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-15&comparison=previous_period&metric=conversion_rate&filters=#{filters}"
         )
 
       assert %{"plot" => this_week_plot, "comparison_plot" => last_week_plot} =
@@ -1511,7 +1511,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&metric=total_revenue&filters=#{filters}&comparison=previous_period"
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-15&metric=total_revenue&filters=#{filters}&comparison=previous_period"
         )
 
       assert %{"plot" => plot, "comparison_plot" => prev} = json_response(conn, 200)
@@ -1669,7 +1669,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&metric=average_revenue&filters=#{filters}&comparison=previous_period"
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-15&metric=average_revenue&filters=#{filters}&comparison=previous_period"
         )
 
       assert %{"plot" => plot, "comparison_plot" => prev} = json_response(conn, 200)

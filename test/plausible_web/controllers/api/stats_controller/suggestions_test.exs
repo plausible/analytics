@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/region?q=Har"
+          "/api/stats/#{site.domain}/suggestions/region?period=day&q=Har"
         )
 
       assert json_response(conn, 200) == [%{"value" => "EE-37", "label" => "Harjumaa"}]
@@ -164,7 +164,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/city?q=Kär"
+          "/api/stats/#{site.domain}/suggestions/city?period=day&q=Kär"
         )
 
       assert json_response(conn, 200) == [%{"value" => 591_632, "label" => "Kärdla"}]
@@ -291,7 +291,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn1,
-          "/api/stats/#{site.domain}/suggestions/hostname?q=alice"
+          "/api/stats/#{site.domain}/suggestions/hostname?period=day&q=alice"
         )
 
       assert json_response(conn, 200) == [
@@ -301,7 +301,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn1,
-          "/api/stats/#{site.domain}/suggestions/hostname?q=host"
+          "/api/stats/#{site.domain}/suggestions/hostname?period=day&q=host"
         )
 
       suggestions = json_response(conn, 200)
@@ -344,7 +344,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn1,
-          "/api/stats/#{site.domain}/suggestions/hostname?q=host"
+          "/api/stats/#{site.domain}/suggestions/hostname?period=day&q=host"
         )
 
       results = json_response(conn, 200)
@@ -360,7 +360,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn1,
-          "/api/stats/#{site.domain}/suggestions/hostname?q=dave"
+          "/api/stats/#{site.domain}/suggestions/hostname?period=day&q=dave"
         )
 
       assert json_response(conn, 200) == []
@@ -368,7 +368,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn1,
-          "/api/stats/#{site.domain}/suggestions/hostname?q=rogue"
+          "/api/stats/#{site.domain}/suggestions/hostname?period=day&q=rogue"
         )
 
       assert json_response(conn, 200) == [
@@ -820,7 +820,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/country?filters=#{filters}&q=&with_imported=true"
+          "/api/stats/#{site.domain}/suggestions/country?period=day&filters=#{filters}&q=&with_imported=true"
         )
 
       assert json_response(conn, 200) == [%{"value" => "EE", "label" => "Estonia"}]
@@ -880,7 +880,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         conn =
           get(
             conn,
-            "/api/stats/#{site.domain}/suggestions/region?q=#{unquote(q)}&with_imported=true"
+            "/api/stats/#{site.domain}/suggestions/region?period=day&q=#{unquote(q)}&with_imported=true"
           )
 
         assert json_response(conn, 200) == [
@@ -908,7 +908,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn1 =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/region?q=&with_imported=true"
+          "/api/stats/#{site.domain}/suggestions/region?period=day&q=&with_imported=true"
         )
 
       assert json_response(conn1, 200) == [
@@ -919,7 +919,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn2 =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/region?q=H&with_imported=true"
+          "/api/stats/#{site.domain}/suggestions/region?period=day&q=H&with_imported=true"
         )
 
       assert json_response(conn2, 200) == [
@@ -948,7 +948,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/region?filters=#{filters}&q=&with_imported=true"
+          "/api/stats/#{site.domain}/suggestions/region?period=day&filters=#{filters}&q=&with_imported=true"
         )
 
       assert json_response(conn, 200) == [%{"value" => "EE-39", "label" => "Hiiumaa"}]
@@ -1020,7 +1020,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         conn =
           get(
             conn,
-            "/api/stats/#{site.domain}/suggestions/city?q=#{unquote(q)}&with_imported=true"
+            "/api/stats/#{site.domain}/suggestions/city?period=day&q=#{unquote(q)}&with_imported=true"
           )
 
         assert json_response(conn, 200) == [
@@ -1050,7 +1050,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/city?filters=#{filters}&q=&with_imported=true"
+          "/api/stats/#{site.domain}/suggestions/city?period=day&filters=#{filters}&q=&with_imported=true"
         )
 
       assert json_response(conn, 200) == [%{"value" => 591_632, "label" => "Kärdla"}]

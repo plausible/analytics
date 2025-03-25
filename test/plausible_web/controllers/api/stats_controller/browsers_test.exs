@@ -204,7 +204,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/browsers?period=7d&date=2021-01-13&comparison=previous_period"
+          "/api/stats/#{site.domain}/browsers?period=7d&date=2021-01-14&comparison=previous_period"
         )
 
       assert json_response(conn, 200)["results"] == [
@@ -267,8 +267,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
 
       assert json_response(conn, 200)["meta"] == %{
-               "date_range_label" => "7 Jan - 13 Jan 2021",
-               "comparison_date_range_label" => "31 Dec 2020 - 6 Jan 2021"
+               "date_range_label" => "6 Jan - 12 Jan 2021",
+               "comparison_date_range_label" => "30 Dec 2020 - 5 Jan 2021"
              }
     end
   end
@@ -367,7 +367,10 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       filters = Jason.encode!([[:is, "visit:browser", ["Chrome"]]])
 
       conn =
-        get(conn, "/api/stats/#{site.domain}/browser-versions?filters=#{filters}&detailed=true")
+        get(
+          conn,
+          "/api/stats/#{site.domain}/browser-versions?filters=#{filters}&detailed=true&period=day"
+        )
 
       assert json_response(conn, 200)["results"] == [
                %{

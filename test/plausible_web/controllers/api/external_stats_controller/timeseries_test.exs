@@ -338,7 +338,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       get(conn, "/api/v1/stats/timeseries", %{
         "site_id" => site.domain,
         "period" => "7d",
-        "date" => "2021-01-07"
+        "date" => "2021-01-08"
       })
 
     assert json_response(conn, 200) == %{
@@ -1240,7 +1240,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "metrics" => "conversion_rate",
           "filters" => "event:goal==Signup",
           "period" => "7d",
-          "date" => "2021-01-10"
+          "date" => "2021-01-11"
         })
 
       assert [first, second | _] = json_response(conn, 200)["results"]
@@ -1290,7 +1290,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "metrics" => "conversion_rate",
           "filters" => "event:goal==Signup;event:props:author==Teet",
           "period" => "7d",
-          "date" => "2021-01-10"
+          "date" => "2021-01-11"
         })
 
       [first | _] = json_response(conn, 200)["results"]
@@ -1329,7 +1329,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "metrics" => "conversion_rate",
           "filters" => "event:goal==Signup;event:page==/yes",
           "period" => "7d",
-          "date" => "2021-01-10"
+          "date" => "2021-01-11"
         })
 
       [first | _] = json_response(conn, 200)["results"]
@@ -1368,7 +1368,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "metrics" => "conversion_rate",
           "filters" => "event:goal==Signup;visit:device==Mobile",
           "period" => "7d",
-          "date" => "2021-01-10"
+          "date" => "2021-01-11"
         })
 
       [first | _] = json_response(conn, 200)["results"]
@@ -1414,7 +1414,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "7d",
           "metrics" => "pageviews,visits,views_per_visit",
-          "date" => "2021-01-07"
+          "date" => "2021-01-08"
         })
 
       assert json_response(conn, 200) == %{
@@ -1477,7 +1477,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "7d",
           "metrics" => "events",
-          "date" => "2021-01-07"
+          "date" => "2021-01-08"
         })
 
       assert json_response(conn, 200) == %{
@@ -1545,7 +1545,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "7d",
           "metrics" => "views_per_visit",
-          "date" => "2021-01-07"
+          "date" => "2021-01-08"
         })
 
       assert json_response(conn, 200) == %{
@@ -1579,7 +1579,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "7d",
           "metrics" => "events",
-          "date" => "2021-01-07",
+          "date" => "2021-01-08",
           "with_imported" => "true"
         })
 
@@ -1615,7 +1615,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "7d",
           "metrics" => "events",
-          "date" => "2021-01-07",
+          "date" => "2021-01-08",
           "with_imported" => "true",
           "filters" => "event:props:package==large"
         })

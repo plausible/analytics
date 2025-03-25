@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:pageview)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/sources")
+      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day")
 
       assert json_response(conn, 200)["results"] == [
                %{"name" => "Google", "visitors" => 3},
@@ -273,14 +273,14 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/sources")
+      conn1 = get(conn, "/api/stats/#{site.domain}/sources?period=day")
 
       assert json_response(conn1, 200)["results"] == [
                %{"name" => "Google", "visitors" => 2},
                %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
 
-      conn2 = get(conn, "/api/stats/#{site.domain}/sources?with_imported=true")
+      conn2 = get(conn, "/api/stats/#{site.domain}/sources?period=day&with_imported=true")
 
       assert json_response(conn2, 200)["results"] == [
                %{"name" => "Google", "visitors" => 4},
@@ -466,13 +466,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2")
+      conn1 = get(conn, "/api/stats/#{site.domain}/sources?period=day&limit=1&page=2")
 
       assert json_response(conn1, 200)["results"] == [
                %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
 
-      conn2 = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2&with_imported=true")
+      conn2 =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&limit=1&page=2&with_imported=true"
+        )
 
       assert json_response(conn2, 200)["results"] == [
                %{"name" => "Google", "visitors" => 2}
@@ -496,7 +500,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       filters = Jason.encode!([[:is, "event:page", ["/page1"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
+      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
                %{"name" => "Google", "visitors" => 2},
@@ -521,7 +525,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       filters = Jason.encode!([[:is, "event:page", ["/page1"]]])
-      conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
+      conn = get(conn, "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
                %{"name" => "Google", "visitors" => 2},
@@ -537,7 +541,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       order_by = Jason.encode!([["visit:source", "desc"]])
-      conn = get(conn, "/api/stats/#{site.domain}/sources?order_by=#{order_by}")
+      conn = get(conn, "/api/stats/#{site.domain}/sources?order_by=#{order_by}&period=day")
 
       assert json_response(conn, 200)["results"] == [
                %{"name" => "C", "visitors" => 1},
