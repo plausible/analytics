@@ -79,6 +79,10 @@ defmodule Plausible.Cache.Adapter do
     full_cache_name = get_name(cache_name, key)
     ConCache.dirty_fetch_or_store(full_cache_name, key, fallback_fn)
   catch
+    :exit, {:timeout, _} = error ->
+      Logger.error("Timeout fetching #{key}")
+      :erlang.raise(:exit, error, __STACKTRACE__)
+
     :exit, _ ->
       Logger.error("Error fetching key from '#{inspect(cache_name)}'")
       nil

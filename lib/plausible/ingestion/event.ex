@@ -238,13 +238,13 @@ defmodule Plausible.Ingestion.Event do
 
   defp put_user_agent(%__MODULE__{} = event, _context) do
     case parse_user_agent(event.request) do
-      %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}} ->
+      {:ok, %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}} ->
         drop(event, :bot)
 
-      %UAInspector.Result.Bot{} ->
+      {:ok, %UAInspector.Result.Bot{}} ->
         drop(event, :bot)
 
-      %UAInspector.Result{} = user_agent ->
+      {:ok, %UAInspector.Result{} = user_agent} ->
         update_session_attrs(event, %{
           operating_system: os_name(user_agent),
           operating_system_version: os_version(user_agent),
@@ -430,9 +430,18 @@ defmodule Plausible.Ingestion.Event do
     |> Enum.find(fn param_name -> Map.has_key?(query_params, param_name) end)
   end
 
+  @ua_parse_limit_ms 200
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
-    Plausible.Cache.Adapter.get(:user_agents, user_agent, fn ->
-      UAInspector.parse(user_agent)
+    Plausible.Cache.Adapter.fetch(:user_agents, user_agent, fn ->
+      task = Task.async(fn -> {:ok, UAInspector.parse(user_agent)} end)
+
+      try do
+        Task.await(task, @ua_parse_limit_ms)
+      catch
+        :exit, {:timeout, _} ->
+          Process.exit(task.pid, :normal)
+          {:ok, nil}
+      end
     end)
   end
 
