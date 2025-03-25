@@ -9,6 +9,58 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
+  describe "change_team/3" do
+    test "changes the team if owner in both teams" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :owner)
+
+      assert {:error, :no_plan} = AcceptInvitation.change_team(site, user, team2)
+
+      subscribe_to_growth_plan(another)
+
+      assert :ok = AcceptInvitation.change_team(site, user, team2)
+    end
+
+    test "changes the team if admin in second team" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      subscribe_to_growth_plan(another)
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :admin)
+
+      assert :ok = AcceptInvitation.change_team(site, user, team2)
+    end
+
+    for role <- Plausible.Teams.Membership.roles() -- [:admin, :owner] do
+      test "refuses to change the team if #{role} in second team" do
+        user = new_user()
+        site = new_site(owner: user)
+
+        another = new_user()
+        subscribe_to_growth_plan(another)
+        new_site(owner: another)
+
+        team2 = team_of(another)
+
+        add_member(team2, user: user, role: unquote(role))
+
+        assert {:error, :permission_denied} = AcceptInvitation.change_team(site, user, team2)
+      end
+    end
+  end
+
   describe "bulk_transfer_ownership_direct/2" do
     test "transfers ownership for multiple sites in one action" do
       current_owner = new_user()
