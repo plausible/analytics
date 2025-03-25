@@ -182,12 +182,14 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     do: sessions_q |> build_order_by(events_query)
 
   defp join_query_results({events_q, events_query}, {sessions_q, sessions_query}) do
-    join(subquery(events_q), :left, [e], s in subquery(sessions_q),
+    {join_type, events_q_fields, sessions_q_fields} =
+      TableDecider.join_options(events_query, sessions_query)
+
+    join(subquery(events_q), join_type, [e], s in subquery(sessions_q),
       on: ^build_group_by_join(events_query)
     )
-    |> select_join_fields(events_query, events_query.dimensions, e)
-    |> select_join_fields(events_query, events_query.metrics, e)
-    |> select_join_fields(sessions_query, List.delete(sessions_query.metrics, :sample_percent), s)
+    |> select_join_fields(events_query, events_q_fields, e)
+    |> select_join_fields(sessions_query, sessions_q_fields, s)
     |> build_order_by(events_query)
   end
 
