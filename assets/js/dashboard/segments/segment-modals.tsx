@@ -42,15 +42,15 @@ interface SharedSegmentModalProps {
   namePlaceholder: string
 }
 
-const primaryNeutralButtonClassName = 'button'
+const primaryNeutralButtonClassName = 'button !px-3'
 
 const primaryNegativeButtonClassName = classNames(
-  'button',
+  'button !px-3',
   'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
 )
 
 const secondaryButtonClassName = classNames(
-  'button',
+  'button !px-3',
   'border !border-gray-300 dark:!border-gray-500 !text-gray-700 dark:!text-gray-300 !bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-850'
 )
 
