@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useEffect, useCallback } from 'react'
 import FadeIn from '../../fade-in'
 import Bar from '../bar'

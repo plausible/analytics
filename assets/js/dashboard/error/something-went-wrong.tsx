@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode } from 'react'
 import RocketIcon from '../stats/modals/rocket-icon'
 import { useInRouterContext } from 'react-router-dom'

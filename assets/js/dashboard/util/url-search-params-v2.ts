@@ -1,4 +1,3 @@
-/* @format */
 import JsonURL from '@jsonurl/jsonurl'
 import {
   encodeURIComponentPermissive,

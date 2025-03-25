@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ChangeEventHandler, useCallback, useState, useRef } from 'react'
 import { isModifierPressed, Keybind } from '../keybinding'
 import { useDebounce } from '../custom-hooks'

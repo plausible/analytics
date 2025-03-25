@@ -5,7 +5,7 @@
   "scripts": {
     "test": "TZ=UTC jest",
     "format": "prettier --write",
-    "check-format": "prettier --check **/*.{js,css,ts,tsx} --require-pragma",
+    "check-format": "prettier --check \"**/*.{js,css,ts,tsx}\"",
     "eslint": "eslint js/**",
     "stylelint": "stylelint css/**",
     "lint": "npm run eslint && npm run stylelint",

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useState, useEffect, useCallback, ReactNode } from 'react'
 import { AppNavigationLinkProps } from '../../navigation/use-app-navigate'
 import FlipMove from 'react-flip-move'

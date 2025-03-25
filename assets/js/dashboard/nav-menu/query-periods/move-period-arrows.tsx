@@ -1,4 +1,3 @@
-/* @format */
 import React, { useMemo } from 'react'
 import { shiftQueryPeriod, getDateForShiftedPeriod } from '../../query'
 import classNames from 'classnames'

@@ -1,5 +1,3 @@
-/** @format */
-
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Metric } from '../stats/reports/metrics'
 import { getDomainScopedStorageKey, getItem, setItem } from '../util/storage'

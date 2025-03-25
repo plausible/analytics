@@ -1,4 +1,3 @@
-/** @format */
 import React, { createContext, ReactNode, useContext } from 'react'
 
 export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
@@ -28,8 +27,6 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
 }
 
 type FeatureFlags = {
-  saved_segments?: boolean
-  saved_segments_fe?: boolean
   new_time_on_page?: boolean
 }
 

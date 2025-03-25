@@ -1,10 +1,10 @@
-import "./polyfills/closest"
+import './polyfills/closest'
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import Alpine from 'alpinejs'
-import "./liveview/live_socket"
-import comboBox from "./liveview/combo-box"
-import dropdown from "./liveview/dropdown"
-import "./liveview/phx_events"
+import './liveview/live_socket'
+import comboBox from './liveview/combo-box'
+import dropdown from './liveview/dropdown'
+import './liveview/phx_events'
 
 Alpine.data('dropdown', dropdown)
 Alpine.data('comboBox', comboBox)
@@ -30,14 +30,14 @@ if (document.querySelectorAll('[data-modal]').length > 0) {
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
 for (const trigger of triggers) {
-  trigger.addEventListener('click', function(e) {
+  trigger.addEventListener('click', function (e) {
     e.stopPropagation()
     e.currentTarget.nextElementSibling.classList.remove('hidden')
   })
 }
 
 if (triggers.length > 0) {
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const dropdown = e.target.closest('[data-dropdown]')
 
     if (dropdown && e.target.tagName === 'A') {
@@ -45,7 +45,7 @@ if (triggers.length > 0) {
     }
   })
 
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const clickedInDropdown = e.target.closest('[data-dropdown]')
 
     if (!clickedInDropdown) {
@@ -61,7 +61,9 @@ const changelogNotification = document.getElementById('changelog-notification')
 if (changelogNotification) {
   showChangelogNotification(changelogNotification)
 
-  fetch('https://plausible.io/changes.txt', { headers: { 'Content-Type': 'text/plain' } })
+  fetch('https://plausible.io/changes.txt', {
+    headers: { 'Content-Type': 'text/plain' }
+  })
     .then((res) => res.text())
     .then((res) => {
       localStorage.lastChangelogUpdate = new Date(res).getTime()
@@ -87,9 +89,11 @@ function showChangelogNotification(el) {
       </a>
       `
     const link = el.getElementsByTagName('a')[0]
-    link.addEventListener('click', function() {
+    link.addEventListener('click', function () {
       localStorage.lastChangelogClick = Date.now()
-      setTimeout(() => { link.remove() }, 100)
+      setTimeout(() => {
+        link.remove()
+      }, 100)
     })
   }
 }
@@ -97,7 +101,7 @@ function showChangelogNotification(el) {
 const embedButton = document.getElementById('generate-embed')
 
 if (embedButton) {
-  embedButton.addEventListener('click', function(_e) {
+  embedButton.addEventListener('click', function (_e) {
     const baseUrl = document.getElementById('base-url').value
     const embedCode = document.getElementById('embed-code')
     const theme = document.getElementById('theme').value.toLowerCase()
@@ -116,7 +120,8 @@ if (embedButton) {
 <script async src="${baseUrl}/js/embed.host.js"></script>`
     } catch (e) {
       console.error(e)
-      embedCode.value = 'ERROR: Please enter a valid URL in the shared link field'
+      embedCode.value =
+        'ERROR: Please enter a valid URL in the shared link field'
     }
   })
 }

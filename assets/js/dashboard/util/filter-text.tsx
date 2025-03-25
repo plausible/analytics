@@ -1,5 +1,3 @@
-/* @format */
-
 import React, { ReactNode, isValidElement, Fragment } from 'react'
 import { DashboardQuery, Filter } from '../query'
 import {

@@ -1,4 +1,3 @@
-/* @format */
 import React, { useLayoutEffect, useRef } from 'react'
 import DatePicker from 'react-flatpickr'
 

@@ -1,4 +1,3 @@
-/* @format */
 import React, { forwardRef, useCallback } from 'react'
 import {
   Link,

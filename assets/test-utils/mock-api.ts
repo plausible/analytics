@@ -1,5 +1,3 @@
-/** @format */
-
 export class MockAPI {
   private mocked: Map<string, () => Promise<Response>>
   private fetch: jest.Mock

@@ -1,5 +1,3 @@
-/** @format */
-
 import React from 'react'
 import { SavedSegmentPublic, SavedSegment } from '../filtering/segments'
 import { dateForSite, formatDayShort } from '../util/date'

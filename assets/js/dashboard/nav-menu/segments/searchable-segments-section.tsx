@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useEffect, useState } from 'react'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'

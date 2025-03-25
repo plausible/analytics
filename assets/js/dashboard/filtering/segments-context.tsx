@@ -1,4 +1,3 @@
-/** @format */
 import React, {
   createContext,
   ReactNode,

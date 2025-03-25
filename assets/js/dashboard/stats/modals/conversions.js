@@ -1,43 +1,54 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState } from 'react'
 
 import Modal from './modal'
-import BreakdownModal from "./breakdown-modal";
-import * as metrics from "../reports/metrics";
-import * as url from '../../util/url';
-import { useSiteContext } from "../../site-context";
-import { addFilter } from "../../query";
+import BreakdownModal from './breakdown-modal'
+import * as metrics from '../reports/metrics'
+import * as url from '../../util/url'
+import { useSiteContext } from '../../site-context'
+import { addFilter } from '../../query'
 
 /*global BUILD_EXTRA*/
 function ConversionsModal() {
   const [showRevenue, setShowRevenue] = useState(false)
-  const site = useSiteContext();
+  const site = useSiteContext()
 
   const reportInfo = {
     title: 'Goal Conversions',
     dimension: 'goal',
     endpoint: url.apiPath(site, '/conversions'),
-    dimensionLabel: "Goal"
+    dimensionLabel: 'Goal'
   }
 
-  const getFilterInfo = useCallback((listItem) => {
-    return {
-      prefix: reportInfo.dimension,
-      filter: ["is", reportInfo.dimension, [listItem.name]]
-    }
-  }, [reportInfo.dimension])
+  const getFilterInfo = useCallback(
+    (listItem) => {
+      return {
+        prefix: reportInfo.dimension,
+        filter: ['is', reportInfo.dimension, [listItem.name]]
+      }
+    },
+    [reportInfo.dimension]
+  )
 
-  const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [searchString], { case_sensitive: false }])
-  }, [reportInfo.dimension])
+  const addSearchFilter = useCallback(
+    (query, searchString) => {
+      return addFilter(query, [
+        'contains',
+        reportInfo.dimension,
+        [searchString],
+        { case_sensitive: false }
+      ])
+    },
+    [reportInfo.dimension]
+  )
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ renderLabel: (_query) => "Uniques" }),
-      metrics.createEvents({ renderLabel: (_query) => "Total" }),
+      metrics.createVisitors({ renderLabel: (_query) => 'Uniques' }),
+      metrics.createEvents({ renderLabel: (_query) => 'Total' }),
       metrics.createConversionRate(),
       showRevenue && metrics.createAverageRevenue(),
-      showRevenue && metrics.createTotalRevenue(),
-    ].filter(metric => !!metric)
+      showRevenue && metrics.createTotalRevenue()
+    ].filter((metric) => !!metric)
   }
 
   // After a successful API response, we want to scan the rows of the
@@ -49,9 +60,14 @@ function ConversionsModal() {
 
   // After fetching the next page, we never want to set `showRevenue` to
   // `false` as revenue metrics might exist in previously loaded data.
-  const afterFetchNextPage = useCallback((res) => {
-    if (!showRevenue && revenueInResponse(res)) { setShowRevenue(true) }
-  }, [showRevenue])
+  const afterFetchNextPage = useCallback(
+    (res) => {
+      if (!showRevenue && revenueInResponse(res)) {
+        setShowRevenue(true)
+      }
+    },
+    [showRevenue]
+  )
 
   function revenueInResponse(apiResponse) {
     return apiResponse.results.some((item) => item.total_revenue)

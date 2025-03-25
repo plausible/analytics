@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {

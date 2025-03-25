@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode, RefObject } from 'react'
 import classNames from 'classnames'
 import { popover } from '../../components/popover'

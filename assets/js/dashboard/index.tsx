@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useMemo, useState } from 'react'
 import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'

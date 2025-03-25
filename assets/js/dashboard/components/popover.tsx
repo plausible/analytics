@@ -1,4 +1,3 @@
-/** @format */
 import { TransitionClasses } from '@headlessui/react'
 import classNames from 'classnames'
 

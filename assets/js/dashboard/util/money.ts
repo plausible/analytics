@@ -1,6 +1,6 @@
-import { numberLongFormatter, numberShortFormatter } from "./number-formatter"
+import { numberLongFormatter, numberShortFormatter } from './number-formatter'
 
-type Money = { long: string, short: string }
+type Money = { long: string; short: string }
 
 export function formatMoneyShort(value: Money | number | null) {
   if (typeof value == 'number') {
@@ -8,7 +8,7 @@ export function formatMoneyShort(value: Money | number | null) {
   } else if (value) {
     return value.short
   } else {
-    return "-"
+    return '-'
   }
 }
 
@@ -18,6 +18,6 @@ export function formatMoneyLong(value: Money | number | null) {
   } else if (value) {
     return value.long
   } else {
-    return "-"
+    return '-'
   }
 }

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { DetailedHTMLProps, HTMLAttributes } from 'react'
 import { useQueryContext } from '../query-context'
 import { FilterPill, FilterPillProps } from './filter-pill'

@@ -1,5 +1,3 @@
-/** @format */
-
 import React from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'

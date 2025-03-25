@@ -5,6 +5,8 @@ defmodule Plausible.Workers.LockSitesTest do
   alias Plausible.Workers.LockSites
   alias Plausible.Billing.Subscription
 
+  @moduletag :ee_only
+
   test "does not lock enterprise site on grace period" do
     user = new_user()
     site = new_site(owner: user)

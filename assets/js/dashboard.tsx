@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'url-search-params-polyfill'

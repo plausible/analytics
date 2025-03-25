@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fix `visitors.csv` (in dashboard CSV export) vs dashboard main graph reporting different results for `visitors` and `visits` with a `time:minute` interval.
 - The tracker script now sends pageviews when a page gets loaded from bfcache
 - Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal
 - Fix typo on login screen

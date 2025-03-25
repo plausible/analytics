@@ -6,10 +6,22 @@ import { render, screen } from '@testing-library/react'
 describe('styledFilterText() and plainFilterText()', () => {
   it.each<[Filter, FilterClauseLabels, string]>([
     [['is', 'page', ['/docs', '/blog']], {}, 'Page is /docs or /blog'],
-    [['is', 'country', ['US']], { US: 'United States' }, 'Country is United States'],
+    [
+      ['is', 'country', ['US']],
+      { US: 'United States' },
+      'Country is United States'
+    ],
     [['is', 'goal', ['Signup']], {}, 'Goal is Signup'],
-    [['is', 'props:browser_language', ['en-US']], {}, 'Property browser_language is en-US'],
-    [['has_not_done', 'goal', ['Signup', 'Login']], {}, 'Goal is not Signup or Login'],
+    [
+      ['is', 'props:browser_language', ['en-US']],
+      {},
+      'Property browser_language is en-US'
+    ],
+    [
+      ['has_not_done', 'goal', ['Signup', 'Login']],
+      {},
+      'Goal is not Signup or Login'
+    ]
   ])(
     'when filter is %p and labels are %p, functions return %p',
     (filter, labels, expectedPlainText) => {
@@ -18,7 +30,9 @@ describe('styledFilterText() and plainFilterText()', () => {
       expect(plainFilterText(query, filter)).toBe(expectedPlainText)
 
       render(<p data-testid="filter-text">{styledFilterText(query, filter)}</p>)
-      expect(screen.getByTestId('filter-text')).toHaveTextContent(expectedPlainText)
+      expect(screen.getByTestId('filter-text')).toHaveTextContent(
+        expectedPlainText
+      )
     }
   )
 })

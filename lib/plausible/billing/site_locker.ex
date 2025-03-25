@@ -15,10 +15,11 @@ defmodule Plausible.Billing.SiteLocker do
           {:locked, lock_reason()} | :unlocked
   def update_sites_for(team, opts \\ []) do
     send_email? = Keyword.get(opts, :send_email?, true)
+    usage_mod = Keyword.get(opts, :usage_mod, Teams.Billing)
 
     team = Teams.with_subscription(team)
 
-    case Plausible.Teams.Billing.check_needs_to_upgrade(team) do
+    case Plausible.Teams.Billing.check_needs_to_upgrade(team, usage_mod) do
       {:needs_to_upgrade, :grace_period_ended} ->
         set_lock_status_for(team, true)
 

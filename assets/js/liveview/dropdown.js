@@ -12,9 +12,9 @@ export default () => ({
   },
 
   close(focusAfter) {
-    if (! this.open) return
+    if (!this.open) return
 
     this.open = false
     focusAfter?.focus()
-  },
+  }
 })

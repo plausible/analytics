@@ -1,4 +1,3 @@
-/* @format */
 import React, { createContext, ReactNode, useContext, useState } from 'react'
 import { RoutelessSegmentModal } from '../segments/routeless-segment-modals'
 

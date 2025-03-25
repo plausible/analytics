@@ -1342,6 +1342,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   end
 
   describe "timeseries" do
+    test "breakdown by time:minute (internal API), counts visitors and visits in all buckets their session was active in",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "visits", "pageviews"],
+          "date_range" => ["2021-01-01T00:00:00Z", "2021-01-01T00:10:00Z"],
+          "dimensions" => ["time:minute"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [1, 1, 1]},
+               %{"dimensions" => ["2021-01-01 00:01:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:02:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:03:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:04:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:05:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:06:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:07:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:08:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:09:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:10:00"], "metrics" => [1, 1, 1]}
+             ]
+    end
+
     test "shows hourly data for a certain date with time_labels", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),

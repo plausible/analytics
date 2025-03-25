@@ -8,19 +8,19 @@ export default (id) => ({
   selectionInProgress: false,
   firstFocusRegistered: false,
   setFocus(f) {
-    this.focus = f;
+    this.focus = f
   },
   initFocus() {
     if (this.focus === null) {
       this.setFocus(this.leastFocusableIndex())
       if (!this.firstFocusRegistered) {
-        document.getElementById(this.id).select();
-        this.firstFocusRegistered = true;
+        document.getElementById(this.id).select()
+        this.firstFocusRegistered = true
       }
     }
   },
   trackSubmitValueChange() {
-    this.selectionInProgress = false;
+    this.selectionInProgress = false
   },
   open() {
     if (!this.isOpen) {
@@ -32,7 +32,9 @@ export default (id) => ({
     return this.$refs.suggestions?.querySelectorAll('li').length
   },
   hasCreatableOption() {
-    return this.$refs.suggestions?.querySelector('li').classList.contains("creatable")
+    return this.$refs.suggestions
+      ?.querySelector('li')
+      .classList.contains('creatable')
   },
   leastFocusableIndex() {
     if (this.suggestionsCount() === 0) {
@@ -41,20 +43,26 @@ export default (id) => ({
     return this.hasCreatableOption() ? 0 : 1
   },
   maxFocusableIndex() {
-    return this.hasCreatableOption() ? this.suggestionsCount() - 1 : this.suggestionsCount()
+    return this.hasCreatableOption()
+      ? this.suggestionsCount() - 1
+      : this.suggestionsCount()
   },
   nextFocusableIndex() {
     const currentFocus = this.focus
-    return currentFocus + 1 > this.maxFocusableIndex() ? this.leastFocusableIndex() : currentFocus + 1
+    return currentFocus + 1 > this.maxFocusableIndex()
+      ? this.leastFocusableIndex()
+      : currentFocus + 1
   },
   prevFocusableIndex() {
     const currentFocus = this.focus
-    return currentFocus - 1 >= this.leastFocusableIndex() ? currentFocus - 1 : this.maxFocusableIndex()
+    return currentFocus - 1 >= this.leastFocusableIndex()
+      ? currentFocus - 1
+      : this.maxFocusableIndex()
   },
   close(e) {
     // Pressing Escape should not propagate to window,
     // so we'll only close the suggestions pop-up
-    if (this.isOpen && e.key === "Escape") {
+    if (this.isOpen && e.key === 'Escape') {
       e.stopPropagation()
     }
     this.isOpen = false
@@ -65,9 +73,11 @@ export default (id) => ({
     document.getElementById(this.id).blur()
   },
   scrollTo(idx) {
-    this.$refs[`dropdown-${this.id}-option-${idx}`]?.scrollIntoView(
-      { block: 'nearest', behavior: 'smooth', inline: 'start' }
-    )
+    this.$refs[`dropdown-${this.id}-option-${idx}`]?.scrollIntoView({
+      block: 'nearest',
+      behavior: 'smooth',
+      inline: 'start'
+    })
   },
   focusNext() {
     const nextIndex = this.nextFocusableIndex()

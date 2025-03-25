@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode } from 'react'
 import { cycleSortDirection, SortDirection } from '../hooks/use-order-by'
 import classNames from 'classnames'

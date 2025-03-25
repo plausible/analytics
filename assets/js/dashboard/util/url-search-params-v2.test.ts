@@ -1,5 +1,3 @@
-/** @format */
-
 import JsonURL from '@jsonurl/jsonurl'
 import { v2 } from './url-search-params-v2'
 

@@ -1,4 +1,3 @@
-/** @format */
 import React from 'react'
 import { createBrowserRouter, Outlet, useRouteError } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

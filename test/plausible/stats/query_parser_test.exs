@@ -1490,6 +1490,39 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       end
     end
 
+    test "time:minute dimension fails public schema validation", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["time:minute"]
+      }
+      |> check_error(site, "#/dimensions/0: Invalid dimension \"time:minute\"")
+    end
+
+    test "time:minute dimension passes internal schema validation", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["time:minute"]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["time:minute"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: @default_include,
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+
     test "custom properties dimension", %{site: site} do
       %{
         "site_id" => site.domain,

@@ -1,5 +1,5 @@
 import Alpine from 'alpinejs'
-import dropdown from "./liveview/dropdown"
+import dropdown from './liveview/dropdown'
 
 // If your components require any hooks or custom uploaders, or if your pages
 // require connect parameters, uncomment the following lines and declare them as
@@ -13,27 +13,24 @@ import dropdown from "./liveview/dropdown"
 //   window.storybook = { Hooks, Params, Uploaders };
 // })();
 
-
 window.Alpine = Alpine
 document.addEventListener('DOMContentLoaded', () => {
-  window.Alpine.start();
-});
+  window.Alpine.start()
+})
 
 document.addEventListener('alpine:init', () => {
   window.Alpine.data('dropdown', dropdown)
-});
-
-
- (function () {
-   window.storybook = {
-     LiveSocketOptions: {
-       dom: {
-         onBeforeElUpdated(from, to) {
-           if (from._x_dataStack) {
-             window.Alpine.clone(from, to)
-           }
-         }
-       }
-     }
-   };
- })();
+})
+;(function () {
+  window.storybook = {
+    LiveSocketOptions: {
+      dom: {
+        onBeforeElUpdated(from, to) {
+          if (from._x_dataStack) {
+            window.Alpine.clone(from, to)
+          }
+        }
+      }
+    }
+  }
+})()

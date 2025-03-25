@@ -1,5 +1,5 @@
-import React from 'react';
-import { AppNavigationLink } from '../navigation/use-app-navigate';
+import React from 'react'
+import { AppNavigationLink } from '../navigation/use-app-navigate'
 
 function detailsIcon() {
   return (

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useMemo } from 'react'
 import { Metric } from '../../../types/query-api'
 import { Tooltip } from '../../util/tooltip'

@@ -1,4 +1,3 @@
-/** @format */
 import { Filter, FilterClauseLabels } from '../query'
 import { v1 } from './url-search-params-v1'
 import { v2 } from './url-search-params-v2'

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useCallback, useEffect, useState } from 'react'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import * as api from '../api'

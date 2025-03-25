@@ -1,6 +1,6 @@
-import { numberLongFormatter, numberShortFormatter } from "./number-formatter"
+import { numberLongFormatter, numberShortFormatter } from './number-formatter'
 
-describe("numberShortFormatter()", () => {
+describe('numberShortFormatter()', () => {
   it('converts to short format', () => {
     expect(numberShortFormatter(0)).toEqual('0')
     expect(numberShortFormatter(-10)).toEqual('-10')
@@ -16,7 +16,7 @@ describe("numberShortFormatter()", () => {
   })
 })
 
-describe("numberLongFormatter()", () => {
+describe('numberLongFormatter()', () => {
   it('converts to short format', () => {
     expect(numberLongFormatter(0)).toEqual('0')
     expect(numberLongFormatter(-10)).toEqual('-10')

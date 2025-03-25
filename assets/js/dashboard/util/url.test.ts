@@ -1,5 +1,3 @@
-/** @format */
-
 import { apiPath, externalLinkForPage, isValidHttpUrl, trimURL } from './url'
 
 describe('apiPath', () => {

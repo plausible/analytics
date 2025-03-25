@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useMemo, useRef } from 'react'
 import {
   FILTER_MODAL_TO_FILTER_GROUP,

@@ -1,5 +1,3 @@
-/** @format */
-
 import { DashboardQuery, Filter } from '../query'
 import { cleanLabels, remapFromApiFilters } from '../util/filters'
 import { plainFilterText } from '../util/filter-text'

@@ -1,5 +1,3 @@
-/** @format */
-
 import { DashboardQuery, Filter } from '../query'
 import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS } from './filters'
 

@@ -1,6 +1,8 @@
-import {parseUTCDate, formatMonthYYYY, formatDayShort} from '../../util/date'
+import { parseUTCDate, formatMonthYYYY, formatDayShort } from '../../util/date'
 
-const browserDateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
+const browserDateFormat = Intl.DateTimeFormat(navigator.language, {
+  hour: 'numeric'
+})
 
 const is12HourClock = function () {
   return browserDateFormat.resolvedOptions().hour12
@@ -19,7 +21,9 @@ const monthIntervalFormatter = {
 const weekIntervalFormatter = {
   long(isoDate, options) {
     const formatted = this.short(isoDate, options)
-    return options.isBucketPartial ? `Partial week of ${formatted}` : `Week of ${formatted}`
+    return options.isBucketPartial
+      ? `Partial week of ${formatted}`
+      : `Week of ${formatted}`
   },
   short(isoDate, options) {
     return formatDayShort(parseUTCDate(isoDate), options.shouldShowYear)
@@ -98,9 +102,20 @@ const factory = {
  * @param {boolean} config.shouldShowYear - Should the year be appended to the date?
  * Defaults to false. Rendering year string is a newer opt-in feature to be enabled where needed.
  */
-export default function dateFormatter({ interval, longForm, period, isPeriodFull, shouldShowYear = false }) {
+export default function dateFormatter({
+  interval,
+  longForm,
+  period,
+  isPeriodFull,
+  shouldShowYear = false
+}) {
   const displayMode = longForm ? 'long' : 'short'
-  const options = { period: period, interval: interval, isBucketPartial: !isPeriodFull, shouldShowYear }
+  const options = {
+    period: period,
+    interval: interval,
+    isBucketPartial: !isPeriodFull,
+    shouldShowYear
+  }
   return function (isoDate, _index, _ticks) {
     return factory[interval][displayMode](isoDate, options)
   }
