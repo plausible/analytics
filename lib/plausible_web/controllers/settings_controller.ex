@@ -102,7 +102,7 @@ defmodule PlausibleWeb.SettingsController do
   def new_api_key(conn, _params) do
     current_team = conn.assigns[:current_team]
 
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, current_team)
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, current_team, %{})
 
     render(conn, "new_api_key.html", changeset: changeset)
   end

@@ -5,7 +5,9 @@ defmodule Plausible.Auth do
 
   use Plausible
   use Plausible.Repo
+
   alias Plausible.Auth
+  alias Plausible.Billing
   alias Plausible.RateLimit
   alias Plausible.Teams
 
@@ -160,7 +162,7 @@ defmodule Plausible.Auth do
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, team, params)
 
-    with :ok <- check_stats_api_available(user) do
+    with :ok <- Billing.Feature.StatsAPI.check_availability(team) do
       Repo.insert(changeset)
     end
   end
@@ -221,21 +223,6 @@ defmodule Plausible.Auth do
         where: s.domain == ^domain or s.domain_changed_from == ^domain,
         select: t
     )
-  end
-
-  defp check_stats_api_available(user) do
-    case Plausible.Teams.get_by_owner(user) do
-      {:ok, team} ->
-        Plausible.Billing.Feature.StatsAPI.check_availability(team)
-
-      {:error, :no_team} ->
-        Plausible.Billing.Feature.StatsAPI.check_availability(nil)
-
-      {:error, :multiple_teams} ->
-        # NOTE: Loophole to allow creating API keys when user is a member
-        # on multiple teams.
-        :ok
-    end
   end
 
   defp rate_limit_key(%Auth.User{id: id}), do: id
