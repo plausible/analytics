@@ -18,12 +18,10 @@ export const FILTER_MODAL_TO_FILTER_GROUP = {
 }
 
 export function getAvailableFilterModals(site) {
-  const { props, segment, ...rest } = FILTER_MODAL_TO_FILTER_GROUP
+  const { props, ...rest } = FILTER_MODAL_TO_FILTER_GROUP
   return {
     ...rest,
-    ...(site.propsAvailable && { props }),
-    ...(site.flags.saved_segments &&
-      site.flags.saved_segments_fe && { segment })
+    ...(site.propsAvailable && { props })
   }
 }
 
