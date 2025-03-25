@@ -2,8 +2,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Teams.Test
 
-  import ExUnit.CaptureLog
-
   alias PlausibleWeb.Plugs.AuthorizePublicAPI
 
   setup %{conn: conn} do
@@ -173,17 +171,14 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   end
 
   test "halts with error when API rate limit hit", %{conn: conn} do
-    user = new_user(team: [hourly_api_request_limit: 1])
-    site = new_site(owner: user)
-
-    api_key = insert(:api_key, user: user)
+    user = insert(:user)
+    api_key = insert(:api_key, user: user, hourly_request_limit: 1)
 
     conn =
       conn
       |> put_req_header("authorization", "Bearer #{api_key.key}")
-      |> get("/?site_id=#{site.domain}")
+      |> get("/")
       |> assign(:api_scope, "sites:read:*")
-      |> assign(:api_context, :site)
 
     first_resp = AuthorizePublicAPI.call(conn, nil)
     second_resp = AuthorizePublicAPI.call(conn, nil)
@@ -191,64 +186,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     refute first_resp.halted
     assert second_resp.halted
     assert json_response(second_resp, 429)["error"] =~ "Too many API requests."
-  end
-
-  test "does not rate limit when not in applicable context", %{conn: conn} do
-    user = new_user(team: [hourly_api_request_limit: 1])
-    site = new_site(owner: user)
-
-    api_key = insert(:api_key, user: user)
-
-    conn =
-      conn
-      |> put_req_header("authorization", "Bearer #{api_key.key}")
-      |> get("/?site_id=#{site.domain}")
-      |> assign(:api_scope, "sites:read:*")
-
-    first_resp = AuthorizePublicAPI.call(conn, nil)
-    second_resp = AuthorizePublicAPI.call(conn, nil)
-
-    refute first_resp.halted
-    refute second_resp.halted
-  end
-
-  test "logs a warning on using API key against site with guest access", %{conn: conn} do
-    user = new_user(team: [hourly_api_request_limit: 1])
-    site = new_site()
-    add_guest(site, user: user, role: :editor)
-
-    api_key = insert(:api_key, user: user)
-
-    capture_log(fn ->
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer #{api_key.key}")
-        |> get("/?site_id=#{site.domain}")
-        |> assign(:api_scope, "sites:read:*")
-        |> assign(:api_context, :site)
-        |> AuthorizePublicAPI.call(nil)
-
-      refute conn.halted
-    end) =~ "API key #{api_key.id} user accessing #{site.domain} as a guest"
-  end
-
-  test "logs a warning on using API key against site with no access", %{conn: conn} do
-    user = new_user(team: [hourly_api_request_limit: 1])
-    site = new_site()
-
-    api_key = insert(:api_key, user: user)
-
-    capture_log(fn ->
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer #{api_key.key}")
-        |> get("/?site_id=#{site.domain}")
-        |> assign(:api_scope, "stats:read:*")
-        |> assign(:api_context, :site)
-        |> AuthorizePublicAPI.call(nil)
-
-      assert conn.halted
-    end) =~ "API key #{api_key.id} user trying to access #{site.domain} as a non-member"
   end
 
   test "passes and sets current user when valid API key with required scope provided", %{

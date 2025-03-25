@@ -289,13 +289,14 @@ defmodule Plausible.BillingTest do
 
       team = team_of(user)
 
-      _api_key = insert(:api_key, user: user)
+      api_key = insert(:api_key, user: user, hourly_request_limit: 1)
 
       assert team.hourly_api_request_limit != 10_000
 
       %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
+      assert Repo.reload!(api_key).hourly_request_limit == 10_000
       assert Repo.reload!(team).hourly_api_request_limit == 10_000
     end
   end
@@ -419,7 +420,7 @@ defmodule Plausible.BillingTest do
 
       team = team_of(user)
 
-      _api_key = insert(:api_key, user: user)
+      api_key = insert(:api_key, user: user, hourly_request_limit: 1)
 
       assert team.hourly_api_request_limit != 10_000
 
@@ -431,6 +432,7 @@ defmodule Plausible.BillingTest do
       })
       |> Billing.subscription_updated()
 
+      assert Repo.reload!(api_key).hourly_request_limit == 10_000
       assert Repo.reload!(team).hourly_api_request_limit == 10_000
     end
 

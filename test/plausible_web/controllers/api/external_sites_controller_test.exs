@@ -235,7 +235,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 404) == %{"error" => "Site could not be found"}
       end
 
-      @tag :capture_log
       test "cannot delete a site that the user does not own", %{conn: conn, user: user} do
         site = new_site()
         add_guest(site, user: user, role: :editor)
@@ -333,7 +332,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert res["error"] == "Site could not be found"
       end
 
-      @tag :capture_log
       test "returns 404 when api key owner does not have permissions to create a shared link", %{
         conn: conn,
         user: user
@@ -482,7 +480,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert res["error"] == "Site could not be found"
       end
 
-      @tag :capture_log
       test "returns 404 when api key owner does not have permissions to create a goal", %{
         conn: conn,
         user: user
@@ -589,7 +586,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 404) == %{"error" => "Goal could not be found"}
       end
 
-      @tag :capture_log
       test "cannot delete a goal belongs to a site that the user does not own", %{
         conn: conn,
         user: user
@@ -1101,7 +1097,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                }
       end
 
-      @tag :capture_log
       test "returns goals for site where user is viewer", %{site: site} do
         viewer = new_user()
         add_guest(site, user: viewer, role: :viewer)

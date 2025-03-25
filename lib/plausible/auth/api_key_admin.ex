@@ -29,6 +29,7 @@ defmodule Plausible.Auth.ApiKeyAdmin do
       name: nil,
       key: %{create: :readonly, update: :hidden, help_text: @plaintext_key_help},
       key_prefix: %{create: :hidden, update: :readonly},
+      hourly_request_limit: %{default: 1000},
       scope: %{choices: [{"Stats API", ["stats:read:*"]}, {"Sites API", ["sites:provision:*"]}]},
       user_id: nil
     ]

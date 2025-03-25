@@ -25,6 +25,26 @@ defmodule Plausible.AuthTest do
       assert {:ok, %Auth.ApiKey{}} = Auth.create_api_key(user, "my new key", key)
     end
 
+    @tag :ee_only
+    test "defaults to 600 requests per hour limit in EE" do
+      user = new_user(trial_expiry_date: Date.utc_today())
+
+      {:ok, %Auth.ApiKey{hourly_request_limit: hourly_request_limit}} =
+        Auth.create_api_key(user, "my new EE key", Ecto.UUID.generate())
+
+      assert hourly_request_limit == 600
+    end
+
+    @tag :ce_build_only
+    test "defaults to 1000000 requests per hour limit in CE" do
+      user = new_user(trial_expiry_date: Date.utc_today())
+
+      {:ok, %Auth.ApiKey{hourly_request_limit: hourly_request_limit}} =
+        Auth.create_api_key(user, "my new CE key", Ecto.UUID.generate())
+
+      assert hourly_request_limit == 1_000_000
+    end
+
     test "errors when key already exists" do
       u1 = new_user(trial_expiry_date: Date.utc_today())
       u2 = new_user(trial_expiry_date: Date.utc_today())
