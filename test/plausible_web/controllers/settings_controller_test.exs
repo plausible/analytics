@@ -1095,10 +1095,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "can't delete api key that doesn't belong to me", %{conn: conn} do
       other_user = new_user()
       new_site(owner: other_user)
+      team = team_of(other_user)
 
       assert {:ok, %ApiKey{} = api_key} =
                %ApiKey{user_id: other_user.id}
-               |> ApiKey.changeset(%{"name" => "other user's key"})
+               |> ApiKey.changeset(team, %{"name" => "other user's key"})
                |> Repo.insert()
 
       conn = delete(conn, Routes.settings_path(conn, :delete_api_key, api_key.id))

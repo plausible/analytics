@@ -100,13 +100,18 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def new_api_key(conn, _params) do
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{})
+    current_team = conn.assigns[:current_team]
+
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, current_team)
 
     render(conn, "new_api_key.html", changeset: changeset)
   end
 
   def create_api_key(conn, %{"api_key" => %{"name" => name, "key" => key}}) do
-    case Auth.create_api_key(conn.assigns.current_user, name, key) do
+    current_user = conn.assigns.current_user
+    current_team = conn.assigns.current_team
+
+    case Auth.create_api_key(current_user, current_team, name, key) do
       {:ok, _api_key} ->
         conn
         |> put_flash(:success, "API key created successfully")
