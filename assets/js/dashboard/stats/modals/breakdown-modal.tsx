@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useState, ReactNode, useMemo } from 'react'
 
 import { useQueryContext } from '../../query-context'

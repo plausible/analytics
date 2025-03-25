@@ -1,4 +1,3 @@
-/** @format */
 import { DashboardQuery } from './query'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'

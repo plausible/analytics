@@ -1,5 +1,3 @@
-/** @format */
-
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import classNames from 'classnames'
 import React, { useRef, useState, useLayoutEffect, ReactNode } from 'react'

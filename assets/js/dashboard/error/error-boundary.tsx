@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode, ReactElement } from 'react'
 
 type ErrorBoundaryProps = {

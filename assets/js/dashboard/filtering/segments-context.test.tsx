@@ -1,5 +1,3 @@
-/** @format */
-
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { SegmentsContextProvider, useSegmentsContext } from './segments-context'

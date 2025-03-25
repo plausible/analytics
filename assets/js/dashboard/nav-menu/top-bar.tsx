@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode, useRef } from 'react'
 import SiteSwitcher from '../site-switcher'
 import { useSiteContext } from '../site-context'

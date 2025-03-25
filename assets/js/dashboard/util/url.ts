@@ -1,4 +1,3 @@
-/* @format */
 import { PlausibleSite } from '../site-context'
 
 export function apiPath(

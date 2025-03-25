@@ -1,21 +1,26 @@
-import React, { Fragment, useRef } from 'react';
-import { Menu, Transition } from '@headlessui/react';
-import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import classNames from 'classnames';
-import * as storage from '../../util/storage';
-import { BlurMenuButtonOnEscape, isModifierPressed, isTyping, Keybind } from '../../keybinding';
-import { useQueryContext } from '../../query-context';
-import { useSiteContext } from '../../site-context';
-import { useMatch } from 'react-router-dom';
-import { rootRoute } from '../../router';
-import { popover } from '../../components/popover';
+import React, { Fragment, useRef } from 'react'
+import { Menu, Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import classNames from 'classnames'
+import * as storage from '../../util/storage'
+import {
+  BlurMenuButtonOnEscape,
+  isModifierPressed,
+  isTyping,
+  Keybind
+} from '../../keybinding'
+import { useQueryContext } from '../../query-context'
+import { useSiteContext } from '../../site-context'
+import { useMatch } from 'react-router-dom'
+import { rootRoute } from '../../router'
+import { popover } from '../../components/popover'
 
 const INTERVAL_LABELS = {
-  'minute': 'Minutes',
-  'hour': 'Hours',
-  'day': 'Days',
-  'week': 'Weeks',
-  'month': 'Months'
+  minute: 'Minutes',
+  hour: 'Hours',
+  day: 'Days',
+  week: 'Weeks',
+  month: 'Months'
 }
 
 function validIntervals(site, query) {
@@ -36,11 +41,11 @@ function validIntervals(site, query) {
 
 function getDefaultInterval(query, validIntervals) {
   const defaultByPeriod = {
-    'day': 'hour',
+    day: 'hour',
     '7d': 'day',
     '6mo': 'month',
     '12mo': 'month',
-    'year': 'month'
+    year: 'month'
   }
 
   if (query.period === 'custom') {
@@ -74,7 +79,7 @@ function storeInterval(period, domain, interval) {
   storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
-export const getCurrentInterval = function(site, query) {
+export const getCurrentInterval = function (site, query) {
   const options = validIntervals(site, query)
 
   const storedInterval = getStoredInterval(query.period, site.domain)
@@ -89,15 +94,14 @@ export const getCurrentInterval = function(site, query) {
 
 export function IntervalPicker({ onIntervalUpdate }) {
   const menuElement = useRef(null)
-  const {query} = useQueryContext();
-  const site = useSiteContext();
+  const { query } = useQueryContext()
+  const site = useSiteContext()
   const dashboardRouteMatch = useMatch(rootRoute.path)
-  
+
   if (query.period == 'realtime') return null
 
   const options = validIntervals(site, query)
   const currentInterval = getCurrentInterval(site, query)
-
 
   function updateInterval(interval) {
     storeInterval(query.period, site.domain, interval)
@@ -106,13 +110,23 @@ export function IntervalPicker({ onIntervalUpdate }) {
 
   function renderDropdownItem(option) {
     return (
-      <Menu.Item onClick={() => updateInterval(option)} key={option} disabled={option == currentInterval}>
+      <Menu.Item
+        onClick={() => updateInterval(option)}
+        key={option}
+        disabled={option == currentInterval}
+      >
         {({ active }) => (
-          <span className={classNames({
-            'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer': active,
-            'text-gray-700 dark:text-gray-200': !active,
-            'font-bold cursor-none select-none': option == currentInterval,
-          }, 'block px-4 py-2 text-sm')}>
+          <span
+            className={classNames(
+              {
+                'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer':
+                  active,
+                'text-gray-700 dark:text-gray-200': !active,
+                'font-bold cursor-none select-none': option == currentInterval
+              },
+              'block px-4 py-2 text-sm'
+            )}
+          >
             {INTERVAL_LABELS[option]}
           </span>
         )}
@@ -144,11 +158,7 @@ export function IntervalPicker({ onIntervalUpdate }) {
             <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
           </Menu.Button>
 
-          <Transition
-            as={Fragment}
-            show={open}
-            {...popover.transition.props}
-          >
+          <Transition as={Fragment} show={open} {...popover.transition.props}>
             <Menu.Items
               className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
               static
