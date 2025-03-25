@@ -93,7 +93,7 @@ defmodule Plausible.Auth.ApiKeyAdmin do
 
   defp get_team(api_key) do
     team_name =
-      case api_key.team.owners do
+      case api_key.team && api_key.team.owners do
         [owner] ->
           if api_key.team.setup_complete do
             api_key.team.name
@@ -103,13 +103,19 @@ defmodule Plausible.Auth.ApiKeyAdmin do
 
         [_ | _] ->
           api_key.team.name
+
+        nil ->
+          "(none)"
       end
       |> html_escape()
 
-    """
-    <a href="/crm/teams/team/#{api_key.team.id}">#{team_name}</a>
-    """
-    |> Phoenix.HTML.raw()
+    if api_key.team do
+      Phoenix.HTML.raw("""
+      <a href="/crm/teams/team/#{api_key.team.id}">#{team_name}</a>
+      """)
+    else
+      team_name
+    end
   end
 
   defp get_owner(api_key) do
