@@ -42,7 +42,13 @@ defmodule Plausible.Teams do
   end
 
   def get(team_identifier) when is_binary(team_identifier) do
-    Repo.get_by(Teams.Team, identifier: team_identifier)
+    case Ecto.UUID.cast(team_identifier) do
+      {:ok, uuid} ->
+        Repo.get_by(Teams.Team, identifier: uuid)
+
+      :error ->
+        nil
+    end
   end
 
   @spec get!(pos_integer() | binary()) :: Teams.Team.t()

@@ -26,15 +26,20 @@ defmodule Plausible.Auth.ApiKey do
 
   def hourly_request_limit(), do: @hourly_request_limit
 
-  def changeset(schema, team, attrs \\ %{}) do
+  def changeset(schema, team, attrs) do
     schema
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> maybe_put_key()
     |> process_key()
-    |> put_assoc(:team, team)
+    |> maybe_put_team(team)
     |> unique_constraint(:key_hash, error_key: :key)
     |> unique_constraint([:team_id, :user_id], error_key: :team)
+  end
+
+  # NOTE: needed only because of lacking introspection in Kaffy
+  def changeset(schema, attrs) do
+    changeset(schema, nil, attrs)
   end
 
   def update(schema, attrs \\ %{}) do
@@ -59,6 +64,12 @@ defmodule Plausible.Auth.ApiKey do
   end
 
   def process_key(changeset), do: changeset
+
+  defp maybe_put_team(changeset, nil), do: changeset
+
+  defp maybe_put_team(changeset, team) do
+    put_assoc(changeset, :team, team)
+  end
 
   defp maybe_put_key(changeset) do
     if get_change(changeset, :key) do

@@ -75,7 +75,8 @@ defmodule Plausible.TestUtils do
   end
 
   def create_api_key(%{user: user}) do
-    api_key = Factory.insert(:api_key, user: user)
+    team = Plausible.Teams.Test.team_of(user)
+    api_key = Factory.insert(:api_key, user: user, team: team)
 
     {:ok, api_key: api_key.key}
   end
