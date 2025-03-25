@@ -1,5 +1,3 @@
-/** @format */
-
 import { Metric } from '../../../types/query-api'
 import { formatMoneyShort, formatMoneyLong } from '../../util/money'
 import {

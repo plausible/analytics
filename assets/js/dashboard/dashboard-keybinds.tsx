@@ -1,4 +1,3 @@
-/* @format */
 import React from 'react'
 import { NavigateKeybind } from './keybinding'
 import { useRoutelessModalsContext } from './navigation/routeless-modals-context'

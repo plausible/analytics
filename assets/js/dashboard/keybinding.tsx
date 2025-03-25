@@ -1,4 +1,3 @@
-/* @format */
 import React, { ReactNode, RefObject, useCallback, useEffect } from 'react'
 import {
   AppNavigationTarget,

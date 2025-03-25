@@ -1,5 +1,3 @@
-/** @format */
-
 import { remapToApiFilters } from '../util/filters'
 import {
   formatSegmentIdAsLabelKey,

@@ -1,5 +1,3 @@
-/** @format */
-
 import { getAvailableFilterModals, serializeApiFilters } from './filters'
 
 describe(`${getAvailableFilterModals.name}`, () => {

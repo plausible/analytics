@@ -1,17 +1,26 @@
 import React from 'react'
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom'
 
-import Modal from './modal';
-import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP, cleanLabels, getAvailableFilterModals } from '../../util/filters';
-import { useQueryContext } from '../../query-context';
-import { useSiteContext } from '../../site-context';
-import { isModifierPressed, isTyping } from '../../keybinding';
-import FilterModalGroup from "./filter-modal-group";
-import { rootRoute } from '../../router';
-import { useAppNavigate } from '../../navigation/use-app-navigate';
-import { SegmentModal } from '../../segments/segment-modals';
-import { TrashIcon } from '@heroicons/react/24/outline';
-import { findAppliedSegmentFilter } from '../../filtering/segments';
+import Modal from './modal'
+import {
+  EVENT_PROPS_PREFIX,
+  FILTER_GROUP_TO_MODAL_TYPE,
+  formatFilterGroup,
+  FILTER_OPERATIONS,
+  getFilterGroup,
+  FILTER_MODAL_TO_FILTER_GROUP,
+  cleanLabels,
+  getAvailableFilterModals
+} from '../../util/filters'
+import { useQueryContext } from '../../query-context'
+import { useSiteContext } from '../../site-context'
+import { isModifierPressed, isTyping } from '../../keybinding'
+import FilterModalGroup from './filter-modal-group'
+import { rootRoute } from '../../router'
+import { useAppNavigate } from '../../navigation/use-app-navigate'
+import { SegmentModal } from '../../segments/segment-modals'
+import { TrashIcon } from '@heroicons/react/24/outline'
+import { findAppliedSegmentFilter } from '../../filtering/segments'
 
 function partitionFilters(modalType, filters) {
   const otherFilters = []
@@ -21,7 +30,9 @@ function partitionFilters(modalType, filters) {
   filters.forEach((filter, index) => {
     const filterGroup = getFilterGroup(filter)
     if (FILTER_GROUP_TO_MODAL_TYPE[filterGroup] === modalType) {
-      const key = filterState[filterGroup] ? `${filterGroup}:${index}` : filterGroup
+      const key = filterState[filterGroup]
+        ? `${filterGroup}:${index}`
+        : filterGroup
       filterState[key] = filter
       hasRelevantFilters = true
     } else {
@@ -51,10 +62,19 @@ class FilterModal extends React.Component {
     const modalType = this.props.modalType
 
     const query = this.props.query
-    const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(modalType, query.filters)
+    const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(
+      modalType,
+      query.filters
+    )
 
     this.handleKeydown = this.handleKeydown.bind(this)
-    this.state = { query, filterState, labelState: query.labels, otherFilters, hasRelevantFilters }
+    this.state = {
+      query,
+      filterState,
+      labelState: query.labels,
+      otherFilters,
+      hasRelevantFilters
+    }
   }
 
   componentDidMount() {
@@ -83,7 +103,9 @@ class FilterModal extends React.Component {
   }
 
   isDisabled() {
-    return Object.values(this.state.filterState).every(([_operation, _key, clauses]) => clauses.length === 0)
+    return Object.values(this.state.filterState).every(
+      ([_operation, _key, clauses]) => clauses.length === 0
+    )
   }
 
   selectFiltersAndCloseModal(filters) {
@@ -99,7 +121,7 @@ class FilterModal extends React.Component {
   }
 
   onUpdateRowValue(id, newFilter, newLabels) {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       const [_operation, filterKey, _clauses] = newFilter
       return {
         filterState: {
@@ -107,7 +129,9 @@ class FilterModal extends React.Component {
           [id]: newFilter
         },
         labelState: cleanLabels(
-          Object.values(this.state.filterState).concat(this.state.query.filters),
+          Object.values(this.state.filterState).concat(
+            this.state.query.filters
+          ),
           prevState.labelState,
           filterKey,
           newLabels
@@ -131,7 +155,7 @@ class FilterModal extends React.Component {
   }
 
   onDeleteRow(id) {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       const filterState = { ...prevState.filterState }
       delete filterState[id]
       return { filterState }
@@ -152,7 +176,10 @@ class FilterModal extends React.Component {
 
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
-          <form className="flex flex-col" onSubmit={this.handleSubmit.bind(this)}>
+          <form
+            className="flex flex-col"
+            onSubmit={this.handleSubmit.bind(this)}
+          >
             {this.getFilterGroups().map((filterGroup) => (
               <FilterModalGroup
                 key={filterGroup}
@@ -183,7 +210,10 @@ class FilterModal extends React.Component {
                   }}
                 >
                   <TrashIcon className="w-4 h-4 mr-2" />
-                  Remove filter{FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].length > 1 ? 's' : ''}
+                  Remove filter
+                  {FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].length > 1
+                    ? 's'
+                    : ''}
                 </button>
               )}
             </div>
@@ -195,7 +225,7 @@ class FilterModal extends React.Component {
 }
 
 export default function FilterModalWithRouter(props) {
-  const navigate = useAppNavigate();
+  const navigate = useAppNavigate()
   const { field } = useParams()
   const { query } = useQueryContext()
   const site = useSiteContext()

@@ -5,14 +5,14 @@
 const memStore = {}
 
 // https://stackoverflow.com/a/16427747
-function testLocalStorageAvailability(){
+function testLocalStorageAvailability() {
   try {
-    const testItem = 'test';
-    localStorage.setItem(testItem, testItem);
-    localStorage.removeItem(testItem);
-    return true;
+    const testItem = 'test'
+    localStorage.setItem(testItem, testItem)
+    localStorage.removeItem(testItem)
+    return true
   } catch (_e) {
-    return false;
+    return false
   }
 }
 

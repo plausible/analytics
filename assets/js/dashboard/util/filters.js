@@ -1,5 +1,3 @@
-/** @format */
-
 import * as api from '../api'
 import { formatSegmentIdAsLabelKey } from '../filtering/segments'
 

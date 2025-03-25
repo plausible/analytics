@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useRef } from 'react'
 import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useEffect } from 'react'
 import classNames from 'classnames'
 import { Popover, Transition } from '@headlessui/react'

@@ -4,3 +4,4 @@ static/images/
 .*rc
 *.json
 *.config.js
+js/types/query-api.d.ts

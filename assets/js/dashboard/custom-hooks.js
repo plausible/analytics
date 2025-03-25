@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react'
 
 // A custom hook that behaves like `useEffect`, but
 // the function does not run on the initial render.
@@ -22,15 +22,20 @@ export function useDebounce(fn, delay = DEBOUNCE_DELAY) {
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) { clearTimeout(timerRef.current) }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
     }
   }, [])
 
-  return useCallback((...args) => {
-    clearTimeout(timerRef.current)
+  return useCallback(
+    (...args) => {
+      clearTimeout(timerRef.current)
 
-    timerRef.current = setTimeout(() => {
-      fn(...args)
-    }, delay)
-  }, [fn, delay])
+      timerRef.current = setTimeout(() => {
+        fn(...args)
+      }, delay)
+    },
+    [fn, delay]
+  )
 }

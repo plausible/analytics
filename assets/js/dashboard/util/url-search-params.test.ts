@@ -1,5 +1,3 @@
-/** @format */
-
 import { Filter } from '../query'
 import {
   encodeURIComponentPermissive,
