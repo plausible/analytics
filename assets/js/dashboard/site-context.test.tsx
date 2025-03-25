@@ -30,7 +30,7 @@ describe('parseSiteFromDataset', () => {
       data-current-user-role="owner"
       data-current-user-id="1"
       data-flags="{}"
-      data-valid-intervals-by-period='{"12mo":["day","week","month"],"30d":["day","week"],"6mo":["day","week","month"],"7d":["hour","day"],"all":["week","month"],"custom":["day","week","month"],"day":["minute","hour"],"month":["day","week"],"realtime":["minute"],"year":["day","week","month"]}'
+      data-valid-intervals-by-period='{"12mo":["day","week","month"],"7d":["hour","day"],"28d":["day","week"],"30d":["day","week"],"90d":["day","week","month"],"6mo":["day","week","month"],"all":["week","month"],"custom":["day","week","month"],"day":["minute","hour"],"month":["day","week"],"realtime":["minute"],"year":["day","week","month"]}'
       {...attrs}
     />
   )
@@ -55,9 +55,11 @@ describe('parseSiteFromDataset', () => {
     flags: {},
     validIntervalsByPeriod: {
       '12mo': ['day', 'week', 'month'],
-      '30d': ['day', 'week'],
-      '6mo': ['day', 'week', 'month'],
       '7d': ['hour', 'day'],
+      '28d': ['day', 'week'],
+      '30d': ['day', 'week'],
+      '90d': ['day', 'week'],
+      '6mo': ['day', 'week', 'month'],
       all: ['week', 'month'],
       custom: ['day', 'week', 'month'],
       day: ['minute', 'hour'],

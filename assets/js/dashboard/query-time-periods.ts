@@ -29,7 +29,9 @@ export enum QueryPeriod {
   'day' = 'day',
   'month' = 'month',
   '7d' = '7d',
+  '28d' = '28d',
   '30d' = '30d',
+  '90d' = '90d',
   '6mo' = '6mo',
   '12mo' = '12mo',
   'year' = 'year',
@@ -330,6 +332,19 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
+        ['Last 28 Days', 'F'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['28d'],
+            keybindHint: 'F'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['28d'],
+          onEvent
+        }
+      ],
+      [
         ['Last 30 Days', 'T'],
         {
           search: (s) => ({
@@ -339,6 +354,19 @@ export const getDatePeriodGroups = ({
             keybindHint: 'T'
           }),
           isActive: ({ query }) => query.period === QueryPeriod['30d'],
+          onEvent
+        }
+      ],
+      [
+        ['Last 90 Days', 'N'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['90d'],
+            keybindHint: 'T'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['90d'],
           onEvent
         }
       ]
@@ -570,8 +598,14 @@ export function getCurrentPeriodDisplayName({
   if (query.period === '7d') {
     return 'Last 7 days'
   }
+  if (query.period === '28d') {
+    return 'Last 28 days'
+  }
   if (query.period === '30d') {
     return 'Last 30 days'
+  }
+  if (query.period === '90d') {
+    return 'Last 90 days'
   }
   if (query.period === 'month') {
     if (isThisMonth(site, query.date)) {

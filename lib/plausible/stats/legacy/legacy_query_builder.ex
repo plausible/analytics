@@ -91,26 +91,18 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     struct!(query, period: "day", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "7d"} = params) do
+  defp put_period(query, site, %{"period" => period} = params)
+       when period in ["7d", "28d", "30d", "90d"] do
+    {days, "d"} = Integer.parse(period)
+
     end_date = parse_single_date(query, params) |> Date.shift(day: -1)
-    start_date = end_date |> Date.shift(day: -6)
+    start_date = end_date |> Date.shift(day: 1 - days)
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "7d", utc_time_range: datetime_range)
-  end
-
-  defp put_period(query, site, %{"period" => "30d"} = params) do
-    end_date = parse_single_date(query, params) |> Date.shift(day: -1)
-    start_date = end_date |> Date.shift(day: -29)
-
-    datetime_range =
-      DateTimeRange.new!(start_date, end_date, site.timezone)
-      |> DateTimeRange.to_timezone("Etc/UTC")
-
-    struct!(query, period: "30d", utc_time_range: datetime_range)
+    struct!(query, period: period, utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "month"} = params) do
