@@ -6,14 +6,13 @@ defmodule Plausible.Auth.ApiKey do
   @type t() :: %__MODULE__{}
 
   @required [:user_id, :name]
-  @optional [:key, :scopes, :hourly_request_limit]
+  @optional [:key, :scopes]
 
   @hourly_request_limit on_ee(do: 600, else: 1_000_000)
 
   schema "api_keys" do
     field :name, :string
     field :scopes, {:array, :string}, default: ["stats:read:*"]
-    field :hourly_request_limit, :integer, default: @hourly_request_limit
 
     field :key, :string, virtual: true
     field :key_hash, :string
@@ -37,7 +36,7 @@ defmodule Plausible.Auth.ApiKey do
 
   def update(schema, attrs \\ %{}) do
     schema
-    |> cast(attrs, [:name, :user_id, :scopes, :hourly_request_limit])
+    |> cast(attrs, [:name, :user_id, :scopes])
     |> validate_required([:user_id, :name])
   end
 

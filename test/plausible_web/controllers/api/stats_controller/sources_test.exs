@@ -1805,7 +1805,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert %{"error_code" => "unsupported_filters"} = json_response(conn, 422)
     end
 
-    @tag :capure_log
+    @tag :capture_log
     test "returns 502 when Google API responds with an unexpected error", %{
       conn: conn,
       site: site
