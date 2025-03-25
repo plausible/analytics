@@ -6,7 +6,7 @@ import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
-import { BlurMenuButtonOnEscape, KeybindHint } from '../keybinding'
+import { BlurMenuButtonOnEscape } from '../keybinding'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardQuery } from '../query'
@@ -264,10 +264,10 @@ const SeeMoreMenu = ({
         {showMoreFilters && (
           <div
             aria-hidden="true"
-            className="right-0 top-0 absolute p-1 flex items-center rounded opacity-50 group-hover:opacity-100 group-focus:opacity-100 transition-opacity"
+            className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 pr-[3px]"
           >
-            <div style={{ fontSize: 6, lineHeight: 1 }}>
-              {filtersInMenuCount}
+            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow px-[3px] py-[1px] flex items-center rounded-sm bg-gray-100 dark:bg-gray-850">
+              +{filtersInMenuCount}
             </div>
           </div>
         )}
@@ -288,16 +288,19 @@ const SeeMoreMenu = ({
         >
           {showMoreFilters && (
             <>
-              <div className="pt-4 px-4">
+              <div className="py-4 px-4">
                 <AppliedFilterPillsList
                   direction="vertical"
+                  pillClassName="dark:!shadow-gray-950/60"
                   slice={{
                     type: 'no-render-outside',
                     start: visibleFiltersCount
                   }}
                 />
               </div>
-              <div className="mt-4 mb-1 border-gray-200 dark:border-gray-500 border-b"></div>
+              {showSomeActions && (
+                <div className="mb-1 border-gray-200 dark:border-gray-500 border-b"></div>
+              )}
             </>
           )}
           {showSomeActions && (
@@ -346,8 +349,7 @@ const ClearAction = ({ className }: { className?: string }) => (
       labels: null
     })}
   >
-    <span className="#ml-1">Clear all filters</span>
-    <KeybindHint className="ml-4">Esc</KeybindHint>
+    Clear all filters
   </AppNavigationLink>
 )
 
@@ -361,7 +363,7 @@ const SaveAsSegmentAction = ({ className }: { className?: string }) => {
       onClick={() => setModal('create')}
       state={{ expandedSegment: null }}
     >
-      <span className="#ml-1">Save as segment</span>
+      Save as segment
     </AppNavigationLink>
   )
 }

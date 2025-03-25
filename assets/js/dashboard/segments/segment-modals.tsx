@@ -401,6 +401,7 @@ const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
           className="flex-wrap"
           direction="horizontal"
           pills={segment_data.filters.map((filter) => ({
+            className: 'dark:!shadow-gray-950/60',
             plainText: plainFilterText({ labels: segment_data.labels }, filter),
             children: styledFilterText({ labels: segment_data.labels }, filter),
             interactive: false

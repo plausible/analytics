@@ -32,7 +32,10 @@ type NoRenderOutsideSlice = {
 type AppliedFilterPillsListProps = Omit<
   FilterPillsListProps,
   'slice' | 'pillProps' | 'pills'
-> & { slice?: InvisibleOutsideSlice | NoRenderOutsideSlice }
+> & {
+  slice?: InvisibleOutsideSlice | NoRenderOutsideSlice
+  pillClassName?: string
+}
 
 type FilterPillsListProps = {
   direction: 'horizontal' | 'vertical'
@@ -43,7 +46,7 @@ type FilterPillsListProps = {
 export const AppliedFilterPillsList = React.forwardRef<
   HTMLDivElement,
   AppliedFilterPillsListProps
->(({ className, style, slice, direction }, ref) => {
+>(({ className, style, slice, direction, pillClassName }, ref) => {
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
 
@@ -65,7 +68,7 @@ export const AppliedFilterPillsList = React.forwardRef<
   return (
     <FilterPillsList
       pills={renderableFilters.map((filter, index) => ({
-        className: classNames(isInvisible(index) && 'invisible'),
+        className: classNames(isInvisible(index) && 'invisible', pillClassName),
         plainText: plainFilterText(query, filter),
         children: styledFilterText(query, filter),
         interactive: {

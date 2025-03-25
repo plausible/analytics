@@ -101,7 +101,7 @@ test('user can see expected filters and clear them one by one or all together', 
   await userEvent.click(
     screen.getByRole('link', {
       hidden: false,
-      name: ['Clear all filters', 'Esc'].join(' ')
+      name: 'Clear all filters'
     })
   )
 
