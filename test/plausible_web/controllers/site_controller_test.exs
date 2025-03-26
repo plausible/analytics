@@ -1850,6 +1850,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert element_exists?(html, ~s|button[type=submit]|)
     end
 
+    @tag :ee_only
     test "change team form error: destination team has no subscription", %{
       user: user,
       conn: conn,
@@ -1869,6 +1870,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html =~ "This team has no subscription"
     end
 
+    @tag :ee_only
     test "change team form error: subscription insufficient", %{
       user: user,
       conn: conn,
