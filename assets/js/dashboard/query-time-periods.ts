@@ -366,7 +366,7 @@ export const getDatePeriodGroups = ({
             ...s,
             ...clearedDateSearch,
             period: QueryPeriod['90d'],
-            keybindHint: 'T'
+            keybindHint: 'N'
           }),
           isActive: ({ query }) => query.period === QueryPeriod['90d'],
           onEvent
@@ -397,7 +397,7 @@ export const getDatePeriodGroups = ({
             ...clearedDateSearch,
             period: QueryPeriod.month,
             date: formatISO(lastMonth(site)),
-            keybindHint: null
+            keybindHint: 'P'
           }),
           isActive: ({ query }) =>
             query.period === QueryPeriod.month &&
