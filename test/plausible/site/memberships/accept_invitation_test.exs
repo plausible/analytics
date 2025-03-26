@@ -26,6 +26,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       subscribe_to_growth_plan(another)
 
       assert :ok = AcceptInvitation.change_team(site, user, team2)
+      assert Repo.reload!(site).team_id == team2.id
+      assert_team_membership(user, team2, :owner)
     end
 
     test "changes the team if admin in second team" do
@@ -41,6 +43,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       add_member(team2, user: user, role: :admin)
 
       assert :ok = AcceptInvitation.change_team(site, user, team2)
+      assert Repo.reload!(site).team_id == team2.id
+      assert_team_membership(user, team2, :admin)
     end
 
     for role <- Plausible.Teams.Membership.roles() -- [:admin, :owner] do
@@ -57,6 +61,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
         add_member(team2, user: user, role: unquote(role))
 
         assert {:error, :permission_denied} = AcceptInvitation.change_team(site, user, team2)
+        refute Repo.reload!(site).team_id == team2.id
       end
     end
   end
