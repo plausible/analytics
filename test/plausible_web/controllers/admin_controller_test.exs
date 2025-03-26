@@ -74,6 +74,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       :ok
     end
 
+    @tag :ee_only
     test "deletes a user without a team", %{conn: conn} do
       another_user = new_user()
 
@@ -83,6 +84,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       refute Repo.reload(another_user)
     end
 
+    @tag :ee_only
     test "deletes a user with a personal team without subscription", %{conn: conn} do
       another_user = new_user()
       site = new_site(owner: another_user)
@@ -96,6 +98,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       refute Repo.reload(team)
     end
 
+    @tag :ee_only
     test "fails to delete a user with a personal team with active subscription", %{conn: conn} do
       another_user = new_user() |> subscribe_to_growth_plan()
       site = new_site(owner: another_user)
@@ -112,6 +115,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       assert Repo.reload(team)
     end
 
+    @tag :ee_only
     test "fails to delete a user who is the only owner on a public team", %{conn: conn} do
       another_user = new_user()
       site = new_site(owner: another_user)
@@ -138,6 +142,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       :ok
     end
 
+    @tag :ee_only
     test "deletes a team", %{conn: conn} do
       another_user = new_user()
       site = new_site(owner: another_user)
@@ -151,6 +156,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       assert Repo.reload(another_user)
     end
 
+    @tag :ee_only
     test "fails to delete a team with an active subscription", %{conn: conn} do
       another_user = new_user() |> subscribe_to_growth_plan()
       site = new_site(owner: another_user)
