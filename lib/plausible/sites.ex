@@ -96,17 +96,7 @@ defmodule Plausible.Sites do
         where: gm.site_id == ^site.id,
         select: %{
           user: u,
-          role:
-            fragment(
-              """
-              CASE
-              WHEN ? = 'editor' THEN 'admin'
-              ELSE ?
-              END
-              """,
-              gm.role,
-              gm.role
-            )
+          role: gm.role
         }
       )
       |> Repo.all()
@@ -121,17 +111,7 @@ defmodule Plausible.Sites do
         select: %{
           invitation_id: gi.invitation_id,
           email: ti.email,
-          role:
-            fragment(
-              """
-              CASE
-              WHEN ? = 'editor' THEN 'admin'
-              ELSE ?
-              END
-              """,
-              gi.role,
-              gi.role
-            )
+          role: gi.role
         }
       )
       |> Repo.all()

@@ -231,7 +231,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     test "removes the invitation", %{conn: conn, user: user} do
       owner = new_user()
       site = new_site(owner: owner)
-      add_guest(site, user: user, role: :editor)
+      team = Plausible.Teams.complete_setup(site.team)
+      add_member(team, user: user, role: :admin)
       invitation = invite_guest(site, "jane@example.com", inviter: owner, role: :editor)
 
       conn =
@@ -248,7 +249,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     test "removes the invitation for ownership transfer", %{conn: conn, user: user} do
       owner = new_user()
       site = new_site(owner: owner)
-      add_guest(site, user: user, role: :editor)
+      team = Plausible.Teams.complete_setup(site.team)
+      add_member(team, user: user, role: :admin)
       transfer = invite_transfer(site, "jane@example.com", inviter: owner)
 
       conn =
@@ -265,7 +267,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     test "fails to remove an invitation with insufficient permission", %{conn: conn, user: user} do
       owner = new_user()
       site = new_site(owner: owner)
-      add_guest(site, user: user, role: :viewer)
+      add_guest(site, user: user, role: :editor)
 
       invitation = invite_guest(site, "jane@example.com", inviter: owner, role: :editor)
 
@@ -302,7 +304,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
     test "renders error for non-existent invitation", %{conn: conn, user: user} do
       site = new_site()
-      add_guest(site, user: user, role: :editor)
+      team = Plausible.Teams.complete_setup(site.team)
+      add_member(team, user: user, role: :admin)
 
       remove_invitation_path =
         Routes.invitation_path(
