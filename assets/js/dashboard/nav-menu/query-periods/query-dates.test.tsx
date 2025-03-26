@@ -31,7 +31,7 @@ test('if no period is stored, loads with default value of "Last 30 days", all ex
       ['Last 30 Days', 'T'],
       ['Last 90 Days', 'N'],
       ['Month to Date', 'M'],
-      ['Last Month', ''],
+      ['Last Month', 'P'],
       ['Year to Date', 'Y'],
       ['Last 12 Months', 'L'],
       ['All time', 'A'],

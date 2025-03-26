@@ -388,7 +388,7 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last Month'],
+        ['Last Month', 'P'],
         {
           search: (s) => ({
             ...s,
