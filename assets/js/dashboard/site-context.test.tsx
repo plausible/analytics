@@ -58,7 +58,7 @@ describe('parseSiteFromDataset', () => {
       '7d': ['hour', 'day'],
       '28d': ['day', 'week'],
       '30d': ['day', 'week'],
-      '90d': ['day', 'week'],
+      '90d': ['day', 'week', 'month'],
       '6mo': ['day', 'week', 'month'],
       all: ['week', 'month'],
       custom: ['day', 'week', 'month'],
