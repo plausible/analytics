@@ -19,8 +19,8 @@ import FilterModalGroup from './filter-modal-group'
 import { rootRoute } from '../../router'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { SegmentModal } from '../../segments/segment-modals'
-import { TrashIcon } from '@heroicons/react/24/outline'
 import { findAppliedSegmentFilter } from '../../filtering/segments'
+import { removeFilterButtonClassname } from '../../components/remove-filter-button'
 
 function partitionFilters(modalType, filters) {
   const otherFilters = []
@@ -192,10 +192,10 @@ class FilterModal extends React.Component {
               />
             ))}
 
-            <div className="mt-6 flex items-center justify-start">
+            <div className="mt-6 flex gap-x-4 items-center justify-start">
               <button
                 type="submit"
-                className="button"
+                className="button !px-3"
                 disabled={this.isDisabled()}
               >
                 Apply filter
@@ -204,16 +204,14 @@ class FilterModal extends React.Component {
               {this.state.hasRelevantFilters && (
                 <button
                   type="button"
-                  className="ml-4 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
+                  className={removeFilterButtonClassname}
                   onClick={() => {
                     this.selectFiltersAndCloseModal(this.state.otherFilters)
                   }}
                 >
-                  <TrashIcon className="w-4 h-4 mr-2" />
-                  Remove filter
                   {FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].length > 1
-                    ? 's'
-                    : ''}
+                    ? 'Remove filters'
+                    : 'Remove filter'}
                 </button>
               )}
             </div>

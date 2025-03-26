@@ -55,6 +55,7 @@ const items = {
       'first-of-type:rounded-t-md',
       'last-of-type:rounded-b-md'
     ),
+    roundedEnd: classNames('last-of-type:rounded-b-md'),
     groupRoundedStartEnd: classNames(
       'group-first-of-type:rounded-t-md',
       'group-last-of-type:rounded-b-md'
