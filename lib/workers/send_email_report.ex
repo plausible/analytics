@@ -75,8 +75,9 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp put_last_week_query(%{site: site} = assigns) do
     # In production, evaluating and sending the date param to `Query.from`
-    # is redundant since the default value is today for `site.timezone`.
-    # However, this makes it easier to test - no need for a `now` argument.
+    # is redundant since the default value is today for `site.timezone` and
+    # weekly reports are always sent on Monday morning. However, this makes
+    # it easier to test - no need for a `now` argument.
     date_param =
       site.timezone
       |> DateTime.now!()
