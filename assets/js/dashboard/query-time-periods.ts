@@ -250,7 +250,7 @@ export type LinkItem = [
       query: DashboardQuery
     }) => boolean
     onEvent?: (event: Pick<Event, 'preventDefault' | 'stopPropagation'>) => void
-    hidden?: boolean,
+    hidden?: boolean
   }
 ]
 

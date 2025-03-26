@@ -163,7 +163,10 @@ const QueryPeriodMenuInner = ({
           {groups.map((group, index) => (
             <React.Fragment key={index}>
               {group.map(
-                ([[label, keyboardKey], { search, isActive, onEvent, hidden }]) => {
+                ([
+                  [label, keyboardKey],
+                  { search, isActive, onEvent, hidden }
+                ]) => {
                   if (!hidden) {
                     return (
                       <AppNavigationLink
@@ -174,7 +177,9 @@ const QueryPeriodMenuInner = ({
                         onClick={onEvent && ((e) => onEvent(e))}
                       >
                         {label}
-                        {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}
+                        {!!keyboardKey && (
+                          <KeybindHint>{keyboardKey}</KeybindHint>
+                        )}
                       </AppNavigationLink>
                     )
                   }
