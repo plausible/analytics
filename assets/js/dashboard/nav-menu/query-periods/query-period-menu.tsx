@@ -163,18 +163,22 @@ const QueryPeriodMenuInner = ({
           {groups.map((group, index) => (
             <React.Fragment key={index}>
               {group.map(
-                ([[label, keyboardKey], { search, isActive, onEvent }]) => (
-                  <AppNavigationLink
-                    key={label}
-                    data-selected={isActive({ site, query })}
-                    className={linkClassName}
-                    search={search}
-                    onClick={onEvent && ((e) => onEvent(e))}
-                  >
-                    {label}
-                    {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}
-                  </AppNavigationLink>
-                )
+                ([[label, keyboardKey], { search, isActive, onEvent, hidden }]) => {
+                  if (!hidden) {
+                    return (
+                      <AppNavigationLink
+                        key={label}
+                        data-selected={isActive({ site, query })}
+                        className={linkClassName}
+                        search={search}
+                        onClick={onEvent && ((e) => onEvent(e))}
+                      >
+                        {label}
+                        {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}
+                      </AppNavigationLink>
+                    )
+                  }
+                }
               )}
               {index < groups.length - 1 && <MenuSeparator />}
             </React.Fragment>

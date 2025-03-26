@@ -250,6 +250,7 @@ export type LinkItem = [
       query: DashboardQuery
     }) => boolean
     onEvent?: (event: Pick<Event, 'preventDefault' | 'stopPropagation'>) => void
+    hidden?: boolean,
   }
 ]
 
@@ -347,6 +348,7 @@ export const getDatePeriodGroups = ({
       [
         ['Last 30 Days', 'T'],
         {
+          hidden: true,
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
