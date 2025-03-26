@@ -37,7 +37,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           | :multiple_teams
           | :permission_denied
 
-  @type membership :: %Teams.Membership{}
+  @type membership() :: %Teams.Membership{}
 
   @spec bulk_transfer_ownership_direct([Site.t()], Auth.User.t(), Teams.Team.t() | nil) ::
           {:ok, [membership]} | {:error, transfer_error()}
@@ -53,6 +53,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
         end
       end
     end)
+  end
+
+  @spec change_team(Site.t(), Auth.User.t(), Teams.Team.t()) ::
+          :ok | {:error, transfer_error()}
+  def change_team(site, user, new_team) do
+    with {:ok, _} <- transfer_ownership(site, user, new_team) do
+      :ok
+    end
   end
 
   @spec accept_invitation(String.t(), Auth.User.t(), Teams.Team.t() | nil) ::

@@ -15,7 +15,12 @@ defmodule PlausibleWeb.Site.MembershipController do
   use Plausible
   alias Plausible.Site.Memberships
 
-  @only_owner_and_admin_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
+  @only_owner_and_admin_is_allowed_to [
+    :transfer_ownership_form,
+    :transfer_ownership,
+    :change_team,
+    :change_team_form
+  ]
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -134,6 +139,75 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> put_flash(:error_title, "Transfer error")
         |> put_flash(:error, message)
         |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+    end
+  end
+
+  def change_team_form(conn, _params) do
+    site_domain = conn.assigns.site.domain
+    user = conn.assigns.current_user
+
+    site =
+      Plausible.Sites.get_for_user!(user, site_domain)
+
+    render_change_team_form(conn, user, site)
+  end
+
+  defp render_change_team_form(conn, user, site, opts \\ []) do
+    transferable_teams =
+      user
+      |> Plausible.Teams.Users.teams(roles: [:owner, :admin])
+      |> Enum.reject(&(&1.id == site.team_id))
+      |> Enum.map(&{&1.name, &1.identifier})
+
+    render(
+      conn,
+      "change_team_form.html",
+      site: site,
+      skip_plausible_tracking: true,
+      transferable_teams: transferable_teams,
+      error: opts[:error]
+    )
+  end
+
+  def change_team(conn, %{"team_identifier" => identifier}) do
+    site_domain = conn.assigns.site.domain
+    user = conn.assigns.current_user
+
+    site =
+      Plausible.Sites.get_for_user!(user, site_domain)
+
+    destination_team =
+      Repo.one!(
+        Plausible.Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier)
+      )
+
+    case Memberships.AcceptInvitation.change_team(
+           site,
+           conn.assigns.current_user,
+           destination_team
+         ) do
+      :ok ->
+        conn
+        |> put_flash(:success, "Site team was changed")
+        |> redirect(external: Routes.site_path(conn, :index, __team: identifier))
+
+      {:error, :no_plan} ->
+        conn
+        |> render_change_team_form(conn.assigns.current_user, site,
+          error: "This team has no subscription"
+        )
+
+      {:error, {:over_plan_limits, _}} ->
+        conn
+        |> render_change_team_form(conn.assigns.current_user, site,
+          error: "This team's subscription outgrows site usage"
+        )
+
+      {:error, _} ->
+        conn
+        |> render_change_team_form(conn.assigns.current_user, site,
+          error: "Sorry, this team cannot be used"
+        )
     end
   end
 

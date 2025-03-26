@@ -1813,4 +1813,130 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.reload(site).stats_start_date == nil
     end
   end
+
+  describe "change team" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "no change team section appears when <1 team", %{conn: conn, site: site} do
+      conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
+      html = html_response(conn, 200)
+      assert html =~ "Danger Zone"
+      assert html =~ "Delete #{site.domain}"
+      refute html =~ "Change #{site.domain} team"
+    end
+
+    test "change team section appears when >1 team", %{user: user, conn: conn, site: site} do
+      join_2nd_team(user)
+
+      conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
+      html = html_response(conn, 200)
+      assert html =~ "Danger Zone"
+      assert html =~ "Delete #{site.domain}"
+      assert html =~ "Change #{site.domain} team"
+    end
+
+    test "change team form renders", %{user: user, conn: conn, site: site} do
+      join_2nd_team(user)
+
+      conn = get(conn, Routes.membership_path(conn, :change_team_form, site.domain))
+      html = html_response(conn, 200)
+      assert html =~ "Change the team of #{site.domain}"
+
+      assert element_exists?(
+               html,
+               ~s|form[action="#{Routes.membership_path(conn, :change_team, site.domain)}"]|
+             )
+
+      assert element_exists?(html, ~s|button[type=submit]|)
+    end
+
+    @tag :ee_only
+    test "change team form error: destination team has no subscription", %{
+      user: user,
+      conn: conn,
+      site: site
+    } do
+      team2 = join_2nd_team(user)
+
+      conn =
+        post(
+          conn,
+          Routes.membership_path(conn, :change_team, site.domain,
+            team_identifier: team2.identifier
+          )
+        )
+
+      html = html_response(conn, 200)
+      assert html =~ "This team has no subscription"
+    end
+
+    @tag :ee_only
+    test "change team form error: subscription insufficient", %{
+      user: user,
+      conn: conn,
+      site: site
+    } do
+      team2 = join_2nd_team(user, subscribe?: true)
+
+      generate_usage_for(site, 11_000, NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -5))
+      generate_usage_for(site, 11_000, NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -35))
+
+      conn =
+        post(
+          conn,
+          Routes.membership_path(conn, :change_team, site.domain,
+            team_identifier: team2.identifier
+          )
+        )
+
+      html = html_response(conn, 200)
+      assert text(html) =~ "This team's subscription outgrows site usage"
+    end
+
+    test "change team form error: unknown team identifier", %{
+      conn: conn,
+      site: site
+    } do
+      assert_raise Ecto.NoResultsError, fn ->
+        post(
+          conn,
+          Routes.membership_path(conn, :change_team, site.domain,
+            team_identifier: Ecto.UUID.generate()
+          )
+        )
+      end
+    end
+
+    test "successfully changes team", %{
+      user: user,
+      conn: conn,
+      site: site
+    } do
+      team2 = join_2nd_team(user, subscribe?: true)
+
+      conn =
+        post(
+          conn,
+          Routes.membership_path(conn, :change_team, site.domain,
+            team_identifier: team2.identifier
+          )
+        )
+
+      assert redirected_to(conn) == "/sites?__team=#{team2.identifier}"
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "Site team was changed"
+    end
+
+    defp join_2nd_team(user, opts \\ []) do
+      another = new_user()
+      new_site(owner: another)
+      team2 = team_of(another)
+      add_member(team2, user: user, role: :admin)
+
+      if opts[:subscribe?] do
+        subscribe_to_growth_plan(another)
+      end
+
+      team2
+    end
+  end
 end
