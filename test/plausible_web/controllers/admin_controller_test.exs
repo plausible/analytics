@@ -65,6 +65,115 @@ defmodule PlausibleWeb.AdminControllerTest do
     end
   end
 
+  describe "DELETE /crm/auth/user/:user_id" do
+    setup [:create_user, :log_in]
+
+    setup %{user: user} do
+      patch_env(:super_admin_user_ids, [user.id])
+
+      :ok
+    end
+
+    @tag :ee_only
+    test "deletes a user without a team", %{conn: conn} do
+      another_user = new_user()
+
+      conn = delete(conn, "/crm/auth/user/#{another_user.id}")
+      assert redirected_to(conn, 302) == "/crm/auth/user"
+
+      refute Repo.reload(another_user)
+    end
+
+    @tag :ee_only
+    test "deletes a user with a personal team without subscription", %{conn: conn} do
+      another_user = new_user()
+      site = new_site(owner: another_user)
+      team = team_of(another_user)
+
+      conn = delete(conn, "/crm/auth/user/#{another_user.id}")
+      assert redirected_to(conn, 302) == "/crm/auth/user"
+
+      refute Repo.reload(another_user)
+      refute Repo.reload(site)
+      refute Repo.reload(team)
+    end
+
+    @tag :ee_only
+    test "fails to delete a user with a personal team with active subscription", %{conn: conn} do
+      another_user = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: another_user)
+      team = team_of(another_user)
+
+      conn = delete(conn, "/crm/auth/user/#{another_user.id}")
+      assert redirected_to(conn, 302) == "/crm/auth/user/#{another_user.id}"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "User's personal team has an active subscription"
+
+      assert Repo.reload(another_user)
+      assert Repo.reload(site)
+      assert Repo.reload(team)
+    end
+
+    @tag :ee_only
+    test "fails to delete a user who is the only owner on a public team", %{conn: conn} do
+      another_user = new_user()
+      site = new_site(owner: another_user)
+      team = another_user |> team_of() |> Plausible.Teams.complete_setup()
+
+      conn = delete(conn, "/crm/auth/user/#{another_user.id}")
+      assert redirected_to(conn, 302) == "/crm/auth/user/#{another_user.id}"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "The user is the only public team owner"
+
+      assert Repo.reload(another_user)
+      assert Repo.reload(site)
+      assert Repo.reload(team)
+    end
+  end
+
+  describe "DELETE /crm/teams/team/:team_id" do
+    setup [:create_user, :log_in]
+
+    setup %{user: user} do
+      patch_env(:super_admin_user_ids, [user.id])
+
+      :ok
+    end
+
+    @tag :ee_only
+    test "deletes a team", %{conn: conn} do
+      another_user = new_user()
+      site = new_site(owner: another_user)
+      team = team_of(another_user)
+
+      conn = delete(conn, "/crm/teams/team/#{team.id}")
+      assert redirected_to(conn, 302) == "/crm/teams/team"
+
+      refute Repo.reload(team)
+      refute Repo.reload(site)
+      assert Repo.reload(another_user)
+    end
+
+    @tag :ee_only
+    test "fails to delete a team with an active subscription", %{conn: conn} do
+      another_user = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: another_user)
+      team = team_of(another_user)
+
+      conn = delete(conn, "/crm/teams/team/#{team.id}")
+      assert redirected_to(conn, 302) == "/crm/teams/team/#{team.id}"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "The team has an active subscription"
+
+      assert Repo.reload(team)
+      assert Repo.reload(site)
+      assert Repo.reload(another_user)
+    end
+  end
+
   describe "POST /crm/sites/site/:site_id" do
     setup [:create_user, :log_in]
 

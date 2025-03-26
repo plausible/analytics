@@ -87,9 +87,14 @@ defmodule Plausible.Teams.TeamAdmin do
     ]
   end
 
-  def delete(_conn, %{data: _team}) do
-    # TODO: Implement custom team removal
-    "Cannot remove the team for now"
+  def delete(_conn, %{data: team}) do
+    case Teams.delete(team) do
+      {:ok, :deleted} ->
+        {:ok, team}
+
+      {:error, :active_subscription} ->
+        {team, "The team has an active subscription which must be canceled first."}
+    end
   end
 
   def grace_period_status(team) do

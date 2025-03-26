@@ -22,10 +22,13 @@ defmodule Plausible.Auth.UserAdmin do
   def delete(_conn, %{data: user}) do
     case Plausible.Auth.delete_user(user) do
       {:ok, :deleted} ->
-        :ok
+        {:ok, user}
+
+      {:error, :active_subscription} ->
+        {user, "User's personal team has an active subscription which must be canceled first."}
 
       {:error, :is_only_team_owner} ->
-        "The user is the only public team owner on one or more teams."
+        {user, "The user is the only public team owner on one or more teams."}
     end
   end
 
