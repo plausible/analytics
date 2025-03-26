@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Two new shorthand time periods `28d` and `90d` available on both dashboard and in public API
 - Average scroll depth metric
 - Scroll Depth goals
 - Dashboard shows comparisons for all reports
@@ -25,6 +26,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Last `7d` and `30d` periods do not include today anymore
 - Filters appear in the search bar as ?f=is,page,/docs,/blog&f=... instead of ?filters=((is,page,(/docs,/blog)),...) for Plausible links sent on various platforms to work reliably.
 - Details modal search inputs are now case-insensitive.
 - Improved report performance in cases where site has a lot of unique pathnames
