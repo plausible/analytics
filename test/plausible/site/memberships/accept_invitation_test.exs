@@ -28,6 +28,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert :ok = AcceptInvitation.change_team(site, user, team2)
       assert Repo.reload!(site).team_id == team2.id
       assert_team_membership(user, team2, :owner)
+      assert_no_emails_delivered()
     end
 
     test "changes the team if admin in second team" do
@@ -45,6 +46,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert :ok = AcceptInvitation.change_team(site, user, team2)
       assert Repo.reload!(site).team_id == team2.id
       assert_team_membership(user, team2, :admin)
+      assert_no_emails_delivered()
     end
 
     for role <- Plausible.Teams.Membership.roles() -- [:admin, :owner] do
