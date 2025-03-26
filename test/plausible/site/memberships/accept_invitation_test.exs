@@ -10,7 +10,23 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "change_team/3" do
-    test "changes the team if owner in both teams" do
+    @tag :ce_build_only
+    test "changes the team if owner in both teams (CE)" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :owner)
+
+      assert :ok = AcceptInvitation.change_team(site, user, team2)
+    end
+
+    @tag :ee_only
+    test "changes the team if owner in both teams (EE)" do
       user = new_user()
       site = new_site(owner: user)
 
