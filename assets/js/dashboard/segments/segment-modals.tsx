@@ -17,13 +17,14 @@ import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
-import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { MutationStatus } from '@tanstack/react-query'
 import { ApiError } from '../api'
 import { ErrorPanel } from '../components/error-panel'
 import { useSegmentsContext } from '../filtering/segments-context'
 import { useSiteContext } from '../site-context'
 import { useUserContext } from '../user-context'
+import { removeFilterButtonClassname } from '../components/remove-filter-button'
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -41,15 +42,15 @@ interface SharedSegmentModalProps {
   namePlaceholder: string
 }
 
-const primaryNeutralButtonClassName = 'button'
+const primaryNeutralButtonClassName = 'button !px-3'
 
 const primaryNegativeButtonClassName = classNames(
-  'button',
+  'button !px-3',
   'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
 )
 
 const secondaryButtonClassName = classNames(
-  'button',
+  'button !px-3',
   'border !border-gray-300 dark:!border-gray-500 !text-gray-700 dark:!text-gray-300 !bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-850'
 )
 
@@ -400,6 +401,7 @@ const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
           className="flex-wrap"
           direction="horizontal"
           pills={segment_data.filters.map((filter) => ({
+            className: 'dark:!shadow-gray-950/60',
             plainText: plainFilterText({ labels: segment_data.labels }, filter),
             children: styledFilterText({ labels: segment_data.labels }, filter),
             interactive: false
@@ -496,7 +498,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                 </AppNavigationLink>
 
                 <AppNavigationLink
-                  className={primaryNegativeButtonClassName}
+                  className={removeFilterButtonClassname}
                   path={rootRoute.path}
                   search={(s) => {
                     const nonSegmentFilters = query.filters.filter(
@@ -514,7 +516,6 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                     }
                   }}
                 >
-                  <TrashIcon className="w-4 h-4 mr-2" />
                   Remove filter
                 </AppNavigationLink>
               </ButtonsRow>
