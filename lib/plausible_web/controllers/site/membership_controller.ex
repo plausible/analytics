@@ -15,7 +15,12 @@ defmodule PlausibleWeb.Site.MembershipController do
   use Plausible
   alias Plausible.Site.Memberships
 
-  @only_owner_and_admin_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
+  @only_owner_and_admin_is_allowed_to [
+    :transfer_ownership_form,
+    :transfer_ownership,
+    :change_team,
+    :change_team_form
+  ]
 
   plug PlausibleWeb.RequireAccountPlug
 
