@@ -22,7 +22,7 @@
           selected_fn={&is_current_tab(@conn, &1)}
         />
 
-        <div class="hidden lg:block">
+        <div class="hidden lg:block sticky top-0">
           <%= for %{key: key, value: value, icon: icon} <- site_settings_sidebar(@conn) do %>
             <%= if is_binary(value) do %>
               {render("_site_settings_tab.html",
