@@ -391,15 +391,10 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       site ->
         site = Repo.preload(site, :team)
 
-        cond do
-          team && team.id != site.team_id ->
-            {:error, :site_not_found}
-
-          !team && site.team.setup_complete ->
-            {:error, :site_not_found}
-
-          true ->
-            {:ok, site}
+        if team && team.id != site.team_id do
+          {:error, :site_not_found}
+        else
+          {:ok, site}
         end
     end
   end
