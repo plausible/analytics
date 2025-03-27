@@ -184,6 +184,8 @@ defmodule Plausible.Teams do
 
       [owner] = team.owners
 
+      scope_api_keys(owner, team)
+
       clear_autocreated(owner)
 
       team
@@ -350,6 +352,15 @@ defmodule Plausible.Teams do
         where: tm.is_autocreated == true
       ),
       set: [is_autocreated: false]
+    )
+
+    :ok
+  end
+
+  defp scope_api_keys(user, team) do
+    Repo.update_all(
+      from(a in Auth.ApiKey, where: a.user_id == ^user.id),
+      set: [team_id: team.id]
     )
 
     :ok
