@@ -88,8 +88,19 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
+  @spec telemetry_pipeline_step_duration() :: [atom()]
   def telemetry_pipeline_step_duration() do
     [:plausible, :ingest, :pipeline, :step]
+  end
+
+  @spec telemetry_ua_parse_timeout() :: [atom()]
+  def telemetry_ua_parse_timeout() do
+    [:plausible, :ingest, :user_agent_parse, :timeout]
+  end
+
+  @spec emit_telemetry_ua_parse_timeout() :: :ok
+  def emit_telemetry_ua_parse_timeout() do
+    :telemetry.execute(telemetry_ua_parse_timeout(), %{}, %{})
   end
 
   @spec emit_telemetry_buffered(t()) :: :ok
@@ -446,8 +457,12 @@ defmodule Plausible.Ingestion.Event do
       end)
 
     case Task.yield(task, @parse_user_agent_timeout) || Task.shutdown(task) do
-      {:ok, result} -> {:ok, result}
-      nil -> {:error, :timeout}
+      {:ok, result} ->
+        {:ok, result}
+
+      nil ->
+        emit_telemetry_ua_parse_timeout()
+        {:error, :timeout}
     end
   end
 
