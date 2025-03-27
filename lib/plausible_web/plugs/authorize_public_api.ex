@@ -97,8 +97,15 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp find_api_key(_conn, token, _) do
-    with {:ok, api_key} <- Auth.find_api_key(token) do
-      {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+    case Auth.find_api_key(token) do
+      {:ok, %{api_key: api_key, team: nil}} ->
+        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+
+      {:ok, %{api_key: api_key, team: team}} ->
+        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_api_request_limit}
+
+      {:error, _} = error ->
+        error
     end
   end
 
