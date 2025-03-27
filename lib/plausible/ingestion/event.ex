@@ -452,9 +452,12 @@ defmodule Plausible.Ingestion.Event do
 
   defp parse_user_agent_safe(user_agent) do
     task =
-      Task.Supervisor.async_nolink(Plausible.UserAgentParseTaskSupervisor, fn ->
-        UAInspector.parse(user_agent)
-      end)
+      Task.Supervisor.async_nolink(
+        {:via, PartitionSupervisor, {Plausible.UserAgentParseTaskSupervisor, self()}},
+        fn ->
+          UAInspector.parse(user_agent)
+        end
+      )
 
     case Task.yield(task, @parse_user_agent_timeout) || Task.shutdown(task) do
       {:ok, result} ->
