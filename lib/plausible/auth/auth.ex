@@ -178,7 +178,7 @@ defmodule Plausible.Auth do
   end
 
   @spec find_api_key(String.t(), Keyword.t()) ::
-          {:ok, Auth.ApiKey.t() | %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
+          {:ok, %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
           | {:error, :invalid_api_key | :missing_site_id}
   def find_api_key(raw_key, opts \\ []) do
     {team_scope, id} = Keyword.get(opts, :team_by, {nil, nil})
@@ -192,27 +192,38 @@ defmodule Plausible.Auth do
     query =
       from(api_key in Auth.ApiKey,
         join: user in assoc(api_key, :user),
+        left_join: team in assoc(api_key, :team),
         where: api_key.key_hash == ^hashed_key,
-        preload: [user: user]
+        preload: [user: user, team: team]
       )
 
-    if found = Repo.one(query) do
-      {:ok, found}
-    else
-      {:error, :invalid_api_key}
+    case Repo.one(query) do
+      nil ->
+        {:error, :invalid_api_key}
+
+      %{team: %{} = team} = api_key ->
+        {:ok, %{api_key: api_key, team: team}}
+
+      api_key ->
+        {:ok, %{api_key: api_key, team: nil}}
     end
   end
 
   defp find_api_key(raw_key, :site, nil) do
-    with {:ok, api_key} <- find_api_key(raw_key, nil, nil) do
-      {:ok, %{api_key: api_key, team: nil}}
-    end
+    find_api_key(raw_key, nil, nil)
   end
 
   defp find_api_key(raw_key, :site, domain) do
-    with {:ok, api_key} <- find_api_key(raw_key, nil, nil) do
-      team = find_team_by_site(domain)
-      {:ok, %{api_key: api_key, team: team}}
+    case find_api_key(raw_key, nil, nil) do
+      {:ok, %{api_key: api_key, team: nil}} ->
+        team = find_team_by_site(domain)
+        {:ok, %{api_key: api_key, team: team}}
+
+      {:ok, %{api_key: api_key, team: team}} ->
+        {:ok, %{api_key: api_key, team: team}}
+
+      {:error, _} = error ->
+        error
     end
   end
 
