@@ -55,7 +55,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
          {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
          :ok <- check_api_key_rate_limit(limit_key, hourly_limit),
          {:ok, conn} <- verify_by_scope(conn, api_key, requested_scope) do
-      assign(conn, :current_user, api_key.user)
+      conn
+      |> assign(:current_user, api_key.user)
+      |> assign(:current_team, api_key.team)
     else
       error -> send_error(conn, requested_scope, error)
     end
