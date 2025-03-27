@@ -88,8 +88,19 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
+  @spec telemetry_pipeline_step_duration() :: [atom()]
   def telemetry_pipeline_step_duration() do
     [:plausible, :ingest, :pipeline, :step]
+  end
+
+  @spec telemetry_ua_parse_timeout() :: [atom()]
+  def telemetry_ua_parse_timeout() do
+    [:plausible, :ingest, :user_agent_parse, :timeout]
+  end
+
+  @spec emit_telemetry_ua_parse_timeout() :: :ok
+  def emit_telemetry_ua_parse_timeout() do
+    :telemetry.execute(telemetry_ua_parse_timeout(), %{}, %{})
   end
 
   @spec emit_telemetry_buffered(t()) :: :ok
@@ -238,13 +249,13 @@ defmodule Plausible.Ingestion.Event do
 
   defp put_user_agent(%__MODULE__{} = event, _context) do
     case parse_user_agent(event.request) do
-      %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}} ->
+      {:ok, %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}} ->
         drop(event, :bot)
 
-      %UAInspector.Result.Bot{} ->
+      {:ok, %UAInspector.Result.Bot{}} ->
         drop(event, :bot)
 
-      %UAInspector.Result{} = user_agent ->
+      {:ok, %UAInspector.Result{} = user_agent} ->
         update_session_attrs(event, %{
           operating_system: os_name(user_agent),
           operating_system_version: os_version(user_agent),
@@ -430,13 +441,30 @@ defmodule Plausible.Ingestion.Event do
     |> Enum.find(fn param_name -> Map.has_key?(query_params, param_name) end)
   end
 
+  @parse_user_agent_timeout 200
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
-    Plausible.Cache.Adapter.get(:user_agents, user_agent, fn ->
-      UAInspector.parse(user_agent)
+    Plausible.Cache.Adapter.fetch(:user_agents, user_agent, fn ->
+      parse_user_agent_safe(user_agent)
     end)
   end
 
   defp parse_user_agent(request), do: request
+
+  defp parse_user_agent_safe(user_agent) do
+    task =
+      Task.Supervisor.async_nolink(Plausible.UserAgentParseTaskSupervisor, fn ->
+        UAInspector.parse(user_agent)
+      end)
+
+    case Task.yield(task, @parse_user_agent_timeout) || Task.shutdown(task) do
+      {:ok, result} ->
+        {:ok, result}
+
+      nil ->
+        emit_telemetry_ua_parse_timeout()
+        {:error, :timeout}
+    end
+  end
 
   defp browser_name(ua) do
     case ua.client do

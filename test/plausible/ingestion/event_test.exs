@@ -45,6 +45,41 @@ defmodule Plausible.Ingestion.EventTest do
     end
   end
 
+  test "times out parsing user agent", %{test: test} do
+    on_exit(:detach, fn ->
+      :telemetry.detach("ua-timeout-#{test}")
+    end)
+
+    test_pid = self()
+    event = Event.telemetry_ua_parse_timeout()
+
+    :telemetry.attach(
+      "ua-timeout-#{test}",
+      event,
+      fn ^event, _, _, _ ->
+        send(test_pid, :telemetry_handled)
+      end,
+      %{}
+    )
+
+    site = new_site()
+
+    payload = %{
+      name: "pageview",
+      url: "http://#{site.domain}"
+    }
+
+    conn =
+      :post
+      |> build_conn("/api/events", payload)
+      |> Plug.Conn.put_req_header("user-agent", :binary.copy("a", 1024 * 8))
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
+    assert_receive :telemetry_handled
+  end
+
   test "drops verification agent" do
     site = new_site()
 
