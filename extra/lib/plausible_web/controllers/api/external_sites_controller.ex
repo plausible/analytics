@@ -61,10 +61,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
   def teams_index(conn, params) do
     user = conn.assigns.current_user
+    team = conn.assigns.current_team
 
     page =
       user
-      |> Teams.Users.teams_query(order_by: :id_desc)
+      |> Teams.Users.teams_query(identifier: team && team.identifier, order_by: :id_desc)
       |> paginate(params, @pagination_opts)
 
     json(conn, %{
