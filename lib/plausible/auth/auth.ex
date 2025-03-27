@@ -204,12 +204,8 @@ defmodule Plausible.Auth do
     query
   end
 
-  defp scope_api_keys_by_team(query, %{setup_complete: false} = team) do
-    where(query, [a], is_nil(a.team_id) or a.team_id == ^team.id)
-  end
-
   defp scope_api_keys_by_team(query, team) do
-    where(query, [a], a.team_id == ^team.id)
+    where(query, [a], is_nil(a.team_id) or a.team_id == ^team.id)
   end
 
   defp find_api_key(raw_key, nil, _) do
