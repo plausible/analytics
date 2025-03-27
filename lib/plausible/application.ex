@@ -18,7 +18,6 @@ defmodule Plausible.Application do
         {PartitionSupervisor,
          child_spec: Task.Supervisor, name: Plausible.UserAgentParseTaskSupervisor},
         Plausible.Session.BalancerSupervisor,
-        Plausible.Cache.Stats,
         Plausible.PromEx,
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         Plausible.Repo,
@@ -153,7 +152,10 @@ defmodule Plausible.Application do
     Location.load_all()
     Plausible.Geo.await_loader()
 
-    Supervisor.start_link(List.flatten(children), opts)
+    with {:ok, _pid} = ok <- Supervisor.start_link(List.flatten(children), opts) do
+      Plausible.Cache.Stats.attach()
+      ok
+    end
   end
 
   def config_change(changed, _new, removed) do
