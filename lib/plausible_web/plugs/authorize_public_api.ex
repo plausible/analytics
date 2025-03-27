@@ -196,6 +196,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
       is_super_admin? ->
         :ok
 
+      api_key.team_id && api_key.team_id != site.team_id ->
+        {:error, :invalid_api_key}
+
       Sites.locked?(site) ->
         {:error, :site_locked}
 
