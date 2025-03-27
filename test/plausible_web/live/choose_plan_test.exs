@@ -577,7 +577,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @slider_value) == "10k"
     end
 
-    test "highlights Business box as the 'Current' tier if it's suitable for their usage", %{
+    test "highlights Business box as the 'Current' tier", %{
       conn: conn,
       site: site
     } do
@@ -592,20 +592,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_highlight_pill) == "Current"
 
       refute element_exists?(doc, @growth_highlight_pill)
-    end
-
-    test "highlights Growth box as the 'Recommended' tier if it would accommodate their usage", %{
-      conn: conn
-    } do
-      {:ok, _lv, doc} = get_liveview(conn)
-
-      class = class_of_element(doc, @growth_plan_box)
-
-      assert class =~ "ring-2"
-      assert class =~ "ring-indigo-600"
-      assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
-
-      refute element_exists?(doc, @business_highlight_pill)
     end
 
     test "recommends Enterprise when site limit exceeds Business tier due to pending ownerships",
