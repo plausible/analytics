@@ -42,6 +42,11 @@ defmodule Plausible.Application do
           global_ttl: :timer.minutes(30),
           ets_options: [read_concurrency: true, write_concurrency: true]
         ),
+        on_ee do
+          if data_dir = Application.get_env(:plausible, :data_dir) do
+            {Plausible.Session.Persistence, base_path: Path.join(data_dir, "sessions")}
+          end
+        end,
         warmed_cache(Plausible.Site.Cache,
           adapter_opts: [
             n_lock_partitions: 1,
