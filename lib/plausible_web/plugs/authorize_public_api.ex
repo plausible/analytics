@@ -201,9 +201,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
       api_key.team_id && api_key.team_id != site.team_id ->
         {:error, :invalid_api_key}
 
-      !api_key.team_id && team.setup_complete ->
-        {:error, :invalid_api_key}
-
       Sites.locked?(site) ->
         {:error, :site_locked}
 
