@@ -14,6 +14,17 @@
     </.button_link>
   </.tile>
 
+  <.tile :if={Enum.count(Plausible.Teams.Users.teams(@current_user, roles: [:owner, :admin])) > 1}>
+    <:title>Change Teams</:title>
+    <:subtitle>Move the site to another team that you are a member of</:subtitle>
+    <.button_link
+      href={Routes.membership_path(@conn, :change_team_form, @site.domain)}
+      theme="danger"
+    >
+      Change {@site.domain} team
+    </.button_link>
+  </.tile>
+
   <.tile>
     <:title>Reset Stats</:title>
     <:subtitle>Reset all stats but keep the site configuration intact</:subtitle>
