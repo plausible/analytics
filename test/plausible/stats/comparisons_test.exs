@@ -173,8 +173,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       comparison_query = Comparisons.get_comparison_query(query)
 
-      assert comparison_query.utc_time_range.first == ~U[2019-12-30 00:00:00Z]
-      assert comparison_query.utc_time_range.last == ~U[2020-01-05 23:59:59Z]
+      assert comparison_query.utc_time_range.first == ~U[2019-12-29 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2020-01-04 23:59:59Z]
       assert date_range_length(comparison_query) == 7
     end
 
@@ -182,7 +182,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         Query.from(site, %{
           "period" => "7d",
-          "date" => "2021-03-03",
+          "date" => "2021-03-04",
           "comparison" => "year_over_year"
         })
 
@@ -204,8 +204,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       comparison_query = Comparisons.get_comparison_query(query)
 
-      assert comparison_query.utc_time_range.first == ~U[2020-11-19 00:00:00Z]
-      assert comparison_query.utc_time_range.last == ~U[2020-11-25 23:59:59Z]
+      assert comparison_query.utc_time_range.first == ~U[2020-11-18 00:00:00Z]
+      assert comparison_query.utc_time_range.last == ~U[2020-11-24 23:59:59Z]
       assert date_range_length(comparison_query) == 7
     end
   end

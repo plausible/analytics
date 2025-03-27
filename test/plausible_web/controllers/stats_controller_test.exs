@@ -345,7 +345,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       pages =
         conn
-        |> get("/#{site.domain}/export?date=2020-01-01")
+        |> get("/#{site.domain}/export?period=day&date=2020-01-01")
         |> response(200)
         |> unzip_and_parse_csv(~c"pages.csv")
 
@@ -411,7 +411,10 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
-      conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
+
+      conn =
+        get(conn, "/" <> site.domain <> "/export?period=custom&from=2021-09-20&to=2021-10-20")
+
       assert_zip(conn, "30d")
     end
 
@@ -459,7 +462,10 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       visitors =
         conn
-        |> get("/" <> site.domain <> "/export?date=2021-10-20&period=30d&interval=week")
+        |> get(
+          "/" <>
+            site.domain <> "/export?period=custom&from=2021-09-20&to=2021-10-20&interval=week"
+        )
         |> response(200)
         |> unzip_and_parse_csv(~c"visitors.csv")
 
@@ -500,7 +506,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       os_versions =
         conn
-        |> get("/#{site.domain}/export")
+        |> get("/#{site.domain}/export?period=day")
         |> response(200)
         |> unzip_and_parse_csv(~c"operating_system_versions.csv")
 
@@ -550,7 +556,9 @@ defmodule PlausibleWeb.StatsControllerTest do
         )
       ])
 
-      conn = get(conn, "/#{site.domain}/export?with_imported=true")
+      tomorrow = Date.utc_today() |> Date.add(1) |> Date.to_iso8601()
+
+      conn = get(conn, "/#{site.domain}/export?date=#{tomorrow}&with_imported=true")
 
       assert response = response(conn, 200)
       {:ok, zip} = :zip.unzip(response, [:memory])
@@ -750,7 +758,14 @@ defmodule PlausibleWeb.StatsControllerTest do
       link = insert(:shared_link, site: site)
 
       populate_exported_stats(site)
-      conn = get(conn, "/" <> site.domain <> "/export?auth=#{link.slug}&date=2021-10-20")
+
+      conn =
+        get(
+          conn,
+          "/" <>
+            site.domain <> "/export?auth=#{link.slug}&period=custom&from=2021-09-20&to=2021-10-20"
+        )
+
       assert_zip(conn, "30d")
     end
   end
@@ -772,7 +787,13 @@ defmodule PlausibleWeb.StatsControllerTest do
       populate_exported_stats(site)
 
       filters = Jason.encode!([[:is, "event:page", ["/some-other-page"]]])
-      conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/#{site.domain}/export?period=custom&from=2021-09-20&to=2021-10-20&filters=#{filters}"
+        )
+
       assert_zip(conn, "30d-filter-path")
     end
 
@@ -805,7 +826,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       pages =
         conn
-        |> get("/#{site.domain}/export?date=2020-01-07&period=7d&filters=#{filters}")
+        |> get("/#{site.domain}/export?date=2020-01-08&period=7d&filters=#{filters}")
         |> response(200)
         |> unzip_and_parse_csv(~c"visitors.csv")
 
@@ -973,7 +994,13 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
       filters = Jason.encode!([[:is, "event:goal", ["Signup"]]])
-      conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
+
+      conn =
+        get(
+          conn,
+          "/#{site.domain}/export?period=custom&from=2021-09-20&to=2021-10-20&filters=#{filters}"
+        )
+
       assert_zip(conn, "30d-filter-goal")
     end
 
@@ -1051,7 +1078,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       os_versions =
         conn
-        |> get("/#{site.domain}/export?filters=#{filters}")
+        |> get("/#{site.domain}/export?period=day&filters=#{filters}")
         |> response(200)
         |> unzip_and_parse_csv(~c"operating_system_versions.csv")
 

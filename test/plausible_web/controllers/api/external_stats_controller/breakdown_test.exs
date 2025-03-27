@@ -1666,7 +1666,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/breakdown", %{
+        get(conn, "/api/v1/stats/breakdown?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors,pageviews",
           "property" => "event:goal"
@@ -2387,7 +2387,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/breakdown", %{
+        get(conn, "/api/v1/stats/breakdown?period=day", %{
           "site_id" => site.domain,
           "filters" => "visit:browser != Chrome",
           "property" => "visit:browser"

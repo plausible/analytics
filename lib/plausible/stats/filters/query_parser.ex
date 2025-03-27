@@ -225,14 +225,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(date, date, site.timezone)}
   end
 
-  defp parse_time_range(site, "7d", date, _now) do
-    first = date |> Date.add(-6)
-    {:ok, DateTimeRange.new!(first, date, site.timezone)}
-  end
-
-  defp parse_time_range(site, "30d", date, _now) do
-    first = date |> Date.add(-30)
-    {:ok, DateTimeRange.new!(first, date, site.timezone)}
+  defp parse_time_range(site, shorthand, date, _now)
+       when shorthand in ["7d", "28d", "30d", "90d"] do
+    {days, "d"} = Integer.parse(shorthand)
+    last = date |> Date.add(-1)
+    first = date |> Date.add(-days)
+    {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
   defp parse_time_range(site, "month", date, _now) do
