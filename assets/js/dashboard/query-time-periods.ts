@@ -422,6 +422,19 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
+        ['Last 6 months', 'S'],
+        {
+          hidden: true,
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['6mo'],
+            keybindHint: 'S'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['6mo']
+        }
+      ],
+      [
         ['Last 12 Months', 'L'],
         {
           search: (s) => ({
@@ -457,19 +470,6 @@ export const getDatePeriodGroups = ({
     .concat([lastGroup.concat(extraItemsInLastGroup)])
     .concat(extraGroups)
 }
-
-export const last6MonthsLinkItem: LinkItem = [
-  ['Last 6 months', 'S'],
-  {
-    search: (s) => ({
-      ...s,
-      ...clearedDateSearch,
-      period: QueryPeriod['6mo'],
-      keybindHint: 'S'
-    }),
-    isActive: ({ query }) => query.period === QueryPeriod['6mo']
-  }
-]
 
 export const getCompareLinkItem = ({
   query,

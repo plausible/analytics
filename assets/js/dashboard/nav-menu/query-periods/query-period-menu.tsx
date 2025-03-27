@@ -15,7 +15,6 @@ import {
 } from '../../navigation/use-app-navigate'
 import {
   getCompareLinkItem,
-  last6MonthsLinkItem,
   getDatePeriodGroups,
   LinkItem,
   QueryPeriod,
@@ -54,7 +53,7 @@ function QueryPeriodMenuKeybinds({
   }
   return (
     <>
-      {groups.concat([[last6MonthsLinkItem]]).flatMap((group) =>
+      {groups.flatMap((group) =>
         group
           .filter(([[_name, keyboardKey]]) => !!keyboardKey)
           .map(([[_name, keyboardKey], { search, onEvent }]) => (
