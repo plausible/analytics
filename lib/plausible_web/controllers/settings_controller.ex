@@ -92,9 +92,9 @@ defmodule PlausibleWeb.SettingsController do
 
   def api_keys(conn, _params) do
     current_user = conn.assigns.current_user
+    current_team = conn.assigns[:current_team]
 
-    api_keys =
-      Repo.preload(current_user, :api_keys).api_keys
+    api_keys = Auth.list_api_keys(current_user, current_team)
 
     render(conn, :api_keys, layout: {PlausibleWeb.LayoutView, :settings}, api_keys: api_keys)
   end

@@ -6,6 +6,8 @@ defmodule Plausible.Auth do
   use Plausible
   use Plausible.Repo
 
+  import Ecto.Query
+
   alias Plausible.Auth
   alias Plausible.Billing
   alias Plausible.RateLimit
@@ -156,6 +158,18 @@ defmodule Plausible.Auth do
     def is_super_admin?(_), do: false
   end
 
+  @spec list_api_keys(Auth.User.t(), Teams.Team.t() | nil) :: [Auth.ApiKey.t()]
+  def list_api_keys(user, team) do
+    query =
+      from(a in Auth.ApiKey,
+        where: a.user_id == ^user.id,
+        order_by: [desc: a.id]
+      )
+      |> scope_api_keys_by_team(team)
+
+    Repo.all(query)
+  end
+
   @spec create_api_key(Auth.User.t(), Teams.Team.t(), String.t(), String.t()) ::
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
   def create_api_key(user, team, name, key) do
@@ -184,6 +198,18 @@ defmodule Plausible.Auth do
     {team_scope, id} = Keyword.get(opts, :team_by, {nil, nil})
 
     find_api_key(raw_key, team_scope, id)
+  end
+
+  defp scope_api_keys_by_team(query, nil) do
+    query
+  end
+
+  defp scope_api_keys_by_team(query, %{setup_complete: false} = team) do
+    where(query, [a], is_nil(a.team_id) or a.team_id == ^team.id)
+  end
+
+  defp scope_api_keys_by_team(query, team) do
+    where(query, [a], a.team_id == ^team.id)
   end
 
   defp find_api_key(raw_key, nil, _) do
