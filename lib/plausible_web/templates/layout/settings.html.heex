@@ -10,7 +10,7 @@
       </h2>
     </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
-      <div class="py-4 g:py-0 lg:col-span-3">
+      <div class="lg:col-span-3">
         <.mobile_nav_dropdown
           name="settings"
           options={options}
@@ -19,7 +19,7 @@
           href_base="/settings/"
         />
 
-        <div class="hidden lg:block top-0 sticky">
+        <div class="hidden lg:block py-4  top-0 sticky">
           <h3 class="uppercase text-sm text-indigo-600 font-semibold">Account Settings</h3>
           <p class="text-xs dark:text-gray-400 truncate">{@current_user.email}</p>
           <%= for %{key: key, value: value, icon: icon} <- options["Account Settings"]  do %>
