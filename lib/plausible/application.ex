@@ -15,7 +15,6 @@ defmodule Plausible.Application do
 
     children =
       [
-        {Task.Supervisor, name: Plausible.UserAgentParseTaskSupervisor},
         Plausible.Session.BalancerSupervisor,
         Plausible.Cache.Stats,
         Plausible.PromEx,
