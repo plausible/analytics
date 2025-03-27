@@ -275,7 +275,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                              "time_on_page" => %{
                                "code" => "legacy_time_on_page_used",
                                "message" =>
-                                 "Contains less accurate legacy time-on-page data up to 2021-01-05 00:00:00"
+                                 "This period includes data calculated with the legacy time on page method up to 2021-01-05"
                              }
                            }
                          })
@@ -308,7 +308,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                              "time_on_page" => %{
                                "code" => "legacy_time_on_page_used",
                                "message" =>
-                                 "Contains less accurate legacy time-on-page data up to 2021-01-02 00:00:00"
+                                 "This period includes data calculated with the legacy time on page method up to 2021-01-02"
                              }
                            }
                          })
@@ -342,7 +342,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                              "time_on_page" => %{
                                "code" => "legacy_time_on_page_used",
                                "message" =>
-                                 "Contains less accurate legacy time-on-page data up to 2021-01-02 00:00:00"
+                                 "This period includes data calculated with the legacy time on page method up to 2021-01-02"
                              }
                            }
                          })
@@ -373,7 +373,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                              "time_on_page" => %{
                                "code" => "legacy_time_on_page_used",
                                "message" =>
-                                 "Contains less accurate legacy time-on-page data up to 2021-01-05 00:00:00"
+                                 "This period includes data calculated with the legacy time on page method up to 2021-01-05"
                              }
                            }
                          })
@@ -404,7 +404,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                              "time_on_page" => %{
                                "code" => "legacy_time_on_page_used",
                                "message" =>
-                                 "Contains less accurate legacy time-on-page data up to 2021-01-02 00:00:00"
+                                 "This period includes data calculated with the legacy time on page method up to 2021-01-02"
                              }
                            }
                          })
@@ -436,7 +436,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                              "time_on_page" => %{
                                "code" => "legacy_time_on_page_used",
                                "message" =>
-                                 "Contains less accurate legacy time-on-page data up to 2021-01-02 00:00:00"
+                                 "This period includes data calculated with the legacy time on page method up to 2021-01-02"
                              }
                            }
                          })
