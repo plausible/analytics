@@ -35,7 +35,10 @@
   >
     <%= if !assigns[:embedded] do %>
       {render("_header.html", assigns)}
-      {render("_notice.html", assigns)}
+
+      <%= if !assigns[:disable_global_notices?] do %>
+        {render("_notice.html", assigns)}
+      <% end %>
     <% end %>
 
     <main class="flex-1">
