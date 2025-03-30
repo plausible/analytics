@@ -1,21 +1,27 @@
-There are currently {@current_visitors} visitors on
-<a href={"https://" <> @site.domain}><%= @site.domain %></a>.
+There are currently <b>{@current_visitors}</b>
+visitors on <a href={"https://" <> @site.domain}><%= @site.domain %></a>. <br />
 <%= if Enum.count(@sources) > 0 do %>
-  <br />
   <br /> The top sources for current visitors:<br />
-  <%= for %{dimensions: [source], metrics: [visitors]} <- @sources do %>
-    {source} - {visitors} visitor{if visitors > 1, do: "s"}<br />
-  <% end %>
+  <ul>
+    <%= for %{dimensions: [source], metrics: [visitors]} <- @sources do %>
+      <li>
+        <b>{visitors}</b> visitor{if visitors > 1, do: "s"} from <b>{source}</b>
+      </li>
+    <% end %>
+  </ul>
 <% end %>
 
-<br />
-<br /> The top pages visited:<br />
-<%= for %{dimensions: [page], metrics: [visitors]} <- @pages do %>
-  {page} - {visitors} visitor{if visitors > 1, do: "s"}<br />
-<% end %>
+<br /> Your top pages being visited:<br />
+<ul>
+  <%= for %{dimensions: [page], metrics: [visitors]} <- @pages do %>
+    <li>
+      <b>{visitors}</b> visitor{if visitors > 1, do: "s"} on <b>{page}</b>
+    </li>
+  <% end %>
+</ul>
 
 <%= if @link do %>
-  <br /><br /> View dashboard: <a href={@link}>{@link}</a>
+  <br /> View dashboard: <a href={@link}>{@link}</a>
 <% end %>
 <br /><br /> Congrats on the spike in traffic!
 <%= if Plausible.ce? do %>
