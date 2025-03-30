@@ -34,10 +34,12 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
           current_visitors = Clickhouse.current_visitors(notification.site)
 
           if current_visitors >= notification.threshold do
-            query = Query.from(notification.site, %{"period" => "realtime"})
-            sources = Clickhouse.top_sources_for_spike(notification.site, query, 3, 1)
+            stats =
+              notification.site
+              |> get_traffic_spike_stats()
+              |> Map.put(:current_visitors, current_visitors)
 
-            notify_spike(notification, current_visitors, sources, now)
+            notify_spike(notification, stats, now)
           end
 
         :drop ->
@@ -52,9 +54,9 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     :ok
   end
 
-  defp notify_spike(notification, current_visitors, sources, now) do
+  defp notify_spike(notification, stats, now) do
     for recipient <- notification.recipients do
-      send_spike_notification(recipient, notification.site, current_visitors, sources)
+      send_spike_notification(recipient, notification.site, stats)
     end
 
     notification
@@ -72,7 +74,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     |> Repo.update()
   end
 
-  defp send_spike_notification(recipient, site, current_visitors, sources) do
+  defp send_spike_notification(recipient, site, stats) do
     dashboard_link =
       if Repo.exists?(email_match_query(site, recipient)) do
         Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, [])
@@ -82,8 +84,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
       PlausibleWeb.Email.spike_notification(
         recipient,
         site,
-        current_visitors,
-        sources,
+        stats,
         dashboard_link
       )
 
@@ -113,6 +114,44 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
       )
 
     Plausible.Mailer.send(template)
+  end
+
+  defp get_traffic_spike_stats(site) do
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        %{
+          "site_id" => "#{site.id}",
+          "metrics" => ["visitors"],
+          "pagination" => %{"limit" => 3},
+          "date_range" => "realtime"
+        },
+        %{}
+      )
+
+    %{}
+    |> put_sources(site, query)
+    |> put_pages(site, query)
+  end
+
+  defp put_sources(stats, site, query) do
+    query =
+      query
+      |> Query.set(dimensions: ["visit:source"])
+      |> Query.add_filter([:is_not, "visit:source", ["Direct / None"]])
+
+    %{results: sources} = Plausible.Stats.query(site, query)
+
+    Map.put(stats, :sources, sources)
+  end
+
+  defp put_pages(stats, site, query) do
+    query = Query.set(query, dimensions: ["event:page"])
+
+    %{results: pages} = Plausible.Stats.query(site, query)
+
+    Map.put(stats, :pages, pages)
   end
 
   defp email_match_query(site, recipient) do

@@ -3,9 +3,15 @@ There are currently {@current_visitors} visitors on
 <%= if Enum.count(@sources) > 0 do %>
   <br />
   <br /> The top sources for current visitors:<br />
-  <%= for %{name: source, count: visitors} <- @sources do %>
+  <%= for %{dimensions: [source], metrics: [visitors]} <- @sources do %>
     {source} - {visitors} visitor{if visitors > 1, do: "s"}<br />
   <% end %>
+<% end %>
+
+<br />
+<br /> The top pages visited:<br />
+<%= for %{dimensions: [page], metrics: [visitors]} <- @pages do %>
+  {page} - {visitors} visitor{if visitors > 1, do: "s"}<br />
 <% end %>
 
 <%= if @link do %>

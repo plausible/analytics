@@ -229,6 +229,45 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       assert html_body =~ "There are currently 2 visitors"
     end
 
+    test "includes top 3 pages" do
+      site = new_site()
+
+      insert(:spike_notification,
+        site: site,
+        threshold: 10,
+        recipients: ["uku@example.com"]
+      )
+
+      populate_stats(site, [
+        build(:pageview, pathname: "/one", timestamp: minutes_ago(1)),
+        build(:pageview, pathname: "/one", timestamp: minutes_ago(1)),
+        build(:pageview, pathname: "/one", timestamp: minutes_ago(1)),
+        build(:pageview, pathname: "/one", timestamp: minutes_ago(1)),
+        build(:pageview, pathname: "/two", timestamp: minutes_ago(1)),
+        build(:pageview, pathname: "/two", timestamp: minutes_ago(1)),
+        build(:pageview, pathname: "/two", timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, pathname: "/not-this-one", timestamp: minutes_ago(1))
+      ])
+
+      TrafficChangeNotifier.perform(nil)
+
+      assert_delivered_email_matches(%{
+        to: [nil: "uku@example.com"],
+        html_body: html_body
+      })
+
+      assert html_body =~ "There are currently 10 visitors"
+
+      assert html_body =~ "The top pages visited:"
+      assert html_body =~ "/one - 4 visitors<br>"
+      assert html_body =~ "/two - 3 visitors<br>"
+      assert html_body =~ "/ - 2 visitors<br>"
+
+      refute html_body =~ "/not-this-one"
+    end
+
     test "does not check site if it is locked" do
       site = insert(:site, locked: true)
 
