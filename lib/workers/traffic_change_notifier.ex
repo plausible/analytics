@@ -3,23 +3,24 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   Oban service sending out traffic drop/spike notifications
   """
   use Plausible.Repo
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Clickhouse}
   alias Plausible.Site.TrafficChangeNotification
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
   use Oban.Worker, queue: :spike_notifications
-  @at_most_every "12 hours"
+  @min_interval_hours 12
 
   @impl Oban.Worker
-  def perform(_job, clickhouse \\ Plausible.Stats.Clickhouse) do
-    today = Date.utc_today()
+  def perform(_job, now \\ NaiveDateTime.utc_now(:second)) do
+    today = NaiveDateTime.to_date(now)
 
     notifications =
       Repo.all(
         from sn in TrafficChangeNotification,
           where:
-            is_nil(sn.last_sent) or sn.last_sent < fragment("now() - INTERVAL ?", @at_most_every),
+            is_nil(sn.last_sent) or
+              sn.last_sent < ^NaiveDateTime.add(now, -@min_interval_hours, :hour),
           inner_join: s in assoc(sn, :site),
           inner_join: t in assoc(s, :team),
           where: not s.locked,
@@ -30,20 +31,20 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     for notification <- notifications do
       case notification.type do
         :spike ->
-          current_visitors = clickhouse.current_visitors(notification.site)
+          current_visitors = Clickhouse.current_visitors(notification.site)
 
           if current_visitors >= notification.threshold do
             query = Query.from(notification.site, %{"period" => "realtime"})
-            sources = clickhouse.top_sources_for_spike(notification.site, query, 3, 1)
+            sources = Clickhouse.top_sources_for_spike(notification.site, query, 3, 1)
 
-            notify_spike(notification, current_visitors, sources)
+            notify_spike(notification, current_visitors, sources, now)
           end
 
         :drop ->
-          current_visitors = clickhouse.current_visitors_12h(notification.site)
+          current_visitors = Clickhouse.current_visitors_12h(notification.site)
 
           if current_visitors < notification.threshold do
-            notify_drop(notification, current_visitors)
+            notify_drop(notification, current_visitors, now)
           end
       end
     end
@@ -51,23 +52,23 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     :ok
   end
 
-  defp notify_spike(notification, current_visitors, sources) do
+  defp notify_spike(notification, current_visitors, sources, now) do
     for recipient <- notification.recipients do
       send_spike_notification(recipient, notification.site, current_visitors, sources)
     end
 
     notification
-    |> TrafficChangeNotification.was_sent()
+    |> TrafficChangeNotification.was_sent(now)
     |> Repo.update()
   end
 
-  defp notify_drop(notification, current_visitors) do
+  defp notify_drop(notification, current_visitors, now) do
     for recipient <- notification.recipients do
       send_drop_notification(recipient, notification.site, current_visitors)
     end
 
     notification
-    |> TrafficChangeNotification.was_sent()
+    |> TrafficChangeNotification.was_sent(now)
     |> Repo.update()
   end
 

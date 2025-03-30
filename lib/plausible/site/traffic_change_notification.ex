@@ -34,8 +34,7 @@ defmodule Plausible.Site.TrafficChangeNotification do
     |> change(recipients: List.delete(schema.recipients, recipient))
   end
 
-  def was_sent(schema) do
-    schema
-    |> change(last_sent: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))
+  def was_sent(schema, now) do
+    schema |> change(last_sent: now)
   end
 end

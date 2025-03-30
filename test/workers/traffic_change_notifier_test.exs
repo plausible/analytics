@@ -2,7 +2,6 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
   use Plausible.Teams.Test
-  import Double
   alias Plausible.Workers.TrafficChangeNotifier
 
   describe "drops" do
@@ -16,10 +15,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
         recipients: ["jerod@example.com", "uku@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors_12h, fn _site -> 1 end)
-
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_no_emails_delivered()
     end
@@ -34,10 +30,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
         recipients: ["jerod@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors_12h, fn _site -> 1 end)
-
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
         subject: "Traffic Drop on #{site.domain}",
@@ -50,14 +43,16 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       insert(:drop_notification,
         site: site,
-        threshold: 10,
+        threshold: 2,
         recipients: ["jerod@example.com", "uku@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors_12h, fn _site -> 11 end)
+      populate_stats(site, [
+        build(:pageview, timestamp: minutes_ago(2)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
 
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_no_emails_delivered()
     end
@@ -71,10 +66,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
         recipients: ["jerod@example.com", "uku@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors_12h, fn _site -> 7 end)
-
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
         subject: "Traffic Drop on #{site.domain}",
@@ -87,28 +79,32 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       )
     end
 
-    test "does not notify anyone if a notification already went out in the last 12 hours" do
+    test "does not send notifications more than once every 12 hours" do
       site = new_site()
 
       insert(:drop_notification,
         site: site,
-        threshold: 10,
+        threshold: 1,
         recipients: ["uku@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors_12h, fn _site -> 4 end)
-
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil, ~N[2021-01-01 00:00:00])
 
       assert_email_delivered_with(
         subject: "Traffic Drop on #{site.domain}",
         to: [nil: "uku@example.com"]
       )
 
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil, ~N[2021-01-01 11:59:59])
 
       assert_no_emails_delivered()
+
+      TrafficChangeNotifier.perform(nil, ~N[2021-01-01 12:00:01])
+
+      assert_email_delivered_with(
+        subject: "Traffic Drop on #{site.domain}",
+        to: [nil: "uku@example.com"]
+      )
     end
 
     test "adds settings link if recipient has access to the site" do
@@ -121,10 +117,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
         recipients: ["robert@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors_12h, fn _site -> 6 end)
-
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
         html_body: ~r|http://localhost:8000/example.com/installation\?flow=review|
@@ -138,15 +131,13 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       insert(:spike_notification,
         site: site,
-        threshold: 10,
+        threshold: 2,
         recipients: ["jerod@example.com", "uku@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 5 end)
-        |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
+      populate_stats(site, [build(:pageview, timestamp: minutes_ago(1))])
 
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_no_emails_delivered()
     end
@@ -156,15 +147,17 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       insert(:spike_notification,
         site: site,
-        threshold: 10,
+        threshold: 2,
         recipients: ["jerod@example.com", "uku@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 10 end)
-        |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
+      populate_stats(site, [
+        build(:pageview, timestamp: minutes_ago(3)),
+        build(:pageview, timestamp: minutes_ago(2)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
 
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
         subject: "Traffic Spike on #{site.domain}",
@@ -177,40 +170,101 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       )
     end
 
+    test "ignores 'Direct / None' source" do
+      site = new_site()
+
+      insert(:spike_notification,
+        site: site,
+        threshold: 5,
+        recipients: ["uku@example.com"]
+      )
+
+      populate_stats(site, [
+        build(:pageview, referrer_source: "A", timestamp: minutes_ago(1)),
+        build(:pageview, referrer_source: "A", timestamp: minutes_ago(1)),
+        build(:pageview, referrer_source: "A", timestamp: minutes_ago(1)),
+        build(:pageview, referrer_source: "B", timestamp: minutes_ago(1)),
+        build(:pageview, referrer_source: "B", timestamp: minutes_ago(1)),
+        build(:pageview, referrer_source: "C", timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
+
+      TrafficChangeNotifier.perform(nil)
+
+      assert_delivered_email_matches(%{
+        to: [nil: "uku@example.com"],
+        html_body: html_body
+      })
+
+      assert html_body =~ "The top sources for current visitors:"
+      assert html_body =~ "A - 3 visitors<br>"
+      assert html_body =~ "B - 2 visitors<br>"
+      assert html_body =~ "C - 1 visitor<br>"
+      assert html_body =~ "There are currently 8 visitors"
+    end
+
+    test "does not list sources at all when everything is 'Direct / None'" do
+      site = new_site()
+
+      insert(:spike_notification,
+        site: site,
+        threshold: 1,
+        recipients: ["uku@example.com"]
+      )
+
+      populate_stats(site, [
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
+
+      TrafficChangeNotifier.perform(nil)
+
+      assert_delivered_email_matches(%{
+        to: [nil: "uku@example.com"],
+        html_body: html_body
+      })
+
+      refute html_body =~ "The top sources for current visitors:"
+      assert html_body =~ "There are currently 2 visitors"
+    end
+
     test "does not check site if it is locked" do
       site = insert(:site, locked: true)
 
       insert(:spike_notification,
         site: site,
-        threshold: 10,
+        threshold: 1,
         recipients: ["uku@example.com"]
       )
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 10 end)
-        |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
+      populate_stats(site, [
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
 
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_no_emails_delivered()
     end
 
-    test "does not notify anyone if a notification already went out in the last 12 hours" do
+    test "does not send notifications more than once every 12 hours" do
       site = new_site()
-      insert(:spike_notification, site: site, threshold: 10, recipients: ["uku@example.com"])
+      insert(:spike_notification, site: site, threshold: 1, recipients: ["uku@example.com"])
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 10 end)
-        |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
+      populate_stats(site, [
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
 
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(
         subject: "Traffic Spike on #{site.domain}",
         to: [nil: "uku@example.com"]
       )
 
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_no_emails_delivered()
     end
@@ -218,15 +272,20 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
     test "adds a dashboard link if recipient has access to the site" do
       user = new_user(email: "robert@example.com")
       site = new_site(domain: "example.com", owner: user)
-      insert(:spike_notification, site: site, threshold: 10, recipients: ["robert@example.com"])
+      insert(:spike_notification, site: site, threshold: 1, recipients: ["robert@example.com"])
 
-      clickhouse_stub =
-        stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 10 end)
-        |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
+      populate_stats(site, [
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
 
-      TrafficChangeNotifier.perform(nil, clickhouse_stub)
+      TrafficChangeNotifier.perform(nil)
 
       assert_email_delivered_with(html_body: ~r/View dashboard:\s+<a href=\"http.+\/example.com/)
     end
+  end
+
+  def minutes_ago(min) do
+    NaiveDateTime.utc_now(:second) |> NaiveDateTime.add(-min, :minute)
   end
 end
