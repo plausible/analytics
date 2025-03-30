@@ -198,10 +198,10 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       })
 
       assert html_body =~ "The top sources for current visitors:"
-      assert html_body =~ "A - 3 visitors<br>"
-      assert html_body =~ "B - 2 visitors<br>"
-      assert html_body =~ "C - 1 visitor<br>"
-      assert html_body =~ "There are currently 8 visitors"
+      assert html_body =~ "<b>3</b> visitors from <b>A</b>"
+      assert html_body =~ "<b>2</b> visitors from <b>B</b>"
+      assert html_body =~ "<b>1</b> visitor from <b>C</b>"
+      assert html_body =~ "There are currently <b>8</b>"
     end
 
     test "does not list sources at all when everything is 'Direct / None'" do
@@ -226,7 +226,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       })
 
       refute html_body =~ "The top sources for current visitors:"
-      assert html_body =~ "There are currently 2 visitors"
+      assert html_body =~ "There are currently <b>2</b>"
     end
 
     test "includes top 3 pages" do
@@ -258,12 +258,12 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
         html_body: html_body
       })
 
-      assert html_body =~ "There are currently 10 visitors"
+      assert html_body =~ "There are currently <b>10</b>"
 
-      assert html_body =~ "The top pages visited:"
-      assert html_body =~ "/one - 4 visitors<br>"
-      assert html_body =~ "/two - 3 visitors<br>"
-      assert html_body =~ "/ - 2 visitors<br>"
+      assert html_body =~ "Your top pages being visited:"
+      assert html_body =~ "<b>4</b> visitors on <b>/one</b>"
+      assert html_body =~ "<b>3</b> visitors on <b>/two</b>"
+      assert html_body =~ "<b>2</b> visitors on <b>/</b>"
 
       refute html_body =~ "/not-this-one"
     end
