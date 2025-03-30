@@ -473,19 +473,19 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                "goal" => "scroll",
                "visitors" => 1513,
                "events" => 2130,
-               "conversion_rate" => 24.7
+               "conversion_rate" => 24.69
              },
              %{
                "goal" => "Outbound Link: Click",
                "visitors" => 17,
                "events" => 17,
-               "conversion_rate" => 0.3
+               "conversion_rate" => 0.28
              },
              %{
                "goal" => "view_search_results",
                "visitors" => 11,
                "events" => 30,
-               "conversion_rate" => 0.2
+               "conversion_rate" => 0.18
              }
            ]
   end
@@ -511,13 +511,14 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                "events" => 6
              }
 
-    assert %{
-             "url" =>
-               "http://www.jamieoliver.com/recipes/pasta-recipes/spinach-ricotta-cannelloni/",
-             "visitors" => 1,
-             "conversion_rate" => 0.0,
-             "events" => 1
-           } in results
+    results
+    |> Enum.find(
+      &(&1["url"] ==
+          "http://www.jamieoliver.com/recipes/pasta-recipes/spinach-ricotta-cannelloni/")
+    )
+    |> then(fn page ->
+      assert %{"visitors" => 1, "conversion_rate" => 0.02, "events" => 1} = page
+    end)
   end
 
   defp assert_timeseries(conn, params) do
