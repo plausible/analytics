@@ -14,14 +14,8 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   @pagination_opts [cursor_fields: [{:id, :desc}], limit: 100, maximum_limit: 1000]
 
   def index(conn, params) do
-    team =
-      if conn.assigns.current_team do
-        conn.assigns.current_team
-      else
-        Teams.get(params["team_id"])
-      end
-
     user = conn.assigns.current_user
+    team = conn.assigns.current_team || Teams.get(params["team_id"])
 
     page =
       user
@@ -119,13 +113,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
   def create_site(conn, params) do
     user = conn.assigns.current_user
-
-    team =
-      if conn.assigns.current_team do
-        conn.assigns.current_team
-      else
-        Plausible.Teams.get(params["team_id"])
-      end
+    team = conn.assigns.current_team || Teams.get(params["team_id"])
 
     case Sites.create(user, params, team) do
       {:ok, %{site: site}} ->
