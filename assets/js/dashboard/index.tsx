@@ -25,11 +25,11 @@ type Layouts = {
 const availableResizers: ResizeHandle[] = ["se"];
 
 const breakpointsConfig: { [key in keyof Layouts]: { columns: number; width: number; height: number } } = {
-  lg: { columns: 2, width: 15, height: 15 },
-  md: { columns: 2, width: 8, height: 15 },
-  sm: { columns: 1, width: 16, height: 15 },
-  xs: { columns: 1, width: 12, height: 15 },
-  xxs: { columns: 1, width: 8, height: 15 },
+  lg: { columns: 2, width: 15, height: 13 },
+  md: { columns: 2, width: 8, height: 13 },
+  sm: { columns: 1, width: 16, height: 13 },
+  xs: { columns: 1, width: 12, height: 13 },
+  xxs: { columns: 1, width: 8, height: 13 },
 };
 
 interface ItemConfig {
@@ -70,6 +70,21 @@ const generateLayouts = (): Layouts => {
   return layouts;
 };
 
+function getFromLS() {
+  if (typeof window === 'undefined') return null;
+  try {
+    return JSON.parse(window.localStorage.getItem("dashboard-layout") || "null");
+  } catch (_error) {
+    return null;
+  }
+}
+
+function saveToLS(layouts: Layouts) {
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem("dashboard-layout", JSON.stringify(layouts));
+  }
+}
+
 function DashboardStats({
   importedDataInView,
   updateImportedDataInView
@@ -77,9 +92,12 @@ function DashboardStats({
   importedDataInView?: boolean
   updateImportedDataInView?: (v: boolean) => void
 }) {
-  const [layouts, setLayouts] = useState<Layouts>(generateLayouts());
+  const initialLayouts = getFromLS() || generateLayouts();
+  const [layouts, setLayouts] = useState<Layouts>(initialLayouts);
+
   const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
     setLayouts(allLayouts);
+    saveToLS(allLayouts);
     if (typeof updateImportedDataInView === 'function') {
       updateImportedDataInView(true);
     }
