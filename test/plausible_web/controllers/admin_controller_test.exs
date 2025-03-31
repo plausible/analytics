@@ -275,6 +275,7 @@ defmodule PlausibleWeb.AdminControllerTest do
     setup [:create_user, :log_in]
 
     @tag :ee_only
+    @tag :slow
     test "creates a team-bound API key", %{conn: conn, user: user} do
       patch_env(:super_admin_user_ids, [user.id])
 
@@ -301,6 +302,7 @@ defmodule PlausibleWeb.AdminControllerTest do
     end
 
     @tag :ee_only
+    @tag :slow
     test "Creates personal team when creating the api key if there's none", %{
       conn: conn,
       user: user
@@ -333,6 +335,7 @@ defmodule PlausibleWeb.AdminControllerTest do
     end
 
     @tag :ee_only
+    @tag :slow
     test "Creates team for a particular team if provided", %{conn: conn, user: user} do
       patch_env(:super_admin_user_ids, [user.id])
 
