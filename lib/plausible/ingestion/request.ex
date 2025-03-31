@@ -27,6 +27,8 @@ defmodule Plausible.Ingestion.Request do
   alias Ecto.Changeset
 
   @max_url_size 2_000
+  @missing_scroll_depth 255
+  @missing_engagement_time 0
 
   @primary_key false
   embedded_schema do
@@ -258,11 +260,11 @@ defmodule Plausible.Ingestion.Request do
       engagement_time = parse_engagement_time(request_body["e"])
 
       case {scroll_depth, engagement_time} do
-        {255, 0} ->
+        {@missing_scroll_depth, @missing_engagement_time} ->
           changeset
           |> Changeset.add_error(
             :event_name,
-            "engagement event requires at least one of 'sd' or 'e' fields defined"
+            "engagement event requires a valid integer value for at least one of 'sd' or 'e' fields"
           )
 
         _ ->
@@ -345,8 +347,6 @@ defmodule Plausible.Ingestion.Request do
     nil
   end
 
-  @missing_scroll_depth 255
-
   defp parse_scroll_depth(sd) when is_binary(sd) do
     case Integer.parse(sd) do
       {sd_int, ""} -> parse_scroll_depth(sd_int)
@@ -357,8 +357,6 @@ defmodule Plausible.Ingestion.Request do
   defp parse_scroll_depth(sd) when is_integer(sd) and sd >= 0 and sd <= 100, do: sd
   defp parse_scroll_depth(sd) when is_integer(sd) and sd > 100, do: 100
   defp parse_scroll_depth(_), do: @missing_scroll_depth
-
-  @missing_engagement_time 0
 
   defp parse_engagement_time(et) when is_binary(et) do
     case Integer.parse(et) do

@@ -1328,7 +1328,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert %{"errors" => %{"event_name" => [error_msg]}} = json_response(conn, 400)
 
-      assert error_msg =~ "engagement event requires at least one of 'sd' or 'e' fields defined"
+      assert error_msg =~
+               "engagement event requires a valid integer value for at least one of 'sd' or 'e' fields"
     end
 
     test "ingests scroll_depth as 255 when not in params", %{conn: conn, site: site} do
