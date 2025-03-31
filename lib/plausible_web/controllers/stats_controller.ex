@@ -84,7 +84,8 @@ defmodule PlausibleWeb.StatsController do
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           segments: segments,
-          load_dashboard_js: true
+          load_dashboard_js: true,
+          hide_footer: true
         )
 
       !stats_start_date && can_see_stats? ->
@@ -373,7 +374,8 @@ defmodule PlausibleWeb.StatsController do
           flags: flags,
           is_dbip: is_dbip(),
           segments: segments,
-          load_dashboard_js: true
+          load_dashboard_js: true,
+          hide_footer: true
         )
 
       Sites.locked?(shared_link.site) ->
