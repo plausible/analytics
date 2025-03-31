@@ -23,6 +23,7 @@ defmodule PlausibleWeb.BillingController do
       redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
     else
       render(conn, "choose_plan.html",
+        disable_global_notices?: true,
         skip_plausible_tracking: true,
         connect_live_socket: true
       )

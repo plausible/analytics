@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       ~H"""
       <aside class="container">
         <.notice
-          title="You have outgrown your Plausible subscription tier"
+          title={Plausible.Billing.active_grace_period_notice_title()}
           class="shadow-md dark:shadow-none"
         >
           To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       ~H"""
       <aside class="container">
         <.notice
-          title="You have outgrown your Plausible subscription tier"
+          title={Plausible.Billing.active_grace_period_notice_title()}
           class="shadow-md dark:shadow-none"
         >
           To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
@@ -47,7 +47,10 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def dashboard_locked(assigns) do
     ~H"""
     <aside class="container">
-      <.notice title="Dashboard locked" class="shadow-md dark:shadow-none">
+      <.notice
+        title={Plausible.Billing.dashboard_locked_notice_title()}
+        class="shadow-md dark:shadow-none"
+      >
         Since you’ve outgrown your current subscription tier, it’s time to upgrade to match your growing usage.
         <.link
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
@@ -123,7 +126,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     <aside id="global-subscription-cancelled-notice" class="container">
       <.notice
         dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@subscription.id)}
-        title="Subscription cancelled"
+        title={Plausible.Billing.subscription_cancelled_notice_title()}
         theme={:red}
         class="shadow-md dark:shadow-none"
       >
@@ -143,7 +146,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
     ~H"""
     <aside id={@container_id} class="hidden">
-      <.notice title="Subscription cancelled" theme={:red} class="shadow-md dark:shadow-none">
+      <.notice
+        title={Plausible.Billing.subscription_cancelled_notice_title()}
+        theme={:red}
+        class="shadow-md dark:shadow-none"
+      >
         <.subscription_cancelled_notice_body subscription={@subscription} />
       </.notice>
     </aside>
@@ -170,7 +177,10 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       ) do
     ~H"""
     <aside class={@class}>
-      <.notice title="Payment failed" class="shadow-md dark:shadow-none">
+      <.notice
+        title={Plausible.Billing.subscription_past_due_notice_title()}
+        class="shadow-md dark:shadow-none"
+      >
         There was a problem with your latest payment. Please update your payment information to keep using Plausible.<.link
           href={@subscription.update_url}
           class="whitespace-nowrap font-semibold"
@@ -190,7 +200,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       ) do
     ~H"""
     <aside class={@class}>
-      <.notice title="Subscription paused" theme={:red} class="shadow-md dark:shadow-none">
+      <.notice
+        title={Plausible.Billing.subscription_paused_notice_title()}
+        theme={:red}
+        class="shadow-md dark:shadow-none"
+      >
         Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.<.link
           href={@subscription.update_url}
           class="whitespace-nowrap font-semibold"
@@ -205,7 +219,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def upgrade_ineligible(assigns) do
     ~H"""
     <aside id="upgrade-eligible-notice" class="pb-6">
-      <.notice title="No sites owned" theme={:yellow} class="shadow-md dark:shadow-none">
+      <.notice
+        title={Plausible.Billing.upgrade_ineligible_notice_title()}
+        theme={:yellow}
+        class="shadow-md dark:shadow-none"
+      >
         You cannot start a subscription as your account doesn't own any sites. The account that owns the sites is responsible for the billing. Please either
         <.styled_link href="https://plausible.io/docs/transfer-ownership">
           transfer the sites
@@ -227,7 +245,10 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
       ~H"""
       <aside class={@class}>
-        <.notice title="Pending ownership transfers" class="shadow-md dark:shadow-none mt-4">
+        <.notice
+          title={Plausible.Billing.pending_site_ownerships_notice_title()}
+          class="shadow-md dark:shadow-none mt-4"
+        >
           {@message} To exclude pending sites from your usage, please go to
           <.link href="https://plausible.io/sites" class="whitespace-nowrap font-semibold">
             plausible.io/sites
