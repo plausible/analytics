@@ -36,7 +36,6 @@ defmodule Plausible.Ingestion.Event do
           | :verification_agent
           | :lock_timeout
           | :no_session_for_engagement
-          | :blank_engagement
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -128,7 +127,6 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
-      drop_blank_engagement: &drop_blank_engagement/2,
       drop_verification_agent: &drop_verification_agent/2,
       drop_datacenter_ip: &drop_datacenter_ip/2,
       drop_shield_rule_hostname: &drop_shield_rule_hostname/2,
@@ -191,16 +189,6 @@ defmodule Plausible.Ingestion.Event do
 
   defp update_session_attrs(%__MODULE__{} = event, %{} = attrs) do
     struct!(event, clickhouse_session_attrs: Map.merge(event.clickhouse_session_attrs, attrs))
-  end
-
-  defp drop_blank_engagement(%__MODULE__{} = event, _context) do
-    case event.request do
-      %{event_name: "engagement", scroll_depth: 255, engagement_time: 0} ->
-        drop(event, :blank_engagement)
-
-      _ ->
-        event
-    end
   end
 
   defp drop_verification_agent(%__MODULE__{} = event, _context) do

@@ -27,6 +27,17 @@ defmodule Plausible.Ingestion.Request do
   alias Ecto.Changeset
 
   @max_url_size 2_000
+  @missing_scroll_depth 255
+  @missing_engagement_time 0
+
+  # :KLUDGE: Old version of tracker script sent huge values for engagement time. Ignore
+  # these while users might still have the old script cached.
+  @too_large_engagement_time :timer.hours(30 * 24)
+
+  @blank_engagement_error_message "engagement event requires a valid integer value for at least one of 'sd' or 'e' fields"
+
+  def too_large_engagement_time(), do: @too_large_engagement_time
+  def blank_engagement_error_message(), do: @blank_engagement_error_message
 
   @primary_key false
   embedded_schema do
@@ -80,8 +91,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_request_params(request_body)
         |> put_referrer(request_body)
         |> put_props(request_body)
-        |> put_scroll_depth(request_body)
-        |> put_engagement_time(request_body)
+        |> put_engagement_fields(request_body)
         |> put_pathname()
         |> put_query_params()
         |> put_revenue_source(request_body)
@@ -253,20 +263,24 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp put_scroll_depth(changeset, %{} = request_body) do
+  defp put_engagement_fields(changeset, %{} = request_body) do
     if Changeset.get_field(changeset, :event_name) == "engagement" do
       scroll_depth = parse_scroll_depth(request_body["sd"])
-      Changeset.put_change(changeset, :scroll_depth, scroll_depth)
-    else
-      changeset
-    end
-  end
-
-  defp put_engagement_time(changeset, %{} = request_body) do
-    if Changeset.get_field(changeset, :event_name) == "engagement" do
       engagement_time = parse_engagement_time(request_body["e"])
 
-      Changeset.put_change(changeset, :engagement_time, engagement_time)
+      case {scroll_depth, engagement_time} do
+        {@missing_scroll_depth, @missing_engagement_time} ->
+          changeset
+          |> Changeset.add_error(
+            :event_name,
+            "engagement event requires a valid integer value for at least one of 'sd' or 'e' fields"
+          )
+
+        _ ->
+          changeset
+          |> Changeset.put_change(:scroll_depth, scroll_depth)
+          |> Changeset.put_change(:engagement_time, engagement_time)
+      end
     else
       changeset
     end
@@ -342,8 +356,6 @@ defmodule Plausible.Ingestion.Request do
     nil
   end
 
-  @missing_scroll_depth 255
-
   defp parse_scroll_depth(sd) when is_binary(sd) do
     case Integer.parse(sd) do
       {sd_int, ""} -> parse_scroll_depth(sd_int)
@@ -355,18 +367,12 @@ defmodule Plausible.Ingestion.Request do
   defp parse_scroll_depth(sd) when is_integer(sd) and sd > 100, do: 100
   defp parse_scroll_depth(_), do: @missing_scroll_depth
 
-  @missing_engagement_time 0
-
   defp parse_engagement_time(et) when is_binary(et) do
     case Integer.parse(et) do
       {et_int, ""} -> parse_engagement_time(et_int)
       _ -> @missing_engagement_time
     end
   end
-
-  # :KLUDGE: Old version of tracker script sent huge values for engagement time. Ignore
-  # these while users might still have the old script cached.
-  @too_large_engagement_time :timer.hours(30 * 24)
 
   defp parse_engagement_time(et)
        when is_integer(et) and et >= 0 and et < @too_large_engagement_time,
