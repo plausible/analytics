@@ -70,7 +70,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       |> select_merge_as([e], %{
         conversion_rate:
           fragment(
-            "if(? > 0, round(? / ? * 100, 1), 0)",
+            "if(? > 0, round(? / ? * 100, 2), 0)",
             selected_as(:total_visitors),
             selected_as(:visitors),
             selected_as(:total_visitors)
@@ -114,7 +114,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         total_visitors: c.visitors,
         group_conversion_rate:
           fragment(
-            "if(? > 0, round(? / ? * 100, 1), 0)",
+            "if(? > 0, round(? / ? * 100, 2), 0)",
             c.visitors,
             e.visitors,
             c.visitors

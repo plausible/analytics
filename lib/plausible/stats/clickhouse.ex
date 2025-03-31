@@ -75,34 +75,6 @@ defmodule Plausible.Stats.Clickhouse do
 
   def usage_breakdown([], _date_range), do: {0, 0}
 
-  def top_sources_for_spike(site, query, limit, page) do
-    offset = (page - 1) * limit
-
-    {first_datetime, last_datetime} = Plausible.Stats.Time.utc_boundaries(query)
-
-    referrers =
-      from(s in "sessions_v2",
-        select: %{
-          name: s.referrer_source,
-          count: uniq(s.user_id)
-        },
-        where: s.site_id == ^site.id,
-        # Note: This query intentionally uses session end timestamp to get currently active users
-        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime,
-        where: s.referrer_source != "",
-        group_by: s.referrer_source,
-        order_by: [desc: uniq(s.user_id), asc: s.referrer_source],
-        limit: ^limit,
-        offset: ^offset
-      )
-
-    on_ee do
-      referrers = Plausible.Stats.Sampling.add_query_hint(referrers, 10_000_000)
-    end
-
-    ClickhouseRepo.all(referrers)
-  end
-
   def current_visitors(site) do
     Plausible.Stats.current_visitors(site)
   end

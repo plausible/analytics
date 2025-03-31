@@ -983,21 +983,21 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["events"] == imported["events"]
       end)
 
-      # NOTE: goal breakdown's conversion rate difference is up to 18%
+      # NOTE: goal breakdown's conversion rate difference is up to 19%
       assert summary(field(exported_goals, "conversion_rate")) == [
-               0.1,
-               0.55,
-               1.0,
-               3.3,
-               5.6
+               0.08,
+               0.515,
+               0.95,
+               3.255,
+               5.56
              ]
 
       assert summary(field(imported_goals, "conversion_rate")) == [
-               0.1,
-               0.5,
-               0.9,
-               3.8499999999999996,
-               6.8
+               0.08,
+               0.505,
+               0.93,
+               3.87,
+               6.81
              ]
 
       assert summary(
@@ -1006,10 +1006,10 @@ defmodule Plausible.Imported.CSVImporterTest do
                end)
              ) == [
                0.0,
-               0.05555555555555558,
-               0.11111111111111116,
-               0.14379084967320266,
-               0.17647058823529416
+               0.010752688172043001,
+               0.021505376344086002,
+               0.10252948699729997,
+               0.18355359765051393
              ]
 
       # url property breakdown
@@ -1024,15 +1024,28 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["events"] == imported["events"]
       end)
 
-      # NOTE: url property breakdown's conversion rate difference is up to 20%
-      assert summary(field(exported_url_props, "conversion_rate")) == [0.1, 0.1, 0.1, 0.1, 0.8]
-      assert summary(field(imported_url_props, "conversion_rate")) == [0.1, 0.1, 0.1, 0.1, 0.8]
+      # NOTE: url property breakdown's conversion rate difference is up to 7%
+      assert summary(field(exported_url_props, "conversion_rate")) == [
+               0.08,
+               0.08,
+               0.08,
+               0.08,
+               0.79
+             ]
+
+      assert summary(field(imported_url_props, "conversion_rate")) == [
+               0.08,
+               0.08,
+               0.08,
+               0.08,
+               0.77
+             ]
 
       assert summary(
                pairwise(exported_url_props, imported_url_props, fn exported, imported ->
                  abs(1 - exported["conversion_rate"] / imported["conversion_rate"])
                end)
-             ) == [0.0, 0.0, 0.0, 0.0, 0.19999999999999996]
+             ) == [0.0, 0.0, 0.0, 0.0, 0.06666666666666665]
 
       # path property breakdown
       exported_path_props = goal_breakdown.(exported_site, "event:props:path", "event:goal==404")
@@ -1041,7 +1054,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       pairwise(exported_path_props, imported_path_props, fn exported, imported ->
         assert exported["visitors"] == imported["visitors"]
         assert exported["events"] == imported["events"]
-        assert exported["conversion_rate"] == imported["conversion_rate"]
+        assert abs(exported["conversion_rate"] - imported["conversion_rate"]) < 0.011
       end)
     end
 

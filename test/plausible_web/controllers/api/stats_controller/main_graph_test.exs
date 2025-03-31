@@ -759,7 +759,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"plot" => plot} = json_response(conn, 200)
       assert Enum.count(plot) == 31
 
-      assert List.first(plot) == 33.3
+      assert List.first(plot) == 33.33
       assert Enum.at(plot, 10) == 0.0
       assert List.last(plot) == 50.0
     end
@@ -1511,7 +1511,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                json_response(conn, 200)
 
       assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-      assert last_week_plot == [33.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      assert last_week_plot == [33.33, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     end
   end
 
