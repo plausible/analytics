@@ -80,8 +80,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_request_params(request_body)
         |> put_referrer(request_body)
         |> put_props(request_body)
-        |> put_scroll_depth(request_body)
-        |> put_engagement_time(request_body)
+        |> put_engagement_fields(request_body)
         |> put_pathname()
         |> put_query_params()
         |> put_revenue_source(request_body)
@@ -253,20 +252,24 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp put_scroll_depth(changeset, %{} = request_body) do
+  defp put_engagement_fields(changeset, %{} = request_body) do
     if Changeset.get_field(changeset, :event_name) == "engagement" do
       scroll_depth = parse_scroll_depth(request_body["sd"])
-      Changeset.put_change(changeset, :scroll_depth, scroll_depth)
-    else
-      changeset
-    end
-  end
-
-  defp put_engagement_time(changeset, %{} = request_body) do
-    if Changeset.get_field(changeset, :event_name) == "engagement" do
       engagement_time = parse_engagement_time(request_body["e"])
 
-      Changeset.put_change(changeset, :engagement_time, engagement_time)
+      case {scroll_depth, engagement_time} do
+        {255, 0} ->
+          changeset
+          |> Changeset.add_error(
+            :event_name,
+            "engagement event requires at least one of 'sd' or 'e' fields defined"
+          )
+
+        _ ->
+          changeset
+          |> Changeset.put_change(:scroll_depth, scroll_depth)
+          |> Changeset.put_change(:engagement_time, engagement_time)
+      end
     else
       changeset
     end

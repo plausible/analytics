@@ -1321,6 +1321,16 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       {:ok, site: site}
     end
 
+    test "rejects engagement when both sd and e fields are missing", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+
+      conn = post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain})
+
+      assert %{"errors" => %{"event_name" => [error_msg]}} = json_response(conn, 400)
+
+      assert error_msg =~ "engagement event requires at least one of 'sd' or 'e' fields defined"
+    end
+
     test "ingests scroll_depth as 255 when not in params", %{conn: conn, site: site} do
       post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
       post(conn, "/api/event", %{n: "engagement", u: "https://test.com", d: site.domain, e: 200})
