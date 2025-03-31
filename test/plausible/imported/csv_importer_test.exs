@@ -351,7 +351,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           storage: on_ee(do: "s3", else: "local")
         )
 
-      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
 
       assert %SiteImport{
                start_date: ~D[2011-12-25],
@@ -414,7 +414,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           storage: on_ee(do: "s3", else: "local")
         )
 
-      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
 
       assert %SiteImport{
                start_date: ~D[2021-12-30],
@@ -484,7 +484,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           storage: on_ee(do: "s3", else: "local")
         )
 
-      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
 
       assert %SiteImport{
                start_date: ~D[2011-12-25],
@@ -546,7 +546,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           storage: on_ee(do: "s3", else: "local")
         )
 
-      assert %{discard: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
+      assert %{discard: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
 
       # TODO
       # assert {:discard, message} = Plausible.Workers.ImportAnalytics.perform(job)
@@ -1243,8 +1243,10 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   defp unzip_archive(%{tmp_dir: tmp_dir} = context) do
+    {:ok, binary} = :file.read_file(to_charlist(Path.join(tmp_dir, "plausible-export.zip")))
+
     assert {:ok, files} =
-             :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")),
+             :zip.unzip(binary,
                cwd: to_charlist(tmp_dir)
              )
 
