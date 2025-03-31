@@ -307,41 +307,6 @@ defmodule Plausible.Stats.ClickhouseTest do
     end
   end
 
-  describe "top_sources_for_spike/4" do
-    test "gets named sources" do
-      site = insert(:site)
-      query = Plausible.Stats.Query.from(site, %{"period" => "all"})
-
-      populate_stats(site, [
-        build(:pageview,
-          pathname: "/",
-          referrer_source: "Twitter"
-        ),
-        build(:pageview,
-          pathname: "/plausible.io"
-        ),
-        build(:pageview,
-          pathname: "/plausible.io",
-          referrer_source: "Google"
-        ),
-        build(:pageview,
-          pathname: "/plausible.io",
-          referrer_source: "Google"
-        ),
-        build(:pageview,
-          pathname: "/plausible.io",
-          referrer_source: "Bing"
-        )
-      ])
-
-      assert [
-               %{count: 2, name: "Google"},
-               %{count: 1, name: "Bing"},
-               %{count: 1, name: "Twitter"}
-             ] = Clickhouse.top_sources_for_spike(site, query, 5, 1)
-    end
-  end
-
   describe "imported_pageview_counts/1" do
     test "gets pageview counts for each of sites' imports" do
       site = insert(:site)

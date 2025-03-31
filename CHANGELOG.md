@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Add top 3 pages into the traffic spike email
 - Two new shorthand time periods `28d` and `90d` available on both dashboard and in public API
 - Average scroll depth metric
 - Scroll Depth goals
