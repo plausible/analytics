@@ -283,6 +283,7 @@ Plausible.Workers.SendCheckStatsEmails.html
 Plausible.Workers.SendEmailReport.html
 Plausible.Workers.SendSiteSetupEmails.html
 Plausible.Workers.SendTrialNotifications.html
+Plausible.Workers.SetLegacyTimeOnPageCutoff.html
 Plausible.Workers.TrafficChangeNotifier.html
 Plausible.html
 PlausibleWeb.AdminController.html
@@ -467,8 +468,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-8E3645F7.js
-dist/sidebar_items-4C0AB7BD.js
+dist/search_data-4A7039BD.js
+dist/sidebar_items-E6E18D8A.js
 index.html
 readme.html
 search.html
