@@ -8,9 +8,18 @@ defmodule Plausible.Stats.TimeOnPage do
       FunWithFlags.enabled?(:new_time_on_page, for: site)
   end
 
-  def legacy_time_on_page_cutoff() do
-    # Placeholder until we implement a more sophisticated way to determine the cutoff
-    # Only used when `new_time_on_page` flag is enabled
-    DateTime.utc_now() |> DateTime.shift(day: -4) |> DateTime.to_iso8601()
+  def legacy_time_on_page_cutoff(site) do
+    cutoff(site.legacy_time_on_page_cutoff, site.timezone)
+  end
+
+  defp cutoff(nil, _timezone), do: ""
+
+  defp cutoff(date, timezone) do
+    case DateTime.new(date, ~T[00:00:00], timezone) do
+      {:ok, datetime} -> datetime
+      {:gap, just_before, _just_after} -> just_before
+      {:ambiguous, first_datetime, _second_datetime} -> first_datetime
+    end
+    |> DateTime.to_iso8601()
   end
 end
