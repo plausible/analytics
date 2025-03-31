@@ -1490,7 +1490,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"total_visitors" => 3, "visitors" => 1, "name" => "/", "conversion_rate" => 33.3}
+               %{
+                 "total_visitors" => 3,
+                 "visitors" => 1,
+                 "name" => "/",
+                 "conversion_rate" => 33.33
+               }
              ]
     end
 

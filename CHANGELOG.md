@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Increase decimal precision of the "Conversion rate" metric from 1 to 2 (e.g. 16.7 -> 16.67)
 - The "Last 30 days" period is now "Last 28 days" on the dashboard and also the new default. Keyboard shortcut `T` still works for last 30 days.
 - Last `7d` and `30d` periods do not include today anymore
 - Filters appear in the search bar as ?f=is,page,/docs,/blog&f=... instead of ?filters=((is,page,(/docs,/blog)),...) for Plausible links sent on various platforms to work reliably.

@@ -307,7 +307,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       assert %{
                "name" => "Chrome 110",
                "browser" => "Chrome",
-               "conversion_rate" => 66.7,
+               "conversion_rate" => 66.67,
                "version" => "110",
                "total_visitors" => 3,
                "visitors" => 2
