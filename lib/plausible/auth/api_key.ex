@@ -26,8 +26,8 @@ defmodule Plausible.Auth.ApiKey do
 
   def hourly_request_limit(), do: @hourly_request_limit
 
-  def changeset(schema, team, attrs) do
-    schema
+  def changeset(struct, team, attrs) do
+    struct
     |> cast(attrs, @required ++ @optional)
     |> validate_required(@required)
     |> maybe_put_key()
@@ -38,12 +38,12 @@ defmodule Plausible.Auth.ApiKey do
   end
 
   # NOTE: needed only because of lacking introspection in Kaffy
-  def changeset(schema, attrs) do
-    changeset(schema, nil, attrs)
+  def changeset(struct, attrs) do
+    changeset(struct, nil, attrs)
   end
 
-  def update(schema, attrs \\ %{}) do
-    schema
+  def update(struct, attrs \\ %{}) do
+    struct
     |> cast(attrs, [:name, :user_id, :scopes])
     |> validate_required([:user_id, :name])
   end

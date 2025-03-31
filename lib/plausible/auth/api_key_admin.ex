@@ -1,4 +1,7 @@
 defmodule Plausible.Auth.ApiKeyAdmin do
+  @moduledoc """
+  Stats and Sites API key logic for CRM.
+  """
   use Plausible.Repo
 
   alias Plausible.Auth
@@ -16,7 +19,7 @@ defmodule Plausible.Auth.ApiKeyAdmin do
     from(r in query, preload: [:user, team: :owners])
   end
 
-  def create_changeset(schema, attrs) do
+  def create_changeset(_schema, attrs) do
     team = Teams.get(attrs["team_identifier"])
 
     user_id =
@@ -33,24 +36,15 @@ defmodule Plausible.Auth.ApiKeyAdmin do
           team
 
         {nil, %{} = user} ->
-          case Teams.get_or_create(user) do
-            {:ok, team} ->
-              team
+          {:ok, team} = Teams.get_or_create(user)
 
-            {:error, _} ->
-              nil
-          end
+          team
 
         _ ->
           nil
       end
 
-    if team do
-      Auth.ApiKey.changeset(struct(schema, %{}), team, attrs)
-    else
-      Auth.ApiKey.changeset(struct(schema, %{}), nil, attrs)
-      |> Ecto.Changeset.add_error(:team, "is required")
-    end
+    Auth.ApiKey.changeset(%Auth.ApiKey{}, team, attrs)
   end
 
   def update_changeset(entry, attrs) do
