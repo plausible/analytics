@@ -96,7 +96,11 @@ defmodule PlausibleWeb.Favicon do
 
       "/favicon/sources/" <> source ->
         clean_source = URI.decode_www_form(source)
-        domain = Map.get(favicon_domains, clean_source, clean_source)
+
+        domain =
+          Map.get(favicon_domains, clean_source, clean_source)
+          |> String.split("/", parts: 2)
+          |> hd()
 
         case HTTPClient.impl().get("https://icons.duckduckgo.com/ip3/#{domain}.ico") do
           {:ok, %Finch.Response{status: 200, body: body, headers: headers}}
