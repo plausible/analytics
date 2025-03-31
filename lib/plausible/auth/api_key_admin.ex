@@ -19,7 +19,7 @@ defmodule Plausible.Auth.ApiKeyAdmin do
     from(r in query, preload: [:user, team: :owners])
   end
 
-  def create_changeset(_schema, attrs) do
+  def create_changeset(schema, attrs) do
     team = Teams.get(attrs["team_identifier"])
 
     user_id =
@@ -44,7 +44,7 @@ defmodule Plausible.Auth.ApiKeyAdmin do
           nil
       end
 
-    Auth.ApiKey.changeset(%Auth.ApiKey{}, team, attrs)
+    Auth.ApiKey.changeset(schema, team, attrs)
   end
 
   def update_changeset(entry, attrs) do
