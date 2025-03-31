@@ -1030,6 +1030,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
     test "can create an API key", %{conn: conn, user: user} do
       new_site(owner: user)
 
+      team = team_of(user)
+
       conn =
         post(conn, Routes.settings_path(conn, :api_keys), %{
           "api_key" => %{
@@ -1042,6 +1044,31 @@ defmodule PlausibleWeb.SettingsControllerTest do
       key = Plausible.Auth.ApiKey |> where(user_id: ^user.id) |> Repo.one()
       assert conn.status == 302
       assert key.name == "all your code are belong to us"
+      assert key.team_id == team.id
+    end
+
+    test "can create an API key when switched to another team", %{conn: conn, user: user} do
+      new_site(owner: user)
+
+      team = new_site().team |> Plausible.Teams.complete_setup()
+
+      add_member(team, user: user, role: :editor)
+
+      conn = set_current_team(conn, team)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :api_keys), %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      key = Plausible.Auth.ApiKey |> where(user_id: ^user.id) |> Repo.one()
+      assert conn.status == 302
+      assert key.name == "all your code are belong to us"
+      assert key.team_id == team.id
     end
 
     test "cannot create a duplicate API key", %{conn: conn, user: user} do
