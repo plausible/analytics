@@ -287,6 +287,47 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
     assert conn.assigns.site.id == site.id
   end
 
+  test "passes for team-bound API key when team matches", %{conn: conn} do
+    user = new_user()
+    _site = new_site(owner: user)
+    another_site = new_site()
+    another_team = another_site.team |> Plausible.Teams.complete_setup()
+    add_member(another_team, user: user, role: :editor)
+    api_key = insert(:api_key, user: user, team: another_team)
+
+    conn =
+      conn
+      |> put_req_header("authorization", "Bearer #{api_key.key}")
+      |> get("/", %{"site_id" => another_site.domain})
+      |> assign(:api_scope, "stats:read:*")
+      |> AuthorizePublicAPI.call(nil)
+
+    refute conn.halted
+    assert conn.assigns.current_team.id == another_team.id
+    assert conn.assigns.current_user.id == user.id
+    assert conn.assigns.site.id == another_site.id
+  end
+
+  test "halts for team-bound API key when team does not match", %{conn: conn} do
+    user = new_user()
+    site = new_site(owner: user)
+    another_site = new_site()
+    another_team = another_site.team |> Plausible.Teams.complete_setup()
+    add_member(another_team, user: user, role: :editor)
+    api_key = insert(:api_key, user: user, team: another_team)
+
+    conn =
+      conn
+      |> put_req_header("authorization", "Bearer #{api_key.key}")
+      |> get("/", %{"site_id" => site.domain})
+      |> assign(:api_scope, "stats:read:*")
+      |> AuthorizePublicAPI.call(nil)
+
+    assert conn.halted
+
+    assert json_response(conn, 401)["error"] =~ "Invalid API key or site ID."
+  end
+
   @tag :ee_only
   test "passes for super admin user even if not a member of the requested site", %{conn: conn} do
     user = new_user()
