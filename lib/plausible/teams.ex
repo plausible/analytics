@@ -42,7 +42,13 @@ defmodule Plausible.Teams do
   end
 
   def get(team_identifier) when is_binary(team_identifier) do
-    Repo.get_by(Teams.Team, identifier: team_identifier)
+    case Ecto.UUID.cast(team_identifier) do
+      {:ok, uuid} ->
+        Repo.get_by(Teams.Team, identifier: uuid)
+
+      :error ->
+        nil
+    end
   end
 
   @spec get!(pos_integer() | binary()) :: Teams.Team.t()
@@ -291,12 +297,14 @@ defmodule Plausible.Teams do
     end
   end
 
+  @spec last_subscription_join_query() :: Ecto.Query.t()
   def last_subscription_join_query() do
     from(subscription in last_subscription_query(),
       where: subscription.team_id == parent_as(:team).id
     )
   end
 
+  @spec last_subscription_query() :: Ecto.Query.t()
   def last_subscription_query() do
     from(subscription in Plausible.Billing.Subscription,
       order_by: [desc: subscription.inserted_at, desc: subscription.id],
@@ -304,7 +312,9 @@ defmodule Plausible.Teams do
     )
   end
 
-  defp get_owned_team(user, opts \\ []) do
+  # Exposed for use in tests
+  @doc false
+  def get_owned_team(user, opts \\ []) do
     only_not_setup? = Keyword.get(opts, :only_not_setup?, false)
 
     query =

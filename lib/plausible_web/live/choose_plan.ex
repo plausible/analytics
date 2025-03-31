@@ -42,10 +42,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:available_plans, fn %{subscription: subscription} ->
         Plans.available_plans_for(subscription, with_prices: true, customer_ip: remote_ip)
       end)
-      |> assign_new(:recommended_tier, fn %{usage: usage, available_plans: available_plans} ->
+      |> assign_new(:recommended_tier, fn %{
+                                            usage: usage,
+                                            available_plans: available_plans,
+                                            owned_tier: owned_tier
+                                          } ->
         highest_growth_plan = List.last(available_plans.growth)
         highest_business_plan = List.last(available_plans.business)
-        Quota.suggest_tier(usage, highest_growth_plan, highest_business_plan)
+        Quota.suggest_tier(usage, highest_growth_plan, highest_business_plan, owned_tier)
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)

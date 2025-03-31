@@ -5,7 +5,11 @@ defmodule Plausible.Auth do
 
   use Plausible
   use Plausible.Repo
+
+  import Ecto.Query
+
   alias Plausible.Auth
+  alias Plausible.Billing
   alias Plausible.RateLimit
   alias Plausible.Teams
 
@@ -154,13 +158,25 @@ defmodule Plausible.Auth do
     def is_super_admin?(_), do: false
   end
 
-  @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
-          {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
-  def create_api_key(user, name, key) do
-    params = %{name: name, user_id: user.id, key: key}
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
+  @spec list_api_keys(Auth.User.t(), Teams.Team.t() | nil) :: [Auth.ApiKey.t()]
+  def list_api_keys(user, team) do
+    query =
+      from(a in Auth.ApiKey,
+        where: a.user_id == ^user.id,
+        order_by: [desc: a.id]
+      )
+      |> scope_api_keys_by_team(team)
 
-    with :ok <- check_stats_api_available(user) do
+    Repo.all(query)
+  end
+
+  @spec create_api_key(Auth.User.t(), Teams.Team.t(), String.t(), String.t()) ::
+          {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
+  def create_api_key(user, team, name, key) do
+    params = %{name: name, user_id: user.id, key: key}
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, team, params)
+
+    with :ok <- Billing.Feature.StatsAPI.check_availability(team) do
       Repo.insert(changeset)
     end
   end
@@ -176,12 +192,20 @@ defmodule Plausible.Auth do
   end
 
   @spec find_api_key(String.t(), Keyword.t()) ::
-          {:ok, Auth.ApiKey.t() | %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
+          {:ok, %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
           | {:error, :invalid_api_key | :missing_site_id}
   def find_api_key(raw_key, opts \\ []) do
     {team_scope, id} = Keyword.get(opts, :team_by, {nil, nil})
 
     find_api_key(raw_key, team_scope, id)
+  end
+
+  defp scope_api_keys_by_team(query, nil) do
+    query
+  end
+
+  defp scope_api_keys_by_team(query, team) do
+    where(query, [a], is_nil(a.team_id) or a.team_id == ^team.id)
   end
 
   defp find_api_key(raw_key, nil, _) do
@@ -190,27 +214,38 @@ defmodule Plausible.Auth do
     query =
       from(api_key in Auth.ApiKey,
         join: user in assoc(api_key, :user),
+        left_join: team in assoc(api_key, :team),
         where: api_key.key_hash == ^hashed_key,
-        preload: [user: user]
+        preload: [user: user, team: team]
       )
 
-    if found = Repo.one(query) do
-      {:ok, found}
-    else
-      {:error, :invalid_api_key}
+    case Repo.one(query) do
+      nil ->
+        {:error, :invalid_api_key}
+
+      %{team: %{} = team} = api_key ->
+        {:ok, %{api_key: api_key, team: team}}
+
+      api_key ->
+        {:ok, %{api_key: api_key, team: nil}}
     end
   end
 
   defp find_api_key(raw_key, :site, nil) do
-    with {:ok, api_key} <- find_api_key(raw_key, nil, nil) do
-      {:ok, %{api_key: api_key, team: nil}}
-    end
+    find_api_key(raw_key, nil, nil)
   end
 
   defp find_api_key(raw_key, :site, domain) do
-    with {:ok, api_key} <- find_api_key(raw_key, nil, nil) do
-      team = find_team_by_site(domain)
-      {:ok, %{api_key: api_key, team: team}}
+    case find_api_key(raw_key, nil, nil) do
+      {:ok, %{api_key: api_key, team: nil}} ->
+        team = find_team_by_site(domain)
+        {:ok, %{api_key: api_key, team: team}}
+
+      {:ok, %{api_key: api_key, team: team}} ->
+        {:ok, %{api_key: api_key, team: team}}
+
+      {:error, _} = error ->
+        error
     end
   end
 
@@ -221,21 +256,6 @@ defmodule Plausible.Auth do
         where: s.domain == ^domain or s.domain_changed_from == ^domain,
         select: t
     )
-  end
-
-  defp check_stats_api_available(user) do
-    case Plausible.Teams.get_by_owner(user) do
-      {:ok, team} ->
-        Plausible.Billing.Feature.StatsAPI.check_availability(team)
-
-      {:error, :no_team} ->
-        Plausible.Billing.Feature.StatsAPI.check_availability(nil)
-
-      {:error, :multiple_teams} ->
-        # NOTE: Loophole to allow creating API keys when user is a member
-        # on multiple teams.
-        :ok
-    end
   end
 
   defp rate_limit_key(%Auth.User{id: id}), do: id
