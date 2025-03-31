@@ -55,7 +55,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
          {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
          :ok <- check_api_key_rate_limit(limit_key, hourly_limit),
          {:ok, conn} <- verify_by_scope(conn, api_key, requested_scope) do
-      assign(conn, :current_user, api_key.user)
+      conn
+      |> assign(:current_user, api_key.user)
+      |> assign(:current_team, api_key.team)
     else
       error -> send_error(conn, requested_scope, error)
     end
@@ -97,8 +99,15 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp find_api_key(_conn, token, _) do
-    with {:ok, api_key} <- Auth.find_api_key(token) do
-      {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+    case Auth.find_api_key(token) do
+      {:ok, %{api_key: api_key, team: nil}} ->
+        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+
+      {:ok, %{api_key: api_key, team: team}} ->
+        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_api_request_limit}
+
+      {:error, _} = error ->
+        error
     end
   end
 
@@ -188,6 +197,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     cond do
       is_super_admin? ->
         :ok
+
+      api_key.team_id && api_key.team_id != site.team_id ->
+        {:error, :invalid_api_key}
 
       Sites.locked?(site) ->
         {:error, :site_locked}
