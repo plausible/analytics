@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 - Time on page metric is now sortable in reports
 - Plausible tracker script now reports maximum scroll depth reached and time engaged with the site in an `engagement` event. These are reported as `sd` and `e` integer parameters to /api/event endpoint respectively. If you're using a custom proxy for plausible script, please ensure that these parameters are being passed forward.
 - Plausible tracker script now reports the version of the script in the `v` parameter sent with each request.
+- Add support for creating and managing teams owning multiple sites
+- Introduce "billing" team role for users
+- Introduce "editor" role with permissions greater than "viewer" but lesser than "admin"
 
 ### Removed
 
@@ -38,6 +41,7 @@ All notable changes to this project will be documented in this file.
 - Changed top bar filter menu and how applied filters wrap
 - Main graph now shows revenue with relevant currency symbol when hovering a data point
 - Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
+- Make Stats and Sites API keys scoped to teams they are created in
 
 ### Fixed
 
