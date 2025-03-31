@@ -274,8 +274,7 @@ defmodule PlausibleWeb.AdminControllerTest do
   describe "POST /crm/auth/api_key" do
     setup [:create_user, :log_in]
 
-    @tag :ee_only
-    @tag :slow
+    @tag :kaffy_quirks
     test "creates a team-bound API key", %{conn: conn, user: user} do
       patch_env(:super_admin_user_ids, [user.id])
 
@@ -301,8 +300,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       assert api_key.user_id == another_user.id
     end
 
-    @tag :ee_only
-    @tag :slow
+    @tag :kaffy_quirks
     test "Creates personal team when creating the api key if there's none", %{
       conn: conn,
       user: user
@@ -334,8 +332,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       assert api_key.team_id == personal_team.id
     end
 
-    @tag :ee_only
-    @tag :slow
+    @tag :kaffy_quirks
     test "Creates team for a particular team if provided", %{conn: conn, user: user} do
       patch_env(:super_admin_user_ids, [user.id])
 

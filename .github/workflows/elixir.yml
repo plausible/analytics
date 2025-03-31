@@ -102,7 +102,7 @@ jobs:
 
       - run: make minio
         if: env.MIX_ENV == 'test'
-      - run: mix test --include slow --include minio --include migrations --max-failures 1 --warnings-as-errors
+      - run: mix test --include slow --include minio --include migrations --include kaffy_quirks --max-failures 1 --warnings-as-errors
         if: env.MIX_ENV == 'test'
         env:
           MINIO_HOST_FOR_CLICKHOUSE: "172.17.0.1"
