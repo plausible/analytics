@@ -39,7 +39,8 @@ defmodule PlausibleWeb.Live.Sites do
                                             current_user: current_user,
                                             current_team: current_team
                                           } ->
-        Teams.Users.owns_sites?(current_user, include_pending?: true) &&
+        current_team &&
+          Teams.Users.owns_sites?(current_user, include_pending?: true, only_team: current_team) &&
           Teams.Billing.check_needs_to_upgrade(current_team)
       end)
 

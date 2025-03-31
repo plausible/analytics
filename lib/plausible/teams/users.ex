@@ -130,6 +130,7 @@ defmodule Plausible.Teams.Users do
 
   def owns_sites?(user, opts \\ []) do
     include_pending? = Keyword.get(opts, :include_pending?, false)
+    only_team = Keyword.get(opts, :only_team)
 
     sites_query =
       from(
@@ -147,6 +148,13 @@ defmodule Plausible.Teams.Users do
         where: tm.role == :owner,
         select: 1
       )
+
+    owner_query =
+      if only_team do
+        where(owner_query, [tm], tm.team_id == ^only_team.id)
+      else
+        owner_query
+      end
 
     query =
       if include_pending? do
