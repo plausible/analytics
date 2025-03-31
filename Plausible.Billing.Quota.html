@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-B6F7D279.js"></script>
+    <script src="dist/sidebar_items-700D43E7.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -211,7 +211,7 @@ of the given plan.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#suggest_tier/3" data-no-tooltip translate="no">suggest_tier(usage, highest_growth_plan, highest_business_plan)</a>
+        <a href="#suggest_tier/4" data-no-tooltip translate="no">suggest_tier(usage, highest_growth, highest_business, owned_tier)</a>
 
       </div>
 
@@ -251,7 +251,7 @@ Returns true if usage is equal to the limit.</p></div>
     </a>
     <h1 class="signature" translate="no">below_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L130" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L132" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -350,7 +350,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">exceeded_cycles(cycles_usage, allowed_volume)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L113" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L115" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -377,7 +377,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">exceeds_last_two_usage_cycles?(cycles_usage, allowed_volume)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L107" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L109" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -399,15 +399,15 @@ the other limits are not exceeded.</p>
 
   </section>
 </section>
-<section class="detail" id="suggest_tier/3">
+<section class="detail" id="suggest_tier/4">
 
   <div class="detail-header">
-    <a href="#suggest_tier/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#suggest_tier/4" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">suggest_tier(usage, highest_growth_plan, highest_business_plan)</h1>
+    <h1 class="signature" translate="no">suggest_tier(usage, highest_growth, highest_business, owned_tier)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L51" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L54" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -418,7 +418,8 @@ the other limits are not exceeded.</p>
 
 <p>Suggests a suitable tier (Growth or Business) for the given usage map.</p><p>If even the highest Business plan does not accommodate the usage, then
 <code class="inline">:custom</code> is returned. This means that this kind of usage should get on
-a custom plan.</p><p><code class="inline">nil</code> is returned if the usage is not eligible for upgrade.</p>
+a custom plan.</p><p>To avoid confusion, we do not recommend Growth tiers for customers that
+are already on a Business tier (even if their usage would fit Growth).</p><p><code class="inline">nil</code> is returned if the usage is not eligible for upgrade.</p>
   </section>
 </section>
 <section class="detail" id="within_limit?/2">
@@ -429,7 +430,7 @@ a custom plan.</p><p><code class="inline">nil</code> is returned if the usage is
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L139" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/qouta/quota.ex#L141" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
