@@ -30,6 +30,15 @@ defmodule Plausible.Ingestion.Request do
   @missing_scroll_depth 255
   @missing_engagement_time 0
 
+  # :KLUDGE: Old version of tracker script sent huge values for engagement time. Ignore
+  # these while users might still have the old script cached.
+  @too_large_engagement_time :timer.hours(30 * 24)
+
+  @blank_engagement_error_message "engagement event requires a valid integer value for at least one of 'sd' or 'e' fields"
+
+  def too_large_engagement_time(), do: @too_large_engagement_time
+  def blank_engagement_error_message(), do: @blank_engagement_error_message
+
   @primary_key false
   embedded_schema do
     field :remote_ip, :string
@@ -364,10 +373,6 @@ defmodule Plausible.Ingestion.Request do
       _ -> @missing_engagement_time
     end
   end
-
-  # :KLUDGE: Old version of tracker script sent huge values for engagement time. Ignore
-  # these while users might still have the old script cached.
-  @too_large_engagement_time :timer.hours(30 * 24)
 
   defp parse_engagement_time(et)
        when is_integer(et) and et >= 0 and et < @too_large_engagement_time,
