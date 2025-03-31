@@ -1415,7 +1415,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Conversion rate", "value" => 33.3, "graph_metric" => "conversion_rate"} in res[
+      assert %{"name" => "Conversion rate", "value" => 33.33, "graph_metric" => "conversion_rate"} in res[
                "top_stats"
              ]
     end
@@ -1442,7 +1442,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Conversion rate", "value" => 33.3, "graph_metric" => "conversion_rate"} in res[
+      assert %{"name" => "Conversion rate", "value" => 33.33, "graph_metric" => "conversion_rate"} in res[
                "top_stats"
              ]
     end
@@ -1863,7 +1863,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{"name" => "Unique conversions", "value" => 2} = unique_conversions
       assert %{"name" => "Total conversions", "value" => nil} = total_conversions
-      assert %{"name" => "Conversion rate", "value" => 66.7} = conversion_rate
+      assert %{"name" => "Conversion rate", "value" => 66.67} = conversion_rate
     end
   end
 
@@ -2022,13 +2022,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => -33.4,
-               "comparison_value" => 66.7,
-               "name" => "Conversion rate",
-               "value" => 33.3,
-               "graph_metric" => "conversion_rate"
-             } in res["top_stats"]
+      cr = Enum.find(res["top_stats"], &(&1["name"] == "Conversion rate"))
+
+      assert %{"change" => -33.3, "comparison_value" => 66.67, "value" => 33.33} = cr
     end
   end
 end

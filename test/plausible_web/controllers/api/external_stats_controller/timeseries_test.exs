@@ -1248,7 +1248,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       assert [first, second] == [
                %{
                  "date" => "2021-01-04",
-                 "conversion_rate" => 66.7
+                 "conversion_rate" => 66.67
                },
                %{
                  "date" => "2021-01-05",
@@ -1336,7 +1336,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       assert first == %{
                "date" => "2021-01-04",
-               "conversion_rate" => 33.3
+               "conversion_rate" => 33.33
              }
     end
 
@@ -1375,7 +1375,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       assert first == %{
                "date" => "2021-01-04",
-               "conversion_rate" => 33.3
+               "conversion_rate" => 33.33
              }
     end
 
@@ -1860,7 +1860,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                },
                %{
                  "date" => "2021-01-04",
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                }
              ]
     end
@@ -1980,7 +1980,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                },
                %{
                  "date" => "2021-01-04",
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                }
              ]
     end

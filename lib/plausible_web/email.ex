@@ -127,15 +127,16 @@ defmodule PlausibleWeb.Email do
     |> html_body(PlausibleWeb.MJML.StatsReport.render(assigns))
   end
 
-  def spike_notification(email, site, current_visitors, sources, dashboard_link) do
+  def spike_notification(email, site, stats, dashboard_link) do
     base_email()
     |> to(email)
     |> tag("spike-notification")
     |> subject("Traffic Spike on #{site.domain}")
     |> render("spike_notification.html", %{
       site: site,
-      current_visitors: current_visitors,
-      sources: sources,
+      current_visitors: stats.current_visitors,
+      sources: stats.sources,
+      pages: stats.pages,
       link: dashboard_link
     })
   end

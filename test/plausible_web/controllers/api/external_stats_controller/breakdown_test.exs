@@ -2848,7 +2848,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "page" => "/en/register",
                    "visitors" => 2,
                    "events" => 2,
-                   "conversion_rate" => 66.7
+                   "conversion_rate" => 66.67
                  },
                  %{
                    "page" => "/it/register",
@@ -2923,7 +2923,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "device" => "Mobile",
                    "visitors" => 2,
                    "events" => 2,
-                   "conversion_rate" => 66.7
+                   "conversion_rate" => 66.67
                  },
                  %{
                    "device" => "Desktop",
