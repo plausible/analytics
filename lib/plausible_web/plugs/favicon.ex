@@ -94,11 +94,11 @@ defmodule PlausibleWeb.Favicon do
       "/favicon/sources/placeholder" ->
         send_placeholder(conn)
 
-      "/favicon/sources/" <> source ->
-        clean_source = URI.decode_www_form(source)
+      "/favicon/sources/" <> domain ->
+        domain = URI.decode_www_form(domain)
 
         domain =
-          Map.get(favicon_domains, clean_source, clean_source)
+          Map.get(favicon_domains, domain, domain)
           |> String.split("/", parts: 2)
           |> hd()
 
