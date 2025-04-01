@@ -283,7 +283,11 @@ defmodule PlausibleWeb.Live.TeamManagement do
          %{assigns: %{layout: layout, current_team: current_team, current_user: current_user}} =
            socket
        ) do
-    result = Layout.persist(layout, %{current_user: current_user, current_team: current_team})
+    result =
+      Layout.persist(layout, %{
+        current_user: current_user,
+        current_team: Plausible.Repo.reload!(current_team)
+      })
 
     case {result, socket.assigns.mode} do
       {{:ok, _}, :team_setup} ->
