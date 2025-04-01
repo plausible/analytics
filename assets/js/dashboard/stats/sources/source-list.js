@@ -214,6 +214,7 @@ export default function SourceList() {
     if (currentTab == 'all' && isRemovingFilter('channel')) {
       setTab('channels')()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, currentTab])
 
   function setTab(tab) {

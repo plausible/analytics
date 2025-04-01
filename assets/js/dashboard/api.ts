@@ -16,7 +16,6 @@ export class ApiError extends Error {
 
 function serializeUrlParams(params: Record<string, string | boolean | number>) {
   const str: string[] = []
-  /* eslint-disable-next-line no-prototype-builtins */
   for (const p in params)
     if (params.hasOwnProperty(p)) {
       str.push(`${encodeURIComponent(p)}=${encodeURIComponent(params[p])}`)

@@ -1,10 +1,13 @@
-// eslint-disable-next-line import/no-unresolved
+/**
+  These 3 modules are resolved from '../deps' folder, 
+  which does not exist when running the lint command in Github CI 
+*/
+/* eslint-disable import/no-unresolved */
 import 'phoenix_html'
-// eslint-disable-next-line import/no-unresolved
 import { Socket } from 'phoenix'
-// eslint-disable-next-line import/no-unresolved
 import { LiveSocket } from 'phoenix_live_view'
-// eslint-disable-next-line import/no-unresolved
+/* eslint-enable import/no-unresolved */
+
 import Alpine from 'alpinejs'
 
 let csrfToken = document.querySelector("meta[name='csrf-token']")
