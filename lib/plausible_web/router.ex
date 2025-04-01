@@ -151,7 +151,8 @@ defmodule PlausibleWeb.Router do
       get("/swagger-ui", OpenApiSpex.Plug.SwaggerUI, path: "/api/plugins/spec/openapi")
     end
 
-    scope "/v1/capabilities", PlausibleWeb.Plugins.API.Controllers, assigns: %{plugins_api: true} do
+    scope "/v1/capabilities", PlausibleWeb.Plugins.API.Controllers,
+      assigns: %{plugins_api: true} do
       pipe_through([:plugins_api])
       get("/", Capabilities, :index)
     end
