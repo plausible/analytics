@@ -5,6 +5,8 @@
 @import './tooltip.css';
 @import './flatpickr-colors.css';
 @import './chartjs.css';
+@import 'react-grid-layout/css/styles.css';
+@import 'react-resizable/css/styles.css';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
@@ -50,7 +52,8 @@ html {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  width: 100vw; /* Prevents content from jumping when scrollbar is added/removed due to vertical overflow */
+  width: 100vw;
+  /* Prevents content from jumping when scrollbar is added/removed due to vertical overflow */
   overflow-x: hidden;
 }
 
@@ -284,20 +287,23 @@ iframe[hidden] {
 .active-prop-heading {
   /* Properties related to text-decoration are all here in one place. TailwindCSS does support underline but that's about it. */
   text-decoration-line: underline;
-  text-decoration-color: #4338ca; /* tailwind's indigo-700 */
+  text-decoration-color: #4338ca;
+  /* tailwind's indigo-700 */
   text-decoration-thickness: 2px;
 }
 
 @media (prefers-color-scheme: dark) {
   .active-prop-heading {
-    text-decoration-color: #6366f1; /* tailwind's indigo-500 */
+    text-decoration-color: #6366f1;
+    /* tailwind's indigo-500 */
   }
 }
 
 /* This class is used for styling embedded dashboards. Do not remove. */
 /* stylelint-disable */
 /* prettier-ignore */
-.date-option-group { }
+.date-option-group {}
+
 /* stylelint-enable */
 
 .popper-tooltip {
