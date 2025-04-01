@@ -163,14 +163,21 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert_team_membership(member2, team, :viewer)
     end
 
-    test "allows updating guest membership so it moves sections", %{
-      conn: conn,
-      user: user
-    } do
+    test "allows updating guest membership so it moves sections and sends out promotion e-mail",
+         %{
+           conn: conn,
+           user: user,
+           team: team
+         } do
       site = new_site(owner: user)
       add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
 
+      {:ok, main_lv, _html} = live(conn, @url)
       lv = get_child_lv(conn)
+
+      type_into_input(main_lv, "team[name]", "A-Team!")
+
+      assert Repo.reload!(team).name == "A-Team!"
 
       html = render(lv)
 
@@ -183,6 +190,13 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
 
       assert length(find(html, member_el())) == 2
       refute element_exists?(html, "#guest-list")
+
+      save_layout(lv)
+
+      assert_email_delivered_with(
+        to: [nil: "guest@example.com"],
+        subject: @subject_prefix <> "Welcome to \"A-Team!\" team"
+      )
     end
 
     test "fails to save layout with limits breached", %{conn: conn} do
