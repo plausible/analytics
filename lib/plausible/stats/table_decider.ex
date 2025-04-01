@@ -149,7 +149,7 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(_, :time_on_page), do: :event
   defp metric_partitioner(_, :visit_duration), do: :session
   defp metric_partitioner(_, :views_per_visit), do: :session
-  defp metric_partitioner(_, :exit_rate), do: :other
+  defp metric_partitioner(_, :exit_rate), do: :session
 
   # Calculated metrics - handled on callsite separately from other metrics.
   defp metric_partitioner(_, :total_visitors), do: :other

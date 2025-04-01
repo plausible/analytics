@@ -387,6 +387,7 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:percentage, _query), do: %{}
   def session_metric(:conversion_rate, _query), do: %{}
   def session_metric(:group_conversion_rate, _query), do: %{}
+  def session_metric(:exit_rate, _query), do: %{}
 
   defmacro event_goal_join(goal_join_data) do
     quote do
