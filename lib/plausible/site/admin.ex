@@ -251,7 +251,7 @@ defmodule Plausible.SiteAdmin do
       role = html_escape(m.role)
 
       """
-      <a href="/auth/user/#{id}">#{email} (#{role})</a>
+      <a href="/crm/auth/user/#{id}">#{email} (#{role})</a>
       """
     end)
     |> Phoenix.HTML.raw()
