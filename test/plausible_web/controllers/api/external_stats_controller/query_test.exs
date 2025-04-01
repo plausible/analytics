@@ -3353,6 +3353,31 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "returns exit_rate metric with a visit:exit_page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/exit", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 1, pathname: "/some-page", timestamp: ~N[2021-01-01 00:10:00]),
+        build(:pageview, user_id: 2, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 2, pathname: "/exit", timestamp: ~N[2021-01-01 00:10:00]),
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["exit_rate", "visits"],
+          "date_range" => "all",
+          "dimensions" => ["visit:exit_page"],
+          "order_by" => [["visits", "asc"]]
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+                %{"dimensions" => ["/exit"], "metrics" => [50]},
+                %{"dimensions" => ["/some-page"], "metrics" => [100]}
+              ]
+    end
+
     test "metrics=bounce_rate does not add visits to the response", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
