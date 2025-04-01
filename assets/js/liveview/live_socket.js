@@ -1,10 +1,6 @@
-// eslint-disable-next-line import/no-unresolved
 import 'phoenix_html'
-// eslint-disable-next-line import/no-unresolved
 import { Socket } from 'phoenix'
-// eslint-disable-next-line import/no-unresolved
 import { LiveSocket } from 'phoenix_live_view'
-// eslint-disable-next-line import/no-unresolved
 import Alpine from 'alpinejs'
 
 let csrfToken = document.querySelector("meta[name='csrf-token']")
