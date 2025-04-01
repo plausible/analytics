@@ -25,4 +25,16 @@ defmodule PlausibleWeb.SiteView do
       "a " <> word
     end
   end
+
+  def site_role(%{role: "viewer"}) do
+    "Guest Viewer"
+  end
+
+  def site_role(%{role: "admin"}) do
+    "Guest Admin"
+  end
+
+  def site_role(%{role: role}) do
+    role |> to_string() |> String.capitalize()
+  end
 end
