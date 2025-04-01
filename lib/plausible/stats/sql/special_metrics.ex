@@ -13,18 +13,39 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
   def add(q, site, query) do
     q
-    |> maybe_add_exit_rate_metric(site, query)
+    |> maybe_add_exit_rate_metric(query)
     |> maybe_add_percentage_metric(site, query)
     |> maybe_add_global_conversion_rate(site, query)
     |> maybe_add_group_conversion_rate(site, query)
     |> maybe_add_scroll_depth(query)
   end
 
-  defp maybe_add_exit_rate_metric(q, site, query) do
-    if :exit_rate in query.metrics do
-      IO.inspect("JOU")
+  defp maybe_add_exit_rate_metric(q, query) do
+    if :exit_rate not in query.metrics do
+      q
+    else
+      events_subquery =
+        Base.base_event_query(query)
+        |> group_by([event], event.pathname)
+        |> select([event], %{
+          pathname: event.pathname,
+          pageviews: fragment("countIf(? = 'pageview')", event.name)
+        })
+
+      q
+      |> join(:left, [session], event in subquery(events_subquery),
+        on: session.exit_page == event.pathname
+      )
+      |> select_merge_as([session, event], %{
+        exit_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            fragment("any(?)", event.pageviews),
+            selected_as(:visits),
+            fragment("any(?)", event.pageviews)
+          )
+      })
     end
-    q
   end
 
   defp maybe_add_percentage_metric(q, site, query) do

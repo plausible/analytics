@@ -3358,7 +3358,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         build(:pageview, user_id: 1, pathname: "/exit", timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, user_id: 1, pathname: "/some-page", timestamp: ~N[2021-01-01 00:10:00]),
         build(:pageview, user_id: 2, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, user_id: 2, pathname: "/exit", timestamp: ~N[2021-01-01 00:10:00]),
+        build(:pageview, user_id: 2, pathname: "/exit", timestamp: ~N[2021-01-01 00:10:00])
       ])
 
       conn =
@@ -3373,9 +3373,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       %{"results" => results} = json_response(conn, 200)
 
       assert results == [
-                %{"dimensions" => ["/exit"], "metrics" => [50]},
-                %{"dimensions" => ["/some-page"], "metrics" => [100]}
-              ]
+               %{"dimensions" => ["/exit"], "metrics" => [50, 1]},
+               %{"dimensions" => ["/some-page"], "metrics" => [100, 1]}
+             ]
     end
 
     test "metrics=bounce_rate does not add visits to the response", %{conn: conn, site: site} do
