@@ -629,6 +629,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_metric(:exit_rate = metric, query) do
+    exit_page_dimension? = Enum.member?(query.dimensions, "visit:exit_page")
+    toplevel_exit_page_filter? = not is_nil(Filters.get_toplevel_filter(query, "visit:exit_page"))
+
+    if exit_page_dimension? or toplevel_exit_page_filter? do
+      :ok
+    else
+      {:error, "Metric `#{metric}` can only be queried with visit:exit_page filters or dimensions."}
+    end
+  end
+
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) ->

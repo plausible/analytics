@@ -11,6 +11,7 @@ defmodule Plausible.Stats.Metrics do
                  :visitors,
                  :visits,
                  :pageviews,
+                 :exit_rate,
                  :views_per_visit,
                  :bounce_rate,
                  :visit_duration,

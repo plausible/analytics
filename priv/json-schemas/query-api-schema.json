@@ -274,6 +274,10 @@
           "$comment": "only :internal"
         },
         {
+          "const": "exit_rate",
+          "$comment": "only :internal"
+        },
+        {
           "const": "total_revenue",
           "markdownDescription": "Total revenue",
           "$comment": "only :ee"

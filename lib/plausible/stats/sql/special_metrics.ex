@@ -13,10 +13,18 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
   def add(q, site, query) do
     q
+    |> maybe_add_exit_rate_metric(site, query)
     |> maybe_add_percentage_metric(site, query)
     |> maybe_add_global_conversion_rate(site, query)
     |> maybe_add_group_conversion_rate(site, query)
     |> maybe_add_scroll_depth(query)
+  end
+
+  defp maybe_add_exit_rate_metric(q, site, query) do
+    if :exit_rate in query.metrics do
+      IO.inspect("JOU")
+    end
+    q
   end
 
   defp maybe_add_percentage_metric(q, site, query) do
