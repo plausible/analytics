@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Components.FirstDashboardLaunchBanner do
       x-init={x_init(@site)}
     >
       <.styled_link href={"/#{URI.encode_www_form(@site.domain)}/settings/email-reports"}>
-        Team members, email reports and GA import. Explore more →
+        Invite guests, enable email reports, import from GA and more →
       </.styled_link>
     </div>
     """
