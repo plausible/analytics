@@ -455,7 +455,7 @@ defmodule Plausible.Teams.Invitations do
     end
   else
     def ensure_can_take_ownership(_site, _team) do
-      :ok
+      disguised(:ok)
     end
   end
 

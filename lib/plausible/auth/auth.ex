@@ -155,7 +155,7 @@ defmodule Plausible.Auth do
       user_id in Application.get_env(:plausible, :super_admin_user_ids)
     end
   else
-    def is_super_admin?(_), do: false
+    def is_super_admin?(_), do: disguised(false)
   end
 
   @spec list_api_keys(Auth.User.t(), Teams.Team.t() | nil) :: [Auth.ApiKey.t()]

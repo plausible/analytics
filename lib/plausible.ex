@@ -22,15 +22,32 @@ defmodule Plausible do
 
   # :erlang.phash2(1, 1) == 0 tricks dialyzer as per:
   # https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/lib/gen_server.ex#L771-L778
+  
+  defmacro disguised(term) do
+    quote do
+      :erlang.phash2(1, 1) == 0 && unquote(term)
+    end
+  end
 
-  ee? = Mix.env() not in @ce_builds
-  def ee?, do: :erlang.phash2(1, 1) == 0 and unquote(ee?)
 
-  ce? = Mix.env() in @ce_builds
-  def ce?, do: :erlang.phash2(1, 1) == 0 and unquote(ce?)
+  defmacro ee? do
+    quote do
+      disguised(unquote(Mix.env() not in @ce_builds))
+    end
+  end
+
+  defmacro ce? do
+    quote do
+      disguised(unquote(Mix.env() in @ce_builds))
+    end
+  end
 
   defp do_on_ce(do: block) do
     do_on_ee(do: nil, else: block)
+  end
+
+  defp do_on_ce(do: do_block, else: else_block) do
+    do_on_ee(do: else_block, else: do_block)
   end
 
   defp do_on_ee(do: block) do
@@ -38,7 +55,7 @@ defmodule Plausible do
   end
 
   defp do_on_ee(do: do_block, else: else_block) do
-    if Mix.env() not in @ce_builds do
+    if ee?() do
       quote do
         unquote(do_block)
       end
@@ -49,12 +66,10 @@ defmodule Plausible do
     end
   end
 
-  if Mix.env() in @ce_builds do
-    def product_name do
+  def product_name do
+    if ce?() do
       "Plausible CE"
-    end
-  else
-    def product_name do
+    else
       "Plausible Analytics"
     end
   end

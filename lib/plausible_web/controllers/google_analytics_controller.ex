@@ -3,6 +3,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
   alias Plausible.Google
   alias Plausible.Imported
+  use Plausible
 
   require Plausible.Imported.SiteImport
 
@@ -62,7 +63,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
 
         message =
-          if Plausible.ce?() do
+          if ce?() do
             message || default_message
           else
             default_message

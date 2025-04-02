@@ -72,7 +72,7 @@ defmodule Plausible.Teams do
         trial_days_left(team) >= 0
     end
   else
-    def on_trial?(_), do: true
+    def on_trial?(_), do: disguised(true)
   end
 
   @spec trial_days_left(Teams.Team.t()) :: integer()
