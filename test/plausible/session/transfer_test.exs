@@ -1,17 +1,32 @@
 defmodule Plausible.Session.TransferTest do
   use ExUnit.Case
+  import Plausible.Factory
 
   @tag :slow
   test "it works" do
     tmp_dir = tmp_dir()
 
     old = start_another_plausible(tmp_dir)
-    session = put_session(old, %{user_id: 123})
+
+    Enum.each(1..100_000, fn i ->
+      process_event(old, build(:event, name: "pageview"))
+
+      if rem(i, 1000) == 0 do
+        IO.inspect(i, label: "Processed event")
+      end
+    end)
 
     new = start_another_plausible(tmp_dir)
-    await_transfer(new)
+    started = System.monotonic_time()
+    await_transfer(new, _wait = :timer.seconds(5))
+    duration = System.monotonic_time() - started
 
-    assert get_session(new, {session.site_id, session.user_id}) == session
+    assert IO.inspect(System.convert_time_unit(duration, :native, :millisecond),
+             label: "transfer duration ms"
+           ) <
+             :timer.seconds(1)
+
+    assert all_sessions_sorted(new) == all_sessions_sorted(old)
   end
 
   # normal `@tag :tmp_dir` might not work if the path is too long for unix domain sockets (>104)
@@ -54,34 +69,44 @@ defmodule Plausible.Session.TransferTest do
     end
   end
 
-  defp put_session(pid, overrides) do
-    user_id = overrides[:user_id] || Enum.random(1000..2000)
-    session_id = user_id * 1000 + Enum.random(0..1000)
+  @session_params %{
+    referrer: "ref",
+    referrer_source: "refsource",
+    utm_medium: "medium",
+    utm_source: "source",
+    utm_campaign: "campaign",
+    utm_content: "content",
+    utm_term: "term",
+    browser: "browser",
+    browser_version: "55",
+    country_code: "EE",
+    screen_size: "Desktop",
+    operating_system: "Mac",
+    operating_system_version: "11"
+  }
 
-    default = %Plausible.ClickhouseSessionV2{
-      sign: 1,
-      session_id: session_id,
-      user_id: user_id,
-      hostname: "example.com",
-      site_id: Enum.random(1000..10_000),
-      entry_page: "/",
-      pageviews: 1,
-      events: 1,
-      start: NaiveDateTime.utc_now(:second),
-      timestamp: NaiveDateTime.utc_now(:second),
-      is_bounce: false
-    }
-
-    session = struct!(default, overrides)
-    key = {session.site_id, session.user_id}
-    :peer.call(pid, Plausible.Cache.Adapter, :put, [:sessions, key, session, [dirty?: true]])
+  defp process_event(pid, event) do
+    :peer.call(pid, Plausible.Session.CacheStore, :on_event, [
+      event,
+      @session_params,
+      _prev_user_id = nil,
+      [buffer_insert: &Function.identity/1]
+    ])
   end
 
-  defp get_session(pid, key) do
-    :peer.call(pid, Plausible.Cache.Adapter, :get, [:sessions, key])
+  defp all_sessions_sorted(pid) do
+    cache_names = :peer.call(pid, Plausible.Cache.Adapter, :get_names, [:sessions])
+
+    records =
+      Enum.flat_map(cache_names, fn cache_name ->
+        tab = :peer.call(pid, ConCache, :ets, [cache_name])
+        :peer.call(pid, :ets, :tab2list, [tab])
+      end)
+
+    Enum.sort_by(records, fn {key, _} -> key end)
   end
 
-  defp await_transfer(pid, timeout \\ :timer.seconds(1)) do
+  defp await_transfer(pid, timeout) do
     test = self()
 
     spawn_link(fn ->
