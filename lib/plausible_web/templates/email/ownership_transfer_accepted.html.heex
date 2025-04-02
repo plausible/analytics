@@ -1,6 +1,6 @@
 {@new_owner_email} has accepted the ownership transfer of {@site.domain}. They will be responsible for billing of it going
 forward<%= if @initiator_as_guest? and @initiator_as_editor? do %>
-  and your role has been changed to <b>admin</b>
+  and your role has been changed to <b>guest editor</b>
 <% end %>.
 <%= if @initiator_as_guest? do %>
   <a href={Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @site.domain) <> "?__team=none"}>
