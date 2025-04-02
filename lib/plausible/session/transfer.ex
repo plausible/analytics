@@ -32,7 +32,13 @@ defmodule Plausible.Session.Transfer do
 
   @doc false
   def start_link(opts) do
-    maybe_start_link(Keyword.fetch!(opts, :base_path))
+    result = maybe_start_link(Keyword.fetch!(opts, :base_path))
+
+    if result == :ignore do
+      took()
+    end
+
+    result
   end
 
   defp maybe_start_link(base_path) do
