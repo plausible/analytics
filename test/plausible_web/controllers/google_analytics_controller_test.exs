@@ -10,7 +10,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
 
   require Plausible.Imported.SiteImport
 
-  if Plausible.ce?() do
+  on_ce do
     @moduletag :capture_log
   end
 

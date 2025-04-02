@@ -142,7 +142,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           "Google Analytics authentication seems to have expired. Please try again."
 
         message =
-          if Plausible.ce?() do
+          if ce?() do
             message || default_message
           else
             default_message
@@ -214,7 +214,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           "Google Analytics authentication seems to have expired. Please try again."
 
         message =
-          if Plausible.ce?() do
+          if ce?() do
             message || default_message
           else
             default_message
