@@ -82,7 +82,7 @@ defmodule Plausible.SiteAdmin do
       public: nil,
       team: %{value: &get_team/1},
       owners: %{value: &get_owners/1},
-      other_members: %{value: &get_other_members/1},
+      other_guest_members: %{value: &get_other_members/1},
       limits: %{
         value: fn site ->
           rate_limiting_status =
@@ -251,7 +251,7 @@ defmodule Plausible.SiteAdmin do
       role = html_escape(m.role)
 
       """
-      <a href="/crm/auth/user/#{id}">#{email} (#{role})</a>
+      <a href="/crm/auth/user/#{id}">#{email} (guest #{role})</a>
       """
     end)
     |> Phoenix.HTML.raw()
