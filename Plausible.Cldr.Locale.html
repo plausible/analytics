@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D847EC77.js"></script>
+    <script src="dist/sidebar_items-0E1090CA.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -292,8 +292,8 @@ locale name.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> fallback_locale_names(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
-  {:ok, [<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(), ...]} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> fallback_locale_names(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+  {:ok, [<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(), ...]} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
@@ -320,16 +320,16 @@ this specific locale..</p><h2 id="fallback_locale_names/1-arguments" class="sect
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locale_names</span><span class="p" data-group-id="9141067635-1">(</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p" data-group-id="9141067635-1">)</span><span class="w">
-</span><span class="p" data-group-id="9141067635-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9141067635-3">[</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:fr</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="9141067635-3">]</span><span class="p" data-group-id="9141067635-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locale_names</span><span class="p" data-group-id="9142973827-1">(</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p" data-group-id="9142973827-1">)</span><span class="w">
+</span><span class="p" data-group-id="9142973827-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9142973827-3">[</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:fr</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="9142973827-3">]</span><span class="p" data-group-id="9142973827-2">}</span><span class="w">
 
 </span><span class="c1"># Fallbacks are typically formed by progressively</span><span class="w">
 </span><span class="c1"># stripping variant, territory and script from the</span><span class="w">
 </span><span class="c1"># given locale name. But not always - there are</span><span class="w">
 </span><span class="c1"># certain fallbacks that take a different path.</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locale_names</span><span class="p" data-group-id="9141067635-4">(</span><span class="ss">:nb</span><span class="p" data-group-id="9141067635-4">)</span><span class="w">
-</span><span class="p" data-group-id="9141067635-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9141067635-6">[</span><span class="ss">:nb</span><span class="p">,</span><span class="w"> </span><span class="ss">:no</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="9141067635-6">]</span><span class="p" data-group-id="9141067635-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locale_names</span><span class="p" data-group-id="9142973827-4">(</span><span class="ss">:nb</span><span class="p" data-group-id="9142973827-4">)</span><span class="w">
+</span><span class="p" data-group-id="9142973827-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9142973827-6">[</span><span class="ss">:nb</span><span class="p">,</span><span class="w"> </span><span class="ss">:no</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="9142973827-6">]</span><span class="p" data-group-id="9142973827-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="fallback_locales/1">
@@ -353,8 +353,8 @@ this specific locale..</p><h2 id="fallback_locale_names/1-arguments" class="sect
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> fallback_locales(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
-  {:ok, [<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(), ...]} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> fallback_locales(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+  {:ok, [<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(), ...]} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
@@ -381,20 +381,20 @@ this specific locale.</p><h2 id="fallback_locales/1-arguments" class="section-he
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locales</span><span class="p" data-group-id="1343628348-1">(</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p" data-group-id="1343628348-1">)</span><span class="w">
-</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="1343628348-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-     </span><span class="p" data-group-id="1343628348-3">[</span><span class="p" data-group-id="1343628348-4">#</span><span class="nc" data-group-id="1343628348-4">Cldr.LanguageTag</span><span class="p" data-group-id="1343628348-4">&lt;</span><span class="n">fr</span><span class="o">-</span><span class="nc">CA</span><span class="w"> </span><span class="p" data-group-id="1343628348-5">[</span><span class="n">validated</span><span class="p" data-group-id="1343628348-5">]</span><span class="p" data-group-id="1343628348-4">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1343628348-6">#</span><span class="nc" data-group-id="1343628348-6">Cldr.LanguageTag</span><span class="p" data-group-id="1343628348-6">&lt;</span><span class="n">fr</span><span class="w"> </span><span class="p" data-group-id="1343628348-7">[</span><span class="n">validated</span><span class="p" data-group-id="1343628348-7">]</span><span class="p" data-group-id="1343628348-6">&gt;</span><span class="p">,</span><span class="w">
-      </span><span class="p" data-group-id="1343628348-8">#</span><span class="nc" data-group-id="1343628348-8">Cldr.LanguageTag</span><span class="p" data-group-id="1343628348-8">&lt;</span><span class="n">und</span><span class="w"> </span><span class="p" data-group-id="1343628348-9">[</span><span class="n">validated</span><span class="p" data-group-id="1343628348-9">]</span><span class="p" data-group-id="1343628348-8">&gt;</span><span class="p" data-group-id="1343628348-3">]</span><span class="p" data-group-id="1343628348-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locales</span><span class="p" data-group-id="2058500501-1">(</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p" data-group-id="2058500501-1">)</span><span class="w">
+</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="2058500501-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="2058500501-3">[</span><span class="p" data-group-id="2058500501-4">#</span><span class="nc" data-group-id="2058500501-4">Cldr.LanguageTag</span><span class="p" data-group-id="2058500501-4">&lt;</span><span class="n">fr</span><span class="o">-</span><span class="nc">CA</span><span class="w"> </span><span class="p" data-group-id="2058500501-5">[</span><span class="n">validated</span><span class="p" data-group-id="2058500501-5">]</span><span class="p" data-group-id="2058500501-4">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2058500501-6">#</span><span class="nc" data-group-id="2058500501-6">Cldr.LanguageTag</span><span class="p" data-group-id="2058500501-6">&lt;</span><span class="n">fr</span><span class="w"> </span><span class="p" data-group-id="2058500501-7">[</span><span class="n">validated</span><span class="p" data-group-id="2058500501-7">]</span><span class="p" data-group-id="2058500501-6">&gt;</span><span class="p">,</span><span class="w">
+      </span><span class="p" data-group-id="2058500501-8">#</span><span class="nc" data-group-id="2058500501-8">Cldr.LanguageTag</span><span class="p" data-group-id="2058500501-8">&lt;</span><span class="n">und</span><span class="w"> </span><span class="p" data-group-id="2058500501-9">[</span><span class="n">validated</span><span class="p" data-group-id="2058500501-9">]</span><span class="p" data-group-id="2058500501-8">&gt;</span><span class="p" data-group-id="2058500501-3">]</span><span class="p" data-group-id="2058500501-2">}</span><span class="w">
 
 </span><span class="c1"># Fallbacks are typically formed by progressively</span><span class="w">
 </span><span class="c1"># stripping variant, territory and script from the</span><span class="w">
 </span><span class="c1"># given locale name. But not always - there are</span><span class="w">
 </span><span class="c1"># certain fallbacks that take a different path.</span><span class="w">
 
-</span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locales</span><span class="p" data-group-id="1343628348-10">(</span><span class="ss">:nb</span><span class="p" data-group-id="1343628348-10">)</span><span class="p">)</span><span class="w">
-</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="1343628348-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-     </span><span class="p" data-group-id="1343628348-12">[</span><span class="p" data-group-id="1343628348-13">#</span><span class="nc" data-group-id="1343628348-13">Cldr.LanguageTag</span><span class="p" data-group-id="1343628348-13">&lt;</span><span class="n">nb</span><span class="w"> </span><span class="p" data-group-id="1343628348-14">[</span><span class="n">validated</span><span class="p" data-group-id="1343628348-14">]</span><span class="p" data-group-id="1343628348-13">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1343628348-15">#</span><span class="nc" data-group-id="1343628348-15">Cldr.LanguageTag</span><span class="p" data-group-id="1343628348-15">&lt;</span><span class="n">no</span><span class="w"> </span><span class="p" data-group-id="1343628348-16">[</span><span class="n">validated</span><span class="p" data-group-id="1343628348-16">]</span><span class="p" data-group-id="1343628348-15">&gt;</span><span class="p">,</span><span class="w">
-      </span><span class="p" data-group-id="1343628348-17">#</span><span class="nc" data-group-id="1343628348-17">Cldr.LanguageTag</span><span class="p" data-group-id="1343628348-17">&lt;</span><span class="n">und</span><span class="w"> </span><span class="p" data-group-id="1343628348-18">[</span><span class="n">validated</span><span class="p" data-group-id="1343628348-18">]</span><span class="p" data-group-id="1343628348-17">&gt;</span><span class="p" data-group-id="1343628348-12">]</span><span class="p" data-group-id="1343628348-11">}</span></code></pre>
+</span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locales</span><span class="p" data-group-id="2058500501-10">(</span><span class="ss">:nb</span><span class="p" data-group-id="2058500501-10">)</span><span class="p">)</span><span class="w">
+</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="2058500501-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="2058500501-12">[</span><span class="p" data-group-id="2058500501-13">#</span><span class="nc" data-group-id="2058500501-13">Cldr.LanguageTag</span><span class="p" data-group-id="2058500501-13">&lt;</span><span class="n">nb</span><span class="w"> </span><span class="p" data-group-id="2058500501-14">[</span><span class="n">validated</span><span class="p" data-group-id="2058500501-14">]</span><span class="p" data-group-id="2058500501-13">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2058500501-15">#</span><span class="nc" data-group-id="2058500501-15">Cldr.LanguageTag</span><span class="p" data-group-id="2058500501-15">&lt;</span><span class="n">no</span><span class="w"> </span><span class="p" data-group-id="2058500501-16">[</span><span class="n">validated</span><span class="p" data-group-id="2058500501-16">]</span><span class="p" data-group-id="2058500501-15">&gt;</span><span class="p">,</span><span class="w">
+      </span><span class="p" data-group-id="2058500501-17">#</span><span class="nc" data-group-id="2058500501-17">Cldr.LanguageTag</span><span class="p" data-group-id="2058500501-17">&lt;</span><span class="n">und</span><span class="w"> </span><span class="p" data-group-id="2058500501-18">[</span><span class="n">validated</span><span class="p" data-group-id="2058500501-18">]</span><span class="p" data-group-id="2058500501-17">&gt;</span><span class="p" data-group-id="2058500501-12">]</span><span class="p" data-group-id="2058500501-11">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="locale_for_territory/1">
@@ -418,8 +418,8 @@ this specific locale.</p><h2 id="fallback_locales/1-arguments" class="section-he
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> locale_for_territory(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>()) ::
-  {:ok, <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> locale_for_territory(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
@@ -436,7 +436,7 @@ is validated and if that fails, &quot;en&quot; is validated.</p><h2 id="locale_f
   <span class="text">Arguments</span>
 </h2>
 <ul><li><code class="inline">territory</code> is any ISO 3166 Alpha-2 territory
-code that can be validated by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#validate_territory/1"><code class="inline">Cldr.validate_territory/1</code></a></li></ul><h2 id="locale_for_territory/1-returns" class="section-heading">
+code that can be validated by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#validate_territory/1"><code class="inline">Cldr.validate_territory/1</code></a></li></ul><h2 id="locale_for_territory/1-returns" class="section-heading">
   <a href="#locale_for_territory/1-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -478,7 +478,7 @@ code that can be validated by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.ht
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> locale_from_host(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
-  {:ok, <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+  {:ok, <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
@@ -497,7 +497,7 @@ is <code class="inline">[]</code>.</p></li></ul><h2 id="locale_from_host/2-optio
 </h2>
 <ul><li><code class="inline">:tlds</code> is a list of territory codes as upper-cased
 atoms that are to be considered as top-level domains.
-See <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#locale_from_host/2"><code class="inline">Cldr.Locale.locale_from_host/2</code></a> for the default
+See <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#locale_from_host/2"><code class="inline">Cldr.Locale.locale_from_host/2</code></a> for the default
 list.</li></ul><h2 id="locale_from_host/2-returns" class="section-heading">
   <a href="#locale_from_host/2-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -521,15 +521,15 @@ generic top-level domain names.</p><h2 id="locale_from_host/2-examples" class="s
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="w"> </span><span class="s">&quot;a.b.com.au&quot;</span><span class="w">
-</span><span class="nc">Elixir.Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="7886192502-1">(</span><span class="ss">:&quot;en-AU&quot;</span><span class="p" data-group-id="7886192502-1">)</span><span class="w">
+</span><span class="nc">Elixir.Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="7842872178-1">(</span><span class="ss">:&quot;en-AU&quot;</span><span class="p" data-group-id="7842872178-1">)</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="p" data-group-id="7886192502-2">(</span><span class="s">&quot;a.b.com.tv&quot;</span><span class="p" data-group-id="7886192502-2">)</span><span class="w">
-</span><span class="p" data-group-id="7886192502-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="7886192502-4">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">tv</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="7886192502-4">}</span><span class="p" data-group-id="7886192502-3">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="p" data-group-id="7842872178-2">(</span><span class="s">&quot;a.b.com.tv&quot;</span><span class="p" data-group-id="7842872178-2">)</span><span class="w">
+</span><span class="p" data-group-id="7842872178-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="7842872178-4">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">tv</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="7842872178-4">}</span><span class="p" data-group-id="7842872178-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="p" data-group-id="7886192502-5">(</span><span class="s">&quot;a.b.com&quot;</span><span class="p" data-group-id="7886192502-5">)</span><span class="w">
-</span><span class="p" data-group-id="7886192502-6">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="7886192502-7">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">com</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="7886192502-7">}</span><span class="p" data-group-id="7886192502-6">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="p" data-group-id="7842872178-5">(</span><span class="s">&quot;a.b.com&quot;</span><span class="p" data-group-id="7842872178-5">)</span><span class="w">
+</span><span class="p" data-group-id="7842872178-6">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="7842872178-7">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">com</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="7842872178-7">}</span><span class="p" data-group-id="7842872178-6">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="new/1">
@@ -597,8 +597,8 @@ generic top-level domain names.</p><h2 id="locale_from_host/2-examples" class="s
   </a>
   <span class="text">Arguments</span>
 </h2>
-<ul><li><code class="inline">language_tag</code> is any language tag returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#new/2"><code class="inline">Cldr.Locale.new/2</code></a>
-or any <code class="inline">locale_name</code> returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>.</li></ul><h2 id="script_direction_from_locale/1-returns" class="section-heading">
+<ul><li><code class="inline">language_tag</code> is any language tag returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#new/2"><code class="inline">Cldr.Locale.new/2</code></a>
+or any <code class="inline">locale_name</code> returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>.</li></ul><h2 id="script_direction_from_locale/1-returns" class="section-heading">
   <a href="#script_direction_from_locale/1-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -640,7 +640,7 @@ scripts) or <code class="inline">:rtl</code> (for right-to-left scripts).</li></
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> territory_from_host(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
-  {:ok, <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+  {:ok, <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
@@ -663,12 +663,12 @@ be a territory.</p><h2 id="territory_from_host/1-arguments" class="section-headi
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Locale</span><span class="o">.</span><span class="n">territory_from_host</span><span class="p" data-group-id="2465445186-1">(</span><span class="s">&quot;a.b.com.au&quot;</span><span class="p" data-group-id="2465445186-1">)</span><span class="w">
-</span><span class="p" data-group-id="2465445186-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:AU</span><span class="p" data-group-id="2465445186-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Locale</span><span class="o">.</span><span class="n">territory_from_host</span><span class="p" data-group-id="7581024720-1">(</span><span class="s">&quot;a.b.com.au&quot;</span><span class="p" data-group-id="7581024720-1">)</span><span class="w">
+</span><span class="p" data-group-id="7581024720-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:AU</span><span class="p" data-group-id="7581024720-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Locale</span><span class="o">.</span><span class="n">territory_from_host</span><span class="p" data-group-id="2465445186-3">(</span><span class="s">&quot;a.b.com&quot;</span><span class="p" data-group-id="2465445186-3">)</span><span class="w">
-</span><span class="p" data-group-id="2465445186-4">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="2465445186-5">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">com</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="2465445186-5">}</span><span class="p" data-group-id="2465445186-4">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Locale</span><span class="o">.</span><span class="n">territory_from_host</span><span class="p" data-group-id="7581024720-3">(</span><span class="s">&quot;a.b.com&quot;</span><span class="p" data-group-id="7581024720-3">)</span><span class="w">
+</span><span class="p" data-group-id="7581024720-4">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="7581024720-5">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">com</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="7581024720-5">}</span><span class="p" data-group-id="7581024720-4">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="territory_from_locale/1">
@@ -692,8 +692,8 @@ be a territory.</p><h2 id="territory_from_host/1-arguments" class="section-headi
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> territory_from_locale(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
-  <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> territory_from_locale(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
+  <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>() | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
@@ -747,7 +747,7 @@ or a locale name in the list returned by
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> timezone_from_locale(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> timezone_from_locale(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>

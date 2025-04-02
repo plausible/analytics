@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D847EC77.js"></script>
+    <script src="dist/sidebar_items-0E1090CA.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -141,7 +141,7 @@ Pages
 <p>Formats numbers and currencies based upon CLDR's decimal formats specification.</p><p>The format specification is documentated in <a href="http://unicode.org/reports/tr35/tr35-numbers.html#Number_Formats">Unicode TR35</a>.
 There are several classes of formatting including non-scientific, scientific,
 rules based (for spelling and ordinal formats), compact formats that display <code class="inline">1k</code>
-rather than <code class="inline">1,000</code> and so on.  See <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.html#to_string/2"><code class="inline">Cldr.Number.to_string/2</code></a> for specific formatting
+rather than <code class="inline">1,000</code> and so on.  See <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.html#to_string/2"><code class="inline">Cldr.Number.to_string/2</code></a> for specific formatting
 options.</p><h3 id="module-non-scientific-notation-formatting" class="section-heading">
   <a href="#module-non-scientific-notation-formatting" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -435,19 +435,19 @@ using the Elixir standard library functions.</p><h2 id="parse/2-examples" class=
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="7804272481-1">(</span><span class="s">&quot;＋1.000,34&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de&quot;</span><span class="p" data-group-id="7804272481-1">)</span><span class="w">
-</span><span class="p" data-group-id="7804272481-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mf">1000.34</span><span class="p" data-group-id="7804272481-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="4482665978-1">(</span><span class="s">&quot;＋1.000,34&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de&quot;</span><span class="p" data-group-id="4482665978-1">)</span><span class="w">
+</span><span class="p" data-group-id="4482665978-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mf">1000.34</span><span class="p" data-group-id="4482665978-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="7804272481-3">(</span><span class="s">&quot;-1_000_000.34&quot;</span><span class="p" data-group-id="7804272481-3">)</span><span class="w">
-</span><span class="p" data-group-id="7804272481-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1000000.34</span><span class="p" data-group-id="7804272481-4">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="4482665978-3">(</span><span class="s">&quot;-1_000_000.34&quot;</span><span class="p" data-group-id="4482665978-3">)</span><span class="w">
+</span><span class="p" data-group-id="4482665978-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">1000000.34</span><span class="p" data-group-id="4482665978-4">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="7804272481-5">(</span><span class="s">&quot;1.000&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number</span><span class="p">:</span><span class="w"> </span><span class="ss">:integer</span><span class="p" data-group-id="7804272481-5">)</span><span class="w">
-</span><span class="p" data-group-id="7804272481-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p" data-group-id="7804272481-6">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="4482665978-5">(</span><span class="s">&quot;1.000&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number</span><span class="p">:</span><span class="w"> </span><span class="ss">:integer</span><span class="p" data-group-id="4482665978-5">)</span><span class="w">
+</span><span class="p" data-group-id="4482665978-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p" data-group-id="4482665978-6">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="7804272481-7">(</span><span class="s">&quot;＋1.000,34&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number</span><span class="p">:</span><span class="w"> </span><span class="ss">:integer</span><span class="p" data-group-id="7804272481-7">)</span><span class="w">
-</span><span class="p" data-group-id="7804272481-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="7804272481-9">{</span><span class="nc">Cldr.Number.ParseError</span><span class="p">,</span><span class="w">
-   </span><span class="s">&quot;The string </span><span class="se">\&quot;</span><span class="s">＋1.000,34</span><span class="se">\&quot;</span><span class="s"> could not be parsed as a number&quot;</span><span class="p" data-group-id="7804272481-9">}</span><span class="p" data-group-id="7804272481-8">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="4482665978-7">(</span><span class="s">&quot;＋1.000,34&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number</span><span class="p">:</span><span class="w"> </span><span class="ss">:integer</span><span class="p" data-group-id="4482665978-7">)</span><span class="w">
+</span><span class="p" data-group-id="4482665978-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="4482665978-9">{</span><span class="nc">Cldr.Number.ParseError</span><span class="p">,</span><span class="w">
+   </span><span class="s">&quot;The string </span><span class="se">\&quot;</span><span class="s">＋1.000,34</span><span class="se">\&quot;</span><span class="s"> could not be parsed as a number&quot;</span><span class="p" data-group-id="4482665978-9">}</span><span class="p" data-group-id="4482665978-8">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="resolve_currencies/2">
@@ -483,8 +483,8 @@ names and symbols are expected</p></li><li><p><code class="inline">options</code
   </a>
   <span class="text">Options</span>
 </h2>
-<ul><li><p><code class="inline">:locale</code> is any valid locale returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a>
+<ul><li><p><code class="inline">:locale</code> is any valid locale returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a>
 The default is <code class="inline">Plausible.Cldr.get_locale()</code></p></li><li><p><code class="inline">:only</code> is an <code class="inline">atom</code> or list of <code class="inline">atoms</code> representing the
 currencies or currency types to be considered for a match.
 The equates to a list of acceptable currencies for parsing.
@@ -517,17 +517,17 @@ financial instruments.</p></li></ul><h2 id="resolve_currencies/2-examples" class
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="9959117618-1">(</span><span class="s">&quot;100 US dollars&quot;</span><span class="p" data-group-id="9959117618-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="1922015657-1">(</span><span class="s">&quot;100 US dollars&quot;</span><span class="p" data-group-id="1922015657-1">)</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currencies</span><span class="w">
-</span><span class="p" data-group-id="9959117618-2">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p" data-group-id="9959117618-2">]</span><span class="w">
+</span><span class="p" data-group-id="1922015657-2">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p" data-group-id="1922015657-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="9959117618-3">(</span><span class="s">&quot;100 eurosports&quot;</span><span class="p" data-group-id="9959117618-3">)</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currencies</span><span class="p" data-group-id="9959117618-4">(</span><span class="ss">fuzzy</span><span class="p">:</span><span class="w"> </span><span class="mf">0.75</span><span class="p" data-group-id="9959117618-4">)</span><span class="w">
-</span><span class="p" data-group-id="9959117618-5">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">:EUR</span><span class="p" data-group-id="9959117618-5">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="1922015657-3">(</span><span class="s">&quot;100 eurosports&quot;</span><span class="p" data-group-id="1922015657-3">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currencies</span><span class="p" data-group-id="1922015657-4">(</span><span class="ss">fuzzy</span><span class="p">:</span><span class="w"> </span><span class="mf">0.75</span><span class="p" data-group-id="1922015657-4">)</span><span class="w">
+</span><span class="p" data-group-id="1922015657-5">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">:EUR</span><span class="p" data-group-id="1922015657-5">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="9959117618-6">(</span><span class="s">&quot;100 dollars des États-Unis&quot;</span><span class="p" data-group-id="9959117618-6">)</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currencies</span><span class="p" data-group-id="9959117618-7">(</span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="9959117618-7">)</span><span class="w">
-</span><span class="p" data-group-id="9959117618-8">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p" data-group-id="9959117618-8">]</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="1922015657-6">(</span><span class="s">&quot;100 dollars des États-Unis&quot;</span><span class="p" data-group-id="1922015657-6">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currencies</span><span class="p" data-group-id="1922015657-7">(</span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="1922015657-7">)</span><span class="w">
+</span><span class="p" data-group-id="1922015657-8">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p" data-group-id="1922015657-8">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="resolve_currency/2">
@@ -562,8 +562,8 @@ names and symbols are expected</p></li><li><p><code class="inline">options</code
   </a>
   <span class="text">Options</span>
 </h2>
-<ul><li><p><code class="inline">:locale</code> is any valid locale returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a>
+<ul><li><p><code class="inline">:locale</code> is any valid locale returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a>
 The default is <code class="inline">Plausible.Cldr.get_locale()</code></p></li><li><p><code class="inline">:only</code> is an <code class="inline">atom</code> or list of <code class="inline">atoms</code> representing the
 currencies or currency types to be considered for a match.
 The equates to a list of acceptable currencies for parsing.
@@ -602,19 +602,19 @@ financial instruments.</p></li></ul><h2 id="resolve_currency/2-examples" class="
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currency</span><span class="p" data-group-id="7740633196-1">(</span><span class="s">&quot;US dollars&quot;</span><span class="p" data-group-id="7740633196-1">)</span><span class="w">
-</span><span class="p" data-group-id="7740633196-2">[</span><span class="ss">:USD</span><span class="p" data-group-id="7740633196-2">]</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currency</span><span class="p" data-group-id="7346338323-1">(</span><span class="s">&quot;US dollars&quot;</span><span class="p" data-group-id="7346338323-1">)</span><span class="w">
+</span><span class="p" data-group-id="7346338323-2">[</span><span class="ss">:USD</span><span class="p" data-group-id="7346338323-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currency</span><span class="p" data-group-id="7740633196-3">(</span><span class="s">&quot;100 eurosports&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">fuzzy</span><span class="p">:</span><span class="w"> </span><span class="mf">0.75</span><span class="p" data-group-id="7740633196-3">)</span><span class="w">
-</span><span class="p" data-group-id="7740633196-4">[</span><span class="ss">:EUR</span><span class="p" data-group-id="7740633196-4">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currency</span><span class="p" data-group-id="7346338323-3">(</span><span class="s">&quot;100 eurosports&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">fuzzy</span><span class="p">:</span><span class="w"> </span><span class="mf">0.75</span><span class="p" data-group-id="7346338323-3">)</span><span class="w">
+</span><span class="p" data-group-id="7346338323-4">[</span><span class="ss">:EUR</span><span class="p" data-group-id="7346338323-4">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currency</span><span class="p" data-group-id="7740633196-5">(</span><span class="s">&quot;dollars des États-Unis&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="7740633196-5">)</span><span class="w">
-</span><span class="p" data-group-id="7740633196-6">[</span><span class="ss">:USD</span><span class="p" data-group-id="7740633196-6">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currency</span><span class="p" data-group-id="7346338323-5">(</span><span class="s">&quot;dollars des États-Unis&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="7346338323-5">)</span><span class="w">
+</span><span class="p" data-group-id="7346338323-6">[</span><span class="ss">:USD</span><span class="p" data-group-id="7346338323-6">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currency</span><span class="p" data-group-id="7740633196-7">(</span><span class="s">&quot;not a known currency&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="7740633196-7">)</span><span class="w">
-</span><span class="p" data-group-id="7740633196-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="7740633196-9">{</span><span class="nc">Cldr.UnknownCurrencyError</span><span class="p">,</span><span class="w">
-  </span><span class="s">&quot;The currency </span><span class="se">\&quot;</span><span class="s">not a known currency</span><span class="se">\&quot;</span><span class="s"> is unknown or not supported&quot;</span><span class="p" data-group-id="7740633196-9">}</span><span class="p" data-group-id="7740633196-8">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_currency</span><span class="p" data-group-id="7346338323-7">(</span><span class="s">&quot;not a known currency&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="7346338323-7">)</span><span class="w">
+</span><span class="p" data-group-id="7346338323-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="7346338323-9">{</span><span class="nc">Cldr.UnknownCurrencyError</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;The currency </span><span class="se">\&quot;</span><span class="s">not a known currency</span><span class="se">\&quot;</span><span class="s"> is unknown or not supported&quot;</span><span class="p" data-group-id="7346338323-9">}</span><span class="p" data-group-id="7346338323-8">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="resolve_per/2">
@@ -641,8 +641,8 @@ financial instruments.</p></li></ul><h2 id="resolve_currency/2-examples" class="
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> resolve_per(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.Parser.html#t:per/0">Cldr.Number.Parser.per</a>()
-  | [<a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.Parser.html#t:per/0">Cldr.Number.Parser.per</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.Parser.html#t:per/0">Cldr.Number.Parser.per</a>()
+  | [<a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.Parser.html#t:per/0">Cldr.Number.Parser.per</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]
   | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -661,8 +661,8 @@ and permille symbols are expected</p></li><li><p><code class="inline">options</c
   </a>
   <span class="text">Options</span>
 </h2>
-<ul><li><code class="inline">:locale</code> is any valid locale returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a>
+<ul><li><code class="inline">:locale</code> is any valid locale returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a>
 The default is <code class="inline">options[:backend].get_locale()</code></li></ul><h2 id="resolve_per/2-returns" class="section-heading">
   <a href="#resolve_per/2-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -676,13 +676,13 @@ The default is <code class="inline">options[:backend].get_locale()</code></li></
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_per</span><span class="w"> </span><span class="s">&quot;11%&quot;</span><span class="w">
-</span><span class="p" data-group-id="6474235093-1">[</span><span class="s">&quot;11&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="6474235093-1">]</span><span class="w">
+</span><span class="p" data-group-id="0350810437-1">[</span><span class="s">&quot;11&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="0350810437-1">]</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_per</span><span class="w"> </span><span class="s">&quot;% of linguists&quot;</span><span class="w">
-</span><span class="p" data-group-id="6474235093-2">[</span><span class="ss">:percent</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; of linguists&quot;</span><span class="p" data-group-id="6474235093-2">]</span><span class="w">
+</span><span class="p" data-group-id="0350810437-2">[</span><span class="ss">:percent</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; of linguists&quot;</span><span class="p" data-group-id="0350810437-2">]</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_per</span><span class="w"> </span><span class="s">&quot;% of linguists %&quot;</span><span class="w">
-</span><span class="p" data-group-id="6474235093-3">[</span><span class="ss">:percent</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; of linguists &quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="6474235093-3">]</span></code></pre>
+</span><span class="p" data-group-id="0350810437-3">[</span><span class="ss">:percent</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; of linguists &quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="0350810437-3">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="resolve_pers/2">
@@ -709,7 +709,7 @@ The default is <code class="inline">options[:backend].get_locale()</code></li></
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> resolve_pers([<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), ...], <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: [
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.Parser.html#t:per/0">Cldr.Number.Parser.per</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.Parser.html#t:per/0">Cldr.Number.Parser.per</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()
 ]</pre>
 
       </div>
@@ -729,17 +729,17 @@ permille symbols are expected</p></li><li><p><code class="inline">options</code>
   </a>
   <span class="text">Options</span>
 </h2>
-<ul><li><code class="inline">:locale</code> is any valid locale returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
-or a <code class="inline">t:Cldr.LanguageTag</code> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a>
+<ul><li><code class="inline">:locale</code> is any valid locale returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
+or a <code class="inline">t:Cldr.LanguageTag</code> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a>
 The default is <code class="inline">options[:backend].get_locale()</code></li></ul><h2 id="resolve_pers/2-examples" class="section-heading">
   <a href="#resolve_pers/2-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="6751148861-1">(</span><span class="s">&quot;100%&quot;</span><span class="p" data-group-id="6751148861-1">)</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_pers</span><span class="p" data-group-id="6751148861-2">(</span><span class="p" data-group-id="6751148861-2">)</span><span class="w">
-</span><span class="p" data-group-id="6751148861-3">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="6751148861-3">]</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="5003028490-1">(</span><span class="s">&quot;100%&quot;</span><span class="p" data-group-id="5003028490-1">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">resolve_pers</span><span class="p" data-group-id="5003028490-2">(</span><span class="p" data-group-id="5003028490-2">)</span><span class="w">
+</span><span class="p" data-group-id="5003028490-3">[</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="5003028490-3">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="scan/2">
@@ -777,7 +777,7 @@ a list of strings and numbers.</p><h2 id="scan/2-arguments" class="section-headi
 <ul><li><p><code class="inline">:number</code> is one of <code class="inline">:integer</code>, <code class="inline">:float</code>,
 <code class="inline">:decimal</code> or <code class="inline">nil</code>. The default is <code class="inline">nil</code>
 meaning that the type auto-detected as either
-an <code class="inline">integer</code> or a <code class="inline">float</code>.</p></li><li><p><code class="inline">:locale</code> is any locale returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
+an <code class="inline">integer</code> or a <code class="inline">float</code>.</p></li><li><p><code class="inline">:locale</code> is any locale returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
 or a <code class="inline">Cldr.LanguageTag.t</code>. The default is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</p></li></ul><h2 id="scan/2-returns" class="section-heading">
   <a href="#scan/2-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -790,27 +790,27 @@ or a <code class="inline">Cldr.LanguageTag.t</code>. The default is <a href="Pla
   </a>
   <span class="text">Notes</span>
 </h2>
-<p>Number parsing is performed by <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.Parser.html#parse/2"><code class="inline">Cldr.Number.Parser.parse/2</code></a>
+<p>Number parsing is performed by <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.Parser.html#parse/2"><code class="inline">Cldr.Number.Parser.parse/2</code></a>
 and any options provided are passed to that function.</p><h2 id="scan/2-examples" class="section-heading">
   <a href="#scan/2-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="1481676646-1">(</span><span class="s">&quot;£1_000_000.34&quot;</span><span class="p" data-group-id="1481676646-1">)</span><span class="w">
-</span><span class="p" data-group-id="1481676646-2">[</span><span class="s">&quot;£&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1000000.34</span><span class="p" data-group-id="1481676646-2">]</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="5675343654-1">(</span><span class="s">&quot;£1_000_000.34&quot;</span><span class="p" data-group-id="5675343654-1">)</span><span class="w">
+</span><span class="p" data-group-id="5675343654-2">[</span><span class="s">&quot;£&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1000000.34</span><span class="p" data-group-id="5675343654-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="1481676646-3">(</span><span class="s">&quot;I want £1_000_000 dollars&quot;</span><span class="p" data-group-id="1481676646-3">)</span><span class="w">
-</span><span class="p" data-group-id="1481676646-4">[</span><span class="s">&quot;I want £&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000000</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; dollars&quot;</span><span class="p" data-group-id="1481676646-4">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="5675343654-3">(</span><span class="s">&quot;I want £1_000_000 dollars&quot;</span><span class="p" data-group-id="5675343654-3">)</span><span class="w">
+</span><span class="p" data-group-id="5675343654-4">[</span><span class="s">&quot;I want £&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1000000</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; dollars&quot;</span><span class="p" data-group-id="5675343654-4">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="1481676646-5">(</span><span class="s">&quot;The prize is 23&quot;</span><span class="p" data-group-id="1481676646-5">)</span><span class="w">
-</span><span class="p" data-group-id="1481676646-6">[</span><span class="s">&quot;The prize is &quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p" data-group-id="1481676646-6">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="5675343654-5">(</span><span class="s">&quot;The prize is 23&quot;</span><span class="p" data-group-id="5675343654-5">)</span><span class="w">
+</span><span class="p" data-group-id="5675343654-6">[</span><span class="s">&quot;The prize is &quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p" data-group-id="5675343654-6">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="1481676646-7">(</span><span class="s">&quot;The lottery number is 23 for the next draw&quot;</span><span class="p" data-group-id="1481676646-7">)</span><span class="w">
-</span><span class="p" data-group-id="1481676646-8">[</span><span class="s">&quot;The lottery number is &quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; for the next draw&quot;</span><span class="p" data-group-id="1481676646-8">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="5675343654-7">(</span><span class="s">&quot;The lottery number is 23 for the next draw&quot;</span><span class="p" data-group-id="5675343654-7">)</span><span class="w">
+</span><span class="p" data-group-id="5675343654-8">[</span><span class="s">&quot;The lottery number is &quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; for the next draw&quot;</span><span class="p" data-group-id="5675343654-8">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="1481676646-9">(</span><span class="s">&quot;The loss is -1.000 euros&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number</span><span class="p">:</span><span class="w"> </span><span class="ss">:integer</span><span class="p" data-group-id="1481676646-9">)</span><span class="w">
-</span><span class="p" data-group-id="1481676646-10">[</span><span class="s">&quot;The loss is &quot;</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; euros&quot;</span><span class="p" data-group-id="1481676646-10">]</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">scan</span><span class="p" data-group-id="5675343654-9">(</span><span class="s">&quot;The loss is -1.000 euros&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number</span><span class="p">:</span><span class="w"> </span><span class="ss">:integer</span><span class="p" data-group-id="5675343654-9">)</span><span class="w">
+</span><span class="p" data-group-id="5675343654-10">[</span><span class="s">&quot;The loss is &quot;</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; euros&quot;</span><span class="p" data-group-id="5675343654-10">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="to_approx_string/2">
@@ -847,7 +847,7 @@ a locale and number system.</p><h2 id="to_approx_string/2-arguments" class="sect
   <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">number</code> is an integer, float or Decimal to be formatted</p></li><li><p><code class="inline">options</code> is a keyword list defining how the number is to be formatted.
-See <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.html#to_string/3"><code class="inline">Cldr.Number.to_string/3</code></a> for a description of the available
+See <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.html#to_string/3"><code class="inline">Cldr.Number.to_string/3</code></a> for a description of the available
 options.</p></li></ul><h2 id="to_approx_string/2-example" class="section-heading">
   <a href="#to_approx_string/2-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -855,7 +855,7 @@ options.</p></li></ul><h2 id="to_approx_string/2-example" class="section-heading
   <span class="text">Example</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_approx_string</span><span class="w"> </span><span class="mi">1234</span><span class="w">
-</span><span class="p" data-group-id="6590154246-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;~1,234&quot;</span><span class="p" data-group-id="6590154246-1">}</span></code></pre>
+</span><span class="p" data-group-id="2551152320-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;~1,234&quot;</span><span class="p" data-group-id="2551152320-1">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="to_at_least_string/2">
@@ -900,7 +900,7 @@ options.</p></li></ul><h2 id="to_at_least_string/2-example" class="section-headi
   <span class="text">Example</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_at_least_string</span><span class="w"> </span><span class="mi">1234</span><span class="w">
-</span><span class="p" data-group-id="8805139739-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1,234+&quot;</span><span class="p" data-group-id="8805139739-1">}</span></code></pre>
+</span><span class="p" data-group-id="6713863789-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1,234+&quot;</span><span class="p" data-group-id="6713863789-1">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="to_at_most_string/2">
@@ -937,7 +937,7 @@ a locale and number system.</p><h2 id="to_at_most_string/2-arguments" class="sec
   <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">number</code> is an integer, float or Decimal to be formatted</p></li><li><p><code class="inline">options</code> is a keyword list defining how the number is to be formatted.
-See <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.html#to_string/3"><code class="inline">Cldr.Number.to_string/3</code></a> for a description of the available
+See <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.html#to_string/3"><code class="inline">Cldr.Number.to_string/3</code></a> for a description of the available
 options.</p></li></ul><h2 id="to_at_most_string/2-example" class="section-heading">
   <a href="#to_at_most_string/2-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -945,7 +945,7 @@ options.</p></li></ul><h2 id="to_at_most_string/2-example" class="section-headin
   <span class="text">Example</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_at_most_string</span><span class="w"> </span><span class="mi">1234</span><span class="w">
-</span><span class="p" data-group-id="7920322472-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;≤1,234&quot;</span><span class="p" data-group-id="7920322472-1">}</span></code></pre>
+</span><span class="p" data-group-id="5524623589-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;≤1,234&quot;</span><span class="p" data-group-id="5524623589-1">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="to_range_string/2">
@@ -982,7 +982,7 @@ the <code class="inline">:range</code> format for a locale and number system.</p
   <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">number</code> is an integer, float or Decimal to be formatted</p></li><li><p><code class="inline">options</code> is a keyword list defining how the number is to be formatted.
-See <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.html#to_string/3"><code class="inline">Cldr.Number.to_string/3</code></a> for a description of the available
+See <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.html#to_string/3"><code class="inline">Cldr.Number.to_string/3</code></a> for a description of the available
 options.</p></li></ul><h2 id="to_range_string/2-example" class="section-heading">
   <a href="#to_range_string/2-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -990,7 +990,7 @@ options.</p></li></ul><h2 id="to_range_string/2-example" class="section-heading"
   <span class="text">Example</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_range_string</span><span class="w"> </span><span class="mi">1234</span><span class="o">..</span><span class="mi">5678</span><span class="w">
-</span><span class="p" data-group-id="3743194159-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1,234–5,678&quot;</span><span class="p" data-group-id="3743194159-1">}</span></code></pre>
+</span><span class="p" data-group-id="0694306758-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1,234–5,678&quot;</span><span class="p" data-group-id="0694306758-1">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="to_string/2">
@@ -1032,19 +1032,19 @@ options.</p></li></ul><h2 id="to_range_string/2-example" class="section-heading"
   <span class="text">Options</span>
 </h2>
 <ul><li><p><code class="inline">format</code>: the format style or a format string defining how the number is
-formatted. See <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.Format.html"><code class="inline">Cldr.Number.Format</code></a> for how format strings can be constructed.
-See <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.Format.html#format_styles_for/3"><code class="inline">Cldr.Number.Format.format_styles_for/3</code></a> to return available format styles
+formatted. See <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.Format.html"><code class="inline">Cldr.Number.Format</code></a> for how format strings can be constructed.
+See <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.Format.html#format_styles_for/3"><code class="inline">Cldr.Number.Format.format_styles_for/3</code></a> to return available format styles
 for a locale. The default <code class="inline">format</code> is <code class="inline">:standard</code>.</p></li><li><p>If <code class="inline">:format</code> is set to <code class="inline">:long</code> or <code class="inline">:short</code> then the formatting depends on
 whether <code class="inline">:currency</code> is specified. If not specified then the number is
 formatted as <code class="inline">:decimal_long</code> or <code class="inline">:decimal_short</code>. If <code class="inline">:currency</code> is
 specified the number is formatted as <code class="inline">:currency_long</code> or
 <code class="inline">:currency_short</code> and <code class="inline">:fractional_digits</code> is set to 0 as a default.</p></li><li><p><code class="inline">:format</code> may also be a format defined by CLDR's Rules Based Number
-Formats (RBNF).  Further information is found in the module <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Rbnf.html"><code class="inline">Cldr.Rbnf</code></a>.
+Formats (RBNF).  Further information is found in the module <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Rbnf.html"><code class="inline">Cldr.Rbnf</code></a>.
 The most commonly used formats in this category are to spell out the
 number in a the locales language.  The applicable formats are <code class="inline">:spellout</code>,
 <code class="inline">:spellout_year</code>, <code class="inline">:ordinal</code>.  A number can also be formatted as roman
 numbers by using the format <code class="inline">:roman</code> or <code class="inline">:roman_lower</code>.</p></li><li><p><code class="inline">currency</code>: is the currency for which the number is formatted. For
-available currencies see <a href="https://hexdocs.pm/ex_cldr_currencies/2.16.1/Cldr.Currency.html#known_currencies/0"><code class="inline">Cldr.Currency.known_currencies/0</code></a>. This option
+available currencies see <a href="https://hexdocs.pm/ex_cldr_currencies/2.16.4/Cldr.Currency.html#known_currencies/0"><code class="inline">Cldr.Currency.known_currencies/0</code></a>. This option
 is required if <code class="inline">:format</code> is set to <code class="inline">:currency</code>.  If <code class="inline">currency</code> is set
 and no <code class="inline">:format</code> is set, <code class="inline">:format</code> will be set to <code class="inline">:currency</code> as well.</p></li><li><p><code class="inline">currency_symbol</code>: Allows overriding a currency symbol. The alternatives
 are:</p><ul><li><code class="inline">:iso</code> the ISO currency code will be used instead of the default
@@ -1066,10 +1066,10 @@ should be used to define the separators and digits for the formatted
 number. If <code class="inline">number_system</code> is an <code class="inline">atom</code> then <code class="inline">number_system</code> is
 interpreted as a number system. If the <code class="inline">:number_system</code> is
 <code class="inline">binary</code> then it is interpreted as a number system name. See
-<a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#number_system_names_for/2"><code class="inline">Cldr.Number.System.number_system_names_for/2</code></a>. The default is <code class="inline">:default</code>.</p></li><li><p><code class="inline">:locale</code>: determines the locale in which the number is formatted. See
-<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/0"><code class="inline">Cldr.known_locale_names/0</code></a>. The default is<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#get_locale/0"><code class="inline">Cldr.get_locale/0</code></a> which is the
+<a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#number_system_names_for/2"><code class="inline">Cldr.Number.System.number_system_names_for/2</code></a>. The default is <code class="inline">:default</code>.</p></li><li><p><code class="inline">:locale</code>: determines the locale in which the number is formatted. See
+<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/0"><code class="inline">Cldr.known_locale_names/0</code></a>. The default is<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#get_locale/0"><code class="inline">Cldr.get_locale/0</code></a> which is the
 locale currently in affect for this <a href="https://hexdocs.pm/elixir/Process.html"><code class="inline">Process</code></a> and which is set by
-<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#put_locale/1"><code class="inline">Cldr.put_locale/1</code></a>.</p></li><li><p>If <code class="inline">:fractional_digits</code> is set to a positive integer value then the number
+<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#put_locale/1"><code class="inline">Cldr.put_locale/1</code></a>.</p></li><li><p>If <code class="inline">:fractional_digits</code> is set to a positive integer value then the number
 will be rounded to that number of digits and displayed accordingly - overriding
 settings that would be applied by default.  For example, currencies have
 fractional digits defined reflecting each currencies minor unit.  Setting
@@ -1107,21 +1107,21 @@ extensions.</p><h2 id="to_string/2-wrapping-format-elements" class="section-head
 </h2>
 <p>Wrapping elements is particularly useful when formatting a number with a
 currency symbol and the requirement is to have different HTML formatting
-applied to the symbol than the number.  For example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="1834317639-1">(</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:currency</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">wrapper</span><span class="p">:</span><span class="w"> </span><span class="k" data-group-id="1834317639-2">fn</span><span class="w">
+applied to the symbol than the number.  For example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="4447091450-1">(</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:currency</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">wrapper</span><span class="p">:</span><span class="w"> </span><span class="k" data-group-id="4447091450-2">fn</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:currency_symbol</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;&lt;span class=</span><span class="se">\&quot;</span><span class="s">symbol</span><span class="se">\&quot;</span><span class="s">&gt;&quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s">&quot;&lt;/span&gt;&quot;</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:number</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;&lt;span class=</span><span class="se">\&quot;</span><span class="s">number</span><span class="se">\&quot;</span><span class="s">&gt;&quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s">&quot;&lt;/span&gt;&quot;</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:currency_space</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;&lt;span&gt;&quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">string</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s">&quot;&lt;/span&gt;&quot;</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="c">_other</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">string</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="k" data-group-id="1834317639-2">end</span><span class="p" data-group-id="1834317639-1">)</span><span class="w">
-</span><span class="p" data-group-id="1834317639-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&lt;span class=</span><span class="se">\&quot;</span><span class="s">symbol</span><span class="se">\&quot;</span><span class="s">&gt;$&lt;/span&gt;&lt;span class=</span><span class="se">\&quot;</span><span class="s">number</span><span class="se">\&quot;</span><span class="s">&gt;100.00&lt;/span&gt;&quot;</span><span class="p" data-group-id="1834317639-3">}</span></code></pre><p>It is also possible and recommended to use the <code class="inline">Phoenix.HTML.Tag.content_tag/3</code>
+</span><span class="gp unselectable">...&gt; </span><span class="k" data-group-id="4447091450-2">end</span><span class="p" data-group-id="4447091450-1">)</span><span class="w">
+</span><span class="p" data-group-id="4447091450-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&lt;span class=</span><span class="se">\&quot;</span><span class="s">symbol</span><span class="se">\&quot;</span><span class="s">&gt;$&lt;/span&gt;&lt;span class=</span><span class="se">\&quot;</span><span class="s">number</span><span class="se">\&quot;</span><span class="s">&gt;100.00&lt;/span&gt;&quot;</span><span class="p" data-group-id="4447091450-3">}</span></code></pre><p>It is also possible and recommended to use the <code class="inline">Phoenix.HTML.Tag.content_tag/3</code>
 function if wrapping HTML tags since these will ensure HTML entities are
-correctly encoded.  For example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="1448580371-1">(</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:currency</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">wrapper</span><span class="p">:</span><span class="w"> </span><span class="k" data-group-id="1448580371-2">fn</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:currency_symbol</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Phoenix.HTML.Tag</span><span class="o">.</span><span class="n">content_tag</span><span class="p" data-group-id="1448580371-3">(</span><span class="ss">:span</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;symbol&quot;</span><span class="p" data-group-id="1448580371-3">)</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:number</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Phoenix.HTML.Tag</span><span class="o">.</span><span class="n">content_tag</span><span class="p" data-group-id="1448580371-4">(</span><span class="ss">:span</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;number&quot;</span><span class="p" data-group-id="1448580371-4">)</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:currency_space</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Phoenix.HTML.Tag</span><span class="o">.</span><span class="n">content_tag</span><span class="p" data-group-id="1448580371-5">(</span><span class="ss">:span</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="p" data-group-id="1448580371-5">)</span><span class="w">
+correctly encoded.  For example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="5920169068-1">(</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:currency</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">wrapper</span><span class="p">:</span><span class="w"> </span><span class="k" data-group-id="5920169068-2">fn</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:currency_symbol</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Phoenix.HTML.Tag</span><span class="o">.</span><span class="n">content_tag</span><span class="p" data-group-id="5920169068-3">(</span><span class="ss">:span</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;symbol&quot;</span><span class="p" data-group-id="5920169068-3">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:number</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Phoenix.HTML.Tag</span><span class="o">.</span><span class="n">content_tag</span><span class="p" data-group-id="5920169068-4">(</span><span class="ss">:span</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">class</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;number&quot;</span><span class="p" data-group-id="5920169068-4">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="ss">:currency_space</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Phoenix.HTML.Tag</span><span class="o">.</span><span class="n">content_tag</span><span class="p" data-group-id="5920169068-5">(</span><span class="ss">:span</span><span class="p">,</span><span class="w"> </span><span class="n">string</span><span class="p" data-group-id="5920169068-5">)</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="c">_other</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">string</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="k" data-group-id="1448580371-2">end</span><span class="p" data-group-id="1448580371-1">)</span><span class="w">
-</span><span class="p" data-group-id="1448580371-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&lt;span class=</span><span class="se">\&quot;</span><span class="s">symbol</span><span class="se">\&quot;</span><span class="s">&gt;$&lt;/span&gt;&lt;span class=</span><span class="se">\&quot;</span><span class="s">number</span><span class="se">\&quot;</span><span class="s">&gt;100.00&lt;/span&gt;&quot;</span><span class="p" data-group-id="1448580371-6">}</span></code></pre><p>When formatting a number the format is parsed into format elements that might include
+</span><span class="gp unselectable">...&gt; </span><span class="k" data-group-id="5920169068-2">end</span><span class="p" data-group-id="5920169068-1">)</span><span class="w">
+</span><span class="p" data-group-id="5920169068-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&lt;span class=</span><span class="se">\&quot;</span><span class="s">symbol</span><span class="se">\&quot;</span><span class="s">&gt;$&lt;/span&gt;&lt;span class=</span><span class="se">\&quot;</span><span class="s">number</span><span class="se">\&quot;</span><span class="s">&gt;100.00&lt;/span&gt;&quot;</span><span class="p" data-group-id="5920169068-6">}</span></code></pre><p>When formatting a number the format is parsed into format elements that might include
 a currency symbol, a literal string, inserted text between a currency symbol and the
 currency amount, a percent sign, the number itself and several other elements.  In
 some cases it is helpful to be apply specific formatting to each element.
@@ -1142,80 +1142,80 @@ inserted in the final formatted number.</p><h2 id="to_string/2-returns" class="s
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">12345</span><span class="w">
-</span><span class="p" data-group-id="8527101041-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;12,345&quot;</span><span class="p" data-group-id="8527101041-1">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;12,345&quot;</span><span class="p" data-group-id="9665551710-1">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;12 345&quot;</span><span class="p" data-group-id="8527101041-2">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;12 345&quot;</span><span class="p" data-group-id="9665551710-2">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mf">1345.32</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="ss">:EUR</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;es&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">minimum_grouping_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
-</span><span class="p" data-group-id="8527101041-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1.345,32 €&quot;</span><span class="p" data-group-id="8527101041-3">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1.345,32 €&quot;</span><span class="p" data-group-id="9665551710-3">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mf">1345.32</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="ss">:EUR</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;es&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1345,32 €&quot;</span><span class="p" data-group-id="8527101041-4">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1345,32 €&quot;</span><span class="p" data-group-id="9665551710-4">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;USD&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;12 345,00 $US&quot;</span><span class="p" data-group-id="8527101041-5">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;12 345,00 $US&quot;</span><span class="p" data-group-id="9665551710-5">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#E0&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1.2345E4&quot;</span><span class="p" data-group-id="8527101041-6">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1.2345E4&quot;</span><span class="p" data-group-id="9665551710-6">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:accounting</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;THB&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-7">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;THB 12,345.00&quot;</span><span class="p" data-group-id="8527101041-7">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-7">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;THB 12,345.00&quot;</span><span class="p" data-group-id="9665551710-7">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="o">-</span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:accounting</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;THB&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-8">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;(THB 12,345.00)&quot;</span><span class="p" data-group-id="8527101041-8">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-8">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;(THB 12,345.00)&quot;</span><span class="p" data-group-id="9665551710-8">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:accounting</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;THB&quot;</span><span class="p">,</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-9">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;฿12,345.00&quot;</span><span class="p" data-group-id="8527101041-9">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-9">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;฿12,345.00&quot;</span><span class="p" data-group-id="9665551710-9">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:accounting</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;THB&quot;</span><span class="p">,</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number_system</span><span class="p">:</span><span class="w"> </span><span class="ss">:native</span><span class="w">
-</span><span class="p" data-group-id="8527101041-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;฿๑๒,๓๔๕.๐๐&quot;</span><span class="p" data-group-id="8527101041-10">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;฿๑๒,๓๔๕.๐๐&quot;</span><span class="p" data-group-id="9665551710-10">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mf">1244.30</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:long</span><span class="w">
-</span><span class="p" data-group-id="8527101041-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1 thousand&quot;</span><span class="p" data-group-id="8527101041-11">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1 thousand&quot;</span><span class="p" data-group-id="9665551710-11">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mf">1244.30</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:long</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;USD&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-12">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1,244 US dollars&quot;</span><span class="p" data-group-id="8527101041-12">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-12">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1,244 US dollars&quot;</span><span class="p" data-group-id="9665551710-12">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mf">1244.30</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:short</span><span class="w">
-</span><span class="p" data-group-id="8527101041-13">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1K&quot;</span><span class="p" data-group-id="8527101041-13">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-13">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1K&quot;</span><span class="p" data-group-id="9665551710-13">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mf">1244.30</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:short</span><span class="p">,</span><span class="w"> </span><span class="ss">currency</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;EUR&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-14">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;€1K&quot;</span><span class="p" data-group-id="8527101041-14">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-14">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;€1K&quot;</span><span class="p" data-group-id="9665551710-14">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">1234</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:spellout</span><span class="w">
-</span><span class="p" data-group-id="8527101041-15">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one thousand two hundred thirty-four&quot;</span><span class="p" data-group-id="8527101041-15">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-15">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one thousand two hundred thirty-four&quot;</span><span class="p" data-group-id="9665551710-15">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">1234</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:spellout_verbose</span><span class="w">
-</span><span class="p" data-group-id="8527101041-16">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one thousand two hundred and thirty-four&quot;</span><span class="p" data-group-id="8527101041-16">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-16">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one thousand two hundred and thirty-four&quot;</span><span class="p" data-group-id="9665551710-16">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">1989</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:spellout_year</span><span class="w">
-</span><span class="p" data-group-id="8527101041-17">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;nineteen eighty-nine&quot;</span><span class="p" data-group-id="8527101041-17">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-17">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;nineteen eighty-nine&quot;</span><span class="p" data-group-id="9665551710-17">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:ordinal</span><span class="w">
-</span><span class="p" data-group-id="8527101041-18">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;123rd&quot;</span><span class="p" data-group-id="8527101041-18">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-18">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;123rd&quot;</span><span class="p" data-group-id="9665551710-18">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:roman</span><span class="w">
-</span><span class="p" data-group-id="8527101041-19">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CXXIII&quot;</span><span class="p" data-group-id="8527101041-19">}</span><span class="w">
+</span><span class="p" data-group-id="9665551710-19">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CXXIII&quot;</span><span class="p" data-group-id="9665551710-19">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;th-u-nu-thai&quot;</span><span class="w">
-</span><span class="p" data-group-id="8527101041-20">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;๑๒๓&quot;</span><span class="p" data-group-id="8527101041-20">}</span></code></pre><h2 id="to_string/2-errors" class="section-heading">
+</span><span class="p" data-group-id="9665551710-20">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;๑๒๓&quot;</span><span class="p" data-group-id="9665551710-20">}</span></code></pre><h2 id="to_string/2-errors" class="section-heading">
   <a href="#to_string/2-errors" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Errors</span>
 </h2>
 <p>An error tuple <code class="inline">{:error, reason}</code> will be returned if an error is detected.
-The two most likely causes of an error return are:</p><ul><li>A format cannot be compiled. In this case the error tuple will look like:</li></ul><pre><code class="makeup elixir" translate="no"><span class="w">    </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="4898290502-1">(</span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0#&quot;</span><span class="p" data-group-id="4898290502-1">)</span><span class="w">
-    </span><span class="p" data-group-id="4898290502-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4898290502-3">{</span><span class="nc">Cldr.FormatCompileError</span><span class="p">,</span><span class="w">
-      </span><span class="s">&quot;Decimal format compiler: syntax error before: </span><span class="se">\&quot;</span><span class="s">#</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="4898290502-3">}</span><span class="p" data-group-id="4898290502-2">}</span></code></pre><ul><li>The format style requested is not defined for the <code class="inline">locale</code> and
+The two most likely causes of an error return are:</p><ul><li>A format cannot be compiled. In this case the error tuple will look like:</li></ul><pre><code class="makeup elixir" translate="no"><span class="w">    </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="3946772622-1">(</span><span class="mi">12345</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0#&quot;</span><span class="p" data-group-id="3946772622-1">)</span><span class="w">
+    </span><span class="p" data-group-id="3946772622-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3946772622-3">{</span><span class="nc">Cldr.FormatCompileError</span><span class="p">,</span><span class="w">
+      </span><span class="s">&quot;Decimal format compiler: syntax error before: </span><span class="se">\&quot;</span><span class="s">#</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="3946772622-3">}</span><span class="p" data-group-id="3946772622-2">}</span></code></pre><ul><li>The format style requested is not defined for the <code class="inline">locale</code> and
 <code class="inline">number_system</code>. This happens typically when the number system is
 <code class="inline">:algorithmic</code> rather than the more common <code class="inline">:numeric</code>. In this case the error
-return looks like:</li></ul><pre><code class="makeup elixir" translate="no"><span class="w">    </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="7019094108-1">(</span><span class="mi">1234</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;he&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number_system</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;hebr&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="7019094108-1">)</span><span class="w">
-    </span><span class="p" data-group-id="7019094108-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7019094108-3">{</span><span class="nc">Cldr.UnknownFormatError</span><span class="p">,</span><span class="w">
-      </span><span class="s">&quot;The locale :he with number system :hebr does not define a format :percent&quot;</span><span class="p" data-group-id="7019094108-3">}</span><span class="p" data-group-id="7019094108-2">}</span></code></pre>
+return looks like:</li></ul><pre><code class="makeup elixir" translate="no"><span class="w">    </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="0842314722-1">(</span><span class="mi">1234</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;he&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">number_system</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;hebr&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:percent</span><span class="p" data-group-id="0842314722-1">)</span><span class="w">
+    </span><span class="p" data-group-id="0842314722-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0842314722-3">{</span><span class="nc">Cldr.UnknownFormatError</span><span class="p">,</span><span class="w">
+      </span><span class="s">&quot;The locale :he with number system :hebr does not define a format :percent&quot;</span><span class="p" data-group-id="0842314722-3">}</span><span class="p" data-group-id="0842314722-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="to_string!/2">
@@ -1291,9 +1291,9 @@ returned.</p><h2 id="to_string!/2-arguments" class="section-heading">
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> validate_number_system(
-  <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>() | <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:types/0">Cldr.Number.System.types</a>()
-) :: {:ok, <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+  <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>() | <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:types/0">Cldr.Number.System.types</a>()
+) :: {:ok, <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
@@ -1306,27 +1306,27 @@ underlying number system is returned.</p><h2 id="validate_number_system/2-argume
   </a>
   <span class="text">Arguments</span>
 </h2>
-<ul><li><p><code class="inline">locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></p></li><li><p><code class="inline">system_name</code> is any number system name returned by
-<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_number_systems/0"><code class="inline">Cldr.known_number_systems/0</code></a> or a number system type
-returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_number_system_types/0"><code class="inline">Cldr.known_number_system_types/0</code></a></p></li></ul><h2 id="validate_number_system/2-examples" class="section-heading">
+<ul><li><p><code class="inline">locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></p></li><li><p><code class="inline">system_name</code> is any number system name returned by
+<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_number_systems/0"><code class="inline">Cldr.known_number_systems/0</code></a> or a number system type
+returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_number_system_types/0"><code class="inline">Cldr.known_number_system_types/0</code></a></p></li></ul><h2 id="validate_number_system/2-examples" class="section-heading">
   <a href="#validate_number_system/2-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">validate_number_system</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="w">
-</span><span class="p" data-group-id="5025554431-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="5025554431-1">}</span><span class="w">
+</span><span class="p" data-group-id="2299597213-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="2299597213-1">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">validate_number_system</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="w">
-</span><span class="p" data-group-id="5025554431-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="5025554431-2">}</span><span class="w">
+</span><span class="p" data-group-id="2299597213-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="2299597213-2">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">validate_number_system</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:unknown</span><span class="w">
-</span><span class="p" data-group-id="5025554431-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="5025554431-4">{</span><span class="nc">Cldr.UnknownNumberSystemError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system :unknown is unknown&quot;</span><span class="p" data-group-id="5025554431-4">}</span><span class="p" data-group-id="5025554431-3">}</span><span class="w">
+</span><span class="p" data-group-id="2299597213-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="2299597213-4">{</span><span class="nc">Cldr.UnknownNumberSystemError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system :unknown is unknown&quot;</span><span class="p" data-group-id="2299597213-4">}</span><span class="p" data-group-id="2299597213-3">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">validate_number_system</span><span class="w"> </span><span class="s">&quot;zz&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="w">
-</span><span class="p" data-group-id="5025554431-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5025554431-6">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="5025554431-6">}</span><span class="p" data-group-id="5025554431-5">}</span></code></pre>
+</span><span class="p" data-group-id="2299597213-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2299597213-6">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="2299597213-6">}</span><span class="p" data-group-id="2299597213-5">}</span></code></pre>
   </section>
 </section>
 

@@ -44,6 +44,7 @@ Plausible.ChangesetHelpers.html
 Plausible.Cldr.AcceptLanguage.html
 Plausible.Cldr.Currency.html
 Plausible.Cldr.Locale.html
+Plausible.Cldr.Money.html
 Plausible.Cldr.Number.Cardinal.html
 Plausible.Cldr.Number.Format.html
 Plausible.Cldr.Number.Formatter.Decimal.html
@@ -468,8 +469,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-A0E8DA7D.js
-dist/sidebar_items-D847EC77.js
+dist/search_data-AFEEB642.js
+dist/sidebar_items-0E1090CA.js
 index.html
 readme.html
 search.html

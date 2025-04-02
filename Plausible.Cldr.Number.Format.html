@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D847EC77.js"></script>
+    <script src="dist/sidebar_items-0E1090CA.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -323,12 +323,9 @@ or raises on error.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> all_formats_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
-  {:ok, %{required(<a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()}}
+          <pre translate="no"><span class="attribute">@spec</span> all_formats_for(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+  {:ok, %{required(<a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()}}
   | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
-
-          <pre translate="no"><span class="attribute">@spec</span> all_formats_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
-  %{required(<a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
 
       </div>
 
@@ -340,7 +337,7 @@ or raises on error.</p></div>
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="all_formats_for/1-returns" class="section-heading">
   <a href="#all_formats_for/1-returns" class="hover-link">
@@ -371,6 +368,13 @@ keyed by number system or</p></li><li><p><code class="inline">{:error, {exceptio
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> all_formats_for!(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+  %{required(<a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
+
+      </div>
+
 <p>Returns the decimal formats defined for a given locale.</p><h2 id="all_formats_for!/1-arguments" class="section-heading">
   <a href="#all_formats_for!/1-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -379,7 +383,7 @@ keyed by number system or</p></li><li><p><code class="inline">{:error, {exceptio
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="all_formats_for!/1-returns" class="section-heading">
   <a href="#all_formats_for!/1-returns" class="hover-link">
@@ -411,8 +415,8 @@ keyed by number system or</p></li><li><p>raises an exception.</p></li></ul><p>Se
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> currency_spacing(
-  <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
 ) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -440,7 +444,7 @@ number system.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> decimal_format_list() :: [<a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.Format.html#t:format/0">Cldr.Number.Format.format</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> decimal_format_list() :: [<a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.Format.html#t:format/0">Cldr.Number.Format.format</a>()]</pre>
 
       </div>
 
@@ -453,7 +457,7 @@ to precompile all the known formats at compile time.</p><h2 id="decimal_format_l
   <span class="text">Example</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="c1">#=&gt; Plausible.Cldr.Number.Format.Format.decimal_format_list</span><span class="w">
-</span><span class="p" data-group-id="9169415632-1">[</span><span class="s">&quot;#&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##,##0%&quot;</span><span class="p">,</span><span class="w">
+</span><span class="p" data-group-id="2711405594-1">[</span><span class="s">&quot;#&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##,##0%&quot;</span><span class="p">,</span><span class="w">
 </span><span class="s">&quot;#,##,##0.###&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##,##0.00¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##,##0.00¤;(#,##,##0.00¤)&quot;</span><span class="p">,</span><span class="w">
 </span><span class="s">&quot;#,##,##0 %&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0%&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.###&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.00 ¤&quot;</span><span class="p">,</span><span class="w">
 </span><span class="s">&quot;#,##0.00 ¤;(#,##0.00 ¤)&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.00¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.00¤;(#,##0.00¤)&quot;</span><span class="p">,</span><span class="w">
@@ -463,7 +467,7 @@ to precompile all the known formats at compile time.</p><h2 id="decimal_format_l
 </span><span class="s">&quot;000 B ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 E ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 K ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 MRD ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 Md ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 Mio&#39;.&#39; ¤&quot;</span><span class="p">,</span><span class="w">
 </span><span class="s">&quot;000 Mio ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 Mld ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 Mln ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 Mn ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 Mrd&#39;.&#39; ¤&quot;</span><span class="p">,</span><span class="w">
 </span><span class="s">&quot;000 Mrd ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 Mr ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 M ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 NT ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 N ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 Tn ¤&quot;</span><span class="p">,</span><span class="w">
-</span><span class="s">&quot;000 Tr ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="9169415632-1">]</span></code></pre>
+</span><span class="s">&quot;000 Tr ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p" data-group-id="2711405594-1">]</span></code></pre>
   </section>
 </section>
 <section class="detail" id="decimal_format_list_for/1">
@@ -487,7 +491,7 @@ to precompile all the known formats at compile time.</p><h2 id="decimal_format_l
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> decimal_format_list_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> decimal_format_list_for(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
   {:ok, [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -500,7 +504,7 @@ to precompile all the known formats at compile time.</p><h2 id="decimal_format_l
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><p>This function exists to allow the decimal formatter to precompile all
 the known formats at compile time. Its use is not otherwise recommended.</p><h2 id="decimal_format_list_for/1-example" class="section-heading">
@@ -509,8 +513,8 @@ the known formats at compile time. Its use is not otherwise recommended.</p><h2 
   </a>
   <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">decimal_format_list_for</span><span class="p" data-group-id="3673586856-1">(</span><span class="ss">:en</span><span class="p" data-group-id="3673586856-1">)</span><span class="w">
-</span><span class="p" data-group-id="3673586856-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3673586856-3">[</span><span class="s">&quot;#,##0%&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.###&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.00;(#,##0.00)&quot;</span><span class="p">,</span><span class="s">&quot;#E0&quot;</span><span class="p">,</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">decimal_format_list_for</span><span class="p" data-group-id="7720059069-1">(</span><span class="ss">:en</span><span class="p" data-group-id="7720059069-1">)</span><span class="w">
+</span><span class="p" data-group-id="7720059069-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7720059069-3">[</span><span class="s">&quot;#,##0%&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.###&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;#,##0.00;(#,##0.00)&quot;</span><span class="p">,</span><span class="s">&quot;#E0&quot;</span><span class="p">,</span><span class="w">
  </span><span class="s">&quot;0 billion&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;0 million&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;0 thousand&quot;</span><span class="p">,</span><span class="w">
  </span><span class="s">&quot;0 trillion&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;00 billion&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;00 million&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;00 thousand&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;00 trillion&quot;</span><span class="p">,</span><span class="w">
  </span><span class="s">&quot;000 billion&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 million&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 thousand&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000 trillion&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;000K&quot;</span><span class="p">,</span><span class="w">
@@ -518,7 +522,7 @@ the known formats at compile time. Its use is not otherwise recommended.</p><h2 
  </span><span class="s">&quot;¤#,##0.00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤#,##0.00;(¤#,##0.00)&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤000B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤000K&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤000M&quot;</span><span class="p">,</span><span class="w">
  </span><span class="s">&quot;¤000T&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤00B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤00K&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤00M&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤00T&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤0B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤0K&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤0M&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤0T&quot;</span><span class="p">,</span><span class="w">
  </span><span class="s">&quot;¤ #,##0.00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ #,##0.00;(¤ #,##0.00)&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 000B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 000K&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 000M&quot;</span><span class="p">,</span><span class="w">
- </span><span class="s">&quot;¤ 000T&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 00B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 00K&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 00M&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 00T&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 0B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 0K&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 0M&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 0T&quot;</span><span class="p" data-group-id="3673586856-3">]</span><span class="p" data-group-id="3673586856-2">}</span></code></pre>
+ </span><span class="s">&quot;¤ 000T&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 00B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 00K&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 00M&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 00T&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 0B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 0K&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 0M&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;¤ 0T&quot;</span><span class="p" data-group-id="7720059069-3">]</span><span class="p" data-group-id="7720059069-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="default_grouping_for/1">
@@ -542,7 +546,7 @@ the known formats at compile time. Its use is not otherwise recommended.</p><h2 
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> default_grouping_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> default_grouping_for(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
   {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -555,7 +559,7 @@ the known formats at compile time. Its use is not otherwise recommended.</p><h2 
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="default_grouping_for/1-returns" class="section-heading">
   <a href="#default_grouping_for/1-returns" class="hover-link">
@@ -569,8 +573,8 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">default_grouping_for</span><span class="p" data-group-id="4052128725-1">(</span><span class="ss">:en</span><span class="p" data-group-id="4052128725-1">)</span><span class="w">
-</span><span class="p" data-group-id="4052128725-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4052128725-3">%{</span><span class="ss">fraction</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4052128725-4">%{</span><span class="ss">first</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="4052128725-4">}</span><span class="p">,</span><span class="w"> </span><span class="ss">integer</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4052128725-5">%{</span><span class="ss">first</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="4052128725-5">}</span><span class="p" data-group-id="4052128725-3">}</span><span class="p" data-group-id="4052128725-2">}</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">default_grouping_for</span><span class="p" data-group-id="4991346686-1">(</span><span class="ss">:en</span><span class="p" data-group-id="4991346686-1">)</span><span class="w">
+</span><span class="p" data-group-id="4991346686-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4991346686-3">%{</span><span class="ss">fraction</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4991346686-4">%{</span><span class="ss">first</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="4991346686-4">}</span><span class="p">,</span><span class="w"> </span><span class="ss">integer</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4991346686-5">%{</span><span class="ss">first</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="4991346686-5">}</span><span class="p" data-group-id="4991346686-3">}</span><span class="p" data-group-id="4991346686-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="default_grouping_for!/1">
@@ -592,7 +596,7 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> default_grouping_for!(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> default_grouping_for!(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
   %{
     fraction: %{first: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), rest: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()},
     integer: %{first: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), rest: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}
@@ -610,7 +614,7 @@ or raises on error.</p><h2 id="default_grouping_for!/1-arguments" class="section
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="default_grouping_for!/1-returns" class="section-heading">
   <a href="#default_grouping_for!/1-returns" class="hover-link">
@@ -624,8 +628,8 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">default_grouping_for!</span><span class="p" data-group-id="1705902217-1">(</span><span class="ss">:en</span><span class="p" data-group-id="1705902217-1">)</span><span class="w">
-</span><span class="p" data-group-id="1705902217-2">%{</span><span class="ss">fraction</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1705902217-3">%{</span><span class="ss">first</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="1705902217-3">}</span><span class="p">,</span><span class="w"> </span><span class="ss">integer</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1705902217-4">%{</span><span class="ss">first</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="1705902217-4">}</span><span class="p" data-group-id="1705902217-2">}</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">default_grouping_for!</span><span class="p" data-group-id="9853431852-1">(</span><span class="ss">:en</span><span class="p" data-group-id="9853431852-1">)</span><span class="w">
+</span><span class="p" data-group-id="9853431852-2">%{</span><span class="ss">fraction</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9853431852-3">%{</span><span class="ss">first</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="9853431852-3">}</span><span class="p">,</span><span class="w"> </span><span class="ss">integer</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9853431852-4">%{</span><span class="ss">first</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="ss">rest</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="9853431852-4">}</span><span class="p" data-group-id="9853431852-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="formats_for/2">
@@ -651,7 +655,7 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> formats_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> formats_for(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
   {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -664,7 +668,7 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
 </h2>
 <ul><li><p><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</p></li><li><p><code class="inline">number_system</code> is any valid number system or number system type returned
 by <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class="inline">Plausible.Cldr.Number.System.number_systems_for/1</code></a>.</p></li></ul><h2 id="formats_for/2-example" class="section-heading">
@@ -680,18 +684,18 @@ by <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class=
   </span><span class="ss">percent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#,##0 %&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">scientific</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#E0&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">standard</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#,##0.###&quot;</span><span class="w">
-  </span><span class="ss">currency_short</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8079846988-1">[</span><span class="p" data-group-id="8079846988-2">{</span><span class="s">&quot;1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-3">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 k ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 k ¤&quot;</span><span class="p" data-group-id="8079846988-3">]</span><span class="p" data-group-id="8079846988-2">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-4">{</span><span class="s">&quot;10000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-5">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 k ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 k ¤&quot;</span><span class="p" data-group-id="8079846988-5">]</span><span class="p" data-group-id="8079846988-4">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-6">{</span><span class="s">&quot;100000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-7">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 k ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 k ¤&quot;</span><span class="p" data-group-id="8079846988-7">]</span><span class="p" data-group-id="8079846988-6">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-8">{</span><span class="s">&quot;1000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-9">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 M ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 M ¤&quot;</span><span class="p" data-group-id="8079846988-9">]</span><span class="p" data-group-id="8079846988-8">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-10">{</span><span class="s">&quot;10000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-11">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 M ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 M ¤&quot;</span><span class="p" data-group-id="8079846988-11">]</span><span class="p" data-group-id="8079846988-10">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-12">{</span><span class="s">&quot;100000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-13">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 M ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 M ¤&quot;</span><span class="p" data-group-id="8079846988-13">]</span><span class="p" data-group-id="8079846988-12">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-14">{</span><span class="s">&quot;1000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-15">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 Md ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 Md ¤&quot;</span><span class="p" data-group-id="8079846988-15">]</span><span class="p" data-group-id="8079846988-14">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-16">{</span><span class="s">&quot;10000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-17">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 Md ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 Md ¤&quot;</span><span class="p" data-group-id="8079846988-17">]</span><span class="p" data-group-id="8079846988-16">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-18">{</span><span class="s">&quot;100000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-19">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 Md ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 Md ¤&quot;</span><span class="p" data-group-id="8079846988-19">]</span><span class="p" data-group-id="8079846988-18">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-20">{</span><span class="s">&quot;1000000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-21">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 Bn ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 Bn ¤&quot;</span><span class="p" data-group-id="8079846988-21">]</span><span class="p" data-group-id="8079846988-20">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-22">{</span><span class="s">&quot;10000000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-23">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 Bn ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 Bn ¤&quot;</span><span class="p" data-group-id="8079846988-23">]</span><span class="p" data-group-id="8079846988-22">}</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="8079846988-24">{</span><span class="s">&quot;100000000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8079846988-25">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 Bn ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 Bn ¤&quot;</span><span class="p" data-group-id="8079846988-25">]</span><span class="p" data-group-id="8079846988-24">}</span><span class="p" data-group-id="8079846988-1">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">currency_short</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2590428873-1">[</span><span class="p" data-group-id="2590428873-2">{</span><span class="s">&quot;1000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-3">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 k ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 k ¤&quot;</span><span class="p" data-group-id="2590428873-3">]</span><span class="p" data-group-id="2590428873-2">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-4">{</span><span class="s">&quot;10000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-5">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 k ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 k ¤&quot;</span><span class="p" data-group-id="2590428873-5">]</span><span class="p" data-group-id="2590428873-4">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-6">{</span><span class="s">&quot;100000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-7">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 k ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 k ¤&quot;</span><span class="p" data-group-id="2590428873-7">]</span><span class="p" data-group-id="2590428873-6">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-8">{</span><span class="s">&quot;1000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-9">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 M ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 M ¤&quot;</span><span class="p" data-group-id="2590428873-9">]</span><span class="p" data-group-id="2590428873-8">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-10">{</span><span class="s">&quot;10000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-11">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 M ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 M ¤&quot;</span><span class="p" data-group-id="2590428873-11">]</span><span class="p" data-group-id="2590428873-10">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-12">{</span><span class="s">&quot;100000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-13">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 M ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 M ¤&quot;</span><span class="p" data-group-id="2590428873-13">]</span><span class="p" data-group-id="2590428873-12">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-14">{</span><span class="s">&quot;1000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-15">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 Md ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 Md ¤&quot;</span><span class="p" data-group-id="2590428873-15">]</span><span class="p" data-group-id="2590428873-14">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-16">{</span><span class="s">&quot;10000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-17">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 Md ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 Md ¤&quot;</span><span class="p" data-group-id="2590428873-17">]</span><span class="p" data-group-id="2590428873-16">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-18">{</span><span class="s">&quot;100000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-19">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 Md ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 Md ¤&quot;</span><span class="p" data-group-id="2590428873-19">]</span><span class="p" data-group-id="2590428873-18">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-20">{</span><span class="s">&quot;1000000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-21">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 Bn ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0 Bn ¤&quot;</span><span class="p" data-group-id="2590428873-21">]</span><span class="p" data-group-id="2590428873-20">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-22">{</span><span class="s">&quot;10000000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-23">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 Bn ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;00 Bn ¤&quot;</span><span class="p" data-group-id="2590428873-23">]</span><span class="p" data-group-id="2590428873-22">}</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="2590428873-24">{</span><span class="s">&quot;100000000000000&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2590428873-25">[</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 Bn ¤&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;000 Bn ¤&quot;</span><span class="p" data-group-id="2590428873-25">]</span><span class="p" data-group-id="2590428873-24">}</span><span class="p" data-group-id="2590428873-1">]</span><span class="p">,</span><span class="w">
    </span><span class="n">...</span><span class="w">
   </span><span class="err">}</span></code></pre>
   </section>
@@ -720,8 +724,8 @@ by <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class=
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> formats_for!(
-  <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
 ) ::
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
 
@@ -751,7 +755,7 @@ by <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class=
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> minimum_grouping_digits_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> minimum_grouping_digits_for(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
   {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -764,7 +768,7 @@ by <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class=
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="minimum_grouping_digits_for/1-returns" class="section-heading">
   <a href="#minimum_grouping_digits_for/1-returns" class="hover-link">
@@ -778,8 +782,8 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">minimum_grouping_digits_for</span><span class="p" data-group-id="1590712183-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="1590712183-1">)</span><span class="w">
-</span><span class="p" data-group-id="1590712183-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="1590712183-2">}</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">minimum_grouping_digits_for</span><span class="p" data-group-id="7423103003-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="7423103003-1">)</span><span class="w">
+</span><span class="p" data-group-id="7423103003-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7423103003-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="minimum_grouping_digits_for!/1">
@@ -801,7 +805,7 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> minimum_grouping_digits_for!(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> minimum_grouping_digits_for!(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
 
       </div>
@@ -815,7 +819,7 @@ or raises on error.</p><h2 id="minimum_grouping_digits_for!/1-arguments" class="
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="minimum_grouping_digits_for!/1-returns" class="section-heading">
   <a href="#minimum_grouping_digits_for!/1-returns" class="hover-link">
@@ -829,7 +833,7 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">minimum_grouping_digits_for!</span><span class="p" data-group-id="4228503304-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="4228503304-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Format</span><span class="o">.</span><span class="n">minimum_grouping_digits_for!</span><span class="p" data-group-id="8662164247-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="8662164247-1">)</span><span class="w">
 </span><span class="mi">1</span></code></pre>
   </section>
 </section>

@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D847EC77.js"></script>
+    <script src="dist/sidebar_items-0E1090CA.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -342,7 +342,7 @@ when builing a regular expression.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> number_symbols_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> number_symbols_for(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
   {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -356,7 +356,7 @@ of the number systems of a locale.</p><h2 id="number_symbols_for/1-options" clas
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="number_symbols_for/1-example" class="section-heading">
   <a href="#number_symbols_for/1-example" class="hover-link">
@@ -364,37 +364,40 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
   </a>
   <span class="text">Example:</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Symbol</span><span class="o">.</span><span class="n">number_symbols_for</span><span class="p" data-group-id="1373797076-1">(</span><span class="ss">:th</span><span class="p" data-group-id="1373797076-1">)</span><span class="w">
-</span><span class="p" data-group-id="1373797076-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1373797076-3">%{</span><span class="w">
-   </span><span class="ss">latn</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1373797076-4">%</span><span class="nc" data-group-id="1373797076-4">Cldr.Number.Symbol</span><span class="p" data-group-id="1373797076-4">{</span><span class="w">
-     </span><span class="ss">decimal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">exponential</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;E&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">group</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">infinity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;∞&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">list</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;;&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">minus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;-&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">nan</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NaN&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">per_mille</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;‰&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">percent_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">plus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">superscripting_exponent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;×&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">time_separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w">
-   </span><span class="p" data-group-id="1373797076-4">}</span><span class="p">,</span><span class="w">
-   </span><span class="ss">thai</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1373797076-5">%</span><span class="nc" data-group-id="1373797076-5">Cldr.Number.Symbol</span><span class="p" data-group-id="1373797076-5">{</span><span class="w">
-     </span><span class="ss">decimal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">exponential</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;E&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">group</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">infinity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;∞&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">list</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;;&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">minus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;-&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">nan</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NaN&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">per_mille</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;‰&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">percent_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">plus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">superscripting_exponent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;×&quot;</span><span class="p">,</span><span class="w">
-     </span><span class="ss">time_separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w">
-   </span><span class="p" data-group-id="1373797076-5">}</span><span class="w">
- </span><span class="p" data-group-id="1373797076-3">}</span><span class="p" data-group-id="1373797076-2">}</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Symbol</span><span class="o">.</span><span class="n">number_symbols_for</span><span class="p" data-group-id="1628230946-1">(</span><span class="ss">:th</span><span class="p" data-group-id="1628230946-1">)</span><span class="w">
+</span><span class="p" data-group-id="1628230946-2">{</span><span class="w">
+  </span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="1628230946-3">%{</span><span class="w">
+    </span><span class="ss">latn</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1628230946-4">%</span><span class="nc" data-group-id="1628230946-4">Cldr.Number.Symbol</span><span class="p" data-group-id="1628230946-4">{</span><span class="w">
+      </span><span class="ss">decimal</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1628230946-5">%{</span><span class="ss">standard</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="p" data-group-id="1628230946-5">}</span><span class="p">,</span><span class="w">
+      </span><span class="ss">exponential</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;E&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">group</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1628230946-6">%{</span><span class="ss">standard</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p" data-group-id="1628230946-6">}</span><span class="p">,</span><span class="w">
+      </span><span class="ss">infinity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;∞&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">list</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;;&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">minus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;-&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">nan</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NaN&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">per_mille</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;‰&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">percent_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">plus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">superscripting_exponent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;×&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">time_separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w">
+    </span><span class="p" data-group-id="1628230946-4">}</span><span class="p">,</span><span class="w">
+    </span><span class="ss">thai</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1628230946-7">%</span><span class="nc" data-group-id="1628230946-7">Cldr.Number.Symbol</span><span class="p" data-group-id="1628230946-7">{</span><span class="w">
+      </span><span class="ss">decimal</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1628230946-8">%{</span><span class="ss">standard</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="p" data-group-id="1628230946-8">}</span><span class="p">,</span><span class="w">
+      </span><span class="ss">exponential</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;E&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">group</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1628230946-9">%{</span><span class="ss">standard</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p" data-group-id="1628230946-9">}</span><span class="p">,</span><span class="w">
+      </span><span class="ss">infinity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;∞&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">list</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;;&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">minus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;-&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">nan</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NaN&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">per_mille</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;‰&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">percent_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">plus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">superscripting_exponent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;×&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">time_separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w">
+    </span><span class="p" data-group-id="1628230946-7">}</span><span class="w">
+  </span><span class="p" data-group-id="1628230946-3">}</span><span class="w">
+</span><span class="p" data-group-id="1628230946-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="number_symbols_for/2">

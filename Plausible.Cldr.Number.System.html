@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-D847EC77.js"></script>
+    <script src="dist/sidebar_items-0E1090CA.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -292,17 +292,17 @@ string or raises on error.</p></div>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> number_system_for(
-  <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>(),
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>(),
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
 ) ::
   {:ok, [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
-<p>Returns the actual number system from a number system type.</p><ul><li><p><code class="inline">locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/0"><code class="inline">Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></p></li><li><p><code class="inline">system_name</code> is any number system name returned by
-<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_number_systems/0"><code class="inline">Cldr.known_number_systems/0</code></a> or a number system type
-returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_number_system_types/0"><code class="inline">Cldr.known_number_system_types/0</code></a></p></li></ul><p>This function will decode a number system type into the actual
+<p>Returns the actual number system from a number system type.</p><ul><li><p><code class="inline">locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/0"><code class="inline">Cldr.known_locale_names/0</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></p></li><li><p><code class="inline">system_name</code> is any number system name returned by
+<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_number_systems/0"><code class="inline">Cldr.known_number_systems/0</code></a> or a number system type
+returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_number_system_types/0"><code class="inline">Cldr.known_number_system_types/0</code></a></p></li></ul><p>This function will decode a number system type into the actual
 number system.  If the number system provided can't be decoded
 it is returned as is.</p><h2 id="number_system_for/2-examples" class="section-heading">
   <a href="#number_system_for/2-examples" class="hover-link">
@@ -311,23 +311,23 @@ it is returned as is.</p><h2 id="number_system_for/2-examples" class="section-he
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_system_for</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="w">
-</span><span class="p" data-group-id="6752409711-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6752409711-2">%{</span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0123456789&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:numeric</span><span class="p" data-group-id="6752409711-2">}</span><span class="p" data-group-id="6752409711-1">}</span><span class="w">
+</span><span class="p" data-group-id="1170555508-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1170555508-2">%{</span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0123456789&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:numeric</span><span class="p" data-group-id="1170555508-2">}</span><span class="p" data-group-id="1170555508-1">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_system_for</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="w">
-</span><span class="p" data-group-id="6752409711-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6752409711-4">%{</span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0123456789&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:numeric</span><span class="p" data-group-id="6752409711-4">}</span><span class="p" data-group-id="6752409711-3">}</span><span class="w">
+</span><span class="p" data-group-id="1170555508-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1170555508-4">%{</span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0123456789&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:numeric</span><span class="p" data-group-id="1170555508-4">}</span><span class="p" data-group-id="1170555508-3">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_system_for</span><span class="w"> </span><span class="s">&quot;he&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:traditional</span><span class="w">
-</span><span class="p" data-group-id="6752409711-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6752409711-6">%{</span><span class="ss">rules</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;hebrew&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:algorithmic</span><span class="p" data-group-id="6752409711-6">}</span><span class="p" data-group-id="6752409711-5">}</span><span class="w">
+</span><span class="p" data-group-id="1170555508-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1170555508-6">%{</span><span class="ss">rules</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;hebrew&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:algorithmic</span><span class="p" data-group-id="1170555508-6">}</span><span class="p" data-group-id="1170555508-5">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_system_for</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:native</span><span class="w">
-</span><span class="p" data-group-id="6752409711-7">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6752409711-8">%{</span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0123456789&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:numeric</span><span class="p" data-group-id="6752409711-8">}</span><span class="p" data-group-id="6752409711-7">}</span><span class="w">
+</span><span class="p" data-group-id="1170555508-7">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1170555508-8">%{</span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0123456789&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:numeric</span><span class="p" data-group-id="1170555508-8">}</span><span class="p" data-group-id="1170555508-7">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_system_for</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:finance</span><span class="w">
-</span><span class="p" data-group-id="6752409711-9">{</span><span class="w">
+</span><span class="p" data-group-id="1170555508-9">{</span><span class="w">
   </span><span class="ss">:error</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="6752409711-10">{</span><span class="nc">Cldr.UnknownNumberSystemError</span><span class="p">,</span><span class="w">
-    </span><span class="s">&quot;The number system :finance is unknown for the locale named :en. Valid number systems are %{default: :latn, native: :latn}&quot;</span><span class="p" data-group-id="6752409711-10">}</span><span class="w">
-</span><span class="p" data-group-id="6752409711-9">}</span></code></pre>
+  </span><span class="p" data-group-id="1170555508-10">{</span><span class="nc">Cldr.UnknownNumberSystemError</span><span class="p">,</span><span class="w">
+    </span><span class="s">&quot;The number system :finance is unknown for the locale named :en. Valid number systems are %{default: :latn, native: :latn}&quot;</span><span class="p" data-group-id="1170555508-10">}</span><span class="w">
+</span><span class="p" data-group-id="1170555508-9">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="number_system_from_locale/1">
@@ -349,8 +349,8 @@ it is returned as is.</p><h2 id="number_system_for/2-examples" class="section-he
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> number_system_from_locale(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> number_system_from_locale(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>() | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
@@ -361,8 +361,8 @@ locale name.</p><h2 id="number_system_from_locale/1-arguments" class="section-he
   </a>
   <span class="text">Arguments</span>
 </h2>
-<ul><li><code class="inline">locale</code> is any language tag returned be <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#new/2"><code class="inline">Cldr.Locale.new/2</code></a>
-or a locale name in the list returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a></li></ul><h2 id="number_system_from_locale/1-returns" class="section-heading">
+<ul><li><code class="inline">locale</code> is any language tag returned be <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#new/2"><code class="inline">Cldr.Locale.new/2</code></a>
+or a locale name in the list returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a></li></ul><h2 id="number_system_from_locale/1-returns" class="section-heading">
   <a href="#number_system_from_locale/1-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -400,24 +400,24 @@ or a locale name in the list returned by <a href="https://hexdocs.pm/ex_cldr/2.3
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> number_system_names_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> number_system_names_for(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
   {:ok, [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
 <p>Returns the number systems available for a locale
 or <code class="inline">{:error, message}</code> if the locale is not known.</p><ul><li><code class="inline">locale</code> is any valid locale name returned by <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a></li></ul><h2 id="number_system_names_for/1-examples" class="section-heading">
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a></li></ul><h2 id="number_system_names_for/1-examples" class="section-heading">
   <a href="#number_system_names_for/1-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_system_names_for</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
-</span><span class="p" data-group-id="8807029716-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8807029716-2">[</span><span class="ss">:latn</span><span class="p" data-group-id="8807029716-2">]</span><span class="p" data-group-id="8807029716-1">}</span><span class="w">
+</span><span class="p" data-group-id="1737911091-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1737911091-2">[</span><span class="ss">:latn</span><span class="p" data-group-id="1737911091-2">]</span><span class="p" data-group-id="1737911091-1">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_system_names_for</span><span class="w"> </span><span class="s">&quot;zz&quot;</span><span class="w">
-</span><span class="p" data-group-id="8807029716-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8807029716-4">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="8807029716-4">}</span><span class="p" data-group-id="8807029716-3">}</span></code></pre>
+</span><span class="p" data-group-id="1737911091-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1737911091-4">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="1737911091-4">}</span><span class="p" data-group-id="1737911091-3">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="number_system_names_for!/1">
@@ -479,27 +479,27 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code cla
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> number_systems_for(<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> number_systems_for(<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
   {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
 <p>Returns the number systems available for a locale
 or <code class="inline">{:error, message}</code> if the locale is not known.</p><ul><li><code class="inline">locale</code> is any valid locale name returned by <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a></li></ul><h2 id="number_systems_for/1-examples" class="section-heading">
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a></li></ul><h2 id="number_systems_for/1-examples" class="section-heading">
   <a href="#number_systems_for/1-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_systems_for</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
-</span><span class="p" data-group-id="3938377422-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3938377422-2">%{</span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="ss">:latn</span><span class="p">,</span><span class="w"> </span><span class="ss">native</span><span class="p">:</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="3938377422-2">}</span><span class="p" data-group-id="3938377422-1">}</span><span class="w">
+</span><span class="p" data-group-id="0154562116-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0154562116-2">%{</span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="ss">:latn</span><span class="p">,</span><span class="w"> </span><span class="ss">native</span><span class="p">:</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="0154562116-2">}</span><span class="p" data-group-id="0154562116-1">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_systems_for</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="w">
-</span><span class="p" data-group-id="3938377422-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3938377422-4">%{</span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="ss">:latn</span><span class="p">,</span><span class="w"> </span><span class="ss">native</span><span class="p">:</span><span class="w"> </span><span class="ss">:thai</span><span class="p" data-group-id="3938377422-4">}</span><span class="p" data-group-id="3938377422-3">}</span><span class="w">
+</span><span class="p" data-group-id="0154562116-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0154562116-4">%{</span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="ss">:latn</span><span class="p">,</span><span class="w"> </span><span class="ss">native</span><span class="p">:</span><span class="w"> </span><span class="ss">:thai</span><span class="p" data-group-id="0154562116-4">}</span><span class="p" data-group-id="0154562116-3">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">number_systems_for</span><span class="w"> </span><span class="s">&quot;zz&quot;</span><span class="w">
-</span><span class="p" data-group-id="3938377422-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3938377422-6">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="3938377422-6">}</span><span class="p" data-group-id="3938377422-5">}</span></code></pre>
+</span><span class="p" data-group-id="0154562116-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0154562116-6">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="0154562116-6">}</span><span class="p" data-group-id="0154562116-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="number_systems_for!/1">
@@ -542,8 +542,8 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code cla
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> number_systems_like(
-  <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>(),
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>(),
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
 ) ::
   {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
@@ -572,17 +572,17 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code cla
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> system_name_from(
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>(),
-  <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>(),
+  <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()
 ) ::
-  {:ok, <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+  {:ok, <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
 <p>Returns a number system name for a given locale and number system reference.</p><ul><li><p><code class="inline">system_name</code> is any number system name returned by
 <a href="Plausible.Cldr.html#known_number_systems/0"><code class="inline">Plausible.Cldr.known_number_systems/0</code></a> or a number system type
 returned by <a href="Plausible.Cldr.html#known_number_system_types/0"><code class="inline">Plausible.Cldr.known_number_system_types/0</code></a></p></li><li><p><code class="inline">locale</code> is any valid locale name returned by <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a></p></li></ul><p>Number systems can be references in one of two ways:</p><ul><li><p>As a number system type such as :default, :native, :traditional and
+or a <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a></p></li></ul><p>Number systems can be references in one of two ways:</p><ul><li><p>As a number system type such as :default, :native, :traditional and
 :finance. This allows references to a number system for a locale in a
 consistent fashion for a given use</p></li><li><p>WIth the number system name directly, such as :latn, :arab or any of the
 other 70 or so</p></li></ul><p>This function dereferences the supplied <code class="inline">system_name</code> and returns the
@@ -592,20 +592,20 @@ actual system name.</p><h2 id="system_name_from/2-examples" class="section-headi
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="n">ex</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">system_name_from</span><span class="p" data-group-id="0865570703-1">(</span><span class="ss">:default</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="0865570703-1">)</span><span class="w">
-</span><span class="p" data-group-id="0865570703-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="0865570703-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="n">ex</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">system_name_from</span><span class="p" data-group-id="9131716601-1">(</span><span class="ss">:default</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="9131716601-1">)</span><span class="w">
+</span><span class="p" data-group-id="9131716601-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="9131716601-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">system_name_from</span><span class="p" data-group-id="0865570703-3">(</span><span class="s">&quot;latn&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="0865570703-3">)</span><span class="w">
-</span><span class="p" data-group-id="0865570703-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="0865570703-4">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">system_name_from</span><span class="p" data-group-id="9131716601-3">(</span><span class="s">&quot;latn&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="9131716601-3">)</span><span class="w">
+</span><span class="p" data-group-id="9131716601-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="9131716601-4">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">system_name_from</span><span class="p" data-group-id="0865570703-5">(</span><span class="ss">:native</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="0865570703-5">)</span><span class="w">
-</span><span class="p" data-group-id="0865570703-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="0865570703-6">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">system_name_from</span><span class="p" data-group-id="9131716601-5">(</span><span class="ss">:native</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="9131716601-5">)</span><span class="w">
+</span><span class="p" data-group-id="9131716601-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="p" data-group-id="9131716601-6">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">system_name_from</span><span class="p" data-group-id="0865570703-7">(</span><span class="ss">:nope</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="0865570703-7">)</span><span class="w">
-</span><span class="p" data-group-id="0865570703-8">{</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">system_name_from</span><span class="p" data-group-id="9131716601-7">(</span><span class="ss">:nope</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="9131716601-7">)</span><span class="w">
+</span><span class="p" data-group-id="9131716601-8">{</span><span class="w">
   </span><span class="ss">:error</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="0865570703-9">{</span><span class="nc">Cldr.UnknownNumberSystemError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system :nope is unknown&quot;</span><span class="p" data-group-id="0865570703-9">}</span><span class="w">
-</span><span class="p" data-group-id="0865570703-8">}</span></code></pre><p>Note that return value is not guaranteed to be a valid
+  </span><span class="p" data-group-id="9131716601-9">{</span><span class="nc">Cldr.UnknownNumberSystemError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system :nope is unknown&quot;</span><span class="p" data-group-id="9131716601-9">}</span><span class="w">
+</span><span class="p" data-group-id="9131716601-8">}</span></code></pre><p>Note that return value is not guaranteed to be a valid
 number system for the given locale as demonstrated in the third example.</p>
   </section>
 </section>
@@ -630,16 +630,16 @@ number system for the given locale as demonstrated in the third example.</p>
 a non-latin number system.</p><p>This function converts numbers to a known
 number system only, it does not provide number
 formatting.</p><ul><li><p><code class="inline">number</code> is a <code class="inline">float</code>, <code class="inline">integer</code> or <a href="https://hexdocs.pm/decimal/2.3.0/Decimal.html"><code class="inline">Decimal</code></a></p></li><li><p><code class="inline">system_name</code> is any number system name returned by
-<a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_number_systems/0"><code class="inline">Cldr.known_number_systems/0</code></a> or a number system type
-returned by <a href="https://hexdocs.pm/ex_cldr/2.39.2/Cldr.html#known_number_system_types/0"><code class="inline">Cldr.known_number_system_types/0</code></a></p></li></ul><p>There are two types of number systems in CLDR:</p><ul><li><p><code class="inline">:numeric</code> in which the number system defines
+<a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_number_systems/0"><code class="inline">Cldr.known_number_systems/0</code></a> or a number system type
+returned by <a href="https://hexdocs.pm/ex_cldr/2.42.0/Cldr.html#known_number_system_types/0"><code class="inline">Cldr.known_number_system_types/0</code></a></p></li></ul><p>There are two types of number systems in CLDR:</p><ul><li><p><code class="inline">:numeric</code> in which the number system defines
 a direct mapping between the latin digits <code class="inline">0..9</code>
 into a the number system equivalent.  In this case,
-<a href="#to_system/2"><code class="inline">to_system/2</code></a> invokes <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Number.Transliterate.html#transliterate_digits/3"><code class="inline">Cldr.Number.Transliterate.transliterate_digits/3</code></a>
+<a href="#to_system/2"><code class="inline">to_system/2</code></a> invokes <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.Transliterate.html#transliterate_digits/3"><code class="inline">Cldr.Number.Transliterate.transliterate_digits/3</code></a>
 for the given number.</p></li><li><p><code class="inline">:algorithmic</code> in which the number system
 does not have the same structure as the <code class="inline">:latn</code>
 number system and therefore the conversion is
 done algorithmically.  For CLDR the algorithm
-is implemented through <a href="https://hexdocs.pm/ex_cldr_numbers/2.33.1/Cldr.Rbnf.html"><code class="inline">Cldr.Rbnf</code></a> rulesets.
+is implemented through <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Rbnf.html"><code class="inline">Cldr.Rbnf</code></a> rulesets.
 These rulesets are considered by CLDR to be
 less rigorous than the <code class="inline">:numeric</code> number systems
 and caution and testing for a specific use case
@@ -650,16 +650,16 @@ is recommended.</p></li></ul><h2 id="to_system/2-examples" class="section-headin
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">to_system</span><span class="w"> </span><span class="mi">123456</span><span class="p">,</span><span class="w"> </span><span class="ss">:hebr</span><span class="w">
-</span><span class="p" data-group-id="3632716030-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;קכ״ג׳תנ״ו&quot;</span><span class="p" data-group-id="3632716030-1">}</span><span class="w">
+</span><span class="p" data-group-id="5256444601-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;קכ״ג׳תנ״ו&quot;</span><span class="p" data-group-id="5256444601-1">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">to_system</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:hans</span><span class="w">
-</span><span class="p" data-group-id="3632716030-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;一百二十三&quot;</span><span class="p" data-group-id="3632716030-2">}</span><span class="w">
+</span><span class="p" data-group-id="5256444601-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;一百二十三&quot;</span><span class="p" data-group-id="5256444601-2">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">to_system</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:hant</span><span class="w">
-</span><span class="p" data-group-id="3632716030-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;一百二十三&quot;</span><span class="p" data-group-id="3632716030-3">}</span><span class="w">
+</span><span class="p" data-group-id="5256444601-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;一百二十三&quot;</span><span class="p" data-group-id="5256444601-3">}</span><span class="w">
 
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.System</span><span class="o">.</span><span class="n">to_system</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:hansfin</span><span class="w">
-</span><span class="p" data-group-id="3632716030-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;壹佰贰拾叁&quot;</span><span class="p" data-group-id="3632716030-4">}</span></code></pre>
+</span><span class="p" data-group-id="5256444601-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;壹佰贰拾叁&quot;</span><span class="p" data-group-id="5256444601-4">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="to_system!/2">
