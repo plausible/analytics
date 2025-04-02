@@ -112,7 +112,7 @@ defmodule Plausible.Workers.CheckUsage do
           Plausible.Billing.Plans.suggest(subscriber, pageview_usage.last_cycle.total)
 
         for owner <- subscriber.owners ++ subscriber.billing_members do
-          PlausibleWeb.Email.over_limit_email(owner, pageview_usage, suggested_plan)
+          PlausibleWeb.Email.over_limit_email(owner, subscriber, pageview_usage, suggested_plan)
           |> Plausible.Mailer.send()
         end
 

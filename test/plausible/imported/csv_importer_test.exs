@@ -1218,10 +1218,10 @@ defmodule Plausible.Imported.CSVImporterTest do
     assert email.to == [{user.name, user.email}]
 
     assert email.html_body =~
-             ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export">here</a>]
+             ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export?__team=#{exported_site.team.identifier}">here</a>]
 
     assert email.text_body =~
-             ~r[Please click here \(http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export\) to start the download process.]
+             ~r[Please click here \(http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export\?__team=#{exported_site.team.identifier}\) to start the download process.]
 
     context
   end

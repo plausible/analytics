@@ -103,7 +103,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
          :ok <- check_can_transfer_site(new_team, new_owner),
          :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team),
          :ok <- Teams.Invitations.accept_site_transfer(site_transfer, new_team) do
-      Teams.Invitations.send_transfer_accepted_email(site_transfer)
+      Teams.Invitations.send_transfer_accepted_email(site_transfer, new_team)
 
       site = site |> Repo.reload!() |> Repo.preload(ownerships: :user)
 

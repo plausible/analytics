@@ -42,9 +42,10 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
             email: u.email,
             deadline: t.accept_traffic_until,
             site_ids: fragment("array_agg(?.id)", s),
-            name: u.name
+            name: u.name,
+            team: t
           },
-          group_by: [u.id, t.accept_traffic_until]
+          group_by: [u.id, t.id]
       )
 
     for notification <- notifications do
