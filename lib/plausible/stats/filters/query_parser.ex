@@ -636,7 +636,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
     if exit_page_dimension? or toplevel_exit_page_filter? do
       :ok
     else
-      {:error, "Metric `#{metric}` can only be queried with visit:exit_page filters or dimensions."}
+      {:error,
+       "Metric `#{metric}` can only be queried with visit:exit_page filters or dimensions."}
     end
   end
 

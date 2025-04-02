@@ -12,102 +12,92 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   import Plausible.Stats.Util
 
   def add(q, site, query) do
+    Enum.reduce(query.metrics, q, fn
+      :exit_rate, q -> add_exit_rate(q, query)
+      :percentage, q -> add_percentage_metric(q, site, query)
+      :conversion_rate, q -> add_global_conversion_rate(q, site, query)
+      :group_conversion_rate, q -> add_group_conversion_rate(q, site, query)
+      :scroll_depth, q -> add_scroll_depth(q, query)
+      _, q -> q
+    end)
+  end
+
+  defp add_exit_rate(q, query) do
+    events_subquery =
+      Base.base_event_query(query)
+      |> group_by([event], event.pathname)
+      |> select([event], %{
+        pathname: event.pathname,
+        pageviews: fragment("countIf(? = 'pageview')", event.name)
+      })
+
     q
-    |> maybe_add_exit_rate_metric(query)
-    |> maybe_add_percentage_metric(site, query)
-    |> maybe_add_global_conversion_rate(site, query)
-    |> maybe_add_group_conversion_rate(site, query)
-    |> maybe_add_scroll_depth(query)
-  end
-
-  defp maybe_add_exit_rate_metric(q, query) do
-    if :exit_rate not in query.metrics do
-      q
-    else
-      events_subquery =
-        Base.base_event_query(query)
-        |> group_by([event], event.pathname)
-        |> select([event], %{
-          pathname: event.pathname,
-          pageviews: fragment("countIf(? = 'pageview')", event.name)
-        })
-
-      q
-      |> join(:left, [session], event in subquery(events_subquery),
-        on: session.exit_page == event.pathname
-      )
-      |> select_merge_as([session, event], %{
-        exit_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
-            fragment("any(?)", event.pageviews),
-            selected_as(:visits),
-            fragment("any(?)", event.pageviews)
-          )
-      })
-    end
-  end
-
-  defp maybe_add_percentage_metric(q, site, query) do
-    if :percentage in query.metrics do
-      total_query =
-        query
-        |> remove_filters_ignored_in_totals_query()
-        |> Query.set(
-          dimensions: [],
-          include_imported: query.include_imported,
-          pagination: nil
+    |> join(:left, [session], event in subquery(events_subquery),
+      on: session.exit_page == event.pathname
+    )
+    |> select_merge_as([session, event], %{
+      exit_rate:
+        fragment(
+          "if(? > 0, round(? / ? * 100, 1), null)",
+          fragment("any(?)", event.pageviews),
+          selected_as(:visits),
+          fragment("any(?)", event.pageviews)
         )
+    })
+  end
 
-      q
-      |> select_merge_as([], total_visitors_subquery(site, total_query, query.include_imported))
-      |> select_merge_as([], %{
-        percentage:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
-            selected_as(:total_visitors),
-            selected_as(:visitors),
-            selected_as(:total_visitors)
-          )
-      })
-    else
-      q
-    end
+  defp add_percentage_metric(q, site, query) do
+    total_query =
+      query
+      |> remove_filters_ignored_in_totals_query()
+      |> Query.set(
+        dimensions: [],
+        include_imported: query.include_imported,
+        pagination: nil
+      )
+
+    q
+    |> select_merge_as([], total_visitors_subquery(site, total_query, query.include_imported))
+    |> select_merge_as([], %{
+      percentage:
+        fragment(
+          "if(? > 0, round(? / ? * 100, 1), null)",
+          selected_as(:total_visitors),
+          selected_as(:visitors),
+          selected_as(:total_visitors)
+        )
+    })
   end
 
   # Adds conversion_rate metric to query, calculated as
   # X / Y where Y is the same breakdown value without goal or props
   # filters.
-  def maybe_add_global_conversion_rate(q, site, query) do
-    if :conversion_rate in query.metrics do
-      total_query =
-        query
-        |> Query.remove_top_level_filters(["event:goal", "event:props"])
-        |> remove_filters_ignored_in_totals_query()
-        |> Query.set(
-          dimensions: [],
-          include_imported: query.include_imported,
-          preloaded_goals: Map.put(query.preloaded_goals, :matching_toplevel_filters, []),
-          pagination: nil
-        )
-
-      q
-      |> select_merge_as(
-        [],
-        total_visitors_subquery(site, total_query, query.include_imported)
+  def add_global_conversion_rate(q, site, query) do
+    total_query =
+      query
+      |> Query.remove_top_level_filters(["event:goal", "event:props"])
+      |> remove_filters_ignored_in_totals_query()
+      |> Query.set(
+        dimensions: [],
+        include_imported: query.include_imported,
+        preloaded_goals: Map.put(query.preloaded_goals, :matching_toplevel_filters, []),
+        pagination: nil
       )
-      |> select_merge_as([e], %{
-        conversion_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 2), 0)",
-            selected_as(:total_visitors),
-            selected_as(:visitors),
-            selected_as(:total_visitors)
-          )
-      })
-    else
-      q
-    end
+
+    q
+    |> select_merge_as(
+      [],
+      total_visitors_subquery(site, total_query, query.include_imported)
+    )
+    |> select_merge_as([e], %{
+      conversion_rate:
+        fragment(
+          "if(? > 0, round(? / ? * 100, 2), 0)",
+          selected_as(:total_visitors),
+          selected_as(:visitors),
+          selected_as(:total_visitors)
+        )
+    })
   end
 
   # This function injects a group_conversion_rate metric into
@@ -121,118 +111,110 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   #  * Y is the number of all visitors for this set of dimensions
   #    result without the `event:goal` and `event:props:*`
   #    filters.
-  def maybe_add_group_conversion_rate(q, site, query) do
-    if :group_conversion_rate in query.metrics do
-      group_totals_query =
-        query
-        |> Query.remove_top_level_filters(["event:goal", "event:props"])
-        |> remove_filters_ignored_in_totals_query()
-        |> Query.set(
-          metrics: [:visitors],
-          order_by: [],
-          include_imported: query.include_imported,
-          preloaded_goals: Map.put(query.preloaded_goals, :matching_toplevel_filters, []),
-          pagination: nil
-        )
-
-      from(e in subquery(q),
-        left_join: c in subquery(SQL.QueryBuilder.build(group_totals_query, site)),
-        on: ^SQL.QueryBuilder.build_group_by_join(query)
+  def add_group_conversion_rate(q, site, query) do
+    group_totals_query =
+      query
+      |> Query.remove_top_level_filters(["event:goal", "event:props"])
+      |> remove_filters_ignored_in_totals_query()
+      |> Query.set(
+        metrics: [:visitors],
+        order_by: [],
+        include_imported: query.include_imported,
+        preloaded_goals: Map.put(query.preloaded_goals, :matching_toplevel_filters, []),
+        pagination: nil
       )
-      |> select_merge_as([e, c], %{
-        total_visitors: c.visitors,
-        group_conversion_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 2), 0)",
-            c.visitors,
-            e.visitors,
-            c.visitors
-          )
-      })
-      |> select_join_fields(query, query.dimensions, e)
-      |> select_join_fields(query, List.delete(query.metrics, :group_conversion_rate), e)
-    else
-      q
-    end
+
+    from(e in subquery(q),
+      left_join: c in subquery(SQL.QueryBuilder.build(group_totals_query, site)),
+      on: ^SQL.QueryBuilder.build_group_by_join(query)
+    )
+    |> select_merge_as([e, c], %{
+      total_visitors: c.visitors,
+      group_conversion_rate:
+        fragment(
+          "if(? > 0, round(? / ? * 100, 2), 0)",
+          c.visitors,
+          e.visitors,
+          c.visitors
+        )
+    })
+    |> select_join_fields(query, query.dimensions, e)
+    |> select_join_fields(query, List.delete(query.metrics, :group_conversion_rate), e)
   end
 
-  def maybe_add_scroll_depth(q, query) do
-    if :scroll_depth in query.metrics do
-      max_per_session_q =
-        Base.base_event_query(query)
-        |> where([e], e.name == "engagement" and e.scroll_depth <= 100)
-        |> select([e], %{
-          session_id: e.session_id,
-          max_scroll_depth: max(e.scroll_depth)
-        })
-        |> SQL.QueryBuilder.build_group_by(:events, query)
-        |> group_by([e], e.session_id)
+  def add_scroll_depth(q, query) do
+    max_per_session_q =
+      Base.base_event_query(query)
+      |> where([e], e.name == "engagement" and e.scroll_depth <= 100)
+      |> select([e], %{
+        session_id: e.session_id,
+        max_scroll_depth: max(e.scroll_depth)
+      })
+      |> SQL.QueryBuilder.build_group_by(:events, query)
+      |> group_by([e], e.session_id)
 
-      dim_shortnames = Enum.map(query.dimensions, fn dim -> shortname(query, dim) end)
+    dim_shortnames = Enum.map(query.dimensions, fn dim -> shortname(query, dim) end)
 
-      dim_select =
-        dim_shortnames
-        |> Enum.map(fn dim -> {dim, dynamic([p], field(p, ^dim))} end)
-        |> Map.new()
+    dim_select =
+      dim_shortnames
+      |> Enum.map(fn dim -> {dim, dynamic([p], field(p, ^dim))} end)
+      |> Map.new()
 
-      dim_group_by =
-        dim_shortnames
-        |> Enum.map(fn dim -> dynamic([p], field(p, ^dim)) end)
+    dim_group_by =
+      dim_shortnames
+      |> Enum.map(fn dim -> dynamic([p], field(p, ^dim)) end)
 
-      total_scroll_depth_q =
-        subquery(max_per_session_q)
-        |> select([], %{})
-        |> select_merge_as([p], %{
-          # Note: No need to upscale sample size here since it would end up cancelling out due to the result being an average
-          total_scroll_depth: fragment("sum(?)", p.max_scroll_depth),
-          total_scroll_depth_visits: fragment("uniq(?)", p.session_id)
-        })
-        |> select_merge(^dim_select)
-        |> group_by(^dim_group_by)
+    total_scroll_depth_q =
+      subquery(max_per_session_q)
+      |> select([], %{})
+      |> select_merge_as([p], %{
+        # Note: No need to upscale sample size here since it would end up cancelling out due to the result being an average
+        total_scroll_depth: fragment("sum(?)", p.max_scroll_depth),
+        total_scroll_depth_visits: fragment("uniq(?)", p.session_id)
+      })
+      |> select_merge(^dim_select)
+      |> group_by(^dim_group_by)
 
-      join_on_dim_condition =
-        if dim_shortnames == [] do
-          true
-        else
-          dim_shortnames
-          |> Enum.map(fn dim -> dynamic([_e, ..., s], selected_as(^dim) == field(s, ^dim)) end)
-          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-          |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
-        end
-
-      joined_q =
-        join(q, :left, [e], s in subquery(total_scroll_depth_q), on: ^join_on_dim_condition)
-
-      if query.include_imported do
-        joined_q
-        |> select_merge_as([..., s], %{
-          scroll_depth:
-            fragment(
-              """
-              if(? + ? > 0, toInt8(round((? + ?) / (? + ?))), NULL)
-              """,
-              s.total_scroll_depth_visits,
-              selected_as(:__imported_total_scroll_depth_visits),
-              s.total_scroll_depth,
-              selected_as(:__imported_total_scroll_depth),
-              s.total_scroll_depth_visits,
-              selected_as(:__imported_total_scroll_depth_visits)
-            )
-        })
+    join_on_dim_condition =
+      if dim_shortnames == [] do
+        true
       else
-        joined_q
-        |> select_merge_as([..., s], %{
-          scroll_depth:
-            fragment(
-              "if(any(?) > 0, toUInt8(round(any(?) / any(?))), NULL)",
-              s.total_scroll_depth_visits,
-              s.total_scroll_depth,
-              s.total_scroll_depth_visits
-            )
-        })
+        dim_shortnames
+        |> Enum.map(fn dim -> dynamic([_e, ..., s], selected_as(^dim) == field(s, ^dim)) end)
+        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+        |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
       end
+
+    joined_q =
+      join(q, :left, [e], s in subquery(total_scroll_depth_q), on: ^join_on_dim_condition)
+
+    if query.include_imported do
+      joined_q
+      |> select_merge_as([..., s], %{
+        scroll_depth:
+          fragment(
+            """
+            if(? + ? > 0, toInt8(round((? + ?) / (? + ?))), NULL)
+            """,
+            s.total_scroll_depth_visits,
+            selected_as(:__imported_total_scroll_depth_visits),
+            s.total_scroll_depth,
+            selected_as(:__imported_total_scroll_depth),
+            s.total_scroll_depth_visits,
+            selected_as(:__imported_total_scroll_depth_visits)
+          )
+      })
     else
-      q
+      joined_q
+      |> select_merge_as([..., s], %{
+        scroll_depth:
+          fragment(
+            "if(any(?) > 0, toUInt8(round(any(?) / any(?))), NULL)",
+            s.total_scroll_depth_visits,
+            s.total_scroll_depth,
+            s.total_scroll_depth_visits
+          )
+      })
     end
   end
 

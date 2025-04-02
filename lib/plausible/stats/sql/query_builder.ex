@@ -16,6 +16,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   def build(query, site) do
     {event_query, sessions_query} = QueryOptimizer.split(query)
+
     event_q = build_events_query(site, event_query)
     sessions_q = build_sessions_query(site, sessions_query)
 

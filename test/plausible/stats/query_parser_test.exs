@@ -154,7 +154,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             :visits,
             :events,
             :bounce_rate,
-            :visit_duration,
+            :visit_duration
           ],
           utc_time_range: @date_range_day,
           filters: [],
