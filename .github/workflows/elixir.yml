@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_VERSION: v11
+  CACHE_VERSION: v12
   PERSISTENT_CACHE_DIR: cached
 
 jobs:
