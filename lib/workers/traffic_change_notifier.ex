@@ -25,7 +25,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
           inner_join: t in assoc(s, :team),
           where: not s.locked,
           where: is_nil(t.accept_traffic_until) or t.accept_traffic_until > ^today,
-          preload: [site: s]
+          preload: [site: {s, team: t}]
       )
 
     for notification <- notifications do
@@ -77,7 +77,8 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   defp send_spike_notification(recipient, site, stats) do
     dashboard_link =
       if Repo.exists?(email_match_query(site, recipient)) do
-        Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, [])
+        Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []) <>
+          "?__team=#{site.team.identifier}"
       end
 
     template =
@@ -95,10 +96,11 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
     {dashboard_link, installation_link} =
       if Repo.exists?(email_match_query(site, recipient)) do
         {
-          Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []),
+          Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []) <>
+            "?__team=#{site.team.identifier}",
           Routes.site_url(PlausibleWeb.Endpoint, :installation, site.domain,
             flow: PlausibleWeb.Flows.review()
-          )
+          ) <> "&__team=#{site.team.identifier}"
         }
       else
         {nil, nil}

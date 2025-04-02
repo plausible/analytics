@@ -54,7 +54,7 @@ defmodule Plausible.Workers.ImportAnalytics do
   end
 
   def import_complete(site_import) do
-    site_import = Repo.preload(site_import, [:site, :imported_by])
+    site_import = Repo.preload(site_import, [:imported_by, site: :team])
 
     PlausibleWeb.Email.import_success(site_import, site_import.imported_by)
     |> Plausible.Mailer.send()

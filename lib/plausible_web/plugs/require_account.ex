@@ -33,8 +33,15 @@ defmodule PlausibleWeb.RequireAccountPlug do
     end
   end
 
-  defp redirect_to(%Plug.Conn{method: :get} = conn) do
-    Routes.auth_path(conn, :login_form, return_to: conn.request_path)
+  defp redirect_to(%Plug.Conn{method: "GET"} = conn) do
+    return_to =
+      if conn.query_string && String.length(conn.query_string) > 0 do
+        conn.request_path <> "?" <> conn.query_string
+      else
+        conn.request_path
+      end
+
+    Routes.auth_path(conn, :login_form, return_to: return_to)
   end
 
   defp redirect_to(conn), do: Routes.auth_path(conn, :login_form)

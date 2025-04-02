@@ -79,10 +79,11 @@ defmodule Plausible.Teams.Invitations do
       from gi in Teams.GuestInvitation,
         inner_join: s in assoc(gi, :site),
         inner_join: ti in assoc(gi, :team_invitation),
+        inner_join: t in assoc(ti, :team),
         inner_join: inviter in assoc(ti, :inviter),
         where: gi.invitation_id == ^guest_invitation_id,
         where: ti.email == ^user.email,
-        preload: [site: s, team_invitation: {ti, inviter: inviter}]
+        preload: [site: s, team_invitation: {ti, team: t, inviter: inviter}]
 
     case Repo.one(invitation_query) do
       nil ->
@@ -97,7 +98,7 @@ defmodule Plausible.Teams.Invitations do
     transfer =
       Teams.SiteTransfer
       |> Repo.get_by(transfer_id: transfer_id, email: user.email)
-      |> Repo.preload([:site, :initiator])
+      |> Repo.preload([:initiator, site: :team])
 
     case transfer do
       nil ->
@@ -459,11 +460,20 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def send_transfer_accepted_email(site_transfer) do
+  def send_transfer_accepted_email(site_transfer, team) do
+    initiator_as_editor? =
+      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) == {:ok, :editor}
+
+    initiator_as_guest? =
+      Teams.Memberships.team_role(team, site_transfer.initiator) == {:ok, :guest}
+
     PlausibleWeb.Email.ownership_transfer_accepted(
       site_transfer.email,
       site_transfer.initiator.email,
-      site_transfer.site
+      team,
+      site_transfer.site,
+      initiator_as_editor?,
+      initiator_as_guest?
     )
     |> Plausible.Mailer.send()
   end
@@ -728,7 +738,11 @@ defmodule Plausible.Teams.Invitations do
 
   defp send_invitation_accepted_email(team_invitation, [guest_invitation | _]) do
     team_invitation.inviter.email
-    |> PlausibleWeb.Email.guest_invitation_accepted(team_invitation.email, guest_invitation.site)
+    |> PlausibleWeb.Email.guest_invitation_accepted(
+      team_invitation.email,
+      team_invitation.team,
+      guest_invitation.site
+    )
     |> Plausible.Mailer.send()
   end
 

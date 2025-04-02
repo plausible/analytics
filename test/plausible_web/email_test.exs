@@ -149,6 +149,7 @@ defmodule PlausibleWeb.EmailTest do
   describe "over_limit_email/3" do
     test "renders usage, suggested plan, and links to upgrade and account settings" do
       user = build(:user)
+      team = build(:team, identifier: Ecto.UUID.generate())
       penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
       last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
       suggested_plan = %Plausible.Billing.Plan{volume: "100k"}
@@ -159,7 +160,7 @@ defmodule PlausibleWeb.EmailTest do
       }
 
       %{html_body: html_body, subject: subject} =
-        PlausibleWeb.Email.over_limit_email(user, usage, suggested_plan)
+        PlausibleWeb.Email.over_limit_email(user, team, usage, suggested_plan)
 
       assert subject == "[Action required] You have outgrown your Plausible subscription tier"
 
@@ -170,18 +171,26 @@ defmodule PlausibleWeb.EmailTest do
       assert html_body =~
                "cycle before that (#{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}), your account used 12,300 billable pageviews"
 
-      assert text_of_element(html_body, ~s|a[href$="/billing/choose-plan"]|) ==
+      assert text_of_element(
+               html_body,
+               ~s|a[href$="/billing/choose-plan?__team=#{team.identifier}"]|
+             ) ==
                "Click here to upgrade your subscription"
 
-      assert text_of_element(html_body, ~s|a[href$="/settings/billing/subscription"]|) ==
+      assert text_of_element(
+               html_body,
+               ~s|a[href$="/settings/billing/subscription?__team=#{team.identifier}"]|
+             ) ==
                "account settings"
 
       assert html_body =~
-               PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
+               PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <>
+                 "?__team=#{team.identifier}"
     end
 
     test "asks enterprise level usage to contact us" do
       user = build(:user)
+      team = build(:team, identifier: Ecto.UUID.generate())
       penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
       last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
       suggested_plan = :enterprise
@@ -191,7 +200,8 @@ defmodule PlausibleWeb.EmailTest do
         last_cycle: %{date_range: last_cycle, total: 32_100}
       }
 
-      %{html_body: html_body} = PlausibleWeb.Email.over_limit_email(user, usage, suggested_plan)
+      %{html_body: html_body} =
+        PlausibleWeb.Email.over_limit_email(user, team, usage, suggested_plan)
 
       refute html_body =~ "Click here to upgrade your subscription"
       assert html_body =~ "Your usage exceeds our standard plans, so please reply back"
@@ -201,6 +211,7 @@ defmodule PlausibleWeb.EmailTest do
   describe "dashboard_locked/3" do
     test "renders usage, suggested plan, and links to upgrade and account settings" do
       user = build(:user)
+      team = build(:team, identifier: Ecto.UUID.generate())
       penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
       last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
       suggested_plan = %Plausible.Billing.Plan{volume: "100k"}
@@ -211,7 +222,7 @@ defmodule PlausibleWeb.EmailTest do
       }
 
       %{html_body: html_body, subject: subject} =
-        PlausibleWeb.Email.dashboard_locked(user, usage, suggested_plan)
+        PlausibleWeb.Email.dashboard_locked(user, team, usage, suggested_plan)
 
       assert subject == "[Action required] Your Plausible dashboard is now locked"
 
@@ -222,18 +233,26 @@ defmodule PlausibleWeb.EmailTest do
       assert html_body =~
                "cycle before that (#{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}), the usage was 12,300 billable pageviews"
 
-      assert text_of_element(html_body, ~s|a[href$="/billing/choose-plan"]|) ==
+      assert text_of_element(
+               html_body,
+               ~s|a[href$="/billing/choose-plan?__team=#{team.identifier}"]|
+             ) ==
                "Click here to upgrade your subscription"
 
-      assert text_of_element(html_body, ~s|a[href$="/settings/billing/subscription"]|) ==
+      assert text_of_element(
+               html_body,
+               ~s|a[href$="/settings/billing/subscription?__team=#{team.identifier}"]|
+             ) ==
                "account settings"
 
       assert html_body =~
-               PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
+               PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan) <>
+                 "?__team=#{team.identifier}"
     end
 
     test "asks enterprise level usage to contact us" do
       user = build(:user)
+      team = build(:team, identifier: Ecto.UUID.generate())
       penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
       last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
       suggested_plan = :enterprise
@@ -243,7 +262,8 @@ defmodule PlausibleWeb.EmailTest do
         last_cycle: %{date_range: last_cycle, total: 32_100}
       }
 
-      %{html_body: html_body} = PlausibleWeb.Email.dashboard_locked(user, usage, suggested_plan)
+      %{html_body: html_body} =
+        PlausibleWeb.Email.dashboard_locked(user, team, usage, suggested_plan)
 
       refute html_body =~ "Click here to upgrade your subscription"
       assert html_body =~ "Your usage exceeds our standard plans, so please reply back"
@@ -281,13 +301,23 @@ defmodule PlausibleWeb.EmailTest do
 
   describe "approaching accept_traffic_until" do
     test "renders first warning" do
-      user = build(:user, name: "John Doe")
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate())
+
+      notification = %{
+        id: user.id,
+        email: user.email,
+        deadline: Date.add(Date.utc_today(), 7),
+        site_ids: [1, 2, 3],
+        name: user.name,
+        team: team
+      }
 
       %{html_body: body, subject: subject} =
-        PlausibleWeb.Email.approaching_accept_traffic_until(user)
+        PlausibleWeb.Email.approaching_accept_traffic_until(notification)
 
       assert subject == "We'll stop counting your stats"
-      assert body =~ plausible_link()
+      assert body =~ plausible_link(team: team, label: "login to your Plausible account")
       assert body =~ "Hey John,"
 
       assert body =~
@@ -295,13 +325,23 @@ defmodule PlausibleWeb.EmailTest do
     end
 
     test "renders final warning" do
-      user = build(:user)
+      user = build(:user, id: 123, name: "John Doe")
+      team = build(:team, identifier: Ecto.UUID.generate())
+
+      notification = %{
+        id: user.id,
+        email: user.email,
+        deadline: Date.add(Date.utc_today(), 1),
+        site_ids: [1, 2, 3],
+        name: user.name,
+        team: team
+      }
 
       %{html_body: body, subject: subject} =
-        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(user)
+        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(notification)
 
       assert subject == "A reminder that we'll stop counting your stats tomorrow"
-      assert body =~ plausible_link()
+      assert body =~ plausible_link(team: team, label: "login to your Plausible account")
 
       assert body =~
                "We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites tomorrow."
@@ -315,7 +355,7 @@ defmodule PlausibleWeb.EmailTest do
 
       emails = [
         PlausibleWeb.Email.create_site_email(trial_user),
-        PlausibleWeb.Email.site_setup_help(trial_user, site),
+        PlausibleWeb.Email.site_setup_help(trial_user, site.team, site),
         PlausibleWeb.Email.site_setup_success(trial_user, site.team, site)
       ]
 
@@ -426,8 +466,23 @@ defmodule PlausibleWeb.EmailTest do
     PlausibleWeb.EmailView.plausible_url()
   end
 
-  def plausible_link() do
+  def plausible_link(opts \\ []) do
+    suffix =
+      if team = Keyword.get(opts, :team) do
+        "?__team=#{team.identifier}"
+      else
+        ""
+      end
+
     plausible_url = plausible_url()
-    "<a href=\"#{plausible_url}\">#{plausible_url}</a>"
+
+    label =
+      if label = Keyword.get(opts, :label) do
+        label
+      else
+        plausible_url
+      end
+
+    "<a href=\"#{plausible_url <> suffix}\">#{label}</a>"
   end
 end

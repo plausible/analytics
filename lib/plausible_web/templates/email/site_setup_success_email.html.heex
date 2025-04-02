@@ -1,7 +1,7 @@
 Congrats! We've recorded the first visitor on
 <a href={"https://#{@site.domain}"}><%= @site.domain %></a>. Your traffic is now being counted without compromising the user experience and privacy of your visitors.
 <br /><br />
-Do check out your <a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}"}>easy to use, fast-loading and privacy-friendly dashboard</a>.
+Do check out your <a href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}?__team=#{@site_team.identifier}"}>easy to use, fast-loading and privacy-friendly dashboard</a>.
 <br /><br />
 Something looks off? Take a look at our <a href="https://plausible.io/docs/troubleshoot-integration">installation troubleshooting guide</a>.
 <br /><br />

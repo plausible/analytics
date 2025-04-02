@@ -67,7 +67,7 @@ defmodule Plausible.Billing.SiteLocker do
 
     for recipient <- team.owners ++ team.billing_members do
       recipient
-      |> PlausibleWeb.Email.dashboard_locked(usage, suggested_plan)
+      |> PlausibleWeb.Email.dashboard_locked(team, usage, suggested_plan)
       |> Plausible.Mailer.send()
     end
   end

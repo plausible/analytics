@@ -15,7 +15,11 @@ defmodule Plausible.Workers.NotifyExportedAnalytics do
     } = args
 
     user = Plausible.Repo.get_by!(Plausible.Auth.User, email: email_to)
-    site = Plausible.Repo.get!(Plausible.Site, site_id)
+
+    site =
+      Plausible.Site
+      |> Plausible.Repo.get!(site_id)
+      |> Plausible.Repo.preload(:team)
 
     email =
       case status do
