@@ -26,7 +26,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                     |> Enum.map(&File.read!/1)
                     |> Enum.map(&Jason.decode!/1)
 
-  on_ce? do
+  on_ce do
     @moduletag :capture_log
   end
 
