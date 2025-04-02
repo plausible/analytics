@@ -141,7 +141,7 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
 
-    if opts[:preload_funnels?] == true and ee?() do
+    if ee?() and opts[:preload_funnels?] == true do
       from(g in query,
         left_join: assoc(g, :funnels),
         group_by: g.id,

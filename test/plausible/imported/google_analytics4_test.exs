@@ -1,5 +1,6 @@
 defmodule Plausible.Imported.GoogleAnalytics4Test do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible
   use Oban.Testing, repo: Plausible.Repo
 
   import Mox
@@ -25,7 +26,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                     |> Enum.map(&File.read!/1)
                     |> Enum.map(&Jason.decode!/1)
 
-  if Plausible.ce?() do
+  on_ce do
     @moduletag :capture_log
   end
 

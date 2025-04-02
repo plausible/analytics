@@ -237,8 +237,8 @@ defmodule Plausible.Imported.CSVImporter do
   defp date_range([], first, last), do: Date.range(first, last)
 
   @spec parse_date!(String.t()) :: Date.t()
-  defp parse_date!(date) do
-    date |> Timex.parse!("{YYYY}{0M}{0D}") |> NaiveDateTime.to_date()
+  defp parse_date!(<<yyyy::bytes-4, mm::bytes-2, dd::bytes-2>>) do
+    Date.from_iso8601!("#{yyyy}-#{mm}-#{dd}")
   end
 
   @doc """
