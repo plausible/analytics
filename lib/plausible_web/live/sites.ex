@@ -711,15 +711,16 @@ defmodule PlausibleWeb.Live.Sites do
 
   on_ee do
     defp check_limits(%{role: :owner, site: site} = invitation, team) do
-        case ensure_can_take_ownership(site, team) do
-          :ok -> check_features(invitation, team)
+      case ensure_can_take_ownership(site, team) do
+        :ok ->
+          check_features(invitation, team)
 
-          {:error, :no_plan} ->
-            %{invitation: invitation, no_plan: true}
+        {:error, :no_plan} ->
+          %{invitation: invitation, no_plan: true}
 
-          {:error, {:over_plan_limits, limits}} ->
-            limits = PlausibleWeb.TextHelpers.pretty_list(limits)
-            %{invitation: invitation, exceeded_limits: limits}
+        {:error, {:over_plan_limits, limits}} ->
+          limits = PlausibleWeb.TextHelpers.pretty_list(limits)
+          %{invitation: invitation, exceeded_limits: limits}
       end
     end
   end
@@ -729,31 +730,31 @@ defmodule PlausibleWeb.Live.Sites do
   defdelegate ensure_can_take_ownership(site, team), to: Teams.Invitations
 
   def check_features(%{role: :owner, site: site} = invitation, team) do
-      case check_feature_access(site, team) do
-        :ok ->
-          %{invitation: invitation}
+    case check_feature_access(site, team) do
+      :ok ->
+        %{invitation: invitation}
 
-        {:error, {:missing_features, features}} ->
-          feature_names =
-            features
-            |> Enum.map(& &1.display_name())
-            |> PlausibleWeb.TextHelpers.pretty_list()
+      {:error, {:missing_features, features}} ->
+        feature_names =
+          features
+          |> Enum.map(& &1.display_name())
+          |> PlausibleWeb.TextHelpers.pretty_list()
 
-          %{invitation: invitation, missing_features: feature_names}
+        %{invitation: invitation, missing_features: feature_names}
     end
   end
 
-    defp check_feature_access(site, new_team) do
-      missing_features =
-        Teams.Billing.features_usage(nil, [site.id])
-        |> Enum.filter(&(&1.check_availability(new_team) != :ok))
+  defp check_feature_access(site, new_team) do
+    missing_features =
+      Teams.Billing.features_usage(nil, [site.id])
+      |> Enum.filter(&(&1.check_availability(new_team) != :ok))
 
-      if missing_features == [] do
-        :ok
-      else
-        {:error, {:missing_features, missing_features}}
-      end
+    if missing_features == [] do
+      :ok
+    else
+      {:error, {:missing_features, missing_features}}
     end
+  end
 
   defp set_filter_text(socket, filter_text) do
     uri = socket.assigns.uri

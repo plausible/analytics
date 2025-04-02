@@ -22,23 +22,23 @@ defmodule Plausible do
 
   # :erlang.phash2(1, 1) == 0 tricks dialyzer as per:
   # https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/lib/gen_server.ex#L771-L778
-  
-  defmacro disguised(term) do
+  # and also tricks elixir 1.18 type checker
+
+  defmacro always(term) do
     quote do
       :erlang.phash2(1, 1) == 0 && unquote(term)
     end
   end
 
-
   defmacro ee? do
     quote do
-      disguised(unquote(Mix.env() not in @ce_builds))
+      always(unquote(Mix.env() not in @ce_builds))
     end
   end
 
   defmacro ce? do
     quote do
-      disguised(unquote(Mix.env() in @ce_builds))
+      always(unquote(Mix.env() in @ce_builds))
     end
   end
 
@@ -67,10 +67,10 @@ defmodule Plausible do
   end
 
   def product_name do
-    if ce?() do
-      "Plausible CE"
-    else
+    if ee?() do
       "Plausible Analytics"
+    else
+      "Plausible CE"
     end
   end
 end

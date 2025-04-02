@@ -134,8 +134,6 @@ defmodule Plausible.Goals do
   end
 
   def for_site_query(site, opts \\ []) do
-    Keyword.validate!(opts, [:preload_funnels?])
-
     query =
       from g in Goal,
         inner_join: assoc(g, :site),
@@ -143,16 +141,12 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
 
-    on_ee do
-      if opts[:preload_funnels?] == true do
-        from(g in query,
-          left_join: assoc(g, :funnels),
-          group_by: g.id,
-          preload: [:funnels]
-        )
-      else
-        query
-      end
+    if ee?() and opts[:preload_funnels?] == true do
+      from(g in query,
+        left_join: assoc(g, :funnels),
+        group_by: g.id,
+        preload: [:funnels]
+      )
     else
       query
     end
