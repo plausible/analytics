@@ -360,7 +360,14 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def ownership_transfer_accepted(new_owner_email, inviter_email, team, site) do
+  def ownership_transfer_accepted(
+        new_owner_email,
+        inviter_email,
+        team,
+        site,
+        initiator_as_editor?,
+        initiator_as_guest?
+      ) do
     priority_email()
     |> to(inviter_email)
     |> tag("ownership-transfer-accepted")
@@ -370,7 +377,9 @@ defmodule PlausibleWeb.Email do
     |> render("ownership_transfer_accepted.html",
       new_owner_email: new_owner_email,
       team: team,
-      site: site
+      site: site,
+      initiator_as_editor?: initiator_as_editor?,
+      initiator_as_guest?: initiator_as_guest?
     )
   end
 

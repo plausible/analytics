@@ -461,11 +461,19 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def send_transfer_accepted_email(site_transfer, team) do
+    initiator_as_editor? =
+      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) == {:ok, :editor}
+
+    initiator_as_guest? =
+      Teams.Memberships.team_role(team, site_transfer.initiator) == {:ok, :guest}
+
     PlausibleWeb.Email.ownership_transfer_accepted(
       site_transfer.email,
       site_transfer.initiator.email,
       team,
-      site_transfer.site
+      site_transfer.site,
+      initiator_as_editor?,
+      initiator_as_guest?
     )
     |> Plausible.Mailer.send()
   end
