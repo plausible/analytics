@@ -478,6 +478,15 @@ defmodule Plausible.Teams.Invitations do
     |> Plausible.Mailer.send()
   end
 
+  def send_team_changed_email(site, user, team) do
+    owners = Repo.preload(team, :owners).owners
+
+    for owner <- owners do
+      PlausibleWeb.Email.team_changed(owner.email, user, team, site)
+      |> Plausible.Mailer.send()
+    end
+  end
+
   @doc false
   def check_invitation_permissions(%Teams.Team{} = team, inviter, invitation_role, opts) do
     check_permissions? = Keyword.get(opts, :check_permissions, true)

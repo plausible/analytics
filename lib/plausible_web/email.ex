@@ -383,6 +383,20 @@ defmodule PlausibleWeb.Email do
     )
   end
 
+  def team_changed(owner_email, user, team, site) do
+    priority_email()
+    |> to(owner_email)
+    |> tag("team-changed")
+    |> subject(
+      "[#{Plausible.product_name()}] #{user.email} has transferred #{site.domain} to \"#{team.name}\""
+    )
+    |> render("team_changed.html",
+      user: user,
+      team: team,
+      site: site
+    )
+  end
+
   def ownership_transfer_rejected(site_transfer) do
     priority_email()
     |> to(site_transfer.initiator.email)
