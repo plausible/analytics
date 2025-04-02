@@ -1,4 +1,4 @@
-<%= use Plausible %>
+<% use Plausible %>
 <mjml>
   <mj-head>
     <mj-attributes>
