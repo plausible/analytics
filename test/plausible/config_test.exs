@@ -606,6 +606,10 @@ defmodule Plausible.ConfigTest do
     end
   end
 
+  describe "session_transfer_dir" do
+    test "it works"
+  end
+
   defp runtime_config(env) do
     put_system_env_undo(env)
     Config.Reader.read!("config/runtime.exs", env: :prod)

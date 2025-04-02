@@ -23,8 +23,7 @@ defmodule Plausible.Session.TransferTest do
 
     assert IO.inspect(System.convert_time_unit(duration, :native, :millisecond),
              label: "transfer duration ms"
-           ) <
-             :timer.seconds(1)
+           ) < :timer.seconds(1)
 
     assert all_sessions_sorted(new) == all_sessions_sorted(old)
   end
