@@ -3353,7 +3353,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "returns exit_rate metric with a visit:exit_page filter", %{conn: conn, site: site} do
+    test "returns exit_rate metric with a visit:exit_page dimension", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, pathname: "/exit", timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, user_id: 1, pathname: "/some-page", timestamp: ~N[2021-01-01 00:10:00]),
@@ -3361,16 +3361,57 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         build(:pageview, user_id: 2, pathname: "/exit", timestamp: ~N[2021-01-01 00:10:00])
       ])
 
-      conn =
-        post(conn, "/api/v2/query-internal-test", %{
-          "site_id" => site.domain,
-          "metrics" => ["exit_rate", "visits"],
-          "date_range" => "all",
-          "dimensions" => ["visit:exit_page"],
-          "order_by" => [["visits", "asc"]]
-        })
+      query = %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate", "visits"],
+        "date_range" => "all",
+        "dimensions" => ["visit:exit_page"],
+        "order_by" => [["exit_rate", "desc"]]
+      }
 
-      %{"results" => results} = json_response(conn, 200)
+      conn_first_page =
+        post(
+          conn,
+          "/api/v2/query-internal-test",
+          Map.merge(query, %{
+            "pagination" => %{"limit" => 1}
+          })
+        )
+
+      %{"results" => results} = json_response(conn_first_page, 200)
+
+      assert results == [
+               %{"dimensions" => ["/some-page"], "metrics" => [100, 1]}
+               # %{"dimensions" => ["/exit"], "metrics" => [50, 1]}
+             ]
+
+      conn_second_page =
+        post(
+          conn,
+          "/api/v2/query-internal-test",
+          Map.merge(query, %{
+            "pagination" => %{"limit" => 1, "offset" => 1}
+          })
+        )
+
+      %{"results" => results} = json_response(conn_second_page, 200)
+
+      assert results == [
+               # %{"dimensions" => ["/some-page"], "metrics" => [100, 1]}
+               %{"dimensions" => ["/exit"], "metrics" => [50, 1]}
+             ]
+
+      conn_all_items_ascending =
+        post(
+          conn,
+          "/api/v2/query-internal-test",
+          Map.merge(query, %{
+            "order_by" => [["exit_rate", "asc"]],
+            "pagination" => %{"limit" => 100}
+          })
+        )
+
+      %{"results" => results} = json_response(conn_all_items_ascending, 200)
 
       assert results == [
                %{"dimensions" => ["/exit"], "metrics" => [50, 1]},
