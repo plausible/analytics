@@ -59,7 +59,7 @@ defmodule Plausible.Stats.Time do
         :months
       )
 
-    Enum.map(n_buckets..0, fn shift ->
+    Enum.map(n_buckets..0//-1, fn shift ->
       date_range.last
       |> Date.beginning_of_month()
       |> Date.shift(month: -shift)

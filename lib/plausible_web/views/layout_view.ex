@@ -111,7 +111,9 @@ defmodule PlausibleWeb.LayoutView do
           if(not Teams.setup?(current_team),
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
-          %{key: "API Keys", value: "api-keys", icon: :key},
+          if(not Teams.setup?(current_team),
+            do: %{key: "API Keys", value: "api-keys", icon: :key}
+          ),
           %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
         ]
         |> Enum.reject(&is_nil/1)
@@ -127,6 +129,7 @@ defmodule PlausibleWeb.LayoutView do
           if(current_team_role in [:owner, :admin, :billing],
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
+          %{key: "API Keys", value: "api-keys", icon: :key},
           if(current_team_role == :owner,
             do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
           )

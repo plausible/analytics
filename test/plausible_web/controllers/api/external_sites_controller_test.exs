@@ -74,6 +74,35 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  }
                }
       end
+
+      test "shows only one team for team scoped key", %{conn: conn, user: user} do
+        user |> subscribe_to_business_plan()
+
+        personal_team = team_of(user)
+
+        another_team = new_site().team |> Plausible.Teams.complete_setup()
+        add_member(another_team, user: user, role: :admin)
+
+        api_key = insert(:api_key, user: user, team: personal_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn = get(conn, "/api/v1/sites/teams")
+
+        assert json_response(conn, 200) == %{
+                 "teams" => [
+                   %{
+                     "id" => personal_team.identifier,
+                     "name" => "My Personal Sites",
+                     "api_available" => true
+                   }
+                 ],
+                 "meta" => %{
+                   "before" => nil,
+                   "after" => nil,
+                   "limit" => 100
+                 }
+               }
+      end
     end
 
     describe "POST /api/v1/sites" do
@@ -127,6 +156,31 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                }
 
         assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == team.id
+      end
+
+      test "creates under a particular team when team-scoped key used", %{conn: conn, user: user} do
+        personal_team = user |> subscribe_to_business_plan() |> team_of()
+
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn =
+          post(conn, "/api/v1/sites", %{
+            # is ignored
+            "team_id" => personal_team.identifier,
+            "domain" => "some-site.domain",
+            "timezone" => "Europe/Tallinn"
+          })
+
+        assert json_response(conn, 200) == %{
+                 "domain" => "some-site.domain",
+                 "timezone" => "Europe/Tallinn"
+               }
+
+        assert Repo.get_by(Plausible.Site, domain: "some-site.domain").team_id == another_team.id
       end
 
       test "timezone is validated", %{conn: conn} do
@@ -244,6 +298,21 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 404) == %{"error" => "Site could not be found"}
       end
 
+      test "cannot delete if team not matching team-scoped API key", %{
+        conn: conn,
+        user: user,
+        site: site
+      } do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn = delete(conn, "/api/v1/sites/" <> site.domain)
+
+        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+      end
+
       test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
         api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 
@@ -310,6 +379,22 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           })
 
         assert %{"url" => ^url} = json_response(conn, 200)
+      end
+
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn =
+          put(conn, "/api/v1/sites/shared-links", %{
+            site_id: site.domain,
+            name: "WordPress"
+          })
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
       end
 
       test "returns 400 when site id missing", %{conn: conn} do
@@ -459,6 +544,23 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert %{"id" => ^goal_id} = json_response(conn, 200)
       end
 
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Signup"
+          })
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
+      end
+
       test "returns 400 when site id missing", %{conn: conn} do
         conn =
           put(conn, "/api/v1/sites/goals", %{
@@ -580,6 +682,30 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 200) == %{"deleted" => true}
       end
 
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
+        conn1 =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Signup"
+          })
+
+        %{"id" => goal_id} = json_response(conn1, 200)
+
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn =
+          delete(conn, "/api/v1/sites/goals/#{goal_id}", %{
+            site_id: site.domain
+          })
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
+      end
+
       test "is 404 when goal cannot be found", %{conn: conn, site: site} do
         conn =
           delete(conn, "/api/v1/sites/goals/0", %{
@@ -686,6 +812,32 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert_matches %{
                          "sites" => [
                            %{"domain" => ^other_team_site.domain}
+                         ]
+                       } = json_response(conn, 200)
+      end
+
+      test "implicitly scopes to a team for a team-scoped key", %{
+        conn: conn,
+        user: user
+      } do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        site = new_site(team: another_team)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        _owned_site = new_site(owner: user)
+        other_site = new_site()
+        add_guest(other_site, user: user, role: :viewer)
+        other_team_site = new_site()
+        add_member(other_team_site.team, user: user, role: :viewer)
+
+        # `team_id` paramaeter is ignored
+        conn = get(conn, "/api/v1/sites?team_id=" <> other_team_site.team.identifier)
+
+        assert_matches %{
+                         "sites" => [
+                           %{"domain" => ^site.domain}
                          ]
                        } = json_response(conn, 200)
       end
@@ -827,6 +979,22 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert is_binary(before_cursor)
       end
+
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user} do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        site = new_site(owner: user)
+
+        _guest = add_guest(site, site: site, role: :editor)
+
+        conn = get(conn, "/api/v1/sites/guests?site_id=#{site.domain}")
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
+      end
     end
 
     describe "PUT /api/v1/sites/guests" do
@@ -900,6 +1068,24 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert_no_emails_delivered()
       end
 
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn =
+          put(conn, "/api/v1/sites/guests?site_id=#{site.domain}", %{
+            "role" => "viewer",
+            "email" => "test@example.com"
+          })
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
+      end
+
       test "fails for unknown role", %{conn: conn, user: user} do
         site = new_site(owner: user)
 
@@ -970,6 +1156,20 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn2, 200) == %{"deleted" => true}
       end
 
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user} do
+        site = new_site(owner: user)
+
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn = delete(conn, "/api/v1/sites/guests/test@example.com?site_id=#{site.domain}")
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
+      end
+
       test "won't delete non-guest membership", %{conn: conn, user: user} do
         site = new_site(owner: user)
 
@@ -1029,6 +1229,18 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "timezone" => site.timezone,
                  "custom_properties" => []
                }
+      end
+
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        conn = get(conn, "/api/v1/sites/" <> site.domain)
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
       end
 
       test "is 404 when site cannot be found", %{conn: conn} do
@@ -1164,6 +1376,20 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert %{"goals" => [%{"id" => ^goal_id}]} = json_response(conn, 200)
       end
 
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        _goal = insert(:goal, %{site: site, page_path: "/login"})
+
+        conn = get(conn, "/api/v1/sites/goals?site_id=" <> site.domain)
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
+      end
+
       test "returns error when `site_id` parameter is missing", %{conn: conn} do
         conn = get(conn, "/api/v1/sites/goals")
 
@@ -1212,6 +1438,24 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert site.domain == "new.example.com"
         assert site.domain_changed_from == old_domain
+      end
+
+      test "fails when team does not match team-scoped key", %{conn: conn, user: user, site: site} do
+        another_team = new_user() |> subscribe_to_business_plan() |> team_of()
+        add_member(another_team, user: user, role: :admin)
+        api_key = insert(:api_key, user: user, team: another_team, scopes: ["sites:provision:*"])
+        conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
+
+        old_domain = site.domain
+        assert old_domain != "new.example.com"
+
+        conn =
+          put(conn, "/api/v1/sites/#{old_domain}", %{
+            "domain" => "new.example.com"
+          })
+
+        res = json_response(conn, 404)
+        assert res["error"] == "Site could not be found"
       end
 
       test "can't make a no-op change", %{conn: conn, site: site} do

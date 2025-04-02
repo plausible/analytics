@@ -552,11 +552,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert owner_row =~ "Owner"
 
       assert editor_row =~ editor.email
-      assert editor_row_button == "Admin"
+      assert editor_row_button == "Guest Admin"
       refute editor_row =~ "Owner"
 
       assert viewer_row =~ viewer.email
-      assert viewer_row_button == "Viewer"
+      assert viewer_row_button == "Guest Viewer"
       refute viewer_row =~ "Owner"
     end
 

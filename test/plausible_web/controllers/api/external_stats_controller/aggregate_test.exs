@@ -444,7 +444,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "conversion_rate" => %{
                  "value" => 50.0,
                  "change" => 16.7,
-                 "comparison_value" => 33.3
+                 "comparison_value" => 33.33
                }
              }
     end

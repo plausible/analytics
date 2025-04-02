@@ -109,6 +109,83 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
 
     @tag :ee_only
+    test "renders upgrade nag when current team has a site and trial expired", %{
+      conn: conn,
+      user: user
+    } do
+      team = new_site(owner: user).team
+
+      team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), -1))
+      |> Repo.update!()
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert html =~ "Payment required"
+    end
+
+    @tag :ee_only
+    test "renders upgrade nag when there's a pending transfer", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, personal_team} = Plausible.Teams.get_or_create(user)
+
+      another_user = new_user()
+      site = new_site(owner: another_user)
+
+      personal_team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), -1))
+      |> Repo.update!()
+
+      invite_transfer(site, user, inviter: another_user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert html =~ "Payment required"
+    end
+
+    @tag :ee_only
+    test "does not render upgrade nag when there's no current team", %{conn: conn, user: user} do
+      team = new_site().team |> Plausible.Teams.complete_setup()
+      add_member(team, user: user, role: :owner)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute html =~ "Payment required"
+    end
+
+    @tag :ee_only
+    test "does not render upgrade nag when current team has no sites and user has no pending transfers",
+         %{conn: conn, user: user} do
+      {:ok, _personal_team} = Plausible.Teams.get_or_create(user)
+
+      team = new_site().team |> Plausible.Teams.complete_setup()
+      add_member(team, user: user, role: :owner)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute html =~ "Payment required"
+    end
+
+    @tag :ee_only
+    test "does not render upgrade nag if current team does not have any sites yet and user has no pending transfers",
+         %{conn: conn, user: user} do
+      {:ok, personal_team} = Plausible.Teams.get_or_create(user)
+
+      personal_team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), -1))
+      |> Repo.update!()
+
+      team = new_site().team |> Plausible.Teams.complete_setup()
+      add_member(team, user: user, role: :owner)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute html =~ "Payment required"
+    end
+
+    @tag :ee_only
     test "renders ownership transfer invitation for a case with exceeded limits", %{
       conn: conn,
       user: user

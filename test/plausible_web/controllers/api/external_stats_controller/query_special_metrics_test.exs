@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
       })
 
     assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/en/register"], "metrics" => [2, 2, 66.7]},
+             %{"dimensions" => ["/en/register"], "metrics" => [2, 2, 66.67]},
              %{"dimensions" => ["/it/register"], "metrics" => [1, 2, 50.0]}
            ]
   end
@@ -159,7 +159,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
     %{"results" => results} = json_response(conn, 200)
 
     assert results == [
-             %{"dimensions" => ["Mobile"], "metrics" => [2, 2, 66.7]},
+             %{"dimensions" => ["Mobile"], "metrics" => [2, 2, 66.67]},
              %{"dimensions" => ["Desktop"], "metrics" => [1, 2, 50]}
            ]
   end

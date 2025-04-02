@@ -39,7 +39,8 @@ defmodule PlausibleWeb.Live.Sites do
                                             current_user: current_user,
                                             current_team: current_team
                                           } ->
-        Teams.Users.owns_sites?(current_user, include_pending?: true) &&
+        current_team &&
+          Teams.Users.owns_sites?(current_user, include_pending?: true, only_team: current_team) &&
           Teams.Billing.check_needs_to_upgrade(current_team)
       end)
 
@@ -708,17 +709,19 @@ defmodule PlausibleWeb.Live.Sites do
     |> Enum.map(&check_limits(&1, team))
   end
 
-  defp check_limits(%{role: :owner, site: site} = invitation, team) do
-    case ensure_can_take_ownership(site, team) do
-      :ok ->
-        check_features(invitation, team)
+  on_ee do
+    defp check_limits(%{role: :owner, site: site} = invitation, team) do
+      case ensure_can_take_ownership(site, team) do
+        :ok ->
+          check_features(invitation, team)
 
-      {:error, :no_plan} ->
-        %{invitation: invitation, no_plan: true}
+        {:error, :no_plan} ->
+          %{invitation: invitation, no_plan: true}
 
-      {:error, {:over_plan_limits, limits}} ->
-        limits = PlausibleWeb.TextHelpers.pretty_list(limits)
-        %{invitation: invitation, exceeded_limits: limits}
+        {:error, {:over_plan_limits, limits}} ->
+          limits = PlausibleWeb.TextHelpers.pretty_list(limits)
+          %{invitation: invitation, exceeded_limits: limits}
+      end
     end
   end
 
@@ -741,21 +744,15 @@ defmodule PlausibleWeb.Live.Sites do
     end
   end
 
-  on_ee do
-    defp check_feature_access(site, new_team) do
-      missing_features =
-        Teams.Billing.features_usage(nil, [site.id])
-        |> Enum.filter(&(&1.check_availability(new_team) != :ok))
+  defp check_feature_access(site, new_team) do
+    missing_features =
+      Teams.Billing.features_usage(nil, [site.id])
+      |> Enum.filter(&(&1.check_availability(new_team) != :ok))
 
-      if missing_features == [] do
-        :ok
-      else
-        {:error, {:missing_features, missing_features}}
-      end
-    end
-  else
-    defp check_feature_access(_site, _new_team) do
+    if missing_features == [] do
       :ok
+    else
+      {:error, {:missing_features, missing_features}}
     end
   end
 

@@ -111,8 +111,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
     socket =
       case Repo.update(changeset) do
-        {:ok, _team} ->
-          assign(socket, team_name_form: to_form(changeset))
+        {:ok, team} ->
+          assign(socket, team_name_form: to_form(changeset), current_team: team)
 
         {:error, changeset} ->
           assign(socket, team_name_form: to_form(changeset))

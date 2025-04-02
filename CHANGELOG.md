@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Add top 3 pages into the traffic spike email
 - Two new shorthand time periods `28d` and `90d` available on both dashboard and in public API
 - Average scroll depth metric
 - Scroll Depth goals
@@ -18,6 +19,9 @@ All notable changes to this project will be documented in this file.
 - Time on page metric is now sortable in reports
 - Plausible tracker script now reports maximum scroll depth reached and time engaged with the site in an `engagement` event. These are reported as `sd` and `e` integer parameters to /api/event endpoint respectively. If you're using a custom proxy for plausible script, please ensure that these parameters are being passed forward.
 - Plausible tracker script now reports the version of the script in the `v` parameter sent with each request.
+- Add support for creating and managing teams owning multiple sites
+- Introduce "billing" team role for users
+- Introduce "editor" role with permissions greater than "viewer" but lesser than "admin"
 
 ### Removed
 
@@ -26,6 +30,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Increase decimal precision of the "Conversion rate" metric from 1 to 2 (e.g. 16.7 -> 16.67)
 - The "Last 30 days" period is now "Last 28 days" on the dashboard and also the new default. Keyboard shortcut `T` still works for last 30 days.
 - Last `7d` and `30d` periods do not include today anymore
 - Filters appear in the search bar as ?f=is,page,/docs,/blog&f=... instead of ?filters=((is,page,(/docs,/blog)),...) for Plausible links sent on various platforms to work reliably.
@@ -36,9 +41,11 @@ All notable changes to this project will be documented in this file.
 - Changed top bar filter menu and how applied filters wrap
 - Main graph now shows revenue with relevant currency symbol when hovering a data point
 - Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
+- Make Stats and Sites API keys scoped to teams they are created in
 
 ### Fixed
 
+- Fix fetching favicons from DuckDuckGo when the domain includes a pathname
 - Fix `visitors.csv` (in dashboard CSV export) vs dashboard main graph reporting different results for `visitors` and `visits` with a `time:minute` interval.
 - The tracker script now sends pageviews when a page gets loaded from bfcache
 - Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal

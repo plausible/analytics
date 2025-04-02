@@ -1,5 +1,6 @@
 defmodule Plausible.ReleaseTest do
   use Plausible.DataCase, async: true
+  use Plausible
   alias Plausible.{Release, Auth}
   import ExUnit.CaptureIO
 
@@ -140,7 +141,7 @@ defmodule Plausible.ReleaseTest do
       pending_streaks = capture_io(fn -> Release.pending_streaks([PostgreSQL, ClickHouse]) end)
 
       pending_streaks =
-        if Plausible.ce?() do
+        if ce?() do
           # just to make the tests pass in CI
           String.replace(pending_streaks, "_build/ce_test/lib", "_build/test/lib")
         else
