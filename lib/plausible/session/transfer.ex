@@ -8,12 +8,14 @@ defmodule Plausible.Session.Transfer do
   - The "alive" process waits on shutdown for at least one taker, for 15 seconds
   """
 
+  @behaviour Supervisor
+
   require Logger
   alias Plausible.Session.Transfer.{TinySock, Alive}
 
   def telemetry_event, do: [:plausible, :sessions, :transfer]
 
-  def done?(transfer \\ __MODULE__) do
+  def attempted?(transfer \\ __MODULE__) do
     not taker_alive?(transfer)
   end
 
@@ -31,77 +33,44 @@ defmodule Plausible.Session.Transfer do
       id: __MODULE__,
       start: {__MODULE__, :start_link, [opts]},
       type: :supervisor,
-      shutdown: :timer.seconds(20),
       restart: :temporary
     }
   end
 
   @doc false
   def start_link(opts) do
-    base_path = Keyword.fetch!(opts, :base_path)
     name = Keyword.get(opts, :name, __MODULE__)
-    maybe_start_link(name, base_path)
+    base_path = Keyword.fetch!(opts, :base_path)
+    Supervisor.start_link(__MODULE__, base_path, name: name)
   end
 
-  defp maybe_start_link(name, base_path) do
-    cond do
-      is_nil(base_path) ->
-        :ignore
+  @impl true
+  def init(nil), do: :ignore
 
-      :ok == TinySock.write_dir(base_path) ->
-        do_start_link(name, base_path)
-
-      true ->
-        Logger.error("#{__MODULE__} failed to create directory #{inspect(base_path)}")
-        :ignore
-    end
-  end
-
-  defp do_start_link(name, base_path) do
-    times_taken = :counters.new(1, [])
-    times_given = :counters.new(1, [])
+  def init(base_path) do
+    File.mkdir_p!(base_path)
 
     taker =
-      {Task,
-       fn ->
-         started = System.monotonic_time()
-         take_all_ets_everywhere(base_path)
-         duration = System.monotonic_time() - started
-         :counters.add(times_taken, 1, 1)
-         :telemetry.execute(telemetry_event(), %{duration: duration})
-       end}
+      Supervisor.child_spec(
+        {Task, fn -> take_all_ets_everywhere(base_path) end},
+        id: :taker
+      )
+
+    given_counter = :counters.new(1, [])
+    parent = self()
 
     giver =
       {TinySock,
        base_path: base_path,
-       handler: fn
-         {:list, session_version} ->
-           if session_version == session_version() and :counters.get(times_taken, 1) > 0 do
-             tabs()
-           else
-             []
-           end
-
-         {:send, tab} ->
-           :ets.tab2list(tab)
-
-         :took ->
-           :counters.add(times_given, 1, 1)
-       end}
+       handler: fn message -> giver_handler(message, parent, given_counter) end}
 
     alive =
-      {Alive,
-       _until = fn ->
-         :counters.get(times_given, 1) > 0
-       end}
+      Supervisor.child_spec(
+        {Alive, _until = fn -> :counters.get(given_counter, 1) > 0 end},
+        shutdown: :timer.seconds(15)
+      )
 
-    children = [
-      Supervisor.child_spec(taker, id: :taker),
-      giver,
-      Supervisor.child_spec(alive, shutdown: :timer.seconds(15))
-    ]
-
-    Supervisor.start_link(children, name: name, strategy: :one_for_one)
+    Supervisor.init([taker, giver, alive], strategy: :one_for_one)
   end
 
   defp session_version do
@@ -113,18 +82,33 @@ defmodule Plausible.Session.Transfer do
     ]
   end
 
-  defp tabs() do
-    Plausible.Cache.Adapter.get_names(:sessions)
-    |> Enum.map(&ConCache.ets/1)
-    |> Enum.filter(fn tab -> :ets.info(tab, :size) > 0 end)
+  defp giver_handler(message, parent, given_counter) do
+    case message do
+      {:list, session_version} ->
+        if session_version == session_version() and attempted?(parent) do
+          Plausible.Cache.Adapter.get_names(:sessions)
+          |> Enum.map(&ConCache.ets/1)
+          |> Enum.filter(fn tab -> :ets.info(tab, :size) > 0 end)
+        else
+          []
+        end
+
+      {:send, tab} ->
+        :ets.tab2list(tab)
+
+      :took ->
+        :counters.add(given_counter, 1, 1)
+    end
   end
 
   defp take_all_ets_everywhere(base_path) do
-    with {:ok, socks} <- TinySock.list(base_path) do
-      socks
-      |> Enum.sort_by(&file_stat_ctime/1, :asc)
-      |> Enum.each(&take_all_ets/1)
-    end
+    started = System.monotonic_time()
+
+    TinySock.list!(base_path)
+    |> Enum.sort_by(&file_stat_ctime/1, :asc)
+    |> Enum.each(&take_all_ets/1)
+
+    :telemetry.execute(telemetry_event(), %{duration: System.monotonic_time() - started})
   end
 
   defp file_stat_ctime(path) do

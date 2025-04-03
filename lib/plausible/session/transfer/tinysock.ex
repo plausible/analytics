@@ -9,42 +9,10 @@ defmodule Plausible.Session.Transfer.TinySock do
   @tag_data "tinysock"
   @tag_size byte_size(@tag_data)
 
-  @spec listen_socket(GenServer.server()) :: :gen_tcp.socket()
-  def listen_socket(server), do: Map.fetch!(:sys.get_state(server), :socket)
-
-  @spec listen_socket_path(GenServer.server()) :: Path.t()
-  def listen_socket_path(server) do
-    {:ok, {:local, path}} = :inet.sockname(listen_socket(server))
-    path
-  end
-
-  @spec write_dir(Path.t()) :: :ok | {:error, File.posix()}
-  def write_dir(dir) do
-    case File.stat(dir) do
-      {:ok, stat} ->
-        dir? = stat.type == :directory
-        write? = stat.access in [:read_write, :write]
-
-        cond do
-          dir? and write? -> :ok
-          dir? -> {:error, :eacces}
-          true -> {:error, :eexist}
-        end
-
-      {:error, _} ->
-        File.mkdir_p(dir)
-    end
-  end
-
-  @spec list(Path.t()) :: {:ok, [Path.t()]} | {:error, File.posix()}
-  def list(base_path) do
-    with {:ok, names} <- File.ls(base_path) do
-      sock_paths =
-        for @tag_data <> _rand = name <- names do
-          Path.join(base_path, name)
-        end
-
-      {:ok, sock_paths}
+  @spec list!(Path.t()) :: [Path.t()]
+  def list!(base_path) do
+    for @tag_data <> _rand = name <- File.ls!(base_path) do
+      Path.join(base_path, name)
     end
   end
 
@@ -70,16 +38,14 @@ defmodule Plausible.Session.Transfer.TinySock do
 
   @impl true
   def init({base_path, handler}) do
-    with :ok <- write_dir(base_path), {:ok, socket} <- sock_listen_or_retry(base_path) do
-      Process.flag(:trap_exit, true)
-      state = %{socket: socket, handler: handler}
-      for _ <- 1..10, do: spawn_acceptor(state)
-      {:ok, state}
-    else
-      {:error, reason} ->
-        Logger.warning("tinysock failed to bind in #{inspect(base_path)}: #{inspect(reason)}")
-        :ignore
-    end
+    File.mkdir_p!(base_path)
+    socket = sock_listen_or_retry!(base_path)
+
+    Process.flag(:trap_exit, true)
+    state = %{socket: socket, handler: handler}
+    for _ <- 1..10, do: spawn_acceptor(state)
+
+    {:ok, state}
   end
 
   @impl true
@@ -141,14 +107,14 @@ defmodule Plausible.Session.Transfer.TinySock do
     sock_shut_and_close(socket)
   end
 
-  defp sock_listen_or_retry(base_path) do
+  defp sock_listen_or_retry!(base_path) do
     sock_name = @tag_data <> Base.url_encode64(:crypto.strong_rand_bytes(4), padding: false)
     sock_path = Path.join(base_path, sock_name)
 
     case :gen_tcp.listen(0, [{:ifaddr, {:local, sock_path}} | @listen_opts]) do
-      {:ok, socket} -> {:ok, socket}
-      {:error, :eaddrinuse} -> sock_listen_or_retry(base_path)
-      {:error, reason} -> {:error, reason}
+      {:ok, socket} -> socket
+      {:error, :eaddrinuse} -> sock_listen_or_retry!(base_path)
+      {:error, reason} -> raise File.Error, path: sock_path, reason: reason, action: "listen"
     end
   end
 

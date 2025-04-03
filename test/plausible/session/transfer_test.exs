@@ -1,28 +1,21 @@
 defmodule Plausible.Session.TransferTest do
   use ExUnit.Case
   import Plausible.Factory
+  import Plausible.TestUtils, only: [tmp_dir: 0]
 
   @tag :slow
   test "it works" do
     tmp_dir = tmp_dir()
 
     old = start_another_plausible(tmp_dir)
+    await_transfer(old)
+
     Enum.each(1..250, fn _ -> process_event(old, build(:event, name: "pageview")) end)
 
     new = start_another_plausible(tmp_dir)
     await_transfer(new)
 
     assert all_sessions_sorted(new) == all_sessions_sorted(old)
-  end
-
-  # normal `@tag :tmp_dir` might not work if the path is too long for unix domain sockets (>104)
-  # this one makes paths a bit shorter like "/tmp/plausible-123/"
-  defp tmp_dir do
-    tmp_dir = Path.join(System.tmp_dir!(), "plausible-#{System.unique_integer([:positive])}")
-    if File.exists?(tmp_dir), do: File.rm_rf!(tmp_dir)
-    File.mkdir_p!(tmp_dir)
-    on_exit(fn -> File.rm_rf!(tmp_dir) end)
-    tmp_dir
   end
 
   defp start_another_plausible(tmp_dir) do
@@ -96,7 +89,7 @@ defmodule Plausible.Session.TransferTest do
     test = self()
 
     spawn_link(fn ->
-      await_loop(fn -> :peer.call(pid, Plausible.Session.Transfer, :took?, []) end)
+      await_loop(fn -> :peer.call(pid, Plausible.Session.Transfer, :attempted?, []) end)
       send(test, :took)
     end)
 

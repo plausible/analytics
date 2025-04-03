@@ -1,5 +1,6 @@
 defmodule Plausible.Session.Transfer.TinySockTest do
   use ExUnit.Case, async: true
+  import Plausible.TestUtils, only: [tmp_dir: 0]
 
   alias Plausible.Session.Transfer.TinySock
 
@@ -7,20 +8,10 @@ defmodule Plausible.Session.Transfer.TinySockTest do
     {:ok, tmp_dir: tmp_dir()}
   end
 
-  # normal `@tag :tmp_dir` might not work if the path is too long for unix domain sockets (>104)
-  # this one makes paths a bit shorter like "/tmp/plausible-1320/"
-  defp tmp_dir do
-    tmp_dir = Path.join(System.tmp_dir!(), "plausible-#{System.unique_integer([:positive])}")
-    if File.exists?(tmp_dir), do: File.rm_rf!(tmp_dir)
-    File.mkdir_p!(tmp_dir)
-    on_exit(fn -> File.rm_rf!(tmp_dir) end)
-    tmp_dir
-  end
-
   test "it works", %{tmp_dir: tmp_dir} do
     base_path = Path.join(tmp_dir, "sessions")
     server = start_supervised!({TinySock, base_path: base_path, handler: fn :ping -> :pong end})
-    sock_path = TinySock.listen_socket_path(server)
+    {:ok, sock_path} = listen_socket_path(server)
     assert String.starts_with?(sock_path, base_path)
     assert {:ok, [^sock_path]} = TinySock.list(base_path)
     assert {:ok, :pong} = TinySock.call(sock_path, :ping)
@@ -28,10 +19,7 @@ defmodule Plausible.Session.Transfer.TinySockTest do
 
   test "eaccess", %{tmp_dir: tmp_dir} do
     # create a directory with no write permissions
-    File.mkdir_p!(tmp_dir)
     File.chmod!(tmp_dir, 0o444)
-
-    assert {:error, :eacces} = TinySock.write_dir(tmp_dir)
 
     log =
       ExUnit.CaptureLog.capture_log(fn ->
@@ -68,11 +56,11 @@ defmodule Plausible.Session.Transfer.TinySockTest do
          end}
       )
 
-    sock = TinySock.listen_socket_path(server)
+    [sockpath] = TinySock.list(tmp_dir)
 
     log =
       ExUnit.CaptureLog.capture_log([async: true], fn ->
-        assert {:error, :closed} = TinySock.call(sock, :crash)
+        assert {:error, :closed} = TinySock.call(sockpath, :crash)
         :timer.sleep(100)
       end)
 
@@ -80,7 +68,7 @@ defmodule Plausible.Session.Transfer.TinySockTest do
     assert log =~ "terminating"
     assert log =~ "(RuntimeError) crash"
 
-    assert {:ok, :two} = TinySock.call(sock, :one)
+    assert {:ok, :two} = TinySock.call(sockpath, :one)
   end
 
   test "can echo ~100MB", %{tmp_dir: tmp_dir} do
@@ -93,9 +81,8 @@ defmodule Plausible.Session.Transfer.TinySockTest do
     # assert buffer >= recbuf
     # assert buffer >= sndbuf
 
-    sock = TinySock.listen_socket_path(server)
     data = Enum.map(1..100, fn _ -> :crypto.strong_rand_bytes(1024 * 1024) end)
-
-    assert {:ok, ^data} = TinySock.call(sock, {:echo, data})
+    [sockpath] = TinySock.list(tmp_dir)
+    assert {:ok, ^data} = TinySock.call(sockpath, {:echo, data})
   end
 end
