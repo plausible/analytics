@@ -6,7 +6,7 @@ defmodule Plausible.Segments do
   alias Plausible.Repo
   import Ecto.Query
 
-  @roles_with_personal_segments [:viewer, :editor, :admin, :owner, :super_admin]
+  @roles_with_personal_segments [:billing, :viewer, :editor, :admin, :owner, :super_admin]
   @roles_with_maybe_site_segments [:editor, :admin, :owner, :super_admin]
 
   @type error_not_enough_permissions() :: {:error, :not_enough_permissions}
@@ -17,25 +17,32 @@ defmodule Plausible.Segments do
 
   @max_segments 500
 
-  @spec index(pos_integer() | nil, Plausible.Site.t(), atom()) ::
-          {:ok, [Segment.t()]} | error_not_enough_permissions()
-  def index(user_id, %Plausible.Site{} = site, site_role) do
-    fields = [:id, :name, :type, :inserted_at, :updated_at, :owner_id]
-
-    site_segments_available? =
-      site_segments_available?(site)
+  def get_all_for_site(%Plausible.Site{} = site, site_role) do
+    fields = [:id, :name, :type, :inserted_at, :updated_at, :segment_data]
 
     cond do
-      site_role in [:public] and
-          site_segments_available? ->
-        {:ok, get_public_site_segments(site.id, fields -- [:owner_id])}
+      site_role in [:public] ->
+        {:ok,
+         Repo.all(
+           from(segment in Segment,
+             select: ^fields,
+             where: segment.site_id == ^site.id,
+             order_by: [desc: segment.updated_at, desc: segment.id]
+           )
+         )}
 
-      site_role in @roles_with_maybe_site_segments and
-          site_segments_available? ->
-        {:ok, get_segments(user_id, site.id, fields)}
+      site_role in @roles_with_personal_segments or site_role in @roles_with_maybe_site_segments ->
+        fields = fields ++ [:owner_id]
 
-      site_role in @roles_with_personal_segments ->
-        {:ok, get_segments(user_id, site.id, fields, only: :personal)}
+        {:ok,
+         Repo.all(
+           from(segment in Segment,
+             select: ^fields,
+             where: segment.site_id == ^site.id,
+             order_by: [desc: segment.updated_at, desc: segment.id],
+             preload: [:owner]
+           )
+         )}
 
       true ->
         {:error, :not_enough_permissions}
@@ -348,42 +355,6 @@ defmodule Plausible.Segments do
   def site_segments_available?(%Plausible.Site{} = site),
     do: Plausible.Billing.Feature.SiteSegments.check_availability(site.team) == :ok
 
-  @spec get_public_site_segments(pos_integer(), list(atom())) :: [Segment.t()]
-  defp get_public_site_segments(site_id, fields) do
-    Repo.all(
-      from(segment in Segment,
-        select: ^fields,
-        where: segment.site_id == ^site_id,
-        where: segment.type == :site,
-        order_by: [desc: segment.updated_at, desc: segment.id]
-      )
-    )
-  end
-
-  @spec get_segments(pos_integer(), pos_integer(), list(atom()), Keyword.t()) :: [Segment.t()]
-  defp get_segments(user_id, site_id, fields, opts \\ []) do
-    query =
-      from(segment in Segment,
-        select: ^fields,
-        where: segment.site_id == ^site_id,
-        order_by: [desc: segment.updated_at, desc: segment.id],
-        preload: [:owner]
-      )
-
-    query =
-      if Keyword.get(opts, :only) == :personal do
-        where(query, [segment], segment.type == :personal and segment.owner_id == ^user_id)
-      else
-        where(
-          query,
-          [segment],
-          segment.type == :site or (segment.type == :personal and segment.owner_id == ^user_id)
-        )
-      end
-
-    Repo.all(query)
-  end
-
   @doc """
   iex> serialize_first_error([{"name", {"should be at most %{count} byte(s)", [count: 255]}}])
   "name should be at most 255 byte(s)"
@@ -397,15 +368,6 @@ defmodule Plausible.Segments do
       end)
 
     "#{field} #{formatted_message}"
-  end
-
-  @doc """
-  This function enriches the segment with site, without actually querying the database for the site again.
-  Needed for Plausible.Segments.Segment custom JSON serialization.
-  """
-  @spec enrich_with_site(Segment.t(), Plausible.Site.t()) :: Segment.t()
-  def enrich_with_site(%Segment{} = segment, %Plausible.Site{} = site) do
-    Map.put(segment, :site, site)
   end
 
   @spec get_site_segments_usage_query(list(pos_integer())) :: Ecto.Query.t()

@@ -62,6 +62,10 @@ site =
 add_guest(site, user: new_user(name: "Arnold Wallaby", password: "plausible"), role: :viewer)
 add_guest(site, user: new_user(name: "Lois Lane", password: "plausible"), role: :editor)
 
+user2 = new_user(name: "Mary Jane", email: "user2@plausible.test", password: "plausible")
+site2 = new_site(domain: "computer.example.com", owner: user2)
+invite_guest(site2, user, inviter: user2, role: :viewer)
+
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
 Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")
 Plausible.Factory.insert(:country_rule, site: site, country_code: "EE")
@@ -224,12 +228,12 @@ native_stats_range
 
       event = Keyword.merge(event, timestamp: timestamp)
 
-      event =
+      to_insert =
         cond do
           event_index > 0 && :rand.uniform() < 0.1 ->
             event
             |> Keyword.merge(name: outbound.event_name)
-            |> then(&Plausible.Factory.build(:event, &1))
+            |> then(&[Plausible.Factory.build(:event, &1)])
 
           event_index > 0 && :rand.uniform() < 0.05 ->
             amount = Decimal.new(:rand.uniform(100))
@@ -240,14 +244,22 @@ native_stats_range
             |> Keyword.merge(revenue_source_amount: amount)
             |> Keyword.merge(revenue_reporting_currency: "USD")
             |> Keyword.merge(revenue_reporting_amount: amount)
-            |> then(&Plausible.Factory.build(:event, &1))
+            |> then(&[Plausible.Factory.build(:event, &1)])
 
           true ->
-            event
-            |> then(&Plausible.Factory.build(:pageview, &1))
+            pageview = Plausible.Factory.build(:pageview, event)
+
+            engagement =
+              Map.merge(pageview, %{
+                name: "engagement",
+                engagement_time: Enum.random(300..10000),
+                scroll_depth: Enum.random(1..100)
+              })
+
+            [engagement, pageview]
         end
 
-      [event | events]
+      to_insert ++ events
     end)
     |> Enum.reverse()
   end)
@@ -268,6 +280,8 @@ site_import =
 imported_stats_range
 |> Enum.flat_map(fn date ->
   Enum.flat_map(0..Enum.random(1..50), fn _ ->
+    pages_visits = Enum.random(1..15)
+
     [
       Plausible.Factory.build(:imported_visitors,
         date: date,
@@ -290,10 +304,11 @@ imported_stats_range
         date: date,
         page: Enum.random(long_random_paths),
         visitors: Enum.random(1..10),
-        visits: Enum.random(1..15),
+        visits: pages_visits,
         pageviews: Enum.random(1..50),
         exits: Enum.random(1..10),
-        time_on_page: Enum.random(1000..10000)
+        total_time_on_page: Enum.random(1000..10000),
+        total_time_on_page_visits: pages_visits
       )
     ]
   end)

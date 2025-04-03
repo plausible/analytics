@@ -58,13 +58,21 @@ defmodule Plausible.Verification.Diagnostics do
   end
 
   def interpret(
-        %__MODULE__{plausible_installed?: false, gtm_likely?: true, cookie_banner_likely?: true},
+        %__MODULE__{
+          plausible_installed?: false,
+          gtm_likely?: true,
+          cookie_banner_likely?: true,
+          wordpress_plugin?: false
+        },
         _url
       ) do
     error(@errors.gtm_cookie_banner)
   end
 
-  def interpret(%__MODULE__{plausible_installed?: false, gtm_likely?: true}, _url) do
+  def interpret(
+        %__MODULE__{plausible_installed?: false, gtm_likely?: true, wordpress_plugin?: false},
+        _url
+      ) do
     error(@errors.gtm)
   end
 

@@ -14,6 +14,15 @@ defmodule Plausible.SitesTest do
                Sites.create(user, params)
     end
 
+    test "creating a site sets `legacy_time_on_page_cutoff`" do
+      user = new_user()
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: %{legacy_time_on_page_cutoff: ~D[1970-01-01]}}} =
+               Sites.create(user, params)
+    end
+
     test "does not start a trial for pre-teams guest users without trial expiry date" do
       user = new_user() |> subscribe_to_growth_plan()
       new_site(owner: user)
@@ -224,7 +233,114 @@ defmodule Plausible.SitesTest do
              } = Plausible.Teams.Sites.list_with_invitations(user, %{})
     end
 
-    test "prioritizes pending transfer over pinned site with guest membership" do
+    test "lists guest sites, site invitations and transfers when no current team set" do
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
+      user4 = new_user()
+
+      # owned site on a setup team
+      site1 = new_site(owner: user1, domain: "own.example.com")
+      Plausible.Teams.complete_setup(site1.team)
+
+      # guest site access
+      site2 = new_site(owner: user2, domain: "guest.example.com")
+      add_guest(site2, user: user1, role: :editor)
+
+      # site invitation
+      site3 = new_site(owner: user3, domain: "invitation.example.com")
+      invite_guest(site3, user1, role: :viewer, inviter: user3)
+
+      # transfer
+      site4 = new_site(domain: "transfer.example.com", owner: user3)
+      invite_transfer(site4, user1, inviter: user2)
+
+      # other team site access
+      site5 = new_site(domain: "team.example.com", owner: user4)
+      add_member(site5.team, user: user1, role: :editor)
+
+      assert %{
+               entries: [
+                 %{domain: "invitation.example.com"},
+                 %{domain: "transfer.example.com"},
+                 %{domain: "guest.example.com"}
+               ]
+             } =
+               Sites.list_with_invitations(user1, %{})
+    end
+
+    test "lists guest sites, site invitations, transfers and team sites when current team set but not setup" do
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
+      user4 = new_user()
+
+      # owned site on a personal team
+      site1 = new_site(owner: user1, domain: "own.example.com")
+
+      # guest site access
+      site2 = new_site(owner: user2, domain: "guest.example.com")
+      add_guest(site2, user: user1, role: :editor)
+
+      # site invitation
+      site3 = new_site(owner: user3, domain: "invitation.example.com")
+      invite_guest(site3, user1, role: :viewer, inviter: user3)
+
+      # transfer
+      site4 = new_site(domain: "transfer.example.com", owner: user3)
+      invite_transfer(site4, user1, inviter: user2)
+
+      # other team site access
+      site5 = new_site(domain: "team.example.com", owner: user4)
+      add_member(site5.team, user: user1, role: :editor)
+
+      assert %{
+               entries: [
+                 %{domain: "invitation.example.com"},
+                 %{domain: "transfer.example.com"},
+                 %{domain: "guest.example.com"},
+                 %{domain: "own.example.com"}
+               ]
+             } =
+               Sites.list_with_invitations(user1, %{}, team: site1.team)
+    end
+
+    test "lists team sites and transfers when current team set and setup" do
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
+      user4 = new_user()
+
+      # owned site on a personal team
+      new_site(owner: user1, domain: "own.example.com")
+
+      # guest site access
+      site2 = new_site(owner: user2, domain: "guest.example.com")
+      add_guest(site2, user: user1, role: :editor)
+
+      # site invitation
+      site3 = new_site(owner: user3, domain: "invitation.example.com")
+      invite_guest(site3, user1, role: :viewer, inviter: user3)
+
+      # transfer
+      site4 = new_site(domain: "transfer.example.com", owner: user3)
+      invite_transfer(site4, user1, inviter: user2)
+
+      # other team site access
+      site5 = new_site(domain: "team.example.com", owner: user4)
+      team5 = Plausible.Teams.complete_setup(site5.team)
+      add_member(site5.team, user: user1, role: :admin)
+
+      assert %{
+               entries: [
+                 %{domain: "transfer.example.com"},
+                 %{domain: "team.example.com"}
+               ]
+             } =
+               Sites.list_with_invitations(user1, %{}, team: team5)
+    end
+
+    test "shows both pending transfer and pinned site for user without team with guest membership" do
       owner = new_user()
       pending_owner = new_user()
       site = new_site(owner: owner, domain: "one.example.com")
@@ -236,15 +352,57 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{domain: "one.example.com", entry_type: "invitation"}
+                 %{domain: "one.example.com", entry_type: "invitation"},
+                 %{domain: "one.example.com", entry_type: "pinned_site"}
                ]
              } =
                Sites.list_with_invitations(pending_owner, %{})
     end
 
-    test "prioritizes pending transfer over site with guest membership" do
+    test "shows both pending transfer and site for user without team with guest membership" do
       owner = new_user()
       pending_owner = new_user()
+      site = new_site(owner: owner, domain: "one.example.com")
+      add_guest(site, user: pending_owner, role: :editor)
+
+      invite_transfer(site, pending_owner, inviter: owner)
+
+      assert %{
+               entries: [
+                 %{domain: "one.example.com", entry_type: "invitation"},
+                 %{domain: "one.example.com", entry_type: "site"}
+               ]
+             } =
+               Sites.list_with_invitations(pending_owner, %{})
+    end
+
+    test "shows both pending transfer and site for user with personal team with guest membership" do
+      owner = new_user()
+      pending_owner = new_user() |> subscribe_to_growth_plan()
+      pending_team = team_of(pending_owner)
+      site = new_site(owner: owner, domain: "one.example.com")
+      add_guest(site, user: pending_owner, role: :editor)
+
+      invite_transfer(site, pending_owner, inviter: owner)
+
+      assert %{
+               entries: [
+                 %{domain: "one.example.com", entry_type: "invitation"},
+                 %{domain: "one.example.com", entry_type: "site"}
+               ]
+             } =
+               Sites.list_with_invitations(pending_owner, %{}, team: pending_team)
+    end
+
+    test "shows only pending transfer for user with setup team with guest membership" do
+      owner = new_user()
+      pending_owner = new_user() |> subscribe_to_growth_plan()
+
+      pending_team =
+        pending_owner
+        |> team_of()
+        |> Plausible.Teams.complete_setup()
+
       site = new_site(owner: owner, domain: "one.example.com")
       add_guest(site, user: pending_owner, role: :editor)
 
@@ -255,7 +413,41 @@ defmodule Plausible.SitesTest do
                  %{domain: "one.example.com", entry_type: "invitation"}
                ]
              } =
-               Sites.list_with_invitations(pending_owner, %{})
+               Sites.list_with_invitations(pending_owner, %{}, team: pending_team)
+    end
+
+    test "does not show transfer for user with site in their personal team" do
+      owner = new_user()
+      pending_owner = new_user() |> subscribe_to_growth_plan()
+      pending_team = team_of(pending_owner)
+      site = new_site(owner: pending_owner, domain: "one.example.com")
+
+      invite_transfer(site, pending_owner, inviter: owner)
+
+      assert %{
+               entries: [
+                 %{domain: "one.example.com", entry_type: "site"}
+               ]
+             } =
+               Sites.list_with_invitations(pending_owner, %{}, team: pending_team)
+    end
+
+    test "does not show transfer for user with site in their setup team" do
+      owner = new_user()
+      pending_owner = new_user() |> subscribe_to_growth_plan()
+      pending_team = team_of(pending_owner)
+      site = new_site(owner: pending_owner, domain: "one.example.com")
+
+      pending_team = Plausible.Teams.complete_setup(pending_team)
+
+      invite_transfer(site, pending_owner, inviter: owner)
+
+      assert %{
+               entries: [
+                 %{domain: "one.example.com", entry_type: "site"}
+               ]
+             } =
+               Sites.list_with_invitations(pending_owner, %{}, team: pending_team)
     end
 
     test "pinned site doesn't matter with membership revoked (no active invitations)" do
@@ -470,12 +662,12 @@ defmodule Plausible.SitesTest do
 
       invite_guest(site3, user1, role: :viewer, inviter: user3)
       invite_transfer(site2, user1, inviter: user2)
-      add_member(site4.team, user: user1, role: :editor)
+      team4 = Plausible.Teams.complete_setup(site4.team)
+      add_member(team4, user: user1, role: :admin)
 
       assert_matches %{
                        entries: [
-                         %{id: ^site1.id},
-                         %{id: ^site4.id}
+                         %{id: ^site1.id}
                        ]
                      } = Sites.list(user1, %{})
 
@@ -483,8 +675,7 @@ defmodule Plausible.SitesTest do
                        entries: [
                          %{id: ^site3.id},
                          %{id: ^site2.id},
-                         %{id: ^site1.id},
-                         %{id: ^site4.id}
+                         %{id: ^site1.id}
                        ]
                      } = Sites.list_with_invitations(user1, %{})
 
@@ -492,15 +683,14 @@ defmodule Plausible.SitesTest do
                        entries: [
                          %{id: ^site4.id}
                        ]
-                     } = Sites.list(user1, %{}, team: site4.team)
+                     } = Sites.list(user1, %{}, team: team4)
 
       assert_matches %{
                        entries: [
-                         %{id: ^site3.id},
                          %{id: ^site2.id},
                          %{id: ^site4.id}
                        ]
-                     } = Sites.list_with_invitations(user1, %{}, team: site4.team)
+                     } = Sites.list_with_invitations(user1, %{}, team: team4)
     end
 
     test "handles pagination correctly" do

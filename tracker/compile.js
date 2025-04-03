@@ -4,6 +4,7 @@ const path = require('path')
 const Handlebars = require("handlebars");
 const g = require("generatorics");
 const { canSkipCompile } = require("./dev-compile/can-skip-compile");
+const { tracker_script_version } = require("./package.json");
 
 if (process.env.NODE_ENV === 'dev' && canSkipCompile()) {
   console.info('COMPILATION SKIPPED: No changes detected in tracker dependencies')
@@ -23,7 +24,7 @@ function relPath(segment) {
 function compilefile(input, output, templateVars = {}) {
   const code = fs.readFileSync(input).toString()
   const template = Handlebars.compile(code)
-  const rendered = template(templateVars)
+  const rendered = template({ ...templateVars, TRACKER_SCRIPT_VERSION: tracker_script_version })
   const result = uglify.minify(rendered)
   if (result.code) {
     fs.writeFileSync(output, result.code)

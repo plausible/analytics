@@ -11,8 +11,7 @@
   <.form :let={f} for={@conn} action={Routes.membership_path(@conn, :invite_member, @site.domain)}>
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
       :if={Map.get(assigns, :is_at_limit, false)}
-      current_user={@current_user}
-      billable_user={List.first(@site.owners)}
+      current_role={@current_team_role}
       current_team={@site_team}
       limit={Map.get(assigns, :team_member_limit, 0)}
       resource="team members"
@@ -39,12 +38,12 @@
       <div class="mt-1 bg-white rounded-md -space-y-px dark:bg-gray-800">
         <label
           class="border-gray-200 dark:border-gray-500 rounded-tl-md rounded-tr-md relative border p-4 flex cursor-pointer"
-          x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'admin', 'border-gray-200': selectedOption !== 'admin'}"
+          x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'editor', 'border-gray-200': selectedOption !== 'editor'}"
         >
           <.input
             type="radio"
             field={f[:role]}
-            id="role_admin"
+            id="role_editor"
             value="editor"
             x-model="selectedOption"
             required="true"
@@ -54,15 +53,15 @@
           <div class="ml-3 flex flex-col">
             <span
               class="text-gray-900 dark:text-gray-100 block text-sm font-medium"
-              x-class="{'text-indigo-900 dark:text-white': selectedOption === 'admin', 'text-gray-900 dark:text-gray-100': selectedOption !== 'admin'}"
+              x-class="{'text-indigo-900 dark:text-white': selectedOption === 'editor', 'text-gray-900 dark:text-gray-100': selectedOption !== 'editor'}"
             >
-              Admin
+              Guest Editor
             </span>
             <span
               class="text-gray-500 dark:text-gray-400 text-sm block"
-              x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'admin', 'text-gray-500 dark:text-gray-200': selectedOption !== 'admin'}"
+              x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'editor', 'text-gray-500 dark:text-gray-200': selectedOption !== 'editor'}"
             >
-              Can view stats, change site settings and invite other members
+              Can view stats and change site settings
             </span>
           </div>
         </label>
@@ -86,13 +85,13 @@
               class="text-gray-900 dark:text-gray-100 text-sm block font-medium"
               x-class="{'text-indigo-900 dark:text-white': selectedOption === 'viewer', 'text-gray-900 dark:text-gray-100': selectedOption !== 'viewer'}"
             >
-              Viewer
+              Guest Viewer
             </span>
             <span
               class="text-gray-500 dark:text-gray-400 text-sm block"
               x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'viewer', 'text-gray-500 dark:text-gray-200': selectedOption !== 'viewer'}"
             >
-              Can view stats but cannot access settings or invite members
+              Can view stats but cannot access settings
             </span>
           </div>
         </label>

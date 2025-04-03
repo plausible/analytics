@@ -9,6 +9,100 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
+  describe "change_team/3" do
+    @tag :ce_build_only
+    test "changes the team if owner in both teams (CE)" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :owner)
+
+      assert :ok = AcceptInvitation.change_team(site, user, team2)
+    end
+
+    @tag :ee_only
+    test "changes the team if owner in both teams (EE)" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :owner)
+
+      assert {:error, :no_plan} = AcceptInvitation.change_team(site, user, team2)
+
+      subscribe_to_growth_plan(another)
+
+      assert :ok = AcceptInvitation.change_team(site, user, team2)
+      assert Repo.reload!(site).team_id == team2.id
+      assert_team_membership(user, team2, :owner)
+
+      assert_email_delivered_with(
+        to: [nil: another.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
+
+      assert_email_delivered_with(
+        to: [nil: user.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
+    end
+
+    test "changes the team if admin in second team" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      subscribe_to_growth_plan(another)
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :admin)
+
+      assert :ok = AcceptInvitation.change_team(site, user, team2)
+      assert Repo.reload!(site).team_id == team2.id
+      assert_team_membership(user, team2, :admin)
+
+      assert_email_delivered_with(
+        to: [nil: another.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
+    end
+
+    for role <- Plausible.Teams.Membership.roles() -- [:admin, :owner] do
+      test "refuses to change the team if #{role} in second team" do
+        user = new_user()
+        site = new_site(owner: user)
+
+        another = new_user()
+        subscribe_to_growth_plan(another)
+        new_site(owner: another)
+
+        team2 = team_of(another)
+
+        add_member(team2, user: user, role: unquote(role))
+
+        assert {:error, :permission_denied} = AcceptInvitation.change_team(site, user, team2)
+        refute Repo.reload!(site).team_id == team2.id
+      end
+    end
+  end
+
   describe "bulk_transfer_ownership_direct/2" do
     test "transfers ownership for multiple sites in one action" do
       current_owner = new_user()
@@ -62,6 +156,24 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                AcceptInvitation.bulk_transfer_ownership_direct(
                  [site1, site2],
                  new_owner
+               )
+    end
+
+    test "allows transferring between teams of the same owner" do
+      current_owner = new_user() |> subscribe_to_growth_plan()
+      another_owner = new_user() |> subscribe_to_growth_plan()
+
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      new_team = team_of(another_owner)
+      add_member(new_team, user: current_owner, role: :owner)
+
+      assert {:ok, _} =
+               AcceptInvitation.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 current_owner,
+                 new_team
                )
     end
 
@@ -662,6 +774,20 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert {:error, :transfer_to_self} =
                AcceptInvitation.accept_invitation(transfer.transfer_id, current_owner)
+    end
+
+    test "allows transferring between different teams of the same owner" do
+      current_owner = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: current_owner)
+
+      another_owner = new_user() |> subscribe_to_growth_plan()
+      new_team = team_of(another_owner)
+      add_member(new_team, user: current_owner, role: :owner)
+
+      transfer = invite_transfer(site, current_owner, inviter: current_owner)
+
+      assert {:ok, _} =
+               AcceptInvitation.accept_invitation(transfer.transfer_id, current_owner, new_team)
     end
 
     @tag :ee_only

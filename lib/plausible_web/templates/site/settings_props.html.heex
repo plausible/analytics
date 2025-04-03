@@ -14,8 +14,7 @@
     </:subtitle>
 
     <PlausibleWeb.Components.Billing.Notice.premium_feature
-      billable_user={List.first(@site.owners)}
-      current_user={@current_user}
+      current_role={@site_role}
       current_team={@site_team}
       feature_mod={Plausible.Billing.Feature.Props}
       grandfathered?

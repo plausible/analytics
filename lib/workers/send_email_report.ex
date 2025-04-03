@@ -64,7 +64,8 @@ defmodule Plausible.Workers.SendEmailReport do
     last_month =
       DateTime.now!(site.timezone)
       |> DateTime.shift(month: -1)
-      |> Timex.beginning_of_month()
+      |> DateTime.to_date()
+      |> Date.beginning_of_month()
       |> Date.to_iso8601()
 
     query = Query.from(site, %{"period" => "month", "date" => last_month})
@@ -73,9 +74,18 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp put_last_week_query(%{site: site} = assigns) do
-    today = DateTime.now!(site.timezone) |> DateTime.to_date()
-    date = Date.shift(today, week: -1) |> Timex.end_of_week() |> Date.to_iso8601()
-    query = Query.from(site, %{"period" => "7d", "date" => date})
+    # In production, evaluating and sending the date param to `Query.from`
+    # is redundant since the default value is today for `site.timezone` and
+    # weekly reports are always sent on Monday morning. However, this makes
+    # it easier to test - no need for a `now` argument.
+    date_param =
+      site.timezone
+      |> DateTime.now!()
+      |> DateTime.to_date()
+      |> Date.beginning_of_week()
+      |> Date.to_iso8601()
+
+    query = Query.from(site, %{"period" => "7d", "date" => date_param})
 
     Map.put(assigns, :query, query)
   end

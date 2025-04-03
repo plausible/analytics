@@ -9,6 +9,7 @@ defmodule Plausible.HelpScout do
   alias Plausible.Billing.Subscription
   alias Plausible.HelpScout.Vault
   alias Plausible.Repo
+  alias Plausible.Teams
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
@@ -78,58 +79,87 @@ defmodule Plausible.HelpScout do
     end
   end
 
-  @spec get_details_for_emails([String.t()], String.t()) :: {:ok, map()} | {:error, any()}
-  def get_details_for_emails(emails, customer_id) do
+  @spec get_details_for_emails([String.t()], String.t(), String.t() | nil) ::
+          {:ok, map()} | {:error, any()}
+  def get_details_for_emails(emails, customer_id, team_identifier \\ nil) do
     with {:ok, user} <- get_user(emails) do
       set_mapping(customer_id, user.email)
 
-      {team, subscription, plan} =
-        case Plausible.Teams.get_by_owner(user) do
-          {:ok, team} ->
-            team = Plausible.Teams.with_subscription(team)
-            plan = Billing.Plans.get_subscription_plan(team.subscription)
-            {team, team.subscription, plan}
+      teams = Teams.Users.owned_teams(user)
 
-          {:error, :multiple_teams} ->
-            # NOTE: We might consider exposing the other teams later on
-            [team | _] = Plausible.Teams.Users.owned_teams(user)
-            team = Plausible.Teams.with_subscription(team)
-            plan = Billing.Plans.get_subscription_plan(team.subscription)
-            {team, team.subscription, plan}
-
-          {:error, :no_team} ->
-            {nil, nil, nil}
-        end
-
-      status_link =
-        if team do
-          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :teams, :team, team.id)
+      teams =
+        if team_identifier do
+          Enum.filter(teams, &(&1.identifier == team_identifier))
         else
-          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id)
+          teams
         end
 
-      sites_link =
-        if team do
-          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-            custom_search: team.identifier
-          )
-        else
-          Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-            custom_search: user.email
-          )
-        end
+      if length(teams) > 1 do
+        teams =
+          teams
+          |> Enum.map(fn team ->
+            %{
+              name: Teams.name(team),
+              identifier: team.identifier,
+              sites_count: Teams.owned_sites_count(team)
+            }
+          end)
 
-      {:ok,
-       %{
-         email: user.email,
-         notes: user.notes,
-         status_label: status_label(team, subscription),
-         status_link: status_link,
-         plan_label: plan_label(subscription, plan),
-         plan_link: plan_link(subscription),
-         sites_count: Plausible.Teams.owned_sites_count(team),
-         sites_link: sites_link
-       }}
+        user_link = Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id)
+
+        {:ok,
+         %{
+           multiple_teams?: true,
+           email: user.email,
+           notes: notes(user, nil),
+           teams: teams,
+           user_link: user_link
+         }}
+      else
+        team = List.first(teams)
+
+        {subscription, plan} =
+          if team do
+            team = Teams.with_subscription(team)
+            plan = Billing.Plans.get_subscription_plan(team.subscription)
+            {team.subscription, plan}
+          else
+            {nil, nil}
+          end
+
+        status_link =
+          if team do
+            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :teams, :team, team.id)
+          else
+            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id)
+          end
+
+        sites_link =
+          if team do
+            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+              custom_search: team.identifier
+            )
+          else
+            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+              custom_search: user.email
+            )
+          end
+
+        {:ok,
+         %{
+           multiple_teams?: false,
+           team_setup?: Plausible.Teams.setup?(team),
+           team_name: Plausible.Teams.name(team),
+           email: user.email,
+           notes: notes(user, team),
+           status_label: status_label(team, subscription),
+           status_link: status_link,
+           plan_label: plan_label(subscription, plan),
+           plan_link: plan_link(subscription),
+           sites_count: Teams.owned_sites_count(team),
+           sites_link: sites_link
+         }}
+      end
     end
   end
 
@@ -170,7 +200,7 @@ defmodule Plausible.HelpScout do
 
   defp status_label(team, subscription) do
     subscription_active? = Billing.Subscriptions.active?(subscription)
-    trial? = Plausible.Teams.on_trial?(team)
+    trial? = Teams.on_trial?(team)
 
     cond do
       not subscription_active? and not trial? and (is_nil(team) or is_nil(team.trial_expiry_date)) ->
@@ -192,7 +222,7 @@ defmodule Plausible.HelpScout do
       subscription.status == Subscription.Status.paused() ->
         "Paused"
 
-      Plausible.Teams.owned_sites_locked?(team) ->
+      Teams.owned_sites_locked?(team) ->
         "Dashboard locked"
 
       subscription_active? ->
@@ -392,5 +422,17 @@ defmodule Plausible.HelpScout do
 
   defp config() do
     Application.fetch_env!(:plausible, __MODULE__)
+  end
+
+  defp notes(user, team) do
+    notes =
+      [
+        user.notes,
+        team && team.notes
+      ]
+      |> Enum.reject(&is_nil/1)
+      |> Enum.join("\n")
+
+    if notes != "", do: notes
   end
 end

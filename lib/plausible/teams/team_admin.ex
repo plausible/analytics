@@ -6,10 +6,28 @@ defmodule Plausible.Teams.TeamAdmin do
   use Plausible
   use Plausible.Repo
 
+  import Ecto.Query
+
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
 
   require Plausible.Billing.Subscription.Status
+
+  def widgets(_schema, _conn) do
+    setup_teams_count =
+      Repo.aggregate(from(t in Teams.Team, where: t.setup_complete == true), :count)
+
+    [
+      %{
+        type: "tidbit",
+        title: "Setup Teams",
+        content: to_string(setup_teams_count),
+        icon: nil,
+        order: 1,
+        width: 6
+      }
+    ]
+  end
 
   def custom_index_query(conn, _schema, query) do
     search =
@@ -69,7 +87,8 @@ defmodule Plausible.Teams.TeamAdmin do
       allow_next_upgrade_override: nil,
       accept_traffic_until: %{
         help_text: "Change will take up to 15 minutes to propagate"
-      }
+      },
+      notes: %{type: :textarea, rows: 6}
     ]
   end
 
@@ -86,9 +105,14 @@ defmodule Plausible.Teams.TeamAdmin do
     ]
   end
 
-  def delete(_conn, %{data: _team}) do
-    # TODO: Implement custom team removal
-    "Cannot remove the team for now"
+  def delete(_conn, %{data: team}) do
+    case Teams.delete(team) do
+      {:ok, :deleted} ->
+        {:ok, team}
+
+      {:error, :active_subscription} ->
+        {team, "The team has an active subscription which must be canceled first."}
+    end
   end
 
   def grace_period_status(team) do
@@ -169,10 +193,10 @@ defmodule Plausible.Teams.TeamAdmin do
   defp team_name(team) do
     case team.owners do
       [owner] ->
-        if team.name == "My Team" do
-          owner.name
-        else
+        if team.setup_complete do
           team.name
+        else
+          owner.name
         end
 
       [_ | _] ->

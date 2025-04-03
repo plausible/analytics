@@ -1,5 +1,3 @@
-/** @format */
-
 import React from 'react'
 import { render, screen } from '../../../test-utils'
 import userEvent from '@testing-library/user-event'
@@ -78,7 +76,7 @@ test('user can see expected filters and clear them one by one or all together', 
   await userEvent.click(
     screen.getByRole('button', {
       hidden: false,
-      name: 'See more'
+      name: 'See 3 more filters and actions'
     })
   )
 
@@ -101,7 +99,10 @@ test('user can see expected filters and clear them one by one or all together', 
   ])
 
   await userEvent.click(
-    screen.getByRole('link', { hidden: false, name: 'Clear all filters' })
+    screen.getByRole('link', {
+      hidden: false,
+      name: 'Clear all filters'
+    })
   )
 
   expect(queryFilterPills().map((m) => m.textContent)).toEqual([])

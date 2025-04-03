@@ -45,6 +45,41 @@ defmodule Plausible.Ingestion.EventTest do
     end
   end
 
+  test "times out parsing user agent", %{test: test} do
+    on_exit(:detach, fn ->
+      :telemetry.detach("ua-timeout-#{test}")
+    end)
+
+    test_pid = self()
+    event = Event.telemetry_ua_parse_timeout()
+
+    :telemetry.attach(
+      "ua-timeout-#{test}",
+      event,
+      fn ^event, _, _, _ ->
+        send(test_pid, :telemetry_handled)
+      end,
+      %{}
+    )
+
+    site = new_site()
+
+    payload = %{
+      name: "pageview",
+      url: "http://#{site.domain}"
+    }
+
+    conn =
+      :post
+      |> build_conn("/api/events", payload)
+      |> Plug.Conn.put_req_header("user-agent", :binary.copy("a", 1024 * 8))
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
+    assert_receive :telemetry_handled
+  end
+
   test "drops verification agent" do
     site = new_site()
 
@@ -329,7 +364,9 @@ defmodule Plausible.Ingestion.EventTest do
     payload = %{
       name: "engagement",
       url: "https://#{site.domain}/123",
-      d: "#{site.domain}"
+      d: "#{site.domain}",
+      sd: 25,
+      et: 1000
     }
 
     conn = build_conn(:post, "/api/events", payload)
@@ -337,24 +374,6 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, request} = Request.build(conn)
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :no_session_for_engagement
-  end
-
-  test "TEMPORARY: drops engagement if FF not enabled for site" do
-    site = new_site()
-
-    FunWithFlags.disable(:engagements, for_actor: "site:#{site.domain}")
-
-    payload = %{
-      name: "engagement",
-      url: "https://#{site.domain}/123",
-      d: "#{site.domain}"
-    }
-
-    conn = build_conn(:post, "/api/events", payload)
-
-    assert {:ok, request} = Request.build(conn)
-    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
-    assert dropped.drop_reason == :engagement_ff_throttle
   end
 
   @tag :ee_only

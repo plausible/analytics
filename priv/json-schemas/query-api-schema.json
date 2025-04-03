@@ -109,6 +109,11 @@
               "additionalProperties": false
             }
           ]
+        },
+        "legacy_time_on_page_cutoff": {
+          "$comment": "only :internal",
+          "type": "string",
+          "format": "datetime"
         }
       }
     },
@@ -193,8 +198,16 @@
           "description": "Last 7 days relative to today"
         },
         {
+          "const": "28d",
+          "description": "Last 28 days relative to today"
+        },
+        {
           "const": "30d",
           "description": "Last 30 days relative to today"
+        },
+        {
+          "const": "90d",
+          "description": "Last 90 days relative to today"
         },
         {
           "const": "month",
@@ -272,7 +285,7 @@
         },
         {
           "const": "scroll_depth",
-          "$comment": "only :internal"
+          "markdownDescription": "Average page scroll depth. Requires: `event:page` filter or `event:page` dimension"
         }
       ]
     },
@@ -319,8 +332,16 @@
       "markdownDescription": "Goal dimension"
     },
     "time_dimensions": {
-      "type": "string",
-      "enum": ["time", "time:month", "time:week", "time:day", "time:hour"]
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["time", "time:month", "time:week", "time:day", "time:hour"]
+        },
+        {
+          "const": "time:minute",
+          "$comment": "only :internal"
+        }
+      ]
     },
     "dimensions": {
       "oneOf": [
@@ -462,10 +483,7 @@
         { "$ref": "#/definitions/filter_without_goals" },
         { "$ref": "#/definitions/filter_with_goals" },
         { "$ref": "#/definitions/filter_with_pattern" },
-        {
-          "$ref": "#/definitions/filter_for_segment",
-          "$comment": "only :internal"
-        }
+        { "$ref": "#/definitions/filter_for_segment" }
       ]
     },
     "filter_tree": {

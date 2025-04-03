@@ -1,5 +1,3 @@
-/** @format */
-
 import React from 'react'
 import MetricValue from './metric-value'
 import { hasConversionGoalFilter } from '../../util/filters'
@@ -194,11 +192,11 @@ export const createPageviews = (props) => {
 export const createTimeOnPage = (props) => {
   const renderLabel = (_query) => 'Time on Page'
   return new Metric({
-    width: 'w-28',
+    width: 'w-32',
     ...props,
     key: 'time_on_page',
     renderLabel,
-    sortable: false
+    sortable: true
   })
 }
 

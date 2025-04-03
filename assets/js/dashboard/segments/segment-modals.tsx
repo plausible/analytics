@@ -1,15 +1,14 @@
-/** @format */
-
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
+  canSeeSegmentDetails,
+  isListableSegment,
   isSegmentFilter,
   SavedSegment,
   SEGMENT_TYPE_LABELS,
   SegmentData,
   SegmentType
 } from '../filtering/segments'
-import { useSegmentPrefetch } from '../nav-menu/segments/searchable-segments-section'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { cleanLabels } from '../util/filters'
@@ -18,10 +17,14 @@ import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import { SegmentAuthorship } from './segment-authorship'
-import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { MutationStatus } from '@tanstack/react-query'
 import { ApiError } from '../api'
 import { ErrorPanel } from '../components/error-panel'
+import { useSegmentsContext } from '../filtering/segments-context'
+import { useSiteContext } from '../site-context'
+import { useUserContext } from '../user-context'
+import { removeFilterButtonClassname } from '../components/remove-filter-button'
 
 interface ApiRequestProps {
   status: MutationStatus
@@ -39,15 +42,15 @@ interface SharedSegmentModalProps {
   namePlaceholder: string
 }
 
-const primaryNeutralButtonClassName = 'button'
+const primaryNeutralButtonClassName = 'button !px-3'
 
 const primaryNegativeButtonClassName = classNames(
-  'button',
+  'button !px-3',
   'items-center !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
 )
 
 const secondaryButtonClassName = classNames(
-  'button',
+  'button !px-3',
   'border !border-gray-300 dark:!border-gray-500 !text-gray-700 dark:!text-gray-300 !bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-850'
 )
 
@@ -113,9 +116,6 @@ export const CreateSegmentModal = ({
         userCanSelectSiteSegment={userCanSelectSiteSegment}
       />
       <ButtonsRow>
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
         <button
           className={primaryNeutralButtonClassName}
           onClick={
@@ -131,6 +131,9 @@ export const CreateSegmentModal = ({
           }
         >
           Save
+        </button>
+        <button className={secondaryButtonClassName} onClick={onClose}>
+          Cancel
         </button>
       </ButtonsRow>
       {error !== null && (
@@ -171,9 +174,6 @@ export const DeleteSegmentModal = ({
       )}
 
       <ButtonsRow>
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
         <button
           className={primaryNegativeButtonClassName}
           disabled={status === 'pending'}
@@ -186,6 +186,9 @@ export const DeleteSegmentModal = ({
           }
         >
           Delete
+        </button>
+        <button className={secondaryButtonClassName} onClick={onClose}>
+          Cancel
         </button>
       </ButtonsRow>
       {error !== null && (
@@ -353,9 +356,6 @@ export const UpdateSegmentModal = ({
         userCanSelectSiteSegment={userCanSelectSiteSegment}
       />
       <ButtonsRow>
-        <button className={secondaryButtonClassName} onClick={onClose}>
-          Cancel
-        </button>
         <button
           className={primaryNeutralButtonClassName}
           disabled={status === 'pending'}
@@ -372,6 +372,9 @@ export const UpdateSegmentModal = ({
           }
         >
           Save
+        </button>
+        <button className={secondaryButtonClassName} onClick={onClose}>
+          Cancel
         </button>
       </ButtonsRow>
       {error !== null && (
@@ -398,6 +401,7 @@ const FiltersInSegment = ({ segment_data }: { segment_data: SegmentData }) => {
           className="flex-wrap"
           direction="horizontal"
           pills={segment_data.filters.map((filter) => ({
+            className: 'dark:!shadow-gray-950/60',
             plainText: plainFilterText({ labels: segment_data.labels }, filter),
             children: styledFilterText({ labels: segment_data.labels }, filter),
             interactive: false
@@ -427,15 +431,28 @@ const Placeholder = ({
 )
 
 export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
+  const site = useSiteContext()
+  const user = useUserContext()
   const { query } = useQueryContext()
+  const { segments } = useSegmentsContext()
 
-  const { data, fetchSegment, status, error } = useSegmentPrefetch({
-    id: String(id)
-  })
+  const segment = segments
+    .filter((s) => isListableSegment({ segment: s, site, user }))
+    .find((s) => String(s.id) === String(id))
 
-  useEffect(() => {
-    fetchSegment()
-  }, [fetchSegment])
+  let error: ApiError | null = null
+
+  if (!segment) {
+    error = new ApiError(`Segment not found with with ID "${id}"`, {
+      error: `Segment not found with with ID "${id}"`
+    })
+  } else if (!canSeeSegmentDetails({ user })) {
+    error = new ApiError('Not enough permissions to see segment details', {
+      error: `Not enough permissions to see segment details`
+    })
+  }
+
+  const data = !error ? segment : null
 
   return (
     <ModalWithRouting maxWidth="460px">
@@ -481,7 +498,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                 </AppNavigationLink>
 
                 <AppNavigationLink
-                  className={primaryNegativeButtonClassName}
+                  className={removeFilterButtonClassname}
                   path={rootRoute.path}
                   search={(s) => {
                     const nonSegmentFilters = query.filters.filter(
@@ -499,19 +516,11 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                     }
                   }}
                 >
-                  <TrashIcon className="w-4 h-4 mr-2" />
                   Remove filter
                 </AppNavigationLink>
               </ButtonsRow>
             </div>
           </>
-        )}
-        {status === 'pending' && (
-          <div className="flex items-center justify-center">
-            <div className="loading">
-              <div />
-            </div>
-          </div>
         )}
         {error !== null && (
           <ErrorPanel
@@ -521,7 +530,7 @@ export const SegmentModal = ({ id }: { id: SavedSegment['id'] }) => {
                 ? error.message
                 : 'Something went wrong loading segment'
             }
-            onRetry={() => fetchSegment()}
+            onRetry={() => window.location.reload()}
           />
         )}
       </div>

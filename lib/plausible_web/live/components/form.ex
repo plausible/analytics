@@ -380,7 +380,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :options, options)
 
     ~H"""
-    <.form for={@conn} class="lg:hidden">
+    <.form for={@conn} class="lg:hidden py-4">
       <.input
         value={
           @options

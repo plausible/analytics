@@ -13,5 +13,6 @@ defmodule Plausible.Ingestion.Counters.Record do
     field :domain, Ch, type: "LowCardinality(String)"
     field :metric, Ch, type: "LowCardinality(String)"
     field :value, Ch, type: "UInt64"
+    field :tracker_script_version, Ch, type: "UInt16"
   end
 end

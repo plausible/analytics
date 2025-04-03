@@ -19,13 +19,13 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
         |> html_response(200)
         |> text()
 
-      assert resp =~ "Add, remove or change your team memberships"
+      assert resp =~ "Add or remove team members and adjust their roles"
 
       refute element_exists?(resp, ~s|button[phx-click="save-team-layout"]|)
     end
 
-    test "renders existing guests under Guest divider", %{conn: conn, user: user} do
-      site = new_site(owner: user)
+    test "renders existing guests under Guest divider", %{conn: conn, team: team, user: user} do
+      site = new_site(team: team)
       add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
 
       resp =
@@ -102,11 +102,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(member2, team, :viewer)
     end
 
-    test "allows updating guest membership so it moves sections", %{
-      conn: conn,
-      user: user
-    } do
-      site = new_site(owner: user)
+    test "allows updating guest membership so it moves sections", %{conn: conn, team: team} do
+      site = new_site(team: team)
       add_guest(site, role: :viewer, user: new_user(name: "Mr Guest", email: "guest@example.com"))
 
       lv = get_liveview(conn)
@@ -154,7 +151,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       member2 = add_member(team, role: :admin)
       _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
 
-      site = new_site(owner: user)
+      site = new_site(team: team)
 
       guest =
         add_guest(site,
@@ -223,7 +220,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
            user: user,
            team: team
          } do
-      site = new_site(owner: user)
+      site = new_site(team: team)
 
       member2 =
         add_guest(site,
@@ -240,6 +237,11 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
 
       assert_team_membership(user, team, :owner)
       assert_team_membership(member2, team, :owner)
+
+      assert_email_delivered_with(
+        to: [nil: member2.email],
+        subject: @subject_prefix <> "Welcome to \"#{team.name}\" team"
+      )
     end
 
     test "multiple-owners",
@@ -260,26 +262,38 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       assert_team_membership(user, team, :owner)
       assert_team_membership(member2, team, :owner)
     end
-  end
 
-  describe "to be revisited" do
-    setup [:create_user, :log_in, :create_team, :setup_team]
-
-    @tag :capture_log
-    test "billing role is currently not supported by the underlying services",
+    test "billing role is supported",
          %{
            conn: conn,
            team: team
          } do
-      Process.flag(:trap_exit, true)
-      _member2 = add_member(team, role: :admin)
+      member2 = add_member(team, role: :admin)
 
       lv = get_liveview(conn)
 
-      assert :unsupported == change_role(lv, 2, "billing")
-    catch
-      _, _ ->
-        :unsupported
+      change_role(lv, 2, "billing")
+      assert_team_membership(member2, team, :billing)
+    end
+
+    test "degrading owner to non-admin makes everything read-only", %{conn: conn, team: team} do
+      _owner2 = add_member(team, role: :owner)
+
+      lv = get_liveview(conn)
+
+      change_role(lv, 1, "billing")
+
+      html = render(lv)
+
+      options =
+        lv
+        |> render()
+        |> find("#{member_el()} a")
+
+      assert Enum.empty?(options)
+
+      assert attr_defined?(html, ~s|#team-layout-form input[name="input-email"]|, "readonly")
+      assert attr_defined?(html, ~s|#invite-member|, "disabled")
     end
   end
 

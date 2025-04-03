@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time}
+  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time, Legacy}
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -49,7 +49,8 @@ defmodule Plausible.Stats.QueryOptimizer do
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
       &extend_hostname_filters_to_visit/1,
-      &remove_revenue_metrics_if_unavailable/1
+      &remove_revenue_metrics_if_unavailable/1,
+      &set_time_on_page_data/1
     ]
   end
 
@@ -184,5 +185,31 @@ defmodule Plausible.Stats.QueryOptimizer do
     end
   else
     defp remove_revenue_metrics_if_unavailable(query), do: query
+  end
+
+  defp set_time_on_page_data(query) do
+    if :time_on_page in query.metrics and query.include.legacy_time_on_page_cutoff do
+      {:ok, cutoff, _} =
+        query.include.legacy_time_on_page_cutoff
+        |> DateTime.from_iso8601()
+
+      cutoff =
+        cutoff
+        |> DateTime.shift_zone!("Etc/UTC")
+        |> DateTime.truncate(:second)
+
+      Query.set(
+        query,
+        time_on_page_data: %{
+          include_new_metric: DateTime.before?(cutoff, query.utc_time_range.last),
+          include_legacy_metric:
+            DateTime.after?(cutoff, query.utc_time_range.first) and
+              Legacy.TimeOnPage.can_merge_legacy_time_on_page?(query),
+          cutoff: if(DateTime.after?(cutoff, query.utc_time_range.first), do: cutoff, else: nil)
+        }
+      )
+    else
+      query
+    end
   end
 end

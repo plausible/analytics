@@ -134,10 +134,6 @@ defmodule PlausibleWeb.UserAuth do
         inner_join: u in assoc(us, :user),
         as: :user,
         left_join: tm in assoc(u, :team_memberships),
-        # NOTE: whenever my_team.subscription is used to prevent user action,
-        # we must check whether the team association is ownership.
-        # Otherwise regular members will be limited by team owner in cases
-        # like deleting their own account.
         on: tm.role != :guest,
         left_join: t in assoc(tm, :team),
         as: :team,

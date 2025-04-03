@@ -1,11 +1,5 @@
 const { expect, Page } = require("@playwright/test");
 
-// Since engagement events in the Plausible script are throttled to 300ms, we
-// often need to wait for an artificial timeout before navigating in tests.
-exports.engagementCooldown = async function(page) {
-  return page.waitForTimeout(400)
-}
-
 // Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
 // data. If the request is not made, resolves to null after 3 seconds.
 const mockRequest = function (page, path) {
@@ -161,12 +155,37 @@ exports.showCurrentTab = async function(page) {
   return toggleTabVisibility(page, false)
 }
 
+async function setFocus(page, focus) {
+  await page.evaluate((focus) => {
+    Object.defineProperty(document, 'hasFocus', { value: () => focus, writable: true })
+
+    const eventName = focus ? 'focus' : 'blur'
+    window.dispatchEvent(new Event(eventName))
+  }, focus)
+}
+
+exports.focus = async function(page) {
+  return setFocus(page, true)
+}
+
+exports.blur = async function(page) {
+  return setFocus(page, false)
+}
+
 exports.hideAndShowCurrentTab = async function(page, options = {}) {
   await exports.hideCurrentTab(page)
   if (options.delay > 0) {
     await delay(options.delay)
   }
   await exports.showCurrentTab(page)
+}
+
+exports.blurAndFocusPage = async function(page, options = {}) {
+  await exports.blur(page)
+  if (options.delay > 0) {
+    await delay(options.delay)
+  }
+  await exports.focus(page)
 }
 
 function includesSubset(body, subset) {

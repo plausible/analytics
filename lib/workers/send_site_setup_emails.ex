@@ -104,7 +104,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
 
   defp send_setup_help_email(users, site) do
     for user <- users do
-      PlausibleWeb.Email.site_setup_help(user, site)
+      PlausibleWeb.Email.site_setup_help(user, site.team, site)
       |> Plausible.Mailer.send()
     end
 

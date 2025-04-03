@@ -44,14 +44,14 @@
                 </.styled_link>
               </li>
               <li
-                :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:my_team])}
+                :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team])}
                 class="hidden mr-6 sm:block"
               >
                 <.styled_link
                   class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
                   href={Routes.settings_path(@conn, :subscription)}
                 >
-                  {trial_notification(@conn.assigns[:my_team])}
+                  {trial_notification(@conn.assigns[:current_team])}
                 </.styled_link>
               </li>
               <li class="w-full sm:w-auto">
@@ -72,19 +72,23 @@
                         {@conn.assigns[:current_user].email}
                       </p>
                     </.dropdown_item>
-                    <.dropdown_item :if={@conn.assigns[:multiple_teams?]}>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Team</div>
-                      <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
-                        {@current_team.name}
-                      </p>
-                    </.dropdown_item>
-
+                    <.team_switcher
+                      :if={Plausible.Teams.enabled?(@current_user)}
+                      conn={@conn}
+                      teams={@teams}
+                      my_team={@my_team}
+                      current_team={@current_team}
+                      more_teams?={@more_teams?}
+                    />
                     <.dropdown_divider />
                     <.dropdown_item href={Routes.settings_path(@conn, :index)}>
                       Account Settings
                     </.dropdown_item>
 
-                    <div :if={Plausible.Teams.enabled?(@my_team) and not @my_team.setup_complete}>
+                    <div :if={
+                      @my_team && Plausible.Teams.enabled?(@current_user) &&
+                        @my_team.id == @current_team.id
+                    }>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span class="flex-1">
                           Create a Team
@@ -96,7 +100,10 @@
                       <.dropdown_divider />
                     </div>
 
-                    <div :if={Plausible.Teams.enabled?(@my_team) and @my_team.setup_complete}>
+                    <div :if={
+                      Plausible.Teams.enabled?(@current_user) and
+                        Plausible.Teams.setup?(@current_team)
+                    }>
                       <.dropdown_item
                         class="flex"
                         href={Routes.settings_path(@conn, :team_general)}
@@ -104,12 +111,6 @@
                         <span class="flex-1">
                           Team Settings
                         </span>
-                      </.dropdown_item>
-                      <.dropdown_item
-                        :if={@conn.assigns[:multiple_teams?]}
-                        href={Routes.auth_path(@conn, :select_team)}
-                      >
-                        Switch Team
                       </.dropdown_item>
                       <.dropdown_divider />
                     </div>

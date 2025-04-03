@@ -1,4 +1,3 @@
-/** @format */
 import { DashboardQuery } from './query'
 import { formatISO } from './util/date'
 import { serializeApiFilters } from './util/filters'
@@ -15,12 +14,11 @@ export class ApiError extends Error {
   }
 }
 
-function serialize(obj: Record<string, string | boolean | number>) {
+function serializeUrlParams(params: Record<string, string | boolean | number>) {
   const str: string[] = []
-  /* eslint-disable-next-line no-prototype-builtins */
-  for (const p in obj)
-    if (obj.hasOwnProperty(p)) {
-      str.push(`${encodeURIComponent(p)}=${encodeURIComponent(obj[p])}`)
+  for (const p in params)
+    if (params.hasOwnProperty(p)) {
+      str.push(`${encodeURIComponent(p)}=${encodeURIComponent(params[p])}`)
     }
   return str.join('&')
 }
@@ -34,10 +32,10 @@ export function cancelAll() {
   abortController = new AbortController()
 }
 
-export function serializeQuery(
+export function queryToSearchParams(
   query: DashboardQuery,
   extraQuery: unknown[] = []
-) {
+): string {
   const queryObj: Record<string, string> = {}
   if (query.period) {
     queryObj.period = query.period
@@ -57,9 +55,6 @@ export function serializeQuery(
   if (query.with_imported) {
     queryObj.with_imported = String(query.with_imported)
   }
-  if (SHARED_LINK_AUTH) {
-    queryObj.auth = SHARED_LINK_AUTH
-  }
 
   if (query.comparison) {
     queryObj.comparison = query.comparison
@@ -72,9 +67,28 @@ export function serializeQuery(
     queryObj.match_day_of_week = String(query.match_day_of_week)
   }
 
+  const sharedLinkParams = getSharedLinkSearchParams()
+  if (sharedLinkParams.auth) {
+    queryObj.auth = sharedLinkParams.auth
+  }
+
+  if (
+    query.legacy_time_on_page_cutoff &&
+    validDate(query.legacy_time_on_page_cutoff)
+  ) {
+    queryObj.include = JSON.stringify({
+      legacy_time_on_page_cutoff: query.legacy_time_on_page_cutoff
+    })
+  }
+
   Object.assign(queryObj, ...extraQuery)
 
-  return '?' + serialize(queryObj)
+  return serializeUrlParams(queryObj)
+}
+
+function validDate(dateString: string) {
+  const date = new Date(dateString)
+  return isFinite(date.getTime())
 }
 
 function getHeaders(): Record<string, string> {
@@ -90,18 +104,24 @@ async function handleApiResponse(response: Response) {
   return payload
 }
 
+function getSharedLinkSearchParams(): Record<string, string> {
+  return SHARED_LINK_AUTH ? { auth: SHARED_LINK_AUTH } : {}
+}
+
 export async function get(
   url: string,
   query?: DashboardQuery,
-  ...extraQuery: unknown[]
+  ...extraQueryParams: unknown[]
 ) {
-  const response = await fetch(
-    query ? url + serializeQuery(query, extraQuery) : url,
-    {
-      signal: abortController.signal,
-      headers: { ...getHeaders(), Accept: 'application/json' }
-    }
-  )
+  const queryString = query
+    ? queryToSearchParams(query, [...extraQueryParams])
+    : serializeUrlParams(getSharedLinkSearchParams())
+
+  const response = await fetch(queryString ? `${url}?${queryString}` : url, {
+    signal: abortController.signal,
+    headers: { ...getHeaders(), Accept: 'application/json' }
+  })
+
   return handleApiResponse(response)
 }
 
@@ -113,6 +133,7 @@ export const mutation = async <
     | { body: TBody; method: 'PATCH' | 'PUT' | 'POST' }
     | { method: 'DELETE' }
 ) => {
+  const queryString = serializeUrlParams(getSharedLinkSearchParams())
   const fetchOptions =
     options.method === 'DELETE'
       ? {}
@@ -120,7 +141,7 @@ export const mutation = async <
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(options.body)
         }
-  const response = await fetch(url, {
+  const response = await fetch(queryString ? `${url}?${queryString}` : url, {
     method: options.method,
     headers: {
       ...getHeaders(),

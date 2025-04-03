@@ -35,6 +35,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         event_name_options_count: length(assigns.event_name_options),
         event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
         current_user: assigns.current_user,
+        site_role: assigns.site_role,
         site_team: assigns.site_team,
         domain: assigns.domain,
         selected_tab: selected_tab,
@@ -71,7 +72,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         :if={@selected_tab == "custom_events"}
         f={f}
         suffix={@context_unique_id}
-        current_user={@current_user}
+        site_role={@site_role}
         site_team={@site_team}
         site={@site}
         goal={@goal}
@@ -121,7 +122,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-show="!tabSelectionInProgress"
         f={f}
         suffix={suffix(@context_unique_id, @tab_sequence_id)}
-        current_user={@current_user}
+        site_role={@site_role}
         site_team={@site_team}
         site={@site}
         existing_goals={@existing_goals}
@@ -179,6 +180,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def pageview_fields(assigns) do
     ~H"""
     <div id="pageviews-form" class="py-2" {@rest}>
+      <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
+        Pageview goals allow you to measure how many people visit a specific page or section of your site. Learn more in
+        <.styled_link href="https://plausible.io/docs/pageview-goals" new_tab={true}>
+          our docs
+        </.styled_link>.
+      </div>
+
       <.label for={"page_path_input_#{@suffix}"}>
         Page Path
       </.label>
@@ -248,6 +256,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
     ~H"""
     <div id="scroll-form" class="py-2" x-data={@js} {@rest}>
+      <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
+        Scroll Depth goals allow you to see how many people scroll beyond your desired scroll depth percentage threshold. Learn more in
+        <.styled_link href="https://plausible.io/docs/scroll-depth" new_tab={true}>
+          our docs
+        </.styled_link>.
+      </div>
+
       <.label for={"scroll_threshold_input_#{@suffix}"}>
         Scroll Percentage Threshold (1-100)
       </.label>
@@ -300,7 +315,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
-  attr(:current_user, Plausible.Auth.User)
+  attr(:site_role, :atom)
   attr(:site_team, Plausible.Teams.Team)
   attr(:suffix, :string)
   attr(:existing_goals, :list)
@@ -312,7 +327,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def custom_event_fields(assigns) do
     ~H"""
-    <div id="custom-events-form" class="my-6" {@rest}>
+    <div id="custom-events-form" class="py-2" {@rest}>
       <div id="event-fields">
         <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
           Custom Events are not tracked by default - you have to configure them on your site to be sent to Plausible. See examples and learn more in
@@ -361,7 +376,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           :if={ee?()}
           f={@f}
           site={@site}
-          current_user={@current_user}
+          site_role={@site_role}
           site_team={@site_team}
           has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
           goal={@goal}
@@ -384,8 +399,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div class="mt-6 space-y-3" x-data={@js_data}>
       <PlausibleWeb.Components.Billing.Notice.premium_feature
-        billable_user={List.first(@site.owners)}
-        current_user={@current_user}
+        current_role={@site_role}
         current_team={@site_team}
         feature_mod={Plausible.Billing.Feature.RevenueGoals}
         class="rounded-b-md"
@@ -462,11 +476,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     <div class="my-2 text-sm w-full flex rounded border border-gray-300 dark:border-gray-500 overflow-hidden">
       <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
       <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
-      <.scroll_tab
-        :if={Plausible.Stats.ScrollDepth.feature_visible?(@site, @current_user)}
-        selected?={@selected_tab == "scroll"}
-        myself={@myself}
-      />
+      <.scroll_tab selected?={@selected_tab == "scroll"} myself={@myself} />
     </div>
     """
   end

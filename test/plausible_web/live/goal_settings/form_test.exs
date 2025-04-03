@@ -24,8 +24,6 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
     test "can navigate to scroll tab if scroll_depth feature visible for site/user",
          %{conn: conn, site: site} do
-      Plausible.Sites.set_scroll_depth_visible_at(site)
-
       lv = get_liveview(conn, site)
       lv |> element(~s/a#scroll-tab/) |> render_click()
       html = render(lv)
@@ -33,12 +31,6 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert "goal[scroll_threshold]" in input_names
       assert "goal[page_path]" in input_names
       assert "goal[display_name]" in input_names
-    end
-
-    test "does not render scroll tab if scroll_depth feature not visible for site/user",
-         %{conn: conn, site: site} do
-      html = get_liveview(conn, site) |> render()
-      refute element_exists?(html, ~s/a#scroll-tab/)
     end
   end
 

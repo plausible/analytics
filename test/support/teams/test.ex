@@ -17,21 +17,30 @@ defmodule Plausible.Teams.Test do
     end
   end
 
+  def set_current_team(conn, team) do
+    Plug.Conn.put_session(conn, :current_team_id, team.identifier)
+  end
+
   def new_site(args \\ []) do
     args =
-      if user = args[:owner] do
-        {owner, args} = Keyword.pop(args, :owner)
-        {:ok, team} = Teams.get_or_create(user)
+      cond do
+        user = args[:owner] ->
+          {owner, args} = Keyword.pop(args, :owner)
+          {:ok, team} = Teams.get_or_create(user)
 
-        args
-        |> Keyword.put(:owners, [owner])
-        |> Keyword.put(:team, team)
-      else
-        user = new_user()
-        {:ok, team} = Teams.get_or_create(user)
+          args
+          |> Keyword.put(:owners, [owner])
+          |> Keyword.put(:team, team)
 
-        args
-        |> Keyword.put(:team, team)
+        args[:team] ->
+          args
+
+        true ->
+          user = new_user()
+          {:ok, team} = Teams.get_or_create(user)
+
+          args
+          |> Keyword.put(:team, team)
       end
 
     :site
@@ -328,6 +337,13 @@ defmodule Plausible.Teams.Test do
              team_invitation_id: team_invitation.id,
              site_id: site.id,
              role: role
+           )
+  end
+
+  def refute_team_invitation(team, email) do
+    refute Repo.get_by(Plausible.Teams.Invitation,
+             email: email,
+             team_id: team.id
            )
   end
 

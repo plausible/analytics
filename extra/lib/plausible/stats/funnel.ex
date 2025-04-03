@@ -27,10 +27,10 @@ defmodule Plausible.Stats.Funnel do
     end
   end
 
-  def funnel(site, query, %Funnel{} = funnel) do
+  def funnel(_site, query, %Funnel{} = funnel) do
     funnel_data =
-      site
-      |> Base.base_event_query(query)
+      query
+      |> Base.base_event_query()
       |> query_funnel(funnel)
 
     # Funnel definition steps are 1-indexed, if there's index 0 in the resulting query,

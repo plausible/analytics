@@ -587,7 +587,6 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       insert(:google_auth, site: site, user: user)
       subscribe_to_growth_plan(user, status: Subscription.Status.deleted())
-      subscribe_to_growth_plan(user, status: Subscription.Status.active())
       subscribe_to_enterprise_plan(user, site_limit: 1, subscription?: false)
 
       {:ok, team} = Plausible.Teams.get_or_create(user)
@@ -599,6 +598,22 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Repo.all(Plausible.Billing.Subscription) == []
       assert Repo.all(Plausible.Billing.EnterprisePlan) == []
       refute Repo.get(Plausible.Teams.Team, team.id)
+    end
+
+    test "refuses to delete when a personal team has an active subscription", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_growth_plan(user, status: Subscription.Status.active())
+
+      conn = delete(conn, "/me")
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :danger_zone)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "You have an active subscription which must be canceled first"
+
+      assert Repo.reload(user)
     end
 
     test "deletes sites that the user owns", %{conn: conn, user: user, site: owner_site} do
@@ -616,9 +631,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       user: user,
       site: site
     } do
-      site.team
-      |> Plausible.Teams.Team.setup_changeset()
-      |> Repo.update!()
+      Plausible.Teams.complete_setup(site.team)
 
       conn = delete(conn, "/me")
 
@@ -635,9 +648,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       user: user,
       site: site
     } do
-      site.team
-      |> Plausible.Teams.Team.setup_changeset()
-      |> Repo.update!()
+      Plausible.Teams.complete_setup(site.team)
 
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
@@ -696,7 +707,8 @@ defmodule PlausibleWeb.AuthControllerTest do
     } do
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
-      add_member(another_site.team, user: user, role: :admin)
+      another_team = another_owner |> team_of() |> Plausible.Teams.complete_setup()
+      add_member(another_team, user: user, role: :admin)
 
       segment =
         insert(:segment,
@@ -717,7 +729,8 @@ defmodule PlausibleWeb.AuthControllerTest do
     } do
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
-      add_member(another_site.team, user: user, role: :admin)
+      another_team = another_owner |> team_of() |> Plausible.Teams.complete_setup()
+      add_member(another_team, user: user, role: :admin)
 
       segment =
         insert(:segment,
@@ -738,11 +751,31 @@ defmodule PlausibleWeb.AuthControllerTest do
     } do
       another_owner = new_user()
       another_site = new_site(owner: another_owner)
+      team = another_owner |> team_of() |> Plausible.Teams.complete_setup()
       add_member(another_site.team, user: user, role: :owner)
 
       delete(conn, "/me")
 
       refute Repo.reload(user)
+      assert Repo.reload(team)
+    end
+
+    test "deletes personal team in multiple teams case as well", %{
+      conn: conn,
+      user: user
+    } do
+      new_site(owner: user)
+      personal_team = team_of(user)
+      another_owner = new_user()
+      _another_site = new_site(owner: another_owner)
+      another_team = another_owner |> team_of() |> Plausible.Teams.complete_setup()
+      add_member(another_team, user: user, role: :owner)
+
+      delete(conn, "/me")
+
+      refute Repo.reload(user)
+      assert Repo.reload(another_team)
+      refute Repo.reload(personal_team)
     end
   end
 

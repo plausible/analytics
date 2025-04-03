@@ -1,9 +1,9 @@
-/* @format */
 import React, { ReactNode, RefObject, useCallback, useEffect } from 'react'
 import {
   AppNavigationTarget,
   useAppNavigate
 } from './navigation/use-app-navigate'
+import classNames from 'classnames'
 
 /**
  * Returns whether a keydown or keyup event should be ignored or not.
@@ -135,9 +135,20 @@ export function NavigateKeybind({
   )
 }
 
-export function KeybindHint({ children }: { children: ReactNode }) {
+export function KeybindHint({
+  children,
+  className
+}: {
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <kbd className="rounded border border-gray-200 dark:border-gray-600 px-2 font-mono font-normal text-xs text-gray-400">
+    <kbd
+      className={classNames(
+        'rounded border border-gray-200 dark:border-gray-600 px-2 font-mono font-normal text-xs text-gray-400',
+        className
+      )}
+    >
       {children}
     </kbd>
   )

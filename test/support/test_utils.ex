@@ -47,13 +47,14 @@ defmodule Plausible.TestUtils do
     {:ok, team: team}
   end
 
-  def setup_team(%{team: team}) do
-    team =
-      team
-      |> Plausible.Teams.Team.setup_changeset()
-      |> Repo.update!()
+  def setup_team(%{conn: conn, team: team}) do
+    team = Plausible.Teams.complete_setup(team)
 
-    {:ok, team: team}
+    conn =
+      conn
+      |> Plug.Conn.put_session(:current_team_id, team.identifier)
+
+    {:ok, conn: conn, team: team}
   end
 
   def create_legacy_site_import(%{site: site}) do
@@ -73,13 +74,9 @@ defmodule Plausible.TestUtils do
     {:ok, site_import: site_import}
   end
 
-  def set_scroll_depth_visible_at(%{site: site}) do
-    Plausible.Sites.set_scroll_depth_visible_at(site)
-    :ok
-  end
-
   def create_api_key(%{user: user}) do
-    api_key = Factory.insert(:api_key, user: user)
+    team = Plausible.Teams.Test.team_of(user)
+    api_key = Factory.insert(:api_key, user: user, team: team)
 
     {:ok, api_key: api_key.key}
   end

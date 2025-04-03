@@ -5,7 +5,11 @@ defmodule Plausible.Auth do
 
   use Plausible
   use Plausible.Repo
+
+  import Ecto.Query
+
   alias Plausible.Auth
+  alias Plausible.Billing
   alias Plausible.RateLimit
   alias Plausible.Teams
 
@@ -70,52 +74,76 @@ defmodule Plausible.Auth do
     end
   end
 
+  @spec delete_user(Auth.User.t()) ::
+          {:ok, :deleted} | {:error, :is_only_team_owner | :active_subscription}
   def delete_user(user) do
+    case Teams.get_by_owner(user) do
+      {:ok, %{setup_complete: false} = team} ->
+        delete_team_and_user(team, user)
+
+      {:ok, team} ->
+        with :ok <- check_can_leave_team(team) do
+          delete_user!(user)
+          {:ok, :deleted}
+        end
+
+      {:error, :multiple_teams} ->
+        teams = Teams.Users.owned_teams(user)
+
+        with :ok <- check_can_leave_teams(teams) do
+          personal_team = Enum.find(teams, &(not Teams.setup?(&1)))
+          delete_team_and_user(personal_team, user)
+        end
+
+      {:error, :no_team} ->
+        delete_user!(user)
+        {:ok, :deleted}
+    end
+  end
+
+  defp delete_team_and_user(nil, user) do
+    delete_user!(user)
+    {:ok, :deleted}
+  end
+
+  defp delete_team_and_user(team, user) do
     Repo.transaction(fn ->
-      case Teams.get_by_owner(user) do
-        {:ok, %{setup_complete: false} = team} ->
-          for site <- Teams.owned_sites(team) do
-            Plausible.Site.Removal.run(site)
-          end
+      case Teams.delete(team) do
+        {:ok, :deleted} ->
+          delete_user!(user)
+          :deleted
 
-          Repo.delete_all(from s in Plausible.Billing.Subscription, where: s.team_id == ^team.id)
-
-          Repo.delete_all(
-            from ep in Plausible.Billing.EnterprisePlan, where: ep.team_id == ^team.id
-          )
-
-          Plausible.Segments.user_removed(user)
-          Repo.delete!(team)
-          Repo.delete!(user)
-
-        {:ok, team} ->
-          check_can_leave_team!(team)
-          Repo.delete!(user)
-
-        {:error, :multiple_teams} ->
-          check_can_leave_teams!(user)
-          Repo.delete!(user)
-
-        {:error, :no_team} ->
-          Repo.delete!(user)
+        {:error, error} ->
+          Repo.rollback(error)
       end
-
-      :deleted
     end)
   end
 
-  defp check_can_leave_teams!(user) do
-    user
-    |> Teams.Users.owned_teams()
-    |> Enum.reject(&(&1.setup_complete == false))
-    |> Enum.map(fn team ->
-      check_can_leave_team!(team)
+  defp delete_user!(user) do
+    Repo.transaction(fn ->
+      Plausible.Segments.user_removed(user)
+      Repo.delete!(user)
+    end)
+
+    :ok
+  end
+
+  defp check_can_leave_teams(teams) do
+    teams
+    |> Enum.filter(& &1.setup_complete)
+    |> Enum.reduce_while(:ok, fn team, :ok ->
+      case check_can_leave_team(team) do
+        :ok -> {:cont, :ok}
+        {:error, error} -> {:halt, {:error, error}}
+      end
     end)
   end
 
-  defp check_can_leave_team!(team) do
-    if Teams.Memberships.owners_count(team) <= 1 do
-      Repo.rollback(:is_only_team_owner)
+  defp check_can_leave_team(team) do
+    if Teams.Memberships.owners_count(team) > 1 do
+      :ok
+    else
+      {:error, :is_only_team_owner}
     end
   end
 
@@ -127,16 +155,28 @@ defmodule Plausible.Auth do
       user_id in Application.get_env(:plausible, :super_admin_user_ids)
     end
   else
-    def is_super_admin?(_), do: false
+    def is_super_admin?(_), do: always(false)
   end
 
-  @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
-          {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
-  def create_api_key(user, name, key) do
-    params = %{name: name, user_id: user.id, key: key}
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
+  @spec list_api_keys(Auth.User.t(), Teams.Team.t() | nil) :: [Auth.ApiKey.t()]
+  def list_api_keys(user, team) do
+    query =
+      from(a in Auth.ApiKey,
+        where: a.user_id == ^user.id,
+        order_by: [desc: a.id]
+      )
+      |> scope_api_keys_by_team(team)
 
-    with :ok <- check_stats_api_available(user) do
+    Repo.all(query)
+  end
+
+  @spec create_api_key(Auth.User.t(), Teams.Team.t(), String.t(), String.t()) ::
+          {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
+  def create_api_key(user, team, name, key) do
+    params = %{name: name, user_id: user.id, key: key}
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, team, params)
+
+    with :ok <- Billing.Feature.StatsAPI.check_availability(team) do
       Repo.insert(changeset)
     end
   end
@@ -151,37 +191,71 @@ defmodule Plausible.Auth do
     end
   end
 
-  @spec find_api_key(String.t()) :: {:ok, Auth.ApiKey.t()} | {:error, :invalid_api_key}
-  def find_api_key(raw_key) do
+  @spec find_api_key(String.t(), Keyword.t()) ::
+          {:ok, %{api_key: Auth.ApiKey.t(), team: Teams.Team.t() | nil}}
+          | {:error, :invalid_api_key | :missing_site_id}
+  def find_api_key(raw_key, opts \\ []) do
+    {team_scope, id} = Keyword.get(opts, :team_by, {nil, nil})
+
+    find_api_key(raw_key, team_scope, id)
+  end
+
+  defp scope_api_keys_by_team(query, nil) do
+    query
+  end
+
+  defp scope_api_keys_by_team(query, team) do
+    where(query, [a], is_nil(a.team_id) or a.team_id == ^team.id)
+  end
+
+  defp find_api_key(raw_key, nil, _) do
     hashed_key = Auth.ApiKey.do_hash(raw_key)
 
     query =
       from(api_key in Auth.ApiKey,
         join: user in assoc(api_key, :user),
+        left_join: team in assoc(api_key, :team),
         where: api_key.key_hash == ^hashed_key,
-        preload: [user: user]
+        preload: [user: user, team: team]
       )
 
-    if found = Repo.one(query) do
-      {:ok, found}
-    else
-      {:error, :invalid_api_key}
+    case Repo.one(query) do
+      nil ->
+        {:error, :invalid_api_key}
+
+      %{team: %{} = team} = api_key ->
+        {:ok, %{api_key: api_key, team: team}}
+
+      api_key ->
+        {:ok, %{api_key: api_key, team: nil}}
     end
   end
 
-  defp check_stats_api_available(user) do
-    case Plausible.Teams.get_by_owner(user) do
-      {:ok, team} ->
-        Plausible.Billing.Feature.StatsAPI.check_availability(team)
+  defp find_api_key(raw_key, :site, nil) do
+    find_api_key(raw_key, nil, nil)
+  end
 
-      {:error, :no_team} ->
-        Plausible.Billing.Feature.StatsAPI.check_availability(nil)
+  defp find_api_key(raw_key, :site, domain) do
+    case find_api_key(raw_key, nil, nil) do
+      {:ok, %{api_key: api_key, team: nil}} ->
+        team = find_team_by_site(domain)
+        {:ok, %{api_key: api_key, team: team}}
 
-      {:error, :multiple_teams} ->
-        # NOTE: Loophole to allow creating API keys when user is a member
-        # on multiple teams.
-        :ok
+      {:ok, %{api_key: api_key, team: team}} ->
+        {:ok, %{api_key: api_key, team: team}}
+
+      {:error, _} = error ->
+        error
     end
+  end
+
+  defp find_team_by_site(domain) do
+    Repo.one(
+      from s in Plausible.Site,
+        inner_join: t in assoc(s, :team),
+        where: s.domain == ^domain or s.domain_changed_from == ^domain,
+        select: t
+    )
   end
 
   defp rate_limit_key(%Auth.User{id: id}), do: id

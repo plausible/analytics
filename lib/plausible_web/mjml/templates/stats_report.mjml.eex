@@ -1,3 +1,4 @@
+<% use Plausible %>
 <mjml>
   <mj-head>
     <mj-attributes>
@@ -24,7 +25,7 @@
   <mj-body>
     <mj-section padding="25px 0 0 0">
       <mj-column>
-        <%= if Plausible.ee?() do %>
+        <%= if ee?() do %>
         <mj-text mj-class="text-sm" height="40px">
           <%= Plausible.product_name() %>
         </mj-text>

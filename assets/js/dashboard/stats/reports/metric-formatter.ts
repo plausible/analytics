@@ -1,5 +1,3 @@
-/** @format */
-
 import { Metric } from '../../../types/query-api'
 import { formatMoneyShort, formatMoneyLong } from '../../util/money'
 import {
@@ -34,8 +32,8 @@ export const MetricFormatterShort: Record<
 
   conversions: numberShortFormatter,
 
-  time_on_page: durationFormatter,
-  visit_duration: durationFormatter,
+  time_on_page: nullable(durationFormatter),
+  visit_duration: nullable(durationFormatter),
 
   bounce_rate: percentageFormatter,
   conversion_rate: percentageFormatter,
@@ -62,8 +60,8 @@ export const MetricFormatterLong: Record<
 
   conversions: numberLongFormatter,
 
-  time_on_page: durationFormatter,
-  visit_duration: durationFormatter,
+  time_on_page: nullable(durationFormatter),
+  visit_duration: nullable(durationFormatter),
 
   bounce_rate: percentageFormatter,
   conversion_rate: percentageFormatter,

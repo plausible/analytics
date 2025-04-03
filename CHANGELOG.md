@@ -4,12 +4,24 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Add top 3 pages into the traffic spike email
+- Two new shorthand time periods `28d` and `90d` available on both dashboard and in public API
+- Average scroll depth metric
+- Scroll Depth goals
 - Dashboard shows comparisons for all reports
 - UTM Medium report and API shows (gclid) and (msclkid) for paid searches when no explicit utm medium present.
 - Support for `case_sensitive: false` modifiers in Stats API V2 filters for case-insensitive searches.
 - Add text version to emails plausible/analytics#4674
 - Add acquisition channels report
 - Add filter `is not` for goals in dashboard plausible/analytics#4983
+- Add Segments feature
+- Support `["is", "segment", [<segment ID>]]` filter in Stats API
+- Time on page metric is now sortable in reports
+- Plausible tracker script now reports maximum scroll depth reached and time engaged with the site in an `engagement` event. These are reported as `sd` and `e` integer parameters to /api/event endpoint respectively. If you're using a custom proxy for plausible script, please ensure that these parameters are being passed forward.
+- Plausible tracker script now reports the version of the script in the `v` parameter sent with each request.
+- Add support for creating and managing teams owning multiple sites
+- Introduce "billing" team role for users
+- Introduce "editor" role with permissions greater than "viewer" but lesser than "admin"
 
 ### Removed
 
@@ -18,14 +30,25 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Increase decimal precision of the "Conversion rate" metric from 1 to 2 (e.g. 16.7 -> 16.67)
+- The "Last 30 days" period is now "Last 28 days" on the dashboard and also the new default. Keyboard shortcut `T` still works for last 30 days.
+- Last `7d` and `30d` periods do not include today anymore
 - Filters appear in the search bar as ?f=is,page,/docs,/blog&f=... instead of ?filters=((is,page,(/docs,/blog)),...) for Plausible links sent on various platforms to work reliably.
 - Details modal search inputs are now case-insensitive.
 - Improved report performance in cases where site has a lot of unique pathnames
 - Plausible script now uses `fetch` with keepalive flag as default over `XMLHttpRequest`. This will ensure more reliable tracking. Reminder to use `compat` script variant if tracking Internet Explorer is required.
 - The old `/api/health` healtcheck is soft-deprecated in favour of separate `/api/system/health/live` and `/api/system/health/ready` checks
+- Changed top bar filter menu and how applied filters wrap
+- Main graph now shows revenue with relevant currency symbol when hovering a data point
+- Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
+- Make Stats and Sites API keys scoped to teams they are created in
+- Remove permissions to manage sites guests and run destructive actions from team editor and guest editor roles in favour of team admin role
 
 ### Fixed
 
+- Fix fetching favicons from DuckDuckGo when the domain includes a pathname
+- Fix `visitors.csv` (in dashboard CSV export) vs dashboard main graph reporting different results for `visitors` and `visits` with a `time:minute` interval.
+- The tracker script now sends pageviews when a page gets loaded from bfcache
 - Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal
 - Fix typo on login screen
 - Fix Direct / None details modal not opening
@@ -33,6 +56,10 @@ All notable changes to this project will be documented in this file.
 - Breakdown modals now display correct comparison values instead of 0 after pagination
 - Fix database mismatch between event and session user_ids after rotating salts
 - `/api/v2/query` no longer returns a 500 when querying percentage metric without `visitors`
+- Fix current visitors loading when viewing a dashboard with a shared link
+- Fix Conversion Rate graph being unselectable when "Goal is ..." filter is within a segment
+- Fix Channels filter input appearing when clicking Sources in filter menu or clicking an applied "Channel is..." filter
+- Fix Conversion Rate metrics column disappearing from reports when "Goal is ..." filter is within a segment
 
 ## v2.1.5-rc.1 - 2025-01-17
 

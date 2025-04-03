@@ -3,29 +3,25 @@ defmodule PlausibleWeb.HelpScoutController do
 
   alias Plausible.HelpScout
 
-  @conversation_cookie "helpscout_conversation"
-  @conversation_cookie_seconds 8 * 60 * 60
-  @signature_errors HelpScout.signature_errors()
+  @conversation_token_seconds 8 * 60 * 60
 
   plug :make_iframe_friendly
 
   def callback(conn, %{"customer-id" => customer_id, "conversation-id" => conversation_id}) do
-    assigns = %{conversation_id: conversation_id, customer_id: customer_id}
+    token = sign_token(conversation_id)
+    assigns = %{conversation_id: conversation_id, customer_id: customer_id, token: token}
 
     with :ok <- HelpScout.validate_signature(conn),
          {:ok, details} <- HelpScout.get_details_for_customer(customer_id) do
       conn
-      |> set_cookie(conversation_id)
       |> render("callback.html", Map.merge(assigns, details))
     else
       {:error, {:user_not_found, [email | _]}} ->
         conn
-        |> set_cookie(conversation_id)
         |> render("callback.html", Map.merge(assigns, %{error: ":user_not_found", email: email}))
 
       {:error, error} ->
         conn
-        |> maybe_set_cookie(error, conversation_id)
         |> render("callback.html", Map.put(assigns, :error, inspect(error)))
     end
   end
@@ -36,24 +32,26 @@ defmodule PlausibleWeb.HelpScoutController do
 
   def show(
         conn,
-        %{"email" => email, "conversation_id" => conversation_id, "customer_id" => customer_id} =
+        %{
+          "email" => email,
+          "token" => token,
+          "conversation_id" => conversation_id,
+          "customer_id" => customer_id
+        } =
           params
       ) do
     assigns = %{
       xhr?: params["xhr"] == "true",
       conversation_id: conversation_id,
-      customer_id: customer_id
+      customer_id: customer_id,
+      token: token
     }
 
-    with :ok <- match_conversation(conn, conversation_id),
-         {:ok, details} <- HelpScout.get_details_for_emails([email], customer_id) do
+    with :ok <- match_conversation(token, conversation_id),
+         {:ok, details} <-
+           HelpScout.get_details_for_emails([email], customer_id, params["team_identifier"]) do
       render(conn, "callback.html", Map.merge(assigns, details))
     else
-      {:error, :invalid_conversation = error} ->
-        conn
-        |> clear_cookie()
-        |> render("callback.html", Map.put(assigns, :error, inspect(error)))
-
       {:error, error} ->
         render(conn, "callback.html", Map.put(assigns, :error, inspect(error)))
     end
@@ -61,65 +59,51 @@ defmodule PlausibleWeb.HelpScoutController do
 
   def search(conn, %{
         "term" => term,
+        "token" => token,
         "conversation_id" => conversation_id,
         "customer_id" => customer_id
       }) do
     assigns = %{
       conversation_id: conversation_id,
-      customer_id: customer_id
+      customer_id: customer_id,
+      token: token
     }
 
-    case match_conversation(conn, conversation_id) do
+    case match_conversation(token, conversation_id) do
       :ok ->
         users = HelpScout.search_users(term, customer_id)
         render(conn, "search.html", Map.merge(assigns, %{users: users, term: term}))
 
-      {:error, :invalid_conversation = error} ->
-        conn
-        |> clear_cookie()
-        |> render("search.html", Map.put(assigns, :error, inspect(error)))
+      {:error, error} ->
+        render(conn, "search.html", Map.put(assigns, :error, inspect(error)))
     end
   end
 
-  defp match_conversation(conn, conversation_id) do
-    conn = fetch_cookies(conn, encrypted: [@conversation_cookie])
-    cookie_conversation = conn.cookies[@conversation_cookie][:conversation_id]
+  defp match_conversation(token, conversation_id) do
+    case verify_token(token) do
+      {:ok, token_data} ->
+        if token_data.conversation_id == conversation_id do
+          :ok
+        else
+          {:error, :invalid_conversation}
+        end
 
-    if cookie_conversation && conversation_id == cookie_conversation do
-      :ok
-    else
-      {:error, :invalid_conversation}
+      {:error, _error} ->
+        {:error, :invalid_token}
     end
-  end
-
-  defp maybe_set_cookie(conn, error, conversation_id)
-       when error not in @signature_errors do
-    set_cookie(conn, conversation_id)
-  end
-
-  defp maybe_set_cookie(conn, _error, _conversation_id) do
-    clear_cookie(conn)
   end
 
   # Exposed for testing
   @doc false
-  def set_cookie(conn, conversation_id) do
-    put_resp_cookie(conn, @conversation_cookie, %{conversation_id: conversation_id},
-      domain: PlausibleWeb.Endpoint.host(),
-      secure: true,
-      encrypt: true,
-      max_age: @conversation_cookie_seconds,
-      same_site: "None"
-    )
+  def sign_token(conversation_id) do
+    Phoenix.Token.sign(PlausibleWeb.Endpoint, "hs-conversation", %{
+      conversation_id: conversation_id
+    })
   end
 
-  defp clear_cookie(conn) do
-    delete_resp_cookie(conn, @conversation_cookie,
-      domain: PlausibleWeb.Endpoint.host(),
-      secure: true,
-      encrypt: true,
-      max_age: @conversation_cookie_seconds,
-      same_site: "None"
+  defp verify_token(token) do
+    Phoenix.Token.verify(PlausibleWeb.Endpoint, "hs-conversation", token,
+      max_age: @conversation_token_seconds
     )
   end
 

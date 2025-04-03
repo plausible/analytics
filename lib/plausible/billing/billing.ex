@@ -89,7 +89,7 @@ defmodule Plausible.Billing do
     subscription =
       Subscription
       |> Repo.get_by(paddle_subscription_id: params["subscription_id"])
-      |> Repo.preload(team: :owners)
+      |> Repo.preload(team: [:owners, :billing_members])
 
     if subscription do
       changeset =
@@ -99,8 +99,8 @@ defmodule Plausible.Billing do
 
       updated = Repo.update!(changeset)
 
-      for owner <- subscription.team.owners do
-        owner
+      for recipient <- subscription.team.owners ++ subscription.team.billing_members do
+        recipient
         |> PlausibleWeb.Email.cancellation_email()
         |> Plausible.Mailer.send()
       end
@@ -145,7 +145,7 @@ defmodule Plausible.Billing do
         # this could result in assigning this new subscription to the newly owned team,
         # effectively "shadowing" any old one.
         #
-        # That's why we are always defaulting to creating a new "My Team" team regardless
+        # That's why we are always defaulting to creating a new "My Personal Sites" team regardless
         # if they were owner of one before or not.
         Auth.User
         |> Repo.get!(user_id)
@@ -245,11 +245,20 @@ defmodule Plausible.Billing do
       )
 
     if plan do
-      owner_ids = Enum.map(team.owners, & &1.id)
-      api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id in ^owner_ids)
-      Repo.update_all(api_keys, set: [hourly_request_limit: plan.hourly_api_request_limit])
+      Repo.update_all(
+        from(t in Teams.Team, where: t.id == ^team.id),
+        set: [hourly_api_request_limit: plan.hourly_api_request_limit]
+      )
     end
 
     team
   end
+
+  def dashboard_locked_notice_title(), do: "Dashboard locked"
+  def active_grace_period_notice_title(), do: "You have outgrown your Plausible subscription tier"
+  def subscription_cancelled_notice_title(), do: "Subscription cancelled"
+  def subscription_past_due_notice_title(), do: "Payment failed"
+  def subscription_paused_notice_title(), do: "Subscription paused"
+  def upgrade_ineligible_notice_title(), do: "No sites owned"
+  def pending_site_ownerships_notice_title(), do: "Pending ownership transfers"
 end

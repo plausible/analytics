@@ -4,7 +4,7 @@ defmodule PlausibleWeb.InvitationController do
   plug PlausibleWeb.RequireAccountPlug
 
   plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
-       [:owner, :editor, :admin] when action in [:remove_invitation]
+       [:owner, :admin] when action in [:remove_invitation]
 
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
     current_user = conn.assigns.current_user
@@ -39,6 +39,11 @@ defmodule PlausibleWeb.InvitationController do
       {:error, :invitation_not_found} ->
         conn
         |> put_flash(:error, "Invitation missing or already accepted")
+        |> redirect(to: "/sites")
+
+      {:error, :transfer_to_self} ->
+        conn
+        |> put_flash(:error, "The site is already in the current team")
         |> redirect(to: "/sites")
 
       {:error, :permission_denied} ->
@@ -104,7 +109,7 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   def remove_team_invitation(conn, %{"invitation_id" => invitation_id}) do
-    %{my_team: team, current_user: current_user} = conn.assigns
+    %{current_team: team, current_user: current_user} = conn.assigns
 
     case Plausible.Teams.Invitations.Remove.remove(team, invitation_id, current_user) do
       {:ok, invitation} ->

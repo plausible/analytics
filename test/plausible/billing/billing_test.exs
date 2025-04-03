@@ -7,6 +7,8 @@ defmodule Plausible.BillingTest do
   alias Plausible.Billing.Subscription
 
   describe "check_needs_to_upgrade" do
+    @describetag :ee_only
+
     test "is false for a trial user" do
       team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
       assert Plausible.Teams.Billing.check_needs_to_upgrade(team) == :no_upgrade_needed
@@ -16,12 +18,12 @@ defmodule Plausible.BillingTest do
       team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1)) |> team_of()
 
       assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
     test "is true for a user with empty trial expiry date" do
       assert Plausible.Teams.Billing.check_needs_to_upgrade(nil) ==
-               {:needs_to_upgrade, :no_trial}
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
     test "is false for user with empty trial expiry date but with an active subscription" do
@@ -66,7 +68,7 @@ defmodule Plausible.BillingTest do
         |> team_of()
 
       assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
     test "is true for a deleted subscription if no next_bill_date specified" do
@@ -79,10 +81,10 @@ defmodule Plausible.BillingTest do
         |> team_of()
 
       assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
-               {:needs_to_upgrade, :no_active_subscription}
+               {:needs_to_upgrade, :no_active_trial_or_subscription}
     end
 
-    test "is true for a user past their grace period" do
+    test "needs to upgrade if subscription active and grace period ended when usage still over limits" do
       user =
         new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
         |> subscribe_to_growth_plan(
@@ -92,8 +94,24 @@ defmodule Plausible.BillingTest do
 
       team = user |> team_of() |> Repo.reload!() |> Plausible.Teams.end_grace_period()
 
-      assert Plausible.Teams.Billing.check_needs_to_upgrade(team) ==
+      over_limits_usage_stub = monthly_pageview_usage_stub(100_000_000, 100_000_000)
+
+      assert Plausible.Teams.Billing.check_needs_to_upgrade(team, over_limits_usage_stub) ==
                {:needs_to_upgrade, :grace_period_ended}
+    end
+
+    test "no upgrade needed if subscription active and grace period ended but usage below limits" do
+      user =
+        new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
+        |> subscribe_to_growth_plan(
+          status: Subscription.Status.deleted(),
+          next_bill_date: Date.utc_today()
+        )
+
+      team = user |> team_of() |> Repo.reload!() |> Plausible.Teams.end_grace_period()
+
+      assert Plausible.Teams.Billing.check_needs_to_upgrade(team, Plausible.Teams.Billing) ==
+               :no_upgrade_needed
     end
   end
 
@@ -271,12 +289,14 @@ defmodule Plausible.BillingTest do
 
       team = team_of(user)
 
-      api_key = insert(:api_key, user: user, hourly_request_limit: 1)
+      _api_key = insert(:api_key, user: user)
+
+      assert team.hourly_api_request_limit != 10_000
 
       %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
-      assert Repo.reload!(api_key).hourly_request_limit == 10_000
+      assert Repo.reload!(team).hourly_api_request_limit == 10_000
     end
   end
 
@@ -399,7 +419,9 @@ defmodule Plausible.BillingTest do
 
       team = team_of(user)
 
-      api_key = insert(:api_key, user: user, hourly_request_limit: 1)
+      _api_key = insert(:api_key, user: user)
+
+      assert team.hourly_api_request_limit != 10_000
 
       @subscription_updated_params
       |> Map.merge(%{
@@ -409,7 +431,7 @@ defmodule Plausible.BillingTest do
       })
       |> Billing.subscription_updated()
 
-      assert Repo.reload!(api_key).hourly_request_limit == 10_000
+      assert Repo.reload!(team).hourly_api_request_limit == 10_000
     end
 
     test "if teams's grace period has ended, upgrading will unlock sites and remove grace period" do
@@ -489,13 +511,25 @@ defmodule Plausible.BillingTest do
       user = new_user()
       subscribe_to_growth_plan(user, status: Subscription.Status.active())
 
+      team = team_of(user)
+      billing_member = new_user()
+      add_member(team, user: billing_member, role: :billing)
+
       Billing.subscription_cancelled(%{
         "alert_name" => "subscription_cancelled",
         "subscription_id" => subscription_of(user).paddle_subscription_id,
         "status" => "deleted"
       })
 
-      assert_email_delivered_with(subject: "Mind sharing your thoughts on Plausible?")
+      assert_email_delivered_with(
+        to: [nil: user.email],
+        subject: "Mind sharing your thoughts on Plausible?"
+      )
+
+      assert_email_delivered_with(
+        to: [nil: billing_member.email],
+        subject: "Mind sharing your thoughts on Plausible?"
+      )
     end
   end
 
@@ -584,5 +618,31 @@ defmodule Plausible.BillingTest do
     assert Plausible.Teams.Billing.has_active_subscription?(active_team)
     refute Plausible.Teams.Billing.has_active_subscription?(paused_team)
     refute Plausible.Teams.Billing.has_active_subscription?(nil)
+  end
+
+  def monthly_pageview_usage_stub(penultimate_usage, last_usage) do
+    last_bill_date = Date.utc_today() |> Date.shift(day: -1)
+
+    Plausible.Teams.Billing
+    |> Double.stub(:monthly_pageview_usage, fn _user ->
+      %{
+        last_cycle: %{
+          date_range:
+            Date.range(
+              Date.shift(last_bill_date, month: -1),
+              Date.shift(last_bill_date, day: -1)
+            ),
+          total: last_usage
+        },
+        penultimate_cycle: %{
+          date_range:
+            Date.range(
+              Date.shift(last_bill_date, month: -2),
+              Date.shift(last_bill_date, day: -1, month: -1)
+            ),
+          total: penultimate_usage
+        }
+      }
+    end)
   end
 end

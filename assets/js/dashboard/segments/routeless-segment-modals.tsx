@@ -1,5 +1,3 @@
-/** @format */
-
 import React from 'react'
 import {
   CreateSegmentModal,
@@ -22,10 +20,12 @@ import { useQueryContext } from '../query-context'
 import { Role, useUserContext } from '../user-context'
 import { mutation } from '../api'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
+import { useSegmentsContext } from '../filtering/segments-context'
 
 export type RoutelessSegmentModal = 'create' | 'update' | 'delete'
 
 export const RoutelessSegmentModals = () => {
+  const { updateOne, addOne, removeOne } = useSegmentsContext()
   const navigate = useAppNavigate()
   const queryClient = useQueryClient()
   const site = useSiteContext()
@@ -64,6 +64,7 @@ export const RoutelessSegmentModals = () => {
       return handleSegmentResponse(response)
     },
     onSuccess: async (segment) => {
+      updateOne(segment)
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
         search: getSearchToApplySingleSegmentFilter(segment),
@@ -100,6 +101,7 @@ export const RoutelessSegmentModals = () => {
       return handleSegmentResponse(response)
     },
     onSuccess: async (segment) => {
+      addOne(segment)
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
         search: getSearchToApplySingleSegmentFilter(segment),
@@ -122,7 +124,8 @@ export const RoutelessSegmentModals = () => {
         )
       return handleSegmentResponse(response)
     },
-    onSuccess: (_segment): void => {
+    onSuccess: (segment): void => {
+      removeOne(segment)
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
         search: (s) => {
@@ -140,7 +143,7 @@ export const RoutelessSegmentModals = () => {
     }
   })
 
-  if (!user.loggedIn || !site.flags.saved_segments) {
+  if (!user.loggedIn) {
     return null
   }
 

@@ -31,7 +31,7 @@ defmodule Plausible.Stats.Interval do
     case period do
       period when period in ["realtime", "30m"] -> "minute"
       "day" -> "hour"
-      period when period in ["custom", "7d", "30d", "month"] -> "day"
+      period when period in ["custom", "7d", "28d", "30d", "90d", "month"] -> "day"
       period when period in ["6mo", "12mo", "year"] -> "month"
     end
   end
@@ -57,8 +57,10 @@ defmodule Plausible.Stats.Interval do
     "realtime" => ["minute"],
     "day" => ["minute", "hour"],
     "7d" => ["hour", "day"],
-    "month" => ["day", "week"],
+    "28d" => ["day", "week"],
     "30d" => ["day", "week"],
+    "90d" => ["day", "week", "month"],
+    "month" => ["day", "week"],
     "6mo" => ["day", "week", "month"],
     "12mo" => ["day", "week", "month"],
     "year" => ["day", "week", "month"],

@@ -110,7 +110,7 @@ defmodule Plausible.Teams.Memberships do
       {:ok, guest_membership} ->
         can_grant_role? =
           if guest_membership.team_membership.user_id == current_user.id do
-            can_grant_role_to_self?(current_user_role, new_role)
+            false
           else
             can_grant_role_to_other?(current_user_role, new_role)
           end
@@ -152,14 +152,10 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
-  defp can_grant_role_to_self?(:editor, :viewer), do: true
-  defp can_grant_role_to_self?(_, _), do: false
-
   defp can_grant_role_to_other?(:owner, :editor), do: true
-  defp can_grant_role_to_other?(:owner, :admin), do: true
   defp can_grant_role_to_other?(:owner, :viewer), do: true
-  defp can_grant_role_to_other?(:editor, :editor), do: true
-  defp can_grant_role_to_other?(:editor, :viewer), do: true
+  defp can_grant_role_to_other?(:admin, :editor), do: true
+  defp can_grant_role_to_other?(:admin, :viewer), do: true
   defp can_grant_role_to_other?(_, _), do: false
 
   defp send_site_member_removed_email(guest_membership) do

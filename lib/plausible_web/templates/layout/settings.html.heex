@@ -10,12 +10,7 @@
       </h2>
     </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
-      <div class="py-4 g:py-0 lg:col-span-3">
-        <div class="mb-4 hidden lg:block">
-          <h3 class="uppercase text-sm text-indigo-600 font-semibold">Account Settings</h3>
-          <p class="text-xs dark:text-gray-400 truncate">{@current_user.email}</p>
-        </div>
-
+      <div class="lg:col-span-3">
         <.mobile_nav_dropdown
           name="settings"
           options={options}
@@ -24,7 +19,9 @@
           href_base="/settings/"
         />
 
-        <div class="hidden lg:block">
+        <div class="hidden lg:block py-4  top-0 sticky">
+          <h3 class="uppercase text-sm text-indigo-600 font-semibold">Account Settings</h3>
+          <p class="text-xs dark:text-gray-400 truncate">{@current_user.email}</p>
           <%= for %{key: key, value: value, icon: icon} <- options["Account Settings"]  do %>
             {render("_settings_tab.html",
               icon: icon,
@@ -34,15 +31,15 @@
               submenu?: false
             )}
           <% end %>
-        </div>
 
-        <div :if={Plausible.Teams.enabled?(@my_team) and @my_team.setup_complete}>
-          <div class="mb-4 mt-4 hidden lg:block">
-            <h3 class="uppercase text-sm text-indigo-600 font-semibold">Team Settings</h3>
-            <p class="text-xs dark:text-gray-400 truncate">{@my_team.name}</p>
-          </div>
+          <div :if={
+            Plausible.Teams.enabled?(@current_user) and Plausible.Teams.setup?(@current_team)
+          }>
+            <h3 class="uppercase text-sm text-indigo-600 font-semibold mt-6">Team Settings</h3>
+            <p class="text-xs dark:text-gray-400 truncate mb-4">
+              {Plausible.Teams.name(@current_team)}
+            </p>
 
-          <div class="hidden lg:block">
             <%= for %{key: key, value: value, icon: icon} <- options["Team Settings"]  do %>
               {render("_settings_tab.html",
                 icon: icon,

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'url-search-params-polyfill'
@@ -20,6 +18,10 @@ import {
   GoToSites,
   SomethingWentWrongMessage
 } from './dashboard/error/something-went-wrong'
+import {
+  parsePreloadedSegments,
+  SegmentsContextProvider
+} from './dashboard/filtering/segments-context'
 
 timer.start()
 
@@ -61,13 +63,21 @@ if (container && container.dataset) {
                 container.dataset.loggedIn === 'true'
                   ? {
                       loggedIn: true,
-                      role: container.dataset.currentUserRole! as Role,
-                      id: parseInt(container.dataset.currentUserId!, 10)
+                      id: parseInt(container.dataset.currentUserId!, 10),
+                      role: container.dataset.currentUserRole as Role
                     }
-                  : { loggedIn: false, role: null, id: null }
+                  : {
+                      loggedIn: false,
+                      id: null,
+                      role: container.dataset.currentUserRole as Role
+                    }
               }
             >
-              <RouterProvider router={router} />
+              <SegmentsContextProvider
+                preloadedSegments={parsePreloadedSegments(container.dataset)}
+              >
+                <RouterProvider router={router} />
+              </SegmentsContextProvider>
             </UserContextProvider>
           </SiteContextProvider>
         </ThemeContextProvider>

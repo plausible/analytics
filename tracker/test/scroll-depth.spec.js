@@ -1,4 +1,4 @@
-const { engagementCooldown, expectPlausibleInAction, hideCurrentTab, hideAndShowCurrentTab } = require('./support/test-utils')
+const { expectPlausibleInAction, hideCurrentTab, hideAndShowCurrentTab } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
@@ -31,8 +31,6 @@ test.describe('scroll depth (engagement events)', () => {
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`}
       ]
     })
-
-    await engagementCooldown(page)
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#home-link'),
@@ -116,7 +114,7 @@ test.describe('scroll depth (engagement events)', () => {
     })
   })
 
-  test('re-sends engagement events only when user has scrolled in-between', async ({ page, context }) => {
+  test('re-sends engagement events only when user has scrolled in-between', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.goto('/scroll-depth.html')
@@ -139,5 +137,21 @@ test.describe('scroll depth (engagement events)', () => {
       action: () => hideCurrentTab(page),
       expectedRequests: [{n: 'engagement', u: `${LOCAL_SERVER_ADDR}/scroll-depth.html`, sd: 20}],
     })
+  })
+
+
+  test('gets correct scroll depth when script has no defer', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await page.goto('/no-defer.html')
+        await hideAndShowCurrentTab(page)
+      },
+      expectedRequests: [
+        {n: 'pageview'},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/no-defer.html`, sd: 100}
+      ],
+    })
+
+    await page.waitForTimeout(1000)
   })
 })

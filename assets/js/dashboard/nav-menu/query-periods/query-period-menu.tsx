@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useMemo, useRef } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
@@ -17,7 +15,6 @@ import {
 } from '../../navigation/use-app-navigate'
 import {
   getCompareLinkItem,
-  last6MonthsLinkItem,
   getDatePeriodGroups,
   LinkItem,
   QueryPeriod,
@@ -56,7 +53,7 @@ function QueryPeriodMenuKeybinds({
   }
   return (
     <>
-      {groups.concat([[last6MonthsLinkItem]]).flatMap((group) =>
+      {groups.flatMap((group) =>
         group
           .filter(([[_name, keyboardKey]]) => !!keyboardKey)
           .map(([[_name, keyboardKey], { search, onEvent }]) => (
@@ -165,18 +162,27 @@ const QueryPeriodMenuInner = ({
           {groups.map((group, index) => (
             <React.Fragment key={index}>
               {group.map(
-                ([[label, keyboardKey], { search, isActive, onEvent }]) => (
-                  <AppNavigationLink
-                    key={label}
-                    data-selected={isActive({ site, query })}
-                    className={linkClassName}
-                    search={search}
-                    onClick={onEvent && ((e) => onEvent(e))}
-                  >
-                    {label}
-                    {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}
-                  </AppNavigationLink>
-                )
+                ([
+                  [label, keyboardKey],
+                  { search, isActive, onEvent, hidden }
+                ]) => {
+                  if (!hidden) {
+                    return (
+                      <AppNavigationLink
+                        key={label}
+                        data-selected={isActive({ site, query })}
+                        className={linkClassName}
+                        search={search}
+                        onClick={onEvent && ((e) => onEvent(e))}
+                      >
+                        {label}
+                        {!!keyboardKey && (
+                          <KeybindHint>{keyboardKey}</KeybindHint>
+                        )}
+                      </AppNavigationLink>
+                    )
+                  }
+                }
               )}
               {index < groups.length - 1 && <MenuSeparator />}
             </React.Fragment>

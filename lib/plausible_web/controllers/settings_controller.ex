@@ -8,6 +8,15 @@ defmodule PlausibleWeb.SettingsController do
 
   require Logger
 
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner, :admin] when action in [:update_team_name]
+
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner, :admin, :billing] when action in [:invoices]
+
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner] when action in [:team_danger_zone, :delete_team]
+
   def index(conn, _params) do
     redirect(conn, to: Routes.settings_path(conn, :preferences))
   end
@@ -17,7 +26,7 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def update_team_name(conn, %{"team" => params}) do
-    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.my_team, params)
+    changeset = Plausible.Teams.Team.name_changeset(conn.assigns.current_team, params)
 
     case Repo.update(changeset) do
       {:ok, _user} ->
@@ -31,18 +40,23 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   defp render_team_general(conn, opts \\ []) do
-    name_changeset =
-      Keyword.get(
-        opts,
-        :team_name_changeset,
-        Plausible.Teams.Team.name_changeset(conn.assigns.my_team)
-      )
+    if Plausible.Teams.setup?(conn.assigns.current_team) do
+      name_changeset =
+        Keyword.get(
+          opts,
+          :team_name_changeset,
+          Plausible.Teams.Team.name_changeset(conn.assigns.current_team)
+        )
 
-    render(conn, :team_general,
-      team_name_changeset: name_changeset,
-      layout: {PlausibleWeb.LayoutView, :settings},
-      connect_live_socket: true
-    )
+      render(conn, :team_general,
+        team_name_changeset: name_changeset,
+        layout: {PlausibleWeb.LayoutView, :settings},
+        connect_live_socket: true
+      )
+    else
+      conn
+      |> redirect(to: Routes.site_path(conn, :index))
+    end
   end
 
   def preferences(conn, _params) do
@@ -54,23 +68,23 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def subscription(conn, _params) do
-    my_team = conn.assigns.my_team
-    subscription = Teams.Billing.get_subscription(my_team)
+    team = conn.assigns.current_team
+    subscription = Teams.Billing.get_subscription(team)
 
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
       subscription: subscription,
       pageview_limit: Teams.Billing.monthly_pageview_limit(subscription),
-      pageview_usage: Teams.Billing.monthly_pageview_usage(my_team),
-      site_usage: Teams.Billing.site_usage(my_team),
-      site_limit: Teams.Billing.site_limit(my_team),
-      team_member_limit: Teams.Billing.team_member_limit(my_team),
-      team_member_usage: Teams.Billing.team_member_usage(my_team)
+      pageview_usage: Teams.Billing.monthly_pageview_usage(team),
+      site_usage: Teams.Billing.site_usage(team),
+      site_limit: Teams.Billing.site_limit(team),
+      team_member_limit: Teams.Billing.team_member_limit(team),
+      team_member_usage: Teams.Billing.team_member_usage(team)
     )
   end
 
   def invoices(conn, _params) do
-    subscription = Teams.Billing.get_subscription(conn.assigns.my_team)
+    subscription = Teams.Billing.get_subscription(conn.assigns.current_team)
 
     invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
     render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings}, invoices: invoices)
@@ -78,21 +92,26 @@ defmodule PlausibleWeb.SettingsController do
 
   def api_keys(conn, _params) do
     current_user = conn.assigns.current_user
+    current_team = conn.assigns[:current_team]
 
-    api_keys =
-      Repo.preload(current_user, :api_keys).api_keys
+    api_keys = Auth.list_api_keys(current_user, current_team)
 
     render(conn, :api_keys, layout: {PlausibleWeb.LayoutView, :settings}, api_keys: api_keys)
   end
 
   def new_api_key(conn, _params) do
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{})
+    current_team = conn.assigns[:current_team]
+
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, current_team, %{})
 
     render(conn, "new_api_key.html", changeset: changeset)
   end
 
   def create_api_key(conn, %{"api_key" => %{"name" => name, "key" => key}}) do
-    case Auth.create_api_key(conn.assigns.current_user, name, key) do
+    current_user = conn.assigns.current_user
+    current_team = conn.assigns.current_team
+
+    case Auth.create_api_key(current_user, current_team, name, key) do
       {:ok, _api_key} ->
         conn
         |> put_flash(:success, "API key created successfully")
@@ -118,7 +137,41 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def danger_zone(conn, _params) do
-    render(conn, :danger_zone, layout: {PlausibleWeb.LayoutView, :settings})
+    solely_owned_teams =
+      conn.assigns.current_user
+      |> Teams.Users.owned_teams()
+      |> Enum.filter(& &1.setup_complete)
+      |> Enum.reject(fn team ->
+        Teams.Memberships.owners_count(team) > 1
+      end)
+
+    render(conn, :danger_zone,
+      solely_owned_teams: solely_owned_teams,
+      layout: {PlausibleWeb.LayoutView, :settings}
+    )
+  end
+
+  def team_danger_zone(conn, _params) do
+    render(conn, :team_danger_zone, layout: {PlausibleWeb.LayoutView, :settings})
+  end
+
+  def delete_team(conn, _params) do
+    team = conn.assigns.current_team
+
+    case Plausible.Teams.delete(team) do
+      {:ok, :deleted} ->
+        conn
+        |> put_flash(:success, ~s|Team "#{Plausible.Teams.name(team)}" deleted|)
+        |> redirect(to: Routes.site_path(conn, :index, __team: "none"))
+
+      {:error, :active_subscription} ->
+        conn
+        |> put_flash(
+          :error,
+          "Team has an active subscription. You must cancel it first."
+        )
+        |> redirect(to: Routes.settings_path(conn, :team_danger_zone))
+    end
   end
 
   # Preferences actions

@@ -1,5 +1,3 @@
-/** @format */
-
 import * as api from '../api'
 import { formatSegmentIdAsLabelKey } from '../filtering/segments'
 
@@ -18,11 +16,10 @@ export const FILTER_MODAL_TO_FILTER_GROUP = {
 }
 
 export function getAvailableFilterModals(site) {
-  const { props, segment, ...rest } = FILTER_MODAL_TO_FILTER_GROUP
+  const { props, ...rest } = FILTER_MODAL_TO_FILTER_GROUP
   return {
     ...rest,
-    ...(site.propsAvailable && { props }),
-    ...(site.flags.saved_segments && { segment })
+    ...(site.propsAvailable && { props })
   }
 }
 
@@ -90,10 +87,13 @@ export function getPropertyKeyFromFilterKey(filterKey) {
 }
 
 export function getFiltersByKeyPrefix(query, prefix) {
-  return query.filters.filter(([_operation, filterKey, _clauses]) =>
-    filterKey.startsWith(prefix)
-  )
+  return query.filters.filter(hasDimensionPrefix(prefix))
 }
+
+const hasDimensionPrefix =
+  (prefix) =>
+  ([_operation, dimension, _clauses]) =>
+    dimension.startsWith(prefix)
 
 function omitFiltersByKeyPrefix(query, prefix) {
   return query.filters.filter(
@@ -119,9 +119,11 @@ export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
 }
 
 export function hasConversionGoalFilter(query) {
-  const goalFilters = getFiltersByKeyPrefix(query, 'goal')
+  const resolvedGoalFilters = query.resolvedFilters.filter(
+    hasDimensionPrefix('goal')
+  )
 
-  return goalFilters.some(([operation, _filterKey, _clauses]) => {
+  return resolvedGoalFilters.some(([operation, _filterKey, _clauses]) => {
     return operation !== FILTER_OPERATIONS.has_not_done
   })
 }

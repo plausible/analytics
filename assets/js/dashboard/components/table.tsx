@@ -1,5 +1,3 @@
-/** @format */
-
 import classNames from 'classnames'
 import React, { ReactNode } from 'react'
 import { SortDirection } from '../hooks/use-order-by'
@@ -121,7 +119,7 @@ export const Table = <T extends Record<string, string | number | ReactNode>>({
   const warningSpan = (warning: string) => {
     return (
       <span className="text-xs font-normal whitespace-nowrap">
-        {'*' + warning}
+        {'* ' + warning}
       </span>
     )
   }

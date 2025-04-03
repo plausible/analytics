@@ -10,50 +10,95 @@ defmodule PlausibleWeb.HelpScoutView do
             <input type="text" name="term" value={assigns[:email]} />
             <input type="submit" name="search" value="&nbsp;&#x1F50E;&nbsp;" />
           </p>
+          <input type="hidden" name="token" value={@token} />
           <input type="hidden" name="conversation_id" value={@conversation_id} />
           <input type="hidden" name="customer_id" value={@customer_id} />
         </form>
       </div>
 
-      <%= if @conn.assigns[:error] do %>
-        <p>
-          Failed to get details: {@error}
-        </p>
-      <% else %>
-        <div class="status">
-          <p class="label">
-            Status
+      <%= cond do %>
+        <% @conn.assigns[:error] -> %>
+          <p>
+            Failed to get details: {@error}
           </p>
-          <p class="value">
-            <a href={@status_link} target="_blank">{@status_label}</a>
-          </p>
-        </div>
+        <% @multiple_teams? -> %>
+          <div class="teams">
+            <p class="label">
+              <a href={@user_link} target="_blank">Owner</a> of teams:
+            </p>
 
-        <div class="plan">
-          <p class="label">
-            Plan
-          </p>
-          <p class="value">
-            <a href={@plan_link} target="_blank">{@plan_label}</a>
-          </p>
-        </div>
-
-        <div class="sites">
-          <p class="label">
-            Owner of <b><a href={@sites_link} target="_blank">{@sites_count} sites</a></b>
-          </p>
-          <p class="value"></p>
-        </div>
-
-        <div :if={@notes} class="notes">
-          <p class="label">
-            <b>Notes</b>
-          </p>
-
-          <div class="value">
-            {PhoenixHTMLHelpers.Format.text_to_html(@notes, escape: true)}
+            <div class="value">
+              <ul>
+                <li :for={team <- @teams}>
+                  <a
+                    onclick={"loadContent('/helpscout/show?#{URI.encode_query(
+                    email: @email, 
+                    conversation_id: @conversation_id, 
+                    customer_id: @customer_id, 
+                    team_identifier: team.identifier, 
+                    token: @token)}')"}
+                    href="#"
+                  >
+                    {team.name} ({team.sites_count} sites)
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
+
+          <div :if={@notes} class="notes">
+            <p class="label">
+              <b>User notes</b>
+            </p>
+
+            <div class="value">
+              {PhoenixHTMLHelpers.Format.text_to_html(@notes, escape: true)}
+            </div>
+          </div>
+        <% true -> %>
+          <div :if={@team_setup?} class="team-name">
+            <p class="label">
+              Team name
+            </p>
+            <p class="value">
+              <a href={@status_link} target="_blank">{@team_name}</a>
+            </p>
+          </div>
+
+          <div class="status">
+            <p class="label">
+              Status
+            </p>
+            <p class="value">
+              <a href={@status_link} target="_blank">{@status_label}</a>
+            </p>
+          </div>
+
+          <div class="plan">
+            <p class="label">
+              Plan
+            </p>
+            <p class="value">
+              <a href={@plan_link} target="_blank">{@plan_label}</a>
+            </p>
+          </div>
+
+          <div class="sites">
+            <p class="label">
+              Owner of <b><a href={@sites_link} target="_blank">{@sites_count} sites</a></b>
+            </p>
+            <p class="value"></p>
+          </div>
+
+          <div :if={@notes} class="notes">
+            <p class="label">
+              <b>Notes</b>
+            </p>
+
+            <div class="value">
+              {PhoenixHTMLHelpers.Format.text_to_html(@notes, escape: true)}
+            </div>
+          </div>
       <% end %>
     </.layout>
     """
@@ -73,13 +118,14 @@ defmodule PlausibleWeb.HelpScoutView do
               <input type="text" name="term" value={@term} />
               <input type="submit" name="search" value="&nbsp;&#x1F50E;&nbsp;" />
             </p>
+            <input type="hidden" name="token" value={@token} />
             <input type="hidden" name="conversation_id" value={@conversation_id} />
             <input type="hidden" name="customer_id" value={@customer_id} />
           </form>
           <ul :if={length(@users) > 0}>
             <li :for={user <- @users}>
               <a
-                onclick={"loadContent('/helpscout/show?#{URI.encode_query(email: user.email, conversation_id: @conversation_id, customer_id: @customer_id)}')"}
+                onclick={"loadContent('/helpscout/show?#{URI.encode_query(email: user.email, conversation_id: @conversation_id, customer_id: @customer_id, token: @token)}')"}
                 href="#"
               >
                 {user.email} ({user.sites_count} sites)
@@ -147,6 +193,10 @@ defmodule PlausibleWeb.HelpScoutView do
               margin-bottom: 1.25em;
             }
 
+            .teams .label {
+              margin-bottom: 1em;
+            }
+
             .value {
               margin-bottom: 1.25em;
               font-weight: bold;
@@ -182,37 +232,6 @@ defmodule PlausibleWeb.HelpScoutView do
             }
 
             const appContainer = document.getElementById("content")
-
-            const isSafari = !!(
-              navigator.vendor &&
-              navigator.vendor.indexOf('Apple') > -1 &&
-              navigator.userAgent &&
-              navigator.userAgent.indexOf('CriOS') == -1 &&
-              navigator.userAgent.indexOf('FxiOS') == -1
-            )
-
-            /*
-             * Using cookies within iframe requires requesting storage access
-             * in Safari. Unfortunately, the storage access check sometimes
-             * falsely returns true in FireFox and requesting storage access
-             * in FF seems to break the cookies. That's why there's an extra
-             * check for Safari.
-             */
-            window.addEventListener('load', async () => {
-              const hasStorageAccess = await document.hasStorageAccess()
-              if (isSafari && !hasStorageAccess) {
-                const paragraph = document.createElement('p')
-                paragraph.style = "text-align: center; margin-bottom: 0.4em;"
-                const button = document.createElement('button')
-                button.innerHTML = 'Grant cookie access'
-                button.onclick = async (e) => {
-                  await document.requestStorageAccess()
-                  paragraph.remove()
-                }
-                paragraph.append(button)
-                appContainer.prepend(paragraph)
-              }
-            })
 
             async function loadContent(uri) {
               const response = await fetch(uri)

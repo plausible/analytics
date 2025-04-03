@@ -15,27 +15,32 @@ defmodule Plausible.Ingestion.Source do
                 |> then(&["adwords" | &1])
                 |> MapSet.new()
 
-  def init() do
-    :ets.new(__MODULE__, [
-      :named_table,
-      :set,
-      :public,
-      {:read_concurrency, true}
-    ])
+  @external_resource "priv/ref_inspector/referers.yml"
+  @referers_yaml Application.app_dir(:plausible, "priv/ref_inspector/referers.yml")
 
-    [{"referers.yml", map}] = RefInspector.Database.list(:default)
+  yaml_reader = RefInspector.Config.yaml_file_reader()
+  {:ok, db} = RefInspector.Database.Loader.load(@referers_yaml, yaml_reader)
+  db = RefInspector.Database.Parser.parse(db)
 
-    Enum.each(map, fn {_, entries} ->
-      Enum.each(entries, fn {_, _, _, _, _, _, name} ->
-        :ets.insert(__MODULE__, {String.downcase(name), name})
+  lookup =
+    Enum.reduce(db, Map.new(), fn {_, entries}, lookup ->
+      Enum.reduce(entries, lookup, fn {_, _, _, _, _, _, name}, lookup_inner ->
+        Map.put(lookup_inner, String.downcase(name), name)
       end)
     end)
 
-    Enum.each(@custom_sources, fn {key, val} ->
-      :ets.insert(__MODULE__, {key, val})
-      :ets.insert(__MODULE__, {String.downcase(val), val})
+  lookup =
+    Enum.reduce(@custom_sources, lookup, fn {key, val}, lookup ->
+      lookup
+      |> Map.put(key, val)
+      |> Map.put(String.downcase(val), val)
     end)
+
+  for {k, v} <- Enum.sort(lookup) do
+    def src(unquote(k)), do: unquote(v)
   end
+
+  def src(_), do: nil
 
   def paid_sources() do
     @paid_sources |> MapSet.to_list()
@@ -57,25 +62,6 @@ defmodule Plausible.Ingestion.Source do
   3. When a known source is supplied in utm_source (or source, ref) query parameter, we merge it with our known sources in a case-insensitive manner.
   4. Our list of `custom_sources.json` also contains some commonly used utm_source shorthands for certain sources. URL tagging is a mess, and we can never do it
   perfectly, but at least we're making an effort for the most commonly used ones. For example, `ig -> Instagram` and `adwords -> Google`.
-
-  ### Examples:
-
-    iex> alias Plausible.Ingestion.{Source, Request}
-    iex> base_request = %Request{uri: URI.parse("https://plausible.io")}
-    iex> Source.resolve(%{base_request | referrer: "https://google.com"}) # Known referrer from RefInspector
-    "Google"
-    iex> Source.resolve(%{base_request | query_params: %{"utm_source" => "google"}}) # Known source from RefInspector supplied as downcased utm_source by user
-    "Google"
-    iex> Source.resolve(%{base_request | query_params: %{"utm_source" => "GOOGLE"}}) # Known source from RefInspector supplied as uppercased utm_source by user
-    "Google"
-    iex> Source.resolve(%{base_request | referrer: "https://en.m.wikipedia.org"}) # Known referrer from custom_sources.json
-    "Wikipedia"
-    iex> Source.resolve(%{base_request | query_params: %{"utm_source" => "wikipedia"}}) # Known source from custom_sources.json supplied as downcased utm_source by user
-    "Wikipedia"
-    iex> Source.resolve(%{base_request | query_params: %{"utm_source" => "ig"}}) # Known utm_source from custom_sources.json
-    "Instagram"
-    iex> Source.resolve(%{base_request | referrer: "https://www.markosaric.com"}) # Unknown source, it is just stored as the domain name
-    "markosaric.com"
   """
   def resolve(request) do
     tagged_source =
@@ -107,8 +93,8 @@ defmodule Plausible.Ingestion.Source do
   def find_mapping(nil), do: nil
 
   def find_mapping(source) do
-    case :ets.lookup(__MODULE__, String.downcase(source)) do
-      [{_, name}] -> name
+    case src(String.downcase(source)) do
+      name when is_binary(name) -> name
       _ -> source
     end
   end

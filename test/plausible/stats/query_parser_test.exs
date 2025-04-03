@@ -24,12 +24,12 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_7d %DateTimeRange{
-    first: DateTime.new!(~D[2021-04-29], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
+    first: DateTime.new!(~D[2021-04-28], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_30d %DateTimeRange{
     first: DateTime.new!(~D[2021-04-05], ~T[00:00:00], "Etc/UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
+    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_month %DateTimeRange{
     first: DateTime.new!(~D[2021-05-01], ~T[00:00:00], "Etc/UTC"),
@@ -53,7 +53,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     imports_meta: false,
     time_labels: false,
     total_rows: false,
-    comparisons: nil
+    comparisons: nil,
+    legacy_time_on_page_cutoff: nil
   }
 
   def check_success(params, site, expected_result, schema_type \\ :public) do
@@ -875,7 +876,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           imports_meta: false,
           time_labels: true,
           total_rows: true,
-          comparisons: nil
+          comparisons: nil,
+          legacy_time_on_page_cutoff: nil
         },
         pagination: %{limit: 10_000, offset: 0}
       })
@@ -939,7 +941,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports: false,
             imports_meta: false,
             time_labels: false,
-            total_rows: false
+            total_rows: false,
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },
@@ -970,7 +973,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports: false,
             imports_meta: false,
             time_labels: false,
-            total_rows: false
+            total_rows: false,
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },
@@ -984,7 +988,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "include" => %{
-          "comparisons" => %{"mode" => "custom", "date_range" => ["2021-04-05", "2021-05-05"]}
+          "comparisons" => %{"mode" => "custom", "date_range" => ["2021-04-05", "2021-05-04"]}
         }
       }
       |> check_success(
@@ -1004,7 +1008,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             imports_meta: false,
             imports: false,
             time_labels: false,
-            total_rows: false
+            total_rows: false,
+            legacy_time_on_page_cutoff: nil
           },
           pagination: %{limit: 10_000, offset: 0}
         },
@@ -1483,6 +1488,39 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           pagination: %{limit: 10_000, offset: 0}
         })
       end
+    end
+
+    test "time:minute dimension fails public schema validation", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["time:minute"]
+      }
+      |> check_error(site, "#/dimensions/0: Invalid dimension \"time:minute\"")
+    end
+
+    test "time:minute dimension passes internal schema validation", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["time:minute"]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["time:minute"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: @default_include,
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
     end
 
     test "custom properties dimension", %{site: site} do
@@ -2283,8 +2321,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. You can only use up to 10 segment filters in a query.",
-        :internal
+        "Invalid filters. You can only use up to 10 segment filters in a query."
       )
     end
 
@@ -2310,8 +2347,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Some segments don't exist or aren't accessible.",
-        :internal
+        "Invalid filters. Some segments don't exist or aren't accessible."
       )
     end
 
@@ -2339,8 +2375,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "The owner of this site does not have access to the custom properties feature.",
-        :internal
+        "The owner of this site does not have access to the custom properties feature."
       )
     end
 
@@ -2376,8 +2411,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Dimension `event:goal` can only be filtered at the top level.",
-        :internal
+        "Invalid filters. Dimension `event:goal` can only be filtered at the top level."
       )
     end
 
@@ -2460,8 +2494,46 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           timezone: site.timezone,
           include: @default_include,
           pagination: %{limit: 10_000, offset: 0}
-        },
-        :internal
+        }
+      )
+    end
+
+    test "resolves segments containing otherwise internal features", %{site: site, user: user} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      segment_from_dashboard =
+        insert(:segment,
+          name: "A segment that contains :internal features",
+          type: :site,
+          owner: user,
+          site: site,
+          segment_data: %{
+            "filters" => [["has_not_done", ["is", "event:goal", ["Signup"]]]]
+          }
+        )
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors", "events"],
+        "date_range" => "all",
+        "filters" => [
+          ["is", "segment", [segment_from_dashboard.id]]
+        ]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors, :events],
+          utc_time_range: @date_range_day,
+          filters: [
+            [:has_not_done, [:is, "event:goal", ["Signup"]]]
+          ],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: @default_include,
+          pagination: %{limit: 10_000, offset: 0}
+        }
       )
     end
   end

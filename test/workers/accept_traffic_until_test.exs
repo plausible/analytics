@@ -148,7 +148,11 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
       html_body: ~r/Hey Jane,/,
       to: [nil: email],
       subject:
-        PlausibleWeb.Email.approaching_accept_traffic_until(%{name: "", email: email}).subject
+        PlausibleWeb.Email.approaching_accept_traffic_until(%{
+          name: "",
+          email: email,
+          team: build(:team, identifier: Ecto.UUID.generate())
+        }).subject
     )
   end
 
@@ -157,7 +161,11 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
       html_body: ~r/Hey Jane,/,
       to: [nil: email],
       subject:
-        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(%{name: "", email: email}).subject
+        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(%{
+          name: "",
+          email: email,
+          team: build(:team, identifier: Ecto.UUID.generate())
+        }).subject
     )
   end
 

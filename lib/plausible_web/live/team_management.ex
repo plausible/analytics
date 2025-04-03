@@ -21,25 +21,20 @@ defmodule PlausibleWeb.Live.TeamManagement do
     {:ok, socket |> assign(mode: mode) |> reset()}
   end
 
-  defp reset(%{assigns: %{current_user: current_user, my_team: my_team}} = socket) do
-    {:ok, my_role} = Teams.Memberships.team_role(my_team, current_user)
+  defp reset(%{assigns: %{current_user: current_user, current_team: current_team}} = socket) do
+    {:ok, my_role} = Teams.Memberships.team_role(current_team, current_user)
 
-    if my_role not in [:owner, :admin] do
-      redirect(socket, to: Routes.settings_path(socket, :team_general))
-    else
-      layout = Layout.init(my_team)
-      team_members_limit = Plausible.Teams.Billing.team_member_limit(my_team)
+    layout = Layout.init(current_team)
+    team_members_limit = Plausible.Teams.Billing.team_member_limit(current_team)
 
-      assign(socket,
-        attempted_save?: false,
-        team_members_limit: team_members_limit,
-        layout: layout,
-        my_role: my_role,
-        team_layout_changed?: false,
-        input_role: :viewer,
-        input_email: ""
-      )
-    end
+    assign(socket,
+      team_members_limit: team_members_limit,
+      layout: layout,
+      my_role: my_role,
+      team_layout_changed?: false,
+      input_role: :viewer,
+      input_email: ""
+    )
   end
 
   def render(assigns) do
@@ -47,16 +42,9 @@ defmodule PlausibleWeb.Live.TeamManagement do
     <.flash_messages flash={@flash} />
 
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
-      :if={
-        (not @team_layout_changed? or @attempted_save?) and
-          not Plausible.Billing.Quota.below_limit?(
-            Layout.active_count(@layout) - 1,
-            @team_members_limit
-          )
-      }
-      current_user={@current_user}
-      billable_user={@current_user}
-      current_team={@my_team}
+      :if={at_limit?(@layout, @team_members_limit)}
+      current_role={@current_team_role}
+      current_team={@current_team}
       limit={@team_members_limit}
       resource="team members"
       class="mb-4"
@@ -69,8 +57,9 @@ defmodule PlausibleWeb.Live.TeamManagement do
               name="input-email"
               type="email"
               value={@input_email}
-              placeholder="Enter e-mail to send invitation to"
+              placeholder="Enter e-mail"
               phx-debounce={200}
+              readonly={at_limit?(@layout, @team_members_limit) or @my_role not in [:admin, :owner]}
               mt?={false}
             />
           </div>
@@ -115,7 +104,12 @@ defmodule PlausibleWeb.Live.TeamManagement do
             </:menu>
           </.dropdown>
 
-          <.button id="invite-member" type="submit" mt?={false}>
+          <.button
+            id="invite-member"
+            type="submit"
+            mt?={false}
+            disabled={at_limit?(@layout, @team_members_limit) or @my_role not in [:admin, :owner]}
+          >
             Invite
           </.button>
         </div>
@@ -130,7 +124,10 @@ defmodule PlausibleWeb.Live.TeamManagement do
           label={entry_label(entry, @current_user)}
           my_role={@my_role}
           remove_disabled={not Layout.removable?(@layout, email)}
-          disabled={entry.role == :owner && Layout.owners_count(@layout) == 1}
+          disabled={
+            (entry.role == :owner && Layout.owners_count(@layout) == 1) or
+              @my_role not in [:owner, :admin]
+          }
         />
       </div>
 
@@ -283,22 +280,32 @@ defmodule PlausibleWeb.Live.TeamManagement do
   end
 
   defp save_team_layout(
-         %{assigns: %{layout: layout, my_team: my_team, current_user: current_user}} = socket
+         %{assigns: %{layout: layout, current_team: current_team, current_user: current_user}} =
+           socket
        ) do
-    result = Layout.persist(layout, %{current_user: current_user, my_team: my_team})
-
-    socket = assign(socket, attempted_save?: true)
+    result =
+      Layout.persist(layout, %{
+        current_user: current_user,
+        current_team: Plausible.Repo.reload!(current_team)
+      })
 
     case {result, socket.assigns.mode} do
       {{:ok, _}, :team_setup} ->
         socket
-        |> put_flash(:success, "Your team is now setup")
-        |> redirect(to: Routes.settings_path(socket, :team_general))
+        |> put_flash(:success, "Your team is now created")
+        |> redirect(
+          to: Routes.settings_path(socket, :team_general, __team: current_team.identifier)
+        )
 
       {{:ok, _}, :team_management} ->
+        reset(socket)
+
+      {{:error, :permission_denied}, _} ->
         socket
-        |> reset()
-        |> put_live_flash(:success, "Team layout updated successfully")
+        |> put_live_flash(
+          :error,
+          "Permission denied"
+        )
 
       {{:error, :only_one_owner}, _} ->
         socket
@@ -321,4 +328,11 @@ defmodule PlausibleWeb.Live.TeamManagement do
   defp entry_label(%Layout.Entry{type: :invitation_sent}, _), do: "Invitation Sent"
   defp entry_label(%Layout.Entry{meta: %{user: %{id: id}}}, %{id: id}), do: "You"
   defp entry_label(_, _), do: "Team Member"
+
+  def at_limit?(layout, limit) do
+    not Plausible.Billing.Quota.below_limit?(
+      Layout.active_count(layout) - 1,
+      limit
+    )
+  end
 end

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useRef } from 'react'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'

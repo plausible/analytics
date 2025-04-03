@@ -1,5 +1,3 @@
-/** @format */
-
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import classNames from 'classnames'
 import React, { useRef, useState, useLayoutEffect } from 'react'
@@ -109,13 +107,14 @@ interface FiltersBarProps {
   }
 }
 
-const canShowClearAllAction = ({ filters }: Pick<DashboardQuery, 'filters'>) =>
-  filters.length >= 2
+const canShowClearAllAction = ({
+  filters
+}: Pick<DashboardQuery, 'filters'>): boolean => filters.length >= 2
 
 const canShowSaveAsSegmentAction = ({
   filters,
   isEditingSegment
-}: Pick<DashboardQuery, 'filters'> & { isEditingSegment: boolean }) =>
+}: Pick<DashboardQuery, 'filters'> & { isEditingSegment: boolean }): boolean =>
   filters.length >= 1 && !filters.some(isSegmentFilter) && !isEditingSegment
 
 export const FiltersBar = ({ accessors }: FiltersBarProps) => {
@@ -123,7 +122,6 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const pillsRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { query, expandedSegment } = useQueryContext()
-  const seeMoreRef = useRef<HTMLButtonElement>(null)
 
   const showingClearAll = canShowClearAllAction({ filters: query.filters })
   const showingSaveAsSegment = canShowSaveAsSegmentAction({
@@ -131,7 +129,12 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
     isEditingSegment: !!expandedSegment
   })
 
-  const mustShowSeeMoreMenu = showingClearAll || showingSaveAsSegment
+  const actionsInSeeMoreMenu = [
+    showingSaveAsSegment && ('save as segment' as const),
+    showingClearAll && ('clear all filters' as const)
+  ].filter((f) => f)
+
+  const mustShowSeeMoreMenu = actionsInSeeMoreMenu.length > 0
 
   useLayoutEffect(() => {
     const topBar = accessors.topBar(containerRef.current)
@@ -203,63 +206,143 @@ export const FiltersBar = ({ accessors }: FiltersBarProps) => {
       {visibility !== null &&
         (query.filters.length !== visibility.visibleCount ||
           mustShowSeeMoreMenu) && (
-          <Popover className="md:relative">
-            <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
-            <Popover.Button
-              title="See more"
-              ref={seeMoreRef}
-              className={classNames(
-                popover.toggleButton.classNames.rounded,
-                popover.toggleButton.classNames.shadow,
-                'justify-center'
-              )}
-              style={{
-                height: SEE_MORE_WIDTH_PX,
-                width: SEE_MORE_WIDTH_PX,
-                marginLeft: SEE_MORE_LEFT_MARGIN_PX,
-                marginRight: SEE_MORE_RIGHT_MARGIN_PX
-              }}
-            >
-              <EllipsisHorizontalIcon className="block h-5 w-5" />
-            </Popover.Button>
-            <Transition
-              {...popover.transition.props}
-              className={classNames(
-                'mt-2',
-                popover.transition.classNames.fullwidth,
-                'md:right-auto'
-              )}
-            >
-              <Popover.Panel
-                className={classNames(
-                  popover.panel.classNames.roundedSheet,
-                  'flex flex-col p-4 gap-y-2'
-                )}
-              >
-                {query.filters.length !== visibility.visibleCount && (
-                  <AppliedFilterPillsList
-                    direction="vertical"
-                    slice={{
-                      type: 'no-render-outside',
-                      start: visibility.visibleCount
-                    }}
-                  />
-                )}
-                {showingClearAll && <ClearAction />}
-                {showingSaveAsSegment && <SaveAsSegmentAction />}
-              </Popover.Panel>
-            </Transition>
-          </Popover>
+          <SeeMoreMenu
+            actions={actionsInSeeMoreMenu}
+            className="md:relative"
+            filtersCount={query.filters.length}
+            visibleFiltersCount={visibility.visibleCount}
+          />
         )}
     </div>
   )
 }
 
-const ClearAction = () => (
+const SeeMoreMenu = ({
+  className,
+  filtersCount,
+  visibleFiltersCount,
+  actions
+}: {
+  className?: string
+  filtersCount: number
+  visibleFiltersCount: number
+  actions: Array<'save as segment' | 'clear all filters' | false>
+}) => {
+  const seeMoreRef = useRef<HTMLButtonElement>(null)
+  const filtersInMenuCount = filtersCount - visibleFiltersCount
+
+  const title =
+    filtersInMenuCount === 1
+      ? 'See 1 more filter and actions'
+      : filtersInMenuCount > 1
+        ? `See ${filtersInMenuCount} more filters and actions`
+        : 'See actions'
+
+  const showMoreFilters = filtersCount !== visibleFiltersCount
+  const showSomeActions = actions.some((a) => a)
+
+  return (
+    <Popover className={className}>
+      <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
+      <Popover.Button
+        title={title}
+        ref={seeMoreRef}
+        className={classNames(
+          popover.toggleButton.classNames.rounded,
+          popover.toggleButton.classNames.shadow,
+          'justify-center',
+          'relative group'
+        )}
+        style={{
+          height: SEE_MORE_WIDTH_PX,
+          width: SEE_MORE_WIDTH_PX,
+          marginLeft: SEE_MORE_LEFT_MARGIN_PX,
+          marginRight: SEE_MORE_RIGHT_MARGIN_PX
+        }}
+      >
+        <EllipsisHorizontalIcon className="block h-5 w-5" />
+        {showMoreFilters && (
+          <div
+            aria-hidden="true"
+            className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 pr-[3px]"
+          >
+            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow px-[3px] py-[1px] flex items-center rounded-sm bg-gray-100 dark:bg-gray-850">
+              +{filtersInMenuCount}
+            </div>
+          </div>
+        )}
+      </Popover.Button>
+      <Transition
+        {...popover.transition.props}
+        className={classNames(
+          'mt-2',
+          popover.transition.classNames.fullwidth,
+          'md:right-auto'
+        )}
+      >
+        <Popover.Panel
+          className={classNames(
+            popover.panel.classNames.roundedSheet,
+            'flex flex-col'
+          )}
+        >
+          {showMoreFilters && (
+            <>
+              <div className="py-4 px-4">
+                <AppliedFilterPillsList
+                  direction="vertical"
+                  pillClassName="dark:!shadow-gray-950/60"
+                  slice={{
+                    type: 'no-render-outside',
+                    start: visibleFiltersCount
+                  }}
+                />
+              </div>
+              {showSomeActions && (
+                <div className="mb-1 border-gray-200 dark:border-gray-500 border-b"></div>
+              )}
+            </>
+          )}
+          {showSomeActions && (
+            <div className="flex flex-col">
+              {actions.map((action, index) => {
+                const linkClassName = classNames(
+                  popover.items.classNames.navigationLink,
+                  popover.items.classNames.selectedOption,
+                  popover.items.classNames.hoverLink,
+                  index === 0 && !showMoreFilters
+                    ? popover.items.classNames.roundedStartEnd
+                    : popover.items.classNames.roundedEnd,
+                  'whitespace-nowrap'
+                )
+
+                switch (action) {
+                  case 'clear all filters':
+                    return (
+                      <ClearAction key={action} className={linkClassName} />
+                    )
+                  case 'save as segment':
+                    return (
+                      <SaveAsSegmentAction
+                        key={action}
+                        className={linkClassName}
+                      />
+                    )
+                  default:
+                    return null
+                }
+              })}
+            </div>
+          )}
+        </Popover.Panel>
+      </Transition>
+    </Popover>
+  )
+}
+
+const ClearAction = ({ className }: { className?: string }) => (
   <AppNavigationLink
-    className={classNames(
-      'button flex self-start h-9 !px-3 !bg-red-500 dark:!bg-red-500 hover:!bg-red-600 dark:hover:!bg-red-700 whitespace-nowrap'
-    )}
+    className={className}
     search={(search) => ({
       ...search,
       filters: null,
@@ -270,14 +353,12 @@ const ClearAction = () => (
   </AppNavigationLink>
 )
 
-const SaveAsSegmentAction = () => {
+const SaveAsSegmentAction = ({ className }: { className?: string }) => {
   const { setModal } = useRoutelessModalsContext()
 
   return (
     <AppNavigationLink
-      className={classNames(
-        'button flex self-start h-9 !px-3 whitespace-nowrap'
-      )}
+      className={className}
       search={(s) => s}
       onClick={() => setModal('create')}
       state={{ expandedSegment: null }}

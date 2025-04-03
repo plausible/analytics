@@ -17,7 +17,7 @@ defmodule Plausible.Stats.QueryRunner do
     Compare,
     QueryOptimizer,
     QueryResult,
-    Legacy,
+    Metrics,
     SQL,
     Util,
     Time
@@ -45,9 +45,9 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp execute_main_query(%__MODULE__{main_query: query, site: site} = runner) do
-    {ch_results, time_on_page} = execute_query(query, site)
+    ch_results = execute_query(query, site)
 
-    main_results = build_from_ch(ch_results, query, time_on_page)
+    main_results = build_from_ch(ch_results, query)
 
     runner = struct!(runner, main_results: main_results)
 
@@ -64,6 +64,7 @@ defmodule Plausible.Stats.QueryRunner do
       query
       |> Comparisons.get_comparison_query()
       |> Comparisons.add_comparison_filters(main_results)
+      |> QueryOptimizer.optimize()
 
     struct!(runner, comparison_query: comparison_query)
   end
@@ -74,14 +75,8 @@ defmodule Plausible.Stats.QueryRunner do
          %__MODULE__{comparison_query: comparison_query, site: site} = runner
        ) do
     if comparison_query do
-      {ch_results, time_on_page} = execute_query(comparison_query, site)
-
-      comparison_results =
-        build_from_ch(
-          ch_results,
-          comparison_query,
-          time_on_page
-        )
+      ch_results = execute_query(comparison_query, site)
+      comparison_results = build_from_ch(ch_results, comparison_query)
 
       struct!(runner, comparison_results: comparison_results)
     else
@@ -113,25 +108,19 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp execute_query(query, site) do
-    ch_results =
-      query
-      |> SQL.QueryBuilder.build(site)
-      |> ClickhouseRepo.all(query: query)
-
-    time_on_page = Legacy.TimeOnPage.calculate(site, query, ch_results)
-
-    {ch_results, time_on_page}
+    query
+    |> SQL.QueryBuilder.build(site)
+    |> ClickhouseRepo.all(query: query)
   end
 
-  defp build_from_ch(ch_results, query, time_on_page) do
+  defp build_from_ch(ch_results, query) do
     ch_results
     |> Enum.map(fn entry ->
       dimension_labels = Enum.map(query.dimensions, &dimension_label(&1, entry, query))
 
       %{
         dimensions: dimension_labels,
-        metrics:
-          Enum.map(query.metrics, &get_metric(entry, &1, dimension_labels, query, time_on_page))
+        metrics: Enum.map(query.metrics, &get_metric(entry, &1, dimension_labels, query))
       }
     end)
   end
@@ -152,7 +141,7 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   on_ee do
-    defp get_metric(entry, metric, dimensions, query, _time_on_page)
+    defp get_metric(entry, metric, dimensions, query)
          when metric in [:average_revenue, :total_revenue] do
       value = Map.get(entry, metric)
 
@@ -160,10 +149,7 @@ defmodule Plausible.Stats.QueryRunner do
     end
   end
 
-  defp get_metric(_entry, :time_on_page, dimensions, _query, time_on_page),
-    do: Map.get(time_on_page, dimensions)
-
-  defp get_metric(entry, :events, _dimensions, query, _time_on_page) do
+  defp get_metric(entry, :events, _dimensions, query) do
     cond do
       "event:goal" in query.dimensions ->
         goal = get_dimension_goal(entry, query)
@@ -183,7 +169,7 @@ defmodule Plausible.Stats.QueryRunner do
     end
   end
 
-  defp get_metric(entry, metric, _dimensions, _query, _time_on_page), do: Map.get(entry, metric)
+  defp get_metric(entry, metric, _dimensions, _query), do: Map.get(entry, metric)
 
   defp get_dimension_goal(entry, query) do
     goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
@@ -203,7 +189,7 @@ defmodule Plausible.Stats.QueryRunner do
       |> Enum.reject(fn dimension_value -> Map.has_key?(indexed_results, [dimension_value]) end)
       |> Enum.map(fn dimension_value ->
         %{
-          metrics: empty_metrics(query),
+          metrics: empty_metrics(query, [dimension_value]),
           dimensions: [dimension_value]
         }
       end)
@@ -260,22 +246,13 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp get_comparison_metrics(comparison_map, dimensions, query) do
-    Map.get_lazy(comparison_map, dimensions, fn -> empty_metrics(query) end)
+    Map.get_lazy(comparison_map, dimensions, fn -> empty_metrics(query, dimensions) end)
   end
 
-  defp empty_metrics(query) do
+  defp empty_metrics(query, dimensions) do
     query.metrics
-    |> Enum.map(fn metric -> empty_metric_value(metric) end)
+    |> Enum.map(fn metric -> Metrics.default_value(metric, query, dimensions) end)
   end
-
-  on_ee do
-    defp empty_metric_value(metric)
-         when metric in [:total_revenue, :average_revenue],
-         do: nil
-  end
-
-  defp empty_metric_value(:scroll_depth), do: nil
-  defp empty_metric_value(_), do: 0
 
   defp total_rows([]), do: 0
   defp total_rows([first_row | _rest]), do: first_row.total_rows

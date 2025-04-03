@@ -64,10 +64,19 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
       next_bill_date: Date.shift(Date.utc_today(), day: 7)
     )
 
+    team = team_of(user)
+    billing_member = new_user()
+    add_member(team, user: billing_member, role: :billing)
+
     NotifyAnnualRenewal.perform(nil)
 
     assert_email_delivered_with(
       to: [{user.name, user.email}],
+      subject: "Your Plausible subscription is up for renewal"
+    )
+
+    assert_email_delivered_with(
+      to: [{billing_member.name, billing_member.email}],
       subject: "Your Plausible subscription is up for renewal"
     )
   end

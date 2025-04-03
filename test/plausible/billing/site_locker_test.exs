@@ -5,6 +5,10 @@ defmodule Plausible.Billing.SiteLockerTest do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{SiteLocker, Subscription}
 
+  @moduletag :ee_only
+
+  @v4_growth_plan_id "857097"
+
   describe "update_sites_for/1" do
     test "does not lock sites if user is on trial" do
       user = new_user(trial_expiry_date: Date.utc_today())
@@ -61,6 +65,24 @@ defmodule Plausible.Billing.SiteLockerTest do
       refute Repo.reload!(site).locked
     end
 
+    test "does not lock enterprise customers with (manual lock) graceperiod ended" do
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Date.utc_today() |> Date.shift(day: -1),
+        manual_lock: true
+      }
+
+      user =
+        new_user(team: [grace_period: grace_period])
+        |> subscribe_to_enterprise_plan(monthly_pageview_limit: 10_000)
+
+      site = new_site(owner: user)
+      team = team_of(user)
+
+      assert SiteLocker.update_sites_for(team) == :unlocked
+
+      refute Repo.reload!(site).locked
+    end
+
     test "locks user who cancelled subscription and the cancelled subscription has expired" do
       user =
         new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: -1))
@@ -72,34 +94,62 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_subscription}
+      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_trial_or_subscription}
 
       assert Repo.reload!(site).locked
     end
 
-    test "locks all sites if team has active subscription but grace period has ended" do
+    test "locks all sites if team has an active subscription but grace period has ended (still over limits)" do
       grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
       user = new_user(team: [grace_period: grace_period])
-      subscribe_to_plan(user, "123")
+      subscribe_to_plan(user, @v4_growth_plan_id)
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :grace_period_ended_now}
+      over_limits_usage_stub = Plausible.BillingTest.monthly_pageview_usage_stub(15_000, 15_000)
+
+      assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
+               {:locked, :grace_period_ended_now}
 
       assert Repo.reload!(site).locked
     end
 
-    test "sends email if grace period has ended" do
+    test "does not lock sites (and removes grace period), when on active subscription and grace period ended, but usage now within limits" do
       grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
       user = new_user(team: [grace_period: grace_period])
-      subscribe_to_plan(user, "123")
+      subscribe_to_plan(user, @v4_growth_plan_id)
+      site = new_site(owner: user)
+      team = team_of(user)
+
+      assert SiteLocker.update_sites_for(team) == :unlocked
+
+      refute Repo.reload!(site).locked
+
+      assert_no_emails_delivered()
+    end
+
+    test "sends email to all billing members if grace period has ended and still over limits" do
+      grace_period = %Plausible.Teams.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      user = new_user(team: [grace_period: grace_period])
+      subscribe_to_plan(user, @v4_growth_plan_id)
       new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :grace_period_ended_now}
+      billing_member = new_user()
+      add_member(team, user: billing_member, role: :billing)
+
+      over_limits_usage_stub = Plausible.BillingTest.monthly_pageview_usage_stub(15_000, 15_000)
+
+      assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
+               {:locked, :grace_period_ended_now}
 
       assert_email_delivered_with(
         to: [user],
+        subject: "[Action required] Your Plausible dashboard is now locked"
+      )
+
+      assert_email_delivered_with(
+        to: [billing_member],
         subject: "[Action required] Your Plausible dashboard is now locked"
       )
     end
@@ -112,11 +162,14 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       user = new_user(team: [grace_period: grace_period])
 
-      subscribe_to_plan(user, "123")
+      subscribe_to_plan(user, @v4_growth_plan_id)
       new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :grace_period_ended_now}
+      over_limits_usage_stub = Plausible.BillingTest.monthly_pageview_usage_stub(15_000, 15_000)
+
+      assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
+               {:locked, :grace_period_ended_now}
 
       assert_email_delivered_with(
         to: [user],
@@ -124,9 +177,29 @@ defmodule Plausible.Billing.SiteLockerTest do
       )
 
       team = Repo.reload!(team)
-      assert SiteLocker.update_sites_for(team) == {:locked, :grace_period_ended_already}
+
+      assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
+               {:locked, :grace_period_ended_already}
 
       assert_no_emails_delivered()
+    end
+
+    test "unlocks already ended grace periods when they still have an active subscription and went within limits again" do
+      grace_period = %Plausible.Teams.GracePeriod{
+        end_date: Timex.shift(Timex.today(), days: -7),
+        is_over: true
+      }
+
+      user = new_user(team: [grace_period: grace_period])
+
+      subscribe_to_plan(user, @v4_growth_plan_id)
+      new_site(owner: user)
+      site = new_site(owner: user)
+      team = team_of(user)
+
+      assert SiteLocker.update_sites_for(team) == :unlocked
+
+      refute Repo.reload!(site).locked
     end
 
     test "locks all sites if user has no trial or active subscription" do
@@ -134,7 +207,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_subscription}
+      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_trial_or_subscription}
 
       assert Repo.reload!(site).locked
     end
@@ -144,7 +217,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = user |> team_of() |> Ecto.Changeset.change(trial_expiry_date: nil) |> Repo.update!()
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :no_trial}
+      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_trial_or_subscription}
 
       assert Repo.reload!(site).locked
     end
@@ -157,7 +230,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       add_guest(viewer_site, user: user, role: :viewer)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_subscription}
+      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_trial_or_subscription}
 
       owner_site = Repo.reload!(owner_site)
       viewer_site = Repo.reload!(viewer_site)

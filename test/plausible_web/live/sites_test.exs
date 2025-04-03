@@ -13,7 +13,25 @@ defmodule PlausibleWeb.Live.SitesTest do
     test "renders empty sites page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, "/sites")
 
+      assert text(html) =~ "My Personal Sites"
+
       assert text(html) =~ "You don't have any sites yet"
+    end
+
+    test "renders settings link when current team is set", %{user: user, conn: conn} do
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute element_exists?(html, ~s|a[data-test-id="team-settings-link"]|)
+
+      new_site(owner: user)
+      team = team_of(user)
+      team = Plausible.Teams.complete_setup(team)
+
+      conn = set_current_team(conn, team)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert element_exists?(html, ~s|a[data-test-id="team-settings-link"]|)
     end
 
     test "renders team invitations", %{user: user, conn: conn} do
@@ -31,10 +49,10 @@ defmodule PlausibleWeb.Live.SitesTest do
       {:ok, _lv, html} = live(conn, "/sites")
 
       assert text_of_element(html, "#invitation-#{invitation1.invitation_id}") =~
-               "G.I. Joe has invited you to join the \"My Team\" as viewer member."
+               "G.I. Joe has invited you to join the \"My Personal Sites\" as viewer member."
 
       assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
-               "G.I. Jane has invited you to join the \"My Team\" as editor member."
+               "G.I. Jane has invited you to join the \"My Personal Sites\" as editor member."
 
       assert find(
                html,
@@ -88,6 +106,83 @@ defmodule PlausibleWeb.Live.SitesTest do
       invitation_data = get_invitation_data(html)
 
       assert get_in(invitation_data, ["invitations", transfer.transfer_id, "no_plan"])
+    end
+
+    @tag :ee_only
+    test "renders upgrade nag when current team has a site and trial expired", %{
+      conn: conn,
+      user: user
+    } do
+      team = new_site(owner: user).team
+
+      team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), -1))
+      |> Repo.update!()
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert html =~ "Payment required"
+    end
+
+    @tag :ee_only
+    test "renders upgrade nag when there's a pending transfer", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, personal_team} = Plausible.Teams.get_or_create(user)
+
+      another_user = new_user()
+      site = new_site(owner: another_user)
+
+      personal_team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), -1))
+      |> Repo.update!()
+
+      invite_transfer(site, user, inviter: another_user)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert html =~ "Payment required"
+    end
+
+    @tag :ee_only
+    test "does not render upgrade nag when there's no current team", %{conn: conn, user: user} do
+      team = new_site().team |> Plausible.Teams.complete_setup()
+      add_member(team, user: user, role: :owner)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute html =~ "Payment required"
+    end
+
+    @tag :ee_only
+    test "does not render upgrade nag when current team has no sites and user has no pending transfers",
+         %{conn: conn, user: user} do
+      {:ok, _personal_team} = Plausible.Teams.get_or_create(user)
+
+      team = new_site().team |> Plausible.Teams.complete_setup()
+      add_member(team, user: user, role: :owner)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute html =~ "Payment required"
+    end
+
+    @tag :ee_only
+    test "does not render upgrade nag if current team does not have any sites yet and user has no pending transfers",
+         %{conn: conn, user: user} do
+      {:ok, personal_team} = Plausible.Teams.get_or_create(user)
+
+      personal_team
+      |> Ecto.Changeset.change(trial_expiry_date: Date.add(Date.utc_today(), -1))
+      |> Repo.update!()
+
+      team = new_site().team |> Plausible.Teams.complete_setup()
+      add_member(team, user: user, role: :owner)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      refute html =~ "Payment required"
     end
 
     @tag :ee_only

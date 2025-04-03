@@ -108,7 +108,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   end
 
   describe "GET /billing/upgrade-success" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :create_team, :log_in]
 
     test "shows success page after user subscribes", %{conn: conn} do
       conn = get(conn, Routes.billing_path(conn, :upgrade_success))

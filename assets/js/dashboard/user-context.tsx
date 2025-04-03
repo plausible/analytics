@@ -1,4 +1,3 @@
-/* @format */
 import React, { createContext, ReactNode, useContext } from 'react'
 
 export enum Role {
@@ -6,18 +5,19 @@ export enum Role {
   admin = 'admin',
   viewer = 'viewer',
   editor = 'editor',
-  public = 'public'
+  public = 'public',
+  billing = 'billing'
 }
 
 const userContextDefaultValue = {
+  loggedIn: false,
   id: null,
-  role: null,
-  loggedIn: false
+  role: Role.public
 } as
-  | { loggedIn: false; id: null; role: null }
+  | { loggedIn: false; id: null; role: Role }
   | { loggedIn: true; id: number; role: Role }
 
-type UserContextValue = typeof userContextDefaultValue
+export type UserContextValue = typeof userContextDefaultValue
 
 const UserContext = createContext<UserContextValue>(userContextDefaultValue)
 

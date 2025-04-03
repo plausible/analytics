@@ -1,7 +1,7 @@
 <.settings_tiles>
-  <.tile>
+  <.tile docs="users-roles">
     <:title>
-      <a id="update-name">Team Name</a>
+      <a id="update-name#changing-the-name-of-a-team">Team Information</a>
     </:title>
     <:subtitle>
       Change the name of your team
@@ -12,19 +12,25 @@
       for={@team_name_changeset}
       method="post"
     >
-      <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
+      <.input
+        readonly={@current_team_role not in [:owner, :admin]}
+        type="text"
+        field={f[:name]}
+        label="Name"
+        width="w-1/2"
+      />
 
-      <.button type="submit">
+      <.button type="submit" disabled={@current_team_role not in [:owner, :admin]}>
         Change Name
       </.button>
     </.form>
   </.tile>
-  <.tile>
+  <.tile docs="users-roles#managing-team-member-roles">
     <:title>
       <a id="team-members">Team Members</a>
     </:title>
     <:subtitle>
-      Add, remove or change your team memberships
+      Add or remove team members and adjust their roles
     </:subtitle>
     {live_render(@conn, PlausibleWeb.Live.TeamManagement,
       id: "team-setup",

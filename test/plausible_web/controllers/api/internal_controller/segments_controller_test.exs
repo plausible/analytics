@@ -3,302 +3,6 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
   use Plausible.Repo
   use Plausible.Teams.Test
 
-  describe "GET /api/:domain/segments" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "returns empty list when no segments", %{conn: conn, site: site} do
-      conn =
-        get(conn, "/api/#{site.domain}/segments")
-
-      assert json_response(conn, 200) == []
-    end
-
-    test "returns site segments list when looking at a public dashboard", %{conn: conn} do
-      other_user = new_user()
-      site = new_site(owner: other_user, public: true)
-
-      site_segments =
-        insert_list(2, :segment,
-          site: site,
-          owner: other_user,
-          type: :site,
-          name: "other site segment"
-        )
-
-      insert_list(10, :segment,
-        site: site,
-        owner: other_user,
-        type: :personal,
-        name: "other user personal segment"
-      )
-
-      conn = get(conn, "/api/#{site.domain}/segments")
-
-      assert json_response(conn, 200) ==
-               Enum.reverse(
-                 Enum.map(site_segments, fn s ->
-                   %{
-                     "id" => s.id,
-                     "name" => s.name,
-                     "type" => Atom.to_string(s.type),
-                     "inserted_at" => Calendar.strftime(s.inserted_at, "%Y-%m-%d %H:%M:%S"),
-                     "updated_at" => Calendar.strftime(s.updated_at, "%Y-%m-%d %H:%M:%S"),
-                     "owner_id" => nil,
-                     "owner_name" => nil,
-                     "segment_data" => nil
-                   }
-                 end)
-               )
-    end
-
-    test "forbids owners on growth plan from seeing site segments", %{
-      conn: conn,
-      user: user,
-      site: site
-    } do
-      user |> subscribe_to_growth_plan()
-
-      insert_list(2, :segment,
-        site: site,
-        owner: user,
-        type: :site,
-        name: "site segment"
-      )
-
-      conn =
-        get(conn, "/api/#{site.domain}/segments")
-
-      assert json_response(conn, 200) == []
-    end
-
-    for role <- [:viewer, :owner] do
-      test "returns list with personal and site segments for #{role}, avoiding segments from other site",
-           %{conn: conn, user: user, site: site} do
-        other_user = new_user(name: "Other User")
-        other_site = new_site(owner: other_user, team: team_of(user))
-
-        insert_list(2, :segment,
-          site: other_site,
-          owner: user,
-          type: :site,
-          name: "other site segment"
-        )
-
-        insert_list(10, :segment,
-          site: site,
-          owner: other_user,
-          type: :personal,
-          name: "other user personal segment"
-        )
-
-        personal_segment =
-          insert(:segment,
-            site: site,
-            owner: user,
-            type: :personal,
-            name: "a personal segment"
-          )
-          |> Map.put(:owner_name, user.name)
-
-        emea_site_segment =
-          insert(:segment,
-            site: site,
-            owner: other_user,
-            type: :site,
-            name: "EMEA region"
-          )
-          |> Map.put(:owner_name, other_user.name)
-
-        apac_site_segment =
-          insert(:segment,
-            site: site,
-            owner: user,
-            type: :site,
-            name: "APAC region"
-          )
-          |> Map.put(:owner_name, user.name)
-
-        dangling_site_segment =
-          insert(:segment,
-            site: site,
-            owner: nil,
-            type: :site,
-            name: "Another region"
-          )
-          |> Map.put(:owner_name, nil)
-
-        conn =
-          get(conn, "/api/#{site.domain}/segments")
-
-        assert json_response(conn, 200) ==
-                 Enum.map(
-                   [
-                     dangling_site_segment,
-                     apac_site_segment,
-                     emea_site_segment,
-                     personal_segment
-                   ],
-                   fn s ->
-                     %{
-                       "id" => s.id,
-                       "name" => s.name,
-                       "type" => Atom.to_string(s.type),
-                       "owner_id" => s.owner_id,
-                       "owner_name" => s.owner_name,
-                       "inserted_at" => Calendar.strftime(s.inserted_at, "%Y-%m-%d %H:%M:%S"),
-                       "updated_at" => Calendar.strftime(s.updated_at, "%Y-%m-%d %H:%M:%S"),
-                       "segment_data" => nil
-                     }
-                   end
-                 )
-      end
-    end
-  end
-
-  describe "GET /api/:domain/segments/:segment_id" do
-    setup [:create_user, :create_site, :log_in]
-
-    test "serves 404 when invalid segment key used", %{conn: conn, site: site} do
-      conn =
-        get(conn, "/api/#{site.domain}/segments/any-id")
-
-      assert json_response(conn, 404) == %{"error" => "Segment not found with ID \"any-id\""}
-    end
-
-    test "serves 404 when no segment found", %{conn: conn, site: site} do
-      conn =
-        get(conn, "/api/#{site.domain}/segments/100100")
-
-      assert json_response(conn, 404) == %{"error" => "Segment not found with ID \"100100\""}
-    end
-
-    test "serves 404 when segment is for another site", %{conn: conn, site: site, user: user} do
-      other_site = new_site(owner: user)
-
-      segment =
-        insert(:segment,
-          site: other_site,
-          owner: user,
-          type: :site,
-          name: "any"
-        )
-
-      conn =
-        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
-
-      assert json_response(conn, 404) == %{
-               "error" => "Segment not found with ID \"#{segment.id}\""
-             }
-    end
-
-    test "serves 404 for viewing contents of site segments for viewers of public dashboards",
-         %{
-           conn: conn
-         } do
-      site = new_site(public: true)
-      other_user = add_guest(site, user: new_user(), role: :editor)
-
-      segment =
-        insert(:segment,
-          type: :site,
-          owner: other_user,
-          site: site,
-          name: "any"
-        )
-
-      conn =
-        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
-
-      assert json_response(conn, 403) == %{
-               "error" => "Not enough permissions to get segment data"
-             }
-    end
-
-    test "serves 404 when user is not the segment owner and segment is personal",
-         %{
-           conn: conn,
-           site: site
-         } do
-      other_user = add_guest(site, role: :editor)
-
-      segment =
-        insert(:segment,
-          type: :personal,
-          owner: other_user,
-          site: site,
-          name: "any"
-        )
-
-      conn =
-        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
-
-      assert json_response(conn, 404) == %{
-               "error" => "Segment not found with ID \"#{segment.id}\""
-             }
-    end
-
-    test "serves 200 with segment when user is not the segment owner and segment is not personal",
-         %{
-           conn: conn,
-           user: user
-         } do
-      site = new_site(owner: user, timezone: "Asia/Tokyo")
-      other_user = add_guest(site, role: :editor)
-
-      segment =
-        insert(:segment,
-          type: :site,
-          owner: other_user,
-          site: site,
-          name: "any",
-          inserted_at: "2024-09-01T22:00:00.000Z",
-          updated_at: "2024-09-01T23:00:00.000Z"
-        )
-
-      conn =
-        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
-
-      assert json_response(conn, 200) == %{
-               "id" => segment.id,
-               "owner_id" => other_user.id,
-               "owner_name" => other_user.name,
-               "name" => segment.name,
-               "type" => Atom.to_string(segment.type),
-               "segment_data" => segment.segment_data,
-               "inserted_at" => "2024-09-02 07:00:00",
-               "updated_at" => "2024-09-02 08:00:00"
-             }
-    end
-
-    test "serves 200 with segment when user is segment owner", %{
-      conn: conn,
-      site: site,
-      user: user
-    } do
-      segment =
-        insert(:segment,
-          site: site,
-          name: "any",
-          owner: user,
-          type: :personal
-        )
-
-      conn =
-        get(conn, "/api/#{site.domain}/segments/#{segment.id}")
-
-      assert json_response(conn, 200) == %{
-               "id" => segment.id,
-               "owner_id" => user.id,
-               "owner_name" => user.name,
-               "name" => segment.name,
-               "type" => Atom.to_string(segment.type),
-               "segment_data" => segment.segment_data,
-               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S"),
-               "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%d %H:%M:%S")
-             }
-    end
-  end
-
   describe "POST /api/:domain/segments" do
     setup [:create_user, :log_in, :create_site]
 
@@ -636,7 +340,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                        "inserted_at" =>
                          ^any(
                            :string,
-                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")}/
+                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%dT%H:%M:%S")}/
                          ),
                        "updated_at" => ^any(:iso8601_naive_datetime)
                      }) = response
@@ -676,7 +380,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                        "inserted_at" =>
                          ^any(
                            :string,
-                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S")}/
+                           ~r/#{Calendar.strftime(segment.inserted_at, "%Y-%m-%dT%H:%M:%S")}/
                          ),
                        "updated_at" => ^any(:iso8601_naive_datetime)
                      }) = response
@@ -758,8 +462,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                  "name" => segment.name,
                  "segment_data" => segment.segment_data,
                  "type" => "#{unquote(type)}",
-                 "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S"),
-                 "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%d %H:%M:%S")
+                 "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%dT%H:%M:%S"),
+                 "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%dT%H:%M:%S")
                } == response
 
         verify_no_segment_in_db(segment)
@@ -790,8 +494,8 @@ defmodule PlausibleWeb.Api.Internal.SegmentsControllerTest do
                "name" => segment.name,
                "segment_data" => segment.segment_data,
                "type" => "site",
-               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%d %H:%M:%S"),
-               "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%d %H:%M:%S")
+               "inserted_at" => Calendar.strftime(segment.inserted_at, "%Y-%m-%dT%H:%M:%S"),
+               "updated_at" => Calendar.strftime(segment.updated_at, "%Y-%m-%dT%H:%M:%S")
              } == response
 
       verify_no_segment_in_db(segment)

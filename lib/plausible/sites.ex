@@ -96,17 +96,7 @@ defmodule Plausible.Sites do
         where: gm.site_id == ^site.id,
         select: %{
           user: u,
-          role:
-            fragment(
-              """
-              CASE
-              WHEN ? = 'editor' THEN 'admin'
-              ELSE ?
-              END
-              """,
-              gm.role,
-              gm.role
-            )
+          role: gm.role
         }
       )
       |> Repo.all()
@@ -121,17 +111,7 @@ defmodule Plausible.Sites do
         select: %{
           invitation_id: gi.invitation_id,
           email: ti.email,
-          role:
-            fragment(
-              """
-              CASE
-              WHEN ? = 'editor' THEN 'admin'
-              ELSE ?
-              END
-              """,
-              gi.role,
-              gi.role
-            )
+          role: gi.role
         }
       )
       |> Repo.all()
@@ -149,6 +129,67 @@ defmodule Plausible.Sites do
       |> Repo.all()
 
     %{memberships: memberships, invitations: site_transfers ++ invitations}
+  end
+
+  @spec list_guests_query(Site.t(), Keyword.t()) :: Ecto.Query.t()
+  def list_guests_query(site, opts \\ []) do
+    guest_memberships =
+      from(
+        gm in Teams.GuestMembership,
+        inner_join: tm in assoc(gm, :team_membership),
+        inner_join: u in assoc(tm, :user),
+        as: :user,
+        where: gm.site_id == ^site.id,
+        select: %{
+          id: gm.id,
+          inserted_at: gm.inserted_at,
+          email: u.email,
+          role: gm.role,
+          status: "accepted"
+        }
+      )
+
+    guest_memberships =
+      if email = opts[:email] do
+        guest_memberships |> where([user: u], u.email == ^email)
+      else
+        guest_memberships
+      end
+
+    guest_invitations =
+      from(
+        gi in Teams.GuestInvitation,
+        inner_join: ti in assoc(gi, :team_invitation),
+        as: :team_invitation,
+        where: gi.site_id == ^site.id,
+        select: %{
+          id: gi.id,
+          inserted_at: gi.inserted_at,
+          email: ti.email,
+          role: gi.role,
+          status: "invited"
+        }
+      )
+
+    guest_invitations =
+      if email = opts[:email] do
+        guest_invitations |> where([team_invitation: ti], ti.email == ^email)
+      else
+        guest_invitations
+      end
+
+    guests = union_all(guest_memberships, ^guest_invitations)
+
+    from(g in subquery(guests),
+      select: %{
+        id: g.id,
+        inserted_at: g.inserted_at,
+        email: g.email,
+        role: g.role,
+        status: g.status
+      },
+      order_by: [desc: g.inserted_at, desc: g.id]
+    )
   end
 
   @spec for_user_query(Auth.User.t(), Teams.Team.t() | nil) :: Ecto.Query.t()
@@ -170,7 +211,7 @@ defmodule Plausible.Sites do
       where(
         query,
         [team_memberships: tm, guest_memberships: gm, site: s],
-        (tm.role != :guest and tm.team_id == ^team.id) or gm.site_id == s.id
+        tm.role != :guest and tm.team_id == ^team.id
       )
     else
       where(
@@ -309,14 +350,6 @@ defmodule Plausible.Sites do
     |> Ecto.Changeset.change()
     |> Ecto.Changeset.put_change(:installation_meta, meta)
     |> Repo.update!()
-  end
-
-  def set_scroll_depth_visible_at(site) do
-    utc_now = NaiveDateTime.utc_now(:second)
-
-    site
-    |> Ecto.Changeset.change(%{scroll_depth_visible_at: utc_now})
-    |> Repo.update()
   end
 
   def has_goals?(site) do

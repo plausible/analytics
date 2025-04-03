@@ -4,7 +4,7 @@ import { useInView } from 'react-intersection-observer'
 export default function LazyLoader(props) {
   const [hasBecomeVisibleYet, setHasBecomeVisibleYet] = useState(false)
   const { ref, inView } = useInView({
-    threshold: 0,
+    threshold: 0
   })
 
   useEffect(() => {
@@ -12,12 +12,8 @@ export default function LazyLoader(props) {
       setHasBecomeVisibleYet(true)
       if (props.onVisible) props.onVisible()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inView])
 
-  return (
-    <div ref={ref}>
-      {props.children}
-    </div>
-  )
+  return <div ref={ref}>{props.children}</div>
 }

@@ -12,6 +12,8 @@ defmodule Plausible.Teams.Team do
   use Ecto.Schema
   use Plausible
 
+  alias Plausible.Auth
+
   import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
@@ -29,6 +31,12 @@ defmodule Plausible.Teams.Team do
     field :setup_complete, :boolean, default: false
     field :setup_at, :naive_datetime
 
+    # Field kept in sync with current subscription plan, if any
+    field :hourly_api_request_limit, :integer, default: Auth.ApiKey.hourly_request_limit()
+
+    # Field for purely informational purposes in CRM context
+    field :notes, :string
+
     embeds_one :grace_period, Plausible.Teams.GracePeriod, on_replace: :update
 
     has_many :sites, Plausible.Site
@@ -41,7 +49,12 @@ defmodule Plausible.Teams.Team do
       where: [role: :owner],
       preload_order: [asc: :id]
 
+    has_many :billing_memberships, Plausible.Teams.Membership,
+      where: [role: :billing],
+      preload_order: [asc: :id]
+
     has_many :owners, through: [:ownerships, :user]
+    has_many :billing_members, through: [:billing_memberships, :user]
 
     timestamps()
   end
@@ -50,6 +63,7 @@ defmodule Plausible.Teams.Team do
     team
     |> cast(params, [
       :name,
+      :notes,
       :trial_expiry_date,
       :allow_next_upgrade_override,
       :accept_traffic_until
@@ -69,6 +83,7 @@ defmodule Plausible.Teams.Team do
     team
     |> cast(attrs, [:name])
     |> validate_required(:name)
+    |> validate_exclusion(:name, [Plausible.Teams.default_name()])
   end
 
   def setup_changeset(team, now \\ NaiveDateTime.utc_now(:second)) do

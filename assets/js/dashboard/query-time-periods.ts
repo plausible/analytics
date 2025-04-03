@@ -1,4 +1,3 @@
-/* @format */
 import { useEffect } from 'react'
 import {
   clearedComparisonSearch,
@@ -30,7 +29,9 @@ export enum QueryPeriod {
   'day' = 'day',
   'month' = 'month',
   '7d' = '7d',
+  '28d' = '28d',
   '30d' = '30d',
+  '90d' = '90d',
   '6mo' = '6mo',
   '12mo' = '12mo',
   'year' = 'year',
@@ -249,6 +250,7 @@ export type LinkItem = [
       query: DashboardQuery
     }) => boolean
     onEvent?: (event: Pick<Event, 'preventDefault' | 'stopPropagation'>) => void
+    hidden?: boolean
   }
 ]
 
@@ -331,8 +333,22 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
+        ['Last 28 Days', 'F'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['28d'],
+            keybindHint: 'F'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['28d'],
+          onEvent
+        }
+      ],
+      [
         ['Last 30 Days', 'T'],
         {
+          hidden: true,
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
@@ -340,6 +356,19 @@ export const getDatePeriodGroups = ({
             keybindHint: 'T'
           }),
           isActive: ({ query }) => query.period === QueryPeriod['30d'],
+          onEvent
+        }
+      ],
+      [
+        ['Last 90 Days', 'N'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['90d'],
+            keybindHint: 'N'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['90d'],
           onEvent
         }
       ]
@@ -361,14 +390,14 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last Month'],
+        ['Last Month', 'P'],
         {
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
             period: QueryPeriod.month,
             date: formatISO(lastMonth(site)),
-            keybindHint: null
+            keybindHint: 'P'
           }),
           isActive: ({ query }) =>
             query.period === QueryPeriod.month &&
@@ -390,6 +419,19 @@ export const getDatePeriodGroups = ({
           isActive: ({ query }) =>
             query.period === QueryPeriod.year && isThisYear(site, query.date),
           onEvent
+        }
+      ],
+      [
+        ['Last 6 months', 'S'],
+        {
+          hidden: true,
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['6mo'],
+            keybindHint: 'S'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['6mo']
         }
       ],
       [
@@ -428,19 +470,6 @@ export const getDatePeriodGroups = ({
     .concat([lastGroup.concat(extraItemsInLastGroup)])
     .concat(extraGroups)
 }
-
-export const last6MonthsLinkItem: LinkItem = [
-  ['Last 6 months', 'S'],
-  {
-    search: (s) => ({
-      ...s,
-      ...clearedDateSearch,
-      period: QueryPeriod['6mo'],
-      keybindHint: 'S'
-    }),
-    isActive: ({ query }) => query.period === QueryPeriod['6mo']
-  }
-]
 
 export const getCompareLinkItem = ({
   query,
@@ -571,8 +600,14 @@ export function getCurrentPeriodDisplayName({
   if (query.period === '7d') {
     return 'Last 7 days'
   }
+  if (query.period === '28d') {
+    return 'Last 28 days'
+  }
   if (query.period === '30d') {
     return 'Last 30 days'
+  }
+  if (query.period === '90d') {
+    return 'Last 90 days'
   }
   if (query.period === 'month') {
     if (isThisMonth(site, query.date)) {

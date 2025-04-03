@@ -82,7 +82,7 @@ defmodule Plausible.SiteAdmin do
       public: nil,
       team: %{value: &get_team/1},
       owners: %{value: &get_owners/1},
-      other_members: %{value: &get_other_members/1},
+      other_guest_members: %{value: &get_other_members/1},
       limits: %{
         value: fn site ->
           rate_limiting_status =
@@ -145,8 +145,8 @@ defmodule Plausible.SiteAdmin do
       {:error, :user_not_found} ->
         {:error, "User could not be found"}
 
-      {:error, :transfer_to_self} ->
-        {:error, "User is already an owner of one of the sites"}
+      {:error, %Ecto.Changeset{}} ->
+        {:error, "Site transfer request has failed for one of the sites"}
     end
   end
 
@@ -169,7 +169,7 @@ defmodule Plausible.SiteAdmin do
         {:error, "User could not be found"}
 
       {:error, :transfer_to_self} ->
-        {:error, "User is already an owner of one of the sites"}
+        {:error, "The site is already in the picked team"}
 
       {:error, :no_plan} ->
         {:error, "The new owner does not have a subscription"}
@@ -210,10 +210,10 @@ defmodule Plausible.SiteAdmin do
     team_name =
       case site.owners do
         [owner] ->
-          if site.team.name == "My Team" do
-            owner.name
-          else
+          if site.team.setup_complete do
             site.team.name
+          else
+            owner.name
           end
 
         [_ | _] ->
@@ -251,7 +251,7 @@ defmodule Plausible.SiteAdmin do
       role = html_escape(m.role)
 
       """
-      <a href="/auth/user/#{id}">#{email} (#{role})</a>
+      <a href="/crm/auth/user/#{id}">#{email} (guest #{role})</a>
       """
     end)
     |> Phoenix.HTML.raw()

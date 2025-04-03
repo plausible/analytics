@@ -15,6 +15,8 @@ defmodule Plausible.Application do
 
     children =
       [
+        {PartitionSupervisor,
+         child_spec: Task.Supervisor, name: Plausible.UserAgentParseTaskSupervisor},
         Plausible.Session.BalancerSupervisor,
         Plausible.Cache.Stats,
         Plausible.PromEx,
@@ -150,7 +152,6 @@ defmodule Plausible.Application do
 
     setup_geolocation()
     Location.load_all()
-    Plausible.Ingestion.Source.init()
     Plausible.Geo.await_loader()
 
     Supervisor.start_link(List.flatten(children), opts)

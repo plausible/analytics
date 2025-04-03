@@ -5,7 +5,7 @@ defmodule Plausible.Factory do
 
   def team_factory do
     %Plausible.Teams.Team{
-      name: "My Team",
+      name: Plausible.Teams.default_name(),
       trial_expiry_date: Timex.today() |> Timex.shift(days: 30),
       setup_complete: true,
       setup_at: NaiveDateTime.utc_now()
@@ -277,7 +277,8 @@ defmodule Plausible.Factory do
       visitors: 1,
       pageviews: 1,
       exits: 0,
-      time_on_page: 10
+      total_time_on_page: 10,
+      total_time_on_page_visits: 1
     }
   end
 

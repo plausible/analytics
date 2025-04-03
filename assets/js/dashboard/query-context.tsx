@@ -1,4 +1,3 @@
-/* @format */
 import React, { createContext, useMemo, useContext, ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
@@ -19,9 +18,10 @@ import {
   queryDefaultValue,
   postProcessFilters
 } from './query'
-import { SavedSegment, SegmentData } from './filtering/segments'
+import { resolveFilters, SavedSegment, SegmentData } from './filtering/segments'
 import { useDefiniteLocationState } from './navigation/use-definite-location-state'
 import { useClearExpandedSegmentModeOnFilterClear } from './nav-menu/segments/segment-menu'
+import { useSegmentsContext } from './filtering/segments-context'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
@@ -42,6 +42,7 @@ export default function QueryContextProvider({
 }: {
   children: ReactNode
 }) {
+  const segmentsContext = useSegmentsContext()
   const location = useLocation()
   const { definiteValue: expandedSegment } = useDefiniteLocationState<
     SavedSegment & { segment_data: SegmentData }
@@ -53,13 +54,14 @@ export default function QueryContextProvider({
     compare_to,
     comparison,
     date,
-    filters,
+    filters: rawFilters,
     from,
     labels,
     match_day_of_week,
     period,
     to,
     with_imported,
+    legacy_time_on_page_cutoff,
     ...otherSearch
   } = useMemo(() => parseSearch(location.search), [location.search])
 
@@ -72,6 +74,12 @@ export default function QueryContextProvider({
       defaultValues,
       segmentIsExpanded: !!expandedSegment
     })
+
+    const filters = Array.isArray(rawFilters)
+      ? postProcessFilters(rawFilters as Filter[])
+      : defaultValues.filters
+
+    const resolvedFilters = resolveFilters(filters, segmentsContext.segments)
 
     return {
       ...timeQuery,
@@ -102,25 +110,29 @@ export default function QueryContextProvider({
       with_imported: [true, false].includes(with_imported as boolean)
         ? (with_imported as boolean)
         : defaultValues.with_imported,
-      filters: Array.isArray(filters)
-        ? postProcessFilters(filters as Filter[])
-        : defaultValues.filters,
-      labels: (labels as FilterClauseLabels) || defaultValues.labels
+      filters,
+      resolvedFilters,
+      labels: (labels as FilterClauseLabels) || defaultValues.labels,
+      legacy_time_on_page_cutoff: site.flags.new_time_on_page
+        ? (legacy_time_on_page_cutoff as string) || site.legacyTimeOnPageCutoff
+        : defaultValues.legacy_time_on_page_cutoff
     }
   }, [
     compare_from,
     compare_to,
     comparison,
     date,
-    filters,
+    rawFilters,
     from,
     labels,
     match_day_of_week,
     period,
     to,
     with_imported,
+    legacy_time_on_page_cutoff,
     site,
-    expandedSegment
+    expandedSegment,
+    segmentsContext.segments
   ])
 
   useClearExpandedSegmentModeOnFilterClear({ expandedSegment, query })
