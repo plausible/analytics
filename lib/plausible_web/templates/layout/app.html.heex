@@ -50,7 +50,9 @@
       <script type="text/javascript" src={Routes.static_path(@conn, "/js/embed.content.js")}>
       </script>
     <% else %>
-      {render("_footer.html", assigns)}
+      <%= if !assigns[:hide_footer] do %>
+        {render("_footer.html", assigns)}
+      <% end %>
     <% end %>
     <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
     </script>
