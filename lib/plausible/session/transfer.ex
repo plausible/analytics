@@ -24,7 +24,7 @@ defmodule Plausible.Session.Transfer do
     taker = Enum.find_value(children, fn {id, pid, _, _} -> id == :taker && pid end)
     if is_pid(taker), do: Process.alive?(taker), else: false
   catch
-    :exit, :noproc -> false
+    :exit, {:noproc, _} -> false
   end
 
   @doc false
