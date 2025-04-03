@@ -114,7 +114,7 @@ defmodule Plausible.Session.Transfer.TinySock do
     case :gen_tcp.listen(0, [{:ifaddr, {:local, sock_path}} | @listen_opts]) do
       {:ok, socket} -> socket
       {:error, :eaddrinuse} -> sock_listen_or_retry!(base_path)
-      {:error, reason} -> raise File.Error, path: sock_path, reason: reason, action: "listen"
+      {:error, reason} -> raise File.Error, path: sock_path, reason: reason, action: "bind"
     end
   end
 

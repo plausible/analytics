@@ -35,7 +35,7 @@ defmodule Plausible.Session.Transfer.AliveTest do
     assert Process.alive?(pid)
 
     # check if tinysock is still alive, it should be
-    assert [sock] = TinySock.list(tmp_dir)
+    assert [sock] = TinySock.list!(tmp_dir)
     assert {:ok, :yes} = TinySock.call(sock, :alive)
 
     # now decrement the counter and wait for another second
@@ -44,7 +44,7 @@ defmodule Plausible.Session.Transfer.AliveTest do
     refute Process.alive?(pid)
 
     # check if tinysock is still alive, it shouldn't be
-    assert TinySock.list(tmp_dir) == []
+    assert TinySock.list!(tmp_dir) == []
     assert {:error, :enoent} = TinySock.call(sock, :alive)
   end
 end
