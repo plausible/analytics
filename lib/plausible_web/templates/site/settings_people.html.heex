@@ -1,6 +1,10 @@
 <.settings_tiles>
-  <PlausibleWeb.Team.Notice.inviting_banner :if={
-    @site_role in [:owner, :admin] and Plausible.Teams.setup?(@current_team)
+  <PlausibleWeb.Team.Notice.owner_cta_banner :if={
+    @site_role == :owner and not Plausible.Teams.setup?(@current_team)
+  } />
+
+  <PlausibleWeb.Team.Notice.guest_cta_banner :if={
+    @site_role != :owner and not Plausible.Teams.setup?(@site.team)
   } />
 
   <.tile docs="users-roles">

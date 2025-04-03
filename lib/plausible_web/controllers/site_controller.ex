@@ -145,7 +145,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_people(conn, _params) do
-    site = conn.assigns.site
+    site = Repo.preload(conn.assigns.site, :team)
 
     %{memberships: memberships, invitations: invitations} =
       Sites.list_people(site)

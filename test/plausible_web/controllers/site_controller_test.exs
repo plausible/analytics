@@ -587,11 +587,12 @@ defmodule PlausibleWeb.SiteControllerTest do
                "#{new_owner.email} Owner"
     end
 
-    test "renders team management notices", %{conn: conn, user: user} do
+    test "renders distinct team management notices to owner", %{conn: conn, user: user} do
       site = new_site(owner: user)
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
 
-      refute resp =~ "You can also invite people to your team"
+      refute resp =~ "A Better Way of Inviting People to a Team"
+      assert resp =~ "A Better Way of Inviting People to Your Team"
       refute resp =~ "Team members automatically have access to this site."
 
       team = team_of(user)
@@ -599,22 +600,27 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = set_current_team(conn, team)
 
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
-      assert resp =~ "You can also invite people to your team"
+      refute resp =~ "A Better Way of Inviting People to Your Team"
       assert resp =~ "Team members automatically have access to this site."
     end
 
-    test "does not render team management notices to editors", %{conn: conn, user: user} do
+    test "renders distinct team management notices to editors", %{conn: conn, user: user} do
       # this can go away once we support multiple teams
       user |> team_of() |> Repo.delete!()
       owner = new_user()
       site = new_site(owner: owner)
       add_member(team_of(owner), user: user, role: :editor)
 
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+
+      assert resp =~ "A Better Way of Inviting People to a Team"
+      refute resp =~ "A Better Way of Inviting People to Your Team"
+
       owner |> team_of() |> Teams.Team.setup_changeset() |> Repo.update!()
 
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
 
-      refute resp =~ "You can also invite people to your team"
+      refute resp =~ "A Better Way of Inviting People to a Team"
       refute resp =~ "Team members automatically have access to this site."
     end
   end
