@@ -11,43 +11,45 @@ defmodule Plausible.Session.Transfer do
   require Logger
   alias Plausible.Session.Transfer.{TinySock, Alive}
 
-  def took?, do: Application.get_env(:plausible, :took_sessions, false)
-  defp took, do: Application.put_env(:plausible, :took_sessions, true)
-
-  # TODO await took?
-
-  def gave?, do: Application.get_env(:plausible, :gave_sessions, false)
-  defp gave, do: Application.put_env(:plausible, :gave_sessions, true)
-
   def telemetry_event, do: [:plausible, :sessions, :transfer]
+
+  def done?(transfer \\ __MODULE__) do
+    not taker_alive?(transfer)
+  end
+
+  defp taker_alive?(sup) do
+    children = Supervisor.which_children(sup)
+    taker = Enum.find_value(children, fn {id, pid, _, _} -> id == :taker && pid end)
+    if is_pid(taker), do: Process.alive?(taker), else: false
+  catch
+    :exit, :noproc -> false
+  end
 
   @doc false
   def child_spec(opts) do
     %{
       id: __MODULE__,
       start: {__MODULE__, :start_link, [opts]},
-      type: :supervisor
+      type: :supervisor,
+      shutdown: :timer.seconds(20),
+      restart: :temporary
     }
   end
 
   @doc false
   def start_link(opts) do
-    result = maybe_start_link(Keyword.fetch!(opts, :base_path))
-
-    if result == :ignore do
-      took()
-    end
-
-    result
+    base_path = Keyword.fetch!(opts, :base_path)
+    name = Keyword.get(opts, :name, __MODULE__)
+    maybe_start_link(name, base_path)
   end
 
-  defp maybe_start_link(base_path) do
+  defp maybe_start_link(name, base_path) do
     cond do
       is_nil(base_path) ->
         :ignore
 
       :ok == TinySock.write_dir(base_path) ->
-        do_start_link(base_path)
+        do_start_link(name, base_path)
 
       true ->
         Logger.error("#{__MODULE__} failed to create directory #{inspect(base_path)}")
@@ -55,18 +57,35 @@ defmodule Plausible.Session.Transfer do
     end
   end
 
-  defp do_start_link(base_path) do
-    taker = {Task, fn -> try_take_all_ets_everywhere(base_path) end}
-    giver = {TinySock, base_path: base_path, handler: &giver_handler/1}
-    alive = {Alive, until: &gave?/0}
+  defp do_start_link(name, base_path) do
+    taker =
+      {Task,
+       fn ->
+         started = System.monotonic_time()
+         take_all_ets_everywhere(base_path)
+         :telemetry.execute(telemetry_event(), %{duration: duration})
+       end}
+
+    times_given = :counters.new(1, [])
+
+    giver =
+      {TinySock,
+       base_path: base_path,
+       handler: fn
+         {:list, session_version} -> tabs(session_version)
+         {:send, tab} -> :ets.tab2list(tab)
+         :took -> :counters.add(times_given, 1, 1)
+       end}
+
+    alive = {Alive, fn -> :counters.get(times_given, 1) > 0 end}
 
     children = [
-      Supervisor.child_spec(taker, restart: :temporary),
-      Supervisor.child_spec(giver, restart: :transient),
+      Supervisor.child_spec(taker, id: :taker),
+      giver,
       Supervisor.child_spec(alive, shutdown: :timer.seconds(15))
     ]
 
-    Supervisor.start_link(children, strategy: :one_for_one)
+    Supervisor.start_link(children, name: name, strategy: :one_for_one)
   end
 
   defp session_version do
@@ -78,15 +97,6 @@ defmodule Plausible.Session.Transfer do
     ]
   end
 
-  @doc false
-  def giver_handler(message) do
-    case message do
-      {:list, session_version} -> tabs(session_version)
-      {:send, tab} -> :ets.tab2list(tab)
-      :took -> gave()
-    end
-  end
-
   defp tabs(session_version) do
     if session_version == session_version() and took?() do
       Plausible.Cache.Adapter.get_names(:sessions)
@@ -94,19 +104,6 @@ defmodule Plausible.Session.Transfer do
       |> Enum.filter(fn tab -> :ets.info(tab, :size) > 0 end)
     else
       []
-    end
-  end
-
-  @doc false
-  def try_take_all_ets_everywhere(base_path) do
-    started = System.monotonic_time()
-
-    try do
-      take_all_ets_everywhere(base_path)
-    after
-      duration = System.monotonic_time() - started
-      :telemetry.execute(telemetry_event(), %{duration: duration})
-      took()
     end
   end
 
