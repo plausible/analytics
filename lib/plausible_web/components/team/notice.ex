@@ -13,9 +13,10 @@ defmodule PlausibleWeb.Team.Notice do
       >
         <p>
           You can now create a team and assign different roles to team members, such as admin,
-          editor, viewer or billing. Team members will gain access to all your sites. <a href={
-            Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)
-          }>Create your team here</a>.
+          editor, viewer or billing. Team members will gain access to all your sites.
+          <.styled_link href={Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)}>
+            Create your team here
+          </.styled_link>.
         </p>
       </.notice>
     </aside>
