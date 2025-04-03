@@ -87,8 +87,11 @@ defmodule Plausible.Session.Transfer.TinySockTest do
     server =
       start_supervised!({TinySock, base_path: tmp_dir, handler: fn {:echo, data} -> data end})
 
-    assert :inet.getopts(TinySock.listen_socket(server), [:buffer, :recbuf, :sndbuf]) ==
-             {:ok, [buffer: 1460, recbuf: 8192, sndbuf: 8192]}
+    assert {:ok, [buffer: buffer, recbuf: recbuf, sndbuf: sndbuf]} =
+             :inet.getopts(TinySock.listen_socket(server), [:buffer, :recbuf, :sndbuf])
+
+    assert buffer >= recbuf
+    assert buffer >= sndbuf
 
     sock = TinySock.listen_socket_path(server)
     data = Enum.map(1..100, fn _ -> :crypto.strong_rand_bytes(1024 * 1024) end)

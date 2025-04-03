@@ -16,9 +16,9 @@ defmodule Plausible.Session.TransferTest do
   end
 
   # normal `@tag :tmp_dir` might not work if the path is too long for unix domain sockets (>104)
-  # this one makes paths a bit shorter like "/tmp/plausible_psp_123/"
+  # this one makes paths a bit shorter like "/tmp/plausible-123/"
   defp tmp_dir do
-    tmp_dir = Path.join(System.tmp_dir!(), "plausible_sess_#{System.unique_integer([:positive])}")
+    tmp_dir = Path.join(System.tmp_dir!(), "plausible-#{System.unique_integer([:positive])}")
     if File.exists?(tmp_dir), do: File.rm_rf!(tmp_dir)
     File.mkdir_p!(tmp_dir)
     on_exit(fn -> File.rm_rf!(tmp_dir) end)

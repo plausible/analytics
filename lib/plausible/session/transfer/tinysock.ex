@@ -161,7 +161,7 @@ defmodule Plausible.Session.Transfer.TinySock do
     sock_path = Path.join(base_path, sock_name)
 
     case :gen_tcp.listen(0, [{:ifaddr, {:local, sock_path}} | @listen_opts]) do
-      {:ok, socket} -> {:ok, socket}
+      {:ok, socket} -> {:ok, sock_max_buffer(socket)}
       {:error, :eaddrinuse} -> sock_listen_or_retry(base_path)
       {:error, reason} -> {:error, reason}
     end
@@ -170,7 +170,7 @@ defmodule Plausible.Session.Transfer.TinySock do
   defp sock_connect_or_rm(sock_path, timeout) do
     case :gen_tcp.connect({:local, sock_path}, 0, @connect_opts, timeout) do
       {:ok, socket} ->
-        {:ok, socket}
+        {:ok, sock_max_buffer(socket)}
 
       {:error, reason} = error ->
         if reason != :timeout do
@@ -181,6 +181,19 @@ defmodule Plausible.Session.Transfer.TinySock do
 
         error
     end
+  end
+
+  defp sock_max_buffer(socket) do
+    with {:ok, opts} <- :inet.getopts(socket, [:sndbuf, :recbuf, :buffer]) do
+      buffer =
+        Keyword.fetch!(opts, :buffer)
+        |> max(Keyword.fetch!(opts, :sndbuf))
+        |> max(Keyword.fetch!(opts, :recbuf))
+
+      :inet.setopts(socket, buffer: buffer)
+    end
+
+    socket
   end
 
   @dialyzer :no_improper_lists
