@@ -63,7 +63,7 @@ defmodule Plausible.Session.Transfer do
        fn ->
          started = System.monotonic_time()
          take_all_ets_everywhere(base_path)
-         :telemetry.execute(telemetry_event(), %{duration: duration})
+         :telemetry.execute(telemetry_event(), %{duration: System.monotonic_time() - started})
        end}
 
     times_given = :counters.new(1, [])
@@ -77,7 +77,7 @@ defmodule Plausible.Session.Transfer do
          :took -> :counters.add(times_given, 1, 1)
        end}
 
-    alive = {Alive, fn -> :counters.get(times_given, 1) > 0 end}
+    alive = {Alive, _until = fn -> :counters.get(times_given, 1) > 0 end}
 
     children = [
       Supervisor.child_spec(taker, id: :taker),

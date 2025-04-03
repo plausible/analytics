@@ -4,8 +4,7 @@ defmodule Plausible.Session.Transfer.Alive do
 
   @spec start_link((-> boolean)) :: GenServer.on_start()
   def start_link(until) do
-    {gen_opts, opts} = Keyword.split(opts, [:debug, :name, :spawn_opt, :hibernate_after])
-    GenServer.start_link(__MODULE__, until, gen_opts)
+    GenServer.start_link(__MODULE__, until)
   end
 
   @impl true
