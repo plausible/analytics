@@ -118,7 +118,8 @@ defmodule Plausible.Session.Transfer.TinySock do
 
       {e, stacktrace} when is_exception(e) and is_list(stacktrace) ->
         error = Exception.format(:error, e, stacktrace)
-        Logger.error("tinysock request handler #{inspect(pid)} terminating\n" <> error)
+        log = "tinysock request handler #{inspect(pid)} terminating\n" <> error
+        Logger.error(log, crash_reason: reason)
         {:noreply, state}
 
       reason ->
@@ -190,11 +191,25 @@ defmodule Plausible.Session.Transfer.TinySock do
 
   defp sock_recv(socket, timeout) do
     with {:ok, <<@tag_data, size::64-little>>} <- :gen_tcp.recv(socket, @tag_size + 8, timeout),
-         {:ok, binary} <- :gen_tcp.recv(socket, size, timeout) do
+         {:ok, binary} <- sock_recv_continue(socket, size, timeout, []) do
       try do
         {:ok, :erlang.binary_to_term(binary, [:safe])}
       rescue
         e -> {:error, e}
+      end
+    end
+  end
+
+  @five_mb 5 * 1024 * 1024
+
+  # for larger messages (>70MB), we need to read in chunks or we get {:error, :enomem}
+  defp sock_recv_continue(socket, size, timeout, acc) do
+    with {:ok, data} <- :gen_tcp.recv(socket, min(size, @five_mb), timeout) do
+      acc = [acc | data]
+
+      case size - byte_size(data) do
+        0 -> {:ok, IO.iodata_to_binary(acc)}
+        left -> sock_recv_continue(socket, left, timeout, acc)
       end
     end
   end

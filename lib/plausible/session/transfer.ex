@@ -174,8 +174,8 @@ defmodule Plausible.Session.Transfer do
 
   @session_fields ClickhouseSessionV2.__schema__(:fields)
 
-  defp savescan([{key, session} | rest], counter) do
-    changeset = Ecto.Changeset.cast(%ClickhouseSessionV2{}, session, @session_fields)
+  defp savescan([{key, params} | rest], counter) do
+    changeset = Ecto.Changeset.cast(%ClickhouseSessionV2{}, params, @session_fields)
 
     if changeset.valid? do
       new_session = Ecto.Changeset.apply_changes(changeset)
