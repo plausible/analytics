@@ -415,8 +415,6 @@ defmodule Plausible.Exports do
   end
 
   defp export_pages_q(site_id, current_user_id, timezone, date_range) do
-    _will_be_used_for_time_on_page_flag = current_user_id
-
     base_q =
       from(e in sampled("events_v2"),
         where: ^export_filter(site_id, date_range),
@@ -452,20 +450,65 @@ defmodule Plausible.Exports do
     from(e in base_q,
       left_join: s in subquery(scroll_depth_q),
       on: s.date == selected_as(:date) and s.page == selected_as(:page),
-      select: [
-        date(e.timestamp, ^timezone),
-        selected_as(fragment("any(?)", e.hostname), :hostname),
-        selected_as(e.pathname, :page),
-        selected_as(
-          scale_sample(fragment("uniq(?)", e.session_id)),
-          :visits
-        ),
-        visitors(e),
-        selected_as(scale_sample(fragment("count()")), :pageviews),
-        selected_as(fragment("any(?)", s.total_scroll_depth), :total_scroll_depth),
-        selected_as(fragment("any(?)", s.total_scroll_depth_visits), :total_scroll_depth_visits)
-      ]
+      select: %{
+        date: date(e.timestamp, ^timezone),
+        hostname: selected_as(fragment("any(?)", e.hostname), :hostname),
+        page: selected_as(e.pathname, :page),
+        visits:
+          selected_as(
+            scale_sample(fragment("uniq(?)", e.session_id)),
+            :visits
+          ),
+        visitors: visitors(e),
+        pageviews: selected_as(scale_sample(fragment("count()")), :pageviews),
+        total_scroll_depth:
+          selected_as(fragment("any(?)", s.total_scroll_depth), :total_scroll_depth),
+        total_scroll_depth_visits:
+          selected_as(fragment("any(?)", s.total_scroll_depth_visits), :total_scroll_depth_visits)
+      }
     )
+    |> add_time_on_page_columns(site_id, current_user_id, timezone, date_range)
+  end
+
+  defp add_time_on_page_columns(q, site_id, current_user_id, timezone, date_range) do
+    site = Plausible.Repo.get(Plausible.Site, site_id)
+    current_user = current_user_id && Plausible.Repo.get(Plausible.Auth.User, current_user_id)
+
+    if Plausible.Stats.TimeOnPage.new_time_on_page_visible?(site, current_user) do
+      cutoff = Plausible.Stats.TimeOnPage.legacy_time_on_page_cutoff(site)
+
+      engagements_q =
+        from(e in sampled("events_v2"),
+          where: ^export_filter(site_id, date_range),
+          where: e.name == "engagement",
+          group_by: [selected_as(:date), selected_as(:page)],
+          order_by: selected_as(:date),
+          select: %{
+            date: date(e.timestamp, ^timezone),
+            page: selected_as(e.pathname, :page),
+            total_time_on_page:
+              fragment(
+                "toUInt64(round(sumIf(?, ? >= ?) / 1000))",
+                e.engagement_time,
+                e.timestamp,
+                ^cutoff
+              ),
+            total_time_on_page_visits:
+              fragment("uniqIf(?, ? >= ?)", e.session_id, e.timestamp, ^cutoff)
+          }
+        )
+
+      q
+      |> join(:left, [], s in subquery(engagements_q),
+        on: s.date == selected_as(:date) and s.page == selected_as(:page)
+      )
+      |> select_merge_as([..., s], %{
+        total_time_on_page: fragment("any(?)", s.total_time_on_page),
+        total_time_on_page_visits: fragment("any(?)", s.total_time_on_page_visits)
+      })
+    else
+      q
+    end
   end
 
   defp export_entry_pages_q(site_id, timezone, date_range) do
