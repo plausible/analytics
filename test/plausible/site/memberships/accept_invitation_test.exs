@@ -49,14 +49,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
         to: [nil: another.email],
         subject:
           @subject_prefix <>
-            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\""
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
       )
 
       assert_email_delivered_with(
         to: [nil: user.email],
         subject:
           @subject_prefix <>
-            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\""
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
       )
     end
 
@@ -80,7 +80,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
         to: [nil: another.email],
         subject:
           @subject_prefix <>
-            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\""
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
       )
     end
 
