@@ -388,7 +388,7 @@ defmodule PlausibleWeb.Email do
     |> to(owner_email)
     |> tag("team-changed")
     |> subject(
-      "[#{Plausible.product_name()}] #{user.email} has transferred #{site.domain} to \"#{team.name}\""
+      "[#{Plausible.product_name()}] #{user.email} has transferred #{site.domain} to \"#{team.name}\" team"
     )
     |> render("team_changed.html",
       user: user,
