@@ -1,6 +1,6 @@
 <.settings_tiles>
   <PlausibleWeb.Team.Notice.owner_cta_banner :if={
-    @site_role == :owner and not Plausible.Teams.setup?(@current_team)
+    @site_role == :owner and not Plausible.Teams.setup?(@site.team)
   } />
 
   <PlausibleWeb.Team.Notice.guest_cta_banner :if={
