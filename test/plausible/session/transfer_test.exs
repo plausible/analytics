@@ -11,20 +11,19 @@ defmodule Plausible.Session.TransferTest do
     Enum.each(1..100_000, fn i ->
       process_event(old, build(:event, name: "pageview"))
 
-      if rem(i, 1000) == 0 do
-        IO.inspect(i, label: "Processed event")
-      end
+      # if rem(i, 1000) == 0 do
+      #   IO.inspect(i, label: "Processed event")
+      # end
     end)
 
     new = start_another_plausible(tmp_dir)
     started = System.monotonic_time()
     await_transfer(new, _wait = :timer.seconds(5))
-    duration = System.monotonic_time() - started
+    duration = System.convert_time_unit(System.monotonic_time() - started, :native, :millisecond)
 
-    assert IO.inspect(System.convert_time_unit(duration, :native, :millisecond),
-             label: "transfer duration ms"
-           ) < :timer.seconds(1)
+    IO.inspect(duration, label: "Transfer duration (ms)")
 
+    assert duration < :timer.seconds(1)
     assert all_sessions_sorted(new) == all_sessions_sorted(old)
   end
 
