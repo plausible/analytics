@@ -91,7 +91,7 @@ defmodule Plausible.Cache.Adapter do
 
     value
   catch
-    :exit, _reason ->
+    :exit, _ ->
       Logger.error("Error putting a key to '#{cache_name}'")
       nil
   end
