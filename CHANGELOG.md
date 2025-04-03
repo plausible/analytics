@@ -42,6 +42,7 @@ All notable changes to this project will be documented in this file.
 - Main graph now shows revenue with relevant currency symbol when hovering a data point
 - Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
 - Make Stats and Sites API keys scoped to teams they are created in
+- Remove permissions to manage sites guests and run destructive actions from team editor and guest editor roles in favour of team admin role
 
 ### Fixed
 

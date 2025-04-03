@@ -26,12 +26,12 @@ defmodule PlausibleWeb.SiteView do
     end
   end
 
-  def site_role(%{role: "viewer"}) do
+  def site_role(%{role: :viewer}) do
     "Guest Viewer"
   end
 
-  def site_role(%{role: "admin"}) do
-    "Guest Admin"
+  def site_role(%{role: :editor}) do
+    "Guest Editor"
   end
 
   def site_role(%{role: role}) do

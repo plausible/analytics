@@ -1039,7 +1039,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert %{"role" => "viewer", "status" => "invited"} = json_response(conn2, 200)
 
-        assert %{memberships: [_], invitations: [%{role: "viewer"}]} =
+        assert %{memberships: [_], invitations: [%{role: :viewer}]} =
                  Plausible.Sites.list_people(site)
 
         assert_no_emails_delivered()
