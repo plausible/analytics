@@ -59,6 +59,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           :ok | {:error, transfer_error()}
   def change_team(site, user, new_team) do
     with {:ok, _} <- transfer_ownership(site, user, new_team) do
+      Teams.Invitations.send_team_changed_email(site, user, new_team)
       :ok
     end
   end
