@@ -407,6 +407,8 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/var/lib/plausible"
       # tzdata (timezones cache)
       assert get_in(config, [:tzdata, :data_dir]) == "/var/lib/plausible/tzdata_data"
+      # session transfer
+      assert get_in(config, [:plausible, :session_transfer_dir]) == "/var/lib/plausible/sessions"
     end
 
     test "with only DATA_DIR set", %{env: env} do
@@ -418,6 +420,8 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/data"
       # tzdata (timezones cache)
       assert get_in(config, [:tzdata, :data_dir]) == "/data/tzdata_data"
+      # session transfer
+      assert get_in(config, [:plausible, :session_transfer_dir]) == "/data/sessions"
     end
 
     test "with only PERSISTENT_CACHE_DIR set", %{env: env} do
@@ -429,6 +433,8 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/cache"
       # tzdata (timezones cache)
       assert get_in(config, [:tzdata, :data_dir]) == "/cache/tzdata_data"
+      # session transfer
+      assert get_in(config, [:plausible, :session_transfer_dir]) == "/cache/sessions"
     end
 
     test "with both DATA_DIR and PERSISTENT_CACHE_DIR set", %{env: env} do
@@ -440,6 +446,8 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/cache"
       # tzdata (timezones cache)
       assert get_in(config, [:tzdata, :data_dir]) == "/cache/tzdata_data"
+      # session transfer
+      assert get_in(config, [:plausible, :session_transfer_dir]) == "/cache/sessions"
     end
   end
 
@@ -604,10 +612,6 @@ defmodule Plausible.ConfigTest do
                      )
                    end
     end
-  end
-
-  describe "session_transfer_dir" do
-    test "it works"
   end
 
   defp runtime_config(env) do
