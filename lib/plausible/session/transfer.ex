@@ -58,26 +58,42 @@ defmodule Plausible.Session.Transfer do
   end
 
   defp do_start_link(name, base_path) do
+    times_taken = :counters.new(1, [])
+    times_given = :counters.new(1, [])
+
     taker =
       {Task,
        fn ->
          started = System.monotonic_time()
          take_all_ets_everywhere(base_path)
-         :telemetry.execute(telemetry_event(), %{duration: System.monotonic_time() - started})
+         duration = System.monotonic_time() - started
+         :counters.add(times_taken, 1, 1)
+         :telemetry.execute(telemetry_event(), %{duration: duration})
        end}
-
-    times_given = :counters.new(1, [])
 
     giver =
       {TinySock,
        base_path: base_path,
        handler: fn
-         {:list, session_version} -> tabs(session_version)
-         {:send, tab} -> :ets.tab2list(tab)
-         :took -> :counters.add(times_given, 1, 1)
+         {:list, session_version} ->
+           if session_version == session_version() and :counters.get(times_taken, 1) > 0 do
+             tabs()
+           else
+             []
+           end
+
+         {:send, tab} ->
+           :ets.tab2list(tab)
+
+         :took ->
+           :counters.add(times_given, 1, 1)
        end}
 
-    alive = {Alive, _until = fn -> :counters.get(times_given, 1) > 0 end}
+    alive =
+      {Alive,
+       _until = fn ->
+         :counters.get(times_given, 1) > 0
+       end}
 
     children = [
       Supervisor.child_spec(taker, id: :taker),
@@ -97,14 +113,10 @@ defmodule Plausible.Session.Transfer do
     ]
   end
 
-  defp tabs(session_version) do
-    if session_version == session_version() and took?() do
-      Plausible.Cache.Adapter.get_names(:sessions)
-      |> Enum.map(&ConCache.ets/1)
-      |> Enum.filter(fn tab -> :ets.info(tab, :size) > 0 end)
-    else
-      []
-    end
+  defp tabs() do
+    Plausible.Cache.Adapter.get_names(:sessions)
+    |> Enum.map(&ConCache.ets/1)
+    |> Enum.filter(fn tab -> :ets.info(tab, :size) > 0 end)
   end
 
   defp take_all_ets_everywhere(base_path) do
