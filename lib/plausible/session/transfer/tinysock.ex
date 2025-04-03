@@ -70,34 +70,16 @@ defmodule Plausible.Session.Transfer.TinySock do
 
   @impl true
   def init({base_path, handler}) do
-    case write_dir(base_path) do
-      :ok ->
-        case sock_listen_or_retry(base_path) do
-          {:ok, socket} ->
-            do_init(socket, handler)
-
-          {:error, reason} ->
-            Logger.warning(
-              "tinysock failed to bind listen socket in #{inspect(base_path)}: #{inspect(reason)}"
-            )
-
-            :ignore
-        end
-
+    with :ok <- write_dir(base_path), {:ok, socket} <- sock_listen_or_retry(base_path) do
+      Process.flag(:trap_exit, true)
+      state = %{socket: socket, handler: handler}
+      for _ <- 1..10, do: spawn_acceptor(state)
+      {:ok, state}
+    else
       {:error, reason} ->
-        Logger.warning(
-          "tinysock failed to create directory #{inspect(base_path)}: #{inspect(reason)}"
-        )
-
+        Logger.warning("tinysock failed to bind in #{inspect(base_path)}: #{inspect(reason)}")
         :ignore
     end
-  end
-
-  defp do_init(socket, handler) do
-    Process.flag(:trap_exit, true)
-    state = %{socket: socket, handler: handler}
-    for _ <- 1..10, do: spawn_acceptor(state)
-    {:ok, state}
   end
 
   @impl true
@@ -116,21 +98,24 @@ defmodule Plausible.Session.Transfer.TinySock do
         Logger.error("tinysock ran out of file descriptors, stopping")
         {:stop, reason, state}
 
-      {e, stacktrace} when is_exception(e) and is_list(stacktrace) ->
-        error = Exception.format(:error, e, stacktrace)
-        log = "tinysock request handler #{inspect(pid)} terminating\n" <> error
-        Logger.error(log, crash_reason: reason)
-        {:noreply, state}
-
       reason ->
-        Logger.error("tinysock request handler #{inspect(pid)} terminating: " <> inspect(reason))
+        log = "tinysock request handler #{inspect(pid)} terminating\n" <> format_error(reason)
+        Logger.error(log, crash_reason: reason)
         {:noreply, state}
     end
   end
 
+  defp format_error(reason) do
+    case reason do
+      {e, stacktrace} when is_list(stacktrace) -> Exception.format(:error, e, stacktrace)
+      _other -> Exception.format(:exit, reason)
+    end
+  end
+
   @impl true
-  def terminate(_reason, %{socket: socket}) do
+  def terminate(reason, %{socket: socket}) do
     with {:ok, {:local, path}} <- :inet.sockname(socket), do: File.rm(path)
+    reason
   end
 
   defp spawn_acceptor(%{socket: socket, handler: handler}) do
@@ -161,7 +146,7 @@ defmodule Plausible.Session.Transfer.TinySock do
     sock_path = Path.join(base_path, sock_name)
 
     case :gen_tcp.listen(0, [{:ifaddr, {:local, sock_path}} | @listen_opts]) do
-      {:ok, socket} -> {:ok, sock_max_buffer(socket)}
+      {:ok, socket} -> {:ok, socket}
       {:error, :eaddrinuse} -> sock_listen_or_retry(base_path)
       {:error, reason} -> {:error, reason}
     end
@@ -170,7 +155,7 @@ defmodule Plausible.Session.Transfer.TinySock do
   defp sock_connect_or_rm(sock_path, timeout) do
     case :gen_tcp.connect({:local, sock_path}, 0, @connect_opts, timeout) do
       {:ok, socket} ->
-        {:ok, sock_max_buffer(socket)}
+        {:ok, socket}
 
       {:error, reason} = error ->
         if reason != :timeout do
@@ -183,21 +168,7 @@ defmodule Plausible.Session.Transfer.TinySock do
     end
   end
 
-  defp sock_max_buffer(socket) do
-    with {:ok, opts} <- :inet.getopts(socket, [:sndbuf, :recbuf, :buffer]) do
-      buffer =
-        Keyword.fetch!(opts, :buffer)
-        |> max(Keyword.fetch!(opts, :sndbuf))
-        |> max(Keyword.fetch!(opts, :recbuf))
-
-      :inet.setopts(socket, buffer: buffer)
-    end
-
-    socket
-  end
-
   @dialyzer :no_improper_lists
-  @spec sock_send(:gen_tcp.socket(), iodata) :: :ok | {:error, :closed | :inet.posix()}
   defp sock_send(socket, data) do
     :gen_tcp.send(socket, [<<@tag_data, IO.iodata_length(data)::64-little>> | data])
   end

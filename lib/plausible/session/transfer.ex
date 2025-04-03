@@ -9,12 +9,12 @@ defmodule Plausible.Session.Transfer do
   """
 
   require Logger
-
-  alias Plausible.ClickhouseSessionV2
   alias Plausible.Session.Transfer.{TinySock, Alive}
 
   def took?, do: Application.get_env(:plausible, :took_sessions, false)
   defp took, do: Application.put_env(:plausible, :took_sessions, true)
+
+  # TODO await took?
 
   def gave?, do: Application.get_env(:plausible, :gave_sessions, false)
   defp gave, do: Application.put_env(:plausible, :gave_sessions, true)
@@ -70,20 +70,19 @@ defmodule Plausible.Session.Transfer do
   end
 
   defp session_version do
-    IO.iodata_to_binary([
-      ClickhouseSessionV2.module_info(:md5),
-      # ClickhouseSessionV2.BoolUInt8.module_info(:md5),
-      # Ch.module_info(:md5),
-      # Plausible.Cache.Adapter.module_info(:md5),
-      # __MODULE__.module_info(:md5),
-      Plausible.Session.CacheStore.module_info(:md5)
-    ])
+    [
+      Plausible.ClickhouseSessionV2.module_info(:md5),
+      Plausible.Cache.Adapter.module_info(:md5),
+      Plausible.Session.CacheStore.module_info(:md5),
+      __MODULE__.module_info(:md5)
+    ]
   end
 
-  defp giver_handler(message) do
+  @doc false
+  def giver_handler(message) do
     case message do
       {:list, session_version} -> tabs(session_version)
-      {:send, tab} -> dumpscan(tab)
+      {:send, tab} -> :ets.tab2list(tab)
       :took -> gave()
     end
   end
@@ -98,97 +97,46 @@ defmodule Plausible.Session.Transfer do
     end
   end
 
-  defp maybe_ets_whereis(tab) when is_atom(tab), do: :ets.whereis(tab)
-  defp maybe_ets_whereis(tab) when is_reference(tab), do: tab
-
-  defp dumpscan(tab) do
-    tab = maybe_ets_whereis(tab)
-    :ets.safe_fixtable(tab, true)
-
-    try do
-      dumpscan_continue(:ets.first_lookup(tab), _acc = [], tab)
-    after
-      :ets.safe_fixtable(tab, false)
-    end
-  end
-
-  defp dumpscan_continue({k, [record]}, acc, tab) do
-    {key, %ClickhouseSessionV2{} = session} = record
-    params = Map.filter(session, &__MODULE__.session_params_filter/1)
-    dumpscan_continue(:ets.next_lookup(tab, k), [{key, params} | acc], tab)
-  end
-
-  defp dumpscan_continue(:"$end_of_table", acc, _tab) do
-    acc
-  end
-
   @doc false
-  def session_params_filter({:__struct__, _}), do: false
-  def session_params_filter({:__meta__, _}), do: false
-  def session_params_filter({_, nil}), do: false
-  def session_params_filter({_, _}), do: true
-
-  defp try_take_all_ets_everywhere(base_path) do
-    counter = :counters.new(1, [:write_concurrency])
+  def try_take_all_ets_everywhere(base_path) do
     started = System.monotonic_time()
 
     try do
-      take_all_ets_everywhere(base_path, counter)
+      take_all_ets_everywhere(base_path)
     after
-      count = :counters.get(counter, 1)
       duration = System.monotonic_time() - started
-      :telemetry.execute(telemetry_event(), %{count: count, duration: duration})
+      :telemetry.execute(telemetry_event(), %{duration: duration})
       took()
     end
   end
 
-  defp take_all_ets_everywhere(base_path, counter) do
+  defp take_all_ets_everywhere(base_path) do
     with {:ok, socks} <- TinySock.list(base_path) do
       socks
       |> Enum.sort_by(&file_stat_ctime/1, :asc)
-      |> Enum.each(fn sock -> take_all_ets(sock, counter) end)
+      |> Enum.each(&take_all_ets/1)
     end
   end
 
   defp file_stat_ctime(path) do
     case File.stat(path) do
       {:ok, stat} -> stat.ctime
-      {:error, _} -> 0
+      {:error, _} -> nil
     end
   end
 
-  defp take_all_ets(sock, counter) do
+  defp take_all_ets(sock) do
     with {:ok, tabs} <- TinySock.call(sock, {:list, session_version()}) do
-      tasks = Enum.map(tabs, fn tab -> Task.async(fn -> take_one_ets(sock, counter, tab) end) end)
-      Task.await_many(tasks)
+      tasks = Enum.map(tabs, fn tab -> Task.async(fn -> take_ets(sock, tab) end) end)
+      Task.await_many(tasks, :timer.seconds(10))
     end
   after
     TinySock.call(sock, :took)
   end
 
-  defp take_one_ets(sock, counter, tab) do
+  defp take_ets(sock, tab) do
     with {:ok, records} <- TinySock.call(sock, {:send, tab}) do
-      savescan(records, counter)
+      Plausible.Cache.Adapter.put_many(:sessions, records)
     end
   end
-
-  @session_fields ClickhouseSessionV2.__schema__(:fields)
-
-  defp savescan([{key, params} | rest], counter) do
-    changeset = Ecto.Changeset.cast(%ClickhouseSessionV2{}, params, @session_fields)
-
-    if changeset.valid? do
-      new_session = Ecto.Changeset.apply_changes(changeset)
-      old_session = Plausible.Cache.Adapter.get(:sessions, key)
-
-      if is_nil(old_session) or new_session.events >= old_session.events do
-        Plausible.Cache.Adapter.put(:sessions, key, new_session)
-        :counters.add(counter, 1, 1)
-      end
-    end
-
-    savescan(rest, counter)
-  end
-
-  defp savescan([], _counter), do: :ok
 end

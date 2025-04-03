@@ -91,15 +91,17 @@ defmodule Plausible.Cache.Adapter do
 
     value
   catch
-    :exit, _ ->
+    :exit, _reason ->
       Logger.error("Error putting a key to '#{cache_name}'")
       nil
   end
 
   @spec put_many(atom(), [any()]) :: :ok
   def put_many(cache_name, items) when is_list(items) do
+    partitions = partitions(cache_name)
+
     items
-    |> Enum.group_by(fn {key, _} -> get_name(cache_name, key) end)
+    |> Enum.group_by(fn {key, _} -> get_name(cache_name, key, partitions) end)
     |> Enum.each(fn {full_cache_name, items} ->
       true = :ets.insert(ConCache.ets(full_cache_name), items)
     end)
@@ -145,6 +147,7 @@ defmodule Plausible.Cache.Adapter do
     end
   end
 
+  # TODO :ets.safe_fixtable?
   defp get_keys(full_cache_name) do
     ets = ConCache.ets(full_cache_name)
 
@@ -159,8 +162,10 @@ defmodule Plausible.Cache.Adapter do
   end
 
   defp get_name(cache_name, key) do
-    partitions = partitions(cache_name)
+    get_name(cache_name, key, partitions(cache_name))
+  end
 
+  defp get_name(cache_name, key, partitions) do
     if partitions == 1 do
       cache_name
     else
