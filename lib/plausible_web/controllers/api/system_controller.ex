@@ -60,14 +60,10 @@ defmodule PlausibleWeb.Api.SystemController do
       end
 
     sessions_health =
-      if Plausible.ee?() do
-        if Plausible.Session.Transfer.took?() do
-          "ok"
-        else
-          "waiting"
-        end
-      else
+      if Plausible.Session.Transfer.took?() do
         "ok"
+      else
+        "waiting"
       end
 
     status =

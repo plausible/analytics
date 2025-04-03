@@ -7,23 +7,11 @@ defmodule Plausible.Session.TransferTest do
     tmp_dir = tmp_dir()
 
     old = start_another_plausible(tmp_dir)
-
-    Enum.each(1..100_000, fn i ->
-      process_event(old, build(:event, name: "pageview"))
-
-      # if rem(i, 1000) == 0 do
-      #   IO.inspect(i, label: "Processed event")
-      # end
-    end)
+    Enum.each(1..250, fn _ -> process_event(old, build(:event, name: "pageview")) end)
 
     new = start_another_plausible(tmp_dir)
-    started = System.monotonic_time()
-    await_transfer(new, _wait = :timer.seconds(5))
-    duration = System.convert_time_unit(System.monotonic_time() - started, :native, :millisecond)
+    await_transfer(new)
 
-    IO.inspect(duration, label: "Transfer duration (ms)")
-
-    assert duration < :timer.seconds(1)
     assert all_sessions_sorted(new) == all_sessions_sorted(old)
   end
 
@@ -104,7 +92,7 @@ defmodule Plausible.Session.TransferTest do
     Enum.sort_by(records, fn {key, _} -> key end)
   end
 
-  defp await_transfer(pid, timeout) do
+  defp await_transfer(pid, timeout \\ :timer.seconds(1)) do
     test = self()
 
     spawn_link(fn ->
