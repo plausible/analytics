@@ -134,7 +134,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       %{
         "site_id" => site.domain,
         "metrics" => [
-          "time_on_page",
           "visitors",
           "pageviews",
           "visits",
@@ -148,7 +147,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         site,
         %{
           metrics: [
-            :time_on_page,
             :visitors,
             :pageviews,
             :visits,
@@ -166,15 +164,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         },
         :internal
       )
-    end
-
-    test "time_on_page is not a valid metric in public API", %{site: site} do
-      %{
-        "site_id" => site.domain,
-        "metrics" => ["time_on_page"],
-        "date_range" => "all"
-      }
-      |> check_error(site, "#/metrics/0: Invalid metric \"time_on_page\"")
     end
 
     test "same metric queried multiple times", %{site: site} do
@@ -1920,6 +1909,74 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_error(
         site,
         "Metric `views_per_visit` cannot be queried with `dimensions`."
+      )
+    end
+  end
+
+  describe "time_on_page metric" do
+    test "fails validation on its own", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `time_on_page` can only be queried with event:page filters or dimensions."
+      )
+    end
+
+    test "succeeds with event:page dimension", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all",
+        "dimensions" => ["time", "event:page"]
+      }
+      |> check_success(site, %{
+        metrics: [:time_on_page],
+        utc_time_range: @date_range_day,
+        filters: [],
+        dimensions: ["time", "event:page"],
+        order_by: nil,
+        timezone: site.timezone,
+        include: @default_include,
+        pagination: %{limit: 10_000, offset: 0}
+      })
+    end
+
+    test "succeeds with event:page filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:time_on_page],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:page", ["/"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: @default_include,
+        pagination: %{limit: 10_000, offset: 0}
+      })
+    end
+
+    test "fails when using only a behavioral filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all",
+        "filters" => [
+          ["has_done", ["is", "event:page", ["/"]]]
+        ]
+      }
+      |> check_error(
+        site,
+        "Metric `time_on_page` can only be queried with event:page filters or dimensions.",
+        :internal
       )
     end
   end
