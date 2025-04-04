@@ -734,9 +734,6 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["pageviews"] == imported["pageviews"]
         assert exported["visit_duration"] == imported["visit_duration"]
         assert exported["bounce_rate"] == imported["bounce_rate"]
-
-        # time on page is not being exported/imported right now
-        assert imported["time_on_page"] == 0
       end)
 
       # NOTE: page breakdown's visitors difference is up to 28%
