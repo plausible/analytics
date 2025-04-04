@@ -78,7 +78,7 @@ defmodule Plausible.Session.Transfer do
       Plausible.ClickhouseSessionV2.module_info(:md5),
       Plausible.Cache.Adapter.module_info(:md5),
       Plausible.Session.CacheStore.module_info(:md5),
-      __MODULE__.module_info(:md5)
+      Plausible.Session.Transfer.module_info(:md5)
     ]
   end
 
