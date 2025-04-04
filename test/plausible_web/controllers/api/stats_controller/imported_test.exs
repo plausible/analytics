@@ -879,7 +879,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         assert json_response(conn, 200)["results"] == [
                  %{
                    "bounce_rate" => 0,
-                   "time_on_page" => 40,
+                   "time_on_page" => 60,
                    "visitors" => 3,
                    "pageviews" => 4,
                    "scroll_depth" => nil,
@@ -887,7 +887,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                  },
                  %{
                    "bounce_rate" => 25.0,
-                   "time_on_page" => 800.0,
+                   "time_on_page" => 700,
                    "visitors" => 2,
                    "pageviews" => 2,
                    "scroll_depth" => nil,
