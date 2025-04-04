@@ -372,6 +372,13 @@ defmodule Plausible.Sites do
     |> Repo.update!()
   end
 
+  def update_legacy_time_on_page_cutoff!(site, cutoff) do
+    site
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_change(:legacy_time_on_page_cutoff, cutoff)
+    |> Repo.update!()
+  end
+
   def has_goals?(site) do
     Repo.exists?(
       from(g in Plausible.Goal,

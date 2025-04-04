@@ -28,12 +28,7 @@ defmodule Plausible.Stats.Query do
             site_id: nil,
             site_native_stats_start_at: nil,
             # Contains information to determine how to combine legacy and new time on page metrics
-            # Old stats API and dashboard uses legacy metric by default, new API uses new metric by default
-            time_on_page_data: %{
-              include_new_metric: false,
-              include_legacy_metric: true,
-              cutoff: ~U[2100-01-01 00:00:00Z]
-            }
+            time_on_page_data: %{}
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}
@@ -50,6 +45,7 @@ defmodule Plausible.Stats.Query do
           site_native_stats_start_at: site.native_stats_start_at
         }
         |> struct!(Map.to_list(query_data))
+        |> set_time_on_page_data(site)
         |> put_comparison_utc_time_range()
         |> put_imported_opts(site)
 
@@ -178,6 +174,15 @@ defmodule Plausible.Stats.Query do
       end
 
     in_comparison_range ++ in_range
+  end
+
+  def set_time_on_page_data(query, site) do
+    struct!(query,
+      time_on_page_data: %{
+        new_metric_visible: Plausible.Stats.TimeOnPage.new_time_on_page_visible?(site),
+        cutoff_date: site.legacy_time_on_page_cutoff
+      }
+    )
   end
 
   @spec get_skip_imported_reason(t()) ::

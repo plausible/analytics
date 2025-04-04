@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Filters, Query, TimeOnPage}
+  alias Plausible.Stats.{Filters, Query}
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
