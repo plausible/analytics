@@ -513,6 +513,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                %{"dimensions" => ["/C"], "metrics" => [1, nil]}
              ]
     end
+
+    test "ignores page refresh", %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2100-01-01])
+
+      populate_stats(site, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00], pathname: "/"),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:01:00], pathname: "/"),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:02:00], pathname: "/"),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:03:00], pathname: "/exit")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "time_on_page"],
+          "date_range" => "all",
+          "filters" => [["is", "event:page", ["/"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [1, 180]}
+             ]
+    end
   end
 
   describe "timeseries" do
