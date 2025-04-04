@@ -209,13 +209,13 @@ defmodule Plausible.Exports do
   Builds Ecto queries to export data from `events_v2` and `sessions_v2`
   tables into the format of `imported_*` tables for a website.
   """
-  @spec export_queries(pos_integer, pos_integer | nil,
+  @spec export_queries(pos_integer,
           extname: String.t(),
           date_range: Date.Range.t(),
           timezone: String.t()
         ) ::
           %{String.t() => Ecto.Query.t()}
-  def export_queries(site_id, current_user_id, opts \\ []) do
+  def export_queries(site_id, opts \\ []) do
     extname = opts[:extname] || ".csv"
     date_range = opts[:date_range]
     timezone = opts[:timezone] || "UTC"
@@ -234,8 +234,7 @@ defmodule Plausible.Exports do
     %{
       filename.("imported_visitors") => export_visitors_q(site_id, timezone, date_range),
       filename.("imported_sources") => export_sources_q(site_id, timezone, date_range),
-      filename.("imported_pages") =>
-        export_pages_q(site_id, current_user_id, timezone, date_range),
+      filename.("imported_pages") => export_pages_q(site_id, timezone, date_range),
       filename.("imported_entry_pages") => export_entry_pages_q(site_id, timezone, date_range),
       filename.("imported_exit_pages") => export_exit_pages_q(site_id, timezone, date_range),
       filename.("imported_custom_events") =>
@@ -414,7 +413,7 @@ defmodule Plausible.Exports do
       ]
   end
 
-  defp export_pages_q(site_id, current_user_id, timezone, date_range) do
+  defp export_pages_q(site_id, timezone, date_range) do
     base_q =
       from(e in sampled("events_v2"),
         where: ^export_filter(site_id, date_range),
@@ -467,14 +466,13 @@ defmodule Plausible.Exports do
           selected_as(fragment("any(?)", s.total_scroll_depth_visits), :total_scroll_depth_visits)
       }
     )
-    |> add_time_on_page_columns(site_id, current_user_id, timezone, date_range)
+    |> add_time_on_page_columns(site_id, timezone, date_range)
   end
 
-  defp add_time_on_page_columns(q, site_id, current_user_id, timezone, date_range) do
+  defp add_time_on_page_columns(q, site_id, timezone, date_range) do
     site = Plausible.Repo.get(Plausible.Site, site_id)
-    current_user = current_user_id && Plausible.Repo.get(Plausible.Auth.User, current_user_id)
 
-    if Plausible.Stats.TimeOnPage.new_time_on_page_visible?(site, current_user) do
+    if Plausible.Stats.TimeOnPage.new_time_on_page_visible?(site) do
       cutoff = Plausible.Stats.TimeOnPage.legacy_time_on_page_cutoff(site)
 
       engagements_q =
