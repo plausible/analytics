@@ -29,13 +29,11 @@ defmodule Plausible.Workers.ExportAnalytics do
       "site_id" => site_id
     } = args
 
-    current_user_id = args["current_user_id"]
-
     site = Plausible.Repo.get!(Plausible.Site, site_id)
     %Date.Range{} = date_range = Exports.date_range(site.id, site.timezone)
 
     queries =
-      Exports.export_queries(site_id, current_user_id,
+      Exports.export_queries(site_id,
         date_range: date_range,
         timezone: site.timezone,
         extname: ".csv"

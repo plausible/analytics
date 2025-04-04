@@ -67,8 +67,7 @@ describe('parseSiteFromDataset', () => {
       realtime: ['minute'],
       year: ['day', 'week', 'month']
     },
-    shared: false,
-    legacyTimeOnPageCutoff: '2022-01-01T00:00:00Z'
+    shared: false
   }
 
   it('parses from dom string map correctly', () => {

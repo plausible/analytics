@@ -158,7 +158,7 @@ defmodule Plausible.Stats.QueryResult do
 
   defp metric_warning(:time_on_page, %Query{} = query) do
     case query.time_on_page_data do
-      %{include_legacy_metric: true, cutoff: cutoff} ->
+      %{new_metric_visible: true, include_legacy_metric: true, cutoff: cutoff} ->
         cutoff_date =
           cutoff |> DateTime.shift_zone!(query.timezone) |> Calendar.strftime("%Y-%m-%d")
 
