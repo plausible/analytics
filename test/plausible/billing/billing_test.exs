@@ -318,7 +318,6 @@ defmodule Plausible.BillingTest do
       assert subscription.next_bill_amount == "12.00"
     end
 
-    @tag :teams
     test "updates subscription with user/team passthrough" do
       user = new_user()
       subscribe_to_growth_plan(user)

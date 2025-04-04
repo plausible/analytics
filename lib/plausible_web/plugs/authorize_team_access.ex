@@ -21,10 +21,9 @@ defmodule Plausible.Plugs.AuthorizeTeamAccess do
   end
 
   def call(conn, roles \\ @all_roles) do
-    current_user = conn.assigns[:current_user]
     current_team = conn.assigns[:current_team]
 
-    if current_team && Plausible.Teams.enabled?(current_user) do
+    if current_team do
       current_team_role = conn.assigns[:current_team_role]
 
       if current_team_role in roles do

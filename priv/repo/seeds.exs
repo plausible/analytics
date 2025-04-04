@@ -9,9 +9,9 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
-import Plausible.Teams.Test
+use Plausible
 
-FunWithFlags.enable(:teams)
+import Plausible.Teams.Test
 
 words =
   for i <- 0..(:erlang.system_info(:atom_count) - 1),
@@ -101,7 +101,7 @@ seeded_token = Plausible.Plugins.API.Token.generate("seed-token")
 {:ok, _goal5} = Plausible.Goals.create(site, %{"page_path" => Enum.random(long_random_paths)})
 {:ok, outbound} = Plausible.Goals.create(site, %{"event_name" => "Outbound Link: Click"})
 
-if Plausible.ee?() do
+if ee?() do
   {:ok, _funnel} =
     Plausible.Funnels.create(site, "From homepage to login", [
       %{"goal_id" => goal1.id},

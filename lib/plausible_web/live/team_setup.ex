@@ -13,18 +13,15 @@ defmodule PlausibleWeb.Live.TeamSetup do
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
     current_team = socket.assigns.current_team
-    enabled? = Teams.enabled?(current_user)
 
     socket =
-      case {enabled?, current_team} do
-        {true, %Teams.Team{setup_complete: true}} ->
+      case current_team do
+        %Teams.Team{setup_complete: true} ->
           socket
           |> put_flash(:success, "Your team is now created")
           |> redirect(to: Routes.settings_path(socket, :team_general))
 
-        {true, %Teams.Team{}} ->
-          current_user = socket.assigns.current_user
-
+        %Teams.Team{} ->
           team_name_form =
             current_team
             |> Teams.Team.name_changeset(%{name: "#{current_user.name}'s Team"})
@@ -40,7 +37,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
             current_team: current_team
           )
 
-        {_, _} ->
+        _ ->
           socket
           |> put_flash(:error, "You cannot create any team just yet")
           |> redirect(to: Routes.site_path(socket, :index))
@@ -48,7 +45,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
     socket =
       if current_team do
-        {:ok, my_role} = Teams.Memberships.team_role(current_team, socket.assigns.current_user)
+        {:ok, my_role} = Teams.Memberships.team_role(current_team, current_user)
         assign(socket, my_role: my_role)
       else
         socket
