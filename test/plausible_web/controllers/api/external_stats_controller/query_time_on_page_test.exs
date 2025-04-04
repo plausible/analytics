@@ -3,12 +3,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key, :create_site_import]
 
-  setup %{site: site} = context do
-    FunWithFlags.enable(:new_time_on_page, for_actor: site)
-
-    context
-  end
-
   test "aggregated time_on_page metric based on engagement data", %{
     conn: conn,
     site: site

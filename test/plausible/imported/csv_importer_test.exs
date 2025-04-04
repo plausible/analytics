@@ -1062,7 +1062,6 @@ defmodule Plausible.Imported.CSVImporterTest do
     test "scroll_depth and time_on_page", %{conn: conn, user: user, tmp_dir: tmp_dir} do
       exported_site = new_site(owner: user)
       imported_site = new_site(owner: user)
-      FunWithFlags.enable(:new_time_on_page, for_actor: exported_site)
 
       t0 =
         NaiveDateTime.utc_now(:second)

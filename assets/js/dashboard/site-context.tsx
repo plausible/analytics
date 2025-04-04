@@ -26,7 +26,6 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
 }
 
 type FeatureFlags = {
-  new_time_on_page?: boolean
 }
 
 const siteContextDefaultValue = {
