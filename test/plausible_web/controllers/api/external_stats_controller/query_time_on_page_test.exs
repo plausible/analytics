@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     ])
 
     conn =
-      post(conn, "/api/v2/query-internal-test", %{
+      post(conn, "/api/v2/query", %{
         "site_id" => site.domain,
         "metrics" => ["time_on_page"],
         "date_range" => "all",
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     ])
 
     conn =
-      post(conn, "/api/v2/query-internal-test", %{
+      post(conn, "/api/v2/query", %{
         "site_id" => site.domain,
         "metrics" => ["time_on_page"],
         "date_range" => "all",
@@ -145,7 +145,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     ])
 
     conn =
-      post(conn, "/api/v2/query-internal-test", %{
+      post(conn, "/api/v2/query", %{
         "site_id" => site.domain,
         "metrics" => ["time_on_page"],
         "date_range" => ["2021-01-01", "2021-01-04"],
@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[1970-01-01])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
@@ -260,7 +260,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-05])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
@@ -294,7 +294,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
@@ -331,7 +331,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
@@ -361,7 +361,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-05])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
@@ -393,7 +393,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
@@ -428,7 +428,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
@@ -468,7 +468,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "time_on_page"],
           "date_range" => "all",
@@ -497,7 +497,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "time_on_page"],
           "date_range" => "all",
@@ -525,7 +525,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "time_on_page"],
           "date_range" => "all",
@@ -583,7 +583,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
 
     test "reports average new time-on-page per day", %{conn: conn, site: site} do
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => ["2021-01-01", "2021-01-04"],
@@ -603,7 +603,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2100-01-01])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => ["2021-01-01", "2021-01-04"],
@@ -623,7 +623,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-03])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => ["2021-01-01", "2021-01-04"],
