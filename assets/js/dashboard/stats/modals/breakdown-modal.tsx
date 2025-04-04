@@ -240,7 +240,7 @@ const getMetricWarning = (
       return 'Does not include imported data'
     }
 
-    if (metric.key == 'time_on_page' && code && site.flags.new_time_on_page) {
+    if (metric.key == 'time_on_page' && code) {
       return message
     }
   }

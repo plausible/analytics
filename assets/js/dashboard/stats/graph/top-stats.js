@@ -88,7 +88,7 @@ export default function TopStats({
       return 'Does not include imported data'
     }
 
-    if (metric === 'time_on_page' && site.flags.new_time_on_page) {
+    if (metric === 'time_on_page') {
       return warning.message
     }
 
