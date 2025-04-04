@@ -334,17 +334,53 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: t1,
+          scroll_depth: 20,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/another",
+          timestamp: t2,
+          scroll_depth: 24,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: t1,
+          scroll_depth: 17,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement,
+          user_id: 34,
+          pathname: "/another",
+          timestamp: t2,
+          scroll_depth: 26,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: t3,
+          scroll_depth: 60,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement,
+          user_id: 56,
+          pathname: "/blog",
+          timestamp: t1,
+          scroll_depth: 100,
+          engagement_time: 60_000
+        )
       ])
 
       pages =
@@ -355,7 +391,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert pages == [
                ["name", "visitors", "pageviews", "bounce_rate", "time_on_page", "scroll_depth"],
-               ["/blog", "3", "4", "33", "60", "60"],
+               ["/blog", "3", "4", "33", "80", "60"],
                ["/another", "2", "2", "0", "60", "25"],
                [""]
              ]
@@ -927,6 +963,17 @@ defmodule PlausibleWeb.StatsControllerTest do
         city_geoname_id: 588_409,
         referrer_source: "Google"
       ),
+      build(:engagement,
+        user_id: 123,
+        pathname: "/",
+        timestamp: ~N[2021-10-20 12:00:00] |> NaiveDateTime.truncate(:second),
+        engagement_time: 30_000,
+        scroll_depth: 30,
+        country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
+        referrer_source: "Google"
+      ),
       build(:pageview,
         user_id: 123,
         pathname: "/some-other-page",
@@ -937,7 +984,20 @@ defmodule PlausibleWeb.StatsControllerTest do
         city_geoname_id: 588_409,
         referrer_source: "Google"
       ),
+      build(:engagement,
+        user_id: 123,
+        pathname: "/some-other-page",
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
+        engagement_time: 60_000,
+        scroll_depth: 30,
+        country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
+        referrer_source: "Google"
+      ),
       build(:pageview,
+        user_id: 100,
         pathname: "/",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
@@ -951,7 +1011,26 @@ defmodule PlausibleWeb.StatsControllerTest do
         operating_system: "Mac",
         operating_system_version: "14"
       ),
+      build(:engagement,
+        user_id: 100,
+        pathname: "/",
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1, minutes: 1)
+          |> NaiveDateTime.truncate(:second),
+        engagement_time: 30_000,
+        scroll_depth: 30,
+        utm_medium: "search",
+        utm_campaign: "ads",
+        utm_source: "google",
+        utm_content: "content",
+        utm_term: "term",
+        browser: "Firefox",
+        browser_version: "120",
+        operating_system: "Mac",
+        operating_system_version: "14"
+      ),
       build(:pageview,
+        user_id: 200,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
         country_code: "EE",
@@ -960,9 +1039,37 @@ defmodule PlausibleWeb.StatsControllerTest do
         operating_system: "Mac",
         operating_system_version: "14"
       ),
+      build(:engagement,
+        user_id: 200,
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], months: -1, minutes: 1)
+          |> NaiveDateTime.truncate(:second),
+        engagement_time: 30_000,
+        scroll_depth: 20,
+        country_code: "EE",
+        browser: "Firefox",
+        browser_version: "120",
+        operating_system: "Mac",
+        operating_system_version: "14"
+      ),
       build(:pageview,
+        user_id: 300,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], months: -5) |> NaiveDateTime.truncate(:second),
+        utm_campaign: "ads",
+        country_code: "EE",
+        referrer_source: "Google",
+        click_id_param: "gclid",
+        browser: "FirefoxNoVersion",
+        operating_system: "MacNoVersion"
+      ),
+      build(:engagement,
+        user_id: 300,
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], months: -5, minutes: 1)
+          |> NaiveDateTime.truncate(:second),
+        engagement_time: 30_000,
+        scroll_depth: 20,
         utm_campaign: "ads",
         country_code: "EE",
         referrer_source: "Google",
@@ -976,6 +1083,16 @@ defmodule PlausibleWeb.StatsControllerTest do
           Timex.shift(~N[2021-10-20 12:00:00], days: -1, minutes: -1)
           |> NaiveDateTime.truncate(:second),
         pathname: "/signup",
+        "meta.key": ["variant"],
+        "meta.value": ["A"]
+      ),
+      build(:engagement,
+        user_id: 456,
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
+        pathname: "/signup",
+        engagement_time: 60_000,
+        scroll_depth: 20,
         "meta.key": ["variant"],
         "meta.value": ["A"]
       ),
