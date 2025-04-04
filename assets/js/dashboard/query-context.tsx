@@ -61,7 +61,6 @@ export default function QueryContextProvider({
     period,
     to,
     with_imported,
-    legacy_time_on_page_cutoff,
     ...otherSearch
   } = useMemo(() => parseSearch(location.search), [location.search])
 
@@ -112,10 +111,7 @@ export default function QueryContextProvider({
         : defaultValues.with_imported,
       filters,
       resolvedFilters,
-      labels: (labels as FilterClauseLabels) || defaultValues.labels,
-      legacy_time_on_page_cutoff: site.flags.new_time_on_page
-        ? (legacy_time_on_page_cutoff as string) || site.legacyTimeOnPageCutoff
-        : defaultValues.legacy_time_on_page_cutoff
+      labels: (labels as FilterClauseLabels) || defaultValues.labels
     }
   }, [
     compare_from,
@@ -129,7 +125,6 @@ export default function QueryContextProvider({
     period,
     to,
     with_imported,
-    legacy_time_on_page_cutoff,
     site,
     expandedSegment,
     segmentsContext.segments

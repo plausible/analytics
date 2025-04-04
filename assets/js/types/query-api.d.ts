@@ -208,7 +208,6 @@ export interface QueryApiSchema {
            */
           date_range: [string, string];
         };
-    legacy_time_on_page_cutoff?: string;
   };
   pagination?: {
     /**

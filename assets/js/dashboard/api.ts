@@ -72,15 +72,6 @@ export function queryToSearchParams(
     queryObj.auth = sharedLinkParams.auth
   }
 
-  if (
-    query.legacy_time_on_page_cutoff &&
-    validDate(query.legacy_time_on_page_cutoff)
-  ) {
-    queryObj.include = JSON.stringify({
-      legacy_time_on_page_cutoff: query.legacy_time_on_page_cutoff
-    })
-  }
-
   Object.assign(queryObj, ...extraQuery)
 
   return serializeUrlParams(queryObj)
