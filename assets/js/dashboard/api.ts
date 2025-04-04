@@ -77,11 +77,6 @@ export function queryToSearchParams(
   return serializeUrlParams(queryObj)
 }
 
-function validDate(dateString: string) {
-  const date = new Date(dateString)
-  return isFinite(date.getTime())
-}
-
 function getHeaders(): Record<string, string> {
   return SHARED_LINK_AUTH ? { 'X-Shared-Link-Auth': SHARED_LINK_AUTH } : {}
 }
