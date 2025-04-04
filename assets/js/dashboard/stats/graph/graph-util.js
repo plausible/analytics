@@ -101,3 +101,12 @@ export const buildDataSet = (
 
   return dataset.map((item) => Object.assign(item, defaultOptions))
 }
+
+export function hasMultipleYears(graphData) {
+  return (
+    graphData.labels
+      .filter((date) => typeof date === 'string')
+      .map((date) => date.split('-')[0])
+      .filter((value, index, list) => list.indexOf(value) === index).length > 1
+  )
+}

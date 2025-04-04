@@ -1,7 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import dateFormatter from './date-formatter'
-import { METRIC_LABELS } from './graph-util'
+import { METRIC_LABELS, hasMultipleYears } from './graph-util'
 import { MetricFormatterShort } from '../reports/metric-formatter'
 import { ChangeArrow } from '../reports/change-arrow'
 
@@ -14,18 +14,22 @@ const renderBucketLabel = function (
   let isPeriodFull = graphData.full_intervals?.[label]
   if (comparison) isPeriodFull = true
 
+  const shouldShowYear = hasMultipleYears(graphData)
+
   const formattedLabel = dateFormatter({
     interval: graphData.interval,
     longForm: true,
     period: query.period,
-    isPeriodFull
+    isPeriodFull,
+    shouldShowYear
   })(label)
 
   if (query.period === 'realtime') {
     return dateFormatter({
       interval: graphData.interval,
       longForm: true,
-      period: query.period
+      period: query.period,
+      shouldShowYear
     })(label)
   }
 
@@ -33,7 +37,8 @@ const renderBucketLabel = function (
     const date = dateFormatter({
       interval: 'day',
       longForm: true,
-      period: query.period
+      period: query.period,
+      shouldShowYear
     })(label)
     return `${date}, ${formattedLabel}`
   }
