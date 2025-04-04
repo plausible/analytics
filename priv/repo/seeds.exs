@@ -13,8 +13,6 @@ use Plausible
 
 import Plausible.Teams.Test
 
-FunWithFlags.enable(:teams)
-
 words =
   for i <- 0..(:erlang.system_info(:atom_count) - 1),
       do: :erlang.binary_to_term(<<131, 75, i::24>>)
