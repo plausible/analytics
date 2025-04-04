@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Add support for creating and managing teams owning multiple sites
 - Introduce "billing" team role for users
 - Introduce "editor" role with permissions greater than "viewer" but lesser than "admin"
+- `time_on_page` metric is now graphable, sortable on the dashboard, and available in the Stats API and CSV and GA4 exports/imports
 
 ### Removed
 
@@ -42,6 +43,7 @@ All notable changes to this project will be documented in this file.
 - Main graph now shows revenue with relevant currency symbol when hovering a data point
 - Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
 - Make Stats and Sites API keys scoped to teams they are created in
+- Time-on-page metric has been reworked. It now uses `engagement` events sent by plausible tracker script. We still use the old calculation methods for periods before the self-hosted instance was upgraded. Warnings are shown in the dashboard and API when legacy calculation methods are used.
 
 ### Fixed
 
