@@ -437,7 +437,7 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats: top_stats,
       meta: meta,
       graphable_metrics:
-        if(TimeOnPage.new_time_on_page_enabled?(site, current_user),
+        if(TimeOnPage.new_time_on_page_visible?(site, current_user),
           do: metrics,
           else: metrics -- [:time_on_page]
         ),
