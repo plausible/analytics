@@ -3,7 +3,7 @@ import { useAppNavigate } from '../../navigation/use-app-navigate'
 import { useQueryContext } from '../../query-context'
 import Chart from 'chart.js/auto'
 import GraphTooltip from './graph-tooltip'
-import { buildDataSet, METRIC_LABELS } from './graph-util'
+import { buildDataSet, METRIC_LABELS, hasMultipleYears } from './graph-util'
 import dateFormatter from './date-formatter'
 import FadeIn from '../../fade-in'
 import classNames from 'classnames'
@@ -103,27 +103,21 @@ class LineGraph extends React.Component {
               callback: function (val, _index, _ticks) {
                 if (this.getLabelForValue(val) == '__blank__') return ''
 
-                const hasMultipleYears =
-                  graphData.labels
-                    .filter((date) => typeof date === 'string')
-                    .map((date) => date.split('-')[0])
-                    .filter(
-                      (value, index, list) => list.indexOf(value) === index
-                    ).length > 1
+                const shouldShowYear = hasMultipleYears(graphData)
 
                 if (graphData.interval === 'hour' && query.period !== 'day') {
                   const date = dateFormatter({
                     interval: 'day',
                     longForm: false,
                     period: query.period,
-                    shouldShowYear: hasMultipleYears
+                    shouldShowYear
                   })(this.getLabelForValue(val))
 
                   const hour = dateFormatter({
                     interval: graphData.interval,
                     longForm: false,
                     period: query.period,
-                    shouldShowYear: hasMultipleYears
+                    shouldShowYear
                   })(this.getLabelForValue(val))
 
                   // Returns a combination of date and hour. This is because
@@ -147,7 +141,7 @@ class LineGraph extends React.Component {
                   interval: graphData.interval,
                   longForm: false,
                   period: query.period,
-                  shouldShowYear: hasMultipleYears
+                  shouldShowYear
                 })(this.getLabelForValue(val))
               },
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined

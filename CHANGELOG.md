@@ -59,6 +59,7 @@ All notable changes to this project will be documented in this file.
 - Fix Conversion Rate graph being unselectable when "Goal is ..." filter is within a segment
 - Fix Channels filter input appearing when clicking Sources in filter menu or clicking an applied "Channel is..." filter
 - Fix Conversion Rate metrics column disappearing from reports when "Goal is ..." filter is within a segment
+- Graph tooltip now shows year when graph has data from multiple years
 
 ## v2.1.5-rc.1 - 2025-01-17
 
