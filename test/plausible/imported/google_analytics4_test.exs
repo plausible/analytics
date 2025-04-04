@@ -779,7 +779,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     # it will allow us to assert on the session metrics as well.
     assert Enum.at(results, 2) == %{
              "page" => "/",
-             "time_on_page" => 18,
+             "time_on_page" => 462,
              "visitors" => 371,
              "visits" => 212,
              "bounce_rate" => 54.0,
