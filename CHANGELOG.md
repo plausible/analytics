@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Introduce "billing" team role for users
 - Introduce "editor" role with permissions greater than "viewer" but lesser than "admin"
 - Support behavioral filters `has_done` and `has_not_done` on the Stats API to allow filtering sessions by other events that have been completed.
+- `time_on_page` metric is now graphable, sortable on the dashboard, and available in the Stats API and CSV and GA4 exports/imports
 
 ### Removed
 
@@ -44,6 +45,7 @@ All notable changes to this project will be documented in this file.
 - Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
 - Make Stats and Sites API keys scoped to teams they are created in
 - Remove permissions to manage sites guests and run destructive actions from team editor and guest editor roles in favour of team admin role
+- Time-on-page metric has been reworked. It now uses `engagement` events sent by plausible tracker script. We still use the old calculation methods for periods before the self-hosted instance was upgraded. Warnings are shown in the dashboard and API when legacy calculation methods are used.
 
 ### Fixed
 
