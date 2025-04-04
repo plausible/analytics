@@ -734,9 +734,6 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["pageviews"] == imported["pageviews"]
         assert exported["visit_duration"] == imported["visit_duration"]
         assert exported["bounce_rate"] == imported["bounce_rate"]
-
-        # time on page is not being exported/imported right now
-        assert imported["time_on_page"] == 0
       end)
 
       # NOTE: page breakdown's visitors difference is up to 28%
@@ -1062,7 +1059,6 @@ defmodule Plausible.Imported.CSVImporterTest do
     test "scroll_depth and time_on_page", %{conn: conn, user: user, tmp_dir: tmp_dir} do
       exported_site = new_site(owner: user)
       imported_site = new_site(owner: user)
-      FunWithFlags.enable(:new_time_on_page, for_actor: exported_site)
 
       t0 =
         NaiveDateTime.utc_now(:second)
