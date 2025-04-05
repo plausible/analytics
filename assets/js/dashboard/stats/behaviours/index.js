@@ -5,7 +5,13 @@ import React, {
   useCallback,
   useRef
 } from 'react'
-import { Menu, Transition } from '@headlessui/react'
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition
+} from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
@@ -149,7 +155,7 @@ export default function Behaviours({ importedDataInView }) {
       <Menu as="div" className="relative inline-block text-left">
         <BlurMenuButtonOnEscape targetRef={buttonRef} />
         <div>
-          <Menu.Button
+          <MenuButton
             ref={buttonRef}
             className="inline-flex justify-between focus:outline-none"
           >
@@ -160,7 +166,7 @@ export default function Behaviours({ importedDataInView }) {
               className="-mr-1 ml-1 h-4 w-4"
               aria-hidden="true"
             />
-          </Menu.Button>
+          </MenuButton>
         </div>
 
         <Transition
@@ -172,11 +178,11 @@ export default function Behaviours({ importedDataInView }) {
           leaveFrom="opacity-100 scale-100"
           leaveTo="opacity-0 scale-95"
         >
-          <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-96 max-h-72 overflow-auto rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+          <MenuItems className="text-left origin-top-right absolute right-0 mt-2 w-96 max-h-72 overflow-auto rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
             <div className="py-1">
               {funnelNames.map((funnelName) => {
                 return (
-                  <Menu.Item key={funnelName}>
+                  <MenuItem key={funnelName}>
                     {({ active }) => (
                       <span
                         onClick={setFunnel(funnelName)}
@@ -193,11 +199,11 @@ export default function Behaviours({ importedDataInView }) {
                         {funnelName}
                       </span>
                     )}
-                  </Menu.Item>
+                  </MenuItem>
                 )
               })}
             </div>
-          </Menu.Items>
+          </MenuItems>
         </Transition>
       </Menu>
     )
