@@ -7,7 +7,13 @@ import {
   supportsIsNot,
   supportsHasDoneNot
 } from '../util/filters'
-import { Menu, Transition } from '@headlessui/react'
+import {
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
+  Transition
+} from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import { BlurMenuButtonOnEscape } from '../keybinding'
@@ -19,7 +25,7 @@ export default function FilterOperatorSelector(props) {
   function renderTypeItem(operation, shouldDisplay) {
     return (
       shouldDisplay && (
-        <Menu.Item>
+        <MenuItem>
           {({ active }) => (
             <span
               onClick={() => props.onSelect(operation)}
@@ -32,7 +38,7 @@ export default function FilterOperatorSelector(props) {
               {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}
             </span>
           )}
-        </Menu.Item>
+        </MenuItem>
       )
     )
   }
@@ -48,7 +54,7 @@ export default function FilterOperatorSelector(props) {
           <>
             <BlurMenuButtonOnEscape targetRef={buttonRef} />
             <div className="w-full">
-              <Menu.Button
+              <MenuButton
                 ref={buttonRef}
                 className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500 text-left"
               >
@@ -57,7 +63,7 @@ export default function FilterOperatorSelector(props) {
                   className="-mr-2 ml-2 h-4 w-4 text-gray-500 dark:text-gray-400"
                   aria-hidden="true"
                 />
-              </Menu.Button>
+              </MenuButton>
             </div>
 
             <Transition
@@ -70,7 +76,7 @@ export default function FilterOperatorSelector(props) {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Menu.Items
+              <MenuItems
                 static
                 className="z-10 origin-top-left absolute left-0 mt-2 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
               >
@@ -93,7 +99,7 @@ export default function FilterOperatorSelector(props) {
                     supportsContains(filterName) && supportsIsNot(filterName)
                   )}
                 </div>
-              </Menu.Items>
+              </MenuItems>
             </Transition>
           </>
         )}
