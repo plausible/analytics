@@ -29,7 +29,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
       case Date.diff(team.trial_expiry_date, Date.utc_today()) do
         7 ->
           if Teams.has_active_sites?(team) do
-            send_one_week_reminder(recipients)
+            send_one_week_reminder(recipients, team)
           end
 
         1 ->
@@ -44,7 +44,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
 
         -1 ->
           if Teams.has_active_sites?(team) do
-            send_over_reminder(recipients)
+            send_over_reminder(recipients, team)
           end
 
         _ ->
@@ -55,9 +55,9 @@ defmodule Plausible.Workers.SendTrialNotifications do
     :ok
   end
 
-  defp send_one_week_reminder(users) do
+  defp send_one_week_reminder(users, team) do
     for user <- users do
-      PlausibleWeb.Email.trial_one_week_reminder(user)
+      PlausibleWeb.Email.trial_one_week_reminder(user, team)
       |> Plausible.Mailer.send()
     end
   end
@@ -67,7 +67,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
     suggested_plan = Plausible.Billing.Plans.suggest(team, usage.total)
 
     for user <- users do
-      PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", usage, suggested_plan)
+      PlausibleWeb.Email.trial_upgrade_email(user, team, "tomorrow", usage, suggested_plan)
       |> Plausible.Mailer.send()
     end
   end
@@ -77,14 +77,14 @@ defmodule Plausible.Workers.SendTrialNotifications do
     suggested_plan = Plausible.Billing.Plans.suggest(team, usage.total)
 
     for user <- users do
-      PlausibleWeb.Email.trial_upgrade_email(user, "today", usage, suggested_plan)
+      PlausibleWeb.Email.trial_upgrade_email(user, team, "today", usage, suggested_plan)
       |> Plausible.Mailer.send()
     end
   end
 
-  defp send_over_reminder(users) do
+  defp send_over_reminder(users, team) do
     for user <- users do
-      PlausibleWeb.Email.trial_over_email(user)
+      PlausibleWeb.Email.trial_over_email(user, team)
       |> Plausible.Mailer.send()
     end
   end

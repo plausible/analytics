@@ -2,6 +2,6 @@ You used to have an active account with {Plausible.product_name()}, a simple, li
 <br /><br />
 We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites {@time}. We're an independent, bootstrapped service and we don't sell your data, so this will reduce our server costs and help keep us sustainable.
 <br /><br /> If you'd like to continue counting your site stats in a privacy-friendly way, please
-<a href={plausible_url()}>login to your Plausible account</a> and start a subscription.
+<a href={plausible_url() <> "?__team=#{@team.identifier}"}>login to your Plausible account</a> and start a subscription.
 <br /><br />
 Do you have any questions or need help with anything? Just reply to this email and we'll gladly help.

@@ -6,10 +6,28 @@ defmodule Plausible.Teams.TeamAdmin do
   use Plausible
   use Plausible.Repo
 
+  import Ecto.Query
+
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
 
   require Plausible.Billing.Subscription.Status
+
+  def widgets(_schema, _conn) do
+    setup_teams_count =
+      Repo.aggregate(from(t in Teams.Team, where: t.setup_complete == true), :count)
+
+    [
+      %{
+        type: "tidbit",
+        title: "Setup Teams",
+        content: to_string(setup_teams_count),
+        icon: nil,
+        order: 1,
+        width: 6
+      }
+    ]
+  end
 
   def custom_index_query(conn, _schema, query) do
     search =

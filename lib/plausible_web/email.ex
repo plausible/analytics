@@ -31,14 +31,15 @@ defmodule PlausibleWeb.Email do
     |> render("create_site_email.html", user: user)
   end
 
-  def site_setup_help(user, site) do
+  def site_setup_help(user, team, site) do
     base_email()
     |> to(user)
     |> tag("help-email")
     |> subject("Your Plausible setup: Waiting for the first page views")
     |> render("site_setup_help_email.html",
       user: user,
-      site: site
+      site: site,
+      site_team: team
     )
   end
 
@@ -86,21 +87,22 @@ defmodule PlausibleWeb.Email do
     |> render("two_factor_disabled_email.html", user: user)
   end
 
-  def trial_one_week_reminder(user) do
+  def trial_one_week_reminder(user, team) do
     base_email()
     |> to(user)
     |> tag("trial-one-week-reminder")
     |> subject("Your Plausible trial expires next week")
-    |> render("trial_one_week_reminder.html", user: user)
+    |> render("trial_one_week_reminder.html", user: user, team: team)
   end
 
-  def trial_upgrade_email(user, day, usage, suggested_plan) do
+  def trial_upgrade_email(user, team, day, usage, suggested_plan) do
     base_email()
     |> to(user)
     |> tag("trial-upgrade-email")
     |> subject("Your Plausible trial ends #{day}")
     |> render("trial_upgrade_email.html",
       user: user,
+      team: team,
       day: day,
       custom_events: usage.custom_events,
       usage: usage.total,
@@ -108,13 +110,14 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def trial_over_email(user) do
+  def trial_over_email(user, team) do
     base_email()
     |> to(user)
     |> tag("trial-over-email")
     |> subject("Your Plausible trial has ended")
     |> render("trial_over_email.html",
       user: user,
+      team: team,
       extra_offset: Plausible.Teams.Team.trial_accept_traffic_until_offset_days()
     )
   end
@@ -154,13 +157,14 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def over_limit_email(user, usage, suggested_plan) do
+  def over_limit_email(user, team, usage, suggested_plan) do
     priority_email()
     |> to(user)
     |> tag("over-limit")
     |> subject("[Action required] You have outgrown your Plausible subscription tier")
     |> render("over_limit.html", %{
       user: user,
+      team: team,
       usage: usage,
       suggested_plan: suggested_plan
     })
@@ -179,13 +183,14 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def dashboard_locked(user, usage, suggested_plan) do
+  def dashboard_locked(user, team, usage, suggested_plan) do
     priority_email()
     |> to(user)
     |> tag("dashboard-locked")
     |> subject("[Action required] Your Plausible dashboard is now locked")
     |> render("dashboard_locked.html", %{
       user: user,
+      team: team,
       usage: usage,
       suggested_plan: suggested_plan
     })
@@ -200,6 +205,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Your Plausible subscription is up for renewal")
     |> render("yearly_renewal_notification.html", %{
       user: owner,
+      team: team,
       date: date,
       next_bill_amount: team.subscription.next_bill_amount,
       currency: team.subscription.currency_code
@@ -220,6 +226,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Your Plausible subscription is about to expire")
     |> render("yearly_expiration_notification.html", %{
       user: owner,
+      team: team,
       next_bill_date: next_bill_date,
       accept_traffic_until: accept_traffic_until
     })
@@ -300,7 +307,7 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def guest_invitation_accepted(inviter_email, invitee_email, site) do
+  def guest_invitation_accepted(inviter_email, invitee_email, team, site) do
     priority_email()
     |> to(inviter_email)
     |> tag("guest-invitation-accepted")
@@ -309,6 +316,7 @@ defmodule PlausibleWeb.Email do
     )
     |> render("guest_invitation_accepted.html",
       invitee_email: invitee_email,
+      team: team,
       site: site
     )
   end
@@ -334,6 +342,7 @@ defmodule PlausibleWeb.Email do
       "[#{Plausible.product_name()}] #{guest_invitation.team_invitation.email} rejected your invitation to #{guest_invitation.site.domain}"
     )
     |> render("guest_invitation_rejected.html",
+      team: guest_invitation.team_invitation.team,
       guest_invitation: guest_invitation
     )
   end
@@ -346,11 +355,19 @@ defmodule PlausibleWeb.Email do
       "[#{Plausible.product_name()}] #{team_invitation.email} rejected your invitation to \"#{team_invitation.team.name}\" team"
     )
     |> render("team_invitation_rejected.html",
+      team: team_invitation.team,
       team_invitation: team_invitation
     )
   end
 
-  def ownership_transfer_accepted(new_owner_email, inviter_email, site) do
+  def ownership_transfer_accepted(
+        new_owner_email,
+        inviter_email,
+        team,
+        site,
+        initiator_as_editor?,
+        initiator_as_guest?
+      ) do
     priority_email()
     |> to(inviter_email)
     |> tag("ownership-transfer-accepted")
@@ -359,6 +376,23 @@ defmodule PlausibleWeb.Email do
     )
     |> render("ownership_transfer_accepted.html",
       new_owner_email: new_owner_email,
+      team: team,
+      site: site,
+      initiator_as_editor?: initiator_as_editor?,
+      initiator_as_guest?: initiator_as_guest?
+    )
+  end
+
+  def team_changed(owner_email, user, team, site) do
+    priority_email()
+    |> to(owner_email)
+    |> tag("team-changed")
+    |> subject(
+      "[#{Plausible.product_name()}] #{user.email} has transferred #{site.domain} to \"#{team.name}\" team"
+    )
+    |> render("team_changed.html",
+      user: user,
+      team: team,
       site: site
     )
   end
@@ -372,6 +406,7 @@ defmodule PlausibleWeb.Email do
     )
     |> render("ownership_transfer_rejected.html",
       user: site_transfer.initiator,
+      team: site_transfer.site.team,
       site_transfer: site_transfer
     )
   end
@@ -405,6 +440,7 @@ defmodule PlausibleWeb.Email do
   def import_success(site_import, user) do
     import_api = Plausible.Imported.ImportSources.by_name(site_import.source)
     label = import_api.label()
+    team = site_import.site.team
 
     priority_email()
     |> to(user)
@@ -413,7 +449,9 @@ defmodule PlausibleWeb.Email do
     |> render(import_api.email_template(), %{
       site_import: site_import,
       label: label,
-      link: PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site_import.site.domain),
+      link:
+        PlausibleWeb.Endpoint.url() <>
+          "/" <> URI.encode_www_form(site_import.site.domain) <> "?__team=#{team.identifier}",
       user: user,
       success: true
     })
@@ -449,7 +487,7 @@ defmodule PlausibleWeb.Email do
         PlausibleWeb.Endpoint,
         :download_export,
         site.domain
-      )
+      ) <> "?__team=#{site.team.identifier}"
 
     priority_email()
     |> to(user)
@@ -492,7 +530,8 @@ defmodule PlausibleWeb.Email do
     |> subject("We'll stop counting your stats")
     |> render("approaching_accept_traffic_until.html",
       time: "next week",
-      user: %{email: notification.email, name: notification.name}
+      user: %{email: notification.email, name: notification.name},
+      team: notification.team
     )
   end
 
@@ -503,7 +542,8 @@ defmodule PlausibleWeb.Email do
     |> subject("A reminder that we'll stop counting your stats tomorrow")
     |> render("approaching_accept_traffic_until.html",
       time: "tomorrow",
-      user: %{email: notification.email, name: notification.name}
+      user: %{email: notification.email, name: notification.name},
+      team: notification.team
     )
   end
 

@@ -44,7 +44,20 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert :ok = AcceptInvitation.change_team(site, user, team2)
       assert Repo.reload!(site).team_id == team2.id
       assert_team_membership(user, team2, :owner)
-      assert_no_emails_delivered()
+
+      assert_email_delivered_with(
+        to: [nil: another.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
+
+      assert_email_delivered_with(
+        to: [nil: user.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
     end
 
     test "changes the team if admin in second team" do
@@ -62,7 +75,13 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert :ok = AcceptInvitation.change_team(site, user, team2)
       assert Repo.reload!(site).team_id == team2.id
       assert_team_membership(user, team2, :admin)
-      assert_no_emails_delivered()
+
+      assert_email_delivered_with(
+        to: [nil: another.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
     end
 
     for role <- Plausible.Teams.Membership.roles() -- [:admin, :owner] do
