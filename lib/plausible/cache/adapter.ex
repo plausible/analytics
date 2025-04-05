@@ -178,4 +178,8 @@ defmodule Plausible.Cache.Adapter do
   defp partitions(cache_name) do
     Application.get_env(:plausible, __MODULE__)[cache_name][:partitions] || 1
   end
+
+  def cache2list(full_cache_name) do
+    :ets.tab2list(ConCache.ets(full_cache_name))
+  end
 end

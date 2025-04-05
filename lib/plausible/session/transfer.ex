@@ -3,8 +3,8 @@ defmodule Plausible.Session.Transfer do
   Cross-deployment transfer for `:sessions` cache.
 
   It works by establishing a client-server architecture where:
-  - The "taker" one-time task retrieves ETS data from other OS processes via Unix domain sockets
-  - The "giver" server process responds to requests for ETS data via Unix domain sockets
+  - The "taker" one-time task retrieves `:sessions` data from other processes via Unix domain sockets
+  - The "giver" server process responds to requests for `:sessions` data via Unix domain sockets
   - The "alive" process waits on shutdown for at least one taker, for 15 seconds
   """
 
@@ -87,14 +87,12 @@ defmodule Plausible.Session.Transfer do
       {:list, session_version} ->
         if session_version == session_version() and attempted?(parent) do
           Plausible.Cache.Adapter.get_names(:sessions)
-          |> Enum.map(&ConCache.ets/1)
-          |> Enum.filter(fn tab -> :ets.info(tab, :size) > 0 end)
         else
           []
         end
 
       {:send, tab} ->
-        :ets.tab2list(tab)
+        Plausible.Cache.Adapter.cache2list(tab)
 
       :took ->
         :counters.add(given_counter, 1, 1)
