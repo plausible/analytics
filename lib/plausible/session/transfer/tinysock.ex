@@ -3,9 +3,6 @@ defmodule Plausible.Session.Transfer.TinySock do
   use GenServer
   require Logger
 
-  @listen_opts [:binary, packet: :raw, nodelay: true, backlog: 1024, active: false]
-  @connect_opts [:binary, packet: :raw, nodelay: true, active: false]
-
   @tag_data "tinysock"
   @tag_size byte_size(@tag_data)
 
@@ -30,10 +27,9 @@ defmodule Plausible.Session.Transfer.TinySock do
   end
 
   def start_link(opts) do
-    {gen_opts, opts} = Keyword.split(opts, [:debug, :name, :spawn_opt, :hibernate_after])
     base_path = Keyword.fetch!(opts, :base_path)
     handler = Keyword.fetch!(opts, :handler)
-    GenServer.start_link(__MODULE__, {base_path, handler}, gen_opts)
+    GenServer.start_link(__MODULE__, {base_path, handler})
   end
 
   @impl true
@@ -107,6 +103,9 @@ defmodule Plausible.Session.Transfer.TinySock do
     sock_shut_and_close(socket)
   end
 
+  @listen_opts mode: :binary, packet: :raw, nodelay: true, active: false, backlog: 1024
+  @connect_opts mode: :binary, packet: :raw, nodelay: true, active: false
+
   defp sock_listen_or_retry!(base_path) do
     sock_name = @tag_data <> Base.url_encode64(:crypto.strong_rand_bytes(4), padding: false)
     sock_path = Path.join(base_path, sock_name)
@@ -152,7 +151,7 @@ defmodule Plausible.Session.Transfer.TinySock do
 
   @five_mb 5 * 1024 * 1024
 
-  # for larger messages (>70MB), we need to read in chunks or we get {:error, :enomem}
+  # for larger messages (>64MB) we need to read in chunks or we get {:error, :enomem}
   defp sock_recv_continue(socket, size, timeout, acc) do
     with {:ok, data} <- :gen_tcp.recv(socket, min(size, @five_mb), timeout) do
       acc = [acc | data]

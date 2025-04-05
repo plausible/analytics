@@ -15,6 +15,10 @@ defmodule Plausible.Session.Transfer do
 
   def telemetry_event, do: [:plausible, :sessions, :transfer]
 
+  @doc """
+  Returns `true` if the transfer has been attempted (successfully or not).
+  Returns `false` if the transfer is still in progress.
+  """
   def attempted?(transfer \\ __MODULE__) do
     not taker_alive?(transfer)
   end
@@ -27,7 +31,10 @@ defmodule Plausible.Session.Transfer do
     :exit, {:noproc, _} -> false
   end
 
-  @doc false
+  @doc """
+  Returns the child specification for the `:sessions` transfer supervisor.
+  See `start_link/1` for options.
+  """
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -37,7 +44,13 @@ defmodule Plausible.Session.Transfer do
     }
   end
 
-  @doc false
+  @doc """
+  Starts the `:sessions` transfer supervisor.
+
+  Options:
+  - `:name` - the name of the supervisor (default: `Plausible.Session.Transfer`)
+  - `:base_path` - the base path for the Unix domain sockets (required)
+  """
   def start_link(opts) do
     name = Keyword.get(opts, :name, __MODULE__)
     base_path = Keyword.fetch!(opts, :base_path)
@@ -62,7 +75,7 @@ defmodule Plausible.Session.Transfer do
     giver =
       {TinySock,
        base_path: base_path,
-       handler: fn message -> giver_handler(message, parent, given_counter) end}
+       handler: fn message -> handle_taker(message, parent, given_counter) end}
 
     alive =
       Supervisor.child_spec(
@@ -82,7 +95,7 @@ defmodule Plausible.Session.Transfer do
     ]
   end
 
-  defp giver_handler(message, parent, given_counter) do
+  defp handle_taker(message, parent, given_counter) do
     case message do
       {:list, session_version} ->
         if session_version == session_version() and attempted?(parent) do
@@ -91,8 +104,8 @@ defmodule Plausible.Session.Transfer do
           []
         end
 
-      {:send, tab} ->
-        Plausible.Cache.Adapter.cache2list(tab)
+      {:send, cache} ->
+        Plausible.Cache.Adapter.cache2list(cache)
 
       :took ->
         :counters.add(given_counter, 1, 1)
@@ -109,25 +122,25 @@ defmodule Plausible.Session.Transfer do
     :telemetry.execute(telemetry_event(), %{duration: System.monotonic_time() - started})
   end
 
-  defp file_stat_ctime(path) do
-    case File.stat(path) do
-      {:ok, stat} -> stat.ctime
-      {:error, _} -> nil
-    end
-  end
-
   defp take_all_ets(sock) do
-    with {:ok, tabs} <- TinySock.call(sock, {:list, session_version()}) do
-      tasks = Enum.map(tabs, fn tab -> Task.async(fn -> take_ets(sock, tab) end) end)
+    with {:ok, names} <- TinySock.call(sock, {:list, session_version()}) do
+      tasks = Enum.map(names, fn name -> Task.async(fn -> take_ets(sock, name) end) end)
       Task.await_many(tasks, :timer.seconds(10))
     end
   after
     TinySock.call(sock, :took)
   end
 
-  defp take_ets(sock, tab) do
-    with {:ok, records} <- TinySock.call(sock, {:send, tab}) do
+  defp take_ets(sock, cache) do
+    with {:ok, records} <- TinySock.call(sock, {:send, cache}) do
       Plausible.Cache.Adapter.put_many(:sessions, records)
+    end
+  end
+
+  defp file_stat_ctime(path) do
+    case File.stat(path) do
+      {:ok, stat} -> stat.ctime
+      {:error, _} -> nil
     end
   end
 end
