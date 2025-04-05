@@ -3,7 +3,7 @@ defmodule Plausible.Session.Transfer do
   Cross-deployment transfer for `:sessions` cache.
 
   It works by establishing a client-server architecture where:
-  - The "taker" one-time task retrieves `:sessions` data from other processes via Unix domain sockets
+  - The "taker" one-time task retrieves `:sessions` data from other OS processes via Unix domain sockets
   - The "giver" server process responds to requests for `:sessions` data via Unix domain sockets
   - The "alive" process waits on shutdown for at least one taker, for 15 seconds
   """
