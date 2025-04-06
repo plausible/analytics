@@ -90,4 +90,9 @@ config :sentry,
 config :prom_ex, :storage_adapter, Plausible.PromEx.StripedPeep
 config :peep, :bucket_calculator, Plausible.PromEx.Buckets
 
+# https://github.com/plausible/community-edition/issues/210
+# this regex is more permissive than the original one
+# and allows the users use whatever they want
+config :mail, email_regex: ~r/\S+@\S+/
+
 import_config "#{config_env()}.exs"
