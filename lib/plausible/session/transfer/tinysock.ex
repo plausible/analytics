@@ -81,11 +81,11 @@ defmodule Plausible.Session.Transfer.TinySock do
   end
 
   defp spawn_acceptor(%{socket: socket, handler: handler}) do
-    :proc_lib.spawn_link(__MODULE__, :accept_loop, [_parent = self(), socket, handler])
+    :proc_lib.spawn_link(__MODULE__, :accept, [_parent = self(), socket, handler])
   end
 
   @doc false
-  def accept_loop(parent, listen_socket, handler) do
+  def accept(parent, listen_socket, handler) do
     case :gen_tcp.accept(listen_socket, :infinity) do
       {:ok, socket} ->
         GenServer.cast(parent, :accepted)
