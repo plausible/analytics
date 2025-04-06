@@ -103,8 +103,8 @@ defmodule Plausible.Session.Transfer.TinySock do
     sock_shut_and_close(socket)
   end
 
-  @listen_opts mode: :binary, packet: :raw, nodelay: true, active: false, backlog: 1024
-  @connect_opts mode: :binary, packet: :raw, nodelay: true, active: false
+  @listen_opts mode: :binary, active: false, backlog: 1024
+  @connect_opts mode: :binary, active: false
 
   defp sock_listen_or_retry!(base_path) do
     sock_name = @tag_data <> Base.url_encode64(:crypto.strong_rand_bytes(4), padding: false)
