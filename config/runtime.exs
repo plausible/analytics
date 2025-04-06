@@ -488,7 +488,7 @@ else
           [cacertfile: pg_sslrootcert, verify: :verify_peer]
         else
           raise ArgumentError,
-                "PostgreSQL SSL mode `sslmode=#{pg_sslmode}` requires a certificate, set it in `sslrootcert` or `DATABASE_CACERTFILE`"
+                "PostgreSQL SSL mode `sslmode=#{pg_sslmode}` requires a certificate, set it in `sslrootcert`"
         end
 
       pg_sslmode == "verify-ca" ->
