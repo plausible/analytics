@@ -450,7 +450,7 @@ defmodule Plausible.ConfigTest do
 
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url: "postgres://postgres:postgres@plausible_db:5432/plausible_db",
-               socket_options: []
+               ssl: false
              ]
     end
 
@@ -492,7 +492,7 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url:
                  "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
-               socket_options: []
+               ssl: false
              ]
     end
 
@@ -508,8 +508,123 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url:
                  "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
-               socket_options: [],
-               ssl: [cacertfile: "/path/to/cacert.pem"]
+               ssl: [cacertfile: "/path/to/cacert.pem", verify: :verify_peer]
+             ]
+    end
+
+    test "sslmode=require disables peer verification" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=require"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=require",
+               ssl: [verify: :verify_none]
+             ]
+    end
+
+    test "sslmode=disable explicitly disables SSL" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=disable"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=disable",
+               ssl: false
+             ]
+    end
+
+    test "sslmode=verify-ca uses system certificates" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=verify-ca"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=verify-ca",
+               ssl: [
+                 cacerts: :public_key.cacerts_get(),
+                 verify: :verify_peer
+               ]
+             ]
+    end
+
+    test "sslmode=verify-full raises error without certificate" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=verify-full"}
+      ]
+
+      assert_raise ArgumentError,
+                   ~r/PostgreSQL SSL mode `sslmode=verify-full` requires a certificate/,
+                   fn -> runtime_config(env) end
+    end
+
+    test "unsupported sslmode raises error" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=prefer"}
+      ]
+
+      assert_raise ArgumentError, ~r/PostgreSQL SSL mode `sslmode=prefer` is not supported/, fn ->
+        runtime_config(env)
+      end
+    end
+
+    test "verify-full with sslrootcert enables peer verification" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=verify-full&sslrootcert=/path/to/cert.pem"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslmode=verify-full&sslrootcert=/path/to/cert.pem",
+               ssl: [cacertfile: "/path/to/cert.pem", verify: :verify_peer]
+             ]
+    end
+
+    test "sslrootcert alone is not enough for peer verification" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslrootcert=/path/to/cert.pem"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslrootcert=/path/to/cert.pem",
+               ssl: false
+             ]
+    end
+
+    test "DATABASE_CACERTFILE takes precedence over sslrootcert" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslrootcert=/url/cert.pem"},
+        {"DATABASE_CACERTFILE", "/env/cacert.pem"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://username:password@company.postgres.database.azure.com:5432/prod_plausible?sslrootcert=/url/cert.pem",
+               ssl: [cacertfile: "/env/cacert.pem", verify: :verify_peer]
              ]
     end
   end

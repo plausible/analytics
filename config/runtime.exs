@@ -468,13 +468,48 @@ if db_socket_dir? do
       password: password
   end
 else
-  config :plausible, Plausible.Repo,
-    url: db_url,
-    socket_options: db_maybe_ipv6
+  config :plausible, Plausible.Repo, url: db_url
 
-  if db_cacertfile do
-    config :plausible, Plausible.Repo, ssl: [cacertfile: db_cacertfile]
+  unless Enum.empty?(db_maybe_ipv6) do
+    config :plausible, Plausible.Repo, socket_options: db_maybe_ipv6
   end
+
+  db_query = URI.decode_query(db_uri.query || "")
+  # https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
+  pg_sslmode = db_query["sslmode"]
+
+  pg_ssl =
+    cond do
+      db_cacertfile ->
+        [cacertfile: db_cacertfile, verify: :verify_peer]
+
+      pg_sslmode == "verify-full" ->
+        if pg_sslrootcert = db_query["sslrootcert"] do
+          [cacertfile: pg_sslrootcert, verify: :verify_peer]
+        else
+          raise ArgumentError,
+                "PostgreSQL SSL mode `sslmode=#{pg_sslmode}` requires a certificate, set it in `sslrootcert` or `DATABASE_CACERTFILE`"
+        end
+
+      pg_sslmode == "verify-ca" ->
+        [cacerts: :public_key.cacerts_get(), verify: :verify_peer]
+
+      pg_sslmode == "require" ->
+        [verify: :verify_none]
+
+      pg_sslmode == "disable" ->
+        false
+
+      pg_sslmode ->
+        raise ArgumentError,
+              "PostgreSQL SSL mode `sslmode=#{pg_sslmode}` is not supported, use `disable`, `require`, `verify-ca` or `verify-full` instead"
+
+      true ->
+        # tls is disabled by default, because in self-hosted docker compose postgres is co-located
+        false
+    end
+
+  config :plausible, Plausible.Repo, ssl: pg_ssl
 end
 
 sentry_app_version = runtime_metadata[:version] || app_version
