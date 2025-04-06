@@ -13,7 +13,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
   def add(q, site, query) do
     Enum.reduce(query.metrics, q, fn
-      :exit_rate, q -> add_exit_rate(q, query)
+      :exit_rate, q -> add_exit_rate(q, query, site)
       :percentage, q -> add_percentage_metric(q, site, query)
       :conversion_rate, q -> add_global_conversion_rate(q, site, query)
       :group_conversion_rate, q -> add_group_conversion_rate(q, site, query)
@@ -22,26 +22,29 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     end)
   end
 
-  defp add_exit_rate(q, query) do
-    events_subquery =
-      Base.base_event_query(query)
-      |> group_by([event], event.pathname)
-      |> select([event], %{
-        pathname: event.pathname,
-        pageviews: fragment("countIf(? = 'pageview')", event.name)
-      })
+  defp add_exit_rate(q, query, site) do
+    total_pageviews_query =
+      query
+      |> Query.remove_top_level_filters(["visit:exit_page"])
+      |> Query.set(
+        pagination: nil,
+        order_by: [],
+        metrics: [:pageviews],
+        include_imported: query.include_imported,
+        dimensions: ["event:page"]
+      )
 
     q
-    |> join(:left, [session], event in subquery(events_subquery),
-      on: session.exit_page == event.pathname
+    |> join(:left, [s], p in subquery(SQL.QueryBuilder.build(total_pageviews_query, site)),
+      on: s.exit_page == field(p, ^shortname(total_pageviews_query, "event:page"))
     )
-    |> select_merge_as([session, event], %{
+    |> select_merge_as([s, e], %{
       exit_rate:
         fragment(
           "if(? > 0, round(? / ? * 100, 1), null)",
-          fragment("any(?)", event.pageviews),
-          selected_as(:visits),
-          fragment("any(?)", event.pageviews)
+          fragment("any(?)", e.pageviews),
+          selected_as(:__internal_visits),
+          fragment("any(?)", e.pageviews)
         )
     })
   end

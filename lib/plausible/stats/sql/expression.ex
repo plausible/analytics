@@ -332,6 +332,12 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
+  def session_metric(:exit_rate, _query) do
+    wrap_alias([s], %{
+      __internal_visits: fragment("toUInt32(sum(sign))")
+    })
+  end
+
   def session_metric(:visits, _query) do
     wrap_alias([s], %{
       visits: scale_sample(fragment("sum(?)", s.sign))
@@ -387,7 +393,6 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:percentage, _query), do: %{}
   def session_metric(:conversion_rate, _query), do: %{}
   def session_metric(:group_conversion_rate, _query), do: %{}
-  def session_metric(:exit_rate, _query), do: %{}
 
   defmacro event_goal_join(goal_join_data) do
     quote do
