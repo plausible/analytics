@@ -148,7 +148,7 @@ defmodule Plausible.Cache.Adapter do
     end
   end
 
-  # TODO :ets.safe_fixtable? or not
+  # TODO :ets.safe_fixtable?
   defp get_keys(full_cache_name) do
     ets = ConCache.ets(full_cache_name)
 
