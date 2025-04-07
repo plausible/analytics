@@ -27,12 +27,20 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     first: DateTime.new!(~D[2021-04-28], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
   }
+  @date_range_10d %DateTimeRange{
+    first: DateTime.new!(~D[2021-04-25], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
+  }
   @date_range_30d %DateTimeRange{
     first: DateTime.new!(~D[2021-04-05], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_month %DateTimeRange{
     first: DateTime.new!(~D[2021-05-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_3mo %DateTimeRange{
+    first: DateTime.new!(~D[2020-03-01], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_6mo %DateTimeRange{
@@ -1255,8 +1263,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     test "parsing shortcut options", %{site: site} do
       check_date_range(%{"date_range" => "day"}, site, @date_range_day)
       check_date_range(%{"date_range" => "7d"}, site, @date_range_7d)
+      check_date_range(%{"date_range" => "10d"}, site, @date_range_10d)
       check_date_range(%{"date_range" => "30d"}, site, @date_range_30d)
       check_date_range(%{"date_range" => "month"}, site, @date_range_month)
+      check_date_range(%{"date_range" => "3mo"}, site, @date_range_3mo)
       check_date_range(%{"date_range" => "6mo"}, site, @date_range_6mo)
       check_date_range(%{"date_range" => "12mo"}, site, @date_range_12mo)
       check_date_range(%{"date_range" => "year"}, site, @date_range_year)
@@ -1374,8 +1384,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       for {date_range_shortcut, expected_date_range} <- [
             {"day", @date_range_day},
             {"7d", @date_range_7d},
+            {"10d", @date_range_10d},
             {"30d", @date_range_30d},
             {"month", @date_range_month},
+            {"3mo", @date_range_3mo},
             {"6mo", @date_range_6mo},
             {"12mo", @date_range_12mo},
             {"year", @date_range_year}

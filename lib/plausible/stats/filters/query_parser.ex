@@ -225,39 +225,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(date, date, site.timezone)}
   end
 
-  defp parse_time_range(site, shorthand, date, _now)
-       when shorthand in ["7d", "28d", "30d", "90d"] do
-    {days, "d"} = Integer.parse(shorthand)
-    last = date |> Date.add(-1)
-    first = date |> Date.add(-days)
-    {:ok, DateTimeRange.new!(first, last, site.timezone)}
-  end
-
   defp parse_time_range(site, "month", date, _now) do
     last = date |> Date.end_of_month()
     first = last |> Date.beginning_of_month()
-    {:ok, DateTimeRange.new!(first, last, site.timezone)}
-  end
-
-  defp parse_time_range(site, "6mo", date, _now) do
-    last = date |> Date.end_of_month()
-
-    first =
-      last
-      |> Date.shift(month: -5)
-      |> Date.beginning_of_month()
-
-    {:ok, DateTimeRange.new!(first, last, site.timezone)}
-  end
-
-  defp parse_time_range(site, "12mo", date, _now) do
-    last = date |> Date.end_of_month()
-
-    first =
-      last
-      |> Date.shift(month: -11)
-      |> Date.beginning_of_month()
-
     {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
@@ -271,6 +241,23 @@ defmodule Plausible.Stats.Filters.QueryParser do
     start_date = Plausible.Sites.stats_start_date(site) || date
 
     {:ok, DateTimeRange.new!(start_date, date, site.timezone)}
+  end
+
+  defp parse_time_range(site, shorthand, date, _now) when is_binary(shorthand) do
+    case Integer.parse(shorthand) do
+      {n, "d"} when n > 0 and n <= 5_000 ->
+        last = date |> Date.add(-1)
+        first = date |> Date.add(-n)
+        {:ok, DateTimeRange.new!(first, last, site.timezone)}
+
+      {n, "mo"} when n > 0 and n <= 100 ->
+        last = date |> Date.end_of_month()
+        first = last |> Date.shift(month: -n + 1) |> Date.beginning_of_month()
+        {:ok, DateTimeRange.new!(first, last, site.timezone)}
+
+      _ ->
+        {:error, "Invalid date_range '#{i(shorthand)}'."}
+    end
   end
 
   defp parse_time_range(site, [from, to], _date, _now) when is_binary(from) and is_binary(to) do
