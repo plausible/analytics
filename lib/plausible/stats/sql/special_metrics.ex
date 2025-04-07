@@ -26,6 +26,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     total_pageviews_query =
       query
       |> Query.remove_top_level_filters(["visit:exit_page"])
+      |> remove_filters_ignored_in_totals_query()
       |> Query.set(
         pagination: nil,
         order_by: [],

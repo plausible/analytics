@@ -410,5 +410,54 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
                %{"dimensions" => ["/one"], "metrics" => [100]}
              ]
     end
+
+    test "with comparisons", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1, pathname: "/one", timestamp: ~N[2021-01-09 00:00:00]),
+        build(:pageview, user_id: 1, pathname: "/three", timestamp: ~N[2021-01-09 00:00:00]),
+        build(:pageview, pathname: "/one", timestamp: ~N[2021-01-09 00:10:00]),
+        build(:pageview, user_id: 2, pathname: "/one", timestamp: ~N[2021-01-10 00:00:00]),
+        build(:pageview, user_id: 2, pathname: "/two", timestamp: ~N[2021-01-10 00:10:00]),
+        build(:pageview, user_id: 3, pathname: "/one", timestamp: ~N[2021-01-10 00:00:00]),
+        build(:pageview, user_id: 3, pathname: "/one", timestamp: ~N[2021-01-10 00:10:00])
+      ])
+
+      conn =
+        post(
+          conn,
+          "/api/v2/query-internal-test",
+          %{
+            "site_id" => site.domain,
+            "metrics" => ["exit_rate"],
+            "date_range" => ["2021-01-10", "2021-01-10"],
+            "dimensions" => ["visit:exit_page"],
+            "include" => %{"comparisons" => %{"mode" => "previous_period"}},
+            "order_by" => [["exit_rate", "desc"]]
+          }
+        )
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{
+                 "dimensions" => ["/two"],
+                 "metrics" => [100],
+                 "comparison" => %{
+                   "change" => [nil],
+                   "dimensions" => ["/two"],
+                   "metrics" => [nil]
+                 }
+               },
+               %{
+                 "dimensions" => ["/one"],
+                 "metrics" => [33.3],
+                 "comparison" => %{
+                   "change" => [-16.7],
+                   "dimensions" => ["/one"],
+                   "metrics" => [50]
+                 }
+               }
+             ]
+    end
   end
 end
