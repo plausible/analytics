@@ -1,9 +1,10 @@
 defmodule Plausible.Repo.Migrations.BackfillTeamsHourlyApiRequestLimit do
-  use Plausible
   use Ecto.Migration
 
+  import Plausible.MigrationUtils
+
   def up do
-    if ce?() do
+    if community_edition?() do
       Plausible.DataMigration.BackfillTeamsHourlyRequestLimit.run(dry_run?: false)
     end
   end
