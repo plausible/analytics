@@ -38,6 +38,8 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   import Plug.Conn
   import Phoenix.Controller, only: [get_format: 1]
 
+  alias Plausible.Teams
+
   @all_roles [:public, :viewer, :admin, :editor, :super_admin, :owner, :billing]
 
   def init([]), do: {@all_roles, nil}
@@ -112,7 +114,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
           |> Repo.preload([
             :owners,
             :completed_imports,
-            team: [subscription: Plausible.Teams.last_subscription_query()]
+            team: [subscription: Teams.last_subscription_query()]
           ])
 
         conn = merge_assigns(conn, site: site, site_role: role)
@@ -155,8 +157,8 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
 
     if site do
       site_role =
-        case Plausible.Teams.Memberships.site_role(site, current_user) do
-          {:ok, role} -> role
+        case Teams.Memberships.site_role(site, current_user) do
+          {:ok, {_, role}} -> role
           _ -> nil
         end
 
