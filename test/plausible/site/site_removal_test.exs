@@ -13,7 +13,6 @@ defmodule Plausible.Site.SiteRemovalTest do
     refute Sites.get_by_domain(site.domain)
   end
 
-  @tag :teams
   test "site deletion prunes team guest memberships" do
     owner = new_user()
     site = new_site(owner: owner)
