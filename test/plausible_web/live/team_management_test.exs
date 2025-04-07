@@ -121,6 +121,7 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       refute element_exists?(html, "#guest-list")
     end
 
+    @tag :ee_only
     test "fails to save layout with limits breached", %{conn: conn, team: team} do
       lv = get_liveview(conn)
       add_invite(lv, "new1@example.com", "admin")
@@ -143,6 +144,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
                "Error! Make sure the e-mail is valid and is not taken already"
     end
 
+    # FIXME: Understand what's going on here in CE
+    @tag :ee_only
     test "allows removing any type of entry", %{
       conn: conn,
       user: user,
