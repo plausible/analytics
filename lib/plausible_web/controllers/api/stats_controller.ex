@@ -777,7 +777,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     is_admin =
       if current_user = conn.assigns[:current_user] do
-        Plausible.Teams.Memberships.has_admin_access?(site, current_user)
+        Plausible.Teams.Memberships.has_editor_access?(site, current_user)
       else
         false
       end

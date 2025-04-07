@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Api.InternalController do
     with %User{id: user_id} = user <- conn.assigns[:current_user],
          site <- Sites.get_by_domain(domain),
          true <-
-           Plausible.Teams.Memberships.has_admin_access?(site, user) ||
+           Plausible.Teams.Memberships.has_editor_access?(site, user) ||
              Auth.is_super_admin?(user_id),
          {:ok, mod} <- Map.fetch(@features, feature),
          {:ok, _site} <- mod.toggle(site, user, override: false) do

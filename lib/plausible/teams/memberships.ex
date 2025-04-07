@@ -96,7 +96,8 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
-  def has_admin_access?(site, user) do
+  @spec has_editor_access?(Plausible.Site.t(), Auth.User.t() | nil) :: boolean()
+  def has_editor_access?(site, user) do
     case site_role(site, user) do
       {:ok, {_, role}} when role in [:editor, :admin, :owner] ->
         true
