@@ -934,13 +934,20 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:exit_page")
     query = Query.from(site, params, debug_metadata(conn))
     {limit, page} = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:visits])
+
+    extra_metrics =
+      if TableDecider.sessions_join_events?(query) do
+        [:visits]
+      else
+        [:visits, :exit_rate]
+      end
+
+    metrics = breakdown_metrics(query, extra_metrics)
 
     %{results: results, meta: meta} = Stats.breakdown(site, query, metrics, {limit, page})
 
     exit_pages =
       results
-      |> add_exit_rate(site, query, limit)
       |> transform_keys(%{exit_page: :name})
 
     if params["csv"] do
@@ -964,37 +971,6 @@ defmodule PlausibleWeb.Api.StatsController do
         meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: meta[:imports_skip_reason]
       })
-    end
-  end
-
-  defp add_exit_rate(breakdown_results, site, query, limit) do
-    if TableDecider.sessions_join_events?(query) do
-      breakdown_results
-    else
-      pages = Enum.map(breakdown_results, & &1[:exit_page])
-
-      total_pageviews_query =
-        query
-        |> struct!(order_by: [])
-        |> Query.remove_top_level_filters(["visit:exit_page"])
-        |> Query.add_filter([:is, "event:page", pages])
-        |> Query.set(dimensions: ["event:page"])
-
-      %{results: total_pageviews} =
-        Stats.breakdown(site, total_pageviews_query, [:pageviews], {limit, 1})
-
-      Enum.map(breakdown_results, fn result ->
-        exit_rate =
-          case Enum.find(total_pageviews, &(&1[:page] == result[:exit_page])) do
-            %{pageviews: pageviews} ->
-              Float.floor(result[:visits] / pageviews * 100)
-
-            nil ->
-              nil
-          end
-
-        Map.put(result, :exit_rate, exit_rate)
-      end)
     end
   end
 
