@@ -35,19 +35,37 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         dimensions: ["event:page"]
       )
 
-    q
-    |> join(:left, [s], p in subquery(SQL.QueryBuilder.build(total_pageviews_query, site)),
-      on: s.exit_page == field(p, ^shortname(total_pageviews_query, "event:page"))
-    )
-    |> select_merge_as([s, e], %{
-      exit_rate:
-        fragment(
-          "if(? > 0, round(? / ? * 100, 1), null)",
-          fragment("any(?)", e.pageviews),
-          selected_as(:__internal_visits),
-          fragment("any(?)", e.pageviews)
-        )
-    })
+    joined_q =
+      q
+      |> join(:left, [..., s], p in subquery(SQL.QueryBuilder.build(total_pageviews_query, site)),
+        on:
+          selected_as(^shortname(query, "visit:exit_page")) ==
+            field(p, ^shortname(total_pageviews_query, "event:page"))
+      )
+
+    if query.include_imported do
+      joined_q
+      |> select_merge_as([_s, _i, p], %{
+        exit_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            p.pageviews,
+            selected_as(:__internal_visits),
+            p.pageviews
+          )
+      })
+    else
+      joined_q
+      |> select_merge_as([_s, p], %{
+        exit_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            fragment("any(?)", p.pageviews),
+            selected_as(:__internal_visits),
+            fragment("any(?)", p.pageviews)
+          )
+      })
+    end
   end
 
   defp add_percentage_metric(q, site, query) do

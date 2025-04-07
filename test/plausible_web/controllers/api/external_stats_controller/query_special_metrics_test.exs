@@ -459,5 +459,45 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
                }
              ]
     end
+
+    test "with imported data", %{conn: conn, site: site} do
+      site_import =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2020-01-01],
+          end_date: ~D[2020-12-31]
+        )
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 1, pathname: "/one", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 1, pathname: "/two", timestamp: ~N[2021-01-01 00:10:00]),
+        build(:pageview, user_id: 3, pathname: "/one", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 3, pathname: "/three", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 3, pathname: "/one", timestamp: ~N[2021-01-01 00:10:00]),
+        build(:imported_pages, page: "/one", visits: 10, pageviews: 20, date: ~D[2020-01-01]),
+        build(:imported_exit_pages, exit_page: "/one", exits: 2, date: ~D[2020-01-01])
+      ])
+
+      conn =
+        post(
+          conn,
+          "/api/v2/query-internal-test",
+          %{
+            "site_id" => site.domain,
+            "metrics" => ["exit_rate"],
+            "date_range" => "all",
+            "include" => %{"imports" => true},
+            "dimensions" => ["visit:exit_page"],
+            "order_by" => [["exit_rate", "desc"]]
+          }
+        )
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["/two"], "metrics" => [100]},
+               %{"dimensions" => ["/one"], "metrics" => [13]}
+             ]
+    end
   end
 end

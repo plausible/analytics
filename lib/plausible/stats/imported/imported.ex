@@ -357,6 +357,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   @cannot_optimize_metrics [
+    :exit_rate,
     :scroll_depth,
     :percentage,
     :conversion_rate,
