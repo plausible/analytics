@@ -168,6 +168,41 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                    } = json_response(conn, 200)
   end
 
+  test "time_on_page breakdown (with missing data)", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:engagement,
+        user_id: 12,
+        pathname: "/",
+        timestamp: ~N[2021-01-01 00:03:00],
+        engagement_time: 20_000
+      ),
+      build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:engagement,
+        user_id: 12,
+        pathname: "/",
+        timestamp: ~N[2021-01-01 00:04:00],
+        engagement_time: 30_000
+      ),
+      build(:pageview, pathname: "/blog", timestamp: ~N[2021-01-01 00:00:00])
+    ])
+
+    conn =
+      post(conn, "/api/v2/query-internal-test", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors", "time_on_page"],
+        "date_range" => "all",
+        "dimensions" => ["event:page"]
+      })
+
+    assert_matches %{
+                     "results" => [
+                       %{"dimensions" => ["/"], "metrics" => [1, 50]},
+                       %{"dimensions" => ["/blog"], "metrics" => [1, nil]}
+                     ]
+                   } = json_response(conn, 200)
+  end
+
   describe "site.legacy_time_on_page_cutoff" do
     setup %{site: site, site_import: site_import} = context do
       populate_stats(site, site_import.id, [
