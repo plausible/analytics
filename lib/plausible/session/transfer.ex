@@ -133,7 +133,10 @@ defmodule Plausible.Session.Transfer do
 
   defp take_ets(sock, cache) do
     with {:ok, records} <- TinySock.call(sock, {:send, cache}) do
-      Plausible.Cache.Adapter.put_many(:sessions, records)
+      Enum.each(records, fn record ->
+        {key, %Plausible.ClickhouseSessionV2{} = session} = record
+        Plausible.Cache.Adapter.put(:sessions, key, session)
+      end)
     end
   end
 

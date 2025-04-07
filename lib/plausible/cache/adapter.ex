@@ -103,7 +103,6 @@ defmodule Plausible.Cache.Adapter do
     items
     |> Enum.group_by(fn {key, _} -> get_name(cache_name, key, partitions) end)
     |> Enum.each(fn {full_cache_name, items} ->
-      # TODO ttl?
       true = :ets.insert(ConCache.ets(full_cache_name), items)
     end)
 
@@ -148,7 +147,6 @@ defmodule Plausible.Cache.Adapter do
     end
   end
 
-  # TODO :ets.safe_fixtable?
   defp get_keys(full_cache_name) do
     ets = ConCache.ets(full_cache_name)
 
