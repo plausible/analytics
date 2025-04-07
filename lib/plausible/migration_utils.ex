@@ -3,6 +3,8 @@ defmodule Plausible.MigrationUtils do
   Base module for to use in Clickhouse migrations
   """
 
+  use Plausible
+
   alias Plausible.IngestRepo
 
   def on_cluster_statement(table) do
@@ -37,6 +39,10 @@ defmodule Plausible.MigrationUtils do
       {_, :suffix} -> ", #{expr}"
     end
   end
+
+  def enterprise_edition?(), do: ee?()
+
+  def community_edition?(), do: ce?()
 
   defp encode(value) when is_number(value), do: value
   defp encode(value) when is_binary(value), do: "'#{value}'"
