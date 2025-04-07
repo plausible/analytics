@@ -593,8 +593,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           timezone: site.timezone,
           include: @default_include,
           pagination: %{limit: 10_000, offset: 0}
-        },
-        :internal
+        }
       )
     end
 
@@ -609,8 +608,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters.",
-        :internal
+        "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
       )
     end
 
@@ -625,8 +623,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested.",
-        :internal
+        "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
       )
     end
 
@@ -1239,8 +1236,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           timezone: site.timezone,
           include: @default_include,
           pagination: %{limit: 10_000, offset: 0}
-        },
-        :internal
+        }
       )
       |> check_goals(
         preloaded_goals: %{all: ["Signup"], matching_toplevel_filters: ["Signup"]},
