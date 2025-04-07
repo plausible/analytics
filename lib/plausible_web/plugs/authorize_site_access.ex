@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     current_user = conn.assigns[:current_user]
 
     with {:ok, domain} <- get_domain(conn, site_param),
-         {:ok, %{site: site, role: membership_role}} <-
+         {:ok, %{site: site, role: membership_role, member_type: member_type}} <-
            get_site_with_role(conn, current_user, domain),
          {:ok, shared_link} <- maybe_get_shared_link(conn, site) do
       role =
@@ -114,10 +114,18 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
           |> Repo.preload([
             :owners,
             :completed_imports,
-            team: [subscription: Teams.last_subscription_query()]
+            team: [:owners, subscription: Teams.last_subscription_query()]
           ])
 
         conn = merge_assigns(conn, site: site, site_role: role)
+
+        # Switch current team if user is a team member in it
+        conn =
+          if member_type == :team_member do
+            set_current_team(conn, site.team)
+          else
+            conn
+          end
 
         if not is_nil(current_user) and role not in [:public, nil] do
           assign(conn, :site_team, site.team)
@@ -127,6 +135,18 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
       else
         error_not_found(conn)
       end
+    end
+  end
+
+  defp set_current_team(conn, team) do
+    current_team = conn.assigns[:current_team]
+
+    if !current_team || team.id != current_team.id do
+      conn
+      |> assign(:current_team, team)
+      |> Plug.Conn.put_session("current_team_id", team.identifier)
+    else
+      conn
     end
   end
 
@@ -156,13 +176,13 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     site = Repo.get_by(Plausible.Site, domain: domain)
 
     if site do
-      site_role =
+      {member_type, site_role} =
         case Teams.Memberships.site_role(site, current_user) do
-          {:ok, {_, role}} -> role
-          _ -> nil
+          {:ok, {member_type, role}} -> {member_type, role}
+          _ -> {nil, nil}
         end
 
-      {:ok, %{site: site, role: site_role}}
+      {:ok, %{site: site, role: site_role, member_type: member_type}}
     else
       error_not_found(conn)
     end
