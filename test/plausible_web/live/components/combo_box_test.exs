@@ -361,11 +361,21 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
     test "pre-fills the suggestions asynchronously", %{conn: conn} do
       {:ok, lv, doc} = live_isolated(conn, SampleViewAsync, session: %{})
       refute element_exists?(doc, "#dropdown-test-component-option-1")
-      :timer.sleep(1000)
-      doc = render(lv)
-      assert text_of_element(doc, "#dropdown-test-component-option-1") == "One"
-      assert text_of_element(doc, "#dropdown-test-component-option-2") == "Two"
-      assert text_of_element(doc, "#dropdown-test-component-option-3") == "Three"
+
+      assert eventually(
+               fn ->
+                 doc = render(lv)
+
+                 {
+                   text_of_element(doc, "#dropdown-test-component-option-1") == "One" &&
+                     text_of_element(doc, "#dropdown-test-component-option-2") == "Two" &&
+                     text_of_element(doc, "#dropdown-test-component-option-3") == "Three",
+                   true
+                 }
+               end,
+               200,
+               20
+             )
     end
 
     @tag :slow
@@ -373,10 +383,20 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       {:ok, lv, _html} = live_isolated(conn, SampleViewAsync, session: %{})
       doc = type_into_combo(lv, "test-component", "Echo me")
       refute element_exists?(doc, "#dropdown-test-component-option-1")
-      :timer.sleep(1000)
-      doc = render(lv)
-      assert element_exists?(doc, "#dropdown-test-component-option-1")
-      assert text_of_element(doc, "#dropdown-test-component-option-1") == "Echo me"
+
+      assert eventually(
+               fn ->
+                 doc = render(lv)
+
+                 {
+                   element_exists?(doc, "#dropdown-test-component-option-1") &&
+                     text_of_element(doc, "#dropdown-test-component-option-1") == "Echo me",
+                   true
+                 }
+               end,
+               200,
+               20
+             )
     end
   end
 
