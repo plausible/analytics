@@ -1248,7 +1248,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     context =
       on_ee do
         assert {:ok, _job} =
-                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
+                 Plausible.Exports.schedule_s3_export(exported_site.id, user.email)
 
         context
       else

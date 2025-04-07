@@ -210,12 +210,12 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   @impl true
   def handle_event("export", _params, socket) do
-    %{storage: storage, site_id: site_id, email_to: email_to, current_user: current_user} =
+    %{storage: storage, site_id: site_id, email_to: email_to} =
       socket.assigns
 
     schedule_result =
       case storage do
-        "s3" -> Exports.schedule_s3_export(site_id, current_user.id, email_to)
+        "s3" -> Exports.schedule_s3_export(site_id, email_to)
         "local" -> Exports.schedule_local_export(site_id, email_to)
       end
 

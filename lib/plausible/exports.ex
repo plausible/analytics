@@ -8,15 +8,14 @@ defmodule Plausible.Exports do
   import Ecto.Query
 
   @doc "Schedules CSV export job to S3 storage"
-  @spec schedule_s3_export(pos_integer, pos_integer | nil, String.t()) ::
+  @spec schedule_s3_export(pos_integer, String.t()) ::
           {:ok, Oban.Job.t()} | {:error, :no_data}
-  def schedule_s3_export(site_id, current_user_id, email_to) do
+  def schedule_s3_export(site_id, email_to) do
     with :ok <- ensure_has_data(site_id) do
       args = %{
         "storage" => "s3",
         "site_id" => site_id,
         "email_to" => email_to,
-        "current_user_id" => current_user_id,
         "s3_bucket" => Plausible.S3.exports_bucket(),
         "s3_path" => s3_export_key(site_id)
       }
