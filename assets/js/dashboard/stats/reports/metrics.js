@@ -207,7 +207,7 @@ export const createExitRate = (props) => {
     ...props,
     key: 'exit_rate',
     renderLabel,
-    sortable: false
+    sortable: true
   })
 }
 
