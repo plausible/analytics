@@ -40,7 +40,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_3mo %DateTimeRange{
-    first: DateTime.new!(~D[2020-03-01], ~T[00:00:00], "Etc/UTC"),
+    first: DateTime.new!(~D[2021-03-01], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_6mo %DateTimeRange{
