@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Add support for creating and managing teams owning multiple sites
 - Introduce "billing" team role for users
 - Introduce "editor" role with permissions greater than "viewer" but lesser than "admin"
+- Support behavioral filters `has_done` and `has_not_done` on the Stats API to allow filtering sessions by other events that have been completed.
 
 ### Removed
 
