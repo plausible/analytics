@@ -486,10 +486,7 @@
         { "$ref": "#/definitions/filter_entry" },
         { "$ref": "#/definitions/filter_and_or" },
         { "$ref": "#/definitions/filter_not" },
-        {
-          "$ref": "#/definitions/filter_has_done",
-          "$comment": "only :internal"
-        }
+        { "$ref": "#/definitions/filter_has_done" }
       ]
     },
     "filter_not": {
