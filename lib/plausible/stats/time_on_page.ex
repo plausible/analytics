@@ -4,7 +4,7 @@ defmodule Plausible.Stats.TimeOnPage do
   """
 
   def new_time_on_page_visible?(site) do
-    new_time_on_page_enabled?(site) && not is_nil(site.legacy_time_on_page_cutoff)
+    not is_nil(site.legacy_time_on_page_cutoff)
   end
 
   def legacy_time_on_page_cutoff(site) do
@@ -23,9 +23,5 @@ defmodule Plausible.Stats.TimeOnPage do
       {:gap, just_before, _just_after} -> just_before
       {:ambiguous, first_datetime, _second_datetime} -> first_datetime
     end
-  end
-
-  defp new_time_on_page_enabled?(site) do
-    FunWithFlags.enabled?(:new_time_on_page, for: site)
   end
 end

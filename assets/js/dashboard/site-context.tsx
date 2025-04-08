@@ -25,9 +25,8 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
   }
 }
 
-type FeatureFlags = {
-  new_time_on_page?: boolean
-}
+// Update this object when new feature flags are added to the frontend.
+type FeatureFlags = Record<never, boolean>
 
 const siteContextDefaultValue = {
   domain: '',

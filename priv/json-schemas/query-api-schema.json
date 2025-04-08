@@ -266,7 +266,7 @@
         },
         {
           "const": "time_on_page",
-          "$comment": "only :internal"
+          "markdownDescription": "Average time spent on a given page in a visit in seconds. Requires: `event:page` filter or dimension."
         },
         {
           "const": "total_revenue",
