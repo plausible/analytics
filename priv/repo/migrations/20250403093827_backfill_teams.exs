@@ -1,8 +1,10 @@
 defmodule Plausible.Repo.Migrations.BackfillTeams do
   use Ecto.Migration
 
+  import Plausible.MigrationUtils
+
   def up do
-    if Plausible.ce?() do
+    if community_edition?() do
       Plausible.DataMigration.BackfillTeams.run(dry_run?: false)
     end
   end
