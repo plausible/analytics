@@ -2589,5 +2589,18 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
       )
     end
+
+    test "validation fails with string segment ids", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "segment", ["123"]]]
+      }
+      |> check_error(
+        site,
+        "Invalid filter '[\"is\", \"segment\", [\"123\"]]'."
+      )
+    end
   end
 end
