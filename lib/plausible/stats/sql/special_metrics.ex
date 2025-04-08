@@ -216,7 +216,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
     joined_q =
       q
-      |> join(:left, [..., s], p in subquery(SQL.QueryBuilder.build(total_pageviews_query, site)),
+      |> join(:left, [], p in subquery(SQL.QueryBuilder.build(total_pageviews_query, site)),
         on:
           selected_as(^shortname(query, "visit:exit_page")) ==
             field(p, ^shortname(total_pageviews_query, "event:page"))
@@ -224,10 +224,10 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
     if query.include_imported do
       joined_q
-      |> select_merge_as([_s, _i, p], %{
+      |> select_merge_as([..., p], %{
         exit_rate:
           fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
+            "if(? > 0, round(? / ? * 100, 1), NULL)",
             p.pageviews,
             selected_as(:__internal_visits),
             p.pageviews
@@ -238,7 +238,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       |> select_merge_as([_s, p], %{
         exit_rate:
           fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
+            "if(? > 0, round(? / ? * 100, 1), NULL)",
             fragment("any(?)", p.pageviews),
             selected_as(:__internal_visits),
             fragment("any(?)", p.pageviews)
