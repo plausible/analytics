@@ -136,6 +136,8 @@ defmodule Plausible.Cache.Adapter do
 
   @spec get_names(atom()) :: [atom()]
   def get_names(cache_name) do
+    partitions = partitions(cache_name)
+
     if partitions == 1 do
       [cache_name]
     else
