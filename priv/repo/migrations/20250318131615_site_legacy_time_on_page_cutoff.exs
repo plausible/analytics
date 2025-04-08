@@ -13,7 +13,9 @@ defmodule Plausible.Repo.Migrations.SiteLegacyTimeOnPageCutoff do
       # On self-hosted, new time-on-page will be populated during first deploy.
       execute(
         fn ->
-          repo().query!("UPDATE sites SET legacy_time_on_page_cutoff = ?", [Date.utc_today()])
+          repo().query!("UPDATE sites SET legacy_time_on_page_cutoff = $1::date", [
+            Date.utc_today()
+          ])
         end,
         &pass/0
       )
