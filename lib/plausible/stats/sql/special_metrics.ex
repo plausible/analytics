@@ -201,6 +201,9 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     end
   end
 
+  # Selects exit_rate into the query, calculated as X / Y, where X is the
+  # total number of exits from a page (i.e. the number of sessions with a
+  # specific exit page), and Y is the total pageviews on that page.
   defp add_special_metric(q, :exit_rate, site, query) do
     total_pageviews_query =
       query
