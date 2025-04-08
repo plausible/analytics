@@ -1333,11 +1333,17 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "parsing invalid custom date range with invalid dates", %{site: site} do
+      %{"site_id" => site.domain, "date_range" => "-1d", "metrics" => ["visitors"]}
+      |> check_error(site, "#/date_range: Invalid date range \"-1d\"")
+
       %{"site_id" => site.domain, "date_range" => "foo", "metrics" => ["visitors"]}
       |> check_error(site, "#/date_range: Invalid date range \"foo\"")
 
       %{"site_id" => site.domain, "date_range" => ["21415-00", "eee"], "metrics" => ["visitors"]}
       |> check_error(site, "#/date_range: Invalid date range [\"21415-00\", \"eee\"]")
+
+      %{"site_id" => site.domain, "date_range" => "999999999mo", "metrics" => ["visitors"]}
+      |> check_error(site, "Invalid date_range \"999999999mo\"")
     end
 
     test "custom date range is invalid when timestamps do not include timezone info", %{

@@ -256,7 +256,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
         {:ok, DateTimeRange.new!(first, last, site.timezone)}
 
       _ ->
-        {:error, "Invalid date_range '#{i(shorthand)}'."}
+        {:error, "Invalid date_range #{i(shorthand)}"}
     end
   end
 
@@ -268,7 +268,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_time_range(_site, unknown, _date, _now),
-    do: {:error, "Invalid date_range '#{i(unknown)}'."}
+    do: {:error, "Invalid date_range #{i(unknown)}"}
 
   defp date_range_from_date_strings(site, from, to) do
     with {:ok, from_date} <- Date.from_iso8601(from),
