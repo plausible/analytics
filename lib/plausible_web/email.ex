@@ -365,8 +365,7 @@ defmodule PlausibleWeb.Email do
         inviter_email,
         team,
         site,
-        initiator_as_editor?,
-        initiator_as_guest?
+        initiator_as_guest_editor?
       ) do
     priority_email()
     |> to(inviter_email)
@@ -378,8 +377,7 @@ defmodule PlausibleWeb.Email do
       new_owner_email: new_owner_email,
       team: team,
       site: site,
-      initiator_as_editor?: initiator_as_editor?,
-      initiator_as_guest?: initiator_as_guest?
+      initiator_as_guest_editor?: initiator_as_guest_editor?
     )
   end
 
