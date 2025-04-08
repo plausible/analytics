@@ -27,8 +27,6 @@ defmodule Plausible.Billing.QuotaTest do
     @v3_business_plan_id "857481"
 
     describe "site_limit/1" do
-      @describetag :ee_only
-
       test "returns 50 when user is on an old plan" do
         team_on_v1 = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
         team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
