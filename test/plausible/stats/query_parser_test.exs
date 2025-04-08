@@ -1801,7 +1801,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "exit_rate metric" do
-    test "fails validation on its own", %{site: site} do
+    test "fails validation without visit:exit_page dimension", %{site: site} do
       %{
         "site_id" => site.domain,
         "metrics" => ["exit_rate"],
@@ -1843,7 +1843,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    test "passing validation", %{site: site} do
+    test "passes validation", %{site: site} do
       %{
         "site_id" => site.domain,
         "metrics" => ["exit_rate"],
