@@ -59,19 +59,21 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
       opts = Keyword.put(opts, :flush_interval_ms, 10)
 
-      expect(Plausible.HTTPClient.Mock, :post, fn "https://www.googleapis.com/oauth2/v4/token",
-                                                  headers,
-                                                  body ->
-        assert [{"content-type", "application/x-www-form-urlencoded"}] == headers
+      for _ <- Enum.take(@full_report_mock, 10) do
+        expect(Plausible.HTTPClient.Mock, :post, fn "https://www.googleapis.com/oauth2/v4/token",
+                                                    headers,
+                                                    body ->
+          assert [{"content-type", "application/x-www-form-urlencoded"}] == headers
 
-        assert %{
-                 grant_type: :refresh_token,
-                 redirect_uri: "http://localhost:8000/auth/google/callback",
-                 refresh_token: "redacted_refresh_token"
-               } = body
+          assert %{
+                   grant_type: :refresh_token,
+                   redirect_uri: "http://localhost:8000/auth/google/callback",
+                   refresh_token: "redacted_refresh_token"
+                 } = body
 
-        {:ok, %Finch.Response{status: 200, body: @refresh_token_body}}
-      end)
+          {:ok, %Finch.Response{status: 200, body: @refresh_token_body}}
+        end)
+      end
 
       for report <- @full_report_mock do
         expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
