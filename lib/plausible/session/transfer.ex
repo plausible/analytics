@@ -104,10 +104,10 @@ defmodule Plausible.Session.Transfer do
           []
         end
 
-      {:send, cache} ->
+      {:get, cache} ->
         Plausible.Cache.Adapter.cache2list(cache)
 
-      :took ->
+      :done ->
         :counters.add(given_counter, 1, 1)
     end
   end
@@ -128,11 +128,11 @@ defmodule Plausible.Session.Transfer do
       Task.await_many(tasks, :timer.seconds(10))
     end
   after
-    TinySock.call(sock, :took)
+    TinySock.call(sock, :done)
   end
 
   defp take_ets(sock, cache) do
-    with {:ok, records} <- TinySock.call(sock, {:send, cache}) do
+    with {:ok, records} <- TinySock.call(sock, {:get, cache}) do
       Enum.each(records, fn record ->
         {key, %Plausible.ClickhouseSessionV2{} = session} = record
         Plausible.Cache.Adapter.put(:sessions, key, session)
