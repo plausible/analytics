@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 - Make Stats and Sites API keys scoped to teams they are created in
 - Remove permissions to manage sites guests and run destructive actions from team editor and guest editor roles in favour of team admin role
 - Time-on-page metric has been reworked. It now uses `engagement` events sent by plausible tracker script. We still use the old calculation methods for periods before the self-hosted instance was upgraded. Warnings are shown in the dashboard and API when legacy calculation methods are used.
+- Stats API now supports more `date_range` shorthand options like `30d`, `3mo`.
 
 ### Fixed
 
