@@ -29,52 +29,6 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     end)
   end
 
-  defp add_special_metric(q, :exit_rate, site, query) do
-    total_pageviews_query =
-      query
-      |> Query.remove_top_level_filters(["visit:exit_page"])
-      |> remove_filters_ignored_in_totals_query()
-      |> Query.set(
-        pagination: nil,
-        order_by: [],
-        metrics: [:pageviews],
-        include_imported: query.include_imported,
-        dimensions: ["event:page"]
-      )
-
-    joined_q =
-      q
-      |> join(:left, [..., s], p in subquery(SQL.QueryBuilder.build(total_pageviews_query, site)),
-        on:
-          selected_as(^shortname(query, "visit:exit_page")) ==
-            field(p, ^shortname(total_pageviews_query, "event:page"))
-      )
-
-    if query.include_imported do
-      joined_q
-      |> select_merge_as([_s, _i, p], %{
-        exit_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
-            p.pageviews,
-            selected_as(:__internal_visits),
-            p.pageviews
-          )
-      })
-    else
-      joined_q
-      |> select_merge_as([_s, p], %{
-        exit_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
-            fragment("any(?)", p.pageviews),
-            selected_as(:__internal_visits),
-            fragment("any(?)", p.pageviews)
-          )
-      })
-    end
-  end
-
   defp add_special_metric(q, :percentage, site, query) do
     total_query =
       query
@@ -242,6 +196,52 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
             s.total_scroll_depth_visits,
             s.total_scroll_depth,
             s.total_scroll_depth_visits
+          )
+      })
+    end
+  end
+
+  defp add_special_metric(q, :exit_rate, site, query) do
+    total_pageviews_query =
+      query
+      |> Query.remove_top_level_filters(["visit:exit_page"])
+      |> remove_filters_ignored_in_totals_query()
+      |> Query.set(
+        pagination: nil,
+        order_by: [],
+        metrics: [:pageviews],
+        include_imported: query.include_imported,
+        dimensions: ["event:page"]
+      )
+
+    joined_q =
+      q
+      |> join(:left, [..., s], p in subquery(SQL.QueryBuilder.build(total_pageviews_query, site)),
+        on:
+          selected_as(^shortname(query, "visit:exit_page")) ==
+            field(p, ^shortname(total_pageviews_query, "event:page"))
+      )
+
+    if query.include_imported do
+      joined_q
+      |> select_merge_as([_s, _i, p], %{
+        exit_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            p.pageviews,
+            selected_as(:__internal_visits),
+            p.pageviews
+          )
+      })
+    else
+      joined_q
+      |> select_merge_as([_s, p], %{
+        exit_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            fragment("any(?)", p.pageviews),
+            selected_as(:__internal_visits),
+            fragment("any(?)", p.pageviews)
           )
       })
     end
