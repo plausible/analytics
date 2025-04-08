@@ -456,6 +456,22 @@ defmodule Plausible.Ingestion.RequestTest do
     assert {:error, _} = exceeding_read_limit
   end
 
+  test "respects interactive parameter" do
+    params = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      interactive: false
+    }
+
+    assert {:ok, request} =
+             build_conn(:post, "/api/events", params)
+             |> put_req_header("user-agent", "Mozilla")
+             |> Request.build()
+
+    refute request.interactive?
+  end
+
   @tag :ee_only
   test "encodable" do
     params = %{
@@ -494,7 +510,8 @@ defmodule Plausible.Ingestion.RequestTest do
              "ip_classification" => nil,
              "scroll_depth" => nil,
              "engagement_time" => nil,
-             "tracker_script_version" => 0
+             "tracker_script_version" => 0,
+             "interactive?" => true
            }
 
     assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])

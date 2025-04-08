@@ -55,6 +55,7 @@ defmodule Plausible.Ingestion.Request do
     field :scroll_depth, :integer
     field :engagement_time, :integer
     field :tracker_script_version, :integer, default: 0
+    field :interactive?, :boolean, default: true
 
     on_ee do
       field :revenue_source, :map
@@ -95,6 +96,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_pathname()
         |> put_query_params()
         |> put_revenue_source(request_body)
+        |> put_interactive(request_body)
         |> put_tracker_script_version(request_body)
         |> map_domains(request_body)
         |> Changeset.validate_required([
@@ -231,6 +233,15 @@ defmodule Plausible.Ingestion.Request do
     changeset
     |> Changeset.put_change(:props, props)
     |> validate_props()
+  end
+
+  defp put_interactive(changeset, %{} = request_body) do
+    with interative? when is_boolean(interative?) <-
+           request_body["i"] || request_body["interactive"] do
+      Changeset.put_change(changeset, :interactive?, interative?)
+    else
+      _ -> changeset
+    end
   end
 
   defp filter_bad_props({k, v}, acc) do
