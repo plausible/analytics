@@ -182,7 +182,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def top_stats(conn, params) do
     site = conn.assigns[:site]
-    current_user = conn.assigns[:current_user]
 
     params = realtime_period_to_30m(params)
 
@@ -196,7 +195,7 @@ defmodule PlausibleWeb.Api.StatsController do
       meta: meta,
       sample_percent: sample_percent,
       graphable_metrics: graphable_metrics
-    } = fetch_top_stats(site, query, current_user)
+    } = fetch_top_stats(site, query)
 
     comparison_query = comparison_query(query)
 
@@ -277,7 +276,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp fetch_top_stats(site, query, current_user) do
+  defp fetch_top_stats(site, query) do
     goal_filter? =
       toplevel_goal_filter?(query)
 
@@ -292,7 +291,7 @@ defmodule PlausibleWeb.Api.StatsController do
         fetch_goal_top_stats(site, query)
 
       true ->
-        fetch_other_top_stats(site, query, current_user)
+        fetch_other_top_stats(site, query)
     end
   end
 
@@ -393,7 +392,7 @@ defmodule PlausibleWeb.Api.StatsController do
     %{top_stats: top_stats, meta: meta, graphable_metrics: metrics, sample_percent: 100}
   end
 
-  defp fetch_other_top_stats(site, query, current_user) do
+  defp fetch_other_top_stats(site, query) do
     page_filter? =
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore)
 
@@ -437,7 +436,7 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats: top_stats,
       meta: meta,
       graphable_metrics:
-        if(TimeOnPage.new_time_on_page_enabled?(site, current_user),
+        if(TimeOnPage.new_time_on_page_visible?(site),
           do: metrics,
           else: metrics -- [:time_on_page]
         ),
@@ -777,7 +776,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     is_admin =
       if current_user = conn.assigns[:current_user] do
-        Plausible.Teams.Memberships.has_admin_access?(site, current_user)
+        Plausible.Teams.Memberships.has_editor_access?(site, current_user)
       else
         false
       end

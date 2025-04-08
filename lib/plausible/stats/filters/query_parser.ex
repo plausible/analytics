@@ -656,6 +656,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_metric(:time_on_page = metric, query) do
+    cond do
+      Enum.member?(query.dimensions, "event:page") ->
+        :ok
+
+      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) ->
+        :ok
+
+      true ->
+        {:error, "Metric `#{metric}` can only be queried with event:page filters or dimensions."}
+    end
+  end
+
   defp validate_metric(_, _), do: :ok
 
   defp validate_include(query) do

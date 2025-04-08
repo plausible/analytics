@@ -70,7 +70,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       [owner, inviter, invitee] = for _ <- 1..3, do: new_user()
 
       site = new_site(owner: owner)
-      inviter = add_guest(site, user: inviter, role: :editor)
+      inviter = add_member(site.team, user: inviter, role: :admin)
       for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       assert {:error, {:over_limit, 3}} =
@@ -130,7 +130,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       )
     end
 
-    test "admin initiate ownership transfer too" do
+    test "admin can initiate ownership transfer too" do
       inviter = new_user()
       site = new_site()
       add_member(site.team, user: inviter, role: :admin)
@@ -182,16 +182,16 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       inviter = new_user()
       owner = new_user()
       site = new_site(owner: owner)
-      add_guest(site, user: inviter, role: :viewer)
+      add_member(site.team, user: inviter, role: :viewer)
 
       assert {:error, :forbidden} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
     end
 
-    test "allows admins to invite other admins" do
+    test "allows admins to invite editors" do
       inviter = new_user()
       site = new_site()
-      add_guest(site, user: inviter, role: :editor)
+      add_member(site.team, user: inviter, role: :admin)
 
       assert {:ok, %Plausible.Teams.GuestInvitation{}} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :editor)
