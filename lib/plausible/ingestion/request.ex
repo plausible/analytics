@@ -236,11 +236,12 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_interactive(changeset, %{} = request_body) do
-    with interative? when is_boolean(interative?) <-
-           request_body["i"] || request_body["interactive"] do
-      Changeset.put_change(changeset, :interactive?, interative?)
-    else
-      _ -> changeset
+    case request_body["i"] || request_body["interactive"] do
+      interactive? when is_boolean(interactive?) ->
+        Changeset.put_change(changeset, :interactive?, interactive?)
+
+      _ ->
+        changeset
     end
   end
 
