@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Introduce "editor" role with permissions greater than "viewer" but lesser than "admin"
 - Support behavioral filters `has_done` and `has_not_done` on the Stats API to allow filtering sessions by other events that have been completed.
 - `time_on_page` metric is now graphable, sortable on the dashboard, and available in the Stats API and CSV and GA4 exports/imports
+- Custom events can now be marked as non-interactive in events API and tracker script. Events marked as non-interactive are not counted towards bounce rate.
 
 ### Removed
 
@@ -47,6 +48,7 @@ All notable changes to this project will be documented in this file.
 - Remove permissions to manage sites guests and run destructive actions from team editor and guest editor roles in favour of team admin role
 - Time-on-page metric has been reworked. It now uses `engagement` events sent by plausible tracker script. We still use the old calculation methods for periods before the self-hosted instance was upgraded. Warnings are shown in the dashboard and API when legacy calculation methods are used.
 - Always set site and team member limits to unlimited for Community Edition
+- A session is now marked as a bounce if it has less than 2 pageviews and no interactive custom events.
 
 ### Fixed
 
