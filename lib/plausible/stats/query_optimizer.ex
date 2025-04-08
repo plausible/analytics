@@ -4,7 +4,17 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time, Legacy}
+
+  alias Plausible.Stats.{
+    DateTimeRange,
+    Filters,
+    Query,
+    TableDecider,
+    TimeOnPage,
+    Util,
+    Time,
+    Legacy
+  }
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -188,28 +198,37 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp set_time_on_page_data(query) do
-    if :time_on_page in query.metrics and query.include.legacy_time_on_page_cutoff do
-      {:ok, cutoff, _} =
-        query.include.legacy_time_on_page_cutoff
-        |> DateTime.from_iso8601()
+    case {:time_on_page in query.metrics, query.time_on_page_data} do
+      {true, %{new_metric_visible: true, cutoff_date: cutoff_date}} ->
+        cutoff =
+          cutoff_date
+          |> TimeOnPage.cutoff_datetime(query.timezone)
+          |> DateTime.shift_zone!("Etc/UTC")
+          |> DateTime.truncate(:second)
 
-      cutoff =
-        cutoff
-        |> DateTime.shift_zone!("Etc/UTC")
-        |> DateTime.truncate(:second)
+        Query.set(
+          query,
+          time_on_page_data:
+            Map.merge(query.time_on_page_data, %{
+              include_new_metric: DateTime.before?(cutoff, query.utc_time_range.last),
+              include_legacy_metric:
+                DateTime.after?(cutoff, query.utc_time_range.first) and
+                  Legacy.TimeOnPage.can_merge_legacy_time_on_page?(query),
+              cutoff:
+                if(DateTime.after?(cutoff, query.utc_time_range.first), do: cutoff, else: nil)
+            })
+        )
 
-      Query.set(
-        query,
-        time_on_page_data: %{
-          include_new_metric: DateTime.before?(cutoff, query.utc_time_range.last),
-          include_legacy_metric:
-            DateTime.after?(cutoff, query.utc_time_range.first) and
-              Legacy.TimeOnPage.can_merge_legacy_time_on_page?(query),
-          cutoff: if(DateTime.after?(cutoff, query.utc_time_range.first), do: cutoff, else: nil)
-        }
-      )
-    else
-      query
+      _ ->
+        Query.set(
+          query,
+          time_on_page_data:
+            Map.merge(query.time_on_page_data, %{
+              include_new_metric: false,
+              include_legacy_metric: true,
+              cutoff: nil
+            })
+        )
     end
   end
 end

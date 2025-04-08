@@ -3,6 +3,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
 
   setup [:create_user, :create_site, :create_api_key, :use_api_key, :create_site_import]
 
+  setup %{site: site} = context do
+    FunWithFlags.enable(:new_time_on_page, for_actor: site)
+
+    context
+  end
+
   test "aggregated time_on_page metric based on engagement data", %{
     conn: conn,
     site: site
@@ -162,7 +168,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
                    } = json_response(conn, 200)
   end
 
-  describe "include.legacy_time_on_page_cutoff" do
+  describe "site.legacy_time_on_page_cutoff" do
     setup %{site: site, site_import: site_import} = context do
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 12, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
@@ -223,6 +229,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn: conn,
       site: site
     } do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[1970-01-01])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
@@ -230,7 +238,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
-            "legacy_time_on_page_cutoff" => "1970-01-01T00:00:00Z",
             "imports" => true
           }
         })
@@ -250,6 +257,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     end
 
     test "breakdown with cutoff being after data (legacy query used)", %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-05])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
@@ -257,7 +266,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
-            "legacy_time_on_page_cutoff" => "2021-01-05T00:00:00Z",
             "imports" => true
           }
         })
@@ -283,6 +291,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     end
 
     test "breakdown with cutoff being mid-data (two queries joined)", %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
@@ -290,7 +300,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
-            "legacy_time_on_page_cutoff" => "2021-01-02T00:00:00Z",
             "imports" => true
           }
         })
@@ -319,15 +328,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn: conn,
       site: site
     } do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
-          "dimensions" => ["event:page"],
-          "include" => %{
-            "legacy_time_on_page_cutoff" => "2021-01-02T00:00:00Z"
-          }
+          "dimensions" => ["event:page"]
         })
 
       assert_matches %{
@@ -350,6 +358,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     end
 
     test "aggregation with cutoff being after data (legacy query used)", %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-05])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
@@ -357,7 +367,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/blog"]]],
           "include" => %{
-            "legacy_time_on_page_cutoff" => "2021-01-05T00:00:00Z",
             "imports" => true
           }
         })
@@ -381,6 +390,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     end
 
     test "aggregation with cutoff being mid-data (two queries joined)", %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
@@ -388,7 +399,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/blog"]]],
           "include" => %{
-            "legacy_time_on_page_cutoff" => "2021-01-02T00:00:00Z",
             "imports" => true
           }
         })
@@ -415,15 +425,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn: conn,
       site: site
     } do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => "all",
-          "filters" => [["is", "event:page", ["/blog"]]],
-          "include" => %{
-            "legacy_time_on_page_cutoff" => "2021-01-02T00:00:00Z"
-          }
+          "filters" => [["is", "event:page", ["/blog"]]]
         })
 
       assert_matches %{
@@ -446,6 +455,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
 
   describe "legacy time_on_page metric" do
     test "aggregated", %{conn: conn, site: site, site_import: site_import} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2100-01-01])
+
       populate_stats(site, site_import.id, [
         build(:pageview, pathname: "/A", user_id: 111, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, pathname: "/B", user_id: 111, timestamp: ~N[2021-01-01 00:01:00]),
@@ -463,8 +474,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "filters" => [["is", "event:page", ["/A"]]],
           "include" => %{
-            "imports" => true,
-            "legacy_time_on_page_cutoff" => "2100-01-01T00:00:00Z"
+            "imports" => true
           }
         })
 
@@ -474,6 +484,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     end
 
     test "breakdown", %{conn: conn, site: site, site_import: site_import} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2100-01-01])
+
       populate_stats(site, site_import.id, [
         build(:pageview, pathname: "/A", user_id: 111, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, pathname: "/B", user_id: 111, timestamp: ~N[2021-01-01 00:01:00]),
@@ -491,8 +503,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "include" => %{
-            "imports" => true,
-            "legacy_time_on_page_cutoff" => "2100-01-01T00:00:00Z"
+            "imports" => true
           }
         })
 
@@ -566,14 +577,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     end
 
     test "reports legacy time-on-page as nulls per day", %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2100-01-01])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => ["2021-01-01", "2021-01-04"],
           "filters" => [["is", "event:page", ["/"]]],
-          "dimensions" => ["time:day"],
-          "include" => %{"legacy_time_on_page_cutoff" => "2100-01-01T00:00:00Z"}
+          "dimensions" => ["time:day"]
         })
 
       assert json_response(conn, 200)["results"] == [
@@ -585,14 +597,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
     end
 
     test "respects `legacy_time_on_page_cutoff`", %{conn: conn, site: site} do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-03])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
           "metrics" => ["time_on_page"],
           "date_range" => ["2021-01-01", "2021-01-04"],
           "filters" => [["is", "event:page", ["/"]]],
-          "dimensions" => ["time:day"],
-          "include" => %{"legacy_time_on_page_cutoff" => "2021-01-02T23:59:59Z"}
+          "dimensions" => ["time:day"]
         })
 
       assert json_response(conn, 200)["results"] == [
@@ -607,6 +620,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
       conn: conn,
       site: site
     } do
+      site = Plausible.Sites.update_legacy_time_on_page_cutoff!(site, ~D[2021-01-02])
+
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
@@ -615,7 +630,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTimeOnPageTest do
           "filters" => [["is", "event:page", ["/"]]],
           "dimensions" => ["time:day"],
           "include" => %{
-            "legacy_time_on_page_cutoff" => "2021-01-01T23:59:59Z",
             "comparisons" => %{"mode" => "previous_period"}
           }
         })
