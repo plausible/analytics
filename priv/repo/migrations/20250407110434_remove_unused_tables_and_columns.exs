@@ -12,11 +12,8 @@ defmodule Plausible.Repo.Migrations.RemoveUnusedTablesAndColumns do
         remove :allow_next_upgrade_override
       end
 
-      drop constraint(:sites, "sites_team_id_fkey")
-
       alter table(:sites) do
         remove :accept_traffic_until
-        modify :team_id, references(:teams, on_delete: :delete_all)
       end
 
       alter table(:api_keys) do
