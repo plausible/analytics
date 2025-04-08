@@ -11,18 +11,25 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   import Ecto.Query
   import Plausible.Stats.Util
 
+  @special_metrics [
+    :percentage,
+    :conversion_rate,
+    :group_conversion_rate,
+    :scroll_depth,
+    :exit_rate
+  ]
+
   def add(q, site, query) do
-    Enum.reduce(query.metrics, q, fn
-      :exit_rate, q -> add_exit_rate(q, query, site)
-      :percentage, q -> add_percentage_metric(q, site, query)
-      :conversion_rate, q -> add_global_conversion_rate(q, site, query)
-      :group_conversion_rate, q -> add_group_conversion_rate(q, site, query)
-      :scroll_depth, q -> add_scroll_depth(q, query)
-      _, q -> q
+    Enum.reduce(@special_metrics, q, fn special_metric, q ->
+      if special_metric in query.metrics do
+        add_special_metric(q, special_metric, site, query)
+      else
+        q
+      end
     end)
   end
 
-  defp add_exit_rate(q, query, site) do
+  defp add_special_metric(q, :exit_rate, site, query) do
     total_pageviews_query =
       query
       |> Query.remove_top_level_filters(["visit:exit_page"])
@@ -68,7 +75,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     end
   end
 
-  defp add_percentage_metric(q, site, query) do
+  defp add_special_metric(q, :percentage, site, query) do
     total_query =
       query
       |> remove_filters_ignored_in_totals_query()
@@ -94,7 +101,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   # Adds conversion_rate metric to query, calculated as
   # X / Y where Y is the same breakdown value without goal or props
   # filters.
-  def add_global_conversion_rate(q, site, query) do
+  defp add_special_metric(q, :conversion_rate, site, query) do
     total_query =
       query
       |> Query.remove_top_level_filters(["event:goal", "event:props"])
@@ -133,7 +140,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   #  * Y is the number of all visitors for this set of dimensions
   #    result without the `event:goal` and `event:props:*`
   #    filters.
-  def add_group_conversion_rate(q, site, query) do
+  defp add_special_metric(q, :group_conversion_rate, site, query) do
     group_totals_query =
       query
       |> Query.remove_top_level_filters(["event:goal", "event:props"])
@@ -164,7 +171,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     |> select_join_fields(query, List.delete(query.metrics, :group_conversion_rate), e)
   end
 
-  def add_scroll_depth(q, query) do
+  defp add_special_metric(q, :scroll_depth, _site, query) do
     max_per_session_q =
       Base.base_event_query(query)
       |> where([e], e.name == "engagement" and e.scroll_depth <= 100)
