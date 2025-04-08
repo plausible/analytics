@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input name="my-input" errors={["oh no!"]} />
   """
 
-  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-900 block pl-3.5 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+  @default_input_class "text-sm text-gray-900 dark:text-white dark:bg-gray-900 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
 
   attr(:id, :any, default: nil)
   attr(:name, :any)
@@ -380,7 +380,7 @@ defmodule PlausibleWeb.Live.Components.Form do
     assigns = assign(assigns, :options, options)
 
     ~H"""
-    <.form for={@conn} class="lg:hidden">
+    <.form for={@conn} class="lg:hidden py-4">
       <.input
         value={
           @options
@@ -396,7 +396,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         type="select"
         options={@options}
         onchange={"if (event.target.value) { location.href = '#{@href_base}' + event.target.value }"}
-        class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
+        class="dark:bg-gray-800 mt-1 block w-full pl-3.5 pr-10 py-2.5 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100"
       />
     </.form>
     """

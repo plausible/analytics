@@ -63,14 +63,30 @@ defmodule Plausible.Cache.Stats do
   end
 
   def hit_rate(cache_name) do
-    hit = :ets.lookup_element(__MODULE__, {cache_name, @hit}, 2, 0)
-    miss = :ets.lookup_element(__MODULE__, {cache_name, @miss}, 2, 0)
-    hit_miss = hit + miss
+    cache_name
+    |> Plausible.Cache.Adapter.get_names()
+    |> Enum.reduce(
+      %{hit: 0, miss: 0, hit_miss: 0.0},
+      fn name, acc ->
+        hit =
+          acc.hit + :ets.lookup_element(__MODULE__, {name, @hit}, 2, 0)
 
-    if hit_miss == 0 do
-      0.0
-    else
-      hit / hit_miss * 100
-    end
+        miss =
+          acc.miss + :ets.lookup_element(__MODULE__, {name, @miss}, 2, 0)
+
+        hit_miss = hit + miss
+
+        hit_miss = if(hit_miss == 0, do: 0.0, else: hit / hit_miss * 100)
+
+        acc
+        |> Map.put(:hit, hit)
+        |> Map.put(:miss, miss)
+        |> Map.put(
+          :hit_miss,
+          hit_miss
+        )
+      end
+    )
+    |> Map.fetch!(:hit_miss)
   end
 end

@@ -7,7 +7,10 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   describe "GET /api/stats/:domain/conversions" do
     setup [:create_user, :log_in, :create_site]
 
-    test "returns mixed conversions in ordered by count", %{conn: conn, site: site} do
+    test "returns mixed pageview and custom event goal conversions ordered by count", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/"),
@@ -25,7 +28,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           name: "Signup",
           "meta.key": ["variant"],
           "meta.value": ["B"]
-        )
+        ),
+        build(:event, name: "Signup")
       ])
 
       insert(:goal, %{site: site, page_path: "/register"})
@@ -36,15 +40,107 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Signup",
-                 "visitors" => 2,
-                 "events" => 3,
-                 "conversion_rate" => 33.3
+                 "visitors" => 3,
+                 "events" => 4,
+                 "conversion_rate" => 42.86
                },
                %{
                  "name" => "Visit /register",
                  "visitors" => 2,
                  "events" => 2,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 28.57
+               }
+             ]
+    end
+
+    test "returns page scroll goals ordered by count", %{conn: conn, site: site} do
+      populate_stats(site, [
+        # user 1: /blog -> /another -> blog/posts/1
+        build(:pageview, user_id: 1, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:01:00],
+          scroll_depth: 20
+        ),
+        build(:pageview, user_id: 1, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/another",
+          timestamp: ~N[2020-01-01 00:02:00],
+          scroll_depth: 100
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/blog/posts/1",
+          timestamp: ~N[2020-01-01 00:02:00]
+        ),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/blog/posts/1",
+          timestamp: ~N[2020-01-01 00:03:00],
+          scroll_depth: 55
+        ),
+        # user 2: /blog -> /blog/posts/1 -> /blog/posts/2
+        build(:pageview, user_id: 2, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
+        build(:engagement,
+          user_id: 2,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:01:00],
+          scroll_depth: 60
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/blog/posts/1",
+          timestamp: ~N[2020-01-01 00:02:00]
+        ),
+        build(:engagement,
+          user_id: 2,
+          pathname: "/blog/posts/1",
+          timestamp: ~N[2020-01-01 00:03:00],
+          scroll_depth: 100
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/blog/posts/2",
+          timestamp: ~N[2020-01-01 00:02:00]
+        ),
+        build(:engagement,
+          user_id: 2,
+          pathname: "/blog/posts/2",
+          timestamp: ~N[2020-01-01 00:03:00],
+          scroll_depth: 100
+        )
+      ])
+
+      insert(:goal, %{
+        site: site,
+        page_path: "/blog/**",
+        scroll_threshold: 50,
+        display_name: "Scroll 50 /blog/**"
+      })
+
+      insert(:goal, %{
+        site: site,
+        page_path: "/blog/posts/1",
+        scroll_threshold: 75,
+        display_name: "Scroll 75 /blog/posts/1"
+      })
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&date=2020-01-01")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Scroll 50 /blog/**",
+                 "visitors" => 2,
+                 "events" => nil,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "name" => "Scroll 75 /blog/posts/1",
+                 "visitors" => 1,
+                 "events" => nil,
+                 "conversion_rate" => 50.0
                }
              ]
     end
@@ -85,7 +181,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 1,
                  "events" => 2,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                }
              ]
     end
@@ -125,7 +221,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 2,
                  "events" => 2,
-                 "conversion_rate" => 66.7
+                 "conversion_rate" => 66.67
                }
              ]
     end
@@ -163,7 +259,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 2,
                  "events" => 3,
-                 "conversion_rate" => 66.7
+                 "conversion_rate" => 66.67
                }
              ]
     end
@@ -203,7 +299,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 2,
                  "events" => 3,
-                 "conversion_rate" => 66.7
+                 "conversion_rate" => 66.67
                }
              ]
     end
@@ -257,13 +353,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 1,
                  "events" => 2,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                },
                %{
                  "name" => "Visit /register",
                  "visitors" => 1,
                  "events" => 1,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                }
              ]
     end
@@ -398,7 +494,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                    "value" => 10.0,
                    "currency" => "EUR"
                  },
-                 "conversion_rate" => 16.7,
+                 "conversion_rate" => 16.67,
                  "name" => "Payment",
                  "events" => 1,
                  "total_revenue" => %{
@@ -411,7 +507,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                },
                %{
                  "average_revenue" => nil,
-                 "conversion_rate" => 33.3,
+                 "conversion_rate" => 33.33,
                  "name" => "Signup",
                  "events" => 2,
                  "total_revenue" => nil,
@@ -481,7 +577,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           "name" => "Signup",
           "visitors" => 1,
           "events" => 1,
-          "conversion_rate" => 33.3
+          "conversion_rate" => 33.33
         }
       ]
 
@@ -523,7 +619,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /register",
                  "visitors" => 1,
                  "events" => 1,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                }
              ]
     end
@@ -554,13 +650,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "visitors" => 2,
                  "events" => 2,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                },
                %{
                  "name" => "Visit /register",
                  "visitors" => 1,
                  "events" => 1,
-                 "conversion_rate" => 16.7
+                 "conversion_rate" => 16.67
                }
              ]
     end
@@ -588,13 +684,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /blog/**",
                  "visitors" => 2,
                  "events" => 2,
-                 "conversion_rate" => 66.7
+                 "conversion_rate" => 66.67
                },
                %{
                  "name" => "Visit /billing/upgrade",
                  "visitors" => 1,
                  "events" => 1,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                }
              ]
     end
@@ -626,13 +722,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /blog**",
                  "visitors" => 2,
                  "events" => 2,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                },
                %{
                  "name" => "Signup",
                  "visitors" => 1,
                  "events" => 1,
-                 "conversion_rate" => 16.7
+                 "conversion_rate" => 16.67
                }
              ]
     end
@@ -927,13 +1023,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Purchase",
                  "visitors" => 5,
                  "events" => 7,
-                 "conversion_rate" => 55.6
+                 "conversion_rate" => 55.56
                },
                %{
                  "name" => "Activation",
                  "visitors" => 3,
                  "events" => 5,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                }
              ] = json_response(conn, 200)["results"]
     end
@@ -1048,13 +1144,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /test",
                  "visitors" => 3,
                  "events" => 3,
-                 "conversion_rate" => 33.3
+                 "conversion_rate" => 33.33
                },
                %{
                  "name" => "Visit /blog",
                  "visitors" => 2,
                  "events" => 2,
-                 "conversion_rate" => 22.2
+                 "conversion_rate" => 22.22
                }
              ] = json_response(conn, 200)["results"]
     end

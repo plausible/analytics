@@ -1666,7 +1666,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/breakdown", %{
+        get(conn, "/api/v1/stats/breakdown?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors,pageviews",
           "property" => "event:goal"
@@ -2387,7 +2387,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/breakdown", %{
+        get(conn, "/api/v1/stats/breakdown?period=day", %{
           "site_id" => site.domain,
           "filters" => "visit:browser != Chrome",
           "property" => "visit:browser"
@@ -2526,11 +2526,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         )
 
       populate_stats(site, site_import.id, [
-        build(:imported_pages, page: "/A", time_on_page: 40, date: ~D[2021-01-01]),
-        build(:imported_pages, page: "/A", time_on_page: 110, date: ~D[2021-01-01]),
-        build(:imported_pages, page: "/B", time_on_page: 499, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/A", total_time_on_page: 40, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/A", total_time_on_page: 110, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/B", total_time_on_page: 499, date: ~D[2021-01-01]),
         build(:pageview, pathname: "/A", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00])
+        build(:engagement,
+          pathname: "/A",
+          user_id: 4,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
+        build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:engagement,
+          pathname: "/B",
+          user_id: 4,
+          timestamp: ~N[2021-01-01 00:01:10],
+          engagement_time: 5_000
+        )
       ])
 
       conn =
@@ -2548,12 +2560,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  %{
                    "page" => "/A",
                    "visitors" => 3,
-                   "time_on_page" => 70.0
+                   "time_on_page" => 70
                  },
                  %{
                    "page" => "/B",
                    "visitors" => 2,
-                   "time_on_page" => 499
+                   "time_on_page" => 252
                  }
                ]
              }
@@ -2565,8 +2577,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, pathname: "/B", timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, pathname: "/A", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          pathname: "/A",
+          user_id: 4,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00]),
-        build(:pageview, pathname: "/C", user_id: 4, timestamp: ~N[2021-01-01 00:02:30])
+        build(:engagement,
+          pathname: "/B",
+          user_id: 4,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 90_000
+        ),
+        build(:pageview, pathname: "/C", user_id: 4, timestamp: ~N[2021-01-01 00:02:30]),
+        build(:engagement,
+          pathname: "/C",
+          user_id: 4,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 3_000
+        )
       ])
 
       conn =
@@ -2583,42 +2613,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  %{
                    "page" => "/A",
                    "visitors" => 3,
-                   "time_on_page" => 60.0
+                   "time_on_page" => 60
                  },
                  %{
                    "page" => "/B",
                    "visitors" => 2,
-                   "time_on_page" => 90.0
+                   "time_on_page" => 90
                  },
                  %{
                    "page" => "/C",
                    "visitors" => 1,
-                   "time_on_page" => nil
+                   "time_on_page" => 3
                  }
-               ]
-             }
-    end
-
-    test "pageleave events are ignored when querying time on page", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:00], pathname: "/1"),
-        build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:05], pathname: "/2"),
-        build(:pageleave, user_id: 1234, timestamp: ~N[2021-01-01 12:01:00], pathname: "/1")
-      ])
-
-      conn =
-        get(conn, "/api/v1/stats/breakdown", %{
-          "site_id" => site.domain,
-          "property" => "event:page",
-          "metrics" => "time_on_page",
-          "period" => "day",
-          "date" => "2021-01-01"
-        })
-
-      assert json_response(conn, 200) == %{
-               "results" => [
-                 %{"page" => "/1", "time_on_page" => 5},
-                 %{"page" => "/2", "time_on_page" => nil}
                ]
              }
     end
@@ -2632,8 +2638,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, pathname: "/B", timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, pathname: "/A", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          pathname: "/A",
+          user_id: 4,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00]),
-        build(:pageview, pathname: "/C", user_id: 4, timestamp: ~N[2021-01-01 00:02:30])
+        build(:engagement,
+          pathname: "/B",
+          user_id: 4,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 90_000
+        ),
+        build(:pageview, pathname: "/C", user_id: 4, timestamp: ~N[2021-01-01 00:02:30]),
+        build(:engagement,
+          pathname: "/C",
+          user_id: 4,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 3_000
+        )
       ])
 
       conn =
@@ -2649,15 +2673,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                "results" => [
                  %{
                    "page" => "/A",
-                   "time_on_page" => 60.0
+                   "time_on_page" => 60
                  },
                  %{
                    "page" => "/B",
-                   "time_on_page" => 90.0
+                   "time_on_page" => 90
                  },
                  %{
                    "page" => "/C",
-                   "time_on_page" => nil
+                   "time_on_page" => 3
                  }
                ]
              }
@@ -2848,7 +2872,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "page" => "/en/register",
                    "visitors" => 2,
                    "events" => 2,
-                   "conversion_rate" => 66.7
+                   "conversion_rate" => 66.67
                  },
                  %{
                    "page" => "/it/register",
@@ -2923,7 +2947,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "device" => "Mobile",
                    "visitors" => 2,
                    "events" => 2,
-                   "conversion_rate" => 66.7
+                   "conversion_rate" => 66.67
                  },
                  %{
                    "device" => "Desktop",

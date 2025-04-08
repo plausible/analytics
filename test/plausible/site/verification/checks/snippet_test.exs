@@ -129,7 +129,7 @@ defmodule Plausible.Verification.Checks.SnippetTest do
 
   @valid_attributes """
   <head>
-  <script defer type="text/javascript" data-api="some" data-include="some" data-exclude="some" data-domain="example.com" src="http://my-domain.example.com/js/script.js"></script>
+  <script defer type="text/javascript" data-cfasync='false' data-api="some" data-include="some" data-exclude="some" data-domain="example.com" src="http://my-domain.example.com/js/script.js"></script>
   </head>
   """
 

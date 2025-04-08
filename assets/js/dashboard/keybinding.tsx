@@ -1,9 +1,9 @@
-/* @format */
-import React, { ReactNode, useCallback, useEffect } from 'react'
+import React, { ReactNode, RefObject, useCallback, useEffect } from 'react'
 import {
   AppNavigationTarget,
   useAppNavigate
 } from './navigation/use-app-navigate'
+import classNames from 'classnames'
 
 /**
  * Returns whether a keydown or keyup event should be ignored or not.
@@ -60,17 +60,21 @@ type KeyboardEventType = keyof Pick<
   'keyup' | 'keydown' | 'keypress'
 >
 
-export function Keybind({
-  keyboardKey,
-  type,
-  handler,
-  shouldIgnoreWhen = []
-}: {
+type KeybindOptions = {
   keyboardKey: string
   type: KeyboardEventType
   handler: (event: KeyboardEvent) => void
   shouldIgnoreWhen?: Array<(event: KeyboardEvent) => boolean>
-}) {
+  targetRef?: 'document' | RefObject<HTMLElement> | null
+}
+
+function useKeybind({
+  keyboardKey,
+  type,
+  handler,
+  shouldIgnoreWhen = [],
+  targetRef
+}: KeybindOptions) {
   const wrappedHandler = useCallback(
     (event: KeyboardEvent) => {
       if (isKeyPressed(event, { keyboardKey, shouldIgnoreWhen })) {
@@ -78,19 +82,30 @@ export function Keybind({
       }
     },
     [keyboardKey, handler, shouldIgnoreWhen]
-  )
+  ) as EventListener
 
   useEffect(() => {
-    const registerKeybind = () =>
-      document.addEventListener(type, wrappedHandler)
+    const element = targetRef === 'document' ? document : targetRef?.current
+    const registerKeybind = (t: HTMLElement | Document) =>
+      t.addEventListener(type, wrappedHandler)
 
-    const deregisterKeybind = () =>
-      document.removeEventListener(type, wrappedHandler)
+    const deregisterKeybind = (t: HTMLElement | Document) =>
+      t.removeEventListener(type, wrappedHandler)
 
-    registerKeybind()
+    if (element) {
+      registerKeybind(element)
+    }
 
-    return deregisterKeybind
-  }, [type, wrappedHandler])
+    return () => {
+      if (element) {
+        deregisterKeybind(element)
+      }
+    }
+  }, [targetRef, type, wrappedHandler])
+}
+
+export function Keybind(opts: KeybindOptions) {
+  useKeybind(opts)
 
   return null
 }
@@ -115,14 +130,55 @@ export function NavigateKeybind({
       type={type}
       handler={handler}
       shouldIgnoreWhen={[isModifierPressed, isTyping]}
+      targetRef="document"
     />
   )
 }
 
-export function KeybindHint({ children }: { children: ReactNode }) {
+export function KeybindHint({
+  children,
+  className
+}: {
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <kbd className="rounded border border-gray-200 dark:border-gray-600 px-2 font-mono font-normal text-xs text-gray-400">
+    <kbd
+      className={classNames(
+        'rounded border border-gray-200 dark:border-gray-600 px-2 font-mono font-normal text-xs text-gray-400',
+        className
+      )}
+    >
       {children}
     </kbd>
+  )
+}
+
+/**
+ * Rendering this component captures the Escape key on targetRef.current,
+ * blurring the element on Escape, and stopping the event from propagating.
+ * Needed to prevent other Escape handlers that may exist from running.
+ */
+export function BlurMenuButtonOnEscape({
+  targetRef: targetRef
+}: {
+  targetRef: RefObject<HTMLElement>
+}) {
+  return (
+    <Keybind
+      keyboardKey="Escape"
+      type="keyup"
+      handler={(event) => {
+        const t = event.target as HTMLElement | null
+        if (typeof t?.blur === 'function') {
+          if (t === targetRef.current) {
+            t.blur()
+            event.stopPropagation()
+          }
+        }
+      }}
+      targetRef={targetRef}
+      shouldIgnoreWhen={[isModifierPressed, isTyping]}
+    />
   )
 }

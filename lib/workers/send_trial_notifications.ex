@@ -14,34 +14,37 @@ defmodule Plausible.Workers.SendTrialNotifications do
     teams =
       Repo.all(
         from t in Teams.Team,
-          inner_join: o in assoc(t, :owner),
+          inner_join: o in assoc(t, :owners),
+          left_join: bm in assoc(t, :billing_members),
           left_join: s in assoc(t, :subscription),
           where: not is_nil(t.trial_expiry_date),
           where: is_nil(s.id),
           order_by: t.inserted_at,
-          preload: [owner: o]
+          preload: [owners: o, billing_members: bm]
       )
 
     for team <- teams do
+      recipients = team.owners ++ team.billing_members
+
       case Date.diff(team.trial_expiry_date, Date.utc_today()) do
         7 ->
           if Teams.has_active_sites?(team) do
-            send_one_week_reminder(team.owner)
+            send_one_week_reminder(recipients, team)
           end
 
         1 ->
           if Teams.has_active_sites?(team) do
-            send_tomorrow_reminder(team.owner, team)
+            send_tomorrow_reminder(recipients, team)
           end
 
         0 ->
           if Teams.has_active_sites?(team) do
-            send_today_reminder(team.owner, team)
+            send_today_reminder(recipients, team)
           end
 
         -1 ->
           if Teams.has_active_sites?(team) do
-            send_over_reminder(team.owner)
+            send_over_reminder(recipients, team)
           end
 
         _ ->
@@ -52,27 +55,37 @@ defmodule Plausible.Workers.SendTrialNotifications do
     :ok
   end
 
-  defp send_one_week_reminder(user) do
-    PlausibleWeb.Email.trial_one_week_reminder(user)
-    |> Plausible.Mailer.send()
+  defp send_one_week_reminder(users, team) do
+    for user <- users do
+      PlausibleWeb.Email.trial_one_week_reminder(user, team)
+      |> Plausible.Mailer.send()
+    end
   end
 
-  defp send_tomorrow_reminder(user, team) do
+  defp send_tomorrow_reminder(users, team) do
     usage = Plausible.Teams.Billing.usage_cycle(team, :last_30_days)
+    suggested_plan = Plausible.Billing.Plans.suggest(team, usage.total)
 
-    PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", usage)
-    |> Plausible.Mailer.send()
+    for user <- users do
+      PlausibleWeb.Email.trial_upgrade_email(user, team, "tomorrow", usage, suggested_plan)
+      |> Plausible.Mailer.send()
+    end
   end
 
-  defp send_today_reminder(user, team) do
+  defp send_today_reminder(users, team) do
     usage = Plausible.Teams.Billing.usage_cycle(team, :last_30_days)
+    suggested_plan = Plausible.Billing.Plans.suggest(team, usage.total)
 
-    PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
-    |> Plausible.Mailer.send()
+    for user <- users do
+      PlausibleWeb.Email.trial_upgrade_email(user, team, "today", usage, suggested_plan)
+      |> Plausible.Mailer.send()
+    end
   end
 
-  defp send_over_reminder(user) do
-    PlausibleWeb.Email.trial_over_email(user)
-    |> Plausible.Mailer.send()
+  defp send_over_reminder(users, team) do
+    for user <- users do
+      PlausibleWeb.Email.trial_over_email(user, team)
+      |> Plausible.Mailer.send()
+    end
   end
 end

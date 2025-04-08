@@ -13,6 +13,7 @@ defmodule Plausible.Stats.CurrentVisitors do
       from e in "events_v2",
         where: e.site_id == ^site.id,
         where: e.timestamp >= ^first_datetime,
+        where: e.name != "engagement",
         select: uniq(e.user_id)
     )
   end

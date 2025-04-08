@@ -75,7 +75,7 @@ defmodule Plausible.Sites do
     to: Plausible.Teams.Sites
 
   def list_people(site) do
-    owner_membership =
+    owner_memberships =
       from(
         tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
@@ -86,7 +86,7 @@ defmodule Plausible.Sites do
           role: tm.role
         }
       )
-      |> Repo.one!()
+      |> Repo.all()
 
     memberships =
       from(
@@ -96,22 +96,12 @@ defmodule Plausible.Sites do
         where: gm.site_id == ^site.id,
         select: %{
           user: u,
-          role:
-            fragment(
-              """
-              CASE
-              WHEN ? = 'editor' THEN 'admin'
-              ELSE ?
-              END
-              """,
-              gm.role,
-              gm.role
-            )
+          role: gm.role
         }
       )
       |> Repo.all()
 
-    memberships = [owner_membership | memberships]
+    memberships = owner_memberships ++ memberships
 
     invitations =
       from(
@@ -121,17 +111,7 @@ defmodule Plausible.Sites do
         select: %{
           invitation_id: gi.invitation_id,
           email: ti.email,
-          role:
-            fragment(
-              """
-              CASE
-              WHEN ? = 'editor' THEN 'admin'
-              ELSE ?
-              END
-              """,
-              gi.role,
-              gi.role
-            )
+          role: gi.role
         }
       )
       |> Repo.all()
@@ -151,28 +131,116 @@ defmodule Plausible.Sites do
     %{memberships: memberships, invitations: site_transfers ++ invitations}
   end
 
-  @spec for_user_query(Auth.User.t()) :: Ecto.Query.t()
-  def for_user_query(user) do
-    from(s in Site,
-      inner_join: t in assoc(s, :team),
-      inner_join: tm in assoc(t, :team_memberships),
-      left_join: gm in assoc(tm, :guest_memberships),
-      where: tm.user_id == ^user.id,
-      where: tm.role != :guest or gm.site_id == s.id,
-      order_by: [desc: s.id]
+  @spec list_guests_query(Site.t(), Keyword.t()) :: Ecto.Query.t()
+  def list_guests_query(site, opts \\ []) do
+    guest_memberships =
+      from(
+        gm in Teams.GuestMembership,
+        inner_join: tm in assoc(gm, :team_membership),
+        inner_join: u in assoc(tm, :user),
+        as: :user,
+        where: gm.site_id == ^site.id,
+        select: %{
+          id: gm.id,
+          inserted_at: gm.inserted_at,
+          email: u.email,
+          role: gm.role,
+          status: "accepted"
+        }
+      )
+
+    guest_memberships =
+      if email = opts[:email] do
+        guest_memberships |> where([user: u], u.email == ^email)
+      else
+        guest_memberships
+      end
+
+    guest_invitations =
+      from(
+        gi in Teams.GuestInvitation,
+        inner_join: ti in assoc(gi, :team_invitation),
+        as: :team_invitation,
+        where: gi.site_id == ^site.id,
+        select: %{
+          id: gi.id,
+          inserted_at: gi.inserted_at,
+          email: ti.email,
+          role: gi.role,
+          status: "invited"
+        }
+      )
+
+    guest_invitations =
+      if email = opts[:email] do
+        guest_invitations |> where([team_invitation: ti], ti.email == ^email)
+      else
+        guest_invitations
+      end
+
+    guests = union_all(guest_memberships, ^guest_invitations)
+
+    from(g in subquery(guests),
+      select: %{
+        id: g.id,
+        inserted_at: g.inserted_at,
+        email: g.email,
+        role: g.role,
+        status: g.status
+      },
+      order_by: [desc: g.inserted_at, desc: g.id]
     )
   end
 
-  def create(user, params) do
+  @spec for_user_query(Auth.User.t(), Teams.Team.t() | nil) :: Ecto.Query.t()
+  def for_user_query(user, team \\ nil) do
+    query =
+      from(s in Site,
+        as: :site,
+        inner_join: t in assoc(s, :team),
+        as: :team,
+        inner_join: tm in assoc(t, :team_memberships),
+        as: :team_memberships,
+        left_join: gm in assoc(tm, :guest_memberships),
+        as: :guest_memberships,
+        where: tm.user_id == ^user.id,
+        order_by: [desc: s.id]
+      )
+
+    if team do
+      where(
+        query,
+        [team_memberships: tm, guest_memberships: gm, site: s],
+        tm.role != :guest and tm.team_id == ^team.id
+      )
+    else
+      where(
+        query,
+        [team_memberships: tm, guest_memberships: gm, site: s],
+        tm.role != :guest or gm.site_id == s.id
+      )
+    end
+  end
+
+  def create(user, params, team \\ nil) do
     Ecto.Multi.new()
     |> Ecto.Multi.put(:site_changeset, Site.new(params))
     |> Ecto.Multi.run(:create_team, fn _repo, _context ->
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      cond do
+        team && Teams.Memberships.can_add_site?(team, user) ->
+          {:ok, Teams.with_subscription(team)}
 
-      {:ok, Plausible.Teams.with_subscription(team)}
+        is_nil(team) ->
+          with {:ok, team} <- Teams.get_or_create(user) do
+            {:ok, Teams.with_subscription(team)}
+          end
+
+        true ->
+          {:error, :permission_denied}
+      end
     end)
     |> Ecto.Multi.run(:ensure_can_add_new_site, fn _repo, %{create_team: team} ->
-      case Plausible.Teams.Billing.ensure_can_add_new_site(team) do
+      case Teams.Billing.ensure_can_add_new_site(team) do
         :ok -> {:ok, :proceed}
         error -> error
       end
@@ -231,11 +299,9 @@ defmodule Plausible.Sites do
   end
 
   def stats_start_date(%Site{} = site) do
-    site = Plausible.Imported.load_import_data(site)
-
     start_date =
       [
-        site.earliest_import_start_date,
+        Plausible.Imported.earliest_import_start_date(site),
         native_stats_start_date(site)
       ]
       |> Enum.reject(&is_nil/1)
@@ -286,6 +352,13 @@ defmodule Plausible.Sites do
     |> Repo.update!()
   end
 
+  def update_legacy_time_on_page_cutoff!(site, cutoff) do
+    site
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_change(:legacy_time_on_page_cutoff, cutoff)
+    |> Repo.update!()
+  end
+
   def has_goals?(site) do
     Repo.exists?(
       from(g in Plausible.Goal,
@@ -298,9 +371,7 @@ defmodule Plausible.Sites do
     locked
   end
 
-  def get_for_user!(user, domain, roles \\ [:owner, :admin, :viewer]) do
-    roles = translate_roles(roles)
-
+  def get_for_user!(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
     site =
       if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
         get_by_domain!(domain)
@@ -313,9 +384,7 @@ defmodule Plausible.Sites do
     Repo.preload(site, :team)
   end
 
-  def get_for_user(user, domain, roles \\ [:owner, :admin, :viewer]) do
-    roles = translate_roles(roles)
-
+  def get_for_user(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
     if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do
       get_by_domain(domain)
     else
@@ -323,13 +392,6 @@ defmodule Plausible.Sites do
       |> get_for_user_query(domain, List.delete(roles, :super_admin))
       |> Repo.one()
     end
-  end
-
-  defp translate_roles(roles) do
-    Enum.map(roles, fn
-      :admin -> :editor
-      role -> role
-    end)
   end
 
   defp get_for_user_query(user_id, domain, roles) do

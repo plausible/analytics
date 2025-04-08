@@ -56,16 +56,26 @@ defmodule Plausible.Goals do
           {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
   def update(goal, params) do
     changeset = Goal.changeset(goal, params)
-    site = Repo.preload(goal, :site).site
 
-    with :ok <- maybe_check_feature_access(site, changeset),
-         {:ok, goal} <- Repo.update(changeset) do
-      on_ee do
-        {:ok, Repo.preload(goal, :funnels)}
+    Repo.transaction(fn ->
+      site = Repo.preload(goal, :site).site
+
+      with :ok <- maybe_check_feature_access(site, changeset),
+           {:ok, updated_goal} <- Repo.update(changeset),
+           :ok <- Plausible.Segments.update_goal_in_segments(site, goal, updated_goal) do
+        on_ee do
+          Repo.preload(updated_goal, :funnels)
+        else
+          updated_goal
+        end
       else
-        {:ok, goal}
+        {:error, %Ecto.Changeset{} = changeset} ->
+          Repo.rollback(changeset)
+
+        {:error, :upgrade_required} ->
+          Repo.rollback(:upgrade_required)
       end
-    end
+    end)
   end
 
   def find_or_create(
@@ -131,7 +141,7 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
 
-    if opts[:preload_funnels?] == true and ee?() do
+    if ee?() and opts[:preload_funnels?] == true do
       from(g in query,
         left_join: assoc(g, :funnels),
         group_by: g.id,

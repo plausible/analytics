@@ -48,6 +48,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
       "Google Analytics import"
     ]
     |> Kernel.++(feature_benefits(plan))
+    |> Kernel.++(["Saved Segments"])
     |> Enum.filter(& &1)
   end
 
@@ -110,12 +111,12 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
   defp site_limit_benefit(%Plan{} = plan), do: "Up to #{plan.site_limit} sites"
 
   defp feature_benefits(%Plan{} = plan) do
-    Enum.map(plan.features, fn feature_mod ->
+    Enum.flat_map(plan.features, fn feature_mod ->
       case feature_mod.name() do
-        :goals -> "Goals and custom events"
-        :stats_api -> "Stats API (600 requests per hour)"
-        :revenue_goals -> "Ecommerce revenue attribution"
-        _ -> feature_mod.display_name()
+        :goals -> ["Goals and custom events"]
+        :stats_api -> ["Stats API (600 requests per hour)", "Looker Studio Connector"]
+        :revenue_goals -> ["Ecommerce revenue attribution"]
+        _ -> [feature_mod.display_name()]
       end
     end)
   end

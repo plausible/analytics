@@ -47,15 +47,21 @@ defmodule Plausible.Verification.Checks.Snippet do
     "defer",
     "data-api",
     "data-exclude",
-    "data-include"
+    "data-include",
+    "data-cfasync"
   ]
 
   defp unknown_attributes?(nodes) do
     Enum.any?(nodes, fn {_, attrs, _} ->
       Enum.any?(attrs, fn
-        {"type", "text/javascript"} -> false
-        {"event-" <> _, _} -> false
-        {key, _} -> key not in @known_attributes
+        {"type", "text/javascript"} ->
+          false
+
+        {"event-" <> _, _} ->
+          false
+
+        {key, _} ->
+          key not in @known_attributes
       end)
     end)
   end

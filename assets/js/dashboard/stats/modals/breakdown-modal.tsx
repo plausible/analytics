@@ -1,8 +1,5 @@
-/** @format */
-
 import React, { useState, ReactNode, useMemo } from 'react'
 
-import { FilterLink } from '../reports/list'
 import { useQueryContext } from '../../query-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
@@ -18,6 +15,8 @@ import { BreakdownResultMeta, DashboardQuery } from '../../query'
 import { ColumnConfiguraton } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
 import { useSiteContext } from '../../site-context'
+import { DrilldownLink, FilterInfo } from '../../components/drilldown-link'
+import { SharedReportProps } from '../reports/list'
 
 export type ReportInfo = {
   /** Title of the report to render on the top left. */
@@ -28,6 +27,14 @@ export type ReportInfo = {
   dimensionLabel: string
   /** What this report will be initially sorted by. @example ["visitors", "desc"] */
   defaultOrder?: Order
+}
+
+type BreakdownModalProps = {
+  /** Dimension and title of the breakdown. */
+  reportInfo: ReportInfo
+  /** Function that must return a new query that contains appropriate search filter for searchValue param. */
+  addSearchFilter?: (q: DashboardQuery, searchValue: string) => DashboardQuery
+  searchEnabled?: boolean
 }
 
 /**
@@ -48,35 +55,18 @@ export type ReportInfo = {
   @see usePaginatedGetAPI
 
 */
+
 export default function BreakdownModal<TListItem extends { name: string }>({
   reportInfo,
   metrics,
   renderIcon,
-  getExternalLinkURL,
+  getExternalLinkUrl,
   searchEnabled = true,
   afterFetchData,
   afterFetchNextPage,
   addSearchFilter,
   getFilterInfo
-}: {
-  /** Dimension and title of the breakdown. */
-  reportInfo: ReportInfo
-  /** Columns to show in the table. */
-  metrics: Metric[]
-  /** Function to make the cells in the first column drill down the dashboard. @see NameCell */
-  getFilterInfo: (listItem: TListItem) => unknown | null
-  /** Function to make the cells in the first column richer. @see NameCell */
-  renderIcon?: (listItem: TListItem) => ReactNode
-  /** Function to make the cells more interactive. @see NameCell */
-  getExternalLinkURL?: (listItem: TListItem) => string
-  /** Callback to allow parent to update itself, called with the API response for the first page. */
-  afterFetchData?: (response: { results: TListItem[] }) => void
-  /** Callback to allow parent to update itself, called with the API response of subsequent pages. */
-  afterFetchNextPage?: (response: { results: TListItem[] }) => void
-  /** Function that must return a new query that contains appropriate search filter for searchValue param. */
-  addSearchFilter?: (q: DashboardQuery, searchValue: string) => DashboardQuery
-  searchEnabled?: boolean
-}) {
+}: Omit<SharedReportProps<TListItem>, 'fetchData'> & BreakdownModalProps) {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const [meta, setMeta] = useState<BreakdownResultMeta | null>(null)
@@ -141,7 +131,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           <NameCell
             item={item}
             getFilterInfo={getFilterInfo}
-            getExternalLinkURL={getExternalLinkURL}
+            getExternalLinkUrl={getExternalLinkUrl}
             renderIcon={renderIcon}
           />
         )
@@ -152,6 +142,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           key: m.key,
           width: m.width,
           align: 'right',
+          metricWarning: getMetricWarning(m, meta),
           renderValue: (item) => m.renderValue(item, meta),
           onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
           sortDirection: orderByDictionary[m.key]
@@ -166,7 +157,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       orderByDictionary,
       toggleSortByMetric,
       renderIcon,
-      getExternalLinkURL,
+      getExternalLinkUrl,
       meta
     ]
   )
@@ -192,25 +183,25 @@ const NameCell = <TListItem extends { name: string }>({
   item,
   getFilterInfo,
   renderIcon,
-  getExternalLinkURL
+  getExternalLinkUrl
 }: {
   item: TListItem
-  getFilterInfo: (item: TListItem) => unknown | null
-  renderIcon?: (item: TListItem) => unknown
-  getExternalLinkURL?: (listItem: TListItem) => string
+  getFilterInfo: (item: TListItem) => FilterInfo | null
+  renderIcon?: (item: TListItem) => ReactNode
+  getExternalLinkUrl?: (listItem: TListItem) => string
 }) => (
   <>
     {typeof renderIcon === 'function' && renderIcon(item)}
-    <FilterLink
+    <DrilldownLink
       path={rootRoute.path}
       filterInfo={getFilterInfo(item)}
       onClick={undefined}
       extraClass={undefined}
     >
       {item.name}
-    </FilterLink>
-    {typeof getExternalLinkURL === 'function' && (
-      <ExternalLinkIcon url={getExternalLinkURL(item)} />
+    </DrilldownLink>
+    {typeof getExternalLinkUrl === 'function' && (
+      <ExternalLinkIcon url={getExternalLinkUrl(item)} />
     )}
   </>
 )
@@ -233,3 +224,19 @@ const ExternalLinkIcon = ({ url }: { url?: string }) =>
       </svg>
     </a>
   ) : null
+
+const getMetricWarning = (metric: Metric, meta: BreakdownResultMeta | null) => {
+  const warnings = meta?.metric_warnings
+
+  if (warnings && warnings[metric.key]) {
+    const { code, message } = warnings[metric.key]
+
+    if (metric.key == 'scroll_depth' && code == 'no_imported_scroll_depth') {
+      return 'Does not include imported data'
+    }
+
+    if (metric.key == 'time_on_page' && code) {
+      return message
+    }
+  }
+}

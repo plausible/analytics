@@ -96,6 +96,50 @@ defmodule Plausible.Workers.CheckUsageTest do
     )
   end
 
+  test "sends emails to billing members if available", %{user: user} do
+    usage_stub =
+      Plausible.Teams.Billing
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 11_000},
+          last_cycle: %{date_range: @date_range, total: 11_000}
+        }
+      end)
+
+    user2 = new_user()
+    user3 = new_user()
+    new_site(owner: user)
+    team = team_of(user)
+
+    add_member(team, user: user2, role: :billing)
+    add_member(team, user: user3, role: :viewer)
+
+    subscribe_to_plan(
+      user,
+      @paddle_id_10k,
+      last_bill_date: Date.shift(Date.utc_today(), day: -1),
+      next_bill_date: Date.shift(Date.utc_today(), day: +5),
+      status: :active
+    )
+
+    CheckUsage.perform(nil, usage_stub)
+
+    assert_email_delivered_with(
+      to: [user],
+      subject: "[Action required] You have outgrown your Plausible subscription tier"
+    )
+
+    assert_email_delivered_with(
+      to: [user2],
+      subject: "[Action required] You have outgrown your Plausible subscription tier"
+    )
+
+    refute_email_delivered_with(
+      to: [user3],
+      subject: "[Action required] You have outgrown your Plausible subscription tier"
+    )
+  end
+
   test "ignores user with paused subscription", %{user: user} do
     subscribe_to_plan(
       user,
@@ -296,7 +340,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
 
         CheckUsage.perform(nil, usage_stub)
-        assert user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        assert user |> team_of() |> Repo.reload() |> Plausible.Teams.GracePeriod.active?()
 
         usage_stub =
           Plausible.Teams.Billing
@@ -308,7 +352,7 @@ defmodule Plausible.Workers.CheckUsageTest do
           end)
 
         CheckUsage.perform(nil, usage_stub)
-        refute user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        refute user |> team_of() |> Repo.reload() |> Plausible.Teams.GracePeriod.active?()
       end
     end
   end
@@ -457,7 +501,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
 
         CheckUsage.perform(nil, usage_stub)
-        assert user |> team_of() |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        assert user |> team_of() |> Repo.reload() |> Plausible.Teams.GracePeriod.active?()
       end
     end
   end

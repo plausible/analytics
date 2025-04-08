@@ -29,7 +29,6 @@ defmodule Plausible.Stats.GoalSuggestions do
     site =
       site
       |> Repo.preload(:goals)
-      |> Plausible.Imported.load_import_data()
 
     excluded =
       opts
@@ -42,9 +41,9 @@ defmodule Plausible.Stats.GoalSuggestions do
     query = Query.from(site, params)
 
     native_q =
-      from(e in base_event_query(site, query),
+      from(e in base_event_query(query),
         where: fragment("? ilike ?", e.name, ^matches),
-        where: e.name not in ["pageview", "pageleave"],
+        where: e.name not in ["pageview", "engagement"],
         where: fragment("trim(?)", e.name) != "",
         where: e.name == fragment("trim(?)", e.name),
         where: e.name not in ^excluded,
@@ -62,7 +61,7 @@ defmodule Plausible.Stats.GoalSuggestions do
     imported_q =
       from(i in "imported_custom_events",
         where: i.site_id == ^site.id,
-        where: i.import_id in ^site.complete_import_ids,
+        where: i.import_id in ^Plausible.Imported.complete_import_ids(site),
         where: i.date >= ^date_range.first and i.date <= ^date_range.last,
         where: i.visitors > 0,
         where: fragment("? ilike ?", i.name, ^matches),

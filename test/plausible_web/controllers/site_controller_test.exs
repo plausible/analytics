@@ -141,6 +141,7 @@ defmodule PlausibleWeb.SiteControllerTest do
              )
     end
 
+    @tag :ee_only
     test "shows upgrade nag message to expired trial user without subscription", %{
       conn: initial_conn,
       user: user
@@ -256,6 +257,22 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "can&#39;t be blank"
     end
 
+    test "fails to create site when not allowed to in selected team", %{conn: conn, user: user} do
+      site = new_site()
+      add_member(site.team, user: user, role: :viewer)
+      conn = set_current_team(conn, site.team)
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert html_response(conn, 200) =~ "You are not permitted to add sites in the current team"
+    end
+
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
       refute team_of(user)
 
@@ -324,7 +341,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       for _ <- 1..51, do: new_site(owner: user)
 
-      Ecto.Changeset.change(user, %{inserted_at: ~N[2021-05-04 00:00:00]})
+      Ecto.Changeset.change(team_of(user), %{inserted_at: ~N[2021-05-04 00:00:00]})
       |> Repo.update()
 
       conn =
@@ -535,11 +552,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert owner_row =~ "Owner"
 
       assert editor_row =~ editor.email
-      assert editor_row_button == "Admin"
+      assert editor_row_button == "Guest Editor"
       refute editor_row =~ "Owner"
 
       assert viewer_row =~ viewer.email
-      assert viewer_row_button == "Viewer"
+      assert viewer_row_button == "Guest Viewer"
       refute viewer_row =~ "Owner"
     end
 
@@ -550,7 +567,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") == "admin@example.com Admin"
+      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") ==
+               "admin@example.com Editor"
 
       assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
                "viewer@example.com Viewer"
@@ -569,32 +587,40 @@ defmodule PlausibleWeb.SiteControllerTest do
                "#{new_owner.email} Owner"
     end
 
-    test "renders team management notices", %{conn: conn, user: user} do
+    test "renders distinct team management notices to owner", %{conn: conn, user: user} do
       site = new_site(owner: user)
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
 
-      refute resp =~ "You can also invite people to your team"
+      refute resp =~ "A Better Way of Inviting People to a Team"
+      assert resp =~ "A Better Way of Inviting People to Your Team"
       refute resp =~ "Team members automatically have access to this site."
 
-      user |> team_of() |> Teams.Team.setup_changeset() |> Repo.update!()
+      team = team_of(user)
+      Teams.complete_setup(team)
+      conn = set_current_team(conn, team)
 
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
-      assert resp =~ "You can also invite people to your team"
+      refute resp =~ "A Better Way of Inviting People to Your Team"
       assert resp =~ "Team members automatically have access to this site."
     end
 
-    test "does not render team management notices to editors", %{conn: conn, user: user} do
+    test "renders distinct team management notices to editors", %{conn: conn, user: user} do
       # this can go away once we support multiple teams
       user |> team_of() |> Repo.delete!()
       owner = new_user()
       site = new_site(owner: owner)
       add_member(team_of(owner), user: user, role: :editor)
 
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+
+      assert resp =~ "A Better Way of Inviting People to a Team"
+      refute resp =~ "A Better Way of Inviting People to Your Team"
+
       owner |> team_of() |> Teams.Team.setup_changeset() |> Repo.update!()
 
       resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
 
-      refute resp =~ "You can also invite people to your team"
+      refute resp =~ "A Better Way of Inviting People to a Team"
       refute resp =~ "Team members automatically have access to this site."
     end
   end
@@ -921,6 +947,20 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "An extra step is needed"
       assert resp =~ "Google Search Console integration"
       assert resp =~ "google-integration"
+    end
+
+    @tag :ee_only
+    test "renders looker studio integration section", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/integrations")
+      resp = html_response(conn, 200)
+      assert resp =~ "Google Looker Studio Connector"
+    end
+
+    @tag :ce_build_only
+    test "does not render looker studio integration section", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/integrations")
+      resp = html_response(conn, 200)
+      refute resp =~ "Google Looker Studio Connector"
     end
   end
 
@@ -1592,8 +1632,6 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert Enum.find(imports, &(&1.id == import_id))
 
-      site = Plausible.Imported.load_import_data(site)
-
       assert eventually(fn ->
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
                {count == 22, count}
@@ -1780,6 +1818,132 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, Routes.site_path(conn, :reset_stats, site.domain))
 
       assert Repo.reload(site).stats_start_date == nil
+    end
+  end
+
+  describe "change team" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "no change team section appears when <1 team", %{conn: conn, site: site} do
+      conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
+      html = html_response(conn, 200)
+      assert html =~ "Danger Zone"
+      assert html =~ "Delete #{site.domain}"
+      refute html =~ "Change #{site.domain} team"
+    end
+
+    test "change team section appears when >1 team", %{user: user, conn: conn, site: site} do
+      join_2nd_team(user)
+
+      conn = get(conn, Routes.site_path(conn, :settings_danger_zone, site.domain))
+      html = html_response(conn, 200)
+      assert html =~ "Danger Zone"
+      assert html =~ "Delete #{site.domain}"
+      assert html =~ "Change #{site.domain} team"
+    end
+
+    test "change team form renders", %{user: user, conn: conn, site: site} do
+      join_2nd_team(user)
+
+      conn = get(conn, Routes.membership_path(conn, :change_team_form, site.domain))
+      html = html_response(conn, 200)
+      assert html =~ "Change the team of #{site.domain}"
+
+      assert element_exists?(
+               html,
+               ~s|form[action="#{Routes.membership_path(conn, :change_team, site.domain)}"]|
+             )
+
+      assert element_exists?(html, ~s|button[type=submit]|)
+    end
+
+    @tag :ee_only
+    test "change team form error: destination team has no subscription", %{
+      user: user,
+      conn: conn,
+      site: site
+    } do
+      team2 = join_2nd_team(user)
+
+      conn =
+        post(
+          conn,
+          Routes.membership_path(conn, :change_team, site.domain,
+            team_identifier: team2.identifier
+          )
+        )
+
+      html = html_response(conn, 200)
+      assert html =~ "This team has no subscription"
+    end
+
+    @tag :ee_only
+    test "change team form error: subscription insufficient", %{
+      user: user,
+      conn: conn,
+      site: site
+    } do
+      team2 = join_2nd_team(user, subscribe?: true)
+
+      generate_usage_for(site, 11_000, NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -5))
+      generate_usage_for(site, 11_000, NaiveDateTime.utc_now() |> NaiveDateTime.shift(day: -35))
+
+      conn =
+        post(
+          conn,
+          Routes.membership_path(conn, :change_team, site.domain,
+            team_identifier: team2.identifier
+          )
+        )
+
+      html = html_response(conn, 200)
+      assert text(html) =~ "This team's subscription outgrows site usage"
+    end
+
+    test "change team form error: unknown team identifier", %{
+      conn: conn,
+      site: site
+    } do
+      assert_raise Ecto.NoResultsError, fn ->
+        post(
+          conn,
+          Routes.membership_path(conn, :change_team, site.domain,
+            team_identifier: Ecto.UUID.generate()
+          )
+        )
+      end
+    end
+
+    test "successfully changes team", %{
+      user: user,
+      conn: conn,
+      site: site
+    } do
+      team2 = join_2nd_team(user, subscribe?: true)
+
+      conn =
+        post(
+          conn,
+          Routes.membership_path(conn, :change_team, site.domain,
+            team_identifier: team2.identifier
+          )
+        )
+
+      assert redirected_to(conn) == "/sites?__team=#{team2.identifier}"
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "Site team was changed"
+    end
+
+    defp join_2nd_team(user, opts \\ []) do
+      another = new_user()
+      new_site(owner: another)
+      team2 = team_of(another)
+      add_member(team2, user: user, role: :admin)
+
+      if opts[:subscribe?] do
+        subscribe_to_growth_plan(another)
+      end
+
+      team2
     end
   end
 end

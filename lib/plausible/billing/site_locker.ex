@@ -15,10 +15,11 @@ defmodule Plausible.Billing.SiteLocker do
           {:locked, lock_reason()} | :unlocked
   def update_sites_for(team, opts \\ []) do
     send_email? = Keyword.get(opts, :send_email?, true)
+    usage_mod = Keyword.get(opts, :usage_mod, Teams.Billing)
 
     team = Teams.with_subscription(team)
 
-    case Plausible.Teams.Billing.check_needs_to_upgrade(team) do
+    case Plausible.Teams.Billing.check_needs_to_upgrade(team, usage_mod) do
       {:needs_to_upgrade, :grace_period_ended} ->
         set_lock_status_for(team, true)
 
@@ -26,7 +27,7 @@ defmodule Plausible.Billing.SiteLocker do
           Plausible.Teams.end_grace_period(team)
 
           if send_email? do
-            team = Repo.preload(team, :owner)
+            team = Repo.preload(team, [:owners, :billing_members])
             send_grace_period_end_email(team)
           end
 
@@ -64,8 +65,10 @@ defmodule Plausible.Billing.SiteLocker do
     usage = Teams.Billing.monthly_pageview_usage(team)
     suggested_plan = Plausible.Billing.Plans.suggest(team, usage.last_cycle.total)
 
-    team.owner
-    |> PlausibleWeb.Email.dashboard_locked(usage, suggested_plan)
-    |> Plausible.Mailer.send()
+    for recipient <- team.owners ++ team.billing_members do
+      recipient
+      |> PlausibleWeb.Email.dashboard_locked(team, usage, suggested_plan)
+      |> Plausible.Mailer.send()
+    end
   end
 end

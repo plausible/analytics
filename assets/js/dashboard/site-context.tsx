@@ -1,4 +1,3 @@
-/** @format */
 import React, { createContext, ReactNode, useContext } from 'react'
 
 export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
@@ -9,6 +8,7 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     hasProps: dataset.hasProps === 'true',
     funnelsAvailable: dataset.funnelsAvailable === 'true',
     propsAvailable: dataset.propsAvailable === 'true',
+    siteSegmentsAvailable: dataset.siteSegmentsAvailable === 'true',
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
     propsOptedOut: dataset.propsOptedOut === 'true',
@@ -25,10 +25,8 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
   }
 }
 
-type FeatureFlags = {
-  channels?: boolean
-  saved_segments?: boolean
-}
+// Update this object when new feature flags are added to the frontend.
+type FeatureFlags = Record<never, boolean>
 
 const siteContextDefaultValue = {
   domain: '',
@@ -38,6 +36,7 @@ const siteContextDefaultValue = {
   hasProps: false,
   funnelsAvailable: false,
   propsAvailable: false,
+  siteSegmentsAvailable: false,
   conversionsOptedOut: false,
   funnelsOptedOut: false,
   propsOptedOut: false,

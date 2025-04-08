@@ -2,7 +2,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
   use Plausible.Repo
 
   @numeric_fields [
-    "user_id",
+    "team_id",
     "paddle_plan_id",
     "monthly_pageview_limit",
     "site_limit",
@@ -18,7 +18,7 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
   def form_fields(_schema) do
     [
-      user_id: nil,
+      team_id: nil,
       paddle_plan_id: nil,
       billing_interval: %{choices: [{"Yearly", "yearly"}, {"Monthly", "monthly"}]},
       monthly_pageview_limit: nil,
@@ -40,25 +40,19 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
     from(r in query,
       inner_join: t in assoc(r, :team),
-      inner_join: o in assoc(t, :owner),
+      inner_join: o in assoc(t, :owners),
       or_where: ilike(r.paddle_plan_id, ^search_term),
-      or_where: ilike(o.email, ^search_term) or ilike(o.name, ^search_term),
-      preload: [team: {t, owner: o}]
-    )
-  end
-
-  def custom_show_query(_conn, _schema, query) do
-    from(ep in query,
-      inner_join: t in assoc(ep, :team),
-      inner_join: o in assoc(t, :owner),
-      select: %{ep | user_id: o.id}
+      or_where: ilike(o.email, ^search_term),
+      or_where: ilike(o.name, ^search_term),
+      or_where: ilike(t.name, ^search_term),
+      preload: [team: {t, owners: o}]
     )
   end
 
   def index(_) do
     [
       id: nil,
-      user_email: %{value: &get_user_email/1},
+      user_email: %{value: &owner_emails(&1.team)},
       paddle_plan_id: nil,
       billing_interval: nil,
       monthly_pageview_limit: nil,
@@ -68,21 +62,16 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
     ]
   end
 
-  defp get_user_email(plan), do: plan.team.owner.email
+  defp owner_emails(team) do
+    team.owners
+    |> Enum.map_join("<br>", & &1.email)
+    |> Phoenix.HTML.raw()
+  end
 
   def create_changeset(schema, attrs) do
     attrs = sanitize_attrs(attrs)
 
-    team_id =
-      if user_id = attrs["user_id"] do
-        user = Repo.get!(Plausible.Auth.User, user_id)
-        {:ok, team} = Plausible.Teams.get_or_create(user)
-        team.id
-      end
-
-    attrs = Map.put(attrs, "team_id", team_id)
-
-    Plausible.Billing.EnterprisePlan.changeset(struct(schema, %{}), attrs)
+    Plausible.Billing.EnterprisePlan.changeset(struct(schema, site_limit: 10_000), attrs)
   end
 
   def update_changeset(enterprise_plan, attrs) do

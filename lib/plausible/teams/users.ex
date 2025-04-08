@@ -8,6 +8,59 @@ defmodule Plausible.Teams.Users do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  def owned_teams(user) do
+    Repo.all(teams_query(user, roles: :owner))
+  end
+
+  def teams(user, opts \\ []) do
+    user
+    |> teams_query(Keyword.merge([order_by: :name], opts))
+    |> Repo.all()
+    |> Repo.preload(:owners)
+  end
+
+  def teams_query(user, opts \\ []) do
+    order_by = Keyword.get(opts, :order_by, :name)
+    roles = Keyword.get(opts, :roles)
+    identifier = Keyword.get(opts, :identifier)
+
+    query =
+      from(
+        tm in Teams.Membership,
+        as: :team_membership,
+        inner_join: t in assoc(tm, :team),
+        as: :team,
+        where: tm.user_id == ^user.id,
+        where: tm.role != :guest,
+        select: t
+      )
+
+    query =
+      if roles do
+        where(query, [team_membership: tm], tm.role in ^List.wrap(roles))
+      else
+        query
+      end
+
+    query =
+      if identifier do
+        where(query, [team: team], team.identifier == ^identifier)
+      else
+        query
+      end
+
+    case order_by do
+      :name ->
+        order_by(query, [team: t], [t.name, t.id])
+
+      :id_desc ->
+        order_by(query, [team: t], desc: t.id)
+
+      _ ->
+        query
+    end
+  end
+
   def team_member?(user, opts \\ []) do
     excluded_team_ids = Keyword.get(opts, :except, [])
 
@@ -77,6 +130,7 @@ defmodule Plausible.Teams.Users do
 
   def owns_sites?(user, opts \\ []) do
     include_pending? = Keyword.get(opts, :include_pending?, false)
+    only_team = Keyword.get(opts, :only_team)
 
     sites_query =
       from(
@@ -94,6 +148,13 @@ defmodule Plausible.Teams.Users do
         where: tm.role == :owner,
         select: 1
       )
+
+    owner_query =
+      if only_team do
+        where(owner_query, [tm], tm.team_id == ^only_team.id)
+      else
+        owner_query
+      end
 
     query =
       if include_pending? do

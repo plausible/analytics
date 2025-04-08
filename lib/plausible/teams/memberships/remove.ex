@@ -8,14 +8,26 @@ defmodule Plausible.Teams.Memberships.Remove do
 
   def remove(nil, _, _), do: {:error, :permission_denied}
 
-  def remove(team, user_id, current_user) do
+  def remove(team, user_id, current_user, opts \\ []) do
     with {:ok, team_membership} <- Memberships.get_team_membership(team, user_id),
          {:ok, current_user_role} <- Memberships.team_role(team, current_user),
          :ok <- check_can_remove_membership(current_user_role, team_membership.role),
          :ok <- check_owner_can_get_removed(team, team_membership.role) do
       team_membership = Repo.preload(team_membership, [:team, :user])
-      Repo.delete!(team_membership)
-      send_team_member_removed_email(team_membership)
+
+      {:ok, _} =
+        Repo.transaction(fn ->
+          Repo.delete!(team_membership)
+
+          Plausible.Segments.after_user_removed_from_team(
+            team_membership.team,
+            team_membership.user
+          )
+        end)
+
+      if Keyword.get(opts, :send_email?, true) do
+        send_team_member_removed_email(team_membership)
+      end
 
       {:ok, team_membership}
     end
@@ -35,7 +47,7 @@ defmodule Plausible.Teams.Memberships.Remove do
 
   defp check_owner_can_get_removed(_team, _role), do: :ok
 
-  defp send_team_member_removed_email(team_membership) do
+  def send_team_member_removed_email(team_membership) do
     team_membership
     |> PlausibleWeb.Email.team_member_removed()
     |> Plausible.Mailer.send()

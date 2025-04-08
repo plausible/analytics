@@ -1,25 +1,33 @@
-/** @format */
-
 import React, { ReactNode } from 'react'
 import SiteContextProvider, {
   PlausibleSite
 } from '../js/dashboard/site-context'
-import UserContextProvider, { Role } from '../js/dashboard/user-context'
+import UserContextProvider, {
+  Role,
+  UserContextValue
+} from '../js/dashboard/user-context'
 import { MemoryRouter, MemoryRouterProps } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import QueryContextProvider from '../js/dashboard/query-context'
 import { getRouterBasepath } from '../js/dashboard/router'
+import { RoutelessModalsContextProvider } from '../js/dashboard/navigation/routeless-modals-context'
+import { SegmentsContextProvider } from '../js/dashboard/filtering/segments-context'
+import { SavedSegments } from '../js/dashboard/filtering/segments'
 
 type TestContextProvidersProps = {
   children: ReactNode
   routerProps?: Pick<MemoryRouterProps, 'initialEntries'>
   siteOptions?: Partial<PlausibleSite>
+  user?: UserContextValue
+  preloaded?: { segments?: SavedSegments }
 }
 
 export const TestContextProviders = ({
   children,
   routerProps,
-  siteOptions
+  siteOptions,
+  preloaded,
+  user
 }: TestContextProvidersProps) => {
   const defaultSite: PlausibleSite = {
     domain: 'plausible.io/unit',
@@ -28,6 +36,7 @@ export const TestContextProviders = ({
     hasProps: false,
     funnelsAvailable: false,
     propsAvailable: false,
+    siteSegmentsAvailable: false,
     conversionsOptedOut: false,
     funnelsOptedOut: false,
     propsOptedOut: false,
@@ -58,16 +67,22 @@ export const TestContextProviders = ({
   return (
     // <ThemeContextProvider> not interactive component, default value is suitable
     <SiteContextProvider site={site}>
-      <UserContextProvider role={Role.admin} loggedIn={true}>
-        <MemoryRouter
-          basename={getRouterBasepath(site)}
-          initialEntries={defaultInitialEntries}
-          {...routerProps}
-        >
-          <QueryClientProvider client={queryClient}>
-            <QueryContextProvider>{children}</QueryContextProvider>
-          </QueryClientProvider>
-        </MemoryRouter>
+      <UserContextProvider
+        user={user ?? { role: Role.editor, loggedIn: true, id: 1 }}
+      >
+        <SegmentsContextProvider preloadedSegments={preloaded?.segments ?? []}>
+          <MemoryRouter
+            basename={getRouterBasepath(site)}
+            initialEntries={defaultInitialEntries}
+            {...routerProps}
+          >
+            <QueryClientProvider client={queryClient}>
+              <RoutelessModalsContextProvider>
+                <QueryContextProvider>{children}</QueryContextProvider>
+              </RoutelessModalsContextProvider>
+            </QueryClientProvider>
+          </MemoryRouter>
+        </SegmentsContextProvider>
       </UserContextProvider>
     </SiteContextProvider>
     // </ThemeContextProvider>

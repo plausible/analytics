@@ -1,10 +1,16 @@
 defmodule PlausibleWeb.Api.StatsController.PagesTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/pages" do
-    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
+    setup [
+      :create_user,
+      :log_in,
+      :create_site,
+      :create_legacy_site_import
+    ]
 
     test "returns top pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -237,10 +243,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/blog/john-1",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/blog",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:engagement,
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00],
+          engagement_time: 60_000
         ),
         build(:pageview,
           pathname: "/blog/john-2",
@@ -249,6 +269,14 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:02:00]
         ),
+        build(:engagement,
+          pathname: "/blog/john-2",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/blog/john-2",
           "meta.key": ["author"],
@@ -256,10 +284,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: 456,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/blog/john-2",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:10:00],
+          engagement_time: 600_000
+        ),
         build(:pageview,
           pathname: "/blog",
           user_id: 456,
           timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:engagement,
+          pathname: "/blog",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:10:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -277,8 +319,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "bounce_rate" => 0,
-                 "time_on_page" => 600,
-                 "scroll_depth" => nil
+                 "time_on_page" => 315,
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/blog/john-1",
@@ -286,7 +328,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -299,12 +341,26 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/blog/john-1",
           user_id: @user_id,
           "meta.key": ["author"],
           "meta.value": ["John Doe"],
           timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:engagement,
+          pathname: "/blog/john-1",
+          user_id: @user_id,
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:02:00],
+          engagement_time: 60_000
         ),
         build(:pageview,
           pathname: "/blog/other-post",
@@ -313,10 +369,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           "meta.value": ["other"],
           timestamp: ~N[2021-01-01 00:02:00]
         ),
+        build(:engagement,
+          pathname: "/blog/other-post",
+          user_id: @user_id,
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/blog",
           user_id: 456,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/blog",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:03:00],
+          engagement_time: 180_000
         ),
         build(:pageview,
           pathname: "/blog/john-1",
@@ -324,6 +394,14 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           "meta.value": ["John Doe"],
           user_id: 456,
           timestamp: ~N[2021-01-01 00:03:00]
+        ),
+        build(:engagement,
+          pathname: "/blog/john-1",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:03:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -341,16 +419,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "bounce_rate" => 0,
-                 "time_on_page" => 120.0,
-                 "scroll_depth" => nil
+                 "time_on_page" => 120,
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/blog/other-post",
                  "visitors" => 1,
                  "pageviews" => 1,
                  "bounce_rate" => 0,
-                 "time_on_page" => nil,
-                 "scroll_depth" => nil
+                 "time_on_page" => 30,
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -363,6 +441,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/blog/john-1",
           user_id: @user_id,
@@ -370,14 +454,35 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           "meta.value": ["John Doe"],
           timestamp: ~N[2021-01-01 00:01:00]
         ),
+        build(:engagement,
+          pathname: "/blog/john-1",
+          user_id: @user_id,
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:02:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/blog/other-post",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:02:00]
         ),
+        build(:engagement,
+          pathname: "/blog/other-post",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/blog",
+          user_id: 456,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/blog",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:00:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -395,16 +500,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "bounce_rate" => 50,
-                 "time_on_page" => 60,
-                 "scroll_depth" => nil
+                 "time_on_page" => 45,
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/blog/other-post",
                  "visitors" => 1,
                  "pageviews" => 1,
                  "bounce_rate" => 0,
-                 "time_on_page" => nil,
-                 "scroll_depth" => nil
+                 "time_on_page" => 30,
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -419,10 +524,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           "meta.value": ["John Doe"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/blog/john-1",
+          user_id: @user_id,
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/blog",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:engagement,
+          pathname: "/blog",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00],
+          engagement_time: 60_000
         ),
         build(:pageview,
           pathname: "/blog/other-post",
@@ -431,11 +550,28 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:02:00]
         ),
+        build(:engagement,
+          pathname: "/blog/other-post",
+          "meta.key": ["author"],
+          "meta.value": ["other"],
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/blog/other-post",
           "meta.key": ["author"],
           "meta.value": [""],
+          user_id: 456,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/blog/other-post",
+          "meta.key": ["author"],
+          "meta.value": [""],
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:00:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -453,8 +589,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "bounce_rate" => 100,
-                 "time_on_page" => nil,
-                 "scroll_depth" => nil
+                 "time_on_page" => 30,
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/blog/john-1",
@@ -462,7 +598,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -563,15 +699,33 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/about",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
         ),
+        build(:engagement,
+          pathname: "/about",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 30_000
         ),
         build(:pageview,
           pathname: "/",
@@ -579,7 +733,14 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         ),
         build(:pageview,
           pathname: "/about",
+          user_id: 456,
           timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:engagement,
+          pathname: "/about",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:10:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -597,8 +758,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 3,
                  "bounce_rate" => 50,
-                 "time_on_page" => 60,
-                 "scroll_depth" => nil
+                 "time_on_page" => 90,
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -609,17 +770,53 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: t1,
+          scroll_depth: 20,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/another",
+          timestamp: t2,
+          scroll_depth: 24,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: t1,
+          scroll_depth: 17,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement,
+          user_id: 34,
+          pathname: "/another",
+          timestamp: t2,
+          scroll_depth: 26,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: t3,
+          scroll_depth: 60,
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement,
+          user_id: 56,
+          pathname: "/blog",
+          timestamp: t1,
+          scroll_depth: 100,
+          engagement_time: 60_000
+        )
       ])
 
       conn =
@@ -642,7 +839,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 3,
                  "pageviews" => 4,
                  "bounce_rate" => 33,
-                 "time_on_page" => 60,
+                 "time_on_page" => 80,
                  "scroll_depth" => 60
                }
              ]
@@ -654,20 +851,22 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     } do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00],
-          scroll_depth: 80
+          scroll_depth: 80,
+          engagement_time: 20_000
         ),
         build(:imported_pages,
           date: ~D[2020-01-01],
           visitors: 3,
           pageviews: 3,
-          time_on_page: 90,
+          total_time_on_page: 90,
+          total_time_on_page_visits: 3,
           page: "/blog",
-          scroll_depth: 120,
-          pageleave_visitors: 3
+          total_scroll_depth: 120,
+          total_scroll_depth_visits: 3
         )
       ])
 
@@ -683,7 +882,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 4,
                  "pageviews" => 4,
                  "bounce_rate" => 100,
-                 "time_on_page" => 30.0,
+                 "time_on_page" => 28,
                  "scroll_depth" => 50
                }
              ]
@@ -699,40 +898,44 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           pathname: "/native-and-imported",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/native-and-imported",
           timestamp: ~N[2020-01-01 00:01:00],
-          scroll_depth: 80
+          scroll_depth: 80,
+          engagement_time: 60_000
         ),
         build(:pageview,
           user_id: @user_id,
           pathname: "/native-only",
           timestamp: ~N[2020-01-01 00:01:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: @user_id,
           pathname: "/native-only",
           timestamp: ~N[2020-01-01 00:02:00],
-          scroll_depth: 40
+          scroll_depth: 40,
+          engagement_time: 60_000
         ),
         build(:imported_pages,
           date: ~D[2020-01-01],
           visitors: 4,
           pageviews: 4,
-          time_on_page: 180,
+          total_time_on_page: 180,
+          total_time_on_page_visits: 4,
           page: "/native-and-imported",
-          scroll_depth: 120,
-          pageleave_visitors: 3
+          total_scroll_depth: 120,
+          total_scroll_depth_visits: 3
         ),
         build(:imported_pages,
           date: ~D[2020-01-01],
           visitors: 20,
           pageviews: 30,
-          time_on_page: 300,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 10,
           page: "/imported-only",
-          scroll_depth: 100,
-          pageleave_visitors: 10
+          total_scroll_depth: 100,
+          total_scroll_depth_visits: 10
         )
       ])
 
@@ -756,7 +959,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 1,
                  "pageviews" => 1,
                  "bounce_rate" => 0,
-                 "time_on_page" => nil,
+                 "time_on_page" => 60,
                  "scroll_depth" => 40
                },
                %{
@@ -764,13 +967,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 20,
                  "pageviews" => 30,
                  "bounce_rate" => 0,
-                 "time_on_page" => 10.0,
+                 "time_on_page" => 30,
                  "scroll_depth" => 10
                }
              ]
     end
 
-    test "can query scroll depth only from imported data, ignoring rows where scroll depth doesn't exist",
+    test "can query scroll depth and time-on-page only from imported data, ignoring rows where scroll depth doesn't exist",
          %{
            conn: conn,
            site: site
@@ -781,15 +984,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           visitors: 10,
           pageviews: 10,
           page: "/blog",
-          scroll_depth: 100,
-          pageleave_visitors: 10
+          total_scroll_depth: 100,
+          total_scroll_depth_visits: 10,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 5
         ),
         build(:imported_pages,
           date: ~D[2020-01-01],
           visitors: 100,
           pageviews: 150,
           page: "/blog",
-          scroll_depth: nil
+          total_scroll_depth: 0,
+          total_scroll_depth_visits: 0,
+          total_time_on_page: 0,
+          total_time_on_page_visits: 0
         )
       ])
 
@@ -805,7 +1013,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 110,
                  "pageviews" => 160,
                  "bounce_rate" => 0,
-                 "time_on_page" => 0.125,
+                 "time_on_page" => 60,
                  "scroll_depth" => 10
                }
              ]
@@ -819,23 +1027,55 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/irrelevant",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:engagement,
+          pathname: "/irrelevant",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00],
+          engagement_time: 60_000
         ),
         build(:pageview,
           pathname: "/",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:02:00]
         ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/",
+          user_id: 123,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
         ),
         build(:pageview,
           pathname: "/about",
+          user_id: 456,
           timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:engagement,
+          pathname: "/about",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:10:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -853,16 +1093,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 3,
                  "bounce_rate" => 50,
-                 "time_on_page" => 60,
-                 "scroll_depth" => nil
+                 "time_on_page" => 75,
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/about",
                  "visitors" => 1,
                  "pageviews" => 1,
                  "bounce_rate" => 100,
-                 "time_on_page" => nil,
-                 "scroll_depth" => nil
+                 "time_on_page" => 30,
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -875,23 +1115,55 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/irrelevant",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:engagement,
+          pathname: "/irrelevant",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00],
+          engagement_time: 60_000
         ),
         build(:pageview,
           pathname: "/",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:02:00]
         ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/",
+          user_id: 123,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
         ),
         build(:pageview,
           pathname: "/about",
+          user_id: 456,
           timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:engagement,
+          pathname: "/about",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:10:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -909,8 +1181,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 3,
                  "bounce_rate" => 50,
-                 "time_on_page" => 60,
-                 "scroll_depth" => nil
+                 "time_on_page" => 75,
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -923,22 +1195,55 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/blog/post-1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/blog/post-2",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
         ),
+        build(:engagement,
+          pathname: "/blog/post-2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/",
+          user_id: 100,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
-        build(:pageview,
-          pathname: "/articles/post-1",
-          timestamp: ~N[2021-01-01 00:10:00]
+        build(:engagement,
+          pathname: "/",
+          user_id: 100,
+          timestamp: ~N[2021-01-01 00:00:30],
+          engagement_time: 30_000
         ),
         build(:pageview,
           pathname: "/articles/post-1",
+          user_id: 200,
           timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:engagement,
+          pathname: "/articles/post-1",
+          user_id: 200,
+          timestamp: ~N[2021-01-01 00:10:30],
+          engagement_time: 30_000
+        ),
+        build(:pageview,
+          pathname: "/articles/post-1",
+          user_id: 300,
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:engagement,
+          pathname: "/articles/post-1",
+          user_id: 300,
+          timestamp: ~N[2021-01-01 00:10:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -956,8 +1261,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "bounce_rate" => 100,
-                 "time_on_page" => nil,
-                 "scroll_depth" => nil
+                 "time_on_page" => 30,
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/blog/post-1",
@@ -965,15 +1270,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/blog/post-2",
                  "visitors" => 1,
                  "pageviews" => 1,
                  "bounce_rate" => 0,
-                 "time_on_page" => nil,
-                 "scroll_depth" => nil
+                 "time_on_page" => 30,
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -986,14 +1291,33 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/blog/(/post-1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/blog/(/post-2",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
         ),
+        build(:engagement,
+          pathname: "/blog/(/post-2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/",
+          user_id: 456,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: 456,
+          timestamp: ~N[2021-01-01 00:00:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -1012,15 +1336,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 1,
                  "bounce_rate" => 0,
                  "time_on_page" => 60,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/blog/(/post-2",
                  "visitors" => 1,
                  "pageviews" => 1,
                  "bounce_rate" => 0,
-                 "time_on_page" => nil,
-                 "scroll_depth" => nil
+                 "time_on_page" => 30,
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -1030,25 +1354,58 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       populate_stats(site, [
         build(:pageview,
           pathname: "/blog/post-1",
+          user_id: 100,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/blog/post-1",
+          user_id: 100,
+          timestamp: ~N[2021-01-01 00:00:30],
+          engagement_time: 30_000
         ),
         build(:pageview,
           pathname: "/",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:10:00],
+          engagement_time: 600_000
         ),
         build(:pageview,
           pathname: "/about",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:10:00]
         ),
+        build(:engagement,
+          pathname: "/about",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:10:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/",
+          user_id: 200,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: 200,
+          timestamp: ~N[2021-01-01 00:10:00],
+          engagement_time: 600_000
         ),
         build(:pageview,
           pathname: "/articles/post-1",
+          user_id: 300,
           timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:engagement,
+          pathname: "/articles/post-1",
+          user_id: 300,
+          timestamp: ~N[2021-01-01 00:10:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -1067,15 +1424,15 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 2,
                  "bounce_rate" => 50,
                  "time_on_page" => 600,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                },
                %{
                  "name" => "/about",
                  "visitors" => 1,
                  "pageviews" => 1,
                  "bounce_rate" => 0,
-                 "time_on_page" => nil,
-                 "scroll_depth" => nil
+                 "time_on_page" => 30,
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -1107,6 +1464,16 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"visitors" => 3, "name" => "/register"},
                %{"visitors" => 1, "name" => "/contact"}
              ]
+    end
+
+    test "returns scroll depth warning code", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/stats/#{site.domain}/pages?period=day&detailed=true&with_imported=true")
+
+      response = json_response(conn, 200)
+
+      assert response["meta"]["metric_warnings"]["scroll_depth"]["code"] ==
+               "no_imported_scroll_depth"
     end
 
     test "returns imported pages with a pageview goal filter", %{conn: conn, site: site} do
@@ -1146,14 +1513,33 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 900_000
+        ),
         build(:pageview,
           pathname: "/some-other-page",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
+        build(:engagement,
+          pathname: "/some-other-page",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/",
+          user_id: 123,
           timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:15:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -1166,19 +1552,19 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "bounce_rate" => 50.0,
-                 "time_on_page" => 900.0,
+                 "time_on_page" => 465.0,
                  "visitors" => 2,
                  "pageviews" => 2,
                  "name" => "/",
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                },
                %{
                  "bounce_rate" => 0,
-                 "time_on_page" => nil,
+                 "time_on_page" => 30,
                  "visitors" => 1,
                  "pageviews" => 1,
                  "name" => "/some-other-page",
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -1236,6 +1622,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id + 1,
           timestamp: ~N[2021-01-01 00:01:00]
         ),
+        build(:engagement,
+          pathname: "/about-blog",
+          hostname: "blog.example.com",
+          user_id: @user_id + 1,
+          timestamp: ~N[2021-01-01 00:01:30],
+          engagement_time: 30_000
+        ),
 
         # session 2
         build(:pageview,
@@ -1244,11 +1637,25 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:01:00]
         ),
+        build(:engagement,
+          pathname: "/about-blog",
+          hostname: "blog.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:10:00],
+          engagement_time: 540_000
+        ),
         build(:pageview,
           pathname: "/about",
           hostname: "example.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:engagement,
+          pathname: "/about",
+          hostname: "example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 300_000
         ),
         build(:pageview,
           pathname: "/about-blog",
@@ -1256,23 +1663,51 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
+        build(:engagement,
+          pathname: "/about-blog",
+          hostname: "blog.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:20:00],
+          engagement_time: 300_000
+        ),
         build(:pageview,
           pathname: "/exit-blog",
           hostname: "blog.example.com",
-          timestamp: ~N[2021-01-01 00:20:00],
-          user_id: @user_id
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:20:00]
+        ),
+        build(:engagement,
+          pathname: "/exit-blog",
+          hostname: "blog.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:22:00],
+          engagement_time: 120_000
         ),
         build(:pageview,
           pathname: "/about",
           hostname: "example.com",
-          timestamp: ~N[2021-01-01 00:22:00],
-          user_id: @user_id
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:22:00]
+        ),
+        build(:engagement,
+          pathname: "/about",
+          hostname: "example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00],
+          engagement_time: 180_000
         ),
         build(:pageview,
           pathname: "/exit",
           hostname: "example.com",
-          timestamp: ~N[2021-01-01 00:25:00],
-          user_id: @user_id
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:engagement,
+          pathname: "/exit",
+          hostname: "example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:30],
+          engagement_time: 30_000
         ),
 
         # session 3
@@ -1281,6 +1716,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           hostname: "example.com",
           user_id: @user_id + 2,
           timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:engagement,
+          pathname: "/about",
+          hostname: "example.com",
+          user_id: @user_id + 2,
+          timestamp: ~N[2021-01-01 00:01:30],
+          engagement_time: 30_000
         )
       ])
 
@@ -1297,84 +1739,19 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "bounce_rate" => 50,
                  "name" => "/about-blog",
                  "pageviews" => 3,
-                 "time_on_page" => 1140.0,
+                 "time_on_page" => 435,
                  "visitors" => 2,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                },
                %{
                  "bounce_rate" => 0,
                  "name" => "/exit-blog",
                  "pageviews" => 1,
-                 "time_on_page" => nil,
+                 "time_on_page" => 120,
                  "visitors" => 1,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                }
              ]
-    end
-
-    test "doesn't calculate time on page with only single page visits", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
-      ])
-
-      assert [%{"name" => "/", "time_on_page" => nil}] =
-               conn
-               |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
-               |> json_response(200)
-               |> Map.get("results")
-    end
-
-    test "ignores page refresh when calculating time on page", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00], pathname: "/"),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:01:00], pathname: "/"),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:02:00], pathname: "/"),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:03:00], pathname: "/exit")
-      ])
-
-      assert [
-               %{"name" => "/", "time_on_page" => _three_minutes = 180.0},
-               %{"name" => "/exit", "time_on_page" => nil}
-             ] =
-               conn
-               |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
-               |> json_response(200)
-               |> Map.get("results")
-    end
-
-    test "calculates time on page per unique transition within session", %{conn: conn, site: site} do
-      # ┌─p──┬─p2─┬─minus(t2, t)─┬──s─┐
-      # │ /a │ /b │          100 │ s1 │
-      # │ /a │ /d │          100 │ s2 │ <- these two get treated
-      # │ /a │ /d │            0 │ s2 │ <- as single page transition
-      # └────┴────┴──────────────┴────┘
-      # so that time_on_page(a)=(100+100)/uniq(transition)=200/2=100
-
-      s1 = @user_id
-      s2 = @user_id + 1
-
-      now = ~N[2021-01-01 00:00:00]
-      later = fn seconds -> NaiveDateTime.add(now, seconds) end
-
-      populate_stats(site, [
-        build(:pageview, user_id: s1, timestamp: now, pathname: "/a"),
-        build(:pageview, user_id: s1, timestamp: later.(100), pathname: "/b"),
-        build(:pageview, user_id: s2, timestamp: now, pathname: "/a"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/a"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d")
-      ])
-
-      assert [
-               %{"name" => "/a", "time_on_page" => 100.0},
-               %{"name" => "/b", "time_on_page" => nil},
-               %{"name" => "/d", "time_on_page" => +0.0}
-             ] =
-               conn
-               |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
-               |> json_response(200)
-               |> Map.get("results")
     end
 
     test "calculates bounce rate and time on page for pages with imported data", %{
@@ -1387,19 +1764,39 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 900_000
+        ),
         build(:pageview,
           pathname: "/some-other-page",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
+        build(:engagement,
+          pathname: "/some-other-page",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:30],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/",
+          user_id: 123,
           timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:30:00],
+          engagement_time: 900_000
         ),
         build(:imported_pages,
           page: "/",
           date: ~D[2021-01-01],
-          time_on_page: 700
+          total_time_on_page: 700,
+          total_time_on_page_visits: 3
         ),
         build(:imported_entry_pages,
           entry_page: "/",
@@ -1410,7 +1807,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:imported_pages,
           page: "/some-other-page",
           date: ~D[2021-01-01],
-          time_on_page: 60
+          total_time_on_page: 60,
+          total_time_on_page_visits: 1
         )
       ])
 
@@ -1423,18 +1821,18 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "bounce_rate" => 40.0,
-                 "time_on_page" => 800.0,
+                 "time_on_page" => 500,
                  "visitors" => 3,
                  "pageviews" => 3,
-                 "scroll_depth" => nil,
+                 "scroll_depth" => 0,
                  "name" => "/"
                },
                %{
                  "bounce_rate" => 0,
-                 "time_on_page" => 60,
+                 "time_on_page" => 45,
                  "visitors" => 2,
                  "pageviews" => 2,
-                 "scroll_depth" => nil,
+                 "scroll_depth" => 0,
                  "name" => "/some-other-page"
                }
              ]
@@ -1469,7 +1867,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
 
       assert json_response(conn, 200)["results"] == [
-               %{"total_visitors" => 3, "visitors" => 1, "name" => "/", "conversion_rate" => 33.3}
+               %{
+                 "total_visitors" => 3,
+                 "visitors" => 1,
+                 "name" => "/",
+                 "conversion_rate" => 33.33
+               }
              ]
     end
 
@@ -1478,7 +1881,19 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 1, pathname: "/", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 12:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 1, pathname: "/ignored", timestamp: ~N[2021-01-01 12:01:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/ignored",
+          timestamp: ~N[2021-01-01 12:02:00],
+          engagement_time: 60_000
+        ),
         build(:imported_entry_pages,
           entry_page: "/",
           visitors: 1,
@@ -1489,7 +1904,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           page: "/",
           visitors: 3,
           pageviews: 3,
-          time_on_page: 300,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 3,
           date: ~D[2021-01-01]
         ),
         build(:imported_pages, page: "/ignored", visitors: 10, date: ~D[2021-01-01])
@@ -1507,7 +1923,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 4,
                  "time_on_page" => 90.0,
                  "visitors" => 4,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                }
              ]
     end
@@ -1517,7 +1933,19 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 1, pathname: "/", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 12:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 1, pathname: "/ignored", timestamp: ~N[2021-01-01 12:01:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/ignored",
+          timestamp: ~N[2021-01-01 12:02:00],
+          engagement_time: 60_000
+        ),
         build(:imported_entry_pages,
           entry_page: "/",
           visitors: 1,
@@ -1534,7 +1962,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           page: "/",
           visitors: 3,
           pageviews: 3,
-          time_on_page: 300,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 3,
           date: ~D[2021-01-01]
         ),
         build(:imported_pages,
@@ -1557,7 +1986,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 4,
                  "time_on_page" => 90.0,
                  "visitors" => 4,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                },
                %{
                  "bounce_rate" => 100,
@@ -1575,7 +2004,19 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       populate_stats(site, site_import.id, [
         build(:pageview, user_id: 1, pathname: "/aaa", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/aaa",
+          timestamp: ~N[2021-01-01 12:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview, user_id: 1, pathname: "/ignored", timestamp: ~N[2021-01-01 12:01:00]),
+        build(:engagement,
+          user_id: 1,
+          pathname: "/ignored",
+          timestamp: ~N[2021-01-01 12:02:00],
+          engagement_time: 60_000
+        ),
         build(:imported_entry_pages,
           entry_page: "/aaa",
           visitors: 1,
@@ -1592,7 +2033,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
           page: "/aaa",
           visitors: 3,
           pageviews: 3,
-          time_on_page: 300,
+          total_time_on_page: 300,
+          total_time_on_page_visits: 3,
           date: ~D[2021-01-01]
         ),
         build(:imported_pages,
@@ -1615,7 +2057,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "pageviews" => 4,
                  "time_on_page" => 90.0,
                  "visitors" => 4,
-                 "scroll_depth" => nil
+                 "scroll_depth" => 0
                },
                %{
                  "bounce_rate" => 100,
@@ -1660,7 +2102,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "comparison" => %{
                    "bounce_rate" => 0,
                    "pageviews" => 0,
-                   "time_on_page" => 0,
+                   "time_on_page" => nil,
                    "visitors" => 0,
                    "scroll_depth" => nil,
                    "change" => %{

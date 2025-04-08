@@ -19,16 +19,16 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         Plausible.Teams.Memberships.all_pending_site_transfers(current_user.email)
       end)
       |> assign_new(:usage, fn %{
-                                 my_team: my_team,
+                                 current_team: current_team,
                                  pending_ownership_site_ids: pending_ownership_site_ids
                                } ->
-        Plausible.Teams.Billing.quota_usage(my_team,
+        Plausible.Teams.Billing.quota_usage(current_team,
           with_features: true,
           pending_ownership_site_ids: pending_ownership_site_ids
         )
       end)
-      |> assign_new(:subscription, fn %{my_team: my_team} ->
-        Plausible.Teams.Billing.get_subscription(my_team)
+      |> assign_new(:subscription, fn %{current_team: current_team} ->
+        Plausible.Teams.Billing.get_subscription(current_team)
       end)
       |> assign_new(:owned_plan, fn %{subscription: subscription} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)
@@ -42,10 +42,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:available_plans, fn %{subscription: subscription} ->
         Plans.available_plans_for(subscription, with_prices: true, customer_ip: remote_ip)
       end)
-      |> assign_new(:recommended_tier, fn %{usage: usage, available_plans: available_plans} ->
+      |> assign_new(:recommended_tier, fn %{
+                                            usage: usage,
+                                            available_plans: available_plans,
+                                            owned_tier: owned_tier
+                                          } ->
         highest_growth_plan = List.last(available_plans.growth)
         highest_business_plan = List.last(available_plans.business)
-        Quota.suggest_tier(usage, highest_growth_plan, highest_business_plan)
+        Quota.suggest_tier(usage, highest_growth_plan, highest_business_plan, owned_tier)
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)
@@ -82,8 +86,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     business_plan_to_render =
       assigns.selected_business_plan || List.last(assigns.available_plans.business)
 
-    growth_benefits = PlanBenefits.for_growth(growth_plan_to_render)
-    business_benefits = PlanBenefits.for_business(business_plan_to_render, growth_benefits)
+    growth_benefits =
+      PlanBenefits.for_growth(growth_plan_to_render)
+
+    business_benefits =
+      PlanBenefits.for_business(business_plan_to_render, growth_benefits)
+
     enterprise_benefits = PlanBenefits.for_enterprise(business_benefits)
 
     assigns =
@@ -96,7 +104,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
     ~H"""
     <div class="pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
-      <div class="mx-auto max-w-7xl px-6 lg:px-20">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <Notice.pending_site_ownerships_notice
           class="pb-6"
           pending_ownership_count={length(@pending_ownership_site_ids)}

@@ -5,7 +5,7 @@ defmodule Plausible.Factory do
 
   def team_factory do
     %Plausible.Teams.Team{
-      name: "My Team",
+      name: Plausible.Teams.default_name(),
       trial_expiry_date: Timex.today() |> Timex.shift(days: 30),
       setup_complete: true,
       setup_at: NaiveDateTime.utc_now()
@@ -94,7 +94,7 @@ defmodule Plausible.Factory do
     %Plausible.Imported.SiteImport{
       site: build(:site),
       imported_by: build(:user),
-      start_date: Date.add(today, -200),
+      start_date: ~D[2005-01-01],
       end_date: today,
       source: :universal_analytics,
       status: :completed,
@@ -124,8 +124,8 @@ defmodule Plausible.Factory do
     Map.put(event_factory(attrs), :name, "pageview")
   end
 
-  def pageleave_factory(attrs) do
-    Map.put(event_factory(attrs), :name, "pageleave")
+  def engagement_factory(attrs) do
+    Map.put(event_factory(attrs), :name, "engagement")
   end
 
   def event_factory(attrs) do
@@ -277,7 +277,8 @@ defmodule Plausible.Factory do
       visitors: 1,
       pageviews: 1,
       exits: 0,
-      time_on_page: 10
+      total_time_on_page: 10,
+      total_time_on_page_visits: 1
     }
   end
 

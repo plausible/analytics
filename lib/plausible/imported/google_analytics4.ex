@@ -200,12 +200,12 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       hostname: row.dimensions |> Map.fetch!("hostName") |> String.replace_prefix("www.", ""),
       page: row.dimensions |> Map.fetch!("pagePath") |> URI.parse() |> Map.get(:path),
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
-      active_visitors: row.metrics |> Map.fetch!("activeUsers") |> parse_number(),
       visits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
       pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       # NOTE: no exits metric in GA4 API currently
       exits: 0,
-      time_on_page: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number()
+      total_time_on_page: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number(),
+      total_time_on_page_visits: row.metrics |> Map.fetch!("sessions") |> parse_number()
     }
   end
 

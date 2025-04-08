@@ -10,15 +10,21 @@ defmodule Plausible.Stats.SQL.Fragments do
     end
   end
 
+  defmacro scale_sample(sampled_fragment) do
+    quote do
+      fragment("toUInt64(round(? * any(_sample_factor)))", unquote(sampled_fragment))
+    end
+  end
+
   defmacro uniq(user_id) do
     quote do
-      fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", unquote(user_id))
+      scale_sample(fragment("uniq(?)", unquote(user_id)))
     end
   end
 
   defmacro total() do
     quote do
-      fragment("toUInt64(round(count(*) * any(_sample_factor)))")
+      scale_sample(fragment("count()"))
     end
   end
 
@@ -147,6 +153,17 @@ defmodule Plausible.Stats.SQL.Fragments do
 
   def meta_value_column(:meta), do: :"meta.value"
   def meta_value_column(:entry_meta), do: :"entry_meta.value"
+
+  defmacro time_on_page(total_time_on_page, total_time_on_page_visits) do
+    quote do
+      fragment(
+        "if(? > 0, toInt32(round((?) / (?))), NULL)",
+        unquote(total_time_on_page_visits),
+        unquote(total_time_on_page),
+        unquote(total_time_on_page_visits)
+      )
+    end
+  end
 
   @doc """
   Convenience Ecto macro for wrapping a map passed to select_merge_as such that each

@@ -21,6 +21,7 @@ defmodule Plausible.Site do
     field :conversions_enabled, :boolean, default: true
     field :props_enabled, :boolean, default: true
     field :funnels_enabled, :boolean, default: true
+    field :legacy_time_on_page_cutoff, :date, default: ~D[1970-01-01]
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
@@ -46,8 +47,8 @@ defmodule Plausible.Site do
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
-    has_one :ownership, through: [:team, :ownership]
-    has_one :owner, through: [:team, :owner]
+    has_many :ownerships, through: [:team, :ownerships], preload_order: [asc: :id]
+    has_many :owners, through: [:team, :owners]
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Cache`.
     # Use `Plausible.Repo.reload!(cached_site)` to pre-fill missing fields if
@@ -62,13 +63,7 @@ defmodule Plausible.Site do
     field :invitations, {:array, :map}, virtual: true
     field :pinned_at, :naive_datetime, virtual: true
 
-    # Used for caching imports data for the duration of the whole request
-    # to avoid multiple identical fetches. Populated by plugs putting
-    # `site` in `assigns`.
-    field :import_data_loaded, :boolean, default: false, virtual: true
-    field :earliest_import_start_date, :date, virtual: true
-    field :latest_import_end_date, :date, virtual: true
-    field :complete_import_ids, {:array, :integer}, default: [], virtual: true
+    has_many :completed_imports, Plausible.Imported.SiteImport, where: [status: :completed]
 
     timestamps()
   end
@@ -93,7 +88,7 @@ defmodule Plausible.Site do
 
   def changeset(site, attrs \\ %{}) do
     site
-    |> cast(attrs, [:domain, :timezone])
+    |> cast(attrs, [:domain, :timezone, :legacy_time_on_page_cutoff])
     |> clean_domain()
     |> validate_required([:domain, :timezone])
     |> validate_timezone()

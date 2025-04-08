@@ -21,6 +21,17 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       event_tab = lv |> element(~s/a#event-tab/) |> render_click()
       assert event_tab =~ "Event Name"
     end
+
+    test "can navigate to scroll tab if scroll_depth feature visible for site/user",
+         %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      lv |> element(~s/a#scroll-tab/) |> render_click()
+      html = render(lv)
+      input_names = html |> find("#scroll-form input") |> Enum.map(&name_of/1)
+      assert "goal[scroll_threshold]" in input_names
+      assert "goal[page_path]" in input_names
+      assert "goal[display_name]" in input_names
+    end
   end
 
   describe "Goal submission" do
@@ -257,6 +268,24 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert updated.page_path == "/updated"
       assert updated.display_name == "Visit /updated"
       assert updated.id == g.id
+    end
+
+    test "renders error when goal is invalid", %{conn: conn, site: site} do
+      {:ok, [g, g2, _]} = setup_goals(site)
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
+
+      html = render(lv)
+      assert element_exists?(html, ~s|#page_path_input_modalseq0[value="/go/to/blog/**"|)
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{page_path: "/updated", display_name: g2.display_name}})
+
+      html = render(lv)
+
+      assert html =~ "has already been taken"
     end
   end
 

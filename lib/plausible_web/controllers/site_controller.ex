@@ -5,33 +5,44 @@ defmodule PlausibleWeb.SiteController do
 
   alias Plausible.Sites
 
+  @unrestricted_actions [:new, :create_site]
+  @destructive_actions [:settings_danger_zone, :reset_stats, :delete_site]
+
+  @special_cased_actions @unrestricted_actions ++ @destructive_actions
+
   plug(PlausibleWeb.RequireAccountPlug)
 
   plug(
     PlausibleWeb.Plugs.AuthorizeSiteAccess,
-    [:owner, :admin, :editor, :super_admin] when action not in [:new, :create_site]
+    [:owner, :admin, :editor, :super_admin]
+    when action not in @special_cased_actions
+  )
+
+  plug(
+    PlausibleWeb.Plugs.AuthorizeSiteAccess,
+    [:owner, :admin, :super_admin] when action in @destructive_actions
   )
 
   def new(conn, params) do
     flow = params["flow"] || PlausibleWeb.Flows.register()
-    my_team = conn.assigns.my_team
+    team = conn.assigns.current_team
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      site_limit: Plausible.Teams.Billing.site_limit(my_team),
-      site_limit_exceeded?: Plausible.Teams.Billing.ensure_can_add_new_site(my_team) != :ok,
+      site_limit: Plausible.Teams.Billing.site_limit(team),
+      site_limit_exceeded?: Plausible.Teams.Billing.ensure_can_add_new_site(team) != :ok,
       form_submit_url: "/sites?flow=#{flow}",
       flow: flow
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
-    team = conn.assigns.my_team
+    team = conn.assigns.current_team
     user = conn.assigns.current_user
     first_site? = Plausible.Teams.Billing.site_usage(team) == 0
     flow = conn.params["flow"]
 
-    case Sites.create(user, site_params) do
+    case Sites.create(user, site_params, team) do
       {:ok, %{site: site}} ->
         if first_site? do
           PlausibleWeb.Email.welcome_email(user)
@@ -44,6 +55,18 @@ defmodule PlausibleWeb.SiteController do
               site_created: true,
               flow: flow
             )
+        )
+
+      {:error, _, :permission_denied, _} ->
+        conn
+        |> put_flash(:error, "You are not permitted to add sites in the current team")
+        |> render("new.html",
+          changeset: Plausible.Site.changeset(%Plausible.Site{}),
+          first_site?: first_site?,
+          site_limit: Plausible.Teams.Billing.site_limit(team),
+          site_limit_exceeded?: false,
+          flow: flow,
+          form_submit_url: "/sites?flow=#{flow}"
         )
 
       {:error, _, {:over_limit, limit}, _} ->
@@ -122,7 +145,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_people(conn, _params) do
-    site = conn.assigns.site
+    site = Repo.preload(conn.assigns.site, :team)
 
     %{memberships: memberships, invitations: invitations} =
       Sites.list_people(site)

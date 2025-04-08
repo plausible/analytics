@@ -1,0 +1,2 @@
+{@user.email} has transferred {@site.domain} to the "{@team.name}" team on Plausible Analytics.
+<a href={Routes.stats_url(PlausibleWeb.Endpoint, :stats, @site.domain, []) <> "?__team=#{@team.identifier}"}>Click here</a> to view the stats.

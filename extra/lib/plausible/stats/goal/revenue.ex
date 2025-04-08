@@ -24,11 +24,11 @@ defmodule Plausible.Stats.Goal.Revenue do
 
   The resulting data structure is attached to a `Query` and used below in `format_revenue_metric/3`.
   """
-  def preload(site, goals, metrics, dimensions) do
+  def preload(site, preloaded_goals, metrics, dimensions) do
     cond do
       not requested?(metrics) -> {nil, %{}}
       not available?(site) -> {:revenue_goals_unavailable, %{}}
-      true -> preload(goals, dimensions)
+      true -> preload(preloaded_goals.matching_toplevel_filters, dimensions)
     end
   end
 

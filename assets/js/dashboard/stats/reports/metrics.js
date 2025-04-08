@@ -1,8 +1,6 @@
-/** @format */
-
 import React from 'react'
 import MetricValue from './metric-value'
-import { hasGoalFilter } from '../../util/filters'
+import { hasConversionGoalFilter } from '../../util/filters'
 
 // Class representation of a metric.
 
@@ -79,7 +77,7 @@ export const createVisitors = (props) => {
       if (query.period === 'realtime') {
         return realtimeLabel
       }
-      if (query && hasGoalFilter(query)) {
+      if (query && hasConversionGoalFilter(query)) {
         return goalFilterLabel
       }
       return defaultLabel
@@ -194,11 +192,11 @@ export const createPageviews = (props) => {
 export const createTimeOnPage = (props) => {
   const renderLabel = (_query) => 'Time on Page'
   return new Metric({
-    width: 'w-28',
+    width: 'w-32',
     ...props,
     key: 'time_on_page',
     renderLabel,
-    sortable: false
+    sortable: true
   })
 }
 

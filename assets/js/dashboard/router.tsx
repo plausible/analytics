@@ -1,4 +1,3 @@
-/** @format */
 import React from 'react'
 import { createBrowserRouter, Outlet, useRouteError } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -27,6 +26,8 @@ import FilterModal from './stats/modals/filter-modal'
 import QueryContextProvider from './query-context'
 import { DashboardKeybinds } from './dashboard-keybinds'
 import LastLoadContextProvider from './last-load-context'
+import { RoutelessModalsContextProvider } from './navigation/routeless-modals-context'
+import { RoutelessSegmentModals } from './segments/routeless-segment-modals'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,13 +40,16 @@ const queryClient = new QueryClient({
 function DashboardElement() {
   return (
     <QueryClientProvider client={queryClient}>
-      <QueryContextProvider>
-        <LastLoadContextProvider>
-          <Dashboard />
-          {/** render any children of the root route below */}
-        </LastLoadContextProvider>
-        <Outlet />
-      </QueryContextProvider>
+      <RoutelessModalsContextProvider>
+        <QueryContextProvider>
+          <LastLoadContextProvider>
+            <Dashboard />
+            {/** render any children of the root route below */}
+          </LastLoadContextProvider>
+          <Outlet />
+          <RoutelessSegmentModals />
+        </QueryContextProvider>
+      </RoutelessModalsContextProvider>
     </QueryClientProvider>
   )
 }

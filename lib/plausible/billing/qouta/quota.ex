@@ -46,15 +46,17 @@ defmodule Plausible.Billing.Quota do
   `:custom` is returned. This means that this kind of usage should get on
   a custom plan.
 
+  To avoid confusion, we do not recommend Growth tiers for customers that
+  are already on a Business tier (even if their usage would fit Growth).
+
   `nil` is returned if the usage is not eligible for upgrade.
   """
-  def suggest_tier(usage, highest_growth_plan, highest_business_plan) do
-    if eligible_for_upgrade?(usage) do
-      cond do
-        usage_fits_plan?(usage, highest_growth_plan) -> :growth
-        usage_fits_plan?(usage, highest_business_plan) -> :business
-        true -> :custom
-      end
+  def suggest_tier(usage, highest_growth, highest_business, owned_tier) do
+    cond do
+      not eligible_for_upgrade?(usage) -> nil
+      usage_fits_plan?(usage, highest_growth) and owned_tier != :business -> :growth
+      usage_fits_plan?(usage, highest_business) -> :business
+      true -> :custom
     end
   end
 
@@ -68,9 +70,16 @@ defmodule Plausible.Billing.Quota do
   end
 
   defp exceeded_limits(usage, plan, opts) do
+    site_limit_exceeded? =
+      if opts[:skip_site_limit_check?] do
+        false
+      else
+        not within_limit?(usage.sites, plan.site_limit)
+      end
+
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
-          {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
+          {:site_limit, site_limit_exceeded?},
           {:monthly_pageview_limit,
            exceeds_monthly_pageview_limit?(usage.monthly_pageviews, plan, opts)}
         ],

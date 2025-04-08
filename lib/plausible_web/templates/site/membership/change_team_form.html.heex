@@ -1,0 +1,24 @@
+<.focus_box>
+  <:title>
+    Change the team of {@site.domain}
+  </:title>
+  <:subtitle>
+    Choose the team you'd like to move the site to. The new team must have a sufficient subscription plan.
+  </:subtitle>
+  <.form :let={f} for={@conn} action={Routes.membership_path(@conn, :change_team, @site.domain)}>
+    <div class="my-6">
+      <.input
+        type="select"
+        options={@transferable_teams}
+        field={f[:team_identifier]}
+        label="Destination Team"
+        required="true"
+      />
+      <%= if @conn.assigns[:error] do %>
+        <div class="text-red-500 mt-4">{@conn.assigns[:error]}</div>
+      <% end %>
+    </div>
+
+    <.button type="submit" class="w-full" mt?={false}>Change team</.button>
+  </.form>
+</.focus_box>

@@ -1,5 +1,3 @@
-/** @format */
-
 import {
   ComparisonMode,
   getDashboardTimeSettings,
@@ -45,7 +43,8 @@ describe(`${getDashboardTimeSettings.name}`, () => {
       getDashboardTimeSettings({
         searchValues: emptySearchValues,
         storedValues: emptyStoredValues,
-        defaultValues
+        defaultValues,
+        segmentIsExpanded: false
       })
     ).toEqual(defaultValues)
   })
@@ -59,7 +58,8 @@ describe(`${getDashboardTimeSettings.name}`, () => {
           comparison: ComparisonMode.year_over_year,
           match_day_of_week: false
         },
-        defaultValues
+        defaultValues,
+        segmentIsExpanded: false
       })
     ).toEqual({
       period: QueryPeriod['12mo'],
@@ -81,10 +81,30 @@ describe(`${getDashboardTimeSettings.name}`, () => {
           comparison: ComparisonMode.year_over_year,
           match_day_of_week: false
         },
-        defaultValues
+        defaultValues,
+        segmentIsExpanded: false
       })
     ).toEqual({
       period: QueryPeriod['year'],
+      comparison: null,
+      match_day_of_week: true
+    })
+  })
+
+  it('respects segmentIsExpanded: true option: comparison and edit segment mode are mutually exclusive', () => {
+    expect(
+      getDashboardTimeSettings({
+        searchValues: {
+          period: QueryPeriod['custom'],
+          comparison: ComparisonMode.previous_period,
+          match_day_of_week: true
+        },
+        storedValues: emptyStoredValues,
+        defaultValues,
+        segmentIsExpanded: true
+      })
+    ).toEqual({
+      period: QueryPeriod['custom'],
       comparison: null,
       match_day_of_week: true
     })

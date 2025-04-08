@@ -4,7 +4,17 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time}
+
+  alias Plausible.Stats.{
+    DateTimeRange,
+    Filters,
+    Query,
+    TableDecider,
+    TimeOnPage,
+    Util,
+    Time,
+    Legacy
+  }
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -49,7 +59,8 @@ defmodule Plausible.Stats.QueryOptimizer do
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
       &extend_hostname_filters_to_visit/1,
-      &remove_revenue_metrics_if_unavailable/1
+      &remove_revenue_metrics_if_unavailable/1,
+      &set_time_on_page_data/1
     ]
   end
 
@@ -121,7 +132,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     # Note: Only works since event:hostname is only allowed as a top level filter
     hostname_filters =
       query.filters
-      |> Enum.filter(fn [_operation, filter_key | _rest] -> filter_key == "event:hostname" end)
+      |> Enum.filter(fn [_operation, dimension | _rest] -> dimension == "event:hostname" end)
 
     if length(hostname_filters) > 0 do
       extra_filters =
@@ -136,10 +147,10 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp hostname_filters_for_dimension(dimension, hostname_filters) do
     if Map.has_key?(@dimensions_hostname_map, dimension) do
-      filter_key = Map.get(@dimensions_hostname_map, dimension)
+      dimension = Map.get(@dimensions_hostname_map, dimension)
 
       hostname_filters
-      |> Enum.map(fn [operation, _filter_key | rest] -> [operation, filter_key | rest] end)
+      |> Enum.map(fn [operation, _dimension | rest] -> [operation, dimension | rest] end)
     else
       []
     end
@@ -184,5 +195,40 @@ defmodule Plausible.Stats.QueryOptimizer do
     end
   else
     defp remove_revenue_metrics_if_unavailable(query), do: query
+  end
+
+  defp set_time_on_page_data(query) do
+    case {:time_on_page in query.metrics, query.time_on_page_data} do
+      {true, %{new_metric_visible: true, cutoff_date: cutoff_date}} ->
+        cutoff =
+          cutoff_date
+          |> TimeOnPage.cutoff_datetime(query.timezone)
+          |> DateTime.shift_zone!("Etc/UTC")
+          |> DateTime.truncate(:second)
+
+        Query.set(
+          query,
+          time_on_page_data:
+            Map.merge(query.time_on_page_data, %{
+              include_new_metric: DateTime.before?(cutoff, query.utc_time_range.last),
+              include_legacy_metric:
+                DateTime.after?(cutoff, query.utc_time_range.first) and
+                  Legacy.TimeOnPage.can_merge_legacy_time_on_page?(query),
+              cutoff:
+                if(DateTime.after?(cutoff, query.utc_time_range.first), do: cutoff, else: nil)
+            })
+        )
+
+      _ ->
+        Query.set(
+          query,
+          time_on_page_data:
+            Map.merge(query.time_on_page_data, %{
+              include_new_metric: false,
+              include_legacy_metric: true,
+              cutoff: nil
+            })
+        )
+    end
   end
 end

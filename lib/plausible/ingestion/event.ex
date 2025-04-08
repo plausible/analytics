@@ -35,7 +35,7 @@ defmodule Plausible.Ingestion.Event do
           | :site_hostname_allowlist
           | :verification_agent
           | :lock_timeout
-          | :no_session_for_pageleave
+          | :no_session_for_engagement
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -57,6 +57,7 @@ defmodule Plausible.Ingestion.Event do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
       else
         Enum.reduce(domains, [], fn domain, acc ->
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           case GateKeeper.check(domain) do
             {:allow, site} ->
               processed =
@@ -86,15 +87,27 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
+  @spec telemetry_pipeline_step_duration() :: [atom()]
   def telemetry_pipeline_step_duration() do
     [:plausible, :ingest, :pipeline, :step]
+  end
+
+  @spec telemetry_ua_parse_timeout() :: [atom()]
+  def telemetry_ua_parse_timeout() do
+    [:plausible, :ingest, :user_agent_parse, :timeout]
+  end
+
+  @spec emit_telemetry_ua_parse_timeout() :: :ok
+  def emit_telemetry_ua_parse_timeout() do
+    :telemetry.execute(telemetry_ua_parse_timeout(), %{}, %{})
   end
 
   @spec emit_telemetry_buffered(t()) :: :ok
   def emit_telemetry_buffered(event) do
     :telemetry.execute(telemetry_event_buffered(), %{}, %{
       domain: event.domain,
-      request_timestamp: event.request.timestamp
+      request_timestamp: event.request.timestamp,
+      tracker_script_version: event.request.tracker_script_version
     })
   end
 
@@ -106,7 +119,8 @@ defmodule Plausible.Ingestion.Event do
       %{
         domain: event.domain,
         reason: reason,
-        request_timestamp: event.request.timestamp
+        request_timestamp: event.request.timestamp,
+        tracker_script_version: event.request.tracker_script_version
       }
     )
   end
@@ -223,13 +237,13 @@ defmodule Plausible.Ingestion.Event do
 
   defp put_user_agent(%__MODULE__{} = event, _context) do
     case parse_user_agent(event.request) do
-      %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}} ->
+      {:ok, %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}} ->
         drop(event, :bot)
 
-      %UAInspector.Result.Bot{} ->
+      {:ok, %UAInspector.Result.Bot{}} ->
         drop(event, :bot)
 
-      %UAInspector.Result{} = user_agent ->
+      {:ok, %UAInspector.Result{} = user_agent} ->
         update_session_attrs(event, %{
           operating_system: os_name(user_agent),
           operating_system_version: os_version(user_agent),
@@ -251,7 +265,8 @@ defmodule Plausible.Ingestion.Event do
       name: event.request.event_name,
       hostname: event.request.hostname,
       pathname: event.request.pathname,
-      scroll_depth: event.request.scroll_depth
+      scroll_depth: event.request.scroll_depth,
+      engagement_time: event.request.engagement_time
     })
   end
 
@@ -381,21 +396,21 @@ defmodule Plausible.Ingestion.Event do
         event.clickhouse_event,
         event.clickhouse_session_attrs,
         previous_user_id,
-        write_buffer_insert
+        buffer_insert: write_buffer_insert
       )
 
     case session_result do
+      {:ok, :no_session_for_engagement} ->
+        drop(event, :no_session_for_engagement)
+
+      {:error, :timeout} ->
+        drop(event, :lock_timeout)
+
       {:ok, session} ->
         %{
           event
           | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
         }
-
-      {:error, :no_session_for_pageleave} ->
-        drop(event, :no_session_for_pageleave)
-
-      {:error, :timeout} ->
-        drop(event, :lock_timeout)
     end
   end
 
@@ -414,13 +429,33 @@ defmodule Plausible.Ingestion.Event do
     |> Enum.find(fn param_name -> Map.has_key?(query_params, param_name) end)
   end
 
+  @parse_user_agent_timeout 200
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
-    Plausible.Cache.Adapter.get(:user_agents, user_agent, fn ->
-      UAInspector.parse(user_agent)
+    Plausible.Cache.Adapter.fetch(:user_agents, user_agent, fn ->
+      parse_user_agent_safe(user_agent)
     end)
   end
 
   defp parse_user_agent(request), do: request
+
+  defp parse_user_agent_safe(user_agent) do
+    task =
+      Task.Supervisor.async_nolink(
+        {:via, PartitionSupervisor, {Plausible.UserAgentParseTaskSupervisor, self()}},
+        fn ->
+          UAInspector.parse(user_agent)
+        end
+      )
+
+    case Task.yield(task, @parse_user_agent_timeout) || Task.shutdown(task) do
+      {:ok, result} ->
+        {:ok, result}
+
+      nil ->
+        emit_telemetry_ua_parse_timeout()
+        {:error, :timeout}
+    end
+  end
 
   defp browser_name(ua) do
     case ua.client do
@@ -462,16 +497,6 @@ defmodule Plausible.Ingestion.Event do
 
       %Device{type: t} when t in @desktop_types ->
         "Desktop"
-
-      %Device{type: :unknown} ->
-        nil
-
-      %Device{type: type} ->
-        Sentry.capture_message("Could not determine device type from UAInspector",
-          extra: %{type: type}
-        )
-
-        nil
 
       _ ->
         nil

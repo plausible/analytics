@@ -6,29 +6,48 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange, Metrics}
+  alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange}
 
   def from(site, params, debug_metadata, now \\ nil) do
     now = now || DateTime.utc_now(:second)
 
     query =
       Query
-      |> struct!(now: now, debug_metadata: debug_metadata)
+      |> struct!(
+        now: now,
+        debug_metadata: debug_metadata,
+        site_id: site.id,
+        site_native_stats_start_at: site.native_stats_start_at
+      )
       |> put_period(site, params)
       |> put_timezone(site)
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
+      |> resolve_segments(site)
       |> preload_goals_and_revenue(site)
       |> put_order_by(params)
-      |> put_include_comparisons(site, params)
-      |> Query.put_imported_opts(site, params)
+      |> put_include(site, params)
+      |> Query.put_comparison_utc_time_range()
+      |> Query.put_imported_opts(site)
+      |> Query.set_time_on_page_data(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, site, params)
     end
 
     query
+  end
+
+  defp resolve_segments(query, site) do
+    with {:ok, preloaded_segments} <-
+           Plausible.Segments.Filters.preload_needed_segments(site, query.filters),
+         {:ok, filters} <-
+           Plausible.Segments.Filters.resolve_segments(query.filters, preloaded_segments) do
+      struct!(query,
+        filters: filters
+      )
+    end
   end
 
   defp preload_goals_and_revenue(query, site) do
@@ -73,26 +92,18 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     struct!(query, period: "day", utc_time_range: datetime_range)
   end
 
-  defp put_period(query, site, %{"period" => "7d"} = params) do
-    end_date = parse_single_date(query, params)
-    start_date = end_date |> Date.shift(day: -6)
+  defp put_period(query, site, %{"period" => period} = params)
+       when period in ["7d", "28d", "30d", "90d"] do
+    {days, "d"} = Integer.parse(period)
+
+    end_date = parse_single_date(query, params) |> Date.shift(day: -1)
+    start_date = end_date |> Date.shift(day: 1 - days)
 
     datetime_range =
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "7d", utc_time_range: datetime_range)
-  end
-
-  defp put_period(query, site, %{"period" => "30d"} = params) do
-    end_date = parse_single_date(query, params)
-    start_date = end_date |> Date.shift(day: -30)
-
-    datetime_range =
-      DateTimeRange.new!(start_date, end_date, site.timezone)
-      |> DateTimeRange.to_timezone("Etc/UTC")
-
-    struct!(query, period: "30d", utc_time_range: datetime_range)
+    struct!(query, period: period, utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "month"} = params) do
@@ -200,9 +211,13 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
   end
 
-  defp put_include_comparisons(query, site, params) do
-    comparisons = parse_comparison_params(site, params)
-    struct!(query, include: Map.put(query.include, :comparisons, comparisons))
+  defp put_include(query, site, params) do
+    include = parse_include(site, params["include"])
+
+    query
+    |> struct!(include: include)
+    |> Query.set_include(:comparisons, parse_comparison_params(site, params))
+    |> Query.set_include(:imports, params["with_imported"] == "true")
   end
 
   @doc """
@@ -231,30 +246,36 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     iex> QueryBuilder.parse_order_by(~s([["visitors","asc"],["visit:source","desc"]]))
     [{:visitors, :asc}, {"visit:source", :desc}]
   """
-  def parse_order_by(order_by) when is_binary(order_by) do
-    case Jason.decode(order_by) do
-      {:ok, parsed} when is_list(parsed) ->
-        Enum.flat_map(parsed, &parse_order_by_pair/1)
-
-      _ ->
-        []
-    end
+  def parse_order_by(order_by) do
+    json_decode(order_by)
+    |> unwrap([])
+    |> Filters.QueryParser.parse_order_by()
+    |> unwrap([])
   end
 
-  def parse_order_by(_) do
-    []
+  @doc """
+  ### Examples:
+    iex> QueryBuilder.parse_include(%{}, nil)
+    QueryParser.default_include()
+
+    iex> QueryBuilder.parse_include(%{}, ~s({"total_rows": true}))
+    Map.merge(QueryParser.default_include(), %{total_rows: true})
+  """
+  def parse_include(site, include) do
+    json_decode(include)
+    |> unwrap(%{})
+    |> Filters.QueryParser.parse_include(site)
+    |> unwrap(Filters.QueryParser.default_include())
   end
 
-  defp parse_order_by_pair([metric_or_dimension, direction]) when direction in ["asc", "desc"] do
-    case Metrics.from_string(metric_or_dimension) do
-      {:ok, metric} -> [{metric, String.to_existing_atom(direction)}]
-      :error -> [{metric_or_dimension, String.to_existing_atom(direction)}]
-    end
+  defp json_decode(string) when is_binary(string) do
+    Jason.decode(string)
   end
 
-  defp parse_order_by_pair(_) do
-    []
-  end
+  defp json_decode(_other), do: :error
+
+  defp unwrap({:ok, result}, _default), do: result
+  defp unwrap(_, default), do: default
 
   defp put_order_by(query, %{} = params) do
     struct!(query, order_by: parse_order_by(params["order_by"]))
@@ -309,6 +330,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       date_range: date_range,
       match_day_of_week: params["match_day_of_week"] == "true"
     }
+  end
+
+  def parse_comparison_params(_site, %{"compare" => "previous_period"}) do
+    %{mode: "previous_period"}
   end
 
   def parse_comparison_params(_site, _options), do: nil

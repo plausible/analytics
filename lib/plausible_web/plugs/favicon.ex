@@ -94,9 +94,13 @@ defmodule PlausibleWeb.Favicon do
       "/favicon/sources/placeholder" ->
         send_placeholder(conn)
 
-      "/favicon/sources/" <> source ->
-        clean_source = URI.decode_www_form(source)
-        domain = Map.get(favicon_domains, clean_source, clean_source)
+      "/favicon/sources/" <> domain ->
+        domain = URI.decode_www_form(domain)
+
+        domain =
+          Map.get(favicon_domains, domain, domain)
+          |> String.split("/", parts: 2)
+          |> hd()
 
         case HTTPClient.impl().get("https://icons.duckduckgo.com/ip3/#{domain}.ico") do
           {:ok, %Finch.Response{status: 200, body: body, headers: headers}}

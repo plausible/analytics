@@ -1,4 +1,3 @@
-/** @format */
 import React, { HTMLAttributes } from 'react'
 import { render, screen } from '@testing-library/react'
 import { parseSiteFromDataset, PlausibleSite } from './site-context'
@@ -16,18 +15,22 @@ describe('parseSiteFromDataset', () => {
       data-funnels-opted-out="false"
       data-props-opted-out="false"
       data-funnels-available="true"
+      data-site-segments-available="true"
       data-props-available="true"
       data-revenue-goals='[{"currency":"USD","display_name":"Purchase"}]'
       data-funnels='[{"id":1,"name":"From homepage to login","steps_count":3}]'
       data-has-props="true"
+      data-scroll-depth-visible="true"
       data-logged-in="true"
       data-stats-begin="2021-09-07"
       data-native-stats-begin="2022-09-02"
+      data-legacy-time-on-page-cutoff="2022-01-01T00:00:00Z"
       data-embedded=""
       data-is-dbip="false"
       data-current-user-role="owner"
+      data-current-user-id="1"
       data-flags="{}"
-      data-valid-intervals-by-period='{"12mo":["day","week","month"],"30d":["day","week"],"6mo":["day","week","month"],"7d":["hour","day"],"all":["week","month"],"custom":["day","week","month"],"day":["minute","hour"],"month":["day","week"],"realtime":["minute"],"year":["day","week","month"]}'
+      data-valid-intervals-by-period='{"12mo":["day","week","month"],"7d":["hour","day"],"28d":["day","week"],"30d":["day","week"],"90d":["day","week","month"],"6mo":["day","week","month"],"all":["week","month"],"custom":["day","week","month"],"day":["minute","hour"],"month":["day","week"],"realtime":["minute"],"year":["day","week","month"]}'
       {...attrs}
     />
   )
@@ -40,6 +43,7 @@ describe('parseSiteFromDataset', () => {
     propsOptedOut: false,
     funnelsAvailable: true,
     propsAvailable: true,
+    siteSegmentsAvailable: true,
     revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
     hasProps: true,
@@ -51,9 +55,11 @@ describe('parseSiteFromDataset', () => {
     flags: {},
     validIntervalsByPeriod: {
       '12mo': ['day', 'week', 'month'],
-      '30d': ['day', 'week'],
-      '6mo': ['day', 'week', 'month'],
       '7d': ['hour', 'day'],
+      '28d': ['day', 'week'],
+      '30d': ['day', 'week'],
+      '90d': ['day', 'week', 'month'],
+      '6mo': ['day', 'week', 'month'],
       all: ['week', 'month'],
       custom: ['day', 'week', 'month'],
       day: ['minute', 'hour'],

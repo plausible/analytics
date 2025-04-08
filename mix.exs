@@ -8,7 +8,7 @@ defmodule Plausible.MixProject do
       docs: docs(),
       app: :plausible,
       version: System.get_env("APP_VERSION", "0.0.1"),
-      elixir: "~> 1.17",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() in [:prod, :ce],
       aliases: aliases(),
@@ -38,12 +38,13 @@ defmodule Plausible.MixProject do
   def application do
     [
       mod: {Plausible.Application, []},
-      extra_applications: [
-        :logger,
-        :runtime_tools,
-        :tls_certificate_check,
-        :opentelemetry_exporter
-      ]
+      extra_applications:
+        [
+          :logger,
+          :runtime_tools,
+          :tls_certificate_check,
+          :opentelemetry_exporter
+        ] ++ if(Mix.env() == :dev, do: [:observer, :wx], else: [])
     ]
   end
 
@@ -68,7 +69,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test]},
-      {:ecto_ch, "~> 0.5.0"},
+      {:ecto_ch, "~> 0.6.0"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
@@ -79,10 +80,10 @@ defmodule Plausible.MixProject do
       {:ecto, "~> 3.12.0"},
       {:ecto_sql, "~> 3.12.0"},
       {:envy, "~> 1.1.1"},
-      {:eqrcode, "~> 0.1.10"},
+      {:eqrcode, "~> 0.2.1"},
       {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test]},
       {:excoveralls, "~> 0.10", only: :test},
-      {:finch, "~> 0.17.0"},
+      {:finch, "~> 0.19.0"},
       {:floki, "~> 0.36"},
       {:fun_with_flags, "~> 1.11.0"},
       {:fun_with_flags_ui, "~> 1.0"},
@@ -90,19 +91,19 @@ defmodule Plausible.MixProject do
       {:gen_cycle, "~> 1.0.4"},
       {:hackney, "~> 1.8"},
       {:jason, "~> 1.3"},
-      {:kaffy, "~> 0.10.2", only: [:dev, :test, :staging, :prod]},
+      {:kaffy, git: "https://github.com/aesmail/kaffy.git", only: [:dev, :test, :staging, :prod]},
       {:location, git: "https://github.com/plausible/location.git"},
       {:mox, "~> 1.0", only: [:test, :ce_test]},
       {:nanoid, "~> 2.1.0"},
       {:nimble_totp, "~> 1.0"},
-      {:oban, "~> 2.17.0"},
+      {:oban, "~> 2.19.1"},
       {:observer_cli, "~> 1.7"},
       {:opentelemetry, "~> 1.1"},
       {:opentelemetry_api, "~> 1.1"},
       {:opentelemetry_ecto, "~> 1.1.0"},
       {:opentelemetry_exporter, "~> 1.6.0"},
       {:opentelemetry_phoenix, "~> 1.0"},
-      {:opentelemetry_oban, "~> 1.0.0"},
+      {:opentelemetry_oban, "~> 1.1.1"},
       {:phoenix, "~> 1.7.0"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.5"},
@@ -115,10 +116,11 @@ defmodule Plausible.MixProject do
       {:plug_cowboy, "~> 2.3"},
       {:postgrex, "~> 0.19.0"},
       {:prom_ex, "~> 1.8"},
+      {:peep, "~> 3.4"},
       {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
       {:ref_inspector, "~> 2.0"},
       {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
-      {:sentry, "~> 10.0"},
+      {:sentry, "~> 10.8.1"},
       {:siphash, "~> 3.2"},
       {:timex, "~> 3.7"},
       {:ua_inspector,
@@ -141,7 +143,8 @@ defmodule Plausible.MixProject do
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7.4"},
       {:zstream, "~> 0.6.4"},
-      {:con_cache, "~> 1.1.1"},
+      {:con_cache,
+       git: "https://github.com/aerosol/con_cache", branch: "ensure-dirty-ops-emit-telemetry"},
       {:req, "~> 0.5.0"},
       {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]},
       {:ex_json_schema, "~> 0.10.2"},

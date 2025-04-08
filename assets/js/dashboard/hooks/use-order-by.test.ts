@@ -1,5 +1,3 @@
-/** @format */
-
 import { Metric } from '../stats/reports/metrics'
 import {
   OrderBy,

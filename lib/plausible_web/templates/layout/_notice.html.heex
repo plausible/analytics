@@ -2,18 +2,18 @@
   {render("_flash.html", assigns)}
 <% end %>
 
-<div :if={assigns[:my_team]} class="flex flex-col gap-y-2">
+<div :if={assigns[:current_team]} class="flex flex-col gap-y-2">
   <Notice.active_grace_period
-    :if={Plausible.Auth.GracePeriod.active?(@my_team)}
-    enterprise?={Plausible.Teams.Billing.enterprise_configured?(@my_team)}
-    grace_period_end={grace_period_end(@my_team)}
+    :if={Plausible.Teams.GracePeriod.active?(@current_team)}
+    enterprise?={Plausible.Teams.Billing.enterprise_configured?(@current_team)}
+    grace_period_end={grace_period_end(@current_team)}
   />
 
-  <Notice.dashboard_locked :if={Plausible.Auth.GracePeriod.expired?(@my_team)} />
+  <Notice.dashboard_locked :if={Plausible.Teams.GracePeriod.expired?(@current_team)} />
 
-  <Notice.subscription_cancelled subscription={@my_team.subscription} />
+  <Notice.subscription_cancelled subscription={@current_team.subscription} />
 
-  <Notice.subscription_past_due subscription={@my_team.subscription} class="container" />
+  <Notice.subscription_past_due subscription={@current_team.subscription} class="container" />
 
-  <Notice.subscription_paused subscription={@my_team.subscription} class="container" />
+  <Notice.subscription_paused subscription={@current_team.subscription} class="container" />
 </div>

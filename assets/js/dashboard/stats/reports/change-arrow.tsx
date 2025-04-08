@@ -1,5 +1,3 @@
-/** @format */
-
 import React from 'react'
 import { Metric } from '../../../types/query-api'
 import { numberShortFormatter } from '../../util/number-formatter'

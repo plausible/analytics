@@ -71,7 +71,9 @@ config :plausible, Plausible.ClickhouseRepo, loggers: [Ecto.LogEntry]
 config :plausible, Plausible.Repo,
   timeout: 300_000,
   connect_timeout: 300_000,
-  handshake_timeout: 300_000
+  handshake_timeout: 300_000,
+  queue_target: 500,
+  queue_inerval: 1100
 
 config :plausible, Plausible.Cache, enabled: true
 
@@ -84,5 +86,8 @@ config :ex_cldr,
 config :sentry,
   enable_source_code_context: true,
   root_source_code_path: [File.cwd!()]
+
+config :prom_ex, :storage_adapter, Plausible.PromEx.StripedPeep
+config :peep, :bucket_calculator, Plausible.PromEx.Buckets
 
 import_config "#{config_env()}.exs"

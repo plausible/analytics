@@ -34,6 +34,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   alias Plausible.Sites
   alias PlausibleWeb.Api.Helpers, as: H
 
+  require Logger
+
   # Scopes permitted implicitly for every API key. Existing API keys
   # have _either_ `["stats:read:*"]` (the default) or `["sites:provision:*"]`
   # set as their valid scopes. We always consider implicit scopes as
@@ -47,12 +49,15 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   def call(conn, _opts) do
     requested_scope = Map.fetch!(conn.assigns, :api_scope)
+    context = conn.assigns[:api_context]
 
     with {:ok, token} <- get_bearer_token(conn),
-         {:ok, api_key} <- Auth.find_api_key(token),
-         :ok <- check_api_key_rate_limit(api_key),
+         {:ok, api_key, limit_key, hourly_limit} <- find_api_key(conn, token, context),
+         :ok <- check_api_key_rate_limit(limit_key, hourly_limit),
          {:ok, conn} <- verify_by_scope(conn, api_key, requested_scope) do
-      assign(conn, :current_user, api_key.user)
+      conn
+      |> assign(:current_user, api_key.user)
+      |> assign(:current_team, api_key.team)
     else
       error -> send_error(conn, requested_scope, error)
     end
@@ -60,12 +65,66 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   ### Verification dispatched by scope
 
+  defp find_api_key(conn, token, :site) do
+    case Auth.find_api_key(token, team_by: {:site, conn.params["site_id"]}) do
+      {:ok, %{api_key: api_key, team: nil}} ->
+        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+
+      {:ok, %{api_key: api_key, team: team}} ->
+        team_role_result = Plausible.Teams.Memberships.team_role(team, api_key.user)
+
+        cond do
+          Auth.is_super_admin?(api_key.user) ->
+            :pass
+
+          team_role_result == {:ok, :guest} ->
+            Logger.warning(
+              "[#{inspect(__MODULE__)}] API key #{api_key.id} user accessing #{conn.params["site_id"]} as a guest"
+            )
+
+          team_role_result == {:error, :not_a_member} ->
+            Logger.warning(
+              "[#{inspect(__MODULE__)}] API key #{api_key.id} user trying to access #{conn.params["site_id"]} as a non-member"
+            )
+
+          true ->
+            :pass
+        end
+
+        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_api_request_limit}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp find_api_key(_conn, token, _) do
+    case Auth.find_api_key(token) do
+      {:ok, %{api_key: api_key, team: nil}} ->
+        {:ok, api_key, limit_key(api_key, nil), Auth.ApiKey.hourly_request_limit()}
+
+      {:ok, %{api_key: api_key, team: team}} ->
+        {:ok, api_key, limit_key(api_key, team.identifier), team.hourly_api_request_limit}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp limit_key(api_key, nil) do
+    "api_request:#{api_key.id}"
+  end
+
+  defp limit_key(api_key, team_id) do
+    "api_request:#{api_key.id}:#{team_id}"
+  end
+
   defp verify_by_scope(conn, api_key, "stats:read:" <> _ = scope) do
     with :ok <- check_scope(api_key, scope),
          {:ok, site} <- find_site(conn.params["site_id"]),
          :ok <- verify_site_access(api_key, site) do
       Plausible.OpenTelemetry.add_site_attributes(site)
-      site = Plausible.Imported.load_import_data(site)
+      site = Plausible.Repo.preload(site, :completed_imports)
       {:ok, assign(conn, :site, site)}
     end
   end
@@ -107,14 +166,10 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     end
   end
 
-  defp check_api_key_rate_limit(api_key) do
-    case RateLimit.check_rate(
-           "api_request:#{api_key.id}",
-           to_timeout(hour: 1),
-           api_key.hourly_request_limit
-         ) do
+  defp check_api_key_rate_limit(limit_key, hourly_limit) do
+    case RateLimit.check_rate(limit_key, to_timeout(hour: 1), hourly_limit) do
       {:allow, _} -> :ok
-      {:deny, _} -> {:error, :rate_limit, api_key.hourly_request_limit}
+      {:deny, _} -> {:error, :rate_limit, hourly_limit}
     end
   end
 
@@ -134,11 +189,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   end
 
   defp verify_site_access(api_key, site) do
-    team =
-      case Plausible.Teams.get_by_owner(api_key.user) do
-        {:ok, team} -> team
-        _ -> nil
-      end
+    team = Repo.preload(site, :team).team
 
     is_member? = Plausible.Teams.Memberships.site_member?(site, api_key.user)
     is_super_admin? = Auth.is_super_admin?(api_key.user_id)
@@ -146,6 +197,9 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
     cond do
       is_super_admin? ->
         :ok
+
+      api_key.team_id && api_key.team_id != site.team_id ->
+        {:error, :invalid_api_key}
 
       Sites.locked?(site) ->
         {:error, :site_locked}

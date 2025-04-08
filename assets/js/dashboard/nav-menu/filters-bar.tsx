@@ -1,38 +1,42 @@
-/** @format */
-
-import { EllipsisHorizontalIcon, XMarkIcon } from '@heroicons/react/20/solid'
+import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import classNames from 'classnames'
-import React, { useRef, useState, useLayoutEffect, useEffect } from 'react'
-import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { useOnClickOutside } from '../util/use-on-click-outside'
-import {
-  DropdownMenuWrapper,
-  ToggleDropdownButton
-} from '../components/dropdown'
-import { FilterPillsList, PILL_X_GAP } from './filter-pills-list'
+import React, { useRef, useState, useLayoutEffect } from 'react'
+import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
+import { AppNavigationLink } from '../navigation/use-app-navigate'
+import { Popover, Transition } from '@headlessui/react'
+import { popover } from '../components/popover'
+import { BlurMenuButtonOnEscape } from '../keybinding'
+import { isSegmentFilter } from '../filtering/segments'
+import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
+import { DashboardQuery } from '../query'
 
-const SEE_MORE_GAP_PX = 16
+// Component structure is
+// `..[ filter (x) ]..[ filter (x) ]..[ three dot menu ]..`
+// where `..` represents an ideally equal length.
+// The following calculations guarantee that.
+const BUFFER_RIGHT_PX = 16 - PILL_X_GAP_PX
+const BUFFER_LEFT_PX = 16
 const SEE_MORE_WIDTH_PX = 36
+const SEE_MORE_RIGHT_MARGIN_PX = PILL_X_GAP_PX
+const SEE_MORE_LEFT_MARGIN_PX = 0
 
 export const handleVisibility = ({
   setVisibility,
-  topBarWidth,
-  actionsWidth,
-  seeMorePresent,
+  leftoverWidth,
   seeMoreWidth,
   pillWidths,
-  pillGap
+  pillGap,
+  mustShowSeeMoreMenu
 }: {
   setVisibility: (v: VisibilityState) => void
-  topBarWidth: number | null
-  actionsWidth: number | null
+  leftoverWidth: number | null
   pillWidths: (number | null)[] | null
-  seeMorePresent: boolean
   seeMoreWidth: number
   pillGap: number
+  mustShowSeeMoreMenu: boolean
 }): void => {
-  if (topBarWidth === null || actionsWidth === null || pillWidths === null) {
+  if (leftoverWidth === null || pillWidths === null) {
     return
   }
 
@@ -52,22 +56,14 @@ export const handleVisibility = ({
     return { visibleCount, lastValidWidth }
   }
 
-  const fits = fitToWidth(topBarWidth - actionsWidth)
+  const fits = fitToWidth(leftoverWidth)
 
-  // Check if possible to fit one more if "See more" is removed
-  if (seeMorePresent && fits.visibleCount === pillWidths.length - 1) {
-    const maybeFitsMore = fitToWidth(topBarWidth - actionsWidth + seeMoreWidth)
-    if (maybeFitsMore.visibleCount === pillWidths.length) {
-      return setVisibility({
-        width: maybeFitsMore.lastValidWidth,
-        visibleCount: maybeFitsMore.visibleCount
-      })
-    }
-  }
+  const seeMoreWillBePresent =
+    fits.visibleCount < pillWidths.length || mustShowSeeMoreMenu
 
   // Check if the appearance of "See more" would cause overflow
-  if (!seeMorePresent && fits.visibleCount < pillWidths.length) {
-    const maybeFitsLess = fitToWidth(topBarWidth - actionsWidth - seeMoreWidth)
+  if (seeMoreWillBePresent) {
+    const maybeFitsLess = fitToWidth(leftoverWidth - seeMoreWidth)
     if (maybeFitsLess.visibleCount < fits.visibleCount) {
       return setVisibility({
         width: maybeFitsLess.lastValidWidth,
@@ -82,137 +78,292 @@ export const handleVisibility = ({
   })
 }
 
-const getElementWidthOrNull = <T extends HTMLElement>(element: T | null) =>
-  element === null ? null : element.getBoundingClientRect().width
+const getElementWidthOrNull = <
+  T extends Pick<HTMLElement, 'getBoundingClientRect'>
+>(
+  element: T | null
+) => (element === null ? null : element.getBoundingClientRect().width)
 
 type VisibilityState = {
   width: number
   visibleCount: number
 }
 
-export const FiltersBar = () => {
+type ElementAccessor = (
+  filtersBarElement: HTMLElement | null
+) => HTMLElement | null | undefined
+
+/**
+ * The accessors are paths to other elements that FiltersBar needs to measure:
+ * they depend on the structure of the parent and are thus passed as props.
+ * Passing these with refs would be more reactive, but the main layout effect
+ * didn't trigger then as expected.
+ */
+interface FiltersBarProps {
+  accessors: {
+    topBar: ElementAccessor
+    leftSection: ElementAccessor
+    rightSection: ElementAccessor
+  }
+}
+
+const canShowClearAllAction = ({
+  filters
+}: Pick<DashboardQuery, 'filters'>): boolean => filters.length >= 2
+
+const canShowSaveAsSegmentAction = ({
+  filters,
+  isEditingSegment
+}: Pick<DashboardQuery, 'filters'> & { isEditingSegment: boolean }): boolean =>
+  filters.length >= 1 && !filters.some(isSegmentFilter) && !isEditingSegment
+
+export const FiltersBar = ({ accessors }: FiltersBarProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
-  const actionsRef = useRef<HTMLDivElement>(null)
-  const seeMoreRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
-  const { query } = useQueryContext()
+  const { query, expandedSegment } = useQueryContext()
 
-  const [opened, setOpened] = useState(false)
-
-  useEffect(() => {
-    if (visibility?.visibleCount === query.filters.length) {
-      setOpened(false)
-    }
-  }, [visibility?.visibleCount, query.filters.length])
-
-  useOnClickOutside({
-    ref: seeMoreRef,
-    active: opened,
-    handler: () => setOpened(false)
+  const showingClearAll = canShowClearAllAction({ filters: query.filters })
+  const showingSaveAsSegment = canShowSaveAsSegmentAction({
+    filters: query.filters,
+    isEditingSegment: !!expandedSegment
   })
 
+  const actionsInSeeMoreMenu = [
+    showingSaveAsSegment && ('save as segment' as const),
+    showingClearAll && ('clear all filters' as const)
+  ].filter((f) => f)
+
+  const mustShowSeeMoreMenu = actionsInSeeMoreMenu.length > 0
+
   useLayoutEffect(() => {
-    const resizeObserver = new ResizeObserver((_entries) => {
+    const topBar = accessors.topBar(containerRef.current)
+    const leftSection = accessors.leftSection(containerRef.current)
+    const rightSection = accessors.rightSection(containerRef.current)
+
+    const resizeObserver = new ResizeObserver(() => {
       const pillWidths = pillsRef.current
         ? Array.from(pillsRef.current.children).map((el) =>
-            getElementWidthOrNull(el as HTMLElement)
+            getElementWidthOrNull(el)
           )
         : null
       handleVisibility({
         setVisibility,
         pillWidths,
-        pillGap: PILL_X_GAP,
-        topBarWidth: getElementWidthOrNull(containerRef.current),
-        actionsWidth: getElementWidthOrNull(actionsRef.current),
-        seeMorePresent: !!seeMoreRef.current,
-        seeMoreWidth: SEE_MORE_WIDTH_PX + SEE_MORE_GAP_PX
+        pillGap: PILL_X_GAP_PX,
+        leftoverWidth:
+          topBar && leftSection && rightSection
+            ? getElementWidthOrNull(topBar)! -
+              getElementWidthOrNull(leftSection)! -
+              getElementWidthOrNull(rightSection)! -
+              BUFFER_LEFT_PX -
+              BUFFER_RIGHT_PX
+            : null,
+        seeMoreWidth:
+          SEE_MORE_LEFT_MARGIN_PX +
+          SEE_MORE_WIDTH_PX +
+          SEE_MORE_RIGHT_MARGIN_PX,
+        mustShowSeeMoreMenu
       })
     })
 
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current)
+    if (containerRef.current && topBar) {
+      resizeObserver.observe(topBar)
     }
 
     return () => {
       resizeObserver.disconnect()
     }
-  }, [query.filters])
+  }, [accessors, query.filters, mustShowSeeMoreMenu])
 
   if (!query.filters.length) {
-    return null
+    // functions as spacer between elements.leftSection and elements.rightSection
+    return <div className="w-4" />
   }
 
   return (
     <div
+      style={{ paddingRight: BUFFER_RIGHT_PX, paddingLeft: BUFFER_LEFT_PX }}
       className={classNames(
-        'flex w-full mt-4',
+        'flex w-full items-center',
         visibility === null && 'invisible' // hide until we've calculated the positions
       )}
       ref={containerRef}
     >
-      <FilterPillsList
-        ref={pillsRef}
-        direction="horizontal"
-        slice={{
-          type: 'hide-outside',
-          start: 0,
-          end: visibility?.visibleCount
-        }}
-        className="pb-1 overflow-hidden"
-        style={{ width: visibility?.width ?? '100%' }}
-      />
-      <div className="flex items-center gap-x-4 pb-1" ref={actionsRef}>
-        {visibility !== null &&
-          visibility.visibleCount !== query.filters.length && (
-            <ToggleDropdownButton
-              className={classNames('w-9 md:relative')}
-              ref={seeMoreRef}
-              dropdownContainerProps={{
-                ['title']: opened
-                  ? 'Hide rest of the filters'
-                  : 'Show rest of the filters',
-                ['aria-controls']: 'more-filters-menu',
-                ['aria-expanded']: opened
-              }}
-              onClick={() => setOpened((opened) => !opened)}
-              currentOption={
-                <EllipsisHorizontalIcon className="h-full w-full" />
-              }
-            >
-              {opened && typeof visibility.visibleCount === 'number' ? (
-                <DropdownMenuWrapper
-                  id={'more-filters-menu'}
-                  className="md:left-auto md:w-auto"
-                  innerContainerClassName="p-4"
-                >
-                  <FilterPillsList
-                    direction="vertical"
-                    slice={{
-                      type: 'no-render-outside',
-                      start: visibility.visibleCount
-                    }}
-                  />
-                </DropdownMenuWrapper>
-              ) : null}
-            </ToggleDropdownButton>
-          )}
-        <ClearAction />
+      <div className="flex items-center">
+        <AppliedFilterPillsList
+          ref={pillsRef}
+          direction="horizontal"
+          slice={{
+            type: 'invisible-outside',
+            start: 0,
+            end: visibility?.visibleCount
+          }}
+          className="overflow-hidden"
+          style={{ width: visibility?.width ?? 0 }}
+        />
       </div>
+      {visibility !== null &&
+        (query.filters.length !== visibility.visibleCount ||
+          mustShowSeeMoreMenu) && (
+          <SeeMoreMenu
+            actions={actionsInSeeMoreMenu}
+            className="md:relative"
+            filtersCount={query.filters.length}
+            visibleFiltersCount={visibility.visibleCount}
+          />
+        )}
     </div>
   )
 }
 
-export const ClearAction = () => (
+const SeeMoreMenu = ({
+  className,
+  filtersCount,
+  visibleFiltersCount,
+  actions
+}: {
+  className?: string
+  filtersCount: number
+  visibleFiltersCount: number
+  actions: Array<'save as segment' | 'clear all filters' | false>
+}) => {
+  const seeMoreRef = useRef<HTMLButtonElement>(null)
+  const filtersInMenuCount = filtersCount - visibleFiltersCount
+
+  const title =
+    filtersInMenuCount === 1
+      ? 'See 1 more filter and actions'
+      : filtersInMenuCount > 1
+        ? `See ${filtersInMenuCount} more filters and actions`
+        : 'See actions'
+
+  const showMoreFilters = filtersCount !== visibleFiltersCount
+  const showSomeActions = actions.some((a) => a)
+
+  return (
+    <Popover className={className}>
+      <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
+      <Popover.Button
+        title={title}
+        ref={seeMoreRef}
+        className={classNames(
+          popover.toggleButton.classNames.rounded,
+          popover.toggleButton.classNames.shadow,
+          'justify-center',
+          'relative group'
+        )}
+        style={{
+          height: SEE_MORE_WIDTH_PX,
+          width: SEE_MORE_WIDTH_PX,
+          marginLeft: SEE_MORE_LEFT_MARGIN_PX,
+          marginRight: SEE_MORE_RIGHT_MARGIN_PX
+        }}
+      >
+        <EllipsisHorizontalIcon className="block h-5 w-5" />
+        {showMoreFilters && (
+          <div
+            aria-hidden="true"
+            className="absolute flex justify-end left-0 right-0 bottom-0 translate-y-1/4 pr-[3px]"
+          >
+            <div className="text-[10px] leading-[10px] min-w-[10px] font-medium shadow px-[3px] py-[1px] flex items-center rounded-sm bg-gray-100 dark:bg-gray-850">
+              +{filtersInMenuCount}
+            </div>
+          </div>
+        )}
+      </Popover.Button>
+      <Transition
+        {...popover.transition.props}
+        className={classNames(
+          'mt-2',
+          popover.transition.classNames.fullwidth,
+          'md:right-auto'
+        )}
+      >
+        <Popover.Panel
+          className={classNames(
+            popover.panel.classNames.roundedSheet,
+            'flex flex-col'
+          )}
+        >
+          {showMoreFilters && (
+            <>
+              <div className="py-4 px-4">
+                <AppliedFilterPillsList
+                  direction="vertical"
+                  pillClassName="dark:!shadow-gray-950/60"
+                  slice={{
+                    type: 'no-render-outside',
+                    start: visibleFiltersCount
+                  }}
+                />
+              </div>
+              {showSomeActions && (
+                <div className="mb-1 border-gray-200 dark:border-gray-500 border-b"></div>
+              )}
+            </>
+          )}
+          {showSomeActions && (
+            <div className="flex flex-col">
+              {actions.map((action, index) => {
+                const linkClassName = classNames(
+                  popover.items.classNames.navigationLink,
+                  popover.items.classNames.selectedOption,
+                  popover.items.classNames.hoverLink,
+                  index === 0 && !showMoreFilters
+                    ? popover.items.classNames.roundedStartEnd
+                    : popover.items.classNames.roundedEnd,
+                  'whitespace-nowrap'
+                )
+
+                switch (action) {
+                  case 'clear all filters':
+                    return (
+                      <ClearAction key={action} className={linkClassName} />
+                    )
+                  case 'save as segment':
+                    return (
+                      <SaveAsSegmentAction
+                        key={action}
+                        className={linkClassName}
+                      />
+                    )
+                  default:
+                    return null
+                }
+              })}
+            </div>
+          )}
+        </Popover.Panel>
+      </Transition>
+    </Popover>
+  )
+}
+
+const ClearAction = ({ className }: { className?: string }) => (
   <AppNavigationLink
-    title="Clear all filters"
-    className="w-9 text-gray-500 hover:text-indigo-700 dark:hover:text-indigo-500 flex items-center justify-center"
+    className={className}
     search={(search) => ({
       ...search,
       filters: null,
       labels: null
     })}
   >
-    <XMarkIcon className="w-4 h-4" />
+    Clear all filters
   </AppNavigationLink>
 )
+
+const SaveAsSegmentAction = ({ className }: { className?: string }) => {
+  const { setModal } = useRoutelessModalsContext()
+
+  return (
+    <AppNavigationLink
+      className={className}
+      search={(s) => s}
+      onClick={() => setModal('create')}
+      state={{ expandedSegment: null }}
+    >
+      Save as segment
+    </AppNavigationLink>
+  )
+}

@@ -29,7 +29,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "Goals" => false,
                    "Props" => false,
                    "RevenueGoals" => false,
-                   "StatsAPI" => false
+                   "StatsAPI" => false,
+                   "SiteSegments" => false
                  }
                }
 
@@ -53,7 +54,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "Goals" => false,
                    "Props" => false,
                    "RevenueGoals" => false,
-                   "StatsAPI" => false
+                   "StatsAPI" => false,
+                   "SiteSegments" => false
                  }
                }
 
@@ -79,7 +81,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "Goals" => true,
                    "Props" => true,
                    "RevenueGoals" => true,
-                   "StatsAPI" => true
+                   "StatsAPI" => true,
+                   "SiteSegments" => true
                  }
                }
 
@@ -88,8 +91,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
 
     @tag :ee_only
     test "growth", %{conn: conn, site: site, token: token} do
-      site = Plausible.Repo.preload(site, :owner)
-      subscribe_to_growth_plan(site.owner)
+      [owner | _] = Plausible.Repo.preload(site, :owners).owners
+      subscribe_to_growth_plan(owner)
 
       resp =
         conn
@@ -107,7 +110,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "Goals" => true,
                    "Props" => false,
                    "RevenueGoals" => false,
-                   "StatsAPI" => false
+                   "StatsAPI" => false,
+                   "SiteSegments" => false
                  }
                }
 

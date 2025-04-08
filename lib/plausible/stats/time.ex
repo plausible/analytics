@@ -5,11 +5,14 @@ defmodule Plausible.Stats.Time do
 
   alias Plausible.Stats.{Query, DateTimeRange}
 
-  def utc_boundaries(%Query{utc_time_range: time_range}, site) do
+  def utc_boundaries(%Query{
+        utc_time_range: time_range,
+        site_native_stats_start_at: native_stats_start_at
+      }) do
     first =
       time_range.first
       |> DateTime.to_naive()
-      |> beginning_of_time(site.native_stats_start_at)
+      |> beginning_of_time(native_stats_start_at)
 
     last = DateTime.to_naive(time_range.last)
 
@@ -56,7 +59,7 @@ defmodule Plausible.Stats.Time do
         :months
       )
 
-    Enum.map(n_buckets..0, fn shift ->
+    Enum.map(n_buckets..0//-1, fn shift ->
       date_range.last
       |> Date.beginning_of_month()
       |> Date.shift(month: -shift)

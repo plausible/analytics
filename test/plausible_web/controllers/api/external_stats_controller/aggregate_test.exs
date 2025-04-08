@@ -378,10 +378,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "pageviews" => %{"value" => 3, "change" => 200},
-               "visitors" => %{"value" => 2, "change" => 100},
-               "bounce_rate" => %{"value" => 50, "change" => -50},
-               "visit_duration" => %{"value" => 750, "change" => 100}
+               "pageviews" => %{"value" => 3, "change" => 200, "comparison_value" => 1},
+               "visitors" => %{"value" => 2, "change" => 100, "comparison_value" => 1},
+               "bounce_rate" => %{"value" => 50, "change" => -50, "comparison_value" => 100},
+               "visit_duration" => %{"value" => 750, "change" => 100, "comparison_value" => 0}
              }
     end
 
@@ -409,10 +409,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "pageviews" => %{"value" => 4, "change" => 100},
-               "visitors" => %{"value" => 3, "change" => 100},
-               "bounce_rate" => %{"value" => 100, "change" => nil},
-               "visit_duration" => %{"value" => 0, "change" => 0}
+               "pageviews" => %{"value" => 4, "change" => 100, "comparison_value" => 0},
+               "visitors" => %{"value" => 3, "change" => 100, "comparison_value" => 0},
+               "bounce_rate" => %{"value" => 100, "change" => nil, "comparison_value" => 0},
+               "visit_duration" => %{"value" => 0, "change" => 0, "comparison_value" => 0}
              }
     end
 
@@ -441,15 +441,31 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "conversion_rate" => %{"value" => 50.0, "change" => 16.7}
+               "conversion_rate" => %{
+                 "value" => 50.0,
+                 "change" => 16.7,
+                 "comparison_value" => 33.33
+               }
              }
     end
 
     test "can compare time_on_page with previous period", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/A", user_id: 111, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          pathname: "/A",
+          user_id: 111,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview, pathname: "/B", user_id: 111, timestamp: ~N[2021-01-01 00:01:00]),
         build(:pageview, pathname: "/A", user_id: 999, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:engagement,
+          pathname: "/A",
+          user_id: 999,
+          timestamp: ~N[2021-01-02 00:01:30],
+          engagement_time: 90_000
+        ),
         build(:pageview, pathname: "/B", user_id: 999, timestamp: ~N[2021-01-02 00:01:30])
       ])
 
@@ -466,7 +482,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "time_on_page" => %{"value" => 90, "change" => 50.0}
+               "time_on_page" => %{"value" => 90, "change" => 50.0, "comparison_value" => 60}
              }
     end
 
@@ -474,6 +490,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/A", user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:engagement,
+          pathname: "/A",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview, pathname: "/B", user_id: 123, timestamp: ~N[2021-01-01 00:01:00]),
         build(:pageview, pathname: "/A", timestamp: ~N[2021-01-02 00:00:00])
       ])
@@ -491,7 +513,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "time_on_page" => %{"value" => nil, "change" => nil}
+               "time_on_page" => %{"value" => nil, "change" => nil, "comparison_value" => 60}
              }
     end
   end
@@ -565,12 +587,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "visitors" => %{"value" => 2, "change" => 100},
-               "visits" => %{"value" => 5, "change" => 150},
-               "pageviews" => %{"value" => 9, "change" => -10},
-               "bounce_rate" => %{"value" => 40, "change" => -10},
-               "views_per_visit" => %{"value" => 1.8, "change" => -64},
-               "visit_duration" => %{"value" => 20, "change" => -80}
+               "visitors" => %{"value" => 2, "change" => 100, "comparison_value" => 1},
+               "visits" => %{"value" => 5, "change" => 150, "comparison_value" => 2},
+               "pageviews" => %{"value" => 9, "change" => -10, "comparison_value" => 10},
+               "bounce_rate" => %{"value" => 40, "change" => -10, "comparison_value" => 50},
+               "views_per_visit" => %{"value" => 1.8, "change" => -64, "comparison_value" => 5.0},
+               "visit_duration" => %{"value" => 20, "change" => -80, "comparison_value" => 100}
              }
     end
 
@@ -600,7 +622,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "visitors" => %{"value" => 1, "change" => -67}
+               "visitors" => %{"value" => 1, "change" => -67, "comparison_value" => 3}
              }
     end
 
@@ -629,7 +651,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "visitors" => %{"change" => 100, "value" => 1}
+               "visitors" => %{"change" => 100, "value" => 1, "comparison_value" => 0}
              }
 
       assert json_response(conn, 200)["warning"] =~
@@ -879,7 +901,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => "visit:referrer==**a.com**"
@@ -1502,7 +1524,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => "event:page==/en/**"
@@ -1519,7 +1541,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => "event:page!=/en/**"
@@ -1537,7 +1559,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => "event:page==/en/**|/pl/**"
@@ -1555,7 +1577,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => "event:page==**post\\|1|/something-else"
@@ -1575,7 +1597,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "pageviews",
           "filters" => "visit:country==EE"
@@ -1593,6 +1615,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           user_id: 123,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/A",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00],
+          engagement_time: 60_000
+        ),
         build(:pageview,
           pathname: "/another",
           user_id: 123,
@@ -1602,6 +1630,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           pathname: "/A",
           user_id: 321,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/A",
+          user_id: 321,
+          timestamp: ~N[2021-01-01 00:01:20],
+          engagement_time: 80_000
         ),
         build(:pageview,
           pathname: "/another",
@@ -1638,27 +1672,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{"time_on_page" => %{"value" => nil}}
     end
 
-    test "pageleave events are ignored when querying time on page", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:00], pathname: "/1"),
-        build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:05], pathname: "/2"),
-        build(:pageleave, user_id: 1234, timestamp: ~N[2021-01-01 12:01:00], pathname: "/1")
-      ])
-
-      conn =
-        get(conn, "/api/v1/stats/aggregate", %{
-          "site_id" => site.domain,
-          "metrics" => "time_on_page",
-          "filters" => "event:page==/2",
-          "period" => "day",
-          "date" => "2021-01-01"
-        })
-
-      assert json_response(conn, 200)["results"] == %{
-               "time_on_page" => %{"value" => nil}
-             }
-    end
-
     test "conversion_rate when goal filter is applied", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "Signup"),
@@ -1668,7 +1681,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       insert(:goal, %{site: site, event_name: "Signup"})
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "conversion_rate",
           "filters" => "event:goal==Signup"
@@ -1691,7 +1704,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       insert(:goal, %{site: site, event_name: "Signup"})
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "conversion_rate,visitors,events",
           "filters" => "event:goal==Signup;event:props:author==Uku"
@@ -1720,7 +1733,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       insert(:goal, %{site: site, event_name: "Signup"})
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "conversion_rate,visitors,events",
           "filters" => "visit:browser==Firefox;event:goal==Signup"
@@ -1750,7 +1763,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       insert(:goal, %{site: site, event_name: "Signup"})
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "conversion_rate,visitors,events",
           "filters" => "event:page==/this;event:goal==Signup"
@@ -1792,7 +1805,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
@@ -1861,7 +1874,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
@@ -1882,7 +1895,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
@@ -1914,7 +1927,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
@@ -1947,7 +1960,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
@@ -1979,7 +1992,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
@@ -2011,7 +2024,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       ])
 
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/aggregate?period=day", %{
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [

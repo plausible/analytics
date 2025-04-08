@@ -1,23 +1,27 @@
 <.settings_tiles>
-  <PlausibleWeb.Team.Notice.inviting_banner :if={
-    @site_role in [:owner, :admin] and @my_team.setup_complete
+  <PlausibleWeb.Team.Notice.owner_cta_banner :if={
+    @site_role == :owner and not Plausible.Teams.setup?(@site.team)
+  } />
+
+  <PlausibleWeb.Team.Notice.guest_cta_banner :if={
+    @site_role != :owner and not Plausible.Teams.setup?(@site.team)
   } />
 
   <.tile docs="users-roles">
     <:title>People</:title>
     <:subtitle>Invite your friends or coworkers</:subtitle>
 
-    <.filter_bar filtering_enabled?={false}>
+    <.filter_bar :if={@site_role in [:owner, :admin]} filtering_enabled?={false}>
       <.button_link
         mt?={false}
         href={Routes.membership_path(@conn, :invite_member_form, @site.domain)}
       >
-        Invite new member
+        Invite New Guest
       </.button_link>
     </.filter_bar>
 
     <PlausibleWeb.Team.Notice.team_members_notice :if={
-      @site_role in [:owner, :admin] and @my_team.setup_complete
+      @site_role in [:owner, :admin] and Plausible.Teams.setup?(@current_team)
     } />
 
     <div class="flow-root">
@@ -50,9 +54,9 @@
                 </p>
               </div>
 
-              <.dropdown class="relative">
+              <.dropdown>
                 <:button class="bg-transparent text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-gray-100 whitespace-nowrap truncate inline-flex items-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700">
-                  {membership.role |> to_string() |> String.capitalize()}
+                  {site_role(membership)}
                   <Heroicons.chevron_down mini class="size-4 mt-0.5" />
                 </:button>
                 <:menu class="max-w-60">
@@ -65,7 +69,7 @@
                     </.dropdown_item>
                     <.dropdown_divider />
                     <.dropdown_item
-                      :if={@conn.assigns[:site_role] == :owner}
+                      :if={@site_role in [:owner, :admin]}
                       class="text-red-600 dark:text-red-500 hover:text-red-600"
                       href={
                         Routes.membership_path(
@@ -89,9 +93,9 @@
                         )
                       }
                       method="put"
-                      disabled={membership.role == "admin"}
+                      disabled={@site_role not in [:owner, :admin] or membership.role == "editor"}
                     >
-                      <div>Admin</div>
+                      <div>Guest Editor</div>
                       <div class="text-gray-500 dark:text-gray-400 text-xs/5">
                         View stats and edit site settings
                       </div>
@@ -107,9 +111,9 @@
                         )
                       }
                       method="put"
-                      disabled={membership.role == "viewer"}
+                      disabled={@site_role not in [:owner, :admin] or membership.role == "viewer"}
                     >
-                      <div>Viewer</div>
+                      <div>Guest Viewer</div>
                       <div class="text-gray-500 dark:text-gray-400 text-xs/5">
                         View stats only
                       </div>
@@ -126,6 +130,7 @@
                       }
                       class="text-red-600 hover:text-red-600"
                       method="delete"
+                      disabled={@site_role not in [:owner, :admin]}
                     >
                       Remove member
                     </.dropdown_item>
@@ -157,6 +162,7 @@
         <.td hide_on_mobile>{Phoenix.Naming.humanize(invitation.role)}</.td>
         <.td actions>
           <.delete_button
+            :if={@site_role in [:owner, :admin]}
             href={
               Routes.invitation_path(
                 @conn,

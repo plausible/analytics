@@ -1,12 +1,11 @@
-/** @format */
-
 import { Metric } from '../../../types/query-api'
 import { formatMoneyShort, formatMoneyLong } from '../../util/money'
 import {
   numberShortFormatter,
   durationFormatter,
   percentageFormatter,
-  numberLongFormatter
+  numberLongFormatter,
+  nullable
 } from '../../util/number-formatter'
 
 export type FormattableMetric =
@@ -23,7 +22,7 @@ export const MetricFormatterShort: Record<
   FormattableMetric,
   (value: ValueType) => string
 > = {
-  events: numberShortFormatter,
+  events: nullable(numberShortFormatter),
   pageviews: numberShortFormatter,
   total_visitors: numberShortFormatter,
   current_visitors: numberShortFormatter,
@@ -33,8 +32,8 @@ export const MetricFormatterShort: Record<
 
   conversions: numberShortFormatter,
 
-  time_on_page: durationFormatter,
-  visit_duration: durationFormatter,
+  time_on_page: nullable(durationFormatter),
+  visit_duration: nullable(durationFormatter),
 
   bounce_rate: percentageFormatter,
   conversion_rate: percentageFormatter,
@@ -51,7 +50,7 @@ export const MetricFormatterLong: Record<
   FormattableMetric,
   (value: ValueType) => string
 > = {
-  events: numberLongFormatter,
+  events: nullable(numberLongFormatter),
   pageviews: numberLongFormatter,
   total_visitors: numberLongFormatter,
   current_visitors: numberShortFormatter,
@@ -61,8 +60,8 @@ export const MetricFormatterLong: Record<
 
   conversions: numberLongFormatter,
 
-  time_on_page: durationFormatter,
-  visit_duration: durationFormatter,
+  time_on_page: nullable(durationFormatter),
+  visit_duration: nullable(durationFormatter),
 
   bounce_rate: percentageFormatter,
   conversion_rate: percentageFormatter,

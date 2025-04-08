@@ -1,60 +1,79 @@
-import React, {useCallback} from "react";
+import React, { useCallback } from 'react'
 import Modal from './modal'
-import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
+import {
+  hasConversionGoalFilter,
+  isRealTimeDashboard
+} from '../../util/filters'
 import { addFilter } from '../../query'
-import BreakdownModal from "./breakdown-modal";
+import BreakdownModal from './breakdown-modal'
 import * as metrics from '../reports/metrics'
-import * as url from '../../util/url';
-import { useQueryContext } from "../../query-context";
-import { useSiteContext } from "../../site-context";
-import { SortDirection } from "../../hooks/use-order-by";
+import * as url from '../../util/url'
+import { useQueryContext } from '../../query-context'
+import { useSiteContext } from '../../site-context'
+import { SortDirection } from '../../hooks/use-order-by'
 
 function PagesModal() {
-  const { query } = useQueryContext();
-  const site = useSiteContext();
+  const { query } = useQueryContext()
+  const site = useSiteContext()
 
   const reportInfo = {
     title: 'Top Pages',
     dimension: 'page',
     endpoint: url.apiPath(site, '/pages'),
     dimensionLabel: 'Page url',
-    defaultOrder: ["visitors", SortDirection.desc]
+    defaultOrder: ['visitors', SortDirection.desc]
   }
 
-  const getFilterInfo = useCallback((listItem) => {
-    return {
-      prefix: reportInfo.dimension,
-      filter: ["is", reportInfo.dimension, [listItem.name]]
-    }
-  }, [reportInfo.dimension])
+  const getFilterInfo = useCallback(
+    (listItem) => {
+      return {
+        prefix: reportInfo.dimension,
+        filter: ['is', reportInfo.dimension, [listItem.name]]
+      }
+    },
+    [reportInfo.dimension]
+  )
 
-  const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [searchString], { case_sensitive: false }])
-  }, [reportInfo.dimension])
+  const addSearchFilter = useCallback(
+    (query, searchString) => {
+      return addFilter(query, [
+        'contains',
+        reportInfo.dimension,
+        [searchString],
+        { case_sensitive: false }
+      ])
+    },
+    [reportInfo.dimension]
+  )
 
   function chooseMetrics() {
-    if (hasGoalFilter(query)) {
+    if (hasConversionGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({renderLabel: (_query) => 'Conversions', width: 'w-28'}),
+        metrics.createVisitors({
+          renderLabel: (_query) => 'Conversions',
+          width: 'w-28'
+        }),
         metrics.createConversionRate()
       ]
     }
 
     if (isRealTimeDashboard(query)) {
       return [
-        metrics.createVisitors({renderLabel: (_query) => 'Current visitors', width: 'w-36'})
+        metrics.createVisitors({
+          renderLabel: (_query) => 'Current visitors',
+          width: 'w-36'
+        })
       ]
     }
 
-    const defaultMetrics = [
-      metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
+    return [
+      metrics.createVisitors({ renderLabel: (_query) => 'Visitors' }),
       metrics.createPageviews(),
       metrics.createBounceRate(),
-      metrics.createTimeOnPage()
+      metrics.createTimeOnPage(),
+      metrics.createScrollDepth()
     ]
-
-    return site.flags.scroll_depth ? [...defaultMetrics, metrics.createScrollDepth()] : defaultMetrics
   }
 
   return (

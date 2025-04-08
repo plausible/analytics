@@ -1,11 +1,10 @@
-/* @format */
 import { useEffect } from 'react'
 import {
   clearedComparisonSearch,
   clearedDateSearch,
   DashboardQuery
 } from './query'
-import { PlausibleSite, useSiteContext } from './site-context'
+import { PlausibleSite } from './site-context'
 import {
   formatDateRange,
   formatDay,
@@ -24,14 +23,15 @@ import {
 } from './util/date'
 import { AppNavigationTarget } from './navigation/use-app-navigate'
 import { getDomainScopedStorageKey, getItem, setItem } from './util/storage'
-import { useQueryContext } from './query-context'
 
 export enum QueryPeriod {
   'realtime' = 'realtime',
   'day' = 'day',
   'month' = 'month',
   '7d' = '7d',
+  '28d' = '28d',
   '30d' = '30d',
+  '90d' = '90d',
   '6mo' = '6mo',
   '12mo' = '12mo',
   'year' = 'year',
@@ -65,10 +65,15 @@ export const COMPARISON_MATCH_MODE_LABELS = {
 
 export const DEFAULT_COMPARISON_MODE = ComparisonMode.previous_period
 
-export const COMPARISON_DISABLED_PERIODS = [
-  QueryPeriod.realtime,
-  QueryPeriod.all
-]
+const COMPARISON_DISABLED_PERIODS = [QueryPeriod.realtime, QueryPeriod.all]
+
+export const isComparisonForbidden = ({
+  period,
+  segmentIsExpanded
+}: {
+  period: QueryPeriod
+  segmentIsExpanded: boolean
+}) => COMPARISON_DISABLED_PERIODS.includes(period) || segmentIsExpanded
 
 export const DEFAULT_COMPARISON_MATCH_MODE = ComparisonMatchMode.MatchDayOfWeek
 
@@ -244,142 +249,208 @@ export type LinkItem = [
       site: PlausibleSite
       query: DashboardQuery
     }) => boolean
-    onClick?: () => void
+    onEvent?: (event: Pick<Event, 'preventDefault' | 'stopPropagation'>) => void
+    hidden?: boolean
   }
 ]
 
-export const getDatePeriodGroups = (
+/**
+ * This function gets menu items with their respective navigation logic.
+ * Used to render both menu items and keybind listeners.
+ * `onEvent` is passed to all default items, but not extra items.
+ */
+export const getDatePeriodGroups = ({
+  site,
+  onEvent,
+  extraItemsInLastGroup = [],
+  extraGroups = []
+}: {
   site: PlausibleSite
-): Array<Array<LinkItem>> => [
-  [
+  onEvent?: LinkItem[1]['onEvent']
+  extraItemsInLastGroup?: LinkItem[]
+  extraGroups?: LinkItem[][]
+}): LinkItem[][] => {
+  const groups: LinkItem[][] = [
     [
-      ['Today', 'D'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod.day,
-          date: formatISO(nowForSite(site)),
-          keybindHint: 'D'
-        }),
-        isActive: ({ query }) =>
-          query.period === QueryPeriod.day &&
-          isSameDate(query.date, nowForSite(site))
-      }
+      [
+        ['Today', 'D'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod.day,
+            date: formatISO(nowForSite(site)),
+            keybindHint: 'D'
+          }),
+          isActive: ({ query }) =>
+            query.period === QueryPeriod.day &&
+            isSameDate(query.date, nowForSite(site)),
+          onEvent
+        }
+      ],
+      [
+        ['Yesterday', 'E'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod.day,
+            date: formatISO(yesterday(site)),
+            keybindHint: 'E'
+          }),
+          isActive: ({ query }) =>
+            query.period === QueryPeriod.day &&
+            isSameDate(query.date, yesterday(site)),
+          onEvent
+        }
+      ],
+      [
+        ['Realtime', 'R'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod.realtime,
+            keybindHint: 'R'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod.realtime,
+          onEvent
+        }
+      ]
     ],
     [
-      ['Yesterday', 'E'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod.day,
-          date: formatISO(yesterday(site)),
-          keybindHint: 'E'
-        }),
-        isActive: ({ query }) =>
-          query.period === QueryPeriod.day &&
-          isSameDate(query.date, yesterday(site))
-      }
+      [
+        ['Last 7 Days', 'W'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['7d'],
+            keybindHint: 'W'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['7d'],
+          onEvent
+        }
+      ],
+      [
+        ['Last 28 Days', 'F'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['28d'],
+            keybindHint: 'F'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['28d'],
+          onEvent
+        }
+      ],
+      [
+        ['Last 30 Days', 'T'],
+        {
+          hidden: true,
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['30d'],
+            keybindHint: 'T'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['30d'],
+          onEvent
+        }
+      ],
+      [
+        ['Last 90 Days', 'N'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['90d'],
+            keybindHint: 'N'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['90d'],
+          onEvent
+        }
+      ]
     ],
     [
-      ['Realtime', 'R'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod.realtime,
-          keybindHint: 'R'
-        }),
-        isActive: ({ query }) => query.period === QueryPeriod.realtime
-      }
+      [
+        ['Month to Date', 'M'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod.month,
+            keybindHint: 'M'
+          }),
+          isActive: ({ query }) =>
+            query.period === QueryPeriod.month &&
+            isSameMonth(query.date, nowForSite(site)),
+          onEvent
+        }
+      ],
+      [
+        ['Last Month', 'P'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod.month,
+            date: formatISO(lastMonth(site)),
+            keybindHint: 'P'
+          }),
+          isActive: ({ query }) =>
+            query.period === QueryPeriod.month &&
+            isSameMonth(query.date, lastMonth(site)),
+          onEvent
+        }
+      ]
+    ],
+    [
+      [
+        ['Year to Date', 'Y'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod.year,
+            keybindHint: 'Y'
+          }),
+          isActive: ({ query }) =>
+            query.period === QueryPeriod.year && isThisYear(site, query.date),
+          onEvent
+        }
+      ],
+      [
+        ['Last 6 months', 'S'],
+        {
+          hidden: true,
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['6mo'],
+            keybindHint: 'S'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['6mo']
+        }
+      ],
+      [
+        ['Last 12 Months', 'L'],
+        {
+          search: (s) => ({
+            ...s,
+            ...clearedDateSearch,
+            period: QueryPeriod['12mo'],
+            keybindHint: 'L'
+          }),
+          isActive: ({ query }) => query.period === QueryPeriod['12mo'],
+          onEvent
+        }
+      ]
     ]
-  ],
-  [
-    [
-      ['Last 7 Days', 'W'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod['7d'],
-          keybindHint: 'W'
-        }),
-        isActive: ({ query }) => query.period === QueryPeriod['7d']
-      }
-    ],
-    [
-      ['Last 30 Days', 'T'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod['30d'],
-          keybindHint: 'T'
-        }),
-        isActive: ({ query }) => query.period === QueryPeriod['30d']
-      }
-    ]
-  ],
-  [
-    [
-      ['Month to Date', 'M'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod.month,
-          keybindHint: 'M'
-        }),
-        isActive: ({ query }) =>
-          query.period === QueryPeriod.month &&
-          isSameMonth(query.date, nowForSite(site))
-      }
-    ],
-    [
-      ['Last Month'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod.month,
-          date: formatISO(lastMonth(site)),
-          keybindHint: null
-        }),
-        isActive: ({ query }) =>
-          query.period === QueryPeriod.month &&
-          isSameMonth(query.date, lastMonth(site))
-      }
-    ]
-  ],
-  [
-    [
-      ['Year to Date', 'Y'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod.year,
-          keybindHint: 'Y'
-        }),
-        isActive: ({ query }) =>
-          query.period === QueryPeriod.year && isThisYear(site, query.date)
-      }
-    ],
-    [
-      ['Last 12 Months', 'L'],
-      {
-        search: (s) => ({
-          ...s,
-          ...clearedDateSearch,
-          period: QueryPeriod['12mo'],
-          keybindHint: 'L'
-        }),
-        isActive: ({ query }) => query.period === QueryPeriod['12mo']
-      }
-    ]
-  ],
-  [
+  ]
+
+  const lastGroup: LinkItem[] = [
     [
       ['All time', 'A'],
       {
@@ -389,24 +460,16 @@ export const getDatePeriodGroups = (
           period: QueryPeriod.all,
           keybindHint: 'A'
         }),
-        isActive: ({ query }) => query.period === QueryPeriod.all
+        isActive: ({ query }) => query.period === QueryPeriod.all,
+        onEvent
       }
     ]
   ]
-]
 
-export const last6MonthsLinkItem: LinkItem = [
-  ['Last 6 months', 'S'],
-  {
-    search: (s) => ({
-      ...s,
-      ...clearedDateSearch,
-      period: QueryPeriod['6mo'],
-      keybindHint: 'S'
-    }),
-    isActive: ({ query }) => query.period === QueryPeriod['6mo']
-  }
-]
+  return groups
+    .concat([lastGroup.concat(extraItemsInLastGroup)])
+    .concat(extraGroups)
+}
 
 export const getCompareLinkItem = ({
   query,
@@ -472,7 +535,8 @@ export function getSavedTimePreferencesFromStorage({
 export function getDashboardTimeSettings({
   searchValues,
   storedValues,
-  defaultValues
+  defaultValues,
+  segmentIsExpanded
 }: {
   searchValues: Record<'period' | 'comparison' | 'match_day_of_week', unknown>
   storedValues: ReturnType<typeof getSavedTimePreferencesFromStorage>
@@ -480,6 +544,7 @@ export function getDashboardTimeSettings({
     DashboardQuery,
     'period' | 'comparison' | 'match_day_of_week'
   >
+  segmentIsExpanded: boolean
 }): Pick<DashboardQuery, 'period' | 'comparison' | 'match_day_of_week'> {
   let period: QueryPeriod
   if (isValidPeriod(searchValues.period)) {
@@ -492,7 +557,7 @@ export function getDashboardTimeSettings({
 
   let comparison: ComparisonMode | null
 
-  if ([QueryPeriod.realtime, QueryPeriod.all].includes(period)) {
+  if (isComparisonForbidden({ period, segmentIsExpanded })) {
     comparison = null
   } else {
     comparison = isValidComparison(searchValues.comparison)
@@ -519,9 +584,13 @@ export function getDashboardTimeSettings({
   }
 }
 
-export function DisplaySelectedPeriod() {
-  const { query } = useQueryContext()
-  const site = useSiteContext()
+export function getCurrentPeriodDisplayName({
+  query,
+  site
+}: {
+  query: DashboardQuery
+  site: PlausibleSite
+}) {
   if (query.period === 'day') {
     if (isToday(site, query.date)) {
       return 'Today'
@@ -531,8 +600,14 @@ export function DisplaySelectedPeriod() {
   if (query.period === '7d') {
     return 'Last 7 days'
   }
+  if (query.period === '28d') {
+    return 'Last 28 days'
+  }
   if (query.period === '30d') {
     return 'Last 30 days'
+  }
+  if (query.period === '90d') {
+    return 'Last 90 days'
   }
   if (query.period === 'month') {
     if (isThisMonth(site, query.date)) {
@@ -559,4 +634,21 @@ export function DisplaySelectedPeriod() {
     return formatDateRange(site, query.from, query.to)
   }
   return 'Realtime'
+}
+
+export function getCurrentComparisonPeriodDisplayName({
+  query,
+  site
+}: {
+  query: DashboardQuery
+  site: PlausibleSite
+}) {
+  if (!query.comparison) {
+    return null
+  }
+  return query.comparison === ComparisonMode.custom &&
+    query.compare_from &&
+    query.compare_to
+    ? formatDateRange(site, query.compare_from, query.compare_to)
+    : COMPARISON_MODES[query.comparison]
 }

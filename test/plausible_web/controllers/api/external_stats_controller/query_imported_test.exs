@@ -3,6 +3,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
   @user_id Enum.random(1000..9999)
 
+  @unsupported_interval_warning "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+  @unsupported_query_warning "Imported stats are not included in the results because query parameters are not supported. For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
+
+  @no_imported_scroll_depth_metric_warning %{
+    "code" => "no_imported_scroll_depth",
+    "warning" => "No imports with scroll depth data were found"
+  }
+
   setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
   describe "aggregation with imported data" do
@@ -880,8 +888,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       refute json_response(conn, 200)["meta"]["imports_included"]
       assert json_response(conn, 200)["meta"]["imports_skip_reason"] == "unsupported_interval"
 
-      assert json_response(conn, 200)["meta"]["imports_warning"] =~
-               "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+      assert json_response(conn, 200)["meta"]["imports_warning"] == @unsupported_interval_warning
     end
 
     test "adds a warning when query params are not supported for imported data", %{
@@ -920,8 +927,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       refute json_response(conn, 200)["meta"]["imports_included"]
       assert json_response(conn, 200)["meta"]["imports_skip_reason"] == "unsupported_query"
 
-      assert json_response(conn, 200)["meta"]["imports_warning"] =~
-               "Imported stats are not included in the results because query parameters are not supported."
+      assert json_response(conn, 200)["meta"]["imports_warning"] == @unsupported_query_warning
     end
 
     test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
@@ -1052,7 +1058,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
              } = json_response(conn, 200)
 
       refute json_response(conn, 200)["meta"]["imports_included"]
-      assert meta["imports_warning"] =~ "Imported stats are not included in the results"
+      assert meta["imports_warning"] == @unsupported_query_warning
     end
 
     test "imported country, region and city data",
@@ -1285,6 +1291,437 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
       # This is non-deterministic since /99 might not be in the top N items of imported pages subquery.
       assert pageviews in 1..2
+    end
+  end
+
+  describe "behavioral filters" do
+    setup :create_site_import
+
+    test "imports are skipped when has_done filter is used", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_pages,
+          page: "/blog",
+          pageviews: 5,
+          visitors: 3,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            ["has_done", ["is", "event:name", ["pageview"]]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [2]}]
+      refute json_response(conn, 200)["meta"]["imports_included"]
+
+      assert json_response(conn, 200)["meta"]["imports_warning"] == @unsupported_query_warning
+    end
+
+    test "imports are skipped when has_not_done filter is used", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_pages,
+          page: "/blog",
+          pageviews: 5,
+          visitors: 3,
+          date: ~D[2023-01-01]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:goal"],
+          "filters" => [
+            ["has_not_done", ["is", "event:name", ["pageview"]]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == []
+      refute json_response(conn, 200)["meta"]["imports_included"]
+
+      assert json_response(conn, 200)["meta"]["imports_warning"] == @unsupported_query_warning
+    end
+  end
+
+  describe "scroll depth metric warnings" do
+    test "returns warning when a site_import without scroll depth is in queried range", %{
+      conn: conn,
+      site: site
+    } do
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
+        build(:engagement,
+          user_id: 123,
+          pathname: "/",
+          timestamp: ~N[2021-02-01 00:01:00],
+          scroll_depth: 70
+        ),
+        build(:imported_pages, page: "/", date: ~D[2021-02-01]),
+        build(:imported_pages, page: "/", date: ~D[2021-02-28])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "scroll_depth"],
+          "date_range" => "all",
+          "filters" => [["is", "event:page", ["/"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
+
+      assert results == [%{"dimensions" => [], "metrics" => [3, 70]}]
+
+      assert meta["imports_included"] == true
+
+      assert meta["metric_warnings"] == %{
+               "scroll_depth" => @no_imported_scroll_depth_metric_warning
+             }
+    end
+
+    test "returns warning when import without scroll depth in comparison range", %{
+      conn: conn,
+      site: site
+    } do
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
+        build(:engagement,
+          user_id: 123,
+          pathname: "/",
+          timestamp: ~N[2021-02-01 00:01:00],
+          scroll_depth: 70
+        ),
+        build(:imported_pages, page: "/", date: ~D[2021-02-01]),
+        build(:imported_pages, page: "/", date: ~D[2021-02-28])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "scroll_depth"],
+          "date_range" => ["2022-01-01", "2022-12-31"],
+          "filters" => [["is", "event:page", ["/"]]],
+          "include" => %{"imports" => true, "comparisons" => %{"mode" => "previous_period"}}
+        })
+
+      assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
+
+      assert results == [
+               %{
+                 "dimensions" => [],
+                 "metrics" => [0, nil],
+                 "comparison" => %{
+                   "change" => [-100, nil],
+                   "dimensions" => [],
+                   "metrics" => [3, 70]
+                 }
+               }
+             ]
+
+      assert meta["imports_included"] == true
+
+      assert meta["metric_warnings"] == %{
+               "scroll_depth" => @no_imported_scroll_depth_metric_warning
+             }
+    end
+
+    test "does not return warning when imports requested but rejected", %{
+      conn: conn,
+      site: site
+    } do
+      site_import =
+        insert(:site_import, site: site, start_date: ~D[2021-02-01], end_date: ~D[2021-02-28])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
+        build(:engagement,
+          user_id: 123,
+          pathname: "/",
+          timestamp: ~N[2021-02-01 00:01:00],
+          scroll_depth: 70
+        ),
+        build(:imported_pages, page: "/", date: ~D[2021-02-01]),
+        build(:imported_pages, page: "/", date: ~D[2021-02-28])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "scroll_depth"],
+          "date_range" => "all",
+          "filters" => [["is", "event:page", ["/"]], ["is_not", "visit:browser", ["abc"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
+
+      assert results == [%{"dimensions" => [], "metrics" => [1, 70]}]
+
+      refute meta["imports_included"]
+      refute meta["metric_warnings"]["scroll_depth"]
+    end
+
+    test "does not return warning when imports without scroll depth exist but outside the queried range",
+         %{
+           conn: conn,
+           site: site
+         } do
+      site_import =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2021-02-01],
+          end_date: ~D[2021-02-28]
+        )
+
+      populate_stats(site, site_import.id, [
+        build(:imported_pages, page: "/", date: ~D[2021-02-01]),
+        build(:imported_pages, page: "/", date: ~D[2021-02-28])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "scroll_depth"],
+          "date_range" => ["2022-01-01", "2022-01-31"],
+          "dimensions" => ["event:page"],
+          "include" => %{"imports" => true}
+        })
+
+      assert %{"results" => [], "meta" => meta} = json_response(conn, 200)
+
+      refute meta["imports_included"]
+      refute meta["metric_warnings"]["scroll_depth"]
+    end
+
+    test "does not return warning when imported scroll depth exists", %{
+      conn: conn,
+      site: site
+    } do
+      site_import =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2021-02-01],
+          end_date: ~D[2021-02-28],
+          has_scroll_depth: true
+        )
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 123, pathname: "/", timestamp: ~N[2021-02-01 00:00:00]),
+        build(:engagement,
+          user_id: 123,
+          pathname: "/",
+          timestamp: ~N[2021-02-01 00:01:00],
+          scroll_depth: 70
+        ),
+        build(:imported_pages,
+          page: "/",
+          date: ~D[2021-02-01],
+          total_scroll_depth: 80,
+          total_scroll_depth_visits: 1
+        ),
+        build(:imported_pages, page: "/", date: ~D[2021-02-28])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "scroll_depth"],
+          "date_range" => "all",
+          "filters" => [["is", "event:page", ["/"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert %{"results" => results, "meta" => meta} = json_response(conn, 200)
+
+      assert results == [%{"dimensions" => [], "metrics" => [3, 75]}]
+
+      assert meta["imports_included"]
+      refute meta["metric_warnings"]["scroll_depth"]
+    end
+  end
+
+  describe "page scroll goals" do
+    setup :create_site_import
+
+    test "rejects imported data with warning when page scroll goal is filtered by", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      insert(:goal,
+        site: site,
+        page_path: "/blog",
+        scroll_threshold: 50,
+        display_name: "Scroll /blog 50"
+      )
+
+      insert(:goal, site: site, page_path: "/blog**")
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 50
+        ),
+        build(:imported_pages, page: "/blog", date: ~D[2021-01-01])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["Scroll /blog 50"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert %{
+               "results" => results,
+               "meta" => %{
+                 "imports_included" => false,
+                 "imports_skip_reason" => "unsupported_query",
+                 "imports_warning" => @unsupported_query_warning
+               }
+             } = json_response(conn, 200)
+
+      assert results == [%{"dimensions" => [], "metrics" => [1, nil, 100.0]}]
+    end
+
+    test "rejects imported data with warning when page scroll goal is filtered by (IN filter)", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      insert(:goal,
+        site: site,
+        page_path: "/blog",
+        scroll_threshold: 50,
+        display_name: "Scroll /blog 50"
+      )
+
+      insert(:goal, site: site, page_path: "/blog**")
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 50
+        ),
+        build(:imported_pages, page: "/blog", date: ~D[2021-01-01])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "date_range" => "all",
+          "filters" => [["is", "event:goal", ["Scroll /blog 50", "Visit /blog**"]]],
+          "include" => %{"imports" => true}
+        })
+
+      assert %{
+               "results" => results,
+               "meta" => %{
+                 "imports_included" => false,
+                 "imports_skip_reason" => "unsupported_query",
+                 "imports_warning" => @unsupported_query_warning
+               }
+             } = json_response(conn, 200)
+
+      assert results == [%{"dimensions" => [], "metrics" => [1, nil, 100.0]}]
+    end
+
+    test "ignores imported data for page scroll goal conversions in goal breakdown", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      insert(:goal,
+        site: site,
+        page_path: "/blog",
+        scroll_threshold: 50,
+        display_name: "Scroll /blog 50"
+      )
+
+      insert(:goal, site: site, page_path: "/blog**")
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2021-01-01 00:00:10],
+          scroll_depth: 50
+        ),
+        build(:imported_pages, page: "/blog"),
+        build(:imported_visitors)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "date_range" => "all",
+          "include" => %{"imports" => true},
+          "dimensions" => ["event:goal"]
+        })
+
+      assert %{
+               "results" => results,
+               "meta" => %{"imports_included" => true}
+             } = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["Visit /blog**"], "metrics" => [2, 2, 100.0]},
+               %{"dimensions" => ["Scroll /blog 50"], "metrics" => [1, nil, 50.0]}
+             ]
     end
   end
 end

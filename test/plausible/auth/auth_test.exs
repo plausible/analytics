@@ -21,36 +21,21 @@ defmodule Plausible.AuthTest do
   describe "create_api_key/3" do
     test "creates a new api key" do
       user = new_user(trial_expiry_date: Date.utc_today())
+      team = team_of(user)
       key = Ecto.UUID.generate()
-      assert {:ok, %Auth.ApiKey{}} = Auth.create_api_key(user, "my new key", key)
-    end
-
-    @tag :ee_only
-    test "defaults to 600 requests per hour limit in EE" do
-      user = new_user(trial_expiry_date: Date.utc_today())
-
-      {:ok, %Auth.ApiKey{hourly_request_limit: hourly_request_limit}} =
-        Auth.create_api_key(user, "my new EE key", Ecto.UUID.generate())
-
-      assert hourly_request_limit == 600
-    end
-
-    @tag :ce_build_only
-    test "defaults to 1000000 requests per hour limit in CE" do
-      user = new_user(trial_expiry_date: Date.utc_today())
-
-      {:ok, %Auth.ApiKey{hourly_request_limit: hourly_request_limit}} =
-        Auth.create_api_key(user, "my new CE key", Ecto.UUID.generate())
-
-      assert hourly_request_limit == 1_000_000
+      assert {:ok, %Auth.ApiKey{} = api_key} = Auth.create_api_key(user, team, "my new key", key)
+      assert api_key.team_id == team.id
+      assert api_key.user_id == user.id
     end
 
     test "errors when key already exists" do
       u1 = new_user(trial_expiry_date: Date.utc_today())
+      t1 = team_of(u1)
       u2 = new_user(trial_expiry_date: Date.utc_today())
+      t2 = team_of(u2)
       key = Ecto.UUID.generate()
-      assert {:ok, %Auth.ApiKey{}} = Auth.create_api_key(u1, "my new key", key)
-      assert {:error, changeset} = Auth.create_api_key(u2, "my other key", key)
+      assert {:ok, %Auth.ApiKey{}} = Auth.create_api_key(u1, t1, "my new key", key)
+      assert {:error, changeset} = Auth.create_api_key(u2, t2, "my other key", key)
 
       assert changeset.errors[:key] ==
                {"has already been taken",
@@ -58,18 +43,30 @@ defmodule Plausible.AuthTest do
     end
 
     @tag :ee_only
-    test "returns error when user is on a growth plan" do
+    test "returns error when team is on a growth plan" do
       user = new_user() |> subscribe_to_growth_plan()
+      team = team_of(user)
 
       assert {:error, :upgrade_required} =
-               Auth.create_api_key(user, "my new key", Ecto.UUID.generate())
+               Auth.create_api_key(user, team, "my new key", Ecto.UUID.generate())
+    end
+
+    test "creates a key for user in a team with a bunsiness plan" do
+      user = new_user() |> subscribe_to_business_plan()
+      team = team_of(user)
+      another_site = new_site()
+      add_member(another_site.team, user: user, role: :owner)
+
+      assert {:ok, %Auth.ApiKey{}} =
+               Auth.create_api_key(user, team, "my new key", Ecto.UUID.generate())
     end
   end
 
   describe "delete_api_key/2" do
     test "deletes the record" do
       user = new_user(trial_expiry_date: Date.utc_today())
-      assert {:ok, api_key} = Auth.create_api_key(user, "my new key", Ecto.UUID.generate())
+      team = team_of(user)
+      assert {:ok, api_key} = Auth.create_api_key(user, team, "my new key", Ecto.UUID.generate())
       assert :ok = Auth.delete_api_key(user, api_key.id)
       refute Plausible.Repo.reload(api_key)
     end
@@ -78,7 +75,10 @@ defmodule Plausible.AuthTest do
       me = new_user(trial_expiry_date: Date.utc_today())
 
       other_user = new_user(trial_expiry_date: Date.utc_today())
-      {:ok, other_api_key} = Auth.create_api_key(other_user, "my new key", Ecto.UUID.generate())
+      other_team = team_of(other_user)
+
+      {:ok, other_api_key} =
+        Auth.create_api_key(other_user, other_team, "my new key", Ecto.UUID.generate())
 
       assert {:error, :not_found} = Auth.delete_api_key(me, other_api_key.id)
       assert {:error, :not_found} = Auth.delete_api_key(me, -1)

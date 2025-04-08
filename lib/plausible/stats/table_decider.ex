@@ -21,6 +21,72 @@ defmodule Plausible.Stats.TableDecider do
     |> Enum.any?(&(dimension_partitioner(query, &1) == :event))
   end
 
+  @doc """
+  Validates whether metrics and dimensions are compatible with each other.
+
+  During query building we split query into two: event and session queries. However dimensions need to be
+  present in both queries and hence must be compatible.
+
+  Used during query parsing
+  """
+  def validate_no_metrics_dimensions_conflict(query) do
+    %{event: event_only_metrics, session: session_only_metrics} =
+      partition(query.metrics, query, &metric_partitioner/2)
+
+    %{event: event_only_dimensions, session: session_only_dimensions} =
+      partition(query.dimensions, query, &dimension_partitioner/2)
+
+    cond do
+      # event:page is a special case handled in QueryOptimizer.split_sessions_query
+      event_only_dimensions == ["event:page"] ->
+        :ok
+
+      not empty?(session_only_metrics) and not empty?(event_only_dimensions) ->
+        {:error,
+         "Session metric(s) #{i(session_only_metrics)} cannot be queried along with event dimension(s) #{i(event_only_dimensions)}"}
+
+      not empty?(event_only_metrics) and not empty?(session_only_dimensions) ->
+        {:error,
+         "Event metric(s) #{i(event_only_metrics)} cannot be queried along with session dimension(s) #{i(session_only_dimensions)}"}
+
+      true ->
+        :ok
+    end
+  end
+
+  @doc """
+  Returns a three-element tuple with instructions on how to join two Ecto
+  queries. The arguments (`events_query` and `sessions_query`) are `%Query{}`
+  structs that have been split by TableDecider already.
+
+  Normally we can always LEFT JOIN sessions to events, selecting `dimensions`
+  only from the events subquery. That's because:
+
+  1) session dimensions (e.g. entry_page) cannot be queried alongside event
+     metrics/dimensions, or
+
+  2) session dimensions (e.g. operating_system) are also available in the
+     events table.
+
+  The only exception is using the "time:minute" dimension where the sessions
+  subquery might return more rows than the events one. That's because we're
+  counting sessions in all time buckets they were active in.
+  """
+  def join_options(events_query, sessions_query) do
+    events_q_select_fields = events_query.metrics ++ events_query.dimensions
+    sessions_q_select_fields = sessions_query.metrics -- [:sample_percent]
+
+    if "time:minute" in events_query.dimensions do
+      {
+        :full,
+        events_q_select_fields -- ["time:minute"],
+        sessions_q_select_fields ++ ["time:minute"]
+      }
+    else
+      {:left, events_q_select_fields, sessions_q_select_fields}
+    end
+  end
+
   def partition_metrics(metrics, query) do
     %{
       event: event_only_metrics,
@@ -66,10 +132,12 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(%Query{legacy_breakdown: true}, :pageviews), do: :either
   defp metric_partitioner(%Query{legacy_breakdown: true}, :events), do: :either
 
+  defp metric_partitioner(query, metric) when metric in [:visitors, :visits] do
+    if "time:minute" in query.dimensions, do: :session, else: :either
+  end
+
   defp metric_partitioner(_, :conversion_rate), do: :either
   defp metric_partitioner(_, :group_conversion_rate), do: :either
-  defp metric_partitioner(_, :visitors), do: :either
-  defp metric_partitioner(_, :visits), do: :either
   defp metric_partitioner(_, :percentage), do: :either
 
   defp metric_partitioner(_, :average_revenue), do: :event
@@ -78,11 +146,11 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(_, :pageviews), do: :event
   defp metric_partitioner(_, :events), do: :event
   defp metric_partitioner(_, :bounce_rate), do: :session
+  defp metric_partitioner(_, :time_on_page), do: :event
   defp metric_partitioner(_, :visit_duration), do: :session
   defp metric_partitioner(_, :views_per_visit), do: :session
 
   # Calculated metrics - handled on callsite separately from other metrics.
-  defp metric_partitioner(_, :time_on_page), do: :other
   defp metric_partitioner(_, :total_visitors), do: :other
   # Sample percentage is included in both tables if queried.
   defp metric_partitioner(_, :sample_percent), do: :sample_percent
@@ -103,5 +171,9 @@ defmodule Plausible.Stats.TableDecider do
       key = partitioner.(query, value)
       Map.put(acc, key, Map.fetch!(acc, key) ++ [value])
     end)
+  end
+
+  defp i(list) when is_list(list) do
+    Enum.map_join(list, ", ", &"`#{&1}`")
   end
 end

@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { ReactNode } from 'react'
 import { cycleSortDirection, SortDirection } from '../hooks/use-order-by'
 import classNames from 'classnames'
@@ -17,11 +15,11 @@ export const SortButton = ({
   return (
     <button
       onClick={toggleSort}
-      title={next.hint}
       className={classNames('group', 'hover:underline', 'relative')}
     >
       {children}
       <span
+        title={next.hint}
         className={classNames(
           'absolute',
           'rounded inline-block h-4 w-4',

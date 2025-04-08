@@ -4,13 +4,13 @@ defmodule Plausible.Stats.Base do
   alias Plausible.Stats.{TableDecider, SQL}
   import Ecto.Query
 
-  def base_event_query(site, query) do
-    events_q = query_events(site, query)
+  def base_event_query(query) do
+    events_q = query_events(query)
 
     if TableDecider.events_join_sessions?(query) do
       sessions_q =
         from(
-          s in query_sessions(site, query),
+          s in query_sessions(query),
           select: %{session_id: s.session_id},
           where: s.sign == 1,
           group_by: s.session_id
@@ -26,8 +26,8 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp query_events(site, query) do
-    q = from(e in "events_v2", where: ^SQL.WhereBuilder.build(:events, site, query))
+  defp query_events(query) do
+    q = from(e in "events_v2", where: ^SQL.WhereBuilder.build(:events, query))
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
@@ -36,8 +36,8 @@ defmodule Plausible.Stats.Base do
     q
   end
 
-  def query_sessions(site, query) do
-    q = from(s in "sessions_v2", where: ^SQL.WhereBuilder.build(:sessions, site, query))
+  def query_sessions(query) do
+    q = from(s in "sessions_v2", where: ^SQL.WhereBuilder.build(:sessions, query))
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)

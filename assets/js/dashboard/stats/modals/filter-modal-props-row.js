@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useMemo } from 'react'
 import { TrashIcon } from '@heroicons/react/20/solid'
 
@@ -112,7 +110,7 @@ export default function FilterModalPropsRow({
         />
       </div>
       {showDelete && (
-        <div className="col-span-1 flex flex-col justify-center">
+        <div className="col-span-1 flex flex-col mt-2">
           {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
           <a
             className="ml-2 text-red-600 h-5 w-5 cursor-pointer"

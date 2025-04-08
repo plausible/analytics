@@ -15,35 +15,40 @@ defmodule Plausible.Application do
 
     children =
       [
+        {PartitionSupervisor,
+         child_spec: Task.Supervisor, name: Plausible.UserAgentParseTaskSupervisor},
+        Plausible.Session.BalancerSupervisor,
         Plausible.Cache.Stats,
+        Plausible.PromEx,
+        {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         Plausible.Repo,
         Plausible.ClickhouseRepo,
         Plausible.IngestRepo,
         Plausible.AsyncInsertRepo,
         Plausible.ImportDeletionRepo,
-        {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
-        {Plausible.RateLimit, clean_period: :timer.minutes(10)},
-        Plausible.Ingestion.Counters,
-        {Finch, name: Plausible.Finch, pools: finch_pool_config()},
-        {Phoenix.PubSub, name: Plausible.PubSub},
-        Plausible.Session.Salts,
-        Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
-        Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
-        ReferrerBlocklist,
         Plausible.Cache.Adapter.child_spec(:customer_currency, :cache_customer_currency,
           ttl_check_interval: :timer.minutes(5),
+          n_lock_partitions: 1,
           global_ttl: :timer.minutes(60)
         ),
         Plausible.Cache.Adapter.child_spec(:user_agents, :cache_user_agents,
-          ttl_check_interval: :timer.seconds(5),
-          global_ttl: :timer.minutes(60)
+          ttl_check_interval: :timer.minutes(5),
+          global_ttl: :timer.minutes(60),
+          n_lock_partitions: 1,
+          ets_options: [read_concurrency: true, write_concurrency: true]
         ),
-        Plausible.Cache.Adapter.child_spec(:sessions, :cache_sessions,
-          ttl_check_interval: :timer.seconds(1),
-          global_ttl: :timer.minutes(30)
+        Plausible.Cache.Adapter.child_specs(:sessions, :cache_sessions,
+          ttl_check_interval: :timer.seconds(10),
+          global_ttl: :timer.minutes(30),
+          n_lock_partitions: 1,
+          ets_options: [read_concurrency: true, write_concurrency: true]
         ),
         warmed_cache(Plausible.Site.Cache,
-          adapter_opts: [ttl_check_interval: false],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Site.Cache.All,
@@ -53,7 +58,11 @@ defmodule Plausible.Application do
           ]
         ),
         warmed_cache(Plausible.Shield.IPRuleCache,
-          adapter_opts: [ttl_check_interval: false],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Shield.IPRuleCache.All,
@@ -63,7 +72,11 @@ defmodule Plausible.Application do
           ]
         ),
         warmed_cache(Plausible.Shield.CountryRuleCache,
-          adapter_opts: [ttl_check_interval: false],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Shield.CountryRuleCache.All,
@@ -73,7 +86,11 @@ defmodule Plausible.Application do
           ]
         ),
         warmed_cache(Plausible.Shield.PageRuleCache,
-          adapter_opts: [ttl_check_interval: false, ets_options: [:bag]],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [:bag, read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Shield.PageRuleCache.All,
@@ -83,7 +100,11 @@ defmodule Plausible.Application do
           ]
         ),
         warmed_cache(Plausible.Shield.HostnameRuleCache,
-          adapter_opts: [ttl_check_interval: false, ets_options: [:bag]],
+          adapter_opts: [
+            n_lock_partitions: 1,
+            ttl_check_interval: false,
+            ets_options: [:bag, read_concurrency: true]
+          ],
           warmers: [
             refresh_all:
               {Plausible.Shield.HostnameRuleCache.All,
@@ -94,7 +115,11 @@ defmodule Plausible.Application do
         ),
         on_ee do
           warmed_cache(Plausible.Stats.SamplingCache,
-            adapter_opts: [ttl_check_interval: false],
+            adapter_opts: [
+              n_lock_partitions: 1,
+              ttl_check_interval: false,
+              read_concurrency: true
+            ],
             warmers: [
               refresh_all:
                 {Plausible.Stats.SamplingCache.All,
@@ -102,13 +127,21 @@ defmodule Plausible.Application do
             ]
           )
         end,
+        Plausible.Ingestion.Counters,
+        Plausible.Session.Salts,
+        Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
+        Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
+        ReferrerBlocklist,
+        {Plausible.RateLimit, clean_period: :timer.minutes(10)},
+        {Finch, name: Plausible.Finch, pools: finch_pool_config()},
+        {Phoenix.PubSub, name: Plausible.PubSub},
         endpoint,
         {Oban, Application.get_env(:plausible, Oban)},
-        Plausible.PromEx,
         on_ee do
           help_scout_vault()
         end
       ]
+      |> List.flatten()
       |> Enum.reject(&is_nil/1)
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
@@ -119,7 +152,6 @@ defmodule Plausible.Application do
 
     setup_geolocation()
     Location.load_all()
-    Plausible.Ingestion.Source.init()
     Plausible.Geo.await_loader()
 
     Supervisor.start_link(List.flatten(children), opts)
@@ -172,7 +204,7 @@ defmodule Plausible.Application do
 
   defp maybe_add_sentry_pool(pool_config, default) do
     case Sentry.Config.dsn() do
-      {"http" <> _rest = url, _, _} ->
+      %{endpoint_uri: "http" <> _rest = url} ->
         Map.put(pool_config, url, Config.Reader.merge(default, size: 50))
 
       nil ->

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Plausible Playwright tests</title>
+  <script defer src="/tracker/js/plausible.local.manual.js"></script>
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+</head>
+
+<body>
+  <a id="navigate-away" href="/manual.html">Navigate away</a>
+
+  <button id="pageview-trigger-custom-url">
+    Triggers a pageview with custom URL
+  </button>
+  <button id="pageview-trigger-custom-props">
+    Triggers a pageview with custom props
+  </button>
+
+  <script>
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'pageview-trigger-custom-url') {
+        window.plausible('pageview', {u: 'https://example.com/custom/location'})
+      } else if (e.target.id === 'pageview-trigger-custom-props') {
+        window.plausible('pageview', {props: {author: 'John'}})
+      }
+    })
+  </script>
+</body>
+
+</html>

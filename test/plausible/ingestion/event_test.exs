@@ -1,5 +1,5 @@
 defmodule Plausible.Ingestion.EventTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
   use Plausible.Teams.Test
 
   import Phoenix.ConnTest
@@ -43,6 +43,41 @@ defmodule Plausible.Ingestion.EventTest do
 
       assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
     end
+  end
+
+  test "times out parsing user agent", %{test: test} do
+    on_exit(:detach, fn ->
+      :telemetry.detach("ua-timeout-#{test}")
+    end)
+
+    test_pid = self()
+    event = Event.telemetry_ua_parse_timeout()
+
+    :telemetry.attach(
+      "ua-timeout-#{test}",
+      event,
+      fn ^event, _, _, _ ->
+        send(test_pid, :telemetry_handled)
+      end,
+      %{}
+    )
+
+    site = new_site()
+
+    payload = %{
+      name: "pageview",
+      url: "http://#{site.domain}"
+    }
+
+    conn =
+      :post
+      |> build_conn("/api/events", payload)
+      |> Plug.Conn.put_req_header("user-agent", :binary.copy("a", 1024 * 8))
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
+    assert_receive :telemetry_handled
   end
 
   test "drops verification agent" do
@@ -282,10 +317,9 @@ defmodule Plausible.Ingestion.EventTest do
 
     test = self()
 
-    very_slow_buffer = fn sessions ->
+    very_slow_buffer = fn _sessions ->
       send(test, :slow_buffer_insert_started)
-      Process.sleep(1000)
-      Plausible.Session.WriteBuffer.insert(sessions)
+      Process.sleep(800)
     end
 
     first_conn =
@@ -315,25 +349,31 @@ defmodule Plausible.Ingestion.EventTest do
 
     receive do
       :slow_buffer_insert_started ->
-        assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(second_request)
+        assert {:ok, %{buffered: [], dropped: [dropped]}} =
+                 Event.build_and_buffer(second_request,
+                   session_write_buffer_insert: very_slow_buffer
+                 )
+
         assert dropped.drop_reason == :lock_timeout
     end
   end
 
-  test "drops pageleave event when no session found from cache" do
+  test "drops engagement event when no session found from cache" do
     site = new_site()
 
     payload = %{
-      name: "pageleave",
+      name: "engagement",
       url: "https://#{site.domain}/123",
-      d: "#{site.domain}"
+      d: "#{site.domain}",
+      sd: 25,
+      et: 1000
     }
 
     conn = build_conn(:post, "/api/events", payload)
 
     assert {:ok, request} = Request.build(conn)
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
-    assert dropped.drop_reason == :no_session_for_pageleave
+    assert dropped.drop_reason == :no_session_for_engagement
   end
 
   @tag :ee_only

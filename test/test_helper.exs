@@ -8,8 +8,6 @@ Application.ensure_all_started(:double)
 
 FunWithFlags.enable(:channels)
 FunWithFlags.enable(:scroll_depth)
-FunWithFlags.enable(:teams)
-FunWithFlags.enable(:saved_segments)
 
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
@@ -18,7 +16,7 @@ if :minio in Keyword.fetch!(ExUnit.configuration(), :include) do
   Plausible.TestUtils.ensure_minio()
 end
 
-default_exclude = [:slow, :minio, :migrations]
+default_exclude = [:slow, :minio, :migrations, :kaffy_quirks]
 
 # avoid slowdowns contacting the code server https://github.com/sasa1977/con_cache/pull/79
 :code.ensure_loaded(ConCache.Lock.Resource)

@@ -98,13 +98,11 @@
                   "minItems": 2,
                   "maxItems": 2,
                   "items": {
-                      "type": "string",
-                      "format": "date"
+                    "type": "string",
+                    "format": "date"
                   },
                   "description": "If custom period. A list of two ISO8601 dates or timestamps to compare against.",
-                  "examples": [
-                    ["2024-01-01", "2024-01-31"]
-                  ]
+                  "examples": [["2024-01-01", "2024-01-31"]]
                 }
               },
               "required": ["mode", "date_range"],
@@ -195,8 +193,16 @@
           "description": "Last 7 days relative to today"
         },
         {
+          "const": "28d",
+          "description": "Last 28 days relative to today"
+        },
+        {
           "const": "30d",
           "description": "Last 30 days relative to today"
+        },
+        {
+          "const": "90d",
+          "description": "Last 90 days relative to today"
         },
         {
           "const": "month",
@@ -260,7 +266,7 @@
         },
         {
           "const": "time_on_page",
-          "$comment": "only :internal"
+          "markdownDescription": "Average time spent on a given page in a visit in seconds. Requires: `event:page` filter or dimension."
         },
         {
           "const": "total_revenue",
@@ -274,7 +280,7 @@
         },
         {
           "const": "scroll_depth",
-          "$comment": "only :internal"
+          "markdownDescription": "Average page scroll depth. Requires: `event:page` filter or `event:page` dimension"
         }
       ]
     },
@@ -321,8 +327,16 @@
       "markdownDescription": "Goal dimension"
     },
     "time_dimensions": {
-      "type": "string",
-      "enum": ["time", "time:month", "time:week", "time:day", "time:hour"]
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["time", "time:month", "time:week", "time:day", "time:hour"]
+        },
+        {
+          "const": "time:minute",
+          "$comment": "only :internal"
+        }
+      ]
     },
     "dimensions": {
       "oneOf": [
@@ -439,18 +453,40 @@
         }
       ]
     },
+    "filter_for_segment": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 3,
+      "maxItems": 3,
+      "items": [
+        {
+          "const": "is"
+        },
+        {
+          "const": "segment"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": ["integer"]
+          }
+        }
+      ]
+    },
     "filter_entry": {
       "oneOf": [
         { "$ref": "#/definitions/filter_without_goals" },
         { "$ref": "#/definitions/filter_with_goals" },
-        { "$ref": "#/definitions/filter_with_pattern" }
+        { "$ref": "#/definitions/filter_with_pattern" },
+        { "$ref": "#/definitions/filter_for_segment" }
       ]
     },
     "filter_tree": {
       "oneOf": [
         { "$ref": "#/definitions/filter_entry" },
         { "$ref": "#/definitions/filter_and_or" },
-        { "$ref": "#/definitions/filter_not" }
+        { "$ref": "#/definitions/filter_not" },
+        { "$ref": "#/definitions/filter_has_done" }
       ]
     },
     "filter_not": {
@@ -458,7 +494,13 @@
       "additionalItems": false,
       "minItems": 2,
       "maxItems": 2,
-      "items": [{ "const": "not" }, { "$ref": "#/definitions/filter_tree" }]
+      "items": [
+        {
+          "type": "string",
+          "enum": ["not"]
+        },
+        { "$ref": "#/definitions/filter_tree" }
+      ]
     },
     "filter_and_or": {
       "type": "array",
@@ -475,6 +517,19 @@
           "items": { "$ref": "#/definitions/filter_tree" },
           "minItems": 1
         }
+      ]
+    },
+    "filter_has_done": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "type": "string",
+          "enum": ["has_done", "has_not_done"]
+        },
+        { "$ref": "#/definitions/filter_tree" }
       ]
     },
     "order_by_entry": {

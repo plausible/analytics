@@ -35,6 +35,13 @@ defmodule Plausible.Teams.Billing do
   @typep last_30_days_usage() :: %{:last_30_days => usage_cycle()}
   @typep monthly_pageview_usage() :: cycles_usage() | last_30_days_usage()
 
+  def grandfathered_team?(nil), do: false
+
+  def grandfathered_team?(team) do
+    # timestamps were originally rewritten from owner.inserted_at
+    Date.before?(team.inserted_at, @limit_sites_since)
+  end
+
   def get_subscription(nil), do: nil
 
   def get_subscription(%Teams.Team{subscription: %Subscription{} = subscription}),
@@ -121,31 +128,39 @@ defmodule Plausible.Teams.Billing do
     |> Repo.one()
   end
 
-  @spec check_needs_to_upgrade(Teams.Team.t() | nil) ::
-          {:needs_to_upgrade, :no_trial | :no_active_subscription | :grace_period_ended}
+  @spec check_needs_to_upgrade(Teams.Team.t() | nil, atom()) ::
+          {:needs_to_upgrade, :no_active_trial_or_subscription | :grace_period_ended}
           | :no_upgrade_needed
-  def check_needs_to_upgrade(nil), do: {:needs_to_upgrade, :no_trial}
+  def check_needs_to_upgrade(team_or_nil, usage_mod \\ Teams.Billing)
 
-  def check_needs_to_upgrade(team) do
+  def check_needs_to_upgrade(nil, _usage_mod),
+    do: {:needs_to_upgrade, :no_active_trial_or_subscription}
+
+  def check_needs_to_upgrade(team, usage_mod) do
     team = Teams.with_subscription(team)
 
-    trial_over? =
-      not is_nil(team.trial_expiry_date) and
-        Date.before?(team.trial_expiry_date, Date.utc_today())
-
-    subscription_active? = Subscriptions.active?(team.subscription)
-
     cond do
-      is_nil(team.trial_expiry_date) and not subscription_active? ->
-        {:needs_to_upgrade, :no_trial}
+      Plausible.Teams.on_trial?(team) ->
+        :no_upgrade_needed
 
-      trial_over? and not subscription_active? ->
-        {:needs_to_upgrade, :no_active_subscription}
+      not Subscriptions.active?(team.subscription) ->
+        {:needs_to_upgrade, :no_active_trial_or_subscription}
 
-      Plausible.Auth.GracePeriod.expired?(team) ->
-        {:needs_to_upgrade, :grace_period_ended}
+      Teams.GracePeriod.expired?(team) ->
+        revise_pageview_usage(team, usage_mod)
 
       true ->
+        :no_upgrade_needed
+    end
+  end
+
+  defp revise_pageview_usage(team, usage_mod) do
+    case Plausible.Workers.CheckUsage.check_pageview_usage_two_cycles(team, usage_mod) do
+      {:over_limit, _} ->
+        {:needs_to_upgrade, :grace_period_ended}
+
+      {:below_limit, _} ->
+        Plausible.Teams.remove_grace_period(team)
         :no_upgrade_needed
     end
   end
@@ -183,9 +198,7 @@ defmodule Plausible.Teams.Billing do
   end
 
   def site_limit(team) do
-    {:ok, user} = Teams.get_owner(team)
-
-    if Timex.before?(user.inserted_at, @limit_sites_since) do
+    if grandfathered_team?(team) do
       :unlimited
     else
       get_site_limit_from_plan(team)
@@ -377,7 +390,7 @@ defmodule Plausible.Teams.Billing do
   def team_member_usage(nil, _), do: 0
 
   def team_member_usage(team, opts) do
-    {:ok, owner} = Teams.get_owner(team)
+    [owner | _] = Repo.preload(team, :owners).owners
     exclude_emails = Keyword.get(opts, :exclude_emails, []) ++ [owner.email]
 
     pending_site_ids = Keyword.get(opts, :pending_ownership_site_ids, [])
@@ -505,7 +518,8 @@ defmodule Plausible.Teams.Billing do
         [
           {Feature.Props, props_usage_q},
           {Feature.Funnels, funnels_usage_q},
-          {Feature.RevenueGoals, revenue_goals_usage_q}
+          {Feature.RevenueGoals, revenue_goals_usage_q},
+          {Feature.SiteSegments, Plausible.Segments.get_site_segments_usage_query(site_ids)}
         ]
       else
         [

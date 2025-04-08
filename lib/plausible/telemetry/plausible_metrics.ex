@@ -74,6 +74,10 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           metric_prefix ++ [:ingest, :events, :dropped, :total],
           event_name: Ingestion.Event.telemetry_event_dropped(),
           tags: [:reason]
+        ),
+        counter(
+          metric_prefix ++ [:ingest, :user_agent_parse, :timeout, :total],
+          event_name: Ingestion.Event.telemetry_ua_parse_timeout()
         )
       ]
     )

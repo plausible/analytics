@@ -102,11 +102,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "does not count pageleave events towards the events metric in a simple aggregate query",
+    test "does not count engagement events towards the events metric in a simple aggregate query",
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 234, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 234, timestamp: ~N[2021-01-01 00:00:01])
+        build(:engagement, user_id: 234, timestamp: ~N[2021-01-01 00:00:01])
       ])
 
       conn =
@@ -121,13 +121,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "pageleave events do not affect bounce rate and visit duration", %{
+    test "engagement events do not affect bounce rate and visit duration", %{
       conn: conn,
       site: site
     } do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:03])
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:03])
       ])
 
       conn =
@@ -1342,6 +1342,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   end
 
   describe "timeseries" do
+    test "breakdown by time:minute (internal API), counts visitors and visits in all buckets their session was active in",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query-internal-test", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "visits", "pageviews"],
+          "date_range" => ["2021-01-01T00:00:00Z", "2021-01-01T00:10:00Z"],
+          "dimensions" => ["time:minute"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [1, 1, 1]},
+               %{"dimensions" => ["2021-01-01 00:01:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:02:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:03:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:04:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:05:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:06:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:07:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:08:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:09:00"], "metrics" => [1, 1, 0]},
+               %{"dimensions" => ["2021-01-01 00:10:00"], "metrics" => [1, 1, 1]}
+             ]
+    end
+
     test "shows hourly data for a certain date with time_labels", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
@@ -3724,30 +3754,32 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   describe "scroll_depth" do
     setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
-    test "scroll depth is (not yet) available in public API", %{conn: conn, site: site} do
+    test "cannot query scroll depth without page filter or dimension", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
-          "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
           "metrics" => ["scroll_depth"]
         })
 
-      assert json_response(conn, 400)["error"] =~ "Invalid metric \"scroll_depth\""
+      assert %{"error" => error} = json_response(conn, 400)
+
+      assert error ==
+               "Metric `scroll_depth` can only be queried with event:page filters or dimensions."
     end
 
     test "can query scroll_depth metric with a page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:10]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
         build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
+        build(:engagement, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
@@ -3762,14 +3794,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     test "can query scroll_depth with page + custom prop filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:engagement, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
         build(:pageview,
           "meta.key": ["author"],
           "meta.value": ["john"],
           user_id: 123,
           timestamp: ~N[2021-01-01 00:00:10]
         ),
-        build(:pageleave,
+        build(:engagement,
           "meta.key": ["author"],
           "meta.value": ["john"],
           user_id: 123,
@@ -3777,11 +3809,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           scroll_depth: 60
         ),
         build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
+        build(:engagement, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]], ["is", "event:props:author", ["john"]]],
           "date_range" => "all",
@@ -3793,13 +3825,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "scroll depth is 0 when no pageleave data in range", %{conn: conn, site: site} do
+    test "scroll depth is nil when no engagement data in range", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
@@ -3811,9 +3843,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "scroll depth is 0 when no data at all in range", %{conn: conn, site: site} do
+    test "scroll depth is nil when no data at all in range", %{conn: conn, site: site} do
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
@@ -3831,13 +3863,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, timestamp: t0),
-        build(:pageleave, user_id: 12, timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 34, timestamp: t0),
-        build(:pageleave, user_id: 34, timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, timestamp: t2),
-        build(:pageleave, user_id: 34, timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, timestamp: NaiveDateTime.add(t0, 1, :day)),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           timestamp: NaiveDateTime.add(t1, 1, :day),
           scroll_depth: 20
@@ -3845,7 +3877,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -3865,21 +3897,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -3892,27 +3924,56 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "scroll_depth metric is session-based", %{conn: conn, site: site} do
+      t0 = ~N[2020-01-01 00:00:00]
+      t1 = NaiveDateTime.add(t0, 10, :minute)
+      t2 = NaiveDateTime.add(t0, 3, :hour)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t0, scroll_depth: 20),
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t1),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 40),
+        # Different session
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t2),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t2, scroll_depth: 80)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["scroll_depth"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               # avg(max(20, 40), 80) = 60
+               %{"dimensions" => ["/blog"], "metrics" => [60]}
+             ]
+    end
+
     test "can sort by scroll_depth in event:page breakdown", %{conn: conn, site: site} do
       t0 = ~N[2020-01-01 00:00:00]
       [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
 
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+        build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+        build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+        build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+        build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
+        build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100)
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -3937,7 +3998,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Google",
           user_id: 12,
           pathname: "/blog",
@@ -3950,7 +4011,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Google",
           user_id: 34,
           pathname: "/blog",
@@ -3963,7 +4024,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(2, :minute)
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Google",
           user_id: 34,
           pathname: "/blog",
@@ -3976,7 +4037,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Twitter",
           user_id: 56,
           pathname: "/blog",
@@ -3989,7 +4050,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           pathname: "/another",
           timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(1, :minute)
         ),
-        build(:pageleave,
+        build(:engagement,
           referrer_source: "Twitter",
           user_id: 56,
           pathname: "/another",
@@ -3999,7 +4060,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "order_by" => [["scroll_depth", "asc"]],
@@ -4017,49 +4078,49 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     test "breakdown by event:page + time:day with scroll_depth metric", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:01:00],
           scroll_depth: 20
         ),
         build(:pageview, user_id: 12, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 12,
           pathname: "/another",
           timestamp: ~N[2020-01-01 00:02:00],
           scroll_depth: 24
         ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:01:00],
           scroll_depth: 17
         ),
         build(:pageview, user_id: 34, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/another",
           timestamp: ~N[2020-01-01 00:02:00],
           scroll_depth: 26
         ),
         build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-01 00:02:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 34,
           pathname: "/blog",
           timestamp: ~N[2020-01-01 00:03:00],
           scroll_depth: 60
         ),
         build(:pageview, user_id: 56, pathname: "/blog", timestamp: ~N[2020-01-02 00:00:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           pathname: "/blog",
           timestamp: ~N[2020-01-02 00:01:00],
           scroll_depth: 20
         ),
         build(:pageview, user_id: 56, pathname: "/another", timestamp: ~N[2020-01-02 00:01:00]),
-        build(:pageleave,
+        build(:engagement,
           user_id: 56,
           pathname: "/another",
           timestamp: ~N[2020-01-02 00:02:00],
@@ -4068,7 +4129,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "date_range" => "all",
@@ -4086,7 +4147,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     test "breakdown by a custom prop with a page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00], pathname: "/blog"),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           timestamp: ~N[2021-01-01 00:01:00],
           pathname: "/blog",
@@ -4099,7 +4160,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "meta.value": ["john"],
           pathname: "/blog/john-post"
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           timestamp: ~N[2021-01-01 00:03:00],
           "meta.key": ["author"],
@@ -4114,7 +4175,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "meta.value": ["john"],
           pathname: "/another-blog/john-post"
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 123,
           timestamp: ~N[2021-01-01 00:03:00],
           "meta.key": ["author"],
@@ -4129,7 +4190,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "meta.value": ["john"],
           pathname: "/blog/john-post"
         ),
-        build(:pageleave,
+        build(:engagement,
           user_id: 456,
           timestamp: ~N[2021-01-01 00:03:00],
           "meta.key": ["author"],
@@ -4140,7 +4201,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       ])
 
       conn =
-        post(conn, "/api/v2/query-internal-test", %{
+        post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["scroll_depth"],
           "order_by" => [["scroll_depth", "desc"]],
@@ -4575,6 +4636,445 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
 
       assert "metric_warnings" not in json_response(conn, 200)["meta"]
+    end
+  end
+
+  describe "behavioral (has_done/has_not_done) filters" do
+    test "has_done does counting by sessions", %{conn: conn, site: site} do
+      populate_stats(site, [
+        # Session 1
+        build(:event, name: "Conversion", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:01:00]),
+        # Session 2
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-02 00:01:00]),
+        # Session 3
+        build(:event, name: "Conversion", user_id: 1, timestamp: ~N[2021-01-03 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-03 00:01:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-03 00:02:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-03 00:03:00]),
+        # Session 4
+        build(:event, name: "Conversion", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:02:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:03:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:04:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "visits", "events", "pageviews"],
+          "date_range" => "all",
+          "filters" => [["has_done", ["is", "event:name", ["Conversion"]]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [2, 3, 11, 8]}
+             ]
+    end
+
+    test "has_done returns all events by users who match condition if no further filters are provided",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "AddToCart", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 5, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "pageviews"],
+          "date_range" => "all",
+          "filters" => [["has_done", ["is", "event:name", ["Purchase"]]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [3, 6, 2]}
+             ]
+    end
+
+    test "has_done event:page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "pageview",
+          user_id: 1,
+          pathname: "/blog/post/1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "pageview",
+          user_id: 1,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "pageview",
+          user_id: 2,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "pageview",
+          user_id: 3,
+          pathname: "/blog/post/1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews"],
+          "date_range" => "all",
+          "filters" => [["has_done", ["contains", "event:page", ["/blog/"]]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [2, 3]}
+             ]
+    end
+
+    test "has_not_done event:page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "pageview",
+          user_id: 1,
+          pathname: "/blog/post/1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "pageview",
+          user_id: 1,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "pageview",
+          user_id: 2,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "pageview",
+          user_id: 3,
+          pathname: "/blog/post/1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews"],
+          "date_range" => "all",
+          "filters" => [["has_not_done", ["contains", "event:page", ["/blog/"]]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [1, 1]}
+             ]
+    end
+
+    test "has_done with complex event:props and event:name filters", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:10:00]),
+        build(:event, name: "Purchase", user_id: 1, timestamp: ~N[2021-01-01 00:20:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Purchase", user_id: 2, timestamp: ~N[2021-01-01 00:10:00]),
+        build(:event,
+          name: "Signup",
+          user_id: 3,
+          "meta.key": ["paid"],
+          "meta.value": ["true"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event, name: "pageview", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event,
+          name: "Signup",
+          user_id: 4,
+          "meta.key": ["paid"],
+          "meta.value": ["true"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event, name: "pageview", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event,
+          name: "Signup",
+          user_id: 5,
+          "meta.key": ["paid"],
+          "meta.value": ["false"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event, name: "pageview", user_id: 5, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews"],
+          "date_range" => "all",
+          "filters" => [
+            [
+              "has_done",
+              [
+                "or",
+                [
+                  ["is", "event:name", ["Purchase"]],
+                  [
+                    "and",
+                    [
+                      ["is", "event:name", ["Signup"]],
+                      ["is", "event:props:paid", ["true"]]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [4, 3]}
+             ]
+    end
+
+    test "has_done event:goal filter", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Conversion")
+
+      populate_stats(site, [
+        build(:event, name: "Conversion", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 4, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews"],
+          "date_range" => "all",
+          "filters" => [
+            ["has_done", ["is", "event:goal", ["Conversion"]]],
+            ["is", "event:name", ["pageview"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [2, 4]}
+             ]
+    end
+
+    test "has_not_done event:goal filter", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Conversion")
+
+      populate_stats(site, [
+        build(:event, name: "Conversion", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 2, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Conversion", user_id: 3, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "pageview", user_id: 4, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews"],
+          "date_range" => "all",
+          "filters" => [
+            ["has_not_done", ["is", "event:goal", ["Conversion"]]],
+            ["is", "event:name", ["pageview"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => [], "metrics" => [1, 1]}
+             ]
+    end
+
+    test "visit filters are not allowed with has_done/has_not_done filters", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["visit:browser"],
+          "filters" => [
+            ["has_done", ["is", "visit:browser", ["Chrome"]]]
+          ]
+        })
+
+      assert %{"error" => error} = json_response(conn, 400)
+
+      assert error =~
+               "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
+    end
+  end
+
+  describe "segment filters" do
+    setup [:create_user, :create_site, :create_api_key, :use_api_key]
+
+    test "site segments of other sites don't resolve", %{
+      conn: conn,
+      site: site
+    } do
+      other_site = new_site()
+      other_user = add_guest(other_site, role: :editor)
+
+      segment =
+        insert(:segment,
+          name: "Segment of another site",
+          type: :site,
+          owner: other_user,
+          site: other_site,
+          segment_data: %{
+            "filters" => [["is", "event:page", ["/blog"]]]
+          }
+        )
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "filters" => [["is", "segment", [segment.id]]],
+          "date_range" => "all",
+          "metrics" => ["events"]
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Invalid filters. Some segments don't exist or aren't accessible."
+             }
+    end
+
+    test ":has_not_done filter resolves in /api/v2/query endpoint when it is part of a segment",
+         %{
+           conn: conn,
+           site: site
+         } do
+      other_user = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: other_user,
+          site: site,
+          name: "Signups",
+          segment_data: %{
+            "filters" => [["has_not_done", ["is", "event:goal", ["Signup"]]]]
+          }
+        )
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "AnyOtherEvent",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "filters" => [["is", "segment", [segment.id]]],
+          "date_range" => "all",
+          "metrics" => ["events"]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [1]}]
+
+      # response shows what filters the segment was resolved to
+      assert json_response(conn, 200)["query"]["filters"] == [
+               ["has_not_done", ["is", "event:goal", ["Signup"]]]
+             ]
+    end
+
+    test "even personal segments of other users of the same site resolve to filters, with segments expanded in response",
+         %{
+           conn: conn,
+           site: site
+         } do
+      other_user = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          type: :personal,
+          owner: other_user,
+          site: site,
+          name: "Signups",
+          segment_data: %{
+            "filters" => [["is", "event:goal", ["Signup"]]]
+          }
+        )
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "AnyOtherEvent",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "filters" => [["is", "segment", [segment.id]]],
+          "date_range" => "all",
+          "metrics" => ["events"]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [3]}]
+
+      # response shows what filters the segment was resolved to
+      assert json_response(conn, 200)["query"]["filters"] == [
+               ["is", "event:goal", ["Signup"]]
+             ]
     end
   end
 end

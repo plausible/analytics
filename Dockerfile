@@ -2,7 +2,7 @@
 # platform specific, it makes sense to build it in the docker
 
 #### Builder
-FROM hexpm/elixir:1.17.1-erlang-27.0-alpine-3.20.1 AS buildcontainer
+FROM hexpm/elixir:1.18.3-erlang-27.3.1-alpine-3.21.3 AS buildcontainer
 
 ARG MIX_ENV=ce
 
@@ -20,7 +20,7 @@ RUN mkdir /app
 WORKDIR /app
 
 # install build dependencies
-RUN apk add --no-cache git "nodejs-current=21.7.3-r0" yarn npm python3 ca-certificates wget gnupg make gcc libc-dev brotli
+RUN apk add --no-cache git "nodejs-current=23.2.0-r1" yarn npm python3 ca-certificates wget gnupg make gcc libc-dev brotli
 
 COPY mix.exs ./
 COPY mix.lock ./
@@ -54,7 +54,7 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.20.1
+FROM alpine:3.21.3
 LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}

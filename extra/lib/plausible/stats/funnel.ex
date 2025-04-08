@@ -27,10 +27,10 @@ defmodule Plausible.Stats.Funnel do
     end
   end
 
-  def funnel(site, query, %Funnel{} = funnel) do
+  def funnel(_site, query, %Funnel{} = funnel) do
     funnel_data =
-      site
-      |> Base.base_event_query(query)
+      query
+      |> Base.base_event_query()
       |> query_funnel(funnel)
 
     # Funnel definition steps are 1-indexed, if there's index 0 in the resulting query,
@@ -80,7 +80,7 @@ defmodule Plausible.Stats.Funnel do
   defp select_funnel(db_query, funnel_definition) do
     window_funnel_steps =
       Enum.reduce(funnel_definition.steps, nil, fn step, acc ->
-        goal_condition = goal_condition(step.goal)
+        goal_condition = Plausible.Stats.Goals.goal_condition(step.goal)
 
         if acc do
           dynamic([q], fragment("?, ?", ^acc, ^goal_condition))
@@ -101,21 +101,6 @@ defmodule Plausible.Stats.Funnel do
           step: dynamic_window_funnel
         }
     )
-  end
-
-  defp goal_condition(goal) do
-    case goal do
-      %Plausible.Goal{event_name: event} when is_binary(event) ->
-        dynamic([], fragment("name = ?", ^event))
-
-      %Plausible.Goal{page_path: pathname} when is_binary(pathname) ->
-        if String.contains?(pathname, "*") do
-          regex = Plausible.Stats.Filters.Utils.page_regex(pathname)
-          dynamic([], fragment("match(pathname, ?)", ^regex))
-        else
-          dynamic([], fragment("pathname = ?", ^pathname))
-        end
-    end
   end
 
   defp backfill_steps(funnel_result, funnel) do

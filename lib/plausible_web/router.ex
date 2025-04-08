@@ -100,10 +100,11 @@ defmodule PlausibleWeb.Router do
   on_ee do
     scope "/crm", PlausibleWeb do
       pipe_through :flags
-      get "/auth/user/:user_id/usage", AdminController, :usage
-      get "/billing/user/:user_id/current_plan", AdminController, :current_plan
-      get "/billing/search/user-by-id/:user_id", AdminController, :user_by_id
-      post "/billing/search/user", AdminController, :user_search
+      get "/teams/team/:team_id/usage", AdminController, :usage
+      get "/auth/user/:user_id/info", AdminController, :user_info
+      get "/billing/team/:team_id/current_plan", AdminController, :current_plan
+      get "/billing/search/team-by-id/:team_id", AdminController, :team_by_id
+      post "/billing/search/team", AdminController, :team_search
     end
   end
 
@@ -150,7 +151,8 @@ defmodule PlausibleWeb.Router do
       get("/swagger-ui", OpenApiSpex.Plug.SwaggerUI, path: "/api/plugins/spec/openapi")
     end
 
-    scope "/v1/capabilities", PlausibleWeb.Plugins.API.Controllers, assigns: %{plugins_api: true} do
+    scope "/v1/capabilities", PlausibleWeb.Plugins.API.Controllers,
+      assigns: %{plugins_api: true} do
       pipe_through([:plugins_api])
       get("/", Capabilities, :index)
     end
@@ -220,19 +222,14 @@ defmodule PlausibleWeb.Router do
     end
 
     scope "/:domain/segments", PlausibleWeb.Api.Internal do
-      pipeline :segments_endpoints,
-        do: plug(PlausibleWeb.Plugs.FeatureFlagCheckPlug, [:saved_segments])
-
-      pipe_through :segments_endpoints
-      get "/", SegmentsController, :index
       post "/", SegmentsController, :create
-      get "/:segment_id", SegmentsController, :get
       patch "/:segment_id", SegmentsController, :update
       delete "/:segment_id", SegmentsController, :delete
     end
   end
 
-  scope "/api/v1/stats", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
+  scope "/api/v1/stats", PlausibleWeb.Api,
+    assigns: %{api_scope: "stats:read:*", api_context: :site} do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     get "/realtime/visitors", ExternalStatsController, :realtime_visitors
@@ -241,7 +238,8 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*", schema_type: :public} do
+  scope "/api/v2", PlausibleWeb.Api,
+    assigns: %{api_scope: "stats:read:*", api_context: :site, schema_type: :public} do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
@@ -271,19 +269,32 @@ defmodule PlausibleWeb.Router do
         pipe_through PlausibleWeb.Plugs.AuthorizePublicAPI
 
         get "/", ExternalSitesController, :index
-        get "/goals", ExternalSitesController, :goals_index
-        get "/:site_id", ExternalSitesController, :get_site
+        get "/teams", ExternalSitesController, :teams_index
+
+        scope assigns: %{api_context: :site} do
+          get "/goals", ExternalSitesController, :goals_index
+          get "/guests", ExternalSitesController, :guests_index
+          get "/:site_id", ExternalSitesController, :get_site
+        end
       end
 
       scope assigns: %{api_scope: "sites:provision:*"} do
         pipe_through PlausibleWeb.Plugs.AuthorizePublicAPI
 
         post "/", ExternalSitesController, :create_site
-        put "/shared-links", ExternalSitesController, :find_or_create_shared_link
-        put "/goals", ExternalSitesController, :find_or_create_goal
-        delete "/goals/:goal_id", ExternalSitesController, :delete_goal
-        put "/:site_id", ExternalSitesController, :update_site
-        delete "/:site_id", ExternalSitesController, :delete_site
+
+        scope assigns: %{api_context: :site} do
+          put "/shared-links", ExternalSitesController, :find_or_create_shared_link
+
+          put "/goals", ExternalSitesController, :find_or_create_goal
+          delete "/goals/:goal_id", ExternalSitesController, :delete_goal
+
+          put "/guests", ExternalSitesController, :find_or_create_guest
+          delete "/guests/:email", ExternalSitesController, :delete_guest
+
+          put "/:site_id", ExternalSitesController, :update_site
+          delete "/:site_id", ExternalSitesController, :delete_site
+        end
       end
     end
   end
@@ -294,8 +305,14 @@ defmodule PlausibleWeb.Router do
 
       post "/event", Api.ExternalController, :event
       get "/error", Api.ExternalController, :error
-      get "/health", Api.ExternalController, :health
-      get "/system", Api.ExternalController, :info
+      # Remove this once all external checks are migration to new /system/health/* checks
+      get "/health", Api.SystemController, :readiness
+    end
+
+    scope "/system" do
+      get "/", Api.SystemController, :info
+      get "/health/live", Api.SystemController, :liveness
+      get "/health/ready", Api.SystemController, :readiness
     end
 
     scope [] do
@@ -389,11 +406,11 @@ defmodule PlausibleWeb.Router do
 
     get "/team/general", SettingsController, :team_general
     post "/team/general/name", SettingsController, :update_team_name
-    put "/team/memberships/u/:id/role/:new_role", TeamController, :update_member_role
-    delete "/team/memberships/u/:id", TeamController, :remove_member
     post "/team/invitations/:invitation_id/accept", InvitationController, :accept_invitation
     post "/team/invitations/:invitation_id/reject", InvitationController, :reject_invitation
     delete "/team/invitations/:invitation_id", InvitationController, :remove_team_invitation
+    get "/team/delete", SettingsController, :team_danger_zone
+    delete "/team/delete", SettingsController, :delete_team
   end
 
   scope "/", PlausibleWeb do
@@ -401,6 +418,8 @@ defmodule PlausibleWeb.Router do
 
     get "/logout", AuthController, :logout
     delete "/me", AuthController, :delete_me
+
+    get "/team/select", AuthController, :select_team
 
     get "/auth/google/callback", AuthController, :google_auth_callback
 
@@ -488,6 +507,9 @@ defmodule PlausibleWeb.Router do
 
     get "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership_form
     post "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership
+
+    get "/sites/:domain/change-team", Site.MembershipController, :change_team_form
+    post "/sites/:domain/change-team", Site.MembershipController, :change_team
 
     put "/sites/:domain/memberships/u/:id/role/:new_role",
         Site.MembershipController,

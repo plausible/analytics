@@ -15,10 +15,10 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
         [],
         :all_roles,
         {:all_roles, nil},
-        {[:public, :viewer, :admin, :editor, :super_admin, :owner], nil}
+        {[:public, :viewer, :admin, :editor, :super_admin, :owner, :billing], nil}
       ] do
     test "init resolves to expected options with argument #{inspect(init_argument)}" do
-      assert {[:public, :viewer, :admin, :editor, :super_admin, :owner], nil} ==
+      assert {[:public, :viewer, :admin, :editor, :super_admin, :owner, :billing], nil} ==
                AuthorizeSiteAccess.init(unquote(init_argument))
     end
   end
@@ -247,7 +247,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   end
 
   for role <- [:viewer, :editor] do
-    test "allows user based on their #{role} membership", %{conn: conn, user: user} do
+    test "allows user based on their #{role} guest membership", %{conn: conn, user: user} do
       site = new_site()
       add_guest(site, user: user, role: unquote(role))
 
@@ -258,6 +258,33 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
         |> bypass_through(PlausibleWeb.Router)
         |> get("/plug-tests/#{site.domain}/with-domain")
         |> AuthorizeSiteAccess.call(opts)
+
+      # Does not set current team for guest membership
+      refute get_session(conn, "current_team_id") == site.team.identifier
+      refute conn.assigns.current_team.id == site.team.id
+
+      refute conn.halted
+      assert conn.assigns.site.id == site.id
+      assert conn.assigns.site_role == unquote(role)
+    end
+  end
+
+  for role <- [:viewer, :editor, :admin, :billing] do
+    test "allows user based on their #{role} team membership", %{conn: conn, user: user} do
+      site = new_site()
+      add_member(site.team, user: user, role: unquote(role))
+
+      opts = AuthorizeSiteAccess.init([unquote(role)])
+
+      conn =
+        conn
+        |> bypass_through(PlausibleWeb.Router)
+        |> get("/plug-tests/#{site.domain}/with-domain")
+        |> AuthorizeSiteAccess.call(opts)
+
+      # Sets current team for team membership
+      assert get_session(conn, "current_team_id") == site.team.identifier
+      assert conn.assigns.current_team.id == site.team.id
 
       refute conn.halted
       assert conn.assigns.site.id == site.id

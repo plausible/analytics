@@ -17,19 +17,30 @@ defmodule Plausible.Teams.Test do
     end
   end
 
+  def set_current_team(conn, team) do
+    Plug.Conn.put_session(conn, :current_team_id, team.identifier)
+  end
+
   def new_site(args \\ []) do
     args =
-      if user = args[:owner] do
-        {:ok, team} = Teams.get_or_create(user)
+      cond do
+        user = args[:owner] ->
+          {owner, args} = Keyword.pop(args, :owner)
+          {:ok, team} = Teams.get_or_create(user)
 
-        args
-        |> Keyword.put(:team, team)
-      else
-        user = new_user()
-        {:ok, team} = Teams.get_or_create(user)
+          args
+          |> Keyword.put(:owners, [owner])
+          |> Keyword.put(:team, team)
 
-        args
-        |> Keyword.put(:team, team)
+        args[:team] ->
+          args
+
+        true ->
+          user = new_user()
+          {:ok, team} = Teams.get_or_create(user)
+
+          args
+          |> Keyword.put(:team, team)
       end
 
     :site
@@ -299,11 +310,13 @@ defmodule Plausible.Teams.Test do
   end
 
   def assert_team_attached(site, team_id \\ nil) do
-    assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owner])
+    assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owners])
 
-    assert membership = assert_team_membership(site.owner, team)
+    for owner <- site.owners do
+      assert membership = assert_team_membership(owner, team)
 
-    assert membership.team_id == team.id
+      assert membership.team_id == team.id
+    end
 
     if team_id do
       assert team.id == team_id
@@ -324,6 +337,13 @@ defmodule Plausible.Teams.Test do
              team_invitation_id: team_invitation.id,
              site_id: site.id,
              role: role
+           )
+  end
+
+  def refute_team_invitation(team, email) do
+    refute Repo.get_by(Plausible.Teams.Invitation,
+             email: email,
+             team_id: team.id
            )
   end
 
@@ -350,6 +370,21 @@ defmodule Plausible.Teams.Test do
              team_membership_id: team_membership.id,
              site_id: site.id,
              role: role
+           )
+  end
+
+  def assert_non_guest_membership(team, site, user) do
+    assert team_membership =
+             Repo.get_by(Plausible.Teams.Membership,
+               user_id: user.id,
+               team_id: team.id
+             )
+
+    assert team_membership.role != :guest
+
+    refute Repo.get_by(Plausible.Teams.GuestMembership,
+             team_membership_id: team_membership.id,
+             site_id: site.id
            )
   end
 

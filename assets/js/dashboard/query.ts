@@ -1,5 +1,3 @@
-/** @format */
-
 import {
   nowForSite,
   formatISO,
@@ -33,25 +31,46 @@ export type Filter = [FilterOperator, FilterKey, FilterClause[]]
  * */
 export type FilterClauseLabels = Record<string, string>
 
-export const queryDefaultValue = {
-  period: '30d' as QueryPeriod,
-  comparison: null as ComparisonMode | null,
-  match_day_of_week: true,
-  date: null as Dayjs | null,
-  from: null as Dayjs | null,
-  to: null as Dayjs | null,
-  compare_from: null as Dayjs | null,
-  compare_to: null as Dayjs | null,
-  filters: [] as Filter[],
-  labels: {} as FilterClauseLabels,
-  with_imported: true
+export type DashboardQuery = {
+  period: QueryPeriod
+  comparison: ComparisonMode | null
+  match_day_of_week: boolean
+  date: Dayjs | null
+  from: Dayjs | null
+  to: Dayjs | null
+  compare_from: Dayjs | null
+  compare_to: Dayjs | null
+  filters: Filter[]
+  /**
+   * This property is the same as `filters` always, except when
+   * `filters` contains a "Segment is {segment ID}" filter. In this case,
+   * `resolvedFilters` has the segment filter replaced with its constituent filters,
+   * so the FE could be aware of what filters are applied.
+   */
+  resolvedFilters: Filter[]
+  labels: FilterClauseLabels
+  with_imported: boolean
 }
 
-export type DashboardQuery = typeof queryDefaultValue
+export const queryDefaultValue: DashboardQuery = {
+  period: '28d' as QueryPeriod,
+  comparison: null,
+  match_day_of_week: true,
+  date: null,
+  from: null,
+  to: null,
+  compare_from: null,
+  compare_to: null,
+  filters: [],
+  resolvedFilters: [],
+  labels: {},
+  with_imported: true
+}
 
 export type BreakdownResultMeta = {
   date_range_label: string
   comparison_date_range_label?: string
+  metric_warnings: Record<string, Record<string, string>> | undefined
 }
 
 export function addFilter(
@@ -76,11 +95,15 @@ export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
 // goals with the same currency. Used to decide whether to render
 // revenue metrics in a dashboard report or not.
 export function revenueAvailable(query: DashboardQuery, site: PlausibleSite) {
-  const revenueGoalsInFilter = site.revenueGoals.filter((rg) => {
+  const revenueGoalsInFilter = site.revenueGoals.filter((revenueGoal) => {
     const goalFilters: Filter[] = getFiltersByKeyPrefix(query, 'goal')
 
-    return goalFilters.some(([_op, _key, clauses]) => {
-      return clauses.includes(rg.display_name)
+    return goalFilters.some(([operation, _key, clauses]) => {
+      return (
+        [FILTER_OPERATIONS.is, FILTER_OPERATIONS.contains].includes(
+          operation
+        ) && clauses.includes(revenueGoal.display_name)
+      )
     })
   })
 

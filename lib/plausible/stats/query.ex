@@ -2,15 +2,17 @@ defmodule Plausible.Stats.Query do
   use Plausible
 
   defstruct utc_time_range: nil,
+            comparison_utc_time_range: nil,
             interval: nil,
             period: nil,
             dimensions: [],
             filters: [],
             sample_threshold: 20_000_000,
+            imports_exist: false,
+            imports_in_range: [],
             include_imported: false,
             skip_imported_reason: nil,
             now: nil,
-            latest_import_end_date: nil,
             metrics: [],
             order_by: nil,
             timezone: nil,
@@ -22,19 +24,30 @@ defmodule Plausible.Stats.Query do
             # Revenue metric specific metadata
             revenue_currencies: %{},
             revenue_warning: nil,
-            remove_unavailable_revenue_metrics: false
+            remove_unavailable_revenue_metrics: false,
+            site_id: nil,
+            site_native_stats_start_at: nil,
+            # Contains information to determine how to combine legacy and new time on page metrics
+            time_on_page_data: %{}
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy}
+  alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy, Comparisons}
 
   @type t :: %__MODULE__{}
 
   def build(site, schema_type, params, debug_metadata) do
     with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params) do
       query =
-        struct!(__MODULE__, Map.to_list(query_data))
-        |> put_imported_opts(site, %{})
-        |> struct!(now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
+        %__MODULE__{
+          now: DateTime.utc_now(:second),
+          debug_metadata: debug_metadata,
+          site_id: site.id,
+          site_native_stats_start_at: site.native_stats_start_at
+        }
+        |> struct!(Map.to_list(query_data))
+        |> set_time_on_page_data(site)
+        |> put_comparison_utc_time_range()
+        |> put_imported_opts(site)
 
       on_ee do
         query = Plausible.Stats.Sampling.put_threshold(query, site, params)
@@ -102,8 +115,9 @@ defmodule Plausible.Stats.Query do
   """
   def remove_top_level_filters(query, prefixes) do
     new_filters =
-      Enum.reject(query.filters, fn [_, filter_key | _rest] ->
-        is_binary(filter_key) and Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
+      Enum.reject(query.filters, fn [_, dimension_or_filter_tree | _rest] ->
+        is_binary(dimension_or_filter_tree) and
+          Enum.any?(prefixes, &String.starts_with?(dimension_or_filter_tree, &1))
       end)
 
     query
@@ -112,70 +126,93 @@ defmodule Plausible.Stats.Query do
   end
 
   defp refresh_imported_opts(query) do
-    put_imported_opts(query, nil, %{})
+    put_imported_opts(query, nil)
   end
 
-  def put_imported_opts(query, site, params) do
-    requested? = params["with_imported"] == "true" || query.include.imports
+  def put_comparison_utc_time_range(%__MODULE__{include: %{comparisons: nil}} = query), do: query
 
-    latest_import_end_date =
+  def put_comparison_utc_time_range(%__MODULE__{include: %{comparisons: comparison_opts}} = query) do
+    datetime_range = Comparisons.get_comparison_utc_time_range(query, comparison_opts)
+    struct!(query, comparison_utc_time_range: datetime_range)
+  end
+
+  def put_imported_opts(query, site) do
+    requested? = query.include.imports
+
+    query =
       if site do
-        site.latest_import_end_date
+        struct!(query,
+          imports_exist: Plausible.Imported.any_completed_imports?(site),
+          imports_in_range: get_imports_in_range(site, query)
+        )
       else
-        query.latest_import_end_date
+        query
       end
 
-    query = struct!(query, latest_import_end_date: latest_import_end_date)
+    skip_imported_reason = get_skip_imported_reason(query)
 
-    case ensure_include_imported(query, requested?) do
-      :ok ->
-        struct!(query,
-          include_imported: true,
-          include: Map.put(query.include, :imports, true)
-        )
-
-      {:error, reason} ->
-        struct!(query,
-          include_imported: false,
-          skip_imported_reason: reason,
-          include: Map.put(query.include, :imports, requested?)
-        )
-    end
+    struct!(query,
+      include_imported: requested? and is_nil(skip_imported_reason),
+      skip_imported_reason: skip_imported_reason
+    )
   end
 
-  @spec ensure_include_imported(t(), boolean()) ::
-          :ok | {:error, :no_imported_data | :out_of_range | :unsupported_query | :not_requested}
-  def ensure_include_imported(query, requested?) do
+  defp get_imports_in_range(_site, %__MODULE__{period: period})
+       when period in ["realtime", "30m"] do
+    []
+  end
+
+  defp get_imports_in_range(site, query) do
+    in_range = Plausible.Imported.completed_imports_in_query_range(site, query)
+
+    in_comparison_range =
+      if is_map(query.include.comparisons) do
+        comparison_query = Comparisons.get_comparison_query(query)
+        Plausible.Imported.completed_imports_in_query_range(site, comparison_query)
+      else
+        []
+      end
+
+    in_comparison_range ++ in_range
+  end
+
+  def set_time_on_page_data(query, site) do
+    struct!(query,
+      time_on_page_data: %{
+        new_metric_visible: Plausible.Stats.TimeOnPage.new_time_on_page_visible?(site),
+        cutoff_date: site.legacy_time_on_page_cutoff
+      }
+    )
+  end
+
+  @spec get_skip_imported_reason(t()) ::
+          nil | :no_imported_data | :out_of_range | :unsupported_query
+  def get_skip_imported_reason(query) do
     cond do
-      not requested? ->
-        {:error, :not_requested}
+      not query.imports_exist ->
+        :no_imported_data
 
-      is_nil(query.latest_import_end_date) ->
-        {:error, :no_imported_data}
-
-      query.period in ["realtime", "30m"] ->
-        {:error, :unsupported_query}
+      query.imports_in_range == [] ->
+        :out_of_range
 
       "time:minute" in query.dimensions or "time:hour" in query.dimensions ->
-        {:error, :unsupported_interval}
-
-      Date.after?(date_range(query).first, query.latest_import_end_date) ->
-        {:error, :out_of_range}
+        :unsupported_interval
 
       not Imported.schema_supports_query?(query) ->
-        {:error, :unsupported_query}
+        :unsupported_query
 
       true ->
-        :ok
+        nil
     end
   end
 
   @spec trace(%__MODULE__{}, [atom()]) :: %__MODULE__{}
   def trace(%__MODULE__{} = query, metrics) do
-    filter_keys =
+    filter_dimensions =
       query.filters
-      |> Enum.map(fn [_op, prop | _rest] -> prop end)
+      |> Plausible.Stats.Filters.dimensions_used_in_filters()
       |> Enum.sort()
+      |> Enum.uniq()
       |> Enum.join(";")
 
     metrics = metrics |> Enum.sort() |> Enum.join(";")
@@ -185,7 +222,7 @@ defmodule Plausible.Stats.Query do
       {"plausible.query.period", query.period},
       {"plausible.query.dimensions", query.dimensions |> Enum.join(";")},
       {"plausible.query.include_imported", query.include_imported},
-      {"plausible.query.filter_keys", filter_keys},
+      {"plausible.query.filter_keys", filter_dimensions},
       {"plausible.query.metrics", metrics}
     ])
 

@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
   require Plausible.Billing.Subscription.Status
-  alias Plausible.{Repo, Billing.Subscription}
+  alias Plausible.{Repo, Billing, Billing.Subscription}
 
   @v1_10k_yearly_plan_id "572810"
   @v1_50m_yearly_plan_id "650653"
@@ -56,6 +56,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "+ VAT if applicable"
     end
 
+    test "does not render any global notices", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
+    end
+
     test "displays plan benefits", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -74,6 +79,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Up to 10 team members"
       assert business_box =~ "Up to 50 sites"
       assert business_box =~ "Stats API (600 requests per hour)"
+      assert business_box =~ "Looker Studio Connector"
       assert business_box =~ "Custom Properties"
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
@@ -370,7 +376,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
-  describe "for a user with a v4 growth subscription plan" do
+  describe "for a user with an active v4 growth subscription plan" do
     setup [:create_user, :create_site, :log_in, :subscribe_v4_growth]
 
     test "displays basic page content", %{conn: conn} do
@@ -379,6 +385,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "Change subscription plan"
       assert doc =~ "Questions?"
       refute doc =~ "What happens if I go over my page views limit?"
+    end
+
+    test "does not render any global notices", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
     end
 
     test "displays plan benefits", %{conn: conn} do
@@ -400,6 +411,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Up to 10 team members"
       assert business_box =~ "Up to 50 sites"
       assert business_box =~ "Stats API (600 requests per hour)"
+      assert business_box =~ "Looker Studio Connector"
       assert business_box =~ "Custom Properties"
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
@@ -460,6 +472,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       {:ok, _lv, doc} = get_liveview(conn)
 
+      check_notice_titles(doc, [Billing.pending_site_ownerships_notice_title()])
       assert doc =~ "Your account has been invited to become the owner of a site"
 
       assert text_of_element(doc, @growth_plan_tooltip) ==
@@ -567,7 +580,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
-  describe "for a user with a v4 business subscription plan" do
+  describe "for a user with an active v4 business subscription plan" do
     setup [:create_user, :create_site, :log_in, :subscribe_v4_business]
 
     test "sets pageview slider according to last cycle usage", %{conn: conn} do
@@ -575,7 +588,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @slider_value) == "10k"
     end
 
-    test "highlights Business box as the 'Current' tier if it's suitable for their usage", %{
+    test "does not render any global notices", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
+    end
+
+    test "highlights Business box as the 'Current' tier", %{
       conn: conn,
       site: site
     } do
@@ -590,20 +608,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_highlight_pill) == "Current"
 
       refute element_exists?(doc, @growth_highlight_pill)
-    end
-
-    test "highlights Growth box as the 'Recommended' tier if it would accommodate their usage", %{
-      conn: conn
-    } do
-      {:ok, _lv, doc} = get_liveview(conn)
-
-      class = class_of_element(doc, @growth_plan_box)
-
-      assert class =~ "ring-2"
-      assert class =~ "ring-indigo-600"
-      assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
-
-      refute element_exists?(doc, @business_highlight_pill)
     end
 
     test "recommends Enterprise when site limit exceeds Business tier due to pending ownerships",
@@ -745,6 +749,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, context}
     end
 
+    test "does not render any global notices", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
+    end
+
     test "displays plan benefits", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -763,6 +772,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Unlimited team members"
       assert business_box =~ "Up to 50 sites"
       assert business_box =~ "Stats API (600 requests per hour)"
+      assert business_box =~ "Looker Studio Connector"
       assert business_box =~ "Custom Properties"
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
@@ -788,6 +798,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "renders failed payment notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [Billing.subscription_past_due_notice_title()])
       assert doc =~ "There was a problem with your latest payment"
       assert doc =~ "https://update.billing.details"
     end
@@ -821,6 +832,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "renders subscription paused notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [Billing.subscription_paused_notice_title()])
       assert doc =~ "Your subscription is paused due to failed payments"
       assert doc =~ "https://update.billing.details"
     end
@@ -849,8 +861,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
-  describe "for a user with a cancelled subscription" do
+  describe "for a user with a cancelled, but still active subscription" do
     setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
+
+    test "does not render any global notices", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
+    end
 
     test "checkout buttons are paddle buttons", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -860,7 +877,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "Paddle.Checkout.open"
     end
 
-    test "currently owned tier is highlighted if stats are still unlocked", %{conn: conn} do
+    test "currently owned tier is highlighted", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert text_of_element(doc, @growth_highlight_pill) == "Current"
     end
@@ -869,9 +886,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
+  end
 
-    test "highlights recommended tier if subscription expired and no days are paid for anymore",
-         %{conn: conn, user: user} do
+  describe "for a user with a cancelled and expired subscription" do
+    setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
+
+    setup %{user: user} do
       user
       |> team_of()
       |> Repo.preload(:subscription)
@@ -879,6 +899,15 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
       |> Repo.update!()
 
+      :ok
+    end
+
+    test "does not render any global notices", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
+    end
+
+    test "highlights recommended tier", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
       refute text_of_element(doc, @business_highlight_pill) == "Recommended"
@@ -887,6 +916,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   describe "for a grandfathered user with a high volume plan" do
     setup [:create_user, :create_site, :log_in]
+
+    test "does not render any global notices", %{conn: conn, user: user} do
+      create_subscription_for(user, paddle_plan_id: @v1_50m_yearly_plan_id)
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
+    end
 
     test "on a 50M v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not",
          %{conn: conn, user: user} do
@@ -944,6 +979,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, context}
     end
 
+    test "does not render any global notices", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
+    end
+
     test "v1 20M and 50M Growth plans are not available",
          %{conn: conn} do
       {:ok, lv, _doc} = get_liveview(conn)
@@ -975,6 +1015,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute business_box =~ "Unlimited team members"
       refute business_box =~ "Up to 50 sites"
       refute business_box =~ "Stats API (600 requests per hour)"
+      refute business_box =~ "Looker Studio Connector"
       refute business_box =~ "Custom Properties"
 
       assert enterprise_box =~ "Everything in Business"
@@ -989,15 +1030,26 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute enterprise_box =~ "10+ team members"
       refute enterprise_box =~ "Unlimited team members"
     end
+  end
 
-    test "allows to upgrade without a trial_expiry_date when the user owns a site", %{
-      conn: conn,
-      user: user
-    } do
+  describe "for a user without a trial_expiry_date (invited user) who owns a site (transferred)" do
+    setup [:create_user, :create_site, :log_in]
+
+    setup %{user: user} do
       user
-      |> Plausible.Auth.User.changeset(%{trial_expiry_date: nil})
+      |> team_of()
+      |> Ecto.Changeset.change(trial_expiry_date: nil)
       |> Repo.update!()
 
+      :ok
+    end
+
+    test "does not render any global notices", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [])
+    end
+
+    test "allows to upgrade", %{conn: conn} do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "100k")
 
@@ -1048,6 +1100,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "does not allow to subscribe and renders notice", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
+      check_notice_titles(doc, [Billing.upgrade_ineligible_notice_title()])
+
       assert text_of_element(doc, "#upgrade-eligible-notice") =~ "You cannot start a subscription"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
@@ -1057,21 +1111,48 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   describe "for a user with no sites but pending ownership transfer" do
     setup [:create_user, :log_in]
 
-    test "allows to subscribe and does not render the 'upgrade ineligible' notice", %{
-      conn: conn,
-      user: user
-    } do
+    setup %{user: user} do
       old_owner = new_user()
       site = new_site(owner: old_owner)
       invite_transfer(site, user, inviter: old_owner)
 
+      :ok
+    end
+
+    test "renders only the pending ownership transfer notice", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      check_notice_titles(doc, [Billing.pending_site_ownerships_notice_title()])
+    end
+
+    test "allows to subscribe", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      refute text_of_element(doc, "#upgrade-eligible-notice") =~ "You cannot start a subscription"
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
       assert text_of_element(doc, @growth_plan_box) =~ "Recommended"
     end
+  end
+
+  # Checks the given HTML document for the presence of all possible billing
+  # notices. For those expected, we assert that only one is present. Others
+  # should not appear in the document.
+  defp check_notice_titles(doc, expected) do
+    [
+      Billing.dashboard_locked_notice_title(),
+      Billing.active_grace_period_notice_title(),
+      Billing.subscription_cancelled_notice_title(),
+      Billing.subscription_past_due_notice_title(),
+      Billing.subscription_paused_notice_title(),
+      Billing.upgrade_ineligible_notice_title(),
+      Billing.pending_site_ownerships_notice_title()
+    ]
+    |> Enum.each(fn title ->
+      if title in expected do
+        assert length(String.split(doc, title)) == 2
+      else
+        refute doc =~ title
+      end
+    end)
   end
 
   defp subscribe_v4_growth(%{user: user}) do

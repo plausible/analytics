@@ -10,9 +10,10 @@ defmodule Plausible.Stats.Comparisons do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, DateTimeRange, Time}
 
-  @spec get_comparison_query(Stats.Query.t(), map()) :: Stats.Query.t()
+  @spec get_comparison_utc_time_range(Stats.Query.t(), map()) :: DateTimeRange.t()
   @doc """
-  Generates a comparison query based on the source query and comparison mode.
+  Generates a `DateTimeRange` for the comparison period by the given source query
+  and comparison options.
 
   Currently only historical periods are supported for comparisons (not `realtime`
   and `30m` periods).
@@ -41,20 +42,22 @@ defmodule Plausible.Stats.Comparisons do
       January 1st. Defaults to false.
 
   """
-  def get_comparison_query(%Stats.Query{} = source_query, options) do
+  def get_comparison_utc_time_range(%Stats.Query{} = source_query, options) do
     comparison_date_range = get_comparison_date_range(source_query, options)
 
-    new_range =
-      DateTimeRange.new!(
-        comparison_date_range.first,
-        comparison_date_range.last,
-        source_query.timezone
-      )
-      |> DateTimeRange.to_timezone("Etc/UTC")
+    DateTimeRange.new!(
+      comparison_date_range.first,
+      comparison_date_range.last,
+      source_query.timezone
+    )
+    |> DateTimeRange.to_timezone("Etc/UTC")
+  end
 
+  def get_comparison_query(
+        %Query{comparison_utc_time_range: %DateTimeRange{} = comparison_range} = source_query
+      ) do
     source_query
-    |> Query.set(utc_time_range: new_range)
-    |> maybe_include_imported(source_query)
+    |> Query.set(utc_time_range: comparison_range)
   end
 
   @doc """
@@ -171,25 +174,5 @@ defmodule Plausible.Stats.Comparisons do
     days_to_subtract = if days_to_subtract > 0, do: days_to_subtract, else: days_to_subtract + 7
 
     Date.add(date, -days_to_subtract)
-  end
-
-  defp maybe_include_imported(query, source_query) do
-    requested? = source_query.include.imports
-
-    case Query.ensure_include_imported(query, requested?) do
-      :ok ->
-        struct!(query,
-          include_imported: true,
-          skip_imported_reason: nil,
-          include: Map.put(query.include, :imports, true)
-        )
-
-      {:error, reason} ->
-        struct!(query,
-          include_imported: false,
-          skip_imported_reason: reason,
-          include: Map.put(query.include, :imports, requested?)
-        )
-    end
   end
 end

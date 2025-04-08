@@ -189,33 +189,32 @@ defmodule Plausible.Stats.SQL.Expression do
   def select_dimension(q, key, "visit:city_name", _table, _query),
     do: select_merge_as(q, [t], %{key => t.city_name})
 
-  def event_metric(:pageviews) do
+  def event_metric(:pageviews, _query) do
     wrap_alias([e], %{
-      pageviews:
-        fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
+      pageviews: scale_sample(fragment("countIf(? = 'pageview')", e.name))
     })
   end
 
-  def event_metric(:events) do
+  def event_metric(:events, _query) do
     wrap_alias([e], %{
-      events: fragment("toUInt64(round(countIf(? != 'pageleave') * any(_sample_factor)))", e.name)
+      events: scale_sample(fragment("countIf(? != 'engagement')", e.name))
     })
   end
 
-  def event_metric(:visitors) do
+  def event_metric(:visitors, _query) do
     wrap_alias([e], %{
-      visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+      visitors: scale_sample(fragment("uniq(?)", e.user_id))
     })
   end
 
-  def event_metric(:visits) do
+  def event_metric(:visits, _query) do
     wrap_alias([e], %{
-      visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id)
+      visits: scale_sample(fragment("uniq(?)", e.session_id))
     })
   end
 
   on_ee do
-    def event_metric(:total_revenue) do
+    def event_metric(:total_revenue, _query) do
       wrap_alias(
         [e],
         %{
@@ -225,7 +224,7 @@ defmodule Plausible.Stats.SQL.Expression do
       )
     end
 
-    def event_metric(:average_revenue) do
+    def event_metric(:average_revenue, _query) do
       wrap_alias(
         [e],
         %{
@@ -236,20 +235,83 @@ defmodule Plausible.Stats.SQL.Expression do
     end
   end
 
-  def event_metric(:sample_percent) do
+  def event_metric(:sample_percent, _query) do
     wrap_alias([], %{
       sample_percent:
         fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
     })
   end
 
-  def event_metric(:percentage), do: %{}
-  def event_metric(:conversion_rate), do: %{}
-  def event_metric(:scroll_depth), do: %{}
-  def event_metric(:group_conversion_rate), do: %{}
-  def event_metric(:total_visitors), do: %{}
+  def event_metric(:percentage, _query), do: %{}
+  def event_metric(:conversion_rate, _query), do: %{}
+  def event_metric(:scroll_depth, _query), do: %{}
+  def event_metric(:group_conversion_rate, _query), do: %{}
+  def event_metric(:total_visitors, _query), do: %{}
 
-  def event_metric(unknown), do: raise("Unknown metric: #{unknown}")
+  def event_metric(:time_on_page, query) do
+    selected =
+      case query.time_on_page_data do
+        %{include_new_metric: false} ->
+          wrap_alias(
+            [e],
+            %{
+              # :KLUDGE: We would like to but can't use constant 0 here as it leads to cyclic aliases if there's no other
+              # metrics selected other than time_on_page.
+              __internal_total_time_on_page: fragment("sumArray([0])"),
+              __internal_total_time_on_page_visits: fragment("sumArray([0])")
+            }
+          )
+
+        %{include_new_metric: true, cutoff: nil} ->
+          wrap_alias(
+            [e],
+            %{
+              __internal_total_time_on_page: fragment("sum(?) / 1000", e.engagement_time),
+              __internal_total_time_on_page_visits:
+                fragment("uniqIf(?, ? = 'engagement')", e.session_id, e.name)
+            }
+          )
+
+        %{include_new_metric: true, cutoff: cutoff} ->
+          wrap_alias(
+            [e],
+            %{
+              __internal_total_time_on_page:
+                fragment(
+                  "sumIf(?, ? >= ?) / 1000",
+                  e.engagement_time,
+                  e.timestamp,
+                  ^cutoff
+                ),
+              __internal_total_time_on_page_visits:
+                fragment(
+                  "uniqIf(?, ? = 'engagement' and ? >= ?)",
+                  e.session_id,
+                  e.name,
+                  e.timestamp,
+                  ^cutoff
+                )
+            }
+          )
+      end
+
+    if query.time_on_page_data.include_legacy_metric do
+      selected
+    else
+      Map.merge(
+        selected,
+        wrap_alias([e], %{
+          time_on_page:
+            time_on_page(
+              selected_as(:__internal_total_time_on_page),
+              selected_as(:__internal_total_time_on_page_visits)
+            )
+        })
+      )
+    end
+  end
+
+  def event_metric(unknown, _query), do: raise("Unknown metric: #{unknown}")
 
   def session_metric(:bounce_rate, query) do
     # :TRICKY: If page is passed to query, we only count bounce rate where users _entered_ at page.
@@ -272,26 +334,25 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def session_metric(:visits, _query) do
     wrap_alias([s], %{
-      visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
+      visits: scale_sample(fragment("sum(?)", s.sign))
     })
   end
 
   def session_metric(:pageviews, _query) do
     wrap_alias([s], %{
-      pageviews:
-        fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
+      pageviews: scale_sample(fragment("sum(? * ?)", s.sign, s.pageviews))
     })
   end
 
   def session_metric(:events, _query) do
     wrap_alias([s], %{
-      events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+      events: scale_sample(fragment("sum(? * ?)", s.sign, s.events))
     })
   end
 
   def session_metric(:visitors, _query) do
     wrap_alias([s], %{
-      visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
+      visitors: scale_sample(fragment("uniq(?)", s.user_id))
     })
   end
 
@@ -327,19 +388,27 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:conversion_rate, _query), do: %{}
   def session_metric(:group_conversion_rate, _query), do: %{}
 
-  defmacro event_goal_join(events, page_regexes) do
+  defmacro event_goal_join(goal_join_data) do
     quote do
       fragment(
         """
-        arrayPushFront(
-          CAST(multiMatchAllIndices(?, ?) AS Array(Int64)),
-          -indexOf(?, ?)
+        arrayIntersect(
+          multiMatchAllIndices(?, ?),
+          arrayMap(
+            (expected_name, threshold, index) -> if(expected_name = ? and ? between threshold and 100, index, -1),
+            ?,
+            ?,
+            ?
+          )
         )
         """,
         e.pathname,
-        type(^unquote(page_regexes), {:array, :string}),
-        type(^unquote(events), {:array, :string}),
-        e.name
+        type(^unquote(goal_join_data).page_regexes, {:array, :string}),
+        e.name,
+        e.scroll_depth,
+        type(^unquote(goal_join_data).event_names_by_type, {:array, :string}),
+        type(^unquote(goal_join_data).scroll_thresholds, {:array, :integer}),
+        type(^unquote(goal_join_data).indices, {:array, :integer})
       )
     end
   end

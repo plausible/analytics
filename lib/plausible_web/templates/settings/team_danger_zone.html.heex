@@ -1,0 +1,25 @@
+<.notice title="Danger Zone" theme={:red}>
+  Destructive actions below can result in irrecoverable data loss. Be careful.
+</.notice>
+
+<.settings_tiles>
+  <.tile docs="delete-team">
+    <:title>Delete Team</:title>
+    <:subtitle>Deleting the team removes all associated sites and collected stats</:subtitle>
+
+    <%= if Plausible.Billing.Subscription.Status.active?(@current_team && @current_team.subscription) do %>
+      <.notice theme={:gray} title="Cannot delete the team at this time">
+        The team cannot be deleted because it has an active subscription. Please cancel the subscription first.
+      </.notice>
+    <% else %>
+      <.button_link
+        data-confirm="Deleting the team will also delete all the associated sites and data. This action cannot be reversed. Are you sure?"
+        href={Routes.settings_path(@conn, :delete_team)}
+        method="delete"
+        theme="danger"
+      >
+        Delete "{Plausible.Teams.name(@current_team)}"
+      </.button_link>
+    <% end %>
+  </.tile>
+</.settings_tiles>

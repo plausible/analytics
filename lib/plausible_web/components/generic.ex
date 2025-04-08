@@ -132,11 +132,15 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr(:slug, :string, required: true)
+  attr(:class, :string, default: nil)
 
   def docs_info(assigns) do
     ~H"""
     <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
-      <Heroicons.information_circle class="text-gray-500 dark:text-indigo-500 w-6 h-6 stroke-2 absolute top-4 right-4 hover:text-indigo-500 dark:hover:text-indigo-300" />
+      <Heroicons.information_circle class={[
+        "text-gray-500 dark:text-indigo-500 w-6 h-6 stroke-2 hover:text-indigo-500 dark:hover:text-indigo-300",
+        @class
+      ]} />
     </a>
     """
   end
@@ -222,6 +226,7 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :class, :string, default: ""
+  attr :id, :string, default: nil
 
   slot :button, required: true do
     attr(:class, :string)
@@ -236,11 +241,17 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <div
+      id={@id}
       x-data="dropdown"
       x-on:keydown.escape.prevent.stop="close($refs.button)"
       class="relative inline-block text-left"
     >
-      <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
+      <button
+        x-ref="button"
+        x-on:click="toggle()"
+        type="button"
+        class={["py-2.5", List.first(@button).class]}
+      >
         {render_slot(List.first(@button))}
       </button>
       <div
@@ -255,7 +266,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-on:click.outside="close($refs.button)"
         style="display: none;"
         class={[
-          "origin-top-right absolute z-50 right-0 mt-2 p-1 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none",
+          "origin-top-right absolute z-50 right-0 mt-2 p-1.5 w-max rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none",
           @menu_class
         ]}
       >
@@ -267,6 +278,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string)
   attr(:class, :string, default: "")
+  attr(:id, :string, default: nil)
   attr(:new_tab, :boolean, default: false)
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global, include: ~w(method))
@@ -287,6 +299,7 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <.unstyled_link
+        id={@id}
         class={@class}
         new_tab={@new_tab}
         href={@href}
@@ -409,7 +422,7 @@ defmodule PlausibleWeb.Components.Generic do
         <.title>
           {render_slot(@title)}
 
-          <.docs_info :if={@docs} slug={@docs} />
+          <.docs_info :if={@docs} slug={@docs} class="absolute top-4 right-4" />
         </.title>
         <div class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           {render_slot(@subtitle)}

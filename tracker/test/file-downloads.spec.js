@@ -45,7 +45,7 @@ test.describe('file-downloads extension', () => {
     await page.goto('/file-download.html')
     const downloadURL = LOCAL_SERVER_ADDR + '/' + await page.locator('#local-download').getAttribute('href')
 
-    const downloadRequestMockList = mockManyRequests(page, downloadURL, 2)
+    const downloadRequestMockList = mockManyRequests({ page, path: downloadURL, numberOfRequests: 2 })
     await page.click('#local-download')
 
     expect((await downloadRequestMockList).length).toBe(1)

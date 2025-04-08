@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useMemo, useState } from 'react'
 
 import Modal from './modal'

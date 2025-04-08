@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Plausible Playwright tests</title>
+  <script id="plausible-script" defer src="/tracker/js/plausible.hash.local.pageview-props.js"></script>
+</head>
+
+<body>
+  <h1>Blog</h1>
+
+  <button id="home" onclick="goHome()">Home</button>
+  <button id="john-post" onclick="goToBlogPost('john')">A blog post of John</button>
+  <button id="jane-post" onclick="goToBlogPost('jane')">A blog post of Jane</button>
+
+  <div id="content"></div>
+
+  <script>
+    function goToBlogPost(author) {
+      document.getElementById('plausible-script').setAttribute('event-author', author)
+      window.location.hash = `/${author}-post`
+      document.getElementById('content').innerHTML = `Hello, I'm ${author} and this is my post.`
+    }
+
+    function goHome() {
+      document.getElementById('plausible-script').removeAttribute('event-author')
+      window.location.hash = ''
+      document.getElementById('content').innerHTML = ''
+    }
+  </script>
+</body>
+
+</html>

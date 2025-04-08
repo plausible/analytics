@@ -53,7 +53,7 @@ defmodule Plausible.Stats.Imported.SQL.WhereBuilder do
     db_field = Plausible.Stats.Filters.without_prefix(dimension)
 
     if db_field == :goal do
-      Plausible.Goals.Filters.add_filter(query, filter, imported?: true)
+      Plausible.Stats.Goals.add_filter(query, filter, imported?: true)
     else
       mapped_db_field = Map.get(@db_field_mappings, db_field, db_field)
 

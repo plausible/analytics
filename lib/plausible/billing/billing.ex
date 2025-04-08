@@ -89,7 +89,7 @@ defmodule Plausible.Billing do
     subscription =
       Subscription
       |> Repo.get_by(paddle_subscription_id: params["subscription_id"])
-      |> Repo.preload(team: :owner)
+      |> Repo.preload(team: [:owners, :billing_members])
 
     if subscription do
       changeset =
@@ -99,9 +99,11 @@ defmodule Plausible.Billing do
 
       updated = Repo.update!(changeset)
 
-      subscription.team.owner
-      |> PlausibleWeb.Email.cancellation_email()
-      |> Plausible.Mailer.send()
+      for recipient <- subscription.team.owners ++ subscription.team.billing_members do
+        recipient
+        |> PlausibleWeb.Email.cancellation_email()
+        |> Plausible.Mailer.send()
+      end
 
       updated
     end
@@ -138,9 +140,16 @@ defmodule Plausible.Billing do
         Teams.get!(team_id)
 
       {:user_id, user_id} ->
-        user = Repo.get!(Auth.User, user_id)
-        {:ok, team} = Teams.get_or_create(user)
-        team
+        # Given a guest or non-owner member user initiates the new subscription payment
+        # and becomes an owner of an existing team already with a subscription in between,
+        # this could result in assigning this new subscription to the newly owned team,
+        # effectively "shadowing" any old one.
+        #
+        # That's why we are always defaulting to creating a new "My Personal Sites" team regardless
+        # if they were owner of one before or not.
+        Auth.User
+        |> Repo.get!(user_id)
+        |> Teams.force_create_my_team()
     end
   end
 
@@ -155,14 +164,6 @@ defmodule Plausible.Billing do
           {user_id, team_id}
 
         ["ee:true", "user:" <> user_id] ->
-          {user_id, "0"}
-
-        # NOTE: legacy pattern, to be removed in a follow-up
-        ["user:" <> user_id, "team:" <> team_id] ->
-          {user_id, team_id}
-
-        # NOTE: legacy pattern, to be removed in a follow-up
-        [user_id] ->
           {user_id, "0"}
 
         _ ->
@@ -220,7 +221,7 @@ defmodule Plausible.Billing do
       Teams.Team
       |> Repo.get!(subscription.team_id)
       |> Teams.with_subscription()
-      |> Repo.preload(:owner)
+      |> Repo.preload(:owners)
 
     if subscription.id != team.subscription.id do
       Sentry.capture_message("Susbscription ID mismatch",
@@ -244,10 +245,20 @@ defmodule Plausible.Billing do
       )
 
     if plan do
-      api_keys = from(key in Plausible.Auth.ApiKey, where: key.user_id == ^team.owner.id)
-      Repo.update_all(api_keys, set: [hourly_request_limit: plan.hourly_api_request_limit])
+      Repo.update_all(
+        from(t in Teams.Team, where: t.id == ^team.id),
+        set: [hourly_api_request_limit: plan.hourly_api_request_limit]
+      )
     end
 
     team
   end
+
+  def dashboard_locked_notice_title(), do: "Dashboard locked"
+  def active_grace_period_notice_title(), do: "You have outgrown your Plausible subscription tier"
+  def subscription_cancelled_notice_title(), do: "Subscription cancelled"
+  def subscription_past_due_notice_title(), do: "Payment failed"
+  def subscription_paused_notice_title(), do: "Subscription paused"
+  def upgrade_ineligible_notice_title(), do: "No sites owned"
+  def pending_site_ownerships_notice_title(), do: "Pending ownership transfers"
 end

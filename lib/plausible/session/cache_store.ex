@@ -2,54 +2,66 @@ defmodule Plausible.Session.CacheStore do
   require Logger
   alias Plausible.Session.WriteBuffer
 
-  @lock_timeout 500
+  @lock_timeout 1000
 
   @lock_telemetry_event [:plausible, :sessions, :cache, :lock]
 
   def lock_telemetry_event, do: @lock_telemetry_event
 
-  def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1)
+  def on_event(event, session_attributes, prev_user_id, opts \\ []) do
+    buffer_insert = Keyword.get(opts, :buffer_insert, &WriteBuffer.insert/1)
+    skip_balancer? = Keyword.get(opts, :skip_balancer?, false)
+    lock_requested_at = System.monotonic_time()
 
-  def on_event(%{name: "pageleave"} = event, _, prev_user_id, _) do
-    # The `pageleave` event is currently experimental. In a real use case we would
-    # probably want to update the session as well (e.g. `is_bounce` or `duration`).
+    try do
+      response =
+        Plausible.Session.Balancer.dispatch(
+          event.user_id,
+          fn ->
+            lock_duration = System.monotonic_time() - lock_requested_at
+            :telemetry.execute(@lock_telemetry_event, %{duration: lock_duration}, %{})
 
-    # However, for now we're only interested in finding out the success rate of
-    # pageleave events. So these events will simply be inserted into the events
-    # table with the session ID found from the cache. If there's no session, the
-    # event will be dropped.
-    found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
+            found_session =
+              find_session(event, event.user_id) || find_session(event, prev_user_id)
 
-    if found_session do
-      {:ok, found_session}
-    else
-      {:error, :no_session_for_pageleave}
+            handle_event(event, found_session, session_attributes, buffer_insert)
+          end,
+          timeout: @lock_timeout,
+          local?: skip_balancer?
+        )
+
+      case response do
+        {:error, e} -> raise e
+        _ -> {:ok, response}
+      end
+    catch
+      :exit, {:timeout, _} ->
+        Sentry.capture_message("Timeout while handling session event")
+        {:error, :timeout}
     end
   end
 
-  def on_event(event, session_attributes, prev_user_id, buffer_insert) do
-    lock_requested_at = System.monotonic_time()
+  defp handle_event(%{name: "engagement"} = event, found_session, _, _) do
+    if found_session do
+      # Make sure the session is kept active in the in-memory session cache
+      refresh_session_cache(found_session, event.timestamp)
 
-    Plausible.Cache.Adapter.with_lock(
-      :sessions,
-      {event.site_id, event.user_id},
-      @lock_timeout,
-      fn ->
-        lock_duration = System.monotonic_time() - lock_requested_at
-        :telemetry.execute(@lock_telemetry_event, %{duration: lock_duration}, %{})
-        found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
+      found_session
+    else
+      :no_session_for_engagement
+    end
+  end
 
-        if found_session do
-          updated_session = update_session(found_session, event)
-          buffer_insert.([%{found_session | sign: -1}, %{updated_session | sign: 1}])
-          persist_session(updated_session)
-        else
-          new_session = new_session_from_event(event, session_attributes)
-          buffer_insert.([new_session])
-          persist_session(new_session)
-        end
-      end
-    )
+  defp handle_event(event, found_session, session_attributes, buffer_insert) do
+    if found_session do
+      updated_session = update_session(found_session, event)
+      buffer_insert.([%{found_session | sign: -1}, %{updated_session | sign: 1}])
+      update_session_cache(updated_session)
+    else
+      new_session = new_session_from_event(event, session_attributes)
+      buffer_insert.([new_session])
+      update_session_cache(new_session)
+    end
   end
 
   defp find_session(_domain, nil), do: nil
@@ -68,17 +80,22 @@ defmodule Plausible.Session.CacheStore do
     end
   end
 
-  defp persist_session(session) do
+  defp update_session_cache(session) do
     key = {session.site_id, session.user_id}
     Plausible.Cache.Adapter.put(:sessions, key, session, dirty?: true)
     session
   end
 
+  defp refresh_session_cache(session, timestamp) do
+    session
+    |> Map.put(:timestamp, timestamp)
+    |> update_session_cache()
+  end
+
   defp update_session(session, event) do
     %{
       session
-      | user_id: event.user_id,
-        timestamp: event.timestamp,
+      | timestamp: event.timestamp,
         entry_page:
           if(session.entry_page == "" and event.name == "pageview",
             do: event.pathname,

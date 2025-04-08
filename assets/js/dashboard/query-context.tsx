@@ -1,4 +1,3 @@
-/* @format */
 import React, { createContext, useMemo, useContext, ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
@@ -19,10 +18,15 @@ import {
   queryDefaultValue,
   postProcessFilters
 } from './query'
+import { resolveFilters, SavedSegment, SegmentData } from './filtering/segments'
+import { useDefiniteLocationState } from './navigation/use-definite-location-state'
+import { useClearExpandedSegmentModeOnFilterClear } from './nav-menu/segments/segment-menu'
+import { useSegmentsContext } from './filtering/segments-context'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
-  otherSearch: {} as Record<string, unknown>
+  otherSearch: {} as Record<string, unknown>,
+  expandedSegment: null as (SavedSegment & { segment_data: SegmentData }) | null
 }
 
 export type QueryContextValue = typeof queryContextDefaultValue
@@ -38,14 +42,19 @@ export default function QueryContextProvider({
 }: {
   children: ReactNode
 }) {
+  const segmentsContext = useSegmentsContext()
   const location = useLocation()
+  const { definiteValue: expandedSegment } = useDefiniteLocationState<
+    SavedSegment & { segment_data: SegmentData }
+  >('expandedSegment')
   const site = useSiteContext()
+
   const {
     compare_from,
     compare_to,
     comparison,
     date,
-    filters,
+    filters: rawFilters,
     from,
     labels,
     match_day_of_week,
@@ -58,12 +67,18 @@ export default function QueryContextProvider({
   const query = useMemo(() => {
     const defaultValues = queryDefaultValue
     const storedValues = getSavedTimePreferencesFromStorage({ site })
-
     const timeQuery = getDashboardTimeSettings({
       searchValues: { period, comparison, match_day_of_week },
       storedValues,
-      defaultValues
+      defaultValues,
+      segmentIsExpanded: !!expandedSegment
     })
+
+    const filters = Array.isArray(rawFilters)
+      ? postProcessFilters(rawFilters as Filter[])
+      : defaultValues.filters
+
+    const resolvedFilters = resolveFilters(filters, segmentsContext.segments)
 
     return {
       ...timeQuery,
@@ -94,9 +109,8 @@ export default function QueryContextProvider({
       with_imported: [true, false].includes(with_imported as boolean)
         ? (with_imported as boolean)
         : defaultValues.with_imported,
-      filters: Array.isArray(filters)
-        ? postProcessFilters(filters as Filter[])
-        : defaultValues.filters,
+      filters,
+      resolvedFilters,
       labels: (labels as FilterClauseLabels) || defaultValues.labels
     }
   }, [
@@ -104,16 +118,19 @@ export default function QueryContextProvider({
     compare_to,
     comparison,
     date,
-    filters,
+    rawFilters,
     from,
     labels,
     match_day_of_week,
     period,
     to,
     with_imported,
-    site
+    site,
+    expandedSegment,
+    segmentsContext.segments
   ])
 
+  useClearExpandedSegmentModeOnFilterClear({ expandedSegment, query })
   useSaveTimePreferencesToStorage({
     site,
     period,
@@ -126,7 +143,13 @@ export default function QueryContextProvider({
   }, [])
 
   return (
-    <QueryContext.Provider value={{ query, otherSearch }}>
+    <QueryContext.Provider
+      value={{
+        query,
+        otherSearch,
+        expandedSegment
+      }}
+    >
       {children}
     </QueryContext.Provider>
   )

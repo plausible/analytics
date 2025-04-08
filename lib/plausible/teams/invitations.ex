@@ -35,7 +35,16 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def find_team_invitations(user) do
+  def all(%Teams.Team{} = team) do
+    Repo.all(
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        where: ti.team_id == ^team.id,
+        preload: [inviter: inviter]
+    )
+  end
+
+  def all(%Plausible.Auth.User{} = user) do
     Repo.all(
       from ti in Teams.Invitation,
         inner_join: inviter in assoc(ti, :inviter),
@@ -70,10 +79,11 @@ defmodule Plausible.Teams.Invitations do
       from gi in Teams.GuestInvitation,
         inner_join: s in assoc(gi, :site),
         inner_join: ti in assoc(gi, :team_invitation),
+        inner_join: t in assoc(ti, :team),
         inner_join: inviter in assoc(ti, :inviter),
         where: gi.invitation_id == ^guest_invitation_id,
         where: ti.email == ^user.email,
-        preload: [site: s, team_invitation: {ti, inviter: inviter}]
+        preload: [site: s, team_invitation: {ti, team: t, inviter: inviter}]
 
     case Repo.one(invitation_query) do
       nil ->
@@ -88,7 +98,7 @@ defmodule Plausible.Teams.Invitations do
     transfer =
       Teams.SiteTransfer
       |> Repo.get_by(transfer_id: transfer_id, email: user.email)
-      |> Repo.preload([:site, :initiator])
+      |> Repo.preload([:initiator, site: :team])
 
     case transfer do
       nil ->
@@ -134,7 +144,7 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def invite(%Plausible.Site{} = site, invitee_email, role, inviter) do
-    site = Teams.load_for_site(site)
+    site = Repo.preload(site, :team)
 
     if role == :owner do
       create_site_transfer(
@@ -179,10 +189,9 @@ defmodule Plausible.Teams.Invitations do
     )
   end
 
-  def accept_site_transfer(site_transfer, user) do
+  def accept_site_transfer(site_transfer, team) do
     {:ok, _} =
       Repo.transaction(fn ->
-        {:ok, team} = Teams.get_or_create(user)
         :ok = transfer_site_ownership(site_transfer.site, team, NaiveDateTime.utc_now(:second))
         Repo.delete_all(from st in Teams.SiteTransfer, where: st.id == ^site_transfer.id)
       end)
@@ -190,10 +199,9 @@ defmodule Plausible.Teams.Invitations do
     :ok
   end
 
-  def transfer_site(site, user) do
+  def transfer_site(site, team) do
     {:ok, _} =
       Repo.transaction(fn ->
-        {:ok, team} = Teams.get_or_create(user)
         :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
       end)
 
@@ -226,10 +234,11 @@ defmodule Plausible.Teams.Invitations do
   @doc false
   def ensure_transfer_valid(_team, nil, :owner), do: :ok
 
-  def ensure_transfer_valid(team, new_owner, :owner) do
-    case Teams.Memberships.team_role(team, new_owner) do
-      {:ok, :owner} -> {:error, :transfer_to_self}
-      _ -> :ok
+  def ensure_transfer_valid(team, new_team, :owner) do
+    if team.id == new_team.id do
+      {:error, :transfer_to_self}
+    else
+      :ok
     end
   end
 
@@ -326,7 +335,7 @@ defmodule Plausible.Teams.Invitations do
     site =
       Repo.preload(site, [
         :team,
-        :owner,
+        :owners,
         guest_memberships: [team_membership: :user],
         guest_invitations: [team_invitation: :inviter]
       ])
@@ -383,19 +392,21 @@ defmodule Plausible.Teams.Invitations do
     Repo.delete_all(from gm in Teams.GuestMembership, where: gm.id in ^old_guest_ids)
     :ok = Teams.Memberships.prune_guests(prior_team)
 
-    {:ok, prior_owner} = Teams.get_owner(prior_team)
+    prior_owners = Repo.preload(prior_team, :owners).owners
 
-    {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)
+    for prior_owner <- prior_owners do
+      {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)
 
-    if prior_owner_team_membership.role == :guest do
-      {:ok, _} =
-        prior_owner_team_membership
-        |> Teams.GuestMembership.changeset(site, :editor)
-        |> Repo.insert(
-          on_conflict: [set: [updated_at: now, role: :editor]],
-          conflict_target: [:team_membership_id, :site_id],
-          returning: true
-        )
+      if prior_owner_team_membership.role == :guest do
+        {:ok, _} =
+          prior_owner_team_membership
+          |> Teams.GuestMembership.changeset(site, :editor)
+          |> Repo.insert(
+            on_conflict: [set: [updated_at: now, role: :editor]],
+            conflict_target: [:team_membership_id, :site_id],
+            returning: true
+          )
+      end
     end
 
     on_ee do
@@ -436,24 +447,41 @@ defmodule Plausible.Teams.Invitations do
       if active_subscription? and plan != :free_10k do
         team
         |> Teams.Billing.quota_usage(pending_ownership_site_ids: [site.id])
-        |> Billing.Quota.ensure_within_plan_limits(plan)
+        |> Billing.Quota.ensure_within_plan_limits(plan,
+          skip_site_limit_check?: Teams.Billing.grandfathered_team?(team)
+        )
       else
         {:error, :no_plan}
       end
     end
   else
     def ensure_can_take_ownership(_site, _team) do
-      :ok
+      always(:ok)
     end
   end
 
-  def send_transfer_accepted_email(site_transfer) do
+  def send_transfer_accepted_email(site_transfer, team) do
+    initiator_as_guest_editor? =
+      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) ==
+        {:ok, {:guest_member, :editor}}
+
     PlausibleWeb.Email.ownership_transfer_accepted(
       site_transfer.email,
       site_transfer.initiator.email,
-      site_transfer.site
+      team,
+      site_transfer.site,
+      initiator_as_guest_editor?
     )
     |> Plausible.Mailer.send()
+  end
+
+  def send_team_changed_email(site, user, team) do
+    owners = Repo.preload(team, :owners).owners
+
+    for owner <- owners do
+      PlausibleWeb.Email.team_changed(owner.email, user, team, site)
+      |> Plausible.Mailer.send()
+    end
   end
 
   @doc false
@@ -477,16 +505,12 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  def check_invitation_permissions(%Plausible.Site{} = site, inviter, invitation_role, opts) do
+  def check_invitation_permissions(%Plausible.Site{} = site, inviter, _invitation_role, opts) do
     check_permissions? = Keyword.get(opts, :check_permissions, true)
 
     if check_permissions? do
       case Teams.Memberships.site_role(site, inviter) do
-        {:ok, :owner} when invitation_role == :owner ->
-          :ok
-
-        {:ok, inviter_role}
-        when inviter_role in [:owner, :editor, :admin] and invitation_role != :owner ->
+        {:ok, {:team_member, inviter_role}} when inviter_role in [:owner, :admin] ->
           :ok
 
         _ ->
@@ -716,7 +740,11 @@ defmodule Plausible.Teams.Invitations do
 
   defp send_invitation_accepted_email(team_invitation, [guest_invitation | _]) do
     team_invitation.inviter.email
-    |> PlausibleWeb.Email.guest_invitation_accepted(team_invitation.email, guest_invitation.site)
+    |> PlausibleWeb.Email.guest_invitation_accepted(
+      team_invitation.email,
+      team_invitation.team,
+      guest_invitation.site
+    )
     |> Plausible.Mailer.send()
   end
 

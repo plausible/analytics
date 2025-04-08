@@ -1,12 +1,12 @@
 defmodule Plausible.Imported.GoogleAnalytics4Test do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible
   use Oban.Testing, repo: Plausible.Repo
 
   import Mox
   import Ecto.Query, only: [from: 2]
   import ExUnit.CaptureLog
 
-  alias Plausible.ClickhouseRepo
   alias Plausible.Repo
   alias Plausible.Imported.GoogleAnalytics4
 
@@ -26,7 +26,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                     |> Enum.map(&File.read!/1)
                     |> Enum.map(&Jason.decode!/1)
 
-  if Plausible.ce?() do
+  on_ce do
     @moduletag :capture_log
   end
 
@@ -150,9 +150,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert_browsers(conn, breakdown_params)
       assert_os(conn, breakdown_params)
       assert_os_versions(conn, breakdown_params)
-
-      # Misc
-      assert_active_visitors(site_import)
     end
 
     test "handles empty response payload gracefully", %{user: user, site: site} do
@@ -463,34 +460,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     end
   end
 
-  defp assert_active_visitors(site_import) do
-    result =
-      ClickhouseRepo.query!(
-        "SELECT date, sum(visitors) AS all_visitors, sum(active_visitors) AS all_active_visitors " <>
-          "FROM imported_pages WHERE site_id = #{site_import.site_id} AND import_id = #{site_import.id} GROUP BY date"
-      )
-      |> Map.fetch!(:rows)
-      |> Enum.map(fn [date, all_visitors, all_active_visitors] ->
-        %{date: date, visitors: all_visitors, active_visitors: all_active_visitors}
-      end)
-
-    assert length(result) == 31
-
-    Enum.each(result, fn row ->
-      assert row.visitors > 100 and row.active_visitors > 100
-      assert row.active_visitors <= row.visitors
-    end)
-
-    ClickhouseRepo.query!(
-      "SELECT time_on_page FROM imported_pages WHERE active_visitors = 0 AND " <>
-        "site_id = #{site_import.site_id} AND import_id = #{site_import.id}"
-    )
-    |> Map.fetch!(:rows)
-    |> Enum.each(fn [time_on_page] ->
-      assert time_on_page == 0
-    end)
-  end
-
   defp assert_custom_events(conn, params) do
     params =
       params
@@ -505,19 +474,19 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                "goal" => "scroll",
                "visitors" => 1513,
                "events" => 2130,
-               "conversion_rate" => 24.7
+               "conversion_rate" => 24.69
              },
              %{
                "goal" => "Outbound Link: Click",
                "visitors" => 17,
                "events" => 17,
-               "conversion_rate" => 0.3
+               "conversion_rate" => 0.28
              },
              %{
                "goal" => "view_search_results",
                "visitors" => 11,
                "events" => 30,
-               "conversion_rate" => 0.2
+               "conversion_rate" => 0.18
              }
            ]
   end
@@ -543,13 +512,14 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                "events" => 6
              }
 
-    assert %{
-             "url" =>
-               "http://www.jamieoliver.com/recipes/pasta-recipes/spinach-ricotta-cannelloni/",
-             "visitors" => 1,
-             "conversion_rate" => 0.0,
-             "events" => 1
-           } in results
+    results
+    |> Enum.find(
+      &(&1["url"] ==
+          "http://www.jamieoliver.com/recipes/pasta-recipes/spinach-ricotta-cannelloni/")
+    )
+    |> then(fn page ->
+      assert %{"visitors" => 1, "conversion_rate" => 0.02, "events" => 1} = page
+    end)
   end
 
   defp assert_timeseries(conn, params) do
@@ -809,7 +779,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     # it will allow us to assert on the session metrics as well.
     assert Enum.at(results, 2) == %{
              "page" => "/",
-             "time_on_page" => 17.677262055264585,
+             "time_on_page" => 462,
              "visitors" => 371,
              "visits" => 212,
              "bounce_rate" => 54.0,
@@ -821,7 +791,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert List.last(results) == %{
              "bounce_rate" => 0.0,
              "page" => "/znamenitosti-rima-koje-treba-vidjeti/",
-             "time_on_page" => 40.0,
+             "time_on_page" => 40,
              "visit_duration" => 0.0,
              "visitors" => 1,
              "visits" => 1

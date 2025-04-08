@@ -1,5 +1,3 @@
-/** @format */
-
 import { useEffect } from 'react'
 import {
   useQueryClient,
@@ -18,7 +16,7 @@ type PaginatedQueryKeyBase = [Endpoint, { query: DashboardQuery }]
 
 type GetRequestParams<TKey extends PaginatedQueryKeyBase> = (
   k: TKey
-) => [Record<string, unknown>, Record<string, unknown>]
+) => [DashboardQuery, Record<string, unknown>]
 
 /**
  * Hook that fetches the first page from the defined GET endpoint on mount,

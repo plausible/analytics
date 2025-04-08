@@ -7,19 +7,33 @@
     <:title>Delete Account</:title>
     <:subtitle>Deleting your account removes all sites and stats you've collected</:subtitle>
 
-    <%= if Plausible.Billing.Subscription.Status.active?(@my_team && @my_team.subscription) do %>
-      <.notice theme={:gray} title="Cannot delete account at this time">
-        Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.
-      </.notice>
-    <% else %>
-      <.button_link
-        data-confirm="Deleting your account will also delete all the sites and data that you own. This action cannot be reversed. Are you sure?"
-        href="/me"
-        method="delete"
-        theme="danger"
-      >
-        Delete my account
-      </.button_link>
+    <%= cond do %>
+      <% length(@solely_owned_teams) > 0 -> %>
+        <.notice theme={:gray} title="Cannot delete account at this time">
+          You are the sole owner of one or more teams. If you want to delete your account, please either add another owner or delete each of the following teams:
+          <ul class="w-full py-4">
+            <li :for={team <- @solely_owned_teams} class="pt-1">
+              <.styled_link href={
+                Routes.settings_path(@conn, :team_general, __team: team.identifier)
+              }>
+                {Plausible.Teams.name(team)}
+              </.styled_link>
+            </li>
+          </ul>
+        </.notice>
+      <% Plausible.Billing.Subscription.Status.active?(@my_team && @my_team.subscription) -> %>
+        <.notice theme={:gray} title="Cannot delete account at this time">
+          Your account cannot be deleted because you have an active subscription. If you want to delete your account, please cancel your subscription first.
+        </.notice>
+      <% true -> %>
+        <.button_link
+          data-confirm="Deleting your account will also delete all the sites and data that you own. This action cannot be reversed. Are you sure?"
+          href="/me"
+          method="delete"
+          theme="danger"
+        >
+          Delete my account
+        </.button_link>
     <% end %>
   </.tile>
 </.settings_tiles>

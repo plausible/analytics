@@ -25,7 +25,8 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
       Repo.all(
         from t in Teams.Team,
           as: :team,
-          inner_join: o in assoc(t, :owner),
+          inner_join: o in assoc(t, :owners),
+          left_join: bm in assoc(t, :billing_members),
           inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
           on: true,
           left_join: sent in ^sent_notification,
@@ -35,29 +36,39 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
           where:
             s.next_bill_date > fragment("now()::date") and
               s.next_bill_date <= fragment("now()::date + INTERVAL '7 days'"),
-          preload: [owner: o, subscription: s]
+          preload: [owners: o, subscription: s, billing_members: bm]
       )
 
     for team <- teams do
+      recipients = team.owners ++ team.billing_members
+
       case team.subscription.status do
         Subscription.Status.active() ->
-          template = PlausibleWeb.Email.yearly_renewal_notification(team)
-          Plausible.Mailer.send(template)
+          for recipient <- recipients do
+            template = PlausibleWeb.Email.yearly_renewal_notification(team, recipient)
+            Plausible.Mailer.send(template)
+          end
 
         Subscription.Status.deleted() ->
-          template = PlausibleWeb.Email.yearly_expiration_notification(team)
-          Plausible.Mailer.send(template)
+          for recipient <- recipients do
+            template = PlausibleWeb.Email.yearly_expiration_notification(team, recipient)
+            Plausible.Mailer.send(template)
+          end
 
         _ ->
-          Sentry.capture_message("Invalid subscription for renewal", team: team, user: team.owner)
+          Sentry.capture_message("Invalid subscription for renewal",
+            team: team
+          )
       end
 
-      Repo.insert_all("sent_renewal_notifications", [
-        %{
-          user_id: team.owner.id,
-          timestamp: NaiveDateTime.utc_now()
-        }
-      ])
+      for recipient <- recipients do
+        Repo.insert_all("sent_renewal_notifications", [
+          %{
+            user_id: recipient.id,
+            timestamp: NaiveDateTime.utc_now()
+          }
+        ])
+      end
     end
 
     :ok

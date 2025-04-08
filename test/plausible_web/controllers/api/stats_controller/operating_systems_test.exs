@@ -277,7 +277,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/operating-system-versions?filters=#{filters}&detailed=true"
+          "/api/stats/#{site.domain}/operating-system-versions?filters=#{filters}&detailed=true&period=day"
         )
 
       assert json_response(conn, 200)["results"] == [

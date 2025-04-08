@@ -1,5 +1,3 @@
-/** @format */
-
 import React, { useMemo, useState } from 'react'
 import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
@@ -8,7 +6,6 @@ import Locations from './stats/locations'
 import Devices from './stats/devices'
 import { TopBar } from './nav-menu/top-bar'
 import Behaviours from './stats/behaviours'
-import { FiltersBar } from './nav-menu/filters-bar'
 import { useQueryContext } from './query-context'
 import { isRealTimeDashboard } from './util/filters'
 
@@ -61,10 +58,7 @@ function Dashboard() {
 
   return (
     <div className="mb-12">
-      <TopBar
-        showCurrentVisitors={!isRealTimeDashboard}
-        extraBar={<FiltersBar />}
-      />
+      <TopBar showCurrentVisitors={!isRealTimeDashboard} />
       <DashboardStats
         importedDataInView={
           isRealTimeDashboard ? undefined : importedDataInView

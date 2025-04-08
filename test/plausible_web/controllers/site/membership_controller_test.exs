@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   use Bamboo.Test
 
   use Plausible.Teams.Test
+  import Plausible.Teams.Test
   import Plausible.Test.Support.HTML
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
@@ -20,7 +21,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         |> get("/sites/#{site.domain}/memberships/invite")
         |> html_response(200)
 
-      assert html =~ "Invite member to"
+      assert html =~ "Invite guest to"
       assert element_exists?(html, ~s/button[type=submit]/)
       refute element_exists?(html, ~s/button[type=submit][disabled]/)
     end
@@ -300,7 +301,57 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert_guest_membership(site.team, site, collaborator, :viewer)
     end
 
-    test "can downgrade yourself from admin to viewer, redirects to stats", %{
+    test "team admin can update a site member's role by user id (from editor to viewer)", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site()
+      team = Plausible.Teams.complete_setup(site.team)
+      add_member(team, user: user, role: :admin)
+      collaborator = add_guest(site, role: :editor)
+      assert_guest_membership(team, site, collaborator, :editor)
+
+      conn = set_current_team(conn, team)
+
+      put(conn, "/sites/#{site.domain}/memberships/u/#{collaborator.id}/role/viewer")
+
+      assert_guest_membership(team, site, collaborator, :viewer)
+    end
+
+    test "team admin can update a site member's role by user id (from viewer to editor)", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site()
+      team = Plausible.Teams.complete_setup(site.team)
+      add_member(team, user: user, role: :admin)
+      collaborator = add_guest(site, role: :viewer)
+      assert_guest_membership(team, site, collaborator, :viewer)
+
+      conn = set_current_team(conn, team)
+
+      put(conn, "/sites/#{site.domain}/memberships/u/#{collaborator.id}/role/editor")
+
+      assert_guest_membership(team, site, collaborator, :editor)
+    end
+
+    test "team editor can't update site member's role", %{conn: conn, user: user} do
+      site = new_site()
+      team = Plausible.Teams.complete_setup(site.team)
+      add_member(team, user: user, role: :editor)
+      collaborator = add_guest(site, role: :editor)
+      assert_guest_membership(team, site, collaborator, :editor)
+
+      conn = set_current_team(conn, team)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{collaborator.id}/role/viewer")
+
+      assert html_response(conn, 404)
+
+      assert_guest_membership(team, site, collaborator, :editor)
+    end
+
+    test "can't update role when an editor", %{
       conn: conn,
       user: user
     } do
@@ -309,21 +360,37 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       conn = put(conn, "/sites/#{site.domain}/memberships/u/#{user.id}/role/viewer")
 
-      assert_guest_membership(site.team, site, user, :viewer)
+      assert_guest_membership(site.team, site, user, :editor)
 
-      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}"
+      assert html_response(conn, 404)
+    end
+
+    test "can't update role when a viewer", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
+      another_guest = add_guest(site, role: :editor)
+
+      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{another_guest.id}/role/viewer")
+
+      assert_guest_membership(site.team, site, another_guest, :editor)
+
+      assert html_response(conn, 404)
     end
 
     test "owner cannot make anyone else owner", %{
       conn: conn,
       user: user
     } do
-      site = new_site()
-      admin = add_guest(site, user: user, role: :editor)
+      site = new_site(owner: user)
+      editor = new_user()
+      add_guest(site, user: editor, role: :editor)
 
-      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}/role/owner")
+      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{editor.id}/role/owner")
 
-      assert_guest_membership(site.team, site, user, :editor)
+      assert_guest_membership(site.team, site, editor, :editor)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "You are not allowed to grant the owner role"
@@ -344,33 +411,6 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "You are not allowed to grant the admin role"
     end
-
-    test "admin can make another user admin", %{
-      conn: conn,
-      user: user
-    } do
-      site = new_site()
-
-      add_guest(site, user: user, role: :editor)
-      viewer = add_guest(site, user: new_user(), role: :viewer)
-
-      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{viewer.id}/role/editor")
-
-      assert_guest_membership(site.team, site, viewer, :editor)
-      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
-    end
-
-    test "admin can't make themselves an owner", %{conn: conn, user: user} do
-      site = new_site()
-      add_guest(site, user: user, role: :editor)
-
-      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{user.id}/role/owner")
-
-      assert_guest_membership(site.team, site, user, :editor)
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "You are not allowed to grant the owner role"
-    end
   end
 
   describe "DELETE /sites/:domain/memberships/:id" do
@@ -382,6 +422,46 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
 
       refute Repo.exists?(from tm in Plausible.Teams.Membership, where: tm.user_id == ^admin.id)
+    end
+
+    test "when members is removed, associated personal segment is deleted", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      admin = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          type: :personal,
+          owner: admin,
+          site: site,
+          name: "personal segment"
+        )
+
+      delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
+
+      refute Repo.reload(segment)
+    end
+
+    test "when members is removed, associated site segment will be owner-less", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user)
+      admin = add_guest(site, role: :editor)
+
+      segment =
+        insert(:segment,
+          type: :site,
+          owner: admin,
+          site: site,
+          name: "site segment"
+        )
+
+      delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
+
+      assert Repo.reload(segment).owner_id == nil
     end
 
     test "fails to remove a member from a foreign site (silently)", %{conn: conn, user: user} do
@@ -399,13 +479,13 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "notifies the user who has been removed via email", %{conn: conn, user: user} do
-      site = new_site()
-      admin = add_guest(site, user: user, role: :editor)
+      site = new_site(owner: user)
+      editor = add_guest(site, role: :editor)
 
-      delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
+      delete(conn, "/sites/#{site.domain}/memberships/u/#{editor.id}")
 
       assert_email_delivered_with(
-        to: [nil: admin.email],
+        to: [nil: editor.email],
         subject: @subject_prefix <> "Your access to #{site.domain} has been revoked"
       )
     end

@@ -16,11 +16,9 @@
     if (reason) console.warn('Ignoring Event: ' + reason);
     options && options.callback && options.callback()
 
-    {{#if pageleave}}
     if (eventName === 'pageview') {
-      currentPageLeaveIgnored = true
+      currentEngagementIgnored = true
     }
-    {{/if}}
   }
 
   function defaultEndpoint(el) {
@@ -34,41 +32,51 @@
     {{/if}}
   }
 
-  {{#if pageleave}}
-  // :NOTE: Tracking pageleave events is currently experimental.
-
-  var currentPageLeaveIgnored
-  var currentPageLeaveURL = location.href
-  var currentPageLeaveProps = {}
+  var currentEngagementIgnored
+  var currentEngagementURL = location.href
+  var currentEngagementProps = {}
+  var currentEngagementMaxScrollDepth = -1
 
   // Multiple pageviews might be sent by the same script when the page
   // uses client-side routing (e.g. hash or history-based). This flag
   // prevents registering multiple listeners in those cases.
-  var listeningPageLeave = false
+  var listeningOnEngagement = false
 
-  // In SPA-s, multiple listeners that trigger the pageleave event
-  // might fire nearly at the same time. E.g. when navigating back
-  // in browser history while using hash-based routing - a popstate
-  // and hashchange will be fired in a very quick succession. This
-  // flag prevents sending multiple pageleaves in those cases.
-  var pageLeaveSending = false
+  // Timestamp indicating when this particular page last became visible.
+  // Reset during pageviews, set to null when page is closed.
+  var runningEngagementStart = null
+
+  // When page is hidden, this 'engaged' time is saved to this variable
+  var currentEngagementTime = 0
 
   function getDocumentHeight() {
+    var body = document.body || {}
+    var el = document.documentElement || {}
     return Math.max(
-      document.body.scrollHeight || 0,
-      document.body.offsetHeight || 0,
-      document.body.clientHeight || 0,
-      document.documentElement.scrollHeight || 0,
-      document.documentElement.offsetHeight || 0,
-      document.documentElement.clientHeight || 0
+      body.scrollHeight || 0,
+      body.offsetHeight || 0,
+      body.clientHeight || 0,
+      el.scrollHeight || 0,
+      el.offsetHeight || 0,
+      el.clientHeight || 0
     )
   }
 
   function getCurrentScrollDepthPx() {
-    var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
-    var scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+    var body = document.body || {}
+    var el = document.documentElement || {}
+    var viewportHeight = window.innerHeight || el.clientHeight || 0
+    var scrollTop = window.scrollY || el.scrollTop || body.scrollTop || 0
 
     return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
+  }
+
+  function getEngagementTime() {
+    if (runningEngagementStart) {
+      return currentEngagementTime + (Date.now() - runningEngagementStart)
+    } else {
+      return currentEngagementTime
+    }
   }
 
   var currentDocumentHeight = getDocumentHeight()
@@ -85,6 +93,7 @@
       currentDocumentHeight = getDocumentHeight()
       if (++count === 15) {clearInterval(interval)}
     }, 200)
+
   })
 
   document.addEventListener('scroll', function() {
@@ -96,36 +105,64 @@
     }
   })
 
-  function triggerPageLeave() {
-    if (pageLeaveSending || currentPageLeaveIgnored) {return}
-    pageLeaveSending = true
-    setTimeout(function () {pageLeaveSending = false}, 500)
+  function triggerEngagement() {
+    var engagementTime = getEngagementTime()
 
-    var payload = {
-      n: 'pageleave',
-      sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
-      d: dataDomain,
-      u: currentPageLeaveURL,
-      p: currentPageLeaveProps
-    }
+    /*
+    We send engagements if there's new relevant engagement information to share:
+    - If the user has scrolled more than the previously sent max scroll depth.
+    - If the user has been engaged for more than 3 seconds since the last engagement event.
 
-    {{#if hash}}
-    payload.h = 1
-    {{/if}}
+    The first engagement event is always sent due to containing at least the initial scroll depth.
 
-    if (navigator.sendBeacon) {
-      var blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
-      navigator.sendBeacon(endpoint, blob)
+    Also, we don't send engagements if the current pageview is ignored (onIgnoredEvent)
+    */
+    if (!currentEngagementIgnored && (currentEngagementMaxScrollDepth < maxScrollDepthPx || engagementTime >= 3000)) {
+      currentEngagementMaxScrollDepth = maxScrollDepthPx
+
+      var payload = {
+        n: 'engagement',
+        sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
+        d: dataDomain,
+        u: currentEngagementURL,
+        p: currentEngagementProps,
+        e: engagementTime,
+        v: {{TRACKER_SCRIPT_VERSION}}
+      }
+
+      // Reset current engagement time metrics. They will restart upon when page becomes visible or the next SPA pageview
+      runningEngagementStart = null
+      currentEngagementTime = 0
+
+      {{#if hash}}
+      payload.h = 1
+      {{/if}}
+
+      sendRequest(endpoint, payload)
     }
   }
 
-  function registerPageLeaveListener() {
-    if (!listeningPageLeave) {
-      window.addEventListener('pagehide', triggerPageLeave)
-      listeningPageLeave = true
+  function onVisibilityChange() {
+    if (document.visibilityState === 'visible' && document.hasFocus() && runningEngagementStart === null) {
+      runningEngagementStart = Date.now()
+    } else if (document.visibilityState === 'hidden' || !document.hasFocus()) {
+      // Tab went back to background or lost focus. Save the engaged time so far
+      currentEngagementTime = getEngagementTime()
+      runningEngagementStart = null
+
+      triggerEngagement()
     }
   }
-  {{/if}}
+
+  function registerEngagementListener() {
+    if (!listeningOnEngagement) {
+      // Only register visibilitychange listener only after initial page load and pageview
+      document.addEventListener('visibilitychange', onVisibilityChange)
+      window.addEventListener('blur', onVisibilityChange)
+      window.addEventListener('focus', onVisibilityChange)
+      listeningOnEngagement = true
+    }
+  }
 
   function trigger(eventName, options) {
     var isPageview = eventName === 'pageview'
@@ -169,6 +206,7 @@
 
     var payload = {}
     payload.n = eventName
+    payload.v = {{TRACKER_SCRIPT_VERSION}}
 
     {{#if manual}}
     var customURL = options && options.u
@@ -212,6 +250,21 @@
     payload.h = 1
     {{/if}}
 
+    if (isPageview) {
+      currentEngagementIgnored = false
+      currentEngagementURL = payload.u
+      currentEngagementProps = payload.p
+      currentEngagementMaxScrollDepth = -1
+      currentEngagementTime = 0
+      runningEngagementStart = Date.now()
+      registerEngagementListener()
+    }
+
+    sendRequest(endpoint, payload, options)
+  }
+
+  function sendRequest(endpoint, payload, options) {
+    {{#if compat}}
     var request = new XMLHttpRequest();
     request.open('POST', endpoint, true);
     request.setRequestHeader('Content-Type', 'text/plain');
@@ -220,17 +273,23 @@
 
     request.onreadystatechange = function() {
       if (request.readyState === 4) {
-        {{#if pageleave}}
-        if (isPageview) {
-          currentPageLeaveIgnored = false
-          currentPageLeaveURL = payload.u
-          currentPageLeaveProps = payload.p
-          registerPageLeaveListener()
-        }
-        {{/if}}
         options && options.callback && options.callback({status: request.status})
       }
     }
+    {{else}}
+    if (window.fetch) {
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        keepalive: true,
+        body: JSON.stringify(payload)
+      }).then(function(response) {
+        options && options.callback && options.callback({status: response.status})
+      })
+    }
+    {{/if}}
   }
 
   var queue = (window.plausible && window.plausible.q) || []
@@ -244,16 +303,14 @@
 
     function page(isSPANavigation) {
       {{#unless hash}}
-      if (lastPage === location.pathname) return;
+      if (isSPANavigation && lastPage === location.pathname) return;
       {{/unless}}
-      
-      {{#if pageleave}}
-      if (isSPANavigation && listeningPageLeave) {
-        triggerPageLeave();
+
+      if (isSPANavigation && listeningOnEngagement) {
+        triggerEngagement()
         currentDocumentHeight = getDocumentHeight()
         maxScrollDepthPx = getCurrentScrollDepthPx()
       }
-      {{/if}}
 
       lastPage = location.pathname
       trigger('pageview')
@@ -287,14 +344,12 @@
       page()
     }
 
-    {{#if pageleave}}
     window.addEventListener('pageshow', function(event) {
       if (event.persisted) {
         // Page was restored from bfcache - trigger a pageview
         page();
       }
     })
-    {{/if}}
   {{/unless}}
 
   {{#if (any outbound_links file_downloads tagged_events)}}

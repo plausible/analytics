@@ -8,8 +8,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Filters, Query, QueryOptimizer, TableDecider, SQL}
+  alias Plausible.Stats.{Query, QueryOptimizer, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
+  alias Plausible.Stats.Legacy.TimeOnPage
 
   require Plausible.Stats.SQL.Expression
 
@@ -37,7 +38,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     q =
       from(
         e in "events_v2",
-        where: ^SQL.WhereBuilder.build(:events, site, events_query),
+        where: ^SQL.WhereBuilder.build(:events, events_query),
         select: ^select_event_metrics(events_query)
       )
 
@@ -46,18 +47,19 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
 
     q
-    |> join_sessions_if_needed(site, events_query)
+    |> join_sessions_if_needed(events_query)
     |> build_group_by(:events, events_query)
-    |> merge_imported(site, events_query, events_query.metrics)
+    |> merge_imported(site, events_query)
     |> SQL.SpecialMetrics.add(site, events_query)
+    |> TimeOnPage.merge_legacy_time_on_page(events_query)
   end
 
-  defp join_sessions_if_needed(q, site, query) do
+  defp join_sessions_if_needed(q, query) do
     if TableDecider.events_join_sessions?(query) do
       sessions_q =
         from(
           s in "sessions_v2",
-          where: ^SQL.WhereBuilder.build(:sessions, site, query),
+          where: ^SQL.WhereBuilder.build(:sessions, query),
           where: s.sign == 1,
           select: %{session_id: s.session_id},
           group_by: s.session_id
@@ -83,7 +85,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     q =
       from(
         e in "sessions_v2",
-        where: ^SQL.WhereBuilder.build(:sessions, site, sessions_query),
+        where: ^SQL.WhereBuilder.build(:sessions, sessions_query),
         select: ^select_session_metrics(sessions_query)
       )
 
@@ -92,17 +94,17 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
 
     q
-    |> join_events_if_needed(site, sessions_query)
+    |> join_events_if_needed(sessions_query)
     |> build_group_by(:sessions, sessions_query)
-    |> merge_imported(site, sessions_query, sessions_query.metrics)
+    |> merge_imported(site, sessions_query)
     |> SQL.SpecialMetrics.add(site, sessions_query)
   end
 
-  def join_events_if_needed(q, site, query) do
+  def join_events_if_needed(q, query) do
     if TableDecider.sessions_join_events?(query) do
       events_q =
         from(e in "events_v2",
-          where: ^SQL.WhereBuilder.build(:events, site, query),
+          where: ^SQL.WhereBuilder.build(:events, query),
           select: %{
             session_id: fragment("DISTINCT ?", e.session_id),
             _sample_factor: fragment("_sample_factor")
@@ -124,7 +126,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
   defp select_event_metrics(query) do
     query.metrics
-    |> Enum.map(&SQL.Expression.event_metric/1)
+    |> Enum.map(&SQL.Expression.event_metric(&1, query))
     |> Enum.reduce(%{}, &Map.merge/2)
   end
 
@@ -138,18 +140,17 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     Enum.reduce(query.dimensions, q, &dimension_group_by(&2, table, query, &1))
   end
 
-  defp dimension_group_by(q, _table, query, "event:goal" = dimension) do
-    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+  defp dimension_group_by(q, :events, query, "event:goal" = dimension) do
+    goal_join_data = Plausible.Stats.Goals.goal_join_data(query)
 
     from(e in q,
-      join: goal in Expression.event_goal_join(events, page_regexes),
+      join: goal in Expression.event_goal_join(goal_join_data),
       hints: "ARRAY",
       on: true,
       select_merge: %{
         ^shortname(query, dimension) => fragment("?", goal)
       },
-      group_by: goal,
-      where: goal != 0 and (e.name == "pageview" or goal < 0)
+      group_by: goal
     )
   end
 
@@ -181,12 +182,14 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     do: sessions_q |> build_order_by(events_query)
 
   defp join_query_results({events_q, events_query}, {sessions_q, sessions_query}) do
-    join(subquery(events_q), :left, [e], s in subquery(sessions_q),
+    {join_type, events_q_fields, sessions_q_fields} =
+      TableDecider.join_options(events_query, sessions_query)
+
+    join(subquery(events_q), join_type, [e], s in subquery(sessions_q),
       on: ^build_group_by_join(events_query)
     )
-    |> select_join_fields(events_query, events_query.dimensions, e)
-    |> select_join_fields(events_query, events_query.metrics, e)
-    |> select_join_fields(sessions_query, List.delete(sessions_query.metrics, :sample_percent), s)
+    |> select_join_fields(events_query, events_q_fields, e)
+    |> select_join_fields(sessions_query, sessions_q_fields, s)
     |> build_order_by(events_query)
   end
 

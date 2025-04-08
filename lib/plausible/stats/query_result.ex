@@ -8,7 +8,7 @@ defmodule Plausible.Stats.QueryResult do
   """
 
   use Plausible
-  alias Plausible.Stats.DateTimeRange
+  alias Plausible.Stats.{DateTimeRange, Query, QueryRunner}
 
   defstruct results: [],
             meta: %{},
@@ -19,11 +19,11 @@ defmodule Plausible.Stats.QueryResult do
 
   `results` should already-built by Plausible.Stats.QueryRunner
   """
-  def from(results, site, query, meta_extra) do
+  def from(%QueryRunner{site: site, main_query: query, results: results} = runner) do
     struct!(
       __MODULE__,
       results: results,
-      meta: meta(query, meta_extra),
+      meta: meta(runner) |> Enum.sort_by(&elem(&1, 0)) |> Jason.OrderedObject.new(),
       query:
         Jason.OrderedObject.new(
           site_id: site.domain,
@@ -41,6 +41,14 @@ defmodule Plausible.Stats.QueryResult do
     )
   end
 
+  defp meta(%QueryRunner{} = runner) do
+    %{}
+    |> add_imports_meta(runner.main_query)
+    |> add_metric_warnings_meta(runner.main_query)
+    |> add_time_labels_meta(runner.main_query)
+    |> add_total_rows_meta(runner.main_query, runner.total_rows)
+  end
+
   @imports_warnings %{
     unsupported_query:
       "Imported stats are not included in the results because query parameters are not supported. " <>
@@ -49,21 +57,44 @@ defmodule Plausible.Stats.QueryResult do
       "Imported stats are not included because the time dimension (i.e. the interval) is too short."
   }
 
-  defp meta(query, meta_extra) do
-    %{
-      imports_included: if(query.include.imports, do: query.include_imported, else: nil),
-      imports_skip_reason:
-        if(query.include.imports and query.skip_imported_reason,
-          do: to_string(query.skip_imported_reason)
-        ),
-      imports_warning: @imports_warnings[query.skip_imported_reason],
-      metric_warnings: metric_warnings(query),
-      time_labels:
-        if(query.include.time_labels, do: Plausible.Stats.Time.time_labels(query), else: nil),
-      total_rows: if(query.include.total_rows, do: meta_extra.total_rows, else: nil)
-    }
-    |> Enum.reject(fn {_, value} -> is_nil(value) end)
-    |> Map.new()
+  defp add_imports_meta(meta, %Query{include: include} = query) do
+    if include.imports or include.imports_meta do
+      %{
+        imports_included: query.include_imported,
+        imports_skip_reason: query.skip_imported_reason,
+        imports_warning: @imports_warnings[query.skip_imported_reason]
+      }
+      |> Map.reject(fn {_key, value} -> is_nil(value) end)
+      |> Map.merge(meta)
+    else
+      meta
+    end
+  end
+
+  defp add_metric_warnings_meta(meta, query) do
+    warnings = metric_warnings(query)
+
+    if map_size(warnings) > 0 do
+      Map.put(meta, :metric_warnings, warnings)
+    else
+      meta
+    end
+  end
+
+  defp add_time_labels_meta(meta, query) do
+    if query.include.time_labels do
+      Map.put(meta, :time_labels, Plausible.Stats.Time.time_labels(query))
+    else
+      meta
+    end
+  end
+
+  defp add_total_rows_meta(meta, query, total_rows) do
+    if query.include.total_rows do
+      Map.put(meta, :total_rows, total_rows)
+    else
+      meta
+    end
   end
 
   defp include(query) do
@@ -80,7 +111,18 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
+  defp metric_warnings(%Query{} = query) do
+    Enum.reduce(query.metrics, %{}, fn metric, acc ->
+      case metric_warning(metric, query) do
+        nil -> acc
+        %{} = warning -> Map.put(acc, metric, warning)
+      end
+    end)
+  end
+
   on_ee do
+    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
+
     @revenue_metrics_warnings %{
       revenue_goals_unavailable:
         "The owner of this site does not have access to the revenue metrics feature.",
@@ -90,25 +132,48 @@ defmodule Plausible.Stats.QueryResult do
         "Revenue metrics are null as there are no matching revenue goals."
     }
 
-    defp metric_warnings(query) do
+    defp metric_warning(metric, %Query{} = query)
+         when metric in @revenue_metrics do
       if query.revenue_warning do
-        query.metrics
-        |> Enum.filter(&(&1 in Plausible.Stats.Goal.Revenue.revenue_metrics()))
-        |> Enum.map(
-          &{&1,
-           %{
-             code: query.revenue_warning,
-             warning: @revenue_metrics_warnings[query.revenue_warning]
-           }}
-        )
-        |> Map.new()
+        %{
+          code: query.revenue_warning,
+          warning: @revenue_metrics_warnings[query.revenue_warning]
+        }
       else
         nil
       end
     end
-  else
-    defp metric_warnings(_query), do: nil
   end
+
+  @no_imported_scroll_depth_metric_warning %{
+    code: :no_imported_scroll_depth,
+    warning: "No imports with scroll depth data were found"
+  }
+
+  defp metric_warning(:scroll_depth, %Query{} = query) do
+    if query.include_imported and not Enum.any?(query.imports_in_range, & &1.has_scroll_depth) do
+      @no_imported_scroll_depth_metric_warning
+    end
+  end
+
+  defp metric_warning(:time_on_page, %Query{} = query) do
+    case query.time_on_page_data do
+      %{new_metric_visible: true, include_legacy_metric: true, cutoff: cutoff} ->
+        cutoff_date =
+          cutoff |> DateTime.shift_zone!(query.timezone) |> Calendar.strftime("%Y-%m-%d")
+
+        %{
+          code: :legacy_time_on_page_used,
+          message:
+            "This period includes data calculated with the legacy time on page method up to #{cutoff_date}"
+        }
+
+      _ ->
+        nil
+    end
+  end
+
+  defp metric_warning(_metric, _query), do: nil
 
   defp to_iso8601(datetime, timezone) do
     datetime

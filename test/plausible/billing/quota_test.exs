@@ -21,6 +21,9 @@ defmodule Plausible.Billing.QuotaTest do
   @v4_10m_growth_plan_id "857104"
   @v4_10m_business_plan_id "857112"
 
+  @highest_growth_plan Plausible.Billing.Plans.find(@v4_10m_growth_plan_id)
+  @highest_business_plan Plausible.Billing.Plans.find(@v4_10m_business_plan_id)
+
   describe "site_limit/1" do
     @describetag :ee_only
 
@@ -66,6 +69,23 @@ defmodule Plausible.Billing.QuotaTest do
         |> team_of()
 
       assert Plausible.Teams.Billing.site_limit(team) == 10
+    end
+
+    test "grandfathered site limit should be unlimited when accepting transfer invitations" do
+      # must be before ~D[2021-05-05]
+      owner = new_user(team: [inserted_at: ~N[2021-01-01 00:00:00]])
+      # plan with site_limit: 10
+      subscribe_to_plan(owner, "857097")
+      _site = for _ <- 1..10, do: new_site(owner: owner)
+
+      other_owner = new_user()
+      other_site = new_site(owner: other_owner)
+      invite_transfer(other_site, owner, inviter: other_owner)
+
+      team = owner |> team_of()
+
+      assert Plausible.Teams.Billing.site_limit(team) == :unlimited
+      assert Plausible.Teams.Invitations.ensure_can_take_ownership(other_site, team) == :ok
     end
   end
 
@@ -664,7 +684,7 @@ defmodule Plausible.Billing.QuotaTest do
              } = Plausible.Teams.Billing.monthly_pageview_usage(team)
     end
 
-    test "pageleave events are not counted towards monthly pageview usage" do
+    test "engagement events are not counted towards monthly pageview usage" do
       user = new_user()
       site = new_site(owner: user)
       team = team_of(user)
@@ -673,7 +693,7 @@ defmodule Plausible.Billing.QuotaTest do
       populate_stats(site, [
         build(:event, timestamp: Timex.shift(now, days: -8), name: "custom"),
         build(:pageview, user_id: 199, timestamp: Timex.shift(now, days: -5, minutes: -2)),
-        build(:pageleave, user_id: 199, timestamp: Timex.shift(now, days: -5))
+        build(:engagement, user_id: 199, timestamp: Timex.shift(now, days: -5))
       ])
 
       assert %{
@@ -901,21 +921,57 @@ defmodule Plausible.Billing.QuotaTest do
       %{user: user, team: team}
     end
 
-    test "returns nil if the monthly pageview limit exceeds regular plans",
-         %{team: team} do
-      highest_growth_plan = Plausible.Billing.Plans.find(@v4_10m_growth_plan_id)
-      highest_business_plan = Plausible.Billing.Plans.find(@v4_10m_business_plan_id)
-
-      usage =
-        team
-        |> Plausible.Teams.Billing.quota_usage()
-        |> Map.replace!(:monthly_pageviews, %{last_30_days: %{total: 12_000_000}})
-
+    test "returns nil if usage doesn't have any sites", %{team: team} do
       suggested_tier =
-        usage
-        |> Quota.suggest_tier(highest_growth_plan, highest_business_plan)
+        team
+        |> Plausible.Teams.Billing.quota_usage(with_features: true)
+        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, nil)
 
       assert suggested_tier == nil
+    end
+
+    test "returns :custom if the monthly pageview limit exceeds regular plans",
+         %{team: team} do
+      suggested_tier =
+        team
+        |> Plausible.Teams.Billing.quota_usage(with_features: true)
+        |> Map.merge(%{monthly_pageviews: %{last_30_days: %{total: 12_000_000}}, sites: 1})
+        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, nil)
+
+      assert suggested_tier == :custom
+    end
+
+    test "returns :growth if usage within growth limits",
+         %{team: team} do
+      suggested_tier =
+        team
+        |> Plausible.Teams.Billing.quota_usage(with_features: true)
+        |> Map.put(:sites, 1)
+        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, nil)
+
+      assert suggested_tier == :growth
+    end
+
+    test "returns :business if usage within growth limits but already on a business plan",
+         %{team: team} do
+      suggested_tier =
+        team
+        |> Plausible.Teams.Billing.quota_usage(with_features: true)
+        |> Map.put(:sites, 1)
+        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, :business)
+
+      assert suggested_tier == :business
+    end
+
+    test "returns :business if business features used",
+         %{team: team} do
+      suggested_tier =
+        team
+        |> Plausible.Teams.Billing.quota_usage(with_features: true)
+        |> Map.merge(%{sites: 1, features: [Plausible.Billing.Feature.Funnels]})
+        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, nil)
+
+      assert suggested_tier == :business
     end
   end
 end

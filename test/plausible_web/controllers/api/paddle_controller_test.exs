@@ -33,8 +33,10 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
     test "is verified when signature is correct", %{conn: conn} do
       insert(:user, id: 235)
 
-      conn = post(conn, Routes.paddle_path(conn, :webhook), @webhook_body)
-      assert conn.status == 200
+      # NOTE: signature check happens sooner
+      assert_raise RuntimeError, ~r/Invalid passthrough sent via Paddle/, fn ->
+        post(conn, Routes.paddle_path(conn, :webhook), @webhook_body)
+      end
     end
 
     test "not verified when signature is corrupted", %{conn: conn} do

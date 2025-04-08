@@ -25,22 +25,26 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           | Ecto.Changeset.t()
           | :transfer_to_self
           | :no_plan
+          | :multiple_teams
+          | :permission_denied
 
   @type accept_error() ::
           :invitation_not_found
-          | :already_other_team_member
           | Billing.Quota.Limits.over_limits_error()
           | Ecto.Changeset.t()
           | :no_plan
+          | :transfer_to_self
+          | :multiple_teams
+          | :permission_denied
 
-  @type membership :: %Plausible.Teams.Membership{}
+  @type membership() :: %Teams.Membership{}
 
-  @spec bulk_transfer_ownership_direct([Site.t()], Auth.User.t()) ::
+  @spec bulk_transfer_ownership_direct([Site.t()], Auth.User.t(), Teams.Team.t() | nil) ::
           {:ok, [membership]} | {:error, transfer_error()}
-  def bulk_transfer_ownership_direct(sites, new_owner) do
+  def bulk_transfer_ownership_direct(sites, new_owner, team \\ nil) do
     Repo.transaction(fn ->
       for site <- sites do
-        case transfer_ownership(site, new_owner) do
+        case transfer_ownership(site, new_owner, team) do
           {:ok, membership} ->
             membership
 
@@ -51,14 +55,23 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end)
   end
 
-  @spec accept_invitation(String.t(), Auth.User.t()) ::
+  @spec change_team(Site.t(), Auth.User.t(), Teams.Team.t()) ::
+          :ok | {:error, transfer_error()}
+  def change_team(site, user, new_team) do
+    with {:ok, _} <- transfer_ownership(site, user, new_team) do
+      Teams.Invitations.send_team_changed_email(site, user, new_team)
+      :ok
+    end
+  end
+
+  @spec accept_invitation(String.t(), Auth.User.t(), Teams.Team.t() | nil) ::
           {:ok, map()} | {:error, accept_error()}
-  def accept_invitation(invitation_or_transfer_id, user) do
+  def accept_invitation(invitation_or_transfer_id, user, team \\ nil) do
     with {:ok, invitation_or_transfer} <-
            Teams.Invitations.find_for_user(invitation_or_transfer_id, user) do
       case invitation_or_transfer do
         %Teams.SiteTransfer{} = site_transfer ->
-          do_accept_ownership_transfer(site_transfer, user)
+          do_accept_ownership_transfer(site_transfer, user, team)
 
         %Teams.Invitation{} = team_invitation ->
           do_accept_team_invitation(team_invitation, user)
@@ -69,41 +82,49 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp transfer_ownership(site, new_owner) do
+  defp transfer_ownership(site, new_owner, team) do
     site = Repo.preload(site, :team)
 
-    with :ok <-
-           Plausible.Teams.Invitations.ensure_transfer_valid(
-             site.team,
-             new_owner,
-             :owner
-           ),
-         {:ok, new_team} = Plausible.Teams.get_or_create(new_owner),
-         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, new_team),
-         :ok <- Plausible.Teams.Invitations.transfer_site(site, new_owner) do
-      site = site |> Repo.reload!() |> Repo.preload(ownership: :user)
+    with {:ok, new_team} <- maybe_get_team(new_owner, team),
+         :ok <- Teams.Invitations.ensure_transfer_valid(site.team, new_team, :owner),
+         :ok <- check_can_transfer_site(new_team, new_owner),
+         :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team),
+         :ok <- Teams.Invitations.transfer_site(site, new_team) do
+      site = site |> Repo.reload!() |> Repo.preload(ownerships: :user)
 
-      {:ok, site.ownership}
+      {:ok, site.ownerships}
     end
   end
 
-  defp do_accept_ownership_transfer(site_transfer, user) do
+  defp do_accept_ownership_transfer(site_transfer, new_owner, team) do
     site = Repo.preload(site_transfer.site, :team)
 
-    with :ok <-
-           Plausible.Teams.Invitations.ensure_transfer_valid(
-             site.team,
-             user,
-             :owner
-           ),
-         {:ok, team} = Plausible.Teams.get_or_create(user),
-         :ok <- Plausible.Teams.Invitations.ensure_can_take_ownership(site, team),
-         :ok <- Teams.Invitations.accept_site_transfer(site_transfer, user) do
-      Teams.Invitations.send_transfer_accepted_email(site_transfer)
+    with {:ok, new_team} <- maybe_get_team(new_owner, team),
+         :ok <- Teams.Invitations.ensure_transfer_valid(site.team, new_team, :owner),
+         :ok <- check_can_transfer_site(new_team, new_owner),
+         :ok <- Teams.Invitations.ensure_can_take_ownership(site, new_team),
+         :ok <- Teams.Invitations.accept_site_transfer(site_transfer, new_team) do
+      Teams.Invitations.send_transfer_accepted_email(site_transfer, new_team)
 
-      site = site |> Repo.reload!() |> Repo.preload(ownership: :user)
+      site = site |> Repo.reload!() |> Repo.preload(ownerships: :user)
 
-      {:ok, %{team: team, team_membership: site.ownership, site: site}}
+      {:ok, %{team: new_team, team_memberships: site.ownerships, site: site}}
+    end
+  end
+
+  defp maybe_get_team(_user, %Teams.Team{} = team) do
+    {:ok, team}
+  end
+
+  defp maybe_get_team(user, nil) do
+    Teams.get_or_create(user)
+  end
+
+  defp check_can_transfer_site(team, user) do
+    if Teams.Memberships.can_transfer_site?(team, user) do
+      :ok
+    else
+      {:error, :permission_denied}
     end
   end
 
@@ -112,16 +133,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   defp do_accept_team_invitation(team_invitation, user) do
-    with :ok <- ensure_no_other_team_membership(team_invitation.team, user) do
-      Teams.Invitations.accept_team_invitation(team_invitation, user)
-    end
-  end
-
-  defp ensure_no_other_team_membership(team, user) do
-    if Teams.Users.team_member?(user, except: [team.id]) do
-      {:error, :already_other_team_member}
-    else
-      :ok
-    end
+    Teams.Invitations.accept_team_invitation(team_invitation, user)
   end
 end

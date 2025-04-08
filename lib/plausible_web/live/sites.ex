@@ -5,8 +5,10 @@ defmodule PlausibleWeb.Live.Sites do
 
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Pagination
+  require Logger
 
   alias Plausible.Sites
+  alias Plausible.Teams
 
   def mount(params, _session, socket) do
     uri =
@@ -18,7 +20,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:uri, uri)
       |> assign(
         :team_invitations,
-        Plausible.Teams.Invitations.find_team_invitations(socket.assigns.current_user)
+        Teams.Invitations.all(socket.assigns.current_user)
       )
       |> assign(:filter_text, params["filter_text"] || "")
 
@@ -31,14 +33,15 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:params, params)
       |> load_sites()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
-        Plausible.Teams.Users.has_sites?(current_user, include_pending?: true)
+        Teams.Users.has_sites?(current_user, include_pending?: true)
       end)
       |> assign_new(:needs_to_upgrade, fn %{
                                             current_user: current_user,
-                                            my_team: my_team
+                                            current_team: current_team
                                           } ->
-        Plausible.Teams.Users.owns_sites?(current_user, include_pending?: true) &&
-          Plausible.Teams.Billing.check_needs_to_upgrade(my_team)
+        current_team &&
+          Teams.Users.owns_sites?(current_user, include_pending?: true, only_team: current_team) &&
+          Teams.Billing.check_needs_to_upgrade(current_team)
       end)
 
     {:noreply, socket}
@@ -53,11 +56,20 @@ defmodule PlausibleWeb.Live.Sites do
       class="container pt-6"
     >
       <PlausibleWeb.Live.Components.Visitors.gradient_defs />
-      <.upgrade_nag_screen :if={@needs_to_upgrade == {:needs_to_upgrade, :no_active_subscription}} />
+      <.upgrade_nag_screen :if={
+        @needs_to_upgrade == {:needs_to_upgrade, :no_active_trial_or_subscription}
+      } />
 
-      <div class="mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
+      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
         <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
-          My Sites
+          {Teams.name(@current_team)}
+          <.unstyled_link
+            :if={Teams.setup?(@current_team)}
+            data-test-id="team-settings-link"
+            href={Routes.settings_path(@socket, :team_general)}
+          >
+            <Heroicons.cog_6_tooth class="hidden group-hover:inline size-4 dark:text-gray-100 text-gray-900" />
+          </.unstyled_link>
         </h2>
       </div>
 
@@ -192,7 +204,7 @@ defmodule PlausibleWeb.Live.Sites do
   def site(assigns) do
     ~H"""
     <li
-      class="group relative hidden"
+      class="group relative"
       id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
       data-pin-toggled={
@@ -207,7 +219,6 @@ defmodule PlausibleWeb.Live.Sites do
           time: 200
         )
       }
-      phx-mounted={JS.show()}
     >
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
         <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
@@ -295,7 +306,7 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr(:hourly_stats, :map, required: true)
+  attr(:hourly_stats, :any, required: true)
 
   def site_stats(assigns) do
     ~H"""
@@ -648,23 +659,37 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
+  defp loading(sites) do
+    sites.entries
+    |> Enum.into(%{}, fn site ->
+      {site.domain, :loading}
+    end)
+  end
+
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
       Sites.list_with_invitations(assigns.current_user, assigns.params,
-        filter_by_domain: assigns.filter_text
+        filter_by_domain: assigns.filter_text,
+        team: assigns.current_team
       )
 
     hourly_stats =
       if connected?(socket) do
-        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+        try do
+          Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+        catch
+          kind, value ->
+            Logger.error(
+              "Could not render 24h visitors hourly intervals: #{inspect(kind)} #{inspect(value)}"
+            )
+
+            loading(sites)
+        end
       else
-        sites.entries
-        |> Enum.into(%{}, fn site ->
-          {site.domain, :loading}
-        end)
+        loading(sites)
       end
 
-    invitations = extract_invitations(sites.entries, assigns.current_user)
+    invitations = extract_invitations(sites.entries, assigns.current_team)
 
     assign(
       socket,
@@ -674,36 +699,32 @@ defmodule PlausibleWeb.Live.Sites do
     )
   end
 
-  defp extract_invitations(sites, user) do
+  defp extract_invitations(sites, team) do
     sites
     |> Enum.filter(&(&1.entry_type == "invitation"))
     |> Enum.flat_map(& &1.invitations)
-    |> Enum.map(&check_limits(&1, user))
+    |> Enum.map(&check_limits(&1, team))
   end
 
-  defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    team =
-      case Plausible.Teams.get_by_owner(user) do
-        {:ok, team} -> team
-        _ -> nil
+  on_ee do
+    defp check_limits(%{role: :owner, site: site} = invitation, team) do
+      case ensure_can_take_ownership(site, team) do
+        :ok ->
+          check_features(invitation, team)
+
+        {:error, :no_plan} ->
+          %{invitation: invitation, no_plan: true}
+
+        {:error, {:over_plan_limits, limits}} ->
+          limits = PlausibleWeb.TextHelpers.pretty_list(limits)
+          %{invitation: invitation, exceeded_limits: limits}
       end
-
-    case ensure_can_take_ownership(site, team) do
-      :ok ->
-        check_features(invitation, team)
-
-      {:error, :no_plan} ->
-        %{invitation: invitation, no_plan: true}
-
-      {:error, {:over_plan_limits, limits}} ->
-        limits = PlausibleWeb.TextHelpers.pretty_list(limits)
-        %{invitation: invitation, exceeded_limits: limits}
     end
   end
 
   defp check_limits(invitation, _), do: %{invitation: invitation}
 
-  defdelegate ensure_can_take_ownership(site, team), to: Plausible.Teams.Invitations
+  defdelegate ensure_can_take_ownership(site, team), to: Teams.Invitations
 
   def check_features(%{role: :owner, site: site} = invitation, team) do
     case check_feature_access(site, team) do
@@ -720,21 +741,15 @@ defmodule PlausibleWeb.Live.Sites do
     end
   end
 
-  on_ee do
-    defp check_feature_access(site, new_team) do
-      missing_features =
-        Plausible.Teams.Billing.features_usage(nil, [site.id])
-        |> Enum.filter(&(&1.check_availability(new_team) != :ok))
+  defp check_feature_access(site, new_team) do
+    missing_features =
+      Teams.Billing.features_usage(nil, [site.id])
+      |> Enum.filter(&(&1.check_availability(new_team) != :ok))
 
-      if missing_features == [] do
-        :ok
-      else
-        {:error, {:missing_features, missing_features}}
-      end
-    end
-  else
-    defp check_feature_access(_site, _new_team) do
+    if missing_features == [] do
       :ok
+    else
+      {:error, {:missing_features, missing_features}}
     end
   end
 

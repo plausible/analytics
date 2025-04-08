@@ -1,4 +1,3 @@
-/* @format */
 import React, { forwardRef, useCallback } from 'react'
 import {
   Link,
@@ -71,9 +70,11 @@ export const useAppNavigate = () => {
   return navigate
 }
 
+export type AppNavigationLinkProps = AppNavigationTarget & Omit<LinkProps, 'to'>
+
 export const AppNavigationLink = forwardRef<
   HTMLAnchorElement | null,
-  AppNavigationTarget & Omit<LinkProps, 'to'>
+  AppNavigationLinkProps
 >(({ path, params, search, ...options }, ref) => {
   const getToOptions = useGetNavigateOptions()
 

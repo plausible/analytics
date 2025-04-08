@@ -13,7 +13,7 @@ defmodule Plausible.Stats.CustomProps do
         [key]
 
       _ ->
-        from(e in base_event_query(site, query),
+        from(e in base_event_query(query),
           join: meta in fragment("meta"),
           hints: "ARRAY",
           on: true,

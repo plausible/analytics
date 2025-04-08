@@ -713,7 +713,9 @@ cloud_cron = [
   # Daily at 8
   {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
   # First sunday of the month, 4:00 UTC
-  {"0 4 1-7 * SUN", Plausible.Workers.ClickhouseCleanSites}
+  {"0 4 1-7 * SUN", Plausible.Workers.ClickhouseCleanSites},
+  # Daily at 4:00 UTC
+  {"0 4 * * *", Plausible.Workers.SetLegacyTimeOnPageCutoff}
 ]
 
 crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
@@ -740,7 +742,8 @@ cloud_queues = [
   trial_notification_emails: 1,
   check_usage: 1,
   notify_annual_renewal: 1,
-  lock_sites: 1
+  lock_sites: 1,
+  legacy_time_on_page_cutoff: 1
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
@@ -756,7 +759,9 @@ if config_env() in [:prod, :ce] do
       {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
       {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
       # Rescue orphaned jobs after 2 hours
-      {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)}
+      {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},
+      # Daily at 1am
+      {Oban.Plugins.Reindexer, schedule: "0 1 * * *"}
     ],
     queues: if(cron_enabled, do: queues, else: []),
     peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
@@ -798,6 +803,11 @@ if config_env() in [:dev, :staging, :prod, :test] do
         resources: [
           user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin],
           api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
+        ]
+      ],
+      teams: [
+        resources: [
+          team: [schema: Plausible.Teams.Team, admin: Plausible.Teams.TeamAdmin]
         ]
       ],
       sites: [
@@ -969,5 +979,7 @@ unless s3_disabled? do
     exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET"),
     imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end
+
+config :plausible, Plausible.Cache.Adapter, sessions: [partitions: 100]
 
 config :phoenix_storybook, enabled: env !== "prod"
