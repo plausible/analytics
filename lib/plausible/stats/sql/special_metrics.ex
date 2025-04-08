@@ -238,7 +238,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       })
     else
       joined_q
-      |> select_merge_as([_s, p], %{
+      |> select_merge_as([..., p], %{
         exit_rate:
           fragment(
             "if(? > 0, round(? / ? * 100, 1), NULL)",
