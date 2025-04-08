@@ -144,9 +144,8 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
                "Error! Make sure the e-mail is valid and is not taken already"
     end
 
-    # FIXME: Understand what's going on here in CE
     @tag :ee_only
-    test "allows removing any type of entry", %{
+    test "allows removing any type of entry (EE)", %{
       conn: conn,
       user: user,
       team: team
@@ -195,6 +194,72 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
       html = render(lv) |> text()
 
       refute html =~ "Invitation Pending"
+      refute html =~ "Invitation Sent"
+      refute html =~ "Team Member"
+      refute html =~ "Guest"
+
+      html = render(lv)
+
+      assert html |> find(member_el()) |> Enum.count() == 1
+      refute element_exists?(html, "#guest-list")
+
+      assert_email_delivered_with(
+        to: [nil: member2.email],
+        subject: @subject_prefix <> "Your access to \"#{team.name}\" team has been revoked"
+      )
+
+      assert_email_delivered_with(
+        to: [nil: guest.email],
+        subject: @subject_prefix <> "Your access to \"#{team.name}\" team has been revoked"
+      )
+
+      assert_no_emails_delivered()
+    end
+
+    @tag :ce_only
+    test "allows removing any type of entry (CE)", %{
+      conn: conn,
+      user: user,
+      team: team
+    } do
+      member2 = add_member(team, role: :admin)
+      _invitation = invite_member(team, "sent@example.com", inviter: user, role: :viewer)
+
+      site = new_site(team: team)
+
+      guest =
+        add_guest(site,
+          role: :viewer,
+          user: new_user(name: "Mr Guest", email: "guest@example.com")
+        )
+
+      lv = get_liveview(conn)
+
+      html = render(lv)
+
+      assert html |> find(member_el()) |> Enum.count() == 3
+      assert html |> find(guest_el()) |> Enum.count() == 1
+
+      sent = find(html, "#{member_el()}:nth-of-type(1)") |> text()
+      owner = find(html, "#{member_el()}:nth-of-type(2)") |> text()
+      admin = find(html, "#{member_el()}:nth-of-type(3)") |> text()
+
+      guest_member = find(html, "#{guest_el()}:first-of-type") |> text()
+
+      assert sent =~ "Invitation Sent"
+      assert owner =~ "You"
+      assert admin =~ "Team Member"
+      assert guest_member =~ "Guest"
+
+      remove_member(lv, 1)
+      # last becomes second
+      remove_member(lv, 2)
+
+      # remove guest
+      remove_member(lv, 1, guest_el())
+
+      html = render(lv) |> text()
+
       refute html =~ "Invitation Sent"
       refute html =~ "Team Member"
       refute html =~ "Guest"
