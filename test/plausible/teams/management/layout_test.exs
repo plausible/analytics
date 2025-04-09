@@ -307,14 +307,16 @@ defmodule Plausible.Teams.Management.LayoutTest do
     end
 
     test "limits are checked", %{user: user, team: team} do
-      assert {:error, {:over_limit, 3}} =
-               team
-               |> Layout.init()
-               |> Layout.schedule_send("test1@example.com", :admin)
-               |> Layout.schedule_send("test2@example.com", :admin)
-               |> Layout.schedule_send("test3@example.com", :admin)
-               |> Layout.schedule_send("test4@example.com", :admin)
-               |> Layout.persist(%{current_user: user, current_team: team})
+      on_ee do
+        assert {:error, {:over_limit, 3}} =
+                 team
+                 |> Layout.init()
+                 |> Layout.schedule_send("test1@example.com", :admin)
+                 |> Layout.schedule_send("test2@example.com", :admin)
+                 |> Layout.schedule_send("test3@example.com", :admin)
+                 |> Layout.schedule_send("test4@example.com", :admin)
+                 |> Layout.persist(%{current_user: user, current_team: team})
+      end
 
       assert {:error, :only_one_owner} =
                team

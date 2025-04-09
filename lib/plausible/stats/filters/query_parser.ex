@@ -616,6 +616,20 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_metric(:exit_rate = metric, query) do
+    case {query.dimensions, TableDecider.sessions_join_events?(query)} do
+      {["visit:exit_page"], false} ->
+        :ok
+
+      {["visit:exit_page"], true} ->
+        {:error, "Metric `#{metric}` cannot be queried when filtering on event dimensions."}
+
+      _ ->
+        {:error,
+         "Metric `#{metric}` requires a `\"visit:exit_page\"` dimension. No other dimensions are allowed."}
+    end
+  end
+
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) ->

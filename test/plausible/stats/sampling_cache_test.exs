@@ -12,6 +12,8 @@ defmodule Plausible.Stats.SamplingCacheTest do
     @site_id4 400_000
 
     describe "getter" do
+      @threshold Plausible.Stats.Sampling.default_sample_threshold()
+
       test "returns cached values for traffic in past 30 days", %{test: test} do
         now = DateTime.utc_now()
 
@@ -19,42 +21,42 @@ defmodule Plausible.Stats.SamplingCacheTest do
           %{
             site_id: @site_id1,
             domain: "1.com",
-            value: 11_000_000,
+            value: (@threshold * 0.55) |> trunc(),
             event_timebucket: add(now, -1, :day),
             metric: "buffered"
           },
           %{
             site_id: @site_id2,
             domain: "2.com",
-            value: 11_000_000,
+            value: (@threshold * 0.55) |> trunc(),
             event_timebucket: add(now, -1, :day),
             metric: "buffered"
           },
           %{
             site_id: @site_id2,
             domain: "2.com",
-            value: 11_000_000,
+            value: (@threshold * 0.55) |> trunc(),
             event_timebucket: add(now, -5, :day),
             metric: "buffered"
           },
           %{
             site_id: @site_id2,
             domain: "2.com",
-            value: 11_000_000,
+            value: (@threshold * 0.55) |> trunc(),
             event_timebucket: add(now, -35, :day),
             metric: "buffered"
           },
           %{
             site_id: @site_id3,
             domain: "3.com",
-            value: 44_000_000,
+            value: (@threshold * 2.05) |> trunc(),
             event_timebucket: add(now, -35, :day),
             metric: "buffered"
           },
           %{
             site_id: @site_id4,
             domain: "4.com",
-            value: 11_000_000,
+            value: (@threshold * 0.55) |> trunc(),
             event_timebucket: add(now, -35, :day),
             metric: "buffered"
           }
@@ -64,14 +66,14 @@ defmodule Plausible.Stats.SamplingCacheTest do
 
         assert SamplingCache.count_all() == 1
         assert SamplingCache.get(@site_id1, force?: true, cache_name: test) == nil
-        assert SamplingCache.get(@site_id2, force?: true, cache_name: test) == 22_000_000
+        assert SamplingCache.get(@site_id2, force?: true, cache_name: test) == 1.1 * @threshold
         assert SamplingCache.get(@site_id3, force?: true, cache_name: test) == nil
         assert SamplingCache.get(@site_id4, force?: true, cache_name: test) == nil
 
         Plausible.IngestRepo.insert_all(Plausible.Ingestion.Counters.Record, [
           %{
             site_id: @site_id1,
-            value: 11_000_000,
+            value: (@threshold * 0.55) |> trunc(),
             event_timebucket: add(now, -1, :day),
             metric: "buffered"
           }
@@ -80,8 +82,8 @@ defmodule Plausible.Stats.SamplingCacheTest do
         :ok = SamplingCache.refresh_all(cache_name: test)
 
         assert SamplingCache.count_all() == 2
-        assert SamplingCache.get(@site_id1, force?: true, cache_name: test) == 22_000_000
-        assert SamplingCache.get(@site_id2, force?: true, cache_name: test) == 22_000_000
+        assert SamplingCache.get(@site_id1, force?: true, cache_name: test) == 1.1 * @threshold
+        assert SamplingCache.get(@site_id2, force?: true, cache_name: test) == 1.1 * @threshold
       end
     end
 
