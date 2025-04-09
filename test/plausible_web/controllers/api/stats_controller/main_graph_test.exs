@@ -167,21 +167,21 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.sum(plot) == 2
     end
 
-    test "displays visitors for last 90d", %{conn: conn, site: site} do
+    test "displays visitors for last 91d", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-16 00:00:00]),
-        build(:pageview, timestamp: ~N[2021-04-15 00:00:00])
+        build(:pageview, timestamp: ~N[2021-04-16 00:00:00])
       ])
 
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=90d&date=2021-04-16&metric=visitors"
+          "/api/stats/#{site.domain}/main-graph?period=91d&date=2021-04-17&metric=visitors"
         )
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert Enum.count(plot) == 90
+      assert Enum.count(plot) == 91
       assert List.first(plot) == 1
       assert List.last(plot) == 1
       assert Enum.sum(plot) == 2
@@ -1276,14 +1276,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
              }
     end
 
-    test "shows imperfect month-split for last 90d with full month indicators", %{
+    test "shows imperfect month-split for last 91d with full month indicators", %{
       conn: conn,
       site: site
     } do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=90d&metric=visitors&interval=month&date=2021-12-13"
+          "/api/stats/#{site.domain}/main-graph?period=91d&metric=visitors&interval=month&date=2021-12-13"
         )
 
       assert %{"labels" => labels, "full_intervals" => full_intervals} = json_response(conn, 200)
@@ -1298,14 +1298,14 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
              }
     end
 
-    test "shows half-perfect month-split for last 90d with full month indicators", %{
+    test "shows perfect month-split for last 91d with full month indicators", %{
       conn: conn,
       site: site
     } do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=90d&metric=visitors&interval=month&date=2021-12-01"
+          "/api/stats/#{site.domain}/main-graph?period=91d&metric=visitors&interval=month&date=2021-12-01"
         )
 
       assert %{"labels" => labels, "full_intervals" => full_intervals} = json_response(conn, 200)
@@ -1313,7 +1313,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert labels == ["2021-09-01", "2021-10-01", "2021-11-01"]
 
       assert full_intervals == %{
-               "2021-09-01" => false,
+               "2021-09-01" => true,
                "2021-10-01" => true,
                "2021-11-01" => true
              }
@@ -1863,7 +1863,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       refute present_index
     end
 
-    for period <- ["7d", "28d", "30d", "90d"] do
+    for period <- ["7d", "28d", "30d", "91d"] do
       test "#{period} period does not include today", %{conn: conn, site: site} do
         today = "2021-01-01"
         yesterday = "2020-12-31"

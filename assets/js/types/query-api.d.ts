@@ -24,7 +24,7 @@ export type DateRangeShorthand =
   | "7d"
   | "28d"
   | "30d"
-  | "90d"
+  | "91d"
   | "month"
   | "6mo"
   | "12mo"
