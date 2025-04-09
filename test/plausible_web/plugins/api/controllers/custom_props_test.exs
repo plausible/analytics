@@ -37,6 +37,60 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
 
   describe "business tier" do
     @describetag :ee_only
+
+    test "allows prop enable for special key", %{
+      site: site,
+      token: token,
+      conn: conn
+    } do
+      [owner | _] = Plausible.Repo.preload(site, :owners).owners
+      subscribe_to_growth_plan(owner)
+
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
+
+      payload = %{
+        custom_prop: %{key: "search_query"}
+      }
+
+      assert_request_schema(payload, "CustomProp.EnableRequest", spec())
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> put(url, payload)
+      |> json_response(201)
+      |> assert_schema("CustomProp.ListResponse", spec())
+    end
+
+    test "allows bulk prop enable for special keys", %{
+      site: site,
+      token: token,
+      conn: conn
+    } do
+      [owner | _] = Plausible.Repo.preload(site, :owners).owners
+      subscribe_to_growth_plan(owner)
+
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
+
+      payload = %{
+        custom_props: [
+          %{
+            custom_prop: %{key: "search_query"}
+          },
+          %{
+            custom_prop: %{key: "url"}
+          }
+        ]
+      }
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> put(url, payload)
+      |> json_response(201)
+      |> assert_schema("CustomProp.ListResponse", spec())
+    end
+
     test "fails on custom prop enable attempt with insufficient plan", %{
       site: site,
       token: token,
@@ -75,6 +129,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
         custom_props: [
           %{
             custom_prop: %{key: "author"}
+          },
+          %{
+            custom_prop: %{key: "search_query"}
           },
           %{
             custom_prop: %{key: "category"}
