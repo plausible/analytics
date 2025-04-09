@@ -1,4 +1,4 @@
-import { defaultSite } from '../../test-utils/app-context-providers'
+import { DEFAULT_SITE } from '../../test-utils/app-context-providers'
 import {
   ComparisonMode,
   getDashboardTimeSettings,
@@ -24,7 +24,7 @@ describe(`${getStoredPeriod.name}`, () => {
 })
 
 describe(`${getDashboardTimeSettings.name}`, () => {
-  const site = defaultSite
+  const site = DEFAULT_SITE
 
   const defaultValues = {
     period: QueryPeriod['28d'],

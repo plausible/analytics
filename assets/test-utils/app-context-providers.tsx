@@ -22,7 +22,7 @@ type TestContextProvidersProps = {
   preloaded?: { segments?: SavedSegments }
 }
 
-export const defaultSite: PlausibleSite = {
+export const DEFAULT_SITE: PlausibleSite = {
   domain: 'plausible.io/unit',
   offset: 0,
   hasGoals: false,
@@ -52,7 +52,7 @@ export const TestContextProviders = ({
   preloaded,
   user
 }: TestContextProvidersProps) => {
-  const site = { ...defaultSite, ...siteOptions }
+  const site = { ...DEFAULT_SITE, ...siteOptions }
 
   const queryClient = new QueryClient({
     defaultOptions: {
