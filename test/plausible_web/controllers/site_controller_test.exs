@@ -498,6 +498,45 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
 
+    test "all menu options are shown with links, header and footer are shown", %{
+      conn: conn,
+      site: site
+    } do
+      conn = get(conn, "/#{site.domain}/settings/general")
+      resp = html_response(conn, 200)
+      site_domain = URI.encode_www_form(site.domain)
+
+      for {link_text, href} <- [
+            {"General", "#{site_domain}/settings/general"},
+            {"People", "#{site_domain}/settings/people"},
+            {"Visibility", "#{site_domain}/settings/visibility"},
+            {"Goals", "#{site_domain}/settings/goals"},
+            {"Funnels", "#{site_domain}/settings/funnels"},
+            {"Custom Properties", "#{site_domain}/settings/properties"},
+            {"Integrations", "#{site_domain}/settings/integrations"},
+            {"Visibility", "#{site_domain}/settings/visibility"},
+
+            # {"Imports & Exports", "#{site_domain}/settings/imports-exports"},
+
+            # Shields
+            {"IP Addresses", "#{site_domain}/settings/shields/ip_addresses"},
+            {"Countries", "#{site_domain}/settings/shields/countries"},
+            {"Pages", "#{site_domain}/settings/shields/pages"},
+            {"Hostnames", "#{site_domain}/settings/shields/hostnames"},
+            {"Email Reports", "#{site_domain}/settings/email-reports"}
+          ] do
+        assert resp =~ link_text
+        assert resp =~ href
+      end
+    end
+
+    test "header and footer are shown", %{conn: conn, site: site, user: user} do
+      conn = get(conn, "/#{site.domain}/settings/general")
+      resp = html_response(conn, 200)
+      assert resp =~ user.name
+      assert resp =~ "Getting started"
+    end
+
     test "shows settings form", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/general")
       resp = html_response(conn, 200)

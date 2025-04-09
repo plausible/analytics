@@ -49,7 +49,8 @@
       <div data-iframe-height></div>
       <script type="text/javascript" src={Routes.static_path(@conn, "/js/embed.content.js")}>
       </script>
-    <% else %>
+    <% end %>
+    <%= if !assigns[:hide_footer?] do %>
       {render("_footer.html", assigns)}
     <% end %>
     <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
