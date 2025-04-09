@@ -2,6 +2,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   use PlausibleWeb.ConnCase
   use Plausible.Teams.Test
 
+  alias Plausible.Repo
+
   setup [:create_user, :create_api_key]
 
   test "unauthenticated request - returns 401", %{conn: conn} do
@@ -47,7 +49,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   end
 
   test "locked site - returns 402", %{conn: conn, api_key: api_key, user: user} do
-    site = new_site(owner: user, locked: true)
+    site = new_site(owner: user)
+    site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
     conn
     |> with_api_key(api_key)
@@ -88,7 +91,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
       api_key: api_key,
       user: user
     } do
-      site = new_site(owner: user, locked: true)
+      site = new_site(owner: user)
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
       conn
       |> with_api_key(api_key)

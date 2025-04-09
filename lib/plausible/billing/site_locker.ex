@@ -48,16 +48,6 @@ defmodule Plausible.Billing.SiteLocker do
 
   @spec set_lock_status_for(Teams.Team.t(), boolean()) :: :ok
   def set_lock_status_for(team, status) do
-    site_ids = Teams.owned_sites_ids(team)
-
-    site_q =
-      from(
-        s in Plausible.Site,
-        where: s.id in ^site_ids
-      )
-
-    {_, _} = Repo.update_all(site_q, set: [locked: status])
-
     query = from(t in Teams.Team, where: t.id == ^team.id)
 
     {_, _} = Repo.update_all(query, set: [locked: status])
