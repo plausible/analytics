@@ -201,8 +201,8 @@
           "description": "Last 30 days relative to today"
         },
         {
-          "const": "90d",
-          "description": "Last 90 days relative to today"
+          "const": "91d",
+          "description": "Last 91 days relative to today"
         },
         {
           "const": "month",
