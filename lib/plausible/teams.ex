@@ -66,6 +66,11 @@ defmodule Plausible.Teams do
     def on_trial?(_), do: always(true)
   end
 
+  @spec locked?(Teams.Team.t() | nil) :: boolean()
+  def locked?(nil), do: false
+
+  def locked?(%Teams.Team{locked: locked}), do: locked
+
   @spec trial_days_left(Teams.Team.t()) :: integer()
   def trial_days_left(nil) do
     nil
