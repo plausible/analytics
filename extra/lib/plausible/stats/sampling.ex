@@ -2,7 +2,7 @@ defmodule Plausible.Stats.Sampling do
   @moduledoc """
   Sampling related functions
   """
-  @default_sample_threshold 20_000_000
+  @default_sample_threshold 10_000_000
   # 1 percent
   @min_sample_rate 0.01
 
