@@ -1,5 +1,5 @@
 {
-  "tracker_script_version": 1,
+  "tracker_script_version": 2,
   "scripts": {
     "deploy": "node compile.js",
     "test": "npm run deploy && npx playwright test",

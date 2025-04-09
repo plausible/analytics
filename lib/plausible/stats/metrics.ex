@@ -11,6 +11,7 @@ defmodule Plausible.Stats.Metrics do
                  :visitors,
                  :visits,
                  :pageviews,
+                 :exit_rate,
                  :views_per_visit,
                  :bounce_rate,
                  :visit_duration,
@@ -33,6 +34,7 @@ defmodule Plausible.Stats.Metrics do
   end
 
   def default_value(:visit_duration, _query, _dimensions), do: nil
+  def default_value(:exit_rate, _query, _dimensions), do: nil
   def default_value(:scroll_depth, _query, _dimensions), do: nil
   def default_value(:time_on_page, _query, _dimensions), do: nil
 

@@ -12,6 +12,7 @@ export type Metric =
   | "conversion_rate"
   | "group_conversion_rate"
   | "time_on_page"
+  | "exit_rate"
   | "total_revenue"
   | "average_revenue"
   | "scroll_depth";
@@ -71,7 +72,7 @@ export type CustomPropertyFilterDimensions = string;
 export type GoalDimension = "event:goal";
 export type TimeDimensions = ("time" | "time:month" | "time:week" | "time:day" | "time:hour") | "time:minute";
 export type FilterTree = FilterEntry | FilterAndOr | FilterNot | FilterHasDone;
-export type FilterEntry = FilterWithoutGoals | FilterWithGoals | FilterWithPattern | FilterForSegment;
+export type FilterEntry = FilterWithoutGoals | FilterWithIs | FilterWithContains | FilterWithPattern;
 /**
  * @minItems 3
  * @maxItems 4
@@ -95,20 +96,30 @@ export type Clauses = (string | number)[];
  * @minItems 3
  * @maxItems 4
  */
-export type FilterWithGoals =
-  | [FilterOperationContains, GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions, Clauses]
+export type FilterWithIs =
+  | ["is", GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions | "segment", Clauses]
   | [
-      FilterOperationContains,
-      GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions,
+      "is",
+      GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions | "segment",
       Clauses,
       {
         case_sensitive?: boolean;
       }
     ];
 /**
- * filter operation
+ * @minItems 3
+ * @maxItems 4
  */
-export type FilterOperationContains = "is" | "contains";
+export type FilterWithContains =
+  | ["contains", GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions, Clauses]
+  | [
+      "contains",
+      GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions,
+      Clauses,
+      {
+        case_sensitive?: boolean;
+      }
+    ];
 /**
  * @minItems 3
  * @maxItems 3
@@ -122,11 +133,6 @@ export type FilterWithPattern = [
  * filter operation
  */
 export type FilterOperationRegex = "matches" | "matches_not";
-/**
- * @minItems 3
- * @maxItems 3
- */
-export type FilterForSegment = ["is", "segment", number[]];
 /**
  * @minItems 2
  * @maxItems 2

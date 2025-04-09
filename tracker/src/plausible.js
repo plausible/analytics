@@ -287,7 +287,7 @@
         body: JSON.stringify(payload)
       }).then(function(response) {
         options && options.callback && options.callback({status: response.status})
-      })
+      }).catch(function() {})
     }
     {{/if}}
   }

@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Ability to sort by and compare the `exit_rate` metric in the dashboard Exit Pages > Details report
 - Add top 3 pages into the traffic spike email
 - Two new shorthand time periods `28d` and `90d` available on both dashboard and in public API
 - Average scroll depth metric
@@ -33,6 +34,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Default period for brand new sites is now `today` rather than `last 28 days`. On the next day, the default changes to `last 28 days`.
+- Increase decimal precision of the "Exit rate" metric from 0 to 1 (e.g. 67 -> 66.7)
 - Increase decimal precision of the "Conversion rate" metric from 1 to 2 (e.g. 16.7 -> 16.67)
 - The "Last 30 days" period is now "Last 28 days" on the dashboard and also the new default. Keyboard shortcut `T` still works for last 30 days.
 - Last `7d` and `30d` periods do not include today anymore

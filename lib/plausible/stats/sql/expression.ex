@@ -332,6 +332,12 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
+  def session_metric(:exit_rate, _query) do
+    wrap_alias([s], %{
+      __internal_visits: fragment("toUInt32(sum(sign))")
+    })
+  end
+
   def session_metric(:visits, _query) do
     wrap_alias([s], %{
       visits: scale_sample(fragment("sum(?)", s.sign))
