@@ -158,7 +158,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       refute resp =~ "Getting started"
     end
 
-    @tag :ce_only
+    @tag :ce_build_only
     test "header, stats, footer are shown", %{conn: conn, site: site, user: user} do
       populate_stats(site, [build(:pageview)])
       conn = get(conn, "/" <> site.domain)
