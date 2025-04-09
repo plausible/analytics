@@ -148,6 +148,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
+    @tag :ee_only
     test "header, stats are shown; footer is not shown", %{conn: conn, site: site, user: user} do
       populate_stats(site, [build(:pageview)])
       conn = get(conn, "/" <> site.domain)
@@ -155,6 +156,16 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert resp =~ user.name
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
       refute resp =~ "Getting started"
+    end
+
+    @tag :ce_only
+    test "header, stats, footer are shown", %{conn: conn, site: site, user: user} do
+      populate_stats(site, [build(:pageview)])
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+      assert resp =~ user.name
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+      assert resp =~ "Getting started"
     end
 
     test "shows locked page if site is locked", %{conn: conn, user: user} do

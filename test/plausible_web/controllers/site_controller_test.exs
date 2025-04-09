@@ -493,41 +493,71 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:domain/settings/general" do
-    setup [:create_user, :log_in, :create_site]
+  describe "GET /:domain/settings" do
+    setup [:create_user, :log_in]
 
-    setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
-
+    @tag :ee_only
     test "all menu options are shown with links, header and footer are shown", %{
       conn: conn,
-      site: site
+      user: user
     } do
+      site = new_site(owner: user, domain: "example.com")
       conn = get(conn, "/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
-      site_domain = URI.encode_www_form(site.domain)
 
-      for {link_text, href} <- [
-            {"General", "#{site_domain}/settings/general"},
-            {"People", "#{site_domain}/settings/people"},
-            {"Visibility", "#{site_domain}/settings/visibility"},
-            {"Goals", "#{site_domain}/settings/goals"},
-            {"Funnels", "#{site_domain}/settings/funnels"},
-            {"Custom Properties", "#{site_domain}/settings/properties"},
-            {"Integrations", "#{site_domain}/settings/integrations"},
-            {"Visibility", "#{site_domain}/settings/visibility"},
+      items = resp |> find("[data-testid=site_settings_sidebar] a") |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
 
-            # {"Imports & Exports", "#{site_domain}/settings/imports-exports"},
+      assert items == [
+        {"General", "/#{site.domain}/settings/general"},
+        {"People", "/#{site.domain}/settings/people"},
+        {"Visibility", "/#{site.domain}/settings/visibility"},
+        {"Goals", "/#{site.domain}/settings/goals"},
+        {"Funnels", "/#{site.domain}/settings/funnels"},
+        {"Custom Properties", "/#{site.domain}/settings/properties"},
+        {"Integrations", "/#{site.domain}/settings/integrations"},
+        {"Visibility", "/#{site.domain}/settings/visibility"},
+        {"Imports & Exports", "/#{site.domain}/settings/imports-exports"},
 
-            # Shields
-            {"IP Addresses", "#{site_domain}/settings/shields/ip_addresses"},
-            {"Countries", "#{site_domain}/settings/shields/countries"},
-            {"Pages", "#{site_domain}/settings/shields/pages"},
-            {"Hostnames", "#{site_domain}/settings/shields/hostnames"},
-            {"Email Reports", "#{site_domain}/settings/email-reports"}
-          ] do
-        assert resp =~ link_text
-        assert resp =~ href
-      end
+        {"Shields", ""},
+        {"IP Addresses", "/#{site.domain}/settings/shields/ip_addresses"},
+        {"Countries", "/#{site.domain}/settings/shields/countries"},
+        {"Pages", "/#{site.domain}/settings/shields/pages"},
+        {"Hostnames", "/#{site.domain}/settings/shields/hostnames"},
+
+        {"Email Reports", "/#{site.domain}/settings/email-reports"},
+        {"Danger Zone", "/#{site.domain}/settings/danger-zone"}
+      ]
+    end
+
+    @tag :ce_only
+    test "all menu options are shown with links, header and footer are shown on CE", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user, domain: "example.com")
+      conn = get(conn, "/#{site.domain}/settings/general")
+      resp = html_response(conn, 200)
+
+      items = resp |> find("[data-testid=site_settings_sidebar] a") |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
+
+      assert items == [
+        {"General", "/#{site.domain}/settings/general"},
+        {"People", "/#{site.domain}/settings/people"},
+        {"Visibility", "/#{site.domain}/settings/visibility"},
+        {"Goals", "/#{site.domain}/settings/goals"},
+        {"Custom Properties", "/#{site.domain}/settings/properties"},
+        {"Integrations", "/#{site.domain}/settings/integrations"},
+        {"Imports & Exports", "/#{site.domain}/settings/imports-exports"},
+
+        {"Shields", ""},
+        {"IP Addresses", "/#{site.domain}/settings/shields/ip_addresses"},
+        {"Countries", "/#{site.domain}/settings/shields/countries"},
+        {"Pages", "/#{site.domain}/settings/shields/pages"},
+        {"Hostnames", "/#{site.domain}/settings/shields/hostnames"},
+
+        {"Email Reports", "/#{site.domain}/settings/email-reports"},
+        {"Danger Zone", "/#{site.domain}/settings/danger-zone"}
+      ]
     end
 
     test "header and footer are shown", %{conn: conn, site: site, user: user} do
@@ -536,6 +566,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ user.name
       assert resp =~ "Getting started"
     end
+
+  end
+
+  describe "GET /:domain/settings/general" do
+    setup [:create_user, :log_in, :create_site]
+
+    setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
 
     test "shows settings form", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/general")
