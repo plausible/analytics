@@ -68,6 +68,7 @@ export default function QueryContextProvider({
     const defaultValues = queryDefaultValue
     const storedValues = getSavedTimePreferencesFromStorage({ site })
     const timeQuery = getDashboardTimeSettings({
+      site,
       searchValues: { period, comparison, match_day_of_week },
       storedValues,
       defaultValues,
