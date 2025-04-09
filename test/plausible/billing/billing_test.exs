@@ -5,6 +5,7 @@ defmodule Plausible.BillingTest do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing
   alias Plausible.Billing.Subscription
+  alias Plausible.Repo
 
   describe "check_needs_to_upgrade" do
     @describetag :ee_only
@@ -245,13 +246,14 @@ defmodule Plausible.BillingTest do
 
     test "unlocks sites if user has any locked sites" do
       user = new_user()
-      site = new_site(owner: user, locked: true)
+      site = new_site(owner: user)
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       team = team_of(user)
 
       %{@subscription_created_params | "passthrough" => "ee:true;user:#{user.id};team:#{team.id}"}
       |> Billing.subscription_created()
 
-      refute Repo.reload!(site).locked
+      refute Repo.reload!(team).locked
     end
 
     @tag :ee_only
@@ -357,7 +359,8 @@ defmodule Plausible.BillingTest do
     test "unlocks sites if subscription is changed from past_due to active" do
       user = new_user()
       subscribe_to_growth_plan(user, status: Subscription.Status.past_due())
-      site = new_site(locked: true, owner: user)
+      site = new_site(owner: user)
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       team = team_of(user)
 
       @subscription_updated_params
@@ -368,7 +371,7 @@ defmodule Plausible.BillingTest do
       })
       |> Billing.subscription_updated()
 
-      refute Repo.reload!(site).locked
+      refute Repo.reload!(team).locked
     end
 
     @tag :ee_only
@@ -441,7 +444,8 @@ defmodule Plausible.BillingTest do
 
       team = team_of(user)
 
-      site = new_site(locked: true, owner: user)
+      site = new_site(owner: user)
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
       subscription_id = subscription_of(user).paddle_subscription_id
 
@@ -453,8 +457,8 @@ defmodule Plausible.BillingTest do
       })
       |> Billing.subscription_updated()
 
-      assert Repo.reload!(site).locked == false
-      assert Repo.reload!(team_of(user)).grace_period == nil
+      assert Repo.reload!(team).locked == false
+      assert Repo.reload!(team).grace_period == nil
     end
 
     test "ignores if subscription cannot be found" do
@@ -617,31 +621,5 @@ defmodule Plausible.BillingTest do
     assert Plausible.Teams.Billing.has_active_subscription?(active_team)
     refute Plausible.Teams.Billing.has_active_subscription?(paused_team)
     refute Plausible.Teams.Billing.has_active_subscription?(nil)
-  end
-
-  def monthly_pageview_usage_stub(penultimate_usage, last_usage) do
-    last_bill_date = Date.utc_today() |> Date.shift(day: -1)
-
-    Plausible.Teams.Billing
-    |> Double.stub(:monthly_pageview_usage, fn _user ->
-      %{
-        last_cycle: %{
-          date_range:
-            Date.range(
-              Date.shift(last_bill_date, month: -1),
-              Date.shift(last_bill_date, day: -1)
-            ),
-          total: last_usage
-        },
-        penultimate_cycle: %{
-          date_range:
-            Date.range(
-              Date.shift(last_bill_date, month: -2),
-              Date.shift(last_bill_date, day: -1, month: -1)
-            ),
-          total: penultimate_usage
-        }
-      }
-    end)
   end
 end
