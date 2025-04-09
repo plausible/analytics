@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Default period for brand new sites is now `today` rather than `last 28 days`. On the next day, the default changes to `last 28 days`.
 - Increase decimal precision of the "Exit rate" metric from 0 to 1 (e.g. 67 -> 66.7)
 - Increase decimal precision of the "Conversion rate" metric from 1 to 2 (e.g. 16.7 -> 16.67)
 - The "Last 30 days" period is now "Last 28 days" on the dashboard and also the new default. Keyboard shortcut `T` still works for last 30 days.
@@ -49,7 +50,8 @@ All notable changes to this project will be documented in this file.
 - Remove permissions to manage sites guests and run destructive actions from team editor and guest editor roles in favour of team admin role
 - Time-on-page metric has been reworked. It now uses `engagement` events sent by plausible tracker script. We still use the old calculation methods for periods before the self-hosted instance was upgraded. Warnings are shown in the dashboard and API when legacy calculation methods are used.
 - Always set site and team member limits to unlimited for Community Edition
-- Stop showing Plausible footer when viewing stats, except when viewing a public dashboard or unembedded shared link dashboard
+- Stats API now supports more `date_range` shorthand options like `30d`, `3mo`.
+- Stop showing Plausible footer when viewing stats, except when viewing a public dashboard or unembedded shared link dashboard.
 
 ### Fixed
 

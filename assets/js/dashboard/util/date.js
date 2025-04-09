@@ -3,6 +3,10 @@ import utc from 'dayjs/plugin/utc'
 
 dayjs.extend(utc)
 
+export function utcNow() {
+  return dayjs()
+}
+
 // https://stackoverflow.com/a/50130338
 export function formatISO(date) {
   return date.format('YYYY-MM-DD')
@@ -93,6 +97,12 @@ export function isSameMonth(date1, date2) {
 
 export function isToday(site, date) {
   return isSameDate(date, nowForSite(site))
+}
+
+export function isTodayOrYesterday(isoDate) {
+  const isoToday = formatISO(dayjs())
+  const isoYesterday = formatISO(dayjs().subtract(1, 'day'))
+  return isoDate === isoToday || isoDate === isoYesterday
 }
 
 export function isThisMonth(site, date) {

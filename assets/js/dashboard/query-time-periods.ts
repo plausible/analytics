@@ -16,6 +16,7 @@ import {
   isThisMonth,
   isThisYear,
   isToday,
+  isTodayOrYesterday,
   lastMonth,
   nowForSite,
   parseNaiveDate,
@@ -533,11 +534,13 @@ export function getSavedTimePreferencesFromStorage({
 }
 
 export function getDashboardTimeSettings({
+  site,
   searchValues,
   storedValues,
   defaultValues,
   segmentIsExpanded
 }: {
+  site: PlausibleSite
   searchValues: Record<'period' | 'comparison' | 'match_day_of_week', unknown>
   storedValues: ReturnType<typeof getSavedTimePreferencesFromStorage>
   defaultValues: Pick<
@@ -549,10 +552,12 @@ export function getDashboardTimeSettings({
   let period: QueryPeriod
   if (isValidPeriod(searchValues.period)) {
     period = searchValues.period
+  } else if (isValidPeriod(storedValues.period)) {
+    period = storedValues.period
+  } else if (isTodayOrYesterday(site.nativeStatsBegin)) {
+    period = QueryPeriod.day
   } else {
-    period = isValidPeriod(storedValues.period)
-      ? storedValues.period
-      : defaultValues.period
+    period = defaultValues.period
   }
 
   let comparison: ComparisonMode | null

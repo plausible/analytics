@@ -22,6 +22,29 @@ type TestContextProvidersProps = {
   preloaded?: { segments?: SavedSegments }
 }
 
+export const DEFAULT_SITE: PlausibleSite = {
+  domain: 'plausible.io/unit',
+  offset: 0,
+  hasGoals: false,
+  hasProps: false,
+  funnelsAvailable: false,
+  propsAvailable: false,
+  siteSegmentsAvailable: false,
+  conversionsOptedOut: false,
+  funnelsOptedOut: false,
+  propsOptedOut: false,
+  revenueGoals: [],
+  funnels: [],
+  statsBegin: '',
+  nativeStatsBegin: '',
+  embedded: false,
+  background: '',
+  isDbip: false,
+  flags: {},
+  validIntervalsByPeriod: {},
+  shared: false
+}
+
 export const TestContextProviders = ({
   children,
   routerProps,
@@ -29,30 +52,7 @@ export const TestContextProviders = ({
   preloaded,
   user
 }: TestContextProvidersProps) => {
-  const defaultSite: PlausibleSite = {
-    domain: 'plausible.io/unit',
-    offset: 0,
-    hasGoals: false,
-    hasProps: false,
-    funnelsAvailable: false,
-    propsAvailable: false,
-    siteSegmentsAvailable: false,
-    conversionsOptedOut: false,
-    funnelsOptedOut: false,
-    propsOptedOut: false,
-    revenueGoals: [],
-    funnels: [],
-    statsBegin: '',
-    nativeStatsBegin: '',
-    embedded: false,
-    background: '',
-    isDbip: false,
-    flags: {},
-    validIntervalsByPeriod: {},
-    shared: false
-  }
-
-  const site = { ...defaultSite, ...siteOptions }
+  const site = { ...DEFAULT_SITE, ...siteOptions }
 
   const queryClient = new QueryClient({
     defaultOptions: {

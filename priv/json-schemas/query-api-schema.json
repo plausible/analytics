@@ -171,7 +171,7 @@
       ]
     },
     "date_range_shorthand": {
-      "oneOf": [
+      "anyOf": [
         {
           "const": "30m",
           "$comment": "only :internal"
@@ -219,6 +219,16 @@
         {
           "const": "year",
           "description": "Since the start of this year"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\d+d$",
+          "description": "Last n days relative to today"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\d+mo$",
+          "description": "Last n months relative to this month"
         }
       ]
     },
