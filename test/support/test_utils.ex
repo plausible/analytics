@@ -87,23 +87,6 @@ defmodule Plausible.TestUtils do
     {:ok, conn: conn}
   end
 
-  def create_pageviews(pageviews) do
-    pageviews =
-      Enum.map(pageviews, fn pageview ->
-        pageview =
-          pageview
-          |> Map.delete(:site)
-          |> Map.put(:site_id, pageview.site.id)
-
-        Factory.build(:pageview, pageview)
-        |> Map.from_struct()
-        |> Map.drop([:__meta__, :acquisition_channel])
-        |> update_in([:timestamp], &to_naive_truncate/1)
-      end)
-
-    Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, pageviews)
-  end
-
   def log_in(%{user: user, conn: conn}) do
     conn =
       conn

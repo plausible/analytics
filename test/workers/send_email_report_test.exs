@@ -52,19 +52,19 @@ defmodule Plausible.Workers.SendEmailReportTest do
       sunday_before_last = Timex.shift(last_monday, minutes: -1)
       this_monday = Timex.beginning_of_week(now)
 
-      create_pageviews([
+      populate_stats(site, [
         # Sunday before last, not counted
-        %{site: site, timestamp: Timezone.convert(sunday_before_last, "UTC")},
+        build(:pageview, timestamp: Timezone.convert(sunday_before_last, "UTC")),
         # Sunday before last, not counted
-        %{site: site, timestamp: Timezone.convert(sunday_before_last, "UTC")},
+        build(:pageview, timestamp: Timezone.convert(sunday_before_last, "UTC")),
         # Last monday, counted
-        %{site: site, timestamp: Timezone.convert(last_monday, "UTC")},
+        build(:pageview, timestamp: Timezone.convert(last_monday, "UTC")),
         # Last sunday, counted
-        %{site: site, timestamp: Timezone.convert(last_sunday, "UTC")},
+        build(:pageview, timestamp: Timezone.convert(last_sunday, "UTC")),
         # This monday, not counted
-        %{site: site, timestamp: Timezone.convert(this_monday, "UTC")},
+        build(:pageview, timestamp: Timezone.convert(this_monday, "UTC")),
         # This monday, not counted
-        %{site: site, timestamp: Timezone.convert(this_monday, "UTC")}
+        build(:pageview, timestamp: Timezone.convert(this_monday, "UTC"))
       ])
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})

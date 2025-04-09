@@ -64,7 +64,10 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
         subject: "Your Plausible setup: Waiting for the first page views"
       )
 
-      create_pageviews([%{site: site}])
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
       perform_job(SendSiteSetupEmails, %{})
 
       assert_email_delivered_with(
