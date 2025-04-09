@@ -56,19 +56,9 @@ defmodule Plausible.Stats.Sampling do
   end
 
   defp decide_sample_rate(site, query) do
-    cond do
-      FunWithFlags.enabled?(:fractional_hardcoded_sample_rate, for: site) ->
-        # Hard-coded sample rate to temporarily fix an issue for a client.
-        # To be solved as part of https://3.basecamp.com/5308029/buckets/39750953/messages/7978775089
-        0.1
-
-      FunWithFlags.enabled?(:fractional_sample_rate, for: site) ->
-        traffic_30_day = SamplingCache.get(site.id)
-        fractional_sample_rate(traffic_30_day, query)
-
-      true ->
-        @default_sample_threshold
-    end
+    site.id
+    |> SamplingCache.get()
+    |> fractional_sample_rate(query)
   end
 
   def fractional_sample_rate(nil = _traffic_30_day, _query), do: :no_sampling
