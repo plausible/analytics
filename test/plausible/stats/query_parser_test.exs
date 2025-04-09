@@ -1785,6 +1785,73 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "exit_rate metric" do
+    test "fails validation without visit:exit_page dimension", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `exit_rate` requires a `\"visit:exit_page\"` dimension. No other dimensions are allowed.",
+        :internal
+      )
+    end
+
+    test "fails validation with event only filters", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate"],
+        "dimensions" => ["visit:exit_page"],
+        "filters" => [["is", "event:page", ["/"]]],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `exit_rate` cannot be queried when filtering on event dimensions.",
+        :internal
+      )
+    end
+
+    test "fails validation with event metrics", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate", "pageviews"],
+        "dimensions" => ["visit:exit_page"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Event metric(s) `pageviews` cannot be queried along with session dimension(s) `visit:exit_page`",
+        :internal
+      )
+    end
+
+    test "passes validation", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate"],
+        "dimensions" => ["visit:exit_page"],
+        "date_range" => "all"
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:exit_rate],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["visit:exit_page"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: @default_include,
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+  end
+
   describe "scroll_depth metric" do
     test "fails validation on its own", %{site: site} do
       %{

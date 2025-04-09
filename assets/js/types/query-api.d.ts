@@ -12,6 +12,7 @@ export type Metric =
   | "conversion_rate"
   | "group_conversion_rate"
   | "time_on_page"
+  | "exit_rate"
   | "total_revenue"
   | "average_revenue"
   | "scroll_depth";

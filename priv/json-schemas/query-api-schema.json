@@ -269,6 +269,10 @@
           "markdownDescription": "Average time spent on a given page in a visit in seconds. Requires: `event:page` filter or dimension."
         },
         {
+          "const": "exit_rate",
+          "$comment": "only :internal"
+        },
+        {
           "const": "total_revenue",
           "markdownDescription": "Total revenue",
           "$comment": "only :ee"
