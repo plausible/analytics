@@ -14,15 +14,19 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   def run(opts \\ []) do
+    start_cloak()
+
+    dry_run? = Keyword.get(opts, :dry_run?, true)
+    Repo.transaction(fn -> backfill(dry_run?) end, timeout: :infinity)
+  end
+
+  defp start_cloak() do
     Application.ensure_all_started(:cloak)
     Application.ensure_all_started(:cloak_ecto)
     Plausible.Auth.TOTP.Vault.start_link(key: totp_vault_key())
   rescue
     _ ->
       :ok
-
-      dry_run? = Keyword.get(opts, :dry_run?, true)
-      Repo.transaction(fn -> backfill(dry_run?) end, timeout: :infinity)
   end
 
   defp backfill(dry_run?) do
