@@ -28,7 +28,8 @@ export type DateRangeShorthand =
   | "month"
   | "6mo"
   | "12mo"
-  | "year";
+  | "year"
+  | string;
 /**
  * @minItems 2
  * @maxItems 2
