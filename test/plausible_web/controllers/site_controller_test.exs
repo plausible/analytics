@@ -430,7 +430,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
 
-      if Plausible.ee?() do
+      if ee?() do
         assert html_response(conn, 200) =~ "support@plausible.io"
       else
         refute html_response(conn, 200) =~ "support@plausible.io"
@@ -453,7 +453,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
 
-      if Plausible.ee?() do
+      if ee?() do
         assert html_response(conn, 200) =~ "support@plausible.io"
       else
         refute html_response(conn, 200) =~ "support@plausible.io"
