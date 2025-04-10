@@ -79,7 +79,7 @@ defmodule Plausible.Props do
   """
   def allow(site, prop_or_props) do
     with site <- Plausible.Repo.preload(site, :team),
-         :ok <- Plausible.Billing.Feature.Props.check_availability(site.team) do
+         :ok <- ensure_prop_key_accessible(prop_or_props, site.team) do
       site
       |> allow_changeset(prop_or_props)
       |> Plausible.Repo.update()
@@ -137,6 +137,15 @@ defmodule Plausible.Props do
       |> Enum.filter(&valid?/1)
 
     allow(site, props_to_allow)
+  end
+
+  def ensure_prop_key_accessible(prop_keys, team) when is_list(prop_keys) do
+    Enum.reduce_while(prop_keys, :ok, fn prop_key, :ok ->
+      case ensure_prop_key_accessible(prop_key, team) do
+        :ok -> {:cont, :ok}
+        error -> {:halt, error}
+      end
+    end)
   end
 
   def ensure_prop_key_accessible(prop_key, team) do

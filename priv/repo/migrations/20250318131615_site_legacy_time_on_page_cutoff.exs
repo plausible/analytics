@@ -2,6 +2,8 @@ defmodule Plausible.Repo.Migrations.SiteLegacyTimeOnPageCutoff do
   use Ecto.Migration
   use Plausible
 
+  import Plausible.MigrationUtils
+
   def change do
     alter table(:sites) do
       # New sites will have new time-on-page enabled by default.
@@ -9,7 +11,7 @@ defmodule Plausible.Repo.Migrations.SiteLegacyTimeOnPageCutoff do
         default: fragment("to_date('1970-01-01', 'YYYY-MM-DD')")
     end
 
-    if Application.get_env(:plausible, :is_selfhost) do
+    if community_edition?() do
       # On self-hosted, new time-on-page will be populated during first deploy.
       execute(
         fn ->

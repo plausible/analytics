@@ -171,7 +171,7 @@
       ]
     },
     "date_range_shorthand": {
-      "oneOf": [
+      "anyOf": [
         {
           "const": "30m",
           "$comment": "only :internal"
@@ -201,8 +201,8 @@
           "description": "Last 30 days relative to today"
         },
         {
-          "const": "90d",
-          "description": "Last 90 days relative to today"
+          "const": "91d",
+          "description": "Last 91 days relative to today"
         },
         {
           "const": "month",
@@ -219,6 +219,16 @@
         {
           "const": "year",
           "description": "Since the start of this year"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\d+d$",
+          "description": "Last n days relative to today"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\d+mo$",
+          "description": "Last n months relative to this month"
         }
       ]
     },
@@ -267,6 +277,10 @@
         {
           "const": "time_on_page",
           "markdownDescription": "Average time spent on a given page in a visit in seconds. Requires: `event:page` filter or dimension."
+        },
+        {
+          "const": "exit_rate",
+          "$comment": "only :internal"
         },
         {
           "const": "total_revenue",
@@ -367,11 +381,6 @@
       "enum": ["is_not", "contains_not"],
       "description": "filter operation"
     },
-    "filter_operation_contains": {
-      "type": "string",
-      "enum": ["is", "contains"],
-      "description": "filter operation"
-    },
     "filter_with_pattern": {
       "type": "array",
       "additionalItems": false,
@@ -422,14 +431,48 @@
         }
       ]
     },
-    "filter_with_goals": {
+    "filter_with_is": {
       "type": "array",
       "additionalItems": false,
       "minItems": 3,
       "maxItems": 4,
       "items": [
         {
-          "$ref": "#/definitions/filter_operation_contains"
+          "const": "is",
+          "description": "filter operation"
+        },
+        {
+          "oneOf": [
+            { "$ref": "#/definitions/goal_dimension" },
+            { "$ref": "#/definitions/simple_filter_dimensions" },
+            { "$ref": "#/definitions/custom_property_filter_dimensions" },
+            { "const": "segment" }
+          ]
+        },
+        {
+          "$ref": "#/definitions/clauses"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "case_sensitive": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      ]
+    },
+    "filter_with_contains": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 3,
+      "maxItems": 4,
+      "items": [
+        {
+          "const": "contains",
+          "description": "filter operation"
         },
         {
           "oneOf": [
@@ -453,32 +496,12 @@
         }
       ]
     },
-    "filter_for_segment": {
-      "type": "array",
-      "additionalItems": false,
-      "minItems": 3,
-      "maxItems": 3,
-      "items": [
-        {
-          "const": "is"
-        },
-        {
-          "const": "segment"
-        },
-        {
-          "type": "array",
-          "items": {
-            "type": ["integer"]
-          }
-        }
-      ]
-    },
     "filter_entry": {
       "oneOf": [
         { "$ref": "#/definitions/filter_without_goals" },
-        { "$ref": "#/definitions/filter_with_goals" },
-        { "$ref": "#/definitions/filter_with_pattern" },
-        { "$ref": "#/definitions/filter_for_segment" }
+        { "$ref": "#/definitions/filter_with_is" },
+        { "$ref": "#/definitions/filter_with_contains" },
+        { "$ref": "#/definitions/filter_with_pattern" }
       ]
     },
     "filter_tree": {

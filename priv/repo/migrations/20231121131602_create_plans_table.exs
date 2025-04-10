@@ -1,8 +1,10 @@
 defmodule Plausible.Repo.Migrations.CreatePlansTable do
   use Ecto.Migration
 
+  import Plausible.MigrationUtils
+
   def change do
-    if !Application.get_env(:plausible, :is_selfhost) do
+    if enterprise_edition?() do
       create table(:plans) do
         add :generation, :integer, null: false
         add :kind, :string, null: false
