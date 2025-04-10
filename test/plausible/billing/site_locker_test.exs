@@ -9,14 +9,14 @@ defmodule Plausible.Billing.SiteLockerTest do
 
   @v4_growth_plan_id "857097"
 
-  describe "update_sites_for/1" do
+  describe "update_for/1" do
     test "does not lock sites if user is on trial" do
       user = new_user(trial_expiry_date: Date.utc_today())
       site = new_site(owner: user)
       site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == :unlocked
+      assert SiteLocker.update_for(team) == :unlocked
 
       refute Repo.reload!(site.team).locked
     end
@@ -26,7 +26,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == :unlocked
+      assert SiteLocker.update_for(team) == :unlocked
 
       refute Repo.reload!(site.team).locked
     end
@@ -36,7 +36,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == :unlocked
+      assert SiteLocker.update_for(team) == :unlocked
 
       refute Repo.reload!(site.team).locked
     end
@@ -46,7 +46,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == :unlocked
+      assert SiteLocker.update_for(team) == :unlocked
 
       refute Repo.reload!(site.team).locked
     end
@@ -61,7 +61,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == :unlocked
+      assert SiteLocker.update_for(team) == :unlocked
 
       refute Repo.reload!(site.team).locked
     end
@@ -79,7 +79,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == :unlocked
+      assert SiteLocker.update_for(team) == :unlocked
 
       refute Repo.reload!(site.team).locked
     end
@@ -95,7 +95,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_trial_or_subscription}
+      assert SiteLocker.update_for(team) == {:locked, :no_active_trial_or_subscription}
 
       assert Repo.reload!(site.team).locked
     end
@@ -109,7 +109,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       over_limits_usage_stub = monthly_pageview_usage_stub(15_000, 15_000)
 
-      assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
+      assert SiteLocker.update_for(team, usage_mod: over_limits_usage_stub) ==
                {:locked, :grace_period_ended_now}
 
       assert Repo.reload!(site.team).locked
@@ -122,7 +122,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == :unlocked
+      assert SiteLocker.update_for(team) == :unlocked
 
       refute Repo.reload!(site.team).locked
 
@@ -141,7 +141,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       over_limits_usage_stub = monthly_pageview_usage_stub(15_000, 15_000)
 
-      assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
+      assert SiteLocker.update_for(team, usage_mod: over_limits_usage_stub) ==
                {:locked, :grace_period_ended_now}
 
       assert_email_delivered_with(
@@ -171,7 +171,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       over_limits_usage_stub = monthly_pageview_usage_stub(15_000, 15_000)
 
-      assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
+      assert SiteLocker.update_for(team, usage_mod: over_limits_usage_stub) ==
                {:locked, :grace_period_ended_now}
 
       assert_email_delivered_with(
@@ -183,7 +183,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       assert team.locked
 
-      assert SiteLocker.update_sites_for(team, usage_mod: over_limits_usage_stub) ==
+      assert SiteLocker.update_for(team, usage_mod: over_limits_usage_stub) ==
                {:locked, :grace_period_ended_already}
 
       assert_no_emails_delivered()
@@ -204,7 +204,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == :unlocked
+      assert SiteLocker.update_for(team) == :unlocked
 
       refute Repo.reload!(site.team).locked
     end
@@ -214,7 +214,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_trial_or_subscription}
+      assert SiteLocker.update_for(team) == {:locked, :no_active_trial_or_subscription}
 
       assert Repo.reload!(site.team).locked
     end
@@ -224,7 +224,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       site = new_site(owner: user)
       team = user |> team_of() |> Ecto.Changeset.change(trial_expiry_date: nil) |> Repo.update!()
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_trial_or_subscription}
+      assert SiteLocker.update_for(team) == {:locked, :no_active_trial_or_subscription}
 
       assert Repo.reload!(site.team).locked
     end
@@ -237,7 +237,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       add_guest(viewer_site, user: user, role: :viewer)
       team = team_of(user)
 
-      assert SiteLocker.update_sites_for(team) == {:locked, :no_active_trial_or_subscription}
+      assert SiteLocker.update_for(team) == {:locked, :no_active_trial_or_subscription}
 
       assert Repo.reload!(owner_site.team).locked
       refute Repo.reload!(viewer_site.team).locked
