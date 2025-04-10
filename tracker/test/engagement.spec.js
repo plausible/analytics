@@ -114,7 +114,7 @@ test.describe('engagement events', () => {
     })
 
     // After the initial pageview is sent, navigate to ignored page ->
-    // pageleave event is sent from the initial page URL
+    // engagement event is sent from the initial page URL
     await expectPlausibleInAction(page, {
       action: () => page.click('#ignored-hash-link'),
       expectedRequests: [{n: 'engagement', u: pageBaseURL, h: 1}]
