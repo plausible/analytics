@@ -1,11 +1,6 @@
 defmodule Plausible.Repo.Migrations.BackfillTeamsLocked do
   use Ecto.Migration
 
-  import Ecto.Query
-  import Plausible.MigrationUtils
-
-  alias Plausible.Repo
-
   def up do
     execute """
     UPDATE teams t
