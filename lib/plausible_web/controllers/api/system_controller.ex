@@ -59,9 +59,16 @@ defmodule PlausibleWeb.Api.SystemController do
         "ok"
       end
 
+    sessions_health =
+      if Plausible.Session.Transfer.attempted?() do
+        "ok"
+      else
+        "waiting"
+      end
+
     status =
-      case {postgres_health, clickhouse_health, cache_health} do
-        {"ok", "ok", "ok"} -> 200
+      case {postgres_health, clickhouse_health, cache_health, sessions_health} do
+        {"ok", "ok", "ok", "ok"} -> 200
         _ -> 500
       end
 
@@ -69,7 +76,8 @@ defmodule PlausibleWeb.Api.SystemController do
     |> json(%{
       postgres: postgres_health,
       clickhouse: clickhouse_health,
-      sites_cache: cache_health
+      sites_cache: cache_health,
+      sessions: sessions_health
     })
   end
 end

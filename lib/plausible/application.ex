@@ -43,6 +43,8 @@ defmodule Plausible.Application do
           n_lock_partitions: 1,
           ets_options: [read_concurrency: true, write_concurrency: true]
         ),
+        {Plausible.Session.Transfer,
+         base_path: Application.get_env(:plausible, :session_transfer_dir)},
         warmed_cache(Plausible.Site.Cache,
           adapter_opts: [
             n_lock_partitions: 1,
