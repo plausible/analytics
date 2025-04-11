@@ -5,7 +5,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
   import Ecto.Query
 
-  alias Plausible.{Repo, Teams}
+  alias Plausible.Repo
 
   defmacrop is_distinct(f1, f2) do
     quote do
@@ -14,19 +14,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   def run(opts \\ []) do
-    start_cloak()
-
     dry_run? = Keyword.get(opts, :dry_run?, true)
     Repo.transaction(fn -> backfill(dry_run?) end, timeout: :infinity)
-  end
-
-  defp start_cloak() do
-    Application.ensure_all_started(:cloak)
-    Application.ensure_all_started(:cloak_ecto)
-    Plausible.Auth.TOTP.Vault.start_link(key: totp_vault_key())
-  rescue
-    _ ->
-      :ok
   end
 
   defp backfill(dry_run?) do
@@ -34,12 +23,14 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     orphaned_teams =
       from(
-        t in Plausible.Teams.Team,
-        left_join: tm in assoc(t, :team_memberships),
+        t in "teams",
+        left_join: tm in "team_memberships",
+        on: tm.team_id == t.id,
+        left_join: s in "sites",
+        on: s.team_id == t.id,
         where: is_nil(tm.id),
-        left_join: s in assoc(t, :sites),
         where: is_nil(s.id),
-        select: %{t | locked: nil}
+        select: %{id: t.id}
       )
       |> Repo.all(timeout: :infinity)
 
@@ -55,14 +46,17 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     sites_without_teams =
       from(
-        s in Plausible.Site,
+        s in "sites",
         inner_join: m in "site_memberships",
         on: m.site_id == s.id,
-        inner_join: o in Plausible.Auth.User,
+        inner_join: o in "users",
         on: o.id == m.user_id,
         where: m.role == "owner",
         where: is_nil(s.team_id),
-        select: %{s | memberships: [%{user: o, role: :owner}]}
+        select: %{
+          id: s.id,
+          owner_id: o.id
+        }
       )
       |> Repo.all(timeout: :infinity)
 
@@ -78,23 +72,25 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     users_on_trial_without_team =
       from(
-        u in Plausible.Auth.User,
+        u in "users",
         as: :user,
         where: not is_nil(u.trial_expiry_date),
         where:
           not exists(
-            from tm in Teams.Membership,
-              where: tm.role == :owner,
-              where: tm.user_id == parent_as(:user).id
-          )
+            from tm in "team_memberships",
+              where: tm.role == "owner",
+              where: tm.user_id == parent_as(:user).id,
+              select: 1
+          ),
+        select: u.id
       )
       |> Repo.all(timeout: :infinity)
 
     log("Found #{length(users_on_trial_without_team)} users on trial without team...")
 
     if not dry_run? do
-      Enum.each(users_on_trial_without_team, fn user ->
-        {:ok, _} = Teams.get_or_create(user)
+      Enum.each(users_on_trial_without_team, fn user_id ->
+        create_personal_team(user_id)
       end)
 
       log("Created teams for all users on trial without a team.")
@@ -104,10 +100,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     mismatched_guest_memberships_to_remove =
       from(
-        gm in Teams.GuestMembership,
-        inner_join: tm in assoc(gm, :team_membership),
-        inner_join: s in assoc(gm, :site),
-        where: tm.team_id != s.team_id
+        gm in "guest_memberships",
+        inner_join: tm in "team_memberships",
+        on: tm.id == gm.team_membership_id,
+        inner_join: s in "sites",
+        on: s.id == gm.site_id,
+        where: tm.team_id != s.team_id,
+        select: gm.id
       )
       |> Repo.all()
 
@@ -120,10 +119,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
       log("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
 
-      from(t in Teams.Team, where: t.id in ^team_ids_to_prune, select: %{t | locked: nil})
-      |> Repo.all(timeout: :infinity)
-      |> Enum.each(fn team ->
-        Plausible.Teams.Memberships.prune_guests(team)
+      Enum.each(team_ids_to_prune, fn team_id ->
+        prune_guests(team_id)
       end)
 
       log("Guest memberships with mismatched team cleared.")
@@ -142,11 +139,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     guest_memberships_to_remove =
       from(
-        gm in Teams.GuestMembership,
+        gm in "guest_memberships",
         as: :guest_membership,
-        inner_join: tm in assoc(gm, :team_membership),
+        inner_join: tm in "team_memberships",
+        on: tm.id == gm.team_membership_id,
         as: :team_membership,
-        where: not exists(site_memberships_query)
+        where: not exists(site_memberships_query),
+        select: gm.id
       )
       |> Repo.all(timeout: :infinity)
 
@@ -157,10 +156,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
       log("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
 
-      from(t in Teams.Team, where: t.id in ^team_ids_to_prune, select: %{t | locked: nil})
-      |> Repo.all(timeout: :infinity)
-      |> Enum.each(fn team ->
-        Plausible.Teams.Memberships.prune_guests(team)
+      Enum.each(team_ids_to_prune, fn team ->
+        prune_guests(team.id)
       end)
 
       log("Guest memberships cleared.")
@@ -170,8 +167,9 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     guest_memberships_query =
       from(
-        gm in Teams.GuestMembership,
-        inner_join: tm in assoc(gm, :team_membership),
+        gm in "guest_memberships",
+        inner_join: tm in "team_memberships",
+        on: tm.id == gm.team_membership_id,
         where: gm.site_id == parent_as(:site_membership).site_id,
         where: tm.user_id == parent_as(:site_membership).user_id,
         select: 1
@@ -181,17 +179,18 @@ defmodule Plausible.DataMigration.BackfillTeams do
       from(
         sm in "site_memberships",
         as: :site_membership,
-        inner_join: s in Plausible.Site,
+        inner_join: s in "sites",
         on: s.id == sm.site_id,
-        inner_join: t in Plausible.Teams.Team,
+        inner_join: t in "teams",
         on: t.id == s.team_id,
-        inner_join: u in Plausible.Auth.User,
+        inner_join: u in "users",
         on: u.id == sm.user_id,
         where: sm.role != "owner",
         where: not exists(guest_memberships_query),
         select: %{
-          user: u,
-          site: %{s | team: %{t | locked: nil}},
+          user_id: u.id,
+          site_id: s.id,
+          team_id: t.id,
           inserted_at: sm.inserted_at,
           updated_at: sm.updated_at,
           role: sm.role
@@ -214,15 +213,15 @@ defmodule Plausible.DataMigration.BackfillTeams do
     stale_guest_memberships =
       from(
         sm in "site_memberships",
-        inner_join: tm in Teams.Membership,
+        inner_join: tm in "team_memberships",
         on: tm.user_id == sm.user_id,
-        inner_join: gm in Teams.GuestMembership,
+        inner_join: gm in "guest_memberships",
         on: gm.site_id == sm.site_id,
-        where: tm.role == :guest,
+        where: tm.role == "guest",
         where:
-          (gm.role == :viewer and sm.role == "admin") or
-            (gm.role == :editor and sm.role == "viewer"),
-        select: {gm, sm.role}
+          (gm.role == "viewer" and sm.role == "admin") or
+            (gm.role == "editor" and sm.role == "viewer"),
+        select: {gm.id, sm.role}
       )
       |> Repo.all(timeout: :infinity)
 
@@ -242,18 +241,20 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: i.site_id == parent_as(:guest_invitation).site_id,
         where: i.email == parent_as(:team_invitation).email,
         where:
-          (i.role == "viewer" and parent_as(:guest_invitation).role == :viewer) or
-            (i.role == "admin" and parent_as(:guest_invitation).role == :editor),
+          (i.role == "viewer" and parent_as(:guest_invitation).role == "viewer") or
+            (i.role == "admin" and parent_as(:guest_invitation).role == "editor"),
         select: true
       )
 
     guest_invitations_to_remove =
       from(
-        gi in Teams.GuestInvitation,
+        gi in "guest_invitations",
         as: :guest_invitation,
-        inner_join: ti in assoc(gi, :team_invitation),
+        inner_join: ti in "team_invitations",
+        on: ti.id == gi.team_invitation_id,
         as: :team_invitation,
-        where: not exists(site_invitations_query)
+        where: not exists(site_invitations_query),
+        select: gi.id
       )
       |> Repo.all(timeout: :infinity)
 
@@ -264,10 +265,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
       log("Pruning guest team invitations for #{length(team_ids_to_prune)} teams...")
 
-      from(t in Teams.Team, where: t.id in ^team_ids_to_prune, select: %{t | locked: nil})
-      |> Repo.all(timeout: :infinity)
-      |> Enum.each(fn team ->
-        Plausible.Teams.Invitations.prune_guest_invitations(team)
+      Enum.each(team_ids_to_prune, fn team_id ->
+        prune_guest_invitations(team_id)
       end)
 
       log("Guest invitations cleared.")
@@ -277,8 +276,9 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     guest_invitations_query =
       from(
-        gi in Teams.GuestInvitation,
-        inner_join: ti in assoc(gi, :team_invitation),
+        gi in "guest_invitations",
+        inner_join: ti in "team_invitations",
+        on: ti.id == gi.team_invitation_id,
         where: gi.site_id == parent_as(:site_invitation).site_id,
         where: ti.email == parent_as(:site_invitation).email,
         select: 1
@@ -288,11 +288,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       from(
         si in "invitations",
         as: :site_invitation,
-        inner_join: s in Plausible.Site,
+        inner_join: s in "sites",
         on: si.site_id == s.id,
-        inner_join: t in Teams.Team,
+        inner_join: t in "teams",
         on: t.id == s.team_id,
-        inner_join: inv in Plausible.Auth.User,
+        inner_join: inv in "users",
         on: inv.id == si.inviter_id,
         where: si.role != "owner",
         where: not exists(guest_invitations_query),
@@ -302,8 +302,9 @@ defmodule Plausible.DataMigration.BackfillTeams do
           role: si.role,
           invitation_id: si.invitation_id,
           email: si.email,
-          site: %{s | team: %{t | locked: nil}},
-          inviter: inv
+          site_id: s.id,
+          team_id: t.id,
+          inviter_id: inv.id
         }
       )
       |> Repo.all(timeout: :infinity)
@@ -323,16 +324,17 @@ defmodule Plausible.DataMigration.BackfillTeams do
     stale_guest_invitations =
       from(
         si in "invitations",
-        inner_join: ti in Teams.Invitation,
+        inner_join: ti in "team_invitations",
         on: ti.email == si.email,
-        inner_join: gi in assoc(ti, :guest_invitations),
+        inner_join: gi in "guest_invitations",
+        on: gi.team_invitation_id == ti.id,
         on: gi.site_id == si.site_id,
-        where: ti.role == :guest,
+        where: ti.role == "guest",
         where:
-          (gi.role == :viewer and si.role == "admin") or
-            (gi.role == :editor and si.role == "viewer") or
+          (gi.role == "viewer" and si.role == "admin") or
+            (gi.role == "editor" and si.role == "viewer") or
             is_distinct(gi.invitation_id, si.invitation_id),
-        select: {gi, %{role: si.role, invitation_id: si.invitation_id}}
+        select: {gi.id, %{role: si.role, invitation_id: si.invitation_id}}
       )
       |> Repo.all(timeout: :infinity)
 
@@ -357,9 +359,10 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_transfers_to_remove =
       from(
-        st in Teams.SiteTransfer,
+        st in "team_site_transfers",
         as: :site_transfer,
-        where: not exists(site_invitations_query)
+        where: not exists(site_invitations_query),
+        select: st.id
       )
       |> Repo.all(timeout: :infinity)
 
@@ -375,7 +378,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_transfers_query =
       from(
-        st in Teams.SiteTransfer,
+        st in "team_site_transfers",
         where: st.site_id == parent_as(:site_invitation).site_id,
         where: st.email == parent_as(:site_invitation).email,
         select: 1
@@ -385,20 +388,19 @@ defmodule Plausible.DataMigration.BackfillTeams do
       from(
         si in "invitations",
         as: :site_invitation,
-        inner_join: s in Plausible.Site,
+        inner_join: s in "sites",
         on: s.id == si.site_id,
-        inner_join: inv in Plausible.Auth.User,
+        inner_join: inv in "users",
         on: inv.id == si.inviter_id,
         where: si.role == "owner",
         where: not exists(site_transfers_query),
         select: %{
           email: si.email,
-          role: si.role,
           invitation_id: si.invitation_id,
           inserted_at: si.inserted_at,
           updated_at: si.updated_at,
-          site: s,
-          inviter: inv
+          site_id: s.id,
+          inviter_id: inv.id
         }
       )
       |> Repo.all(timeout: :infinity)
@@ -417,13 +419,14 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   def delete_orphaned_teams(teams) do
-    Enum.each(teams, &Repo.delete!/1)
+    ids = Enum.map(teams, & &1.id)
+    Repo.delete_all(from(t in "teams", where: t.id in ^ids))
   end
 
   defp backfill_teams(sites) do
     sites
-    |> Enum.map(fn %{id: site_id, memberships: [%{user: owner, role: :owner}]} ->
-      {owner, site_id}
+    |> Enum.map(fn %{id: site_id, owner_id: owner_id} ->
+      {owner_id, site_id}
     end)
     |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
     |> tap(fn
@@ -437,19 +440,28 @@ defmodule Plausible.DataMigration.BackfillTeams do
       _ ->
         :pass
     end)
-    |> Enum.map(fn {owner, site_ids} ->
+    |> Enum.map(fn {owner_id, site_ids} ->
       Repo.transaction(
         fn ->
-          {:ok, team} = Teams.get_or_create(owner)
+          {user_id, trial_expiry_date, updated_at} =
+            from(
+              u in "users",
+              where: u.id == ^owner_id,
+              select: {u.id, u.trial_expiry_date, u.updated_at}
+            )
+            |> Repo.one!()
 
-          team =
-            team
-            |> Ecto.Changeset.change()
-            |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
-            |> Ecto.Changeset.force_change(:updated_at, owner.updated_at)
-            |> Repo.update!()
+          team = create_personal_team(user_id)
 
-          Repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
+          Repo.update_all(
+            from(t in "teams", where: t.id == ^team.id),
+            set: [
+              trial_expiry_date: trial_expiry_date,
+              updated_at: updated_at
+            ]
+          )
+
+          Repo.update_all(from(s in "sites", where: s.id in ^site_ids),
             set: [team_id: team.id]
           )
         end,
@@ -461,15 +473,14 @@ defmodule Plausible.DataMigration.BackfillTeams do
     |> length()
   end
 
-  defp remove_guest_memberships(guest_memberships) do
-    ids = Enum.map(guest_memberships, & &1.id)
-
+  defp remove_guest_memberships(guest_membership_ids) do
     {_, team_ids} =
       Repo.delete_all(
         from(
-          gm in Teams.GuestMembership,
-          inner_join: tm in assoc(gm, :team_membership),
-          where: gm.id in ^ids,
+          gm in "guest_memberships",
+          inner_join: tm in "team_memberships",
+          on: tm.id == gm.team_membership_id,
+          where: gm.id in ^guest_membership_ids,
           select: tm.team_id
         )
       )
@@ -479,7 +490,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
   defp backfill_guest_memberships(site_memberships) do
     site_memberships
-    |> Enum.group_by(&{&1.site.team, &1.user}, & &1)
+    |> Enum.group_by(&{&1.team_id, &1.user_id}, & &1)
     |> tap(fn
       grouped when grouped != %{} ->
         log("Team memberships to be created: #{map_size(grouped)}")
@@ -491,29 +502,38 @@ defmodule Plausible.DataMigration.BackfillTeams do
       _ ->
         :pass
     end)
-    |> Enum.each(fn {{team, user}, site_memberships} ->
+    |> Enum.each(fn {{team_id, user_id}, site_memberships} ->
       first_site_membership =
         Enum.min_by(site_memberships, & &1.inserted_at)
 
-      team_membership =
-        team
-        |> Teams.Membership.changeset(user, :guest)
-        |> Ecto.Changeset.put_change(:inserted_at, first_site_membership.inserted_at)
-        |> Ecto.Changeset.put_change(:updated_at, first_site_membership.updated_at)
-        |> Repo.insert!(
+      team_membership_data = %{
+        team_id: team_id,
+        user_id: user_id,
+        role: "guest",
+        is_autocreated: false,
+        inserted_at: first_site_membership.inserted_at,
+        updated_at: first_site_membership.updated_at
+      }
+
+      {_, [team_membership]} =
+        Repo.insert_all(
+          "team_memberships",
+          [team_membership_data],
+          returning: [:id],
           on_conflict: [set: [updated_at: first_site_membership.updated_at]],
           conflict_target: [:team_id, :user_id]
         )
 
       Enum.each(site_memberships, fn site_membership ->
-        team_membership
-        |> Teams.GuestMembership.changeset(
-          site_membership.site,
-          translate_role(site_membership.role)
-        )
-        |> Ecto.Changeset.put_change(:inserted_at, site_membership.inserted_at)
-        |> Ecto.Changeset.put_change(:updated_at, site_membership.updated_at)
-        |> Repo.insert!()
+        guest_membership_data = %{
+          team_membership_id: team_membership.id,
+          site_id: site_membership.site_id,
+          role: translate_role(site_membership.role),
+          inserted_at: site_membership.inserted_at,
+          updated_at: site_membership.updated_at
+        }
+
+        Repo.insert_all("guest_memberships", [guest_membership_data])
       end)
 
       IO.write(".")
@@ -521,25 +541,24 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   defp sync_guest_memberships(guest_memberships_and_roles) do
-    Enum.each(guest_memberships_and_roles, fn {guest_membership, role} ->
-      guest_membership
-      |> Ecto.Changeset.change(role: translate_role(role))
-      |> Ecto.Changeset.put_change(:updated_at, guest_membership.updated_at)
-      |> Repo.update!()
+    Enum.each(guest_memberships_and_roles, fn {guest_membership_id, role} ->
+      Repo.update_all(
+        from(gm in "guest_memberships", where: gm.id == ^guest_membership_id),
+        set: [role: translate_role(role)]
+      )
 
       IO.write(".")
     end)
   end
 
-  defp remove_guest_invitations(guest_invitations) do
-    ids = Enum.map(guest_invitations, & &1.id)
-
+  defp remove_guest_invitations(guest_invitation_ids) do
     {_, team_ids} =
       Repo.delete_all(
         from(
-          gi in Teams.GuestInvitation,
-          inner_join: ti in assoc(gi, :team_invitation),
-          where: gi.id in ^ids,
+          gi in "guest_invitations",
+          inner_join: ti in "team_invitations",
+          on: ti.id == gi.team_invitation_id,
+          where: gi.id in ^guest_invitation_ids,
           select: ti.team_id
         )
       )
@@ -549,35 +568,40 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
   defp backfill_guest_invitations(site_invitations) do
     site_invitations
-    |> Enum.group_by(&{&1.site.team, &1.email}, & &1)
-    |> Enum.each(fn {{team, email}, site_invitations} ->
+    |> Enum.group_by(&{&1.team_id, &1.email}, & &1)
+    |> Enum.each(fn {{team_id, email}, site_invitations} ->
       first_site_invitation = List.first(site_invitations)
 
-      team_invitation =
-        team
-        # NOTE: we put first inviter and invitation ID matching team/email combination
-        |> Teams.Invitation.changeset(
-          email: email,
-          role: :guest,
-          inviter: first_site_invitation.inviter
-        )
-        |> Ecto.Changeset.put_change(:inserted_at, first_site_invitation.inserted_at)
-        |> Ecto.Changeset.put_change(:updated_at, first_site_invitation.updated_at)
-        |> Repo.insert!(
+      team_invitation_data = %{
+        invitation_id: Nanoid.generate(),
+        email: email,
+        role: "guest",
+        inviter_id: first_site_invitation.inviter_id,
+        team_id: team_id,
+        inserted_at: first_site_invitation.inserted_at,
+        updated_at: first_site_invitation.updated_at
+      }
+
+      {_, [team_invitation]} =
+        Repo.insert_all(
+          "team_invitations",
+          [team_invitation_data],
           on_conflict: [set: [updated_at: first_site_invitation.updated_at]],
-          conflict_target: [:team_id, :email]
+          conflict_target: [:team_id, :email],
+          returning: [:id]
         )
 
       Enum.each(site_invitations, fn site_invitation ->
-        team_invitation
-        |> Teams.GuestInvitation.changeset(
-          site_invitation.site,
-          translate_role(site_invitation.role)
-        )
-        |> Ecto.Changeset.put_change(:invitation_id, site_invitation.invitation_id)
-        |> Ecto.Changeset.put_change(:inserted_at, site_invitation.inserted_at)
-        |> Ecto.Changeset.put_change(:updated_at, site_invitation.updated_at)
-        |> Repo.insert!()
+        guest_invitation_data = %{
+          invitation_id: site_invitation.invitation_id,
+          role: translate_role(site_invitation.role),
+          site_id: site_invitation.site_id,
+          team_invitation_id: team_invitation.id,
+          inserted_at: site_invitation.inserted_at,
+          updated_at: site_invitation.updated_at
+        }
+
+        Repo.insert_all("guest_invitations", [guest_invitation_data])
       end)
 
       IO.write(".")
@@ -585,50 +609,113 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   defp sync_guest_invitations(guest_and_site_invitations) do
-    Enum.each(guest_and_site_invitations, fn {guest_invitation, site_invitation} ->
-      guest_invitation
-      |> Ecto.Changeset.change()
-      |> Ecto.Changeset.put_change(:role, translate_role(site_invitation.role))
-      |> Ecto.Changeset.put_change(:invitation_id, site_invitation.invitation_id)
-      |> Ecto.Changeset.put_change(:updated_at, guest_invitation.updated_at)
-      |> Repo.update!()
+    Enum.each(guest_and_site_invitations, fn {guest_invitation_id, site_invitation} ->
+      Repo.update_all(
+        from(gi in "guest_invitations", where: gi.id == ^guest_invitation_id),
+        set: [
+          role: translate_role(site_invitation.role),
+          invitation_id: site_invitation.invitation_id
+        ]
+      )
 
       IO.write(".")
     end)
   end
 
-  defp remove_site_transfers(site_transfers) do
-    ids = Enum.map(site_transfers, & &1.id)
-
-    Repo.delete_all(from(st in Teams.SiteTransfer, where: st.id in ^ids))
+  defp remove_site_transfers(site_transfer_ids) do
+    Repo.delete_all(from(st in "team_site_transfers", where: st.id in ^site_transfer_ids))
   end
 
   defp backfill_site_transfers(site_invitations) do
     Enum.each(site_invitations, fn site_invitation ->
-      site_invitation.site
-      |> Teams.SiteTransfer.changeset(
-        initiator: site_invitation.inviter,
-        email: site_invitation.email
-      )
-      |> Ecto.Changeset.put_change(:transfer_id, site_invitation.invitation_id)
-      |> Ecto.Changeset.put_change(:inserted_at, site_invitation.inserted_at)
-      |> Ecto.Changeset.put_change(:updated_at, site_invitation.updated_at)
-      |> Repo.insert!()
+      site_transfer_data = %{
+        initiator: site_invitation.inviter_id,
+        email: site_invitation.email,
+        site_id: site_invitation.site_id,
+        transfer_id: site_invitation.invitation_id,
+        inserted_at: site_invitation.inserted_at,
+        updated_at: site_invitation.updated_at
+      }
+
+      Repo.insert_all("team_site_transfers", [site_transfer_data])
 
       IO.write(".")
     end)
   end
 
-  defp translate_role("admin"), do: :editor
-  defp translate_role("viewer"), do: :viewer
+  defp translate_role("admin"), do: "editor"
+  defp translate_role("viewer"), do: "viewer"
 
   defp log(msg) do
     IO.puts("[#{DateTime.utc_now(:second)}] #{msg}")
   end
 
-  defp totp_vault_key() do
-    :plausible
-    |> Application.fetch_env!(Plausible.Auth.TOTP)
-    |> Keyword.fetch!(:vault_key)
+  defp create_personal_team(user_id) do
+    trial_expiry_date = Date.shift(Date.utc_today(), year: 100)
+
+    team_data =
+      %{
+        identifier: Ecto.UUID.generate() |> Ecto.UUID.dump!(),
+        name: "My Personal Sites",
+        trial_expiry_date: trial_expiry_date,
+        accept_traffic_until: Date.add(trial_expiry_date, 14),
+        hourly_api_request_limit: 1_000_000,
+        allow_next_upgrade_override: false,
+        locked: false,
+        setup_complete: false,
+        inserted_at: NaiveDateTime.utc_now(),
+        updated_at: NaiveDateTime.utc_now()
+      }
+
+    {1, [team]} = Repo.insert_all("teams", [team_data], returning: [:id])
+
+    team_membership_data = %{
+      team_id: team.id,
+      user_id: user_id,
+      role: "owner",
+      is_autocreated: true,
+      inserted_at: NaiveDateTime.utc_now(),
+      updated_at: NaiveDateTime.utc_now()
+    }
+
+    {1, _} = Repo.insert_all("team_memberships", [team_membership_data])
+
+    team
+  end
+
+  defp prune_guests(team_id) do
+    guest_query =
+      from(
+        gm in "guest_memberships",
+        where: gm.team_membership_id == parent_as(:team_membership).id,
+        select: true
+      )
+
+    Repo.delete_all(
+      from(
+        tm in "team_memberships",
+        as: :team_membership,
+        where: tm.team_id == ^team_id and tm.role == "guest",
+        where: not exists(guest_query)
+      )
+    )
+  end
+
+  defp prune_guest_invitations(team_id) do
+    guest_query =
+      from(
+        gi in "guest_invitations",
+        where: gi.team_invitation_id == parent_as(:team_invitation).id,
+        select: true
+      )
+
+    Repo.delete_all(
+      from(
+        ti in "team_invitations",
+        as: :team_invitation,
+        where: ti.team_id == ^team_id and ti.role == "guest",
+        where: not exists(guest_query)
+      )
+    )
   end
 end
