@@ -62,6 +62,8 @@ http_port =
 
 https_port = get_int_from_path_or_env(config_dir, "HTTPS_PORT")
 
+http_uds = get_var_from_path_or_env(config_dir, "HTTPS_UDS")
+
 base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
 if !base_url do
@@ -322,6 +324,12 @@ config :plausible, PlausibleWeb.Endpoint,
   secret_key_base: secret_key_base,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
+
+if http_uds do
+  uds_bind = [ip: {:local, http_uds}, port: 0]
+  uds_opts = Config.Reader.merge(default_http_opts, uds_bind)
+  config :plausible, PlausibleWeb.Endpoint, http: uds_opts
+end
 
 # maybe enable HTTPS in CE
 if config_env() in [:ce, :ce_dev, :ce_test] do
