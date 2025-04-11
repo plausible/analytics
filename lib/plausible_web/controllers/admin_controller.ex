@@ -99,10 +99,10 @@ defmodule PlausibleWeb.AdminController do
           select:
             fragment(
               """
-              case when ? = false then 
-                string_agg(concat(?, ' (', ?, ')'), ',') 
-              else 
-                concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']') 
+              case when ? = false then
+                string_agg(concat(?, ' (', ?, ')'), ',')
+              else
+                concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']')
               end
               """,
               t.setup_complete,
@@ -155,9 +155,9 @@ defmodule PlausibleWeb.AdminController do
               select: [
                 fragment(
                   """
-                  case when ? = false then 
+                  case when ? = false then
                     concat(string_agg(concat(?, ' (', ?, ')'), ','), ' - ', ?)
-                  else 
+                  else
                     concat(concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']'), ' - ', ?)
                   end
                   """,
@@ -187,7 +187,7 @@ defmodule PlausibleWeb.AdminController do
   defp usage_and_limits_html(team, usage, limits, embed?) do
     content = """
       <ul>
-        <li>Team: <b>#{team.name}</b></li>
+        <li>Team: <b>#{html_escape(team.name)}</b></li>
         <li>Subscription plan: #{Teams.TeamAdmin.subscription_plan(team)}</li>
         <li>Subscription status: #{Teams.TeamAdmin.subscription_status(team)}</li>
         <li>Grace period: #{Teams.TeamAdmin.grace_period_status(team)}</li>
