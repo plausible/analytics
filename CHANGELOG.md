@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added 
+
+### Removed 
+
+### Changed 
+
+## v3.0.0 - 2025-04-11
+
 ### Added
 - Ability to sort by and compare the `exit_rate` metric in the dashboard Exit Pages > Details report
 - Add top 3 pages into the traffic spike email
@@ -71,7 +79,7 @@ All notable changes to this project will be documented in this file.
 - Fix Conversion Rate metrics column disappearing from reports when "Goal is ..." filter is within a segment
 - Graph tooltip now shows year when graph has data from multiple years
 
-## v2.1.5-rc.1 - 2025-01-17
+## v2.1.5 - 2025-02-03
 
 ### Added
 

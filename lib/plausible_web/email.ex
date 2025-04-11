@@ -554,7 +554,7 @@ defmodule PlausibleWeb.Email do
   def priority_email(%{layout: layout}) do
     email = base_email(%{layout: layout})
 
-    if Plausible.ee?() do
+    if ee?() do
       put_param(email, "MessageStream", "priority")
     else
       email

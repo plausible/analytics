@@ -1,4 +1,4 @@
-<%= if Plausible.ee?() and Plausible.Teams.on_trial?(@site_team) do %>
+<%= if ee?() and Plausible.Teams.on_trial?(@site_team) do %>
   You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
   <br /><br />
 <% end %>
@@ -9,6 +9,6 @@ This Plausible script is 45 times smaller than Google Analytics script so you’
 <br /><br /> On WordPress? We have a
 <a href="https://plausible.io/wordpress-analytics-plugin">WordPress plugin</a> that makes the process simpler. We also have
 <a href="https://plausible.io/docs/integration-guides">integration guides</a> for different site builders to help you start counting stats in no time.
-<%= if Plausible.ee?() do %>
+<%= if ee?() do %>
   <br /><br /> Do reply back to this email if you have any questions or need some guidance.
 <% end %>
