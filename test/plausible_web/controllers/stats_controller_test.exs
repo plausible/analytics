@@ -76,7 +76,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                Jason.encode!([foo_personal_segment, emea_site_segment])
     end
 
-    test "plausible.io live demo - shows site stats", %{conn: conn} do
+    test "plausible.io live demo - shows site stats, header and footer", %{conn: conn} do
       site = new_site(domain: "plausible.io", public: true)
       populate_stats(site, [build(:pageview)])
 
@@ -90,6 +90,8 @@ defmodule PlausibleWeb.StatsControllerTest do
                |> Floki.attribute("content")
 
       assert text_of_element(resp, "title") == "Plausible Analytics: Live Demo"
+      assert resp =~ "Login"
+      assert resp =~ "Getting started"
     end
 
     test "public site - redirect to /login when no stats because verification requires it", %{
@@ -146,6 +148,26 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
+    @tag :ee_only
+    test "header, stats are shown; footer is not shown", %{conn: conn, site: site, user: user} do
+      populate_stats(site, [build(:pageview)])
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+      assert resp =~ user.name
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+      refute resp =~ "Getting started"
+    end
+
+    @tag :ce_build_only
+    test "header, stats, footer are shown", %{conn: conn, site: site, user: user} do
+      populate_stats(site, [build(:pageview)])
+      conn = get(conn, "/" <> site.domain)
+      resp = html_response(conn, 200)
+      assert resp =~ user.name
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+      assert resp =~ "Getting started"
+    end
+
     test "shows locked page if site is locked", %{conn: conn, user: user} do
       locked_site = new_site(locked: true, owner: user)
       conn = get(conn, "/" <> locked_site.domain)
@@ -196,7 +218,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       refute html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
     end
 
-    test "all segments (personal or site) are stuffed into dataset, with associated their owner_id and owner_name",
+    test "all segments (personal or site) are stuffed into dataset, with their associated owner_id and owner_name",
          %{conn: conn, site: site, user: user} do
       populate_stats(site, [build(:pageview)])
 
@@ -1238,6 +1260,22 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
     end
 
+    test "footer and header are shown when accessing public dashboard", %{
+      conn: conn
+    } do
+      site = new_site(domain: "test-site.com")
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
+      assert resp =~ "stats-react-container"
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-current-user-id") == "null"
+      assert text_of_attr(resp, @react_container, "data-current-user-role") == "public"
+      assert resp =~ "Login"
+      assert resp =~ "Getting started"
+    end
+
     test "returns page with X-Frame-Options disabled so it can be embedded in an iframe", %{
       conn: conn
     } do
@@ -1266,6 +1304,17 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       [{"div", attrs, _}] = find(resp, @react_container)
       assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
+    end
+
+    test "does not show header, does not show footer on embedded pages", %{conn: conn} do
+      site = new_site(domain: "test-site.com")
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}&embed=true")
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-embedded") == "true"
+      refute resp =~ "Login"
+      refute resp =~ "Getting started"
     end
 
     test "shows locked page if page is locked", %{conn: conn} do
