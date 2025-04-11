@@ -410,7 +410,8 @@ defmodule Plausible.Teams.Invitations do
     end
 
     on_ee do
-      :unlocked = Billing.SiteLocker.update_sites_for(team, send_email?: false)
+      Billing.SiteLocker.update_for(prior_team, send_email?: false)
+      :unlocked = Billing.SiteLocker.update_for(team, send_email?: false)
     end
 
     :ok

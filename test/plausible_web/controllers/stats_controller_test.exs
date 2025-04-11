@@ -169,7 +169,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "shows locked page if site is locked", %{conn: conn, user: user} do
-      locked_site = new_site(locked: true, owner: user)
+      locked_site = new_site(owner: user)
+      locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       conn = get(conn, "/" <> locked_site.domain)
       resp = html_response(conn, 200)
       assert resp =~ "Dashboard locked"
@@ -178,7 +179,8 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "shows locked page if site is locked for billing role", %{conn: conn, user: user} do
       other_user = new_user()
-      locked_site = new_site(locked: true, owner: other_user)
+      locked_site = new_site(owner: other_user)
+      locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       add_member(team_of(other_user), user: user, role: :billing)
 
       conn = get(conn, "/" <> locked_site.domain)
@@ -189,7 +191,8 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "shows locked page if site is locked for viewer role", %{conn: conn, user: user} do
       other_user = new_user()
-      locked_site = new_site(locked: true, owner: other_user)
+      locked_site = new_site(owner: other_user)
+      locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       add_member(team_of(other_user), user: user, role: :viewer)
 
       conn = get(conn, "/" <> locked_site.domain)
@@ -200,7 +203,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "shows locked page for anonymous" do
-      locked_site = new_site(locked: true, public: true)
+      locked_site = new_site(public: true)
+      locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       conn = get(build_conn(), "/" <> locked_site.domain)
       resp = html_response(conn, 200)
       assert resp =~ "Dashboard locked"
@@ -274,7 +278,8 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "can view a private locked dashboard with stats", %{conn: conn} do
       user = new_user()
-      site = new_site(locked: true, owner: user)
+      site = new_site(owner: user)
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
@@ -287,14 +292,16 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "can view private locked verification without stats", %{conn: conn} do
       user = new_user()
-      site = new_site(locked: true, owner: user)
+      site = new_site(owner: user)
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
       conn = get(conn, conn |> get("/#{site.domain}") |> redirected_to())
       assert html_response(conn, 200) =~ "Verifying your installation"
     end
 
     test "can view a locked public dashboard", %{conn: conn} do
-      site = new_site(locked: true, public: true)
+      site = new_site(public: true)
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
@@ -1237,7 +1244,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /share/:domain?auth=:auth" do
     test "prompts a password for a password-protected link", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
 
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
@@ -1318,7 +1325,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "shows locked page if page is locked", %{conn: conn} do
-      site = insert(:site, domain: "test-site.com", locked: true)
+      site = new_site(domain: "test-site.com")
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       link = insert(:shared_link, site: site)
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
@@ -1423,8 +1431,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "only gives access to the correct dashboard", %{conn: conn} do
-      site = insert(:site, domain: "test-site.com")
-      site2 = insert(:site, domain: "test-site2.com")
+      site = new_site(domain: "test-site.com")
+      site2 = new_site(domain: "test-site2.com")
 
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))

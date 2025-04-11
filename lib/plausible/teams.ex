@@ -102,19 +102,6 @@ defmodule Plausible.Teams do
     )
   end
 
-  def owned_sites_locked?(nil) do
-    false
-  end
-
-  def owned_sites_locked?(team) do
-    Repo.exists?(
-      from(s in Plausible.Site,
-        where: s.team_id == ^team.id,
-        where: s.locked == true
-      )
-    )
-  end
-
   def owned_sites_count(nil), do: 0
 
   def owned_sites_count(team) do
