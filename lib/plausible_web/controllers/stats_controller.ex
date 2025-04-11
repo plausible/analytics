@@ -83,7 +83,8 @@ defmodule PlausibleWeb.StatsController do
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           segments: segments,
-          load_dashboard_js: true
+          load_dashboard_js: true,
+          hide_footer?: if(ce?() || demo, do: false, else: site_role != :public)
         )
 
       !stats_start_date && can_see_stats? ->
@@ -349,6 +350,8 @@ defmodule PlausibleWeb.StatsController do
 
         {:ok, segments} = Plausible.Segments.get_all_for_site(shared_link.site, site_role)
 
+        embedded? = conn.params["embed"] == "true"
+
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
@@ -365,13 +368,14 @@ defmodule PlausibleWeb.StatsController do
           demo: false,
           dogfood_page_path: "/share/:dashboard",
           shared_link_auth: shared_link.slug,
-          embedded: conn.params["embed"] == "true",
+          embedded: embedded?,
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: flags,
           is_dbip: is_dbip(),
           segments: segments,
-          load_dashboard_js: true
+          load_dashboard_js: true,
+          hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public)
         )
 
       Sites.locked?(shared_link.site) ->

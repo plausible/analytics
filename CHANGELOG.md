@@ -59,6 +59,7 @@ All notable changes to this project will be documented in this file.
 - Time-on-page metric has been reworked. It now uses `engagement` events sent by plausible tracker script. We still use the old calculation methods for periods before the self-hosted instance was upgraded. Warnings are shown in the dashboard and API when legacy calculation methods are used.
 - Always set site and team member limits to unlimited for Community Edition
 - Stats API now supports more `date_range` shorthand options like `30d`, `3mo`.
+- Stop showing Plausible footer when viewing stats, except when viewing a public dashboard or unembedded shared link dashboard.
 
 ### Fixed
 

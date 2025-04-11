@@ -38,7 +38,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
         left_join: tm in assoc(t, :team_memberships),
         where: is_nil(tm.id),
         left_join: s in assoc(t, :sites),
-        where: is_nil(s.id)
+        where: is_nil(s.id),
+        select: %{t | locked: nil}
       )
       |> Repo.all(timeout: :infinity)
 
@@ -119,7 +120,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
       log("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
 
-      from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
+      from(t in Teams.Team, where: t.id in ^team_ids_to_prune, select: %{t | locked: nil})
       |> Repo.all(timeout: :infinity)
       |> Enum.each(fn team ->
         Plausible.Teams.Memberships.prune_guests(team)
@@ -156,7 +157,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
       log("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
 
-      from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
+      from(t in Teams.Team, where: t.id in ^team_ids_to_prune, select: %{t | locked: nil})
       |> Repo.all(timeout: :infinity)
       |> Enum.each(fn team ->
         Plausible.Teams.Memberships.prune_guests(team)
@@ -190,7 +191,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: not exists(guest_memberships_query),
         select: %{
           user: u,
-          site: %{s | team: t},
+          site: %{s | team: %{t | locked: nil}},
           inserted_at: sm.inserted_at,
           updated_at: sm.updated_at,
           role: sm.role
@@ -263,7 +264,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
       log("Pruning guest team invitations for #{length(team_ids_to_prune)} teams...")
 
-      from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
+      from(t in Teams.Team, where: t.id in ^team_ids_to_prune, select: %{t | locked: nil})
       |> Repo.all(timeout: :infinity)
       |> Enum.each(fn team ->
         Plausible.Teams.Invitations.prune_guest_invitations(team)
@@ -301,7 +302,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
           role: si.role,
           invitation_id: si.invitation_id,
           email: si.email,
-          site: %{s | team: t},
+          site: %{s | team: %{t | locked: nil}},
           inviter: inv
         }
       )

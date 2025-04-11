@@ -46,7 +46,7 @@ defmodule Plausible.Billing.SiteLocker do
     end
   end
 
-  @spec set_lock_status_for(Teams.Team.t(), boolean()) :: {:ok, non_neg_integer()}
+  @spec set_lock_status_for(Teams.Team.t(), boolean()) :: :ok
   def set_lock_status_for(team, status) do
     site_ids = Teams.owned_sites_ids(team)
 
@@ -56,9 +56,13 @@ defmodule Plausible.Billing.SiteLocker do
         where: s.id in ^site_ids
       )
 
-    {num_updated, _} = Repo.update_all(site_q, set: [locked: status])
+    {_, _} = Repo.update_all(site_q, set: [locked: status])
 
-    {:ok, num_updated}
+    query = from(t in Teams.Team, where: t.id == ^team.id)
+
+    {_, _} = Repo.update_all(query, set: [locked: status])
+
+    :ok
   end
 
   defp send_grace_period_end_email(team) do

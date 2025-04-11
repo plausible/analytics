@@ -62,6 +62,26 @@ test.describe('engagement events', () => {
     expect(request.e).toBeLessThan(1500)
   })
 
+  test('sends engagements when pageviews are triggered manually on a SPA', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement-hash-manual.html'),
+      expectedRequests: [{n: 'pageview'}],
+    })
+
+    await page.waitForTimeout(1000)
+
+    const [request] = await expectPlausibleInAction(page, {
+      action: () => page.click('#about-us-hash-link'),
+      expectedRequests: [
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/#home`},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/#about-us`}
+      ]
+    })
+
+    expect(request.e).toBeGreaterThan(1000)
+    expect(request.e).toBeLessThan(1500)
+  })
+
   test('sends an event with the manually overridden URL', async ({ page }) => {
     await page.goto('/engagement-manual.html')
 
@@ -94,7 +114,7 @@ test.describe('engagement events', () => {
     })
 
     // After the initial pageview is sent, navigate to ignored page ->
-    // pageleave event is sent from the initial page URL
+    // engagement event is sent from the initial page URL
     await expectPlausibleInAction(page, {
       action: () => page.click('#ignored-hash-link'),
       expectedRequests: [{n: 'engagement', u: pageBaseURL, h: 1}]
