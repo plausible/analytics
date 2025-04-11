@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed 
 
-## v3.0.0 - 2025-04-07
+## v3.0.0 - 2025-04-11
 
 ### Added
 - Ability to sort by and compare the `exit_rate` metric in the dashboard Exit Pages > Details report
