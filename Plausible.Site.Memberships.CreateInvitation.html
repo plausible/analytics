@@ -287,7 +287,7 @@ and sends the invitee an email to accept this invitation.</p></div>
   <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
   | :already_a_member
   | {:over_limit, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}
-  | :forbidden</pre>
+  | :permission_denied</pre>
 
       </div>
 
@@ -372,7 +372,7 @@ and sends the invitee an email to accept this invitation.</p></div>
 <p>Invites a new team member to the given site. Returns either
 <code class="inline">%Teams.GuestInvitation{}</code> or <code class="inline">%Teams.SiteTransfer{}</code> struct
 and sends the invitee an email to accept this invitation.</p><p>The inviter must have enough permissions to invite the new team member,
-otherwise this function returns <code class="inline">{:error, :forbidden}</code>.</p><p>If the new team member role is <code class="inline">:owner</code>, this function handles the invitation
+otherwise this function returns <code class="inline">{:error, :permission_denied}</code>.</p><p>If the new team member role is <code class="inline">:owner</code>, this function handles the invitation
 as an ownership transfer and requires the inviter to be the owner of the site.</p>
   </section>
 </section>
