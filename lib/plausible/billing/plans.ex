@@ -36,7 +36,7 @@ defmodule Plausible.Billing.Plans do
     owned_plan = get_regular_plan(subscription)
 
     cond do
-      Application.get_env(:plausible, :environment) in ["dev", "staging"] -> @sandbox_plans
+      Application.get_env(:plausible, :environment) == "staging" -> @sandbox_plans
       is_nil(owned_plan) -> @plans_v4
       subscription && Subscriptions.expired?(subscription) -> @plans_v4
       owned_plan.kind == :business -> @plans_v4
@@ -52,7 +52,7 @@ defmodule Plausible.Billing.Plans do
     owned_plan = get_regular_plan(subscription)
 
     cond do
-      Application.get_env(:plausible, :environment) in ["dev", "staging"] -> @sandbox_plans
+      Application.get_env(:plausible, :environment) == "staging" -> @sandbox_plans
       subscription && Subscriptions.expired?(subscription) -> @plans_v4
       owned_plan && owned_plan.generation < 4 -> @plans_v3
       true -> @plans_v4
