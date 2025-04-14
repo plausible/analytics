@@ -359,16 +359,12 @@ defmodule Plausible.Teams do
     team =
       %Teams.Team{}
       |> Teams.Team.changeset(%{name: default_name()})
-      |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
-      |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!()
 
     team_membership =
       team
       |> Teams.Membership.changeset(user, :owner)
       |> Ecto.Changeset.put_change(:is_autocreated, true)
-      |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
-      |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!(
         on_conflict: :nothing,
         conflict_target:

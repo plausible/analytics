@@ -150,7 +150,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = new_site()
       add_guest(site, user: inviter, role: :editor)
 
-      assert {:error, :forbidden} =
+      assert {:error, :permission_denied} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
     end
 
@@ -184,7 +184,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = new_site(owner: owner)
       add_member(site.team, user: inviter, role: :viewer)
 
-      assert {:error, :forbidden} =
+      assert {:error, :permission_denied} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
     end
 

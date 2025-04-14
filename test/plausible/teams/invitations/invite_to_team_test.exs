@@ -212,7 +212,7 @@ defmodule Plausible.Teams.Invitations.InviteToTeamTest do
         team = team_of(owner)
         add_member(team, user: inviter, role: unquote(role))
 
-        assert {:error, :forbidden} =
+        assert {:error, :permission_denied} =
                  InviteToTeam.invite(team, inviter, invitee.email, :owner)
       end
     end

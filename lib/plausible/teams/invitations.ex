@@ -498,7 +498,7 @@ defmodule Plausible.Teams.Invitations do
           :ok
 
         _ ->
-          {:error, :forbidden}
+          {:error, :permission_denied}
       end
     else
       :ok
@@ -514,7 +514,7 @@ defmodule Plausible.Teams.Invitations do
           :ok
 
         _ ->
-          {:error, :forbidden}
+          {:error, :permission_denied}
       end
     else
       :ok
