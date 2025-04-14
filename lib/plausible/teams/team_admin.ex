@@ -64,6 +64,7 @@ defmodule Plausible.Teams.TeamAdmin do
     [
       name: %{value: &team_name/1},
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
+      setup: %{value: &if(&1.setup_complete, do: "Yes", else: "No")},
       owners: %{value: &get_owners/1},
       other_members: %{value: &get_other_members/1},
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
