@@ -2,11 +2,7 @@
   <div class="text-lg mb-6 font-bold dark:text-gray-100">
     [Test Mode] Cancel your subscription
   </div>
-  <form
-    action={Routes.dev_subscription_path(PlausibleWeb.Endpoint, :cancel)}
-    method="POST"
-    class="text-sm"
-  >
+  <form action={Routes.dev_subscription_path(@conn, :cancel)} method="POST" class="text-sm">
     <div class="block text-gray-500 dark:text-gray-200 text-sm">
       In development mode you can choose how exactly you want to "cancel" your subscription.<br /><br />
     </div>
