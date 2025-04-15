@@ -25,7 +25,7 @@ defmodule Plausible.Repo.Migrations.RemoveUnusedTablesAndColumns do
 
       alter table(:subscriptions) do
         remove :user_id
-        modify :team_id, references(:teams, on_delete: :delete_all)
+        modify :team_id, references(:teams, on_delete: :delete_all), null: false
       end
 
       drop constraint(:enterprise_plans, "enterprise_plans_user_id_fkey")
@@ -33,7 +33,7 @@ defmodule Plausible.Repo.Migrations.RemoveUnusedTablesAndColumns do
 
       alter table(:enterprise_plans) do
         remove :user_id
-        modify :team_id, references(:teams, on_delete: :delete_all)
+        modify :team_id, references(:teams, on_delete: :delete_all), null: false
       end
 
       drop table(:invitations)
