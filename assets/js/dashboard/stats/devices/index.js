@@ -19,6 +19,7 @@ import {
   operatingSystemVersionsRoute,
   screenSizesRoute
 } from '../../router'
+import { TabButton, TabWrapper } from '../../components/tabs'
 
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
@@ -430,27 +431,6 @@ export default function Devices() {
     }
   }
 
-  function renderPill(name, pill) {
-    const isActive = mode === pill
-
-    if (isActive) {
-      return (
-        <button className="inline-block h-5 font-bold text-indigo-700 active-prop-heading dark:text-indigo-500">
-          {name}
-        </button>
-      )
-    }
-
-    return (
-      <button
-        className="cursor-pointer hover:text-indigo-600"
-        onClick={() => switchTab(pill)}
-      >
-        {name}
-      </button>
-    )
-  }
-
   return (
     <div>
       <div className="flex justify-between w-full">
@@ -461,11 +441,17 @@ export default function Devices() {
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-          {renderPill('Browser', 'browser')}
-          {renderPill('OS', 'os')}
-          {renderPill('Size', 'size')}
-        </div>
+        <TabWrapper>
+          {[
+            { label: 'Browser', value: 'browser' },
+            { label: 'OS', value: 'os' },
+            { label: 'Size', value: 'size' }
+          ].map(({ label, value }) => (
+            <TabButton key={value} active={mode === value} onClick={() => switchTab(value)}>
+              {label}
+            </TabButton>
+          ))}
+        </TabWrapper>
       </div>
       {renderContent()}
     </div>

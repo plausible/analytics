@@ -10,6 +10,7 @@ import { hasConversionGoalFilter } from '../../util/filters'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { entryPagesRoute, exitPagesRoute, topPagesRoute } from '../../router'
+import { TabButton, TabWrapper } from '../../components/tabs'
 
 function EntryPages({ afterFetchData }) {
   const { query } = useQueryContext()
@@ -185,27 +186,6 @@ export default function Pages() {
     }
   }
 
-  function renderPill(name, pill) {
-    const isActive = mode === pill
-
-    if (isActive) {
-      return (
-        <button className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading">
-          {name}
-        </button>
-      )
-    }
-
-    return (
-      <button
-        className="hover:text-indigo-600 cursor-pointer"
-        onClick={() => switchTab(pill)}
-      >
-        {name}
-      </button>
-    )
-  }
-
   return (
     <div>
       {/* Header Container */}
@@ -219,11 +199,21 @@ export default function Pages() {
             skipImportedReason={skipImportedReason}
           />
         </div>
-        <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-          {renderPill('Top Pages', 'pages')}
-          {renderPill('Entry Pages', 'entry-pages')}
-          {renderPill('Exit Pages', 'exit-pages')}
-        </div>
+        <TabWrapper>
+          {[
+            { label: 'Top Pages', value: 'pages' },
+            { label: 'Entry Pages', value: 'entry-pages' },
+            { label: 'Exit Pages', value: 'exit-pages' }
+          ].map(({ value, label }) => (
+            <TabButton
+              active={mode === value}
+              onClick={() => switchTab(value)}
+              key={value}
+            >
+              {label}
+            </TabButton>
+          ))}
+        </TabWrapper>
       </div>
       {/* Main Contents */}
       {renderContent()}
