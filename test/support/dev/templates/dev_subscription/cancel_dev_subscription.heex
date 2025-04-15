@@ -11,7 +11,7 @@
       <input type="radio" name="action" value="cancel" checked /> Just cancel the subscription
     </label>
     <br />
-    <p class="text-xs ml-5 italic text-gray-500">
+    <p class="text-xs ml-4 pl-1 italic text-gray-500">
       Access to stats will still be granted until next_bill_date
     </p>
     <br />
@@ -21,7 +21,7 @@
       Cancel the subscription and make it "expired"
     </label>
     <br />
-    <p class="text-xs ml-5 italic text-gray-500">
+    <p class="text-xs ml-4 pl-1 italic text-gray-500">
       Cancel the subscription and set next_bill_date to yesterday
     </p>
     <br />
@@ -30,7 +30,19 @@
       <input type="radio" name="action" value="delete" /> Delete the subscription
     </label>
     <br />
-    <p class="text-xs ml-5 italic text-gray-500">Back to "trial" or "expired trial" state</p>
+    <p class="text-xs ml-4 pl-1 italic text-gray-500">Back to "trial" or "expired trial" state</p>
+
+    <%= if @enterprise_plan? do %>
+      <br />
+      <label>
+        <input type="radio" name="action" value="delete_enterprise" />
+        Delete the subscription and enterprise plan
+      </label>
+      <br />
+      <p class="text-xs ml-4 pl-1 italic text-gray-500">
+        Also restores the ability to subscribe to regular plans
+      </p>
+    <% end %>
 
     <div class="flex items-center justify-between mt-10">
       <span class="flex rounded-md shadow-sm">
@@ -58,7 +70,8 @@
       const labels = {
         cancel: 'Cancel Subscription',
         cancel_and_expire: 'Cancel and Set Expired',
-        delete: 'Delete Subscription'
+        delete: 'Delete Subscription',
+        delete_enterprise: 'Delete Subscription'
       };
 
       function updateButtonText() {

@@ -15,8 +15,11 @@ defmodule PlausibleWeb.DevSubscriptionController do
   end
 
   def cancel_form(conn, _params) do
+    team = conn.assigns.current_team
+
     render(conn, "cancel_dev_subscription.html",
-      back_link: Routes.settings_path(conn, :subscription)
+      back_link: Routes.settings_path(conn, :subscription),
+      enterprise_plan?: Plausible.Teams.Billing.enterprise_configured?(team)
     )
   end
 
@@ -42,6 +45,10 @@ defmodule PlausibleWeb.DevSubscriptionController do
         "delete" ->
           DevSubscriptions.delete(team.id)
           "Subscription deleted"
+
+        "delete_enterprise" ->
+          DevSubscriptions.delete(team.id, delete_enterprise?: true)
+          "Subscription and enterprise plans deleted"
       end
 
     conn
