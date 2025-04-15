@@ -121,7 +121,11 @@ const QueryPeriodMenuInner = ({
   const { query, expandedSegment } = useQueryContext()
 
   const groups = useMemo(() => {
-    const compareLink = getCompareLinkItem({ site, query })
+    const compareLink = getCompareLinkItem({
+      site,
+      query,
+      onEvent: closeDropdown
+    })
     return getDatePeriodGroups({
       site,
       onEvent: closeDropdown,

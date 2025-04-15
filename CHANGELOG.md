@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 
 ### Changed 
 
+### Fixed
+
+- Make clicking Compare / Disable Comparison in period picker menu close the menu
+
 ## v3.0.0 - 2025-04-11
 
 ### Added
