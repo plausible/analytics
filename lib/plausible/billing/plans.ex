@@ -227,7 +227,7 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp sandbox_plans() do
-    if Application.get_env(:plausible, :environment) in ["dev", "staging"] do
+    if Application.get_env(:plausible, :environment) == "staging" do
       @sandbox_plans
     else
       []
