@@ -204,13 +204,13 @@ defmodule Plausible.Stats.SQL.Fragments do
   @doc """
   Macro that helps join two Ecto queries by selecting fields from either one
   """
-  defmacro select_join_fields(q, query, list, table_name) do
+  defmacro select_join_fields(q, query, values, binding, binding_to_select_from) do
     quote do
-      Enum.reduce(unquote(list), unquote(q), fn metric_or_dimension, q ->
+      Enum.reduce(unquote(values), unquote(q), fn metric_or_dimension, q ->
         key = shortname(unquote(query), metric_or_dimension)
 
-        select_merge_as(q, [e, s], %{
-          key => field(unquote(table_name), ^key)
+        select_merge_as(q, unquote(binding), %{
+          key => field(unquote(binding_to_select_from), ^key)
         })
       end)
     end

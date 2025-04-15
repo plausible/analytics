@@ -121,8 +121,8 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
           c.visitors
         )
     })
-    |> select_join_fields(query, query.dimensions, e)
-    |> select_join_fields(query, List.delete(query.metrics, :group_conversion_rate), e)
+    |> select_join_fields(query, query.dimensions, [e], e)
+    |> select_join_fields(query, List.delete(query.metrics, :group_conversion_rate), [e], e)
   end
 
   defp add_special_metric(q, :scroll_depth, _site, query) do

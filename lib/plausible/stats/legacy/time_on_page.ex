@@ -53,8 +53,8 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
 
   defp select_metrics_and_dimensions(q, query) do
     q
-    |> select_join_fields(query, List.delete(query.metrics, :time_on_page), e)
-    |> select_join_fields(query, query.dimensions, e)
+    |> select_join_fields(query, List.delete(query.metrics, :time_on_page), [e], e)
+    |> select_join_fields(query, query.dimensions, [e], e)
     |> select_merge_as([e, t], %{
       time_on_page:
         time_on_page(

@@ -188,8 +188,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     join(subquery(events_q), join_type, [e], s in subquery(sessions_q),
       on: ^build_group_by_join(events_query)
     )
-    |> select_join_fields(events_query, events_q_fields, e)
-    |> select_join_fields(sessions_query, sessions_q_fields, s)
+    |> select_join_fields(events_query, events_q_fields, [e, s], e)
+    |> select_join_fields(sessions_query, sessions_q_fields, [e, s], s)
     |> build_order_by(events_query)
   end
 
