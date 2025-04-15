@@ -269,7 +269,8 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
     end
 
     test "does not check site if it is locked" do
-      site = insert(:site, locked: true)
+      site = new_site()
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
       insert(:spike_notification,
         site: site,

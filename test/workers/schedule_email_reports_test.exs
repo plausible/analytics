@@ -1,11 +1,12 @@
 defmodule Plausible.Workers.ScheduleEmailReportsTest do
   use Plausible.DataCase
   use Oban.Testing, repo: Plausible.Repo
+  import Plausible.Teams.Test
   alias Plausible.Workers.{ScheduleEmailReports, SendEmailReport}
 
   describe "weekly reports" do
     test "schedules weekly report on Monday 9am local timezone" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})
@@ -18,7 +19,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "does not schedule more than one weekly report at a time" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})
@@ -28,7 +29,8 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "does not schedule a weekly report for locked site" do
-      site = insert(:site, locked: true, domain: "test-site.com", timezone: "US/Eastern")
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})
@@ -37,7 +39,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "schedules a new report as soon as a previous one is completed" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})
@@ -50,7 +52,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
 
   describe "monthly_reports" do
     test "schedules monthly report on first of the next month at 9am local timezone" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})
@@ -63,7 +65,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "does not schedule more than one monthly report at a time" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})
@@ -73,7 +75,8 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "does not schedule a monthly report for locked site" do
-      site = insert(:site, locked: true, domain: "test-site.com", timezone: "US/Eastern")
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
+      site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})
@@ -82,7 +85,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     end
 
     test "schedules a new report as soon as a previous one is completed" do
-      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})

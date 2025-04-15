@@ -27,6 +27,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
     sites =
       Repo.all(
         from s in Plausible.Site,
+          inner_join: t in assoc(s, :team),
           join: wr in Plausible.Site.WeeklyReport,
           on: wr.site_id == s.id,
           left_join: job in subquery(weekly_jobs),
@@ -34,7 +35,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
             fragment("(? -> 'site_id')::int", job.args) == s.id and
               job.state not in ["completed", "discarded"],
           where: is_nil(job),
-          where: not s.locked,
+          where: not t.locked,
           preload: [weekly_report: wr]
       )
 
@@ -67,6 +68,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
     sites =
       Repo.all(
         from s in Plausible.Site,
+          inner_join: t in assoc(s, :team),
           join: mr in Plausible.Site.MonthlyReport,
           on: mr.site_id == s.id,
           left_join: job in subquery(monthly_jobs),
@@ -74,7 +76,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
             fragment("(? -> 'site_id')::int", job.args) == s.id and
               job.state not in ["completed", "discarded"],
           where: is_nil(job),
-          where: not s.locked,
+          where: not t.locked,
           preload: [monthly_report: mr]
       )
 
