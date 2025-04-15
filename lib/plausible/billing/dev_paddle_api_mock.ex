@@ -40,7 +40,7 @@ defmodule Plausible.Billing.DevPaddleApiMock do
        "next_payment" => %{
          "amount" => @prices[new_plan_id],
          "currency" => "EUR",
-         "date" => Date.utc_today() |> Timex.shift(months: 1) |> Date.to_iso8601()
+         "date" => Date.utc_today() |> Date.shift(month: 1) |> Date.to_iso8601()
        },
        "plan_id" => String.to_integer(new_plan_id),
        "subscription_id" => paddle_subscription_id
@@ -52,7 +52,7 @@ defmodule Plausible.Billing.DevPaddleApiMock do
      %{
        "next_payment" => %{
          "amount" => @prices[plan_id],
-         "date" => Date.utc_today() |> Timex.shift(months: 1) |> Date.to_iso8601()
+         "date" => Date.utc_today() |> Date.shift(month: 1) |> Date.to_iso8601()
        },
        "plan_id" => String.to_integer(plan_id)
      }}

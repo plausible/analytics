@@ -18,7 +18,7 @@ defmodule Plausible.Billing.DevSubscriptions do
     if plan do
       next_bill_date =
         Date.utc_today()
-        |> Timex.shift(if plan_id == plan.monthly_product_id, do: [months: 1], else: [years: 1])
+        |> Date.shift(if plan_id == plan.monthly_product_id, do: [month: 1], else: [year: 1])
 
       if Keyword.get(opts, :clean_existing, true) do
         delete(team_id)
