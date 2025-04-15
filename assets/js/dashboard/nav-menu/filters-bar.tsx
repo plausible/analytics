@@ -4,7 +4,12 @@ import React, { useRef, useState, useLayoutEffect } from 'react'
 import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition
+} from '@headlessui/react'
 import { popover } from '../components/popover'
 import { BlurMenuButtonOnEscape } from '../keybinding'
 import { isSegmentFilter } from '../filtering/segments'

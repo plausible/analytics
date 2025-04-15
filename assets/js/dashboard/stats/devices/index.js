@@ -447,7 +447,11 @@ export default function Devices() {
             { label: 'OS', value: 'os' },
             { label: 'Size', value: 'size' }
           ].map(({ label, value }) => (
-            <TabButton key={value} active={mode === value} onClick={() => switchTab(value)}>
+            <TabButton
+              key={value}
+              active={mode === value}
+              onClick={() => switchTab(value)}
+            >
               {label}
             </TabButton>
           ))}
