@@ -6,7 +6,7 @@ defmodule Plausible.Billing.DevSubscriptions do
   alias Plausible.{Repo, Billing}
 
   def create_after_1s(team_id, plan_id) do
-    spawn(fn ->
+    Task.start(fn ->
       Process.sleep(1000)
       create(team_id, plan_id)
     end)
