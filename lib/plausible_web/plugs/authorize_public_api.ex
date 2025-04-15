@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
 
   alias Plausible.Auth
   alias Plausible.RateLimit
-  alias Plausible.Teams
+  alias Plausible.Sites
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -201,7 +201,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
       api_key.team_id && api_key.team_id != site.team_id ->
         {:error, :invalid_api_key}
 
-      Teams.locked?(team) ->
+      Sites.locked?(site) ->
         {:error, :site_locked}
 
       Plausible.Billing.Feature.StatsAPI.check_availability(team) !== :ok ->

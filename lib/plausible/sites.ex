@@ -367,6 +367,10 @@ defmodule Plausible.Sites do
     )
   end
 
+  def locked?(%Site{locked: locked}) do
+    locked
+  end
+
   def get_for_user!(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do
     site =
       if :super_admin in roles and Plausible.Auth.is_super_admin?(user.id) do

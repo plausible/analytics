@@ -16,7 +16,7 @@ defmodule Plausible.Workers.LockSites do
       )
 
     for team <- teams do
-      Plausible.Billing.SiteLocker.update_for(team)
+      Plausible.Billing.SiteLocker.update_sites_for(team)
     end
 
     :ok

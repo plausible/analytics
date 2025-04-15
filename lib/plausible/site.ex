@@ -14,6 +14,7 @@ defmodule Plausible.Site do
     field :domain, :string
     field :timezone, :string, default: "Etc/UTC"
     field :public, :boolean
+    field :locked, :boolean
     field :stats_start_date, :date
     field :native_stats_start_at, :naive_datetime
     field :allowed_event_props, {:array, :string}

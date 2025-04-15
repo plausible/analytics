@@ -11,9 +11,9 @@ defmodule Plausible.Billing.SiteLocker do
           | :no_trial
           | :no_active_subscription
 
-  @spec update_for(Teams.Team.t(), [update_opt()]) ::
+  @spec update_sites_for(Teams.Team.t(), [update_opt()]) ::
           {:locked, lock_reason()} | :unlocked
-  def update_for(team, opts \\ []) do
+  def update_sites_for(team, opts \\ []) do
     send_email? = Keyword.get(opts, :send_email?, true)
     usage_mod = Keyword.get(opts, :usage_mod, Teams.Billing)
 
@@ -26,7 +26,10 @@ defmodule Plausible.Billing.SiteLocker do
         if team.grace_period.is_over != true do
           Plausible.Teams.end_grace_period(team)
 
-          send_grace_period_end_email(team, send_email?)
+          if send_email? do
+            team = Repo.preload(team, [:owners, :billing_members])
+            send_grace_period_end_email(team)
+          end
 
           {:locked, :grace_period_ended_now}
         else
@@ -45,6 +48,16 @@ defmodule Plausible.Billing.SiteLocker do
 
   @spec set_lock_status_for(Teams.Team.t(), boolean()) :: :ok
   def set_lock_status_for(team, status) do
+    site_ids = Teams.owned_sites_ids(team)
+
+    site_q =
+      from(
+        s in Plausible.Site,
+        where: s.id in ^site_ids
+      )
+
+    {_, _} = Repo.update_all(site_q, set: [locked: status])
+
     query = from(t in Teams.Team, where: t.id == ^team.id)
 
     {_, _} = Repo.update_all(query, set: [locked: status])
@@ -52,8 +65,7 @@ defmodule Plausible.Billing.SiteLocker do
     :ok
   end
 
-  defp send_grace_period_end_email(team, true) do
-    team = Repo.preload(team, [:owners, :billing_members])
+  defp send_grace_period_end_email(team) do
     usage = Teams.Billing.monthly_pageview_usage(team)
     suggested_plan = Plausible.Billing.Plans.suggest(team, usage.last_cycle.total)
 
@@ -63,6 +75,4 @@ defmodule Plausible.Billing.SiteLocker do
       |> Plausible.Mailer.send()
     end
   end
-
-  defp send_grace_period_end_email(_team, false), do: :ok
 end
