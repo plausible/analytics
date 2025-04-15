@@ -341,62 +341,61 @@ export default function Behaviours({ importedDataInView }) {
     }
   }
 
-  if (mode) {
-    return (
-      <div className="items-start justify-between block w-full mt-6 md:flex">
-        <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
-          <div className="flex justify-between w-full">
-            <div className="flex gap-x-1">
-              <h3 className="font-bold dark:text-gray-100">
-                {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
-              </h3>
-              {renderImportedQueryUnsupportedWarning()}
-            </div>
-            <TabWrapper>
-              {isEnabled(CONVERSIONS) && (
-                <TabButton
-                  active={mode === CONVERSIONS}
-                  onClick={setTabFactory(CONVERSIONS)}
-                >
-                  Goals
-                </TabButton>
-              )}
-              {isEnabled(PROPS) && (
-                <TabButton
-                  active={mode === PROPS}
-                  onClick={setTabFactory(PROPS)}
-                >
-                  Properties
-                </TabButton>
-              )}
-              {isEnabled(FUNNELS) &&
-                Funnel &&
-                (site.funnels.length > 0 && site.funnelsAvailable ? (
-                  <DropdownTabButton
-                    active={mode === FUNNELS}
-                    options={site.funnels.map(({ name }) => ({
-                      label: name,
-                      onClick: setFunnelFactory(name),
-                      selected: mode === FUNNELS && selectedFunnel === name
-                    }))}
-                  >
-                    Funnels
-                  </DropdownTabButton>
-                ) : (
-                  <TabButton
-                    active={mode === FUNNELS}
-                    onClick={setTabFactory(FUNNELS)}
-                  >
-                    Funnels
-                  </TabButton>
-                ))}
-            </TabWrapper>
-          </div>
-          {renderContent()}
-        </div>
-      </div>
-    )
-  } else {
+  if (!mode) {
     return null
   }
+
+  return (
+    <div className="items-start justify-between block w-full mt-6 md:flex relative">
+      <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
+        <div className="flex justify-between w-full">
+          <div className="flex gap-x-1">
+            <h3 className="font-bold dark:text-gray-100">
+              {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
+            </h3>
+            {renderImportedQueryUnsupportedWarning()}
+          </div>
+          <TabWrapper>
+            {isEnabled(CONVERSIONS) && (
+              <TabButton
+                active={mode === CONVERSIONS}
+                onClick={setTabFactory(CONVERSIONS)}
+              >
+                Goals
+              </TabButton>
+            )}
+            {isEnabled(PROPS) && (
+              <TabButton active={mode === PROPS} onClick={setTabFactory(PROPS)}>
+                Properties
+              </TabButton>
+            )}
+            {isEnabled(FUNNELS) &&
+              Funnel &&
+              (site.funnels.length > 0 && site.funnelsAvailable ? (
+                <DropdownTabButton
+                  className="md:relative"
+                  transitionClassName="md:left-auto md:w-96"
+                  active={mode === FUNNELS}
+                  options={site.funnels.map(({ name }) => ({
+                    label: name,
+                    onClick: setFunnelFactory(name),
+                    selected: mode === FUNNELS && selectedFunnel === name
+                  }))}
+                >
+                  Funnels
+                </DropdownTabButton>
+              ) : (
+                <TabButton
+                  active={mode === FUNNELS}
+                  onClick={setTabFactory(FUNNELS)}
+                >
+                  Funnels
+                </TabButton>
+              ))}
+          </TabWrapper>
+        </div>
+        {renderContent()}
+      </div>
+    </div>
+  )
 }

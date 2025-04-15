@@ -66,10 +66,14 @@ export const TabButton = ({
 )
 
 export const DropdownTabButton = ({
+  className,
+  transitionClassName,
   active,
   children,
   options
 }: {
+  className?: string
+  transitionClassName?: string
   active: boolean
   children: ReactNode
   options: Array<{ selected: boolean; onClick: () => void; label: string }>
@@ -77,7 +81,7 @@ export const DropdownTabButton = ({
   const dropdownButtonRef = useRef<HTMLButtonElement>(null)
 
   return (
-    <Popover className="relative">
+    <Popover className={className}>
       <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
       <PopoverButton
         className={classNames('inline-flex justify-between')}
@@ -90,7 +94,11 @@ export const DropdownTabButton = ({
       <Transition
         as="div"
         {...popover.transition.props}
-        className={classNames(popover.transition.classNames.right, 'w-56 mt-2')}
+        className={classNames(
+          'mt-2',
+          popover.transition.classNames.fullwidth,
+          transitionClassName
+        )}
       >
         <PopoverPanel className={popover.panel.classNames.roundedSheet}>
           {options.map(({ selected, label, onClick }, index) => {
