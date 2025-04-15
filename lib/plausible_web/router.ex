@@ -116,7 +116,7 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    if Mix.env() in [:dev, :test] do
+    if Mix.env() == :dev do
       scope "/dev", PlausibleWeb do
         pipe_through :browser
 
