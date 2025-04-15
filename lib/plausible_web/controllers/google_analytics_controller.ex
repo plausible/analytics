@@ -56,7 +56,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "Google Analytics rate limit has been exceeded. Please try again later."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, {:authentication_failed, message}} ->
         default_message =
@@ -72,7 +72,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         conn
         |> put_flash(:ttl, :timer.seconds(5))
         |> put_flash(:error, message)
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, :timeout} ->
         conn
@@ -80,7 +80,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "Google Analytics API has timed out. Please try again."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, _any} ->
         conn
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "We were unable to list your Google Analytics properties. If the problem persists, please contact support for assistance."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
     end
   end
 
@@ -110,7 +110,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
          :ok <- ensure_dates(api_start_date, api_end_date),
          {:ok, start_date, end_date} <- Imported.clamp_dates(site, api_start_date, api_end_date) do
       redirect(conn,
-        external:
+        to:
           Routes.google_analytics_path(conn, :confirm, site.domain,
             property: property,
             access_token: access_token,
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "Google Analytics rate limit has been exceeded. Please try again later."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, {:authentication_failed, message}} ->
         default_message =
@@ -151,7 +151,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         conn
         |> put_flash(:ttl, :timer.seconds(5))
         |> put_flash(:error, message)
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, :timeout} ->
         conn
@@ -159,7 +159,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "Google Analytics API has timed out. Please try again."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, _any} ->
         conn
@@ -167,7 +167,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "We were unable to retrieve information from Google Analytics. If the problem persists, please contact support for assistance."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
     end
   end
 
@@ -207,7 +207,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "Google Analytics rate limit has been exceeded. Please try again later."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, {:authentication_failed, message}} ->
         default_message =
@@ -223,7 +223,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         conn
         |> put_flash(:ttl, :timer.seconds(5))
         |> put_flash(:error, message)
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, :timeout} ->
         conn
@@ -231,7 +231,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "Google Analytics API has timed out. Please try again."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, :not_found} ->
         conn
@@ -239,7 +239,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "Google Analytics property not found. Please try again."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, _any} ->
         conn
@@ -247,7 +247,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "We were unable to retrieve information from Google Analytics. If the problem persists, please contact support for assistance."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
     end
   end
 
@@ -282,7 +282,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
          {:ok, _} <- Imported.GoogleAnalytics4.new_import(site, current_user, import_opts) do
       conn
       |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
-      |> redirect(external: redirect_route)
+      |> redirect(to: redirect_route)
     else
       {:error, :no_time_window} ->
         conn
@@ -290,7 +290,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "Import failed. No data could be imported because date range overlaps with existing data."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       {:error, :import_in_progress} ->
         conn
@@ -298,7 +298,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           :error,
           "There's another import still in progress. Please wait until it's completed or cancel it before starting a new one."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
     end
   end
 
