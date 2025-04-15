@@ -182,19 +182,16 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     do: sessions_q |> build_order_by(events_query)
 
   defp join_query_results({events_q, events_query}, {sessions_q, sessions_query}) do
-    # :TRICKY: We join sessions on the left as it might have more rows than events metrics
-    # (e.g. when using "time:minute" dimension).
-
-    join(subquery(sessions_q), :full, [s], e in subquery(events_q),
-      on: ^build_group_by_join(sessions_query)
+    join(subquery(events_q), :full, [e], s in subquery(sessions_q),
+      on: ^build_group_by_join(events_query)
     )
-    |> select_join_fields(sessions_query, sessions_query.dimensions, [s, e], s)
-    |> select_join_fields(sessions_query, sessions_query.metrics, [s, e], s)
+    |> select_joined_dimensions(events_query)
+    |> select_join_fields(events_query, events_query.metrics, [e, s], e)
     |> select_join_fields(
-      events_query,
-      List.delete(events_query.metrics, :sample_percent),
-      [s, e],
-      e
+      sessions_query,
+      List.delete(sessions_query.metrics, :sample_percent),
+      [e, s],
+      s
     )
     |> build_order_by(events_query)
   end
@@ -223,5 +220,16 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       dynamic([s, e], field(s, ^shortname(query, dim)) == field(e, ^shortname(query, dim)))
     end)
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
+
+  defp select_joined_dimensions(q, query) do
+    Enum.reduce(query.dimensions, q, fn dimension, q ->
+      key = shortname(query, dimension)
+
+      select_merge_as(q, [e, s], %{
+        # :TRICKY: `greatest` acts as a coalesce here for the full join
+        key => fragment("greatest(?, ?)", field(e, ^key), field(s, ^key))
+      })
+    end)
   end
 end
