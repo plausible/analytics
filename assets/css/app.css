@@ -281,19 +281,6 @@ iframe[hidden] {
   z-index: 100;
 }
 
-.active-prop-heading {
-  /* Properties related to text-decoration are all here in one place. TailwindCSS does support underline but that's about it. */
-  text-decoration-line: underline;
-  text-decoration-color: #4338ca; /* tailwind's indigo-700 */
-  text-decoration-thickness: 2px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .active-prop-heading {
-    text-decoration-color: #6366f1; /* tailwind's indigo-500 */
-  }
-}
-
 /* This class is used for styling embedded dashboards. Do not remove. */
 /* stylelint-disable */
 /* prettier-ignore */
