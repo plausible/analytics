@@ -6,7 +6,12 @@ import {
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition
+} from '@headlessui/react'
 import { popover } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'

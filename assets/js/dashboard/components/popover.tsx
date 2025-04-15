@@ -34,7 +34,8 @@ const toggleButton = {
     ghost:
       'text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900',
     truncatedText: 'truncate block font-medium',
-    linkLike: 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600'
+    linkLike:
+      'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600'
   }
 }
 

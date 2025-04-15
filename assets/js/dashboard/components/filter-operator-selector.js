@@ -46,7 +46,12 @@ export default function FilterOperatorSelector(props) {
           {...popover.transition.props}
           className={classNames(popover.transition.classNames.left, 'mt-2')}
         >
-          <PopoverPanel className={classNames(popover.panel.classNames.roundedSheet, 'font-normal')}>
+          <PopoverPanel
+            className={classNames(
+              popover.panel.classNames.roundedSheet,
+              'font-normal'
+            )}
+          >
             {[
               [FILTER_OPERATIONS.is, true],
               [FILTER_OPERATIONS.isNot, supportsIsNot(filterName)],
