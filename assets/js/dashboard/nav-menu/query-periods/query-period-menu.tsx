@@ -24,7 +24,7 @@ import {
 } from '../../query-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
-import { Popover, Transition } from '@headlessui/react'
+import { PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
 import { popover } from '../../components/popover'
 import {
   datemenuButtonClassName,
@@ -96,12 +96,12 @@ export const QueryPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
+      <PopoverButton ref={buttonRef} className={datemenuButtonClassName}>
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentPeriodDisplayName({ query, site })}
         </span>
         <DateMenuChevron />
-      </Popover.Button>
+      </PopoverButton>
       <QueryPeriodMenuInner
         toggleCalendar={toggleCalendar}
         closeDropdown={closeDropdown}
@@ -152,6 +152,7 @@ const QueryPeriodMenuInner = ({
     <>
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
       <Transition
+        as="div"
         {...popover.transition.props}
         className={classNames(
           'mt-2',
@@ -159,7 +160,7 @@ const QueryPeriodMenuInner = ({
           'md:left-auto md:w-56'
         )}
       >
-        <Popover.Panel
+        <PopoverPanel
           className={popover.panel.classNames.roundedSheet}
           data-testid="datemenu"
         >
@@ -191,7 +192,7 @@ const QueryPeriodMenuInner = ({
               {index < groups.length - 1 && <MenuSeparator />}
             </React.Fragment>
           ))}
-        </Popover.Panel>
+        </PopoverPanel>
       </Transition>
     </>
   )
@@ -208,7 +209,7 @@ export const MainCalendar = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
-      <Popover.Button
+      <PopoverButton
         className={hiddenCalendarButtonClassName}
         tabIndex={-1}
         ref={calendarButtonRef}

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import classNames from 'classnames'
-import { Popover, Transition } from '@headlessui/react'
+import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
 import { popover } from '../../components/popover'
 import {
   AppNavigationLink,
@@ -77,7 +77,7 @@ export const SegmentMenu = () => {
       <Popover className="md:relative">
         {({ close: closeDropdown }) => (
           <>
-            <Popover.Button
+            <PopoverButton
               className={classNames(
                 popover.toggleButton.classNames.rounded,
                 buttonClassName,
@@ -90,8 +90,9 @@ export const SegmentMenu = () => {
                 className="w-4 h-4 md:h-5 md:w-5 block"
                 aria-hidden="true"
               />
-            </Popover.Button>
+            </PopoverButton>
             <Transition
+              as="div"
               {...popover.transition.props}
               className={classNames(
                 'mt-2',
@@ -99,7 +100,7 @@ export const SegmentMenu = () => {
                 'md:w-auto md:left-auto'
               )}
             >
-              <Popover.Panel className={popover.panel.classNames.roundedSheet}>
+              <PopoverPanel className={popover.panel.classNames.roundedSheet}>
                 <AppNavigationLink
                   className={linkClassName}
                   search={(s) => s}
@@ -147,7 +148,7 @@ export const SegmentMenu = () => {
                     </span>
                   </div>
                 </AppNavigationLink>
-              </Popover.Panel>
+              </PopoverPanel>
             </Transition>
           </>
         )}

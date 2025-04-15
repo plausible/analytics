@@ -12,7 +12,11 @@ const TRANSITION_CONFIG: TransitionClasses = {
 
 const transition = {
   props: TRANSITION_CONFIG,
-  classNames: { fullwidth: 'z-10 absolute left-0 right-0' }
+  classNames: {
+    fullwidth: 'z-10 absolute left-0 right-0',
+    left: 'z-10 absolute left-0',
+    right: 'z-10 absolute right-0'
+  }
 }
 
 const panel = {
@@ -29,7 +33,8 @@ const toggleButton = {
       'bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900',
     ghost:
       'text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900',
-    truncatedText: 'truncate block font-medium'
+    truncatedText: 'truncate block font-medium',
+    linkLike: 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600'
   }
 }
 

@@ -1,5 +1,11 @@
-import React, { Fragment, useRef } from 'react'
-import { Menu, Transition } from '@headlessui/react'
+import React, { useRef } from 'react'
+import {
+  CloseButton,
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition
+} from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
@@ -108,66 +114,61 @@ export function IntervalPicker({ onIntervalUpdate }) {
     onIntervalUpdate(interval)
   }
 
-  function renderDropdownItem(option) {
-    return (
-      <Menu.Item
-        onClick={() => updateInterval(option)}
-        key={option}
-        disabled={option == currentInterval}
-      >
-        {({ active }) => (
-          <span
-            className={classNames(
-              {
-                'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer':
-                  active,
-                'text-gray-700 dark:text-gray-200': !active,
-                'font-bold cursor-none select-none': option == currentInterval
-              },
-              'block px-4 py-2 text-sm'
-            )}
-          >
-            {INTERVAL_LABELS[option]}
-          </span>
-        )}
-      </Menu.Item>
-    )
-  }
-
   return (
-    <Menu as="div" className="relative inline-block pl-2">
-      {({ open }) => (
-        <>
-          {!!dashboardRouteMatch && (
-            <Keybind
-              targetRef="document"
-              type="keydown"
-              keyboardKey="i"
-              handler={() => {
-                menuElement.current?.click()
-              }}
-              shouldIgnoreWhen={[isModifierPressed, isTyping]}
-            />
-          )}
-          <BlurMenuButtonOnEscape targetRef={menuElement} />
-          <Menu.Button
-            ref={menuElement}
-            className="text-sm inline-flex focus:outline-none text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600 items-center"
-          >
-            {INTERVAL_LABELS[currentInterval]}
-            <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
-          </Menu.Button>
-
-          <Transition as={Fragment} show={open} {...popover.transition.props}>
-            <Menu.Items
-              className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
-              static
-            >
-              {options.map(renderDropdownItem)}
-            </Menu.Items>
-          </Transition>
-        </>
+    <>
+      {!!dashboardRouteMatch && (
+        <Keybind
+          targetRef="document"
+          type="keydown"
+          keyboardKey="i"
+          handler={() => {
+            menuElement.current?.click()
+          }}
+          shouldIgnoreWhen={[isModifierPressed, isTyping]}
+        />
       )}
-    </Menu>
+      <Popover className="relative inline-block pl-2">
+        <BlurMenuButtonOnEscape targetRef={menuElement} />
+        <PopoverButton
+          ref={menuElement}
+          className={classNames(
+            popover.toggleButton.classNames.linkLike,
+            'rounded-sm text-sm flex items-center'
+          )}
+        >
+          {INTERVAL_LABELS[currentInterval]}
+          <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
+        </PopoverButton>
+
+        <Transition
+          as="div"
+          {...popover.transition.props}
+          className={classNames(
+            popover.transition.classNames.right,
+            'mt-2 w-56'
+          )}
+        >
+          <PopoverPanel className={classNames(popover.panel.classNames.roundedSheet, 'font-normal')}>
+            {options.map((option) => (
+              <CloseButton
+                as="button"
+                key={option}
+                onClick={() => updateInterval(option)}
+                data-selected={option == currentInterval}
+                className={classNames(
+                  popover.items.classNames.navigationLink,
+                  popover.items.classNames.selectedOption,
+                  popover.items.classNames.hoverLink,
+                  popover.items.classNames.roundedStartEnd,
+                  'w-full'
+                )}
+              >
+                {INTERVAL_LABELS[option]}
+              </CloseButton>
+            ))}
+          </PopoverPanel>
+        </Transition>
+      </Popover>
+    </>
   )
 }
