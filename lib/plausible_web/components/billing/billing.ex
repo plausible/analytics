@@ -234,35 +234,7 @@ defmodule PlausibleWeb.Components.Billing do
 
   def paddle_button(assigns) do
     js_action_expr =
-      if Application.get_env(:plausible, :environment) == "dev" do
-        route =
-          Routes.dev_subscription_path(
-            PlausibleWeb.Endpoint,
-            :create_form,
-            assigns.paddle_product_id
-          )
-
-        "window.location = '#{route}'"
-      else
-        passthrough =
-          if assigns.team do
-            "ee:#{ee?()};user:#{assigns.user.id};team:#{assigns.team.id}"
-          else
-            "ee:#{ee?()};user:#{assigns.user.id}"
-          end
-
-        paddle_checkout_params =
-          Jason.encode!(%{
-            product: assigns.paddle_product_id,
-            email: assigns.user.email,
-            disableLogout: true,
-            passthrough: passthrough,
-            success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
-            theme: "none"
-          })
-
-        "Paddle.Checkout.open(#{paddle_checkout_params})"
-      end
+      start_paddle_checkout_expr(assigns.paddle_product_id, assigns.team, assigns.user)
 
     confirmed =
       if assigns.confirm_message, do: "confirm(\"#{assigns.confirm_message}\")", else: "true"
@@ -287,10 +259,35 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  def paddle_script(assigns) do
-    if Application.get_env(:plausible, :environment) == "dev" do
-      ~H""
-    else
+  if Mix.env() == :dev do
+    def start_paddle_checkout_expr(paddle_product_id, _team, _user) do
+      "window.location = '#{Routes.dev_subscription_path(PlausibleWeb.Endpoint, :create_form, paddle_product_id)}'"
+    end
+
+    def paddle_script(assigns), do: ~H""
+  else
+    def start_paddle_checkout_expr(paddle_product_id, team, user) do
+      passthrough =
+        if team do
+          "ee:#{ee?()};user:#{user.id};team:#{team.id}"
+        else
+          "ee:#{ee?()};user:#{user.id}"
+        end
+
+      paddle_checkout_params =
+        Jason.encode!(%{
+          product: paddle_product_id,
+          email: user.email,
+          disableLogout: true,
+          passthrough: passthrough,
+          success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+          theme: "none"
+        })
+
+      "Paddle.Checkout.open(#{paddle_checkout_params})"
+    end
+
+    def paddle_script(assigns) do
       ~H"""
       <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js">
       </script>
