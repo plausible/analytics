@@ -20,22 +20,19 @@
   </div>
 
   <div class="flex items-center justify-between mt-10">
-    <span class="flex rounded-md shadow-sm">
-      <a
-        href={@back_link}
-        type="button"
-        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 dark:active:text-gray-200 active:bg-gray-50 transition ease-in-out duration-150"
-      >
-        Back
-      </a>
-    </span>
-    <span class="flex space-between rounded-md shadow-sm">
-      <.button_link
-        href={Routes.dev_subscription_path(PlausibleWeb.Endpoint, :create, @plan_id)}
-        method="post"
-      >
-        Subscribe to plan
-      </.button_link>
-    </span>
+    <a
+      href={@back_link}
+      type="button"
+      class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 dark:active:text-gray-200 active:bg-gray-50 transition ease-in-out duration-150"
+    >
+      Back
+    </a>
+    <.button_link
+      href={Routes.dev_subscription_path(PlausibleWeb.Endpoint, :create, @plan_id)}
+      method="post"
+      mt?={false}
+    >
+      Subscribe to plan
+    </.button_link>
   </div>
 </.focus_box>
