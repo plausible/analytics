@@ -2,7 +2,7 @@ import React, { ReactNode, RefObject } from 'react'
 import classNames from 'classnames'
 import { popover } from '../../components/popover'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { Popover, Transition } from '@headlessui/react'
+import { PopoverPanel, Transition } from '@headlessui/react'
 
 export const linkClassName = classNames(
   popover.items.classNames.navigationLink,
@@ -41,6 +41,7 @@ export const CalendarPanel = React.forwardRef<
 >(({ children, className }, ref) => {
   return (
     <Transition
+      as="div"
       {...popover.transition.props}
       className={classNames(
         popover.transition.classNames.fullwidth,
@@ -48,9 +49,9 @@ export const CalendarPanel = React.forwardRef<
         className
       )}
     >
-      <Popover.Panel ref={ref} className={calendarPositionClassName}>
+      <PopoverPanel ref={ref} className={calendarPositionClassName}>
         {children}
-      </Popover.Panel>
+      </PopoverPanel>
     </Transition>
   )
 })

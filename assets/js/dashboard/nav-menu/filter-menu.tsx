@@ -6,7 +6,7 @@ import {
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { Popover, Transition } from '@headlessui/react'
+import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
 import { popover } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
@@ -53,7 +53,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button
+      <PopoverButton
         ref={buttonRef}
         className={classNames(
           popover.toggleButton.classNames.rounded,
@@ -65,8 +65,9 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         <span className={popover.toggleButton.classNames.truncatedText}>
           Filter
         </span>
-      </Popover.Button>
+      </PopoverButton>
       <Transition
+        as="div"
         {...popover.transition.props}
         className={classNames(
           'mt-2',
@@ -74,7 +75,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
           'md:left-auto md:w-80'
         )}
       >
-        <Popover.Panel
+        <PopoverPanel
           className={classNames(popover.panel.classNames.roundedSheet)}
         >
           <div className="flex">
@@ -106,7 +107,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
             ))}
           </div>
           <SearchableSegmentsSection closeList={closeDropdown} />
-        </Popover.Panel>
+        </PopoverPanel>
       </Transition>
     </>
   )

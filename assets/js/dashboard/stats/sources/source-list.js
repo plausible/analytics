@@ -10,7 +10,13 @@ import {
   getFiltersByKeyPrefix,
   hasConversionGoalFilter
 } from '../../util/filters'
-import { Menu, Transition } from '@headlessui/react'
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition
+} from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
@@ -252,7 +258,7 @@ export default function SourceList() {
         <Menu as="div" className="relative inline-block text-left">
           <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
           <div>
-            <Menu.Button
+            <MenuButton
               className="inline-flex justify-between focus:outline-none"
               ref={dropdownButtonRef}
             >
@@ -267,7 +273,7 @@ export default function SourceList() {
                 className="-mr-1 ml-1 h-4 w-4"
                 aria-hidden="true"
               />
-            </Menu.Button>
+            </MenuButton>
           </div>
 
           <Transition
@@ -279,30 +285,26 @@ export default function SourceList() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+            <MenuItems className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
               <div className="py-1">
                 {dropdownOptions.map((option) => {
                   return (
-                    <Menu.Item key={option}>
-                      {({ active }) => (
-                        <span
-                          onClick={setTab(option)}
-                          className={classNames(
-                            active
-                              ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer'
-                              : 'text-gray-700 dark:text-gray-200',
-                            'block px-4 py-2 text-sm',
-                            currentTab === option ? 'font-bold' : ''
-                          )}
-                        >
-                          {UTM_TAGS[option].title}
-                        </span>
-                      )}
-                    </Menu.Item>
+                    <MenuItem key={option}>
+                      <span
+                        onClick={setTab(option)}
+                        className={classNames(
+                          'block px-4 py-2 text-sm text-gray-700 dark:text-gray-200',
+                          'data-[focus]:bg-gray-100 dark:data-[focus]:dark:bg-gray-900 data-[focus]:text-gray-900 dark:data-[focus]:text-gray-200',
+                          { 'font-bold': currentTab === option }
+                        )}
+                      >
+                        {UTM_TAGS[option].title}
+                      </span>
+                    </MenuItem>
                   )
                 })}
               </div>
-            </Menu.Items>
+            </MenuItems>
           </Transition>
         </Menu>
       </div>

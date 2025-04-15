@@ -260,6 +260,7 @@ export default class SiteSwitcher extends React.Component {
         </button>
 
         <Transition
+          as="div"
           show={this.state.open}
           enter="transition ease-out duration-100"
           enterFrom="opacity-0 scale-95"
