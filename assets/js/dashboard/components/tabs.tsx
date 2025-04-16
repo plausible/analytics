@@ -36,7 +36,7 @@ const TabButtonText = ({
   active: boolean
 }) => (
   <span
-    className={classNames({
+    className={classNames('truncate text-left', {
       'hover:text-indigo-600 cursor-pointer': !active,
       'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold underline decoration-2 decoration-indigo-700 dark:decoration-indigo-500':
         active
@@ -57,10 +57,7 @@ export const TabButton = ({
   onClick: () => void
   active: boolean
 }) => (
-  <button
-    className={classNames('truncate text-left', className)}
-    onClick={onClick}
-  >
+  <button className={classNames('rounded-sm', className)} onClick={onClick}>
     <TabButtonText active={active}>{children}</TabButtonText>
   </button>
 )
@@ -84,11 +81,17 @@ export const DropdownTabButton = ({
     <Popover className={className}>
       <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
       <PopoverButton
-        className={classNames('inline-flex justify-between')}
+        className={classNames('inline-flex justify-between rounded-sm')}
         ref={dropdownButtonRef}
       >
         <TabButtonText active={active}>{children}</TabButtonText>
-        <ChevronDownIcon className="-mr-1 ml-1 h-4 w-4" aria-hidden="true" />
+
+        <div
+          className="flex self-stretch -mr-1 ml-1 items-center"
+          aria-hidden="true"
+        >
+          <ChevronDownIcon className="h-4 w-4" />
+        </div>
       </PopoverButton>
 
       <Transition
