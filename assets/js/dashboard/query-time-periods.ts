@@ -474,16 +474,19 @@ export const getDatePeriodGroups = ({
 
 export const getCompareLinkItem = ({
   query,
-  site
+  site,
+  onEvent
 }: {
   query: DashboardQuery
   site: PlausibleSite
+  onEvent: () => void
 }): LinkItem => [
   [
     isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare',
     'X'
   ],
   {
+    onEvent,
     search: getSearchToToggleComparison({ site, query }),
     isActive: () => false
   }
