@@ -6,6 +6,24 @@ defmodule Plausible.Session.Transfer.TinySock do
   @tag_data "tinysock"
   @tag_size byte_size(@tag_data)
 
+  def start_link(opts) do
+    base_path = Keyword.fetch!(opts, :base_path)
+    handler = Keyword.fetch!(opts, :handler)
+    GenServer.start_link(__MODULE__, {base_path, handler})
+  end
+
+  @impl true
+  def init({base_path, handler}) do
+    File.mkdir_p!(base_path)
+    socket = sock_listen_or_retry!(base_path)
+
+    Process.flag(:trap_exit, true)
+    state = %{socket: socket, handler: handler}
+    for _ <- 1..10, do: spawn_acceptor(state)
+
+    {:ok, state}
+  end
+
   @spec list!(Path.t()) :: [Path.t()]
   def list!(base_path) do
     for @tag_data <> _rand = name <- File.ls!(base_path) do
@@ -24,24 +42,6 @@ defmodule Plausible.Session.Transfer.TinySock do
         sock_shut_and_close(socket)
       end
     end
-  end
-
-  def start_link(opts) do
-    base_path = Keyword.fetch!(opts, :base_path)
-    handler = Keyword.fetch!(opts, :handler)
-    GenServer.start_link(__MODULE__, {base_path, handler})
-  end
-
-  @impl true
-  def init({base_path, handler}) do
-    File.mkdir_p!(base_path)
-    socket = sock_listen_or_retry!(base_path)
-
-    Process.flag(:trap_exit, true)
-    state = %{socket: socket, handler: handler}
-    for _ <- 1..10, do: spawn_acceptor(state)
-
-    {:ok, state}
   end
 
   @impl true

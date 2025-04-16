@@ -3,7 +3,7 @@ defmodule Plausible.Session.TransferTest do
   import Plausible.Factory
   import Plausible.TestUtils, only: [tmp_dir: 0]
 
-  @tag :slow
+  # @tag :slow
   test "it works" do
     tmp_dir = tmp_dir()
 
