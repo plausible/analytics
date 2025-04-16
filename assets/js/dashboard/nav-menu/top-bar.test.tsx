@@ -90,7 +90,7 @@ test('user can open and close filters dropdown', async () => {
     'Goal'
   ])
   await userEvent.click(toggleFilters)
-  expect(screen.queryAllByRole('menuitem')).toEqual([])
+  expect(screen.queryAllByRole('link')).toEqual([])
 })
 
 test('current visitors renders when visitors are present and disappears after visitors are null', async () => {
