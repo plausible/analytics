@@ -115,6 +115,22 @@ defmodule PlausibleWeb.Router do
     end
   end
 
+  on_ee do
+    if Mix.env() in [:dev, :test] do
+      scope "/dev", PlausibleWeb do
+        pipe_through :browser
+
+        get "/billing/create-subscription-form/:plan_id", DevSubscriptionController, :create_form
+        get "/billing/update-subscription-form", DevSubscriptionController, :update_form
+        get "/billing/cancel-subscription-form", DevSubscriptionController, :cancel_form
+
+        post "/billing/create-subscription/:plan_id", DevSubscriptionController, :create
+        post "/billing/update-subscription", DevSubscriptionController, :update
+        post "/billing/cancel-subscription", DevSubscriptionController, :cancel
+      end
+    end
+  end
+
   # Routes for plug integration testing
   if Mix.env() in [:test, :ce_test] do
     scope "/plug-tests", PlausibleWeb do

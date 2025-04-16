@@ -233,25 +233,21 @@ defmodule PlausibleWeb.Components.Billing do
   slot :inner_block, required: true
 
   def paddle_button(assigns) do
+    js_action_expr =
+      start_paddle_checkout_expr(assigns.paddle_product_id, assigns.team, assigns.user)
+
     confirmed =
       if assigns.confirm_message, do: "confirm(\"#{assigns.confirm_message}\")", else: "true"
-
-    passthrough =
-      if assigns.team do
-        "ee:#{ee?()};user:#{assigns.user.id};team:#{assigns.team.id}"
-      else
-        "ee:#{ee?()};user:#{assigns.user.id}"
-      end
 
     assigns =
       assigns
       |> assign(:confirmed, confirmed)
-      |> assign(:passthrough, passthrough)
+      |> assign(:js_action_expr, js_action_expr)
 
     ~H"""
     <button
       id={@id}
-      onclick={"if (#{@confirmed}) {Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @passthrough, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})}"}
+      onclick={"if (#{@confirmed}) {#{@js_action_expr}}"}
       class={[
         "text-sm w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
@@ -263,17 +259,46 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  def paddle_script(assigns) do
-    ~H"""
-    <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js">
-    </script>
-    <script :if={Application.get_env(:plausible, :environment) in ["dev", "staging"]}>
-      Paddle.Environment.set('sandbox')
-    </script>
-    <script>
-      Paddle.Setup({vendor: <%= Application.get_env(:plausible, :paddle) |> Keyword.fetch!(:vendor_id) %> })
-    </script>
-    """
+  if Mix.env() == :dev do
+    def start_paddle_checkout_expr(paddle_product_id, _team, _user) do
+      "window.location = '#{Routes.dev_subscription_path(PlausibleWeb.Endpoint, :create_form, paddle_product_id)}'"
+    end
+
+    def paddle_script(assigns), do: ~H""
+  else
+    def start_paddle_checkout_expr(paddle_product_id, team, user) do
+      passthrough =
+        if team do
+          "ee:#{ee?()};user:#{user.id};team:#{team.id}"
+        else
+          "ee:#{ee?()};user:#{user.id}"
+        end
+
+      paddle_checkout_params =
+        Jason.encode!(%{
+          product: paddle_product_id,
+          email: user.email,
+          disableLogout: true,
+          passthrough: passthrough,
+          success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+          theme: "none"
+        })
+
+      "Paddle.Checkout.open(#{paddle_checkout_params})"
+    end
+
+    def paddle_script(assigns) do
+      ~H"""
+      <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js">
+      </script>
+      <script :if={Application.get_env(:plausible, :environment) == "staging"}>
+        Paddle.Environment.set('sandbox')
+      </script>
+      <script>
+        Paddle.Setup({vendor: <%= Application.get_env(:plausible, :paddle) |> Keyword.fetch!(:vendor_id) %> })
+      </script>
+      """
+    end
   end
 
   def upgrade_link(assigns) do
