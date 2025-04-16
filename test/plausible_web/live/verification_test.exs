@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
       html = render(lv)
 
       refute text_of_element(html, @awaiting) =~ "Awaiting your first pageview"
-      refute_redirected(lv, "http://localhost:8000/#{URI.encode_www_form(site.domain)}")
+      refute_redirected(lv, "/#{URI.encode_www_form(site.domain)}/")
     end
 
     test "will redirect when first pageview arrives", %{conn: conn, site: site} do
@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
         build(:pageview)
       ])
 
-      assert_redirect(lv, "http://localhost:8000/#{URI.encode_www_form(site.domain)}/")
+      assert_redirect(lv, "/#{URI.encode_www_form(site.domain)}/")
     end
 
     @tag :ce_build_only
@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       populate_stats(site, [build(:pageview)])
 
-      assert_redirect(lv, "http://localhost:8000/#{URI.encode_www_form(site.domain)}/")
+      assert_redirect(lv, "/#{URI.encode_www_form(site.domain)}/")
     end
 
     @tag :ee_only
