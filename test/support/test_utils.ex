@@ -333,4 +333,16 @@ defmodule Plausible.TestUtils do
     |> Application.fetch_env!(PlausibleWeb.Endpoint)
     |> Keyword.fetch!(:secret_key_base)
   end
+
+  # normal `@tag :tmp_dir` might not work in Plausible.Session.Transfer tests
+  # if the path is too long for unix domain sockets (>104)
+  # this one makes paths a bit shorter
+  def tmp_dir do
+    name = "plausible-#{System.unique_integer([:positive])}"
+    tmp_dir = Path.join(System.tmp_dir!(), name)
+    File.rm_rf!(tmp_dir)
+    File.mkdir_p!(tmp_dir)
+    ExUnit.Callbacks.on_exit(fn -> File.rm_rf!(tmp_dir) end)
+    tmp_dir
+  end
 end
