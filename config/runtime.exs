@@ -238,6 +238,13 @@ persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DI
 data_dir = data_dir || persistent_cache_dir || System.get_env("DEFAULT_DATA_DIR")
 persistent_cache_dir = persistent_cache_dir || data_dir
 
+session_transfer_dir =
+  if get_bool_from_path_or_env(config_dir, "ENABLE_SESSION_TRANSFER", config_env() == :prod) do
+    if persistent_cache_dir do
+      Path.join(persistent_cache_dir, "sessions")
+    end
+  end
+
 enable_email_verification =
   get_bool_from_path_or_env(config_dir, "ENABLE_EMAIL_VERIFICATION", false)
 
@@ -305,7 +312,8 @@ config :plausible,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
-  data_dir: data_dir
+  data_dir: data_dir,
+  session_transfer_dir: session_transfer_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,

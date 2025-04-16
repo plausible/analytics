@@ -302,9 +302,47 @@ defmodule Plausible.TestUtils do
     end
   end
 
+  def monthly_pageview_usage_stub(penultimate_usage, last_usage) do
+    last_bill_date = Date.utc_today() |> Date.shift(day: -1)
+
+    Plausible.Teams.Billing
+    |> Double.stub(:monthly_pageview_usage, fn _user ->
+      %{
+        last_cycle: %{
+          date_range:
+            Date.range(
+              Date.shift(last_bill_date, month: -1),
+              Date.shift(last_bill_date, day: -1)
+            ),
+          total: last_usage
+        },
+        penultimate_cycle: %{
+          date_range:
+            Date.range(
+              Date.shift(last_bill_date, month: -2),
+              Date.shift(last_bill_date, day: -1, month: -1)
+            ),
+          total: penultimate_usage
+        }
+      }
+    end)
+  end
+
   defp secret_key_base() do
     :plausible
     |> Application.fetch_env!(PlausibleWeb.Endpoint)
     |> Keyword.fetch!(:secret_key_base)
+  end
+
+  # normal `@tag :tmp_dir` might not work in Plausible.Session.Transfer tests
+  # if the path is too long for unix domain sockets (>104)
+  # this one makes paths a bit shorter
+  def tmp_dir do
+    name = "plausible-#{System.unique_integer([:positive])}"
+    tmp_dir = Path.join(System.tmp_dir!(), name)
+    File.rm_rf!(tmp_dir)
+    File.mkdir_p!(tmp_dir)
+    ExUnit.Callbacks.on_exit(fn -> File.rm_rf!(tmp_dir) end)
+    tmp_dir
   end
 end

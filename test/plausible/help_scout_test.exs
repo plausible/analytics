@@ -264,7 +264,8 @@ defmodule Plausible.HelpScoutTest do
       test "returns for user with locked site" do
         user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        new_site(owner: user, locked: true)
+        site = new_site(owner: user)
+        site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
         subscribe_to_plan(user, @v4_business_monthly_plan_id)
 
         stub_help_scout_requests(email)

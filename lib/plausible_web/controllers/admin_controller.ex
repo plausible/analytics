@@ -187,7 +187,8 @@ defmodule PlausibleWeb.AdminController do
   defp usage_and_limits_html(team, usage, limits, embed?) do
     content = """
       <ul>
-        <li>Team: <b>#{html_escape(team.name)}</b></li>
+        <li>Team: <b>#{html_escape(Teams.name(team))}</b></li>
+        <li>Setup: <b>#{if(team.setup_complete, do: "Yes", else: "No")}</b></li>
         <li>Subscription plan: #{Teams.TeamAdmin.subscription_plan(team)}</li>
         <li>Subscription status: #{Teams.TeamAdmin.subscription_status(team)}</li>
         <li>Grace period: #{Teams.TeamAdmin.grace_period_status(team)}</li>

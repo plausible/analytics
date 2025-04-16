@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   import ExUnit.CaptureLog
 
   alias PlausibleWeb.Plugs.AuthorizePublicAPI
+  alias Plausible.Repo
 
   setup %{conn: conn} do
     conn =
@@ -109,7 +110,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
 
   test "halts with error when site is locked", %{conn: conn} do
     user = new_user()
-    site = new_site(owner: user, locked: true)
+    site = new_site(owner: user)
+    site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
     api_key = insert(:api_key, user: user)
 
     conn =
@@ -332,7 +334,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   test "passes for super admin user even if not a member of the requested site", %{conn: conn} do
     user = new_user()
     patch_env(:super_admin_user_ids, [user.id])
-    site = new_site(locked: true)
+    site = new_site()
+    site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
     api_key = insert(:api_key, user: user)
 
     conn =

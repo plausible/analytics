@@ -492,8 +492,12 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     @tag :ee_only
     test "unlocks a previously locked site after transfer" do
       existing_owner = new_user()
-      site = new_site(owner: existing_owner, locked: true)
+      site = new_site(owner: existing_owner)
+      old_team = site.team
+      old_team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       new_owner = new_user() |> subscribe_to_growth_plan()
+      new_team = team_of(new_owner)
+      new_team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
 
       transfer = invite_transfer(site, new_owner, inviter: existing_owner)
 
@@ -504,7 +508,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                )
 
       refute Repo.reload(transfer)
-      refute Repo.reload!(site).locked
+      refute Repo.reload!(old_team).locked
+      refute Repo.reload!(new_team).locked
     end
 
     for role <- [:viewer, :editor] do

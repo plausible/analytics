@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
                "You now have access to #{site.domain}"
 
-      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}"
+      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/"
 
       refute Repo.exists?(from(i in Plausible.Teams.Invitation, where: i.email == ^user.email))
 
@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       invitation = invite_guest(site, user.email, role: :editor, inviter: owner)
 
       c1 = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
-      assert redirected_to(c1) == "/#{URI.encode_www_form(site.domain)}"
+      assert redirected_to(c1) == "/#{URI.encode_www_form(site.domain)}/"
 
       assert Phoenix.Flash.get(c1.assigns.flash, :success) ==
                "You now have access to #{site.domain}"
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
-      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}"
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "You now have access to"
@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = post(conn, "/sites/invitations/#{transfer.transfer_id}/accept")
 
-      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}"
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "You now have access to"

@@ -228,8 +228,7 @@ defmodule PlausibleWeb.Live.CSVExport do
           socket
           |> put_flash(:error, "There is no data to export")
           |> redirect(
-            external:
-              Routes.site_path(socket, :settings_imports_exports, socket.assigns.site.domain)
+            to: Routes.site_path(socket, :settings_imports_exports, socket.assigns.site.domain)
           )
       end
 

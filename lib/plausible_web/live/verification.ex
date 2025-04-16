@@ -185,8 +185,8 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   defp redirect_to_stats(socket) do
-    stats_url = Routes.stats_url(PlausibleWeb.Endpoint, :stats, socket.assigns.domain, [])
-    redirect(socket, external: stats_url)
+    stats_url = Routes.stats_path(PlausibleWeb.Endpoint, :stats, socket.assigns.domain, [])
+    redirect(socket, to: stats_url)
   end
 
   defp reset_component(socket) do

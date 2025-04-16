@@ -222,7 +222,7 @@ defmodule Plausible.HelpScout do
       subscription.status == Subscription.Status.paused() ->
         "Paused"
 
-      Teams.owned_sites_locked?(team) ->
+      Teams.locked?(team) ->
         "Dashboard locked"
 
       subscription_active? ->

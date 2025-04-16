@@ -233,7 +233,7 @@ defmodule Plausible.Billing do
     |> Plausible.Teams.update_accept_traffic_until()
     |> Plausible.Teams.remove_grace_period()
     |> Plausible.Teams.maybe_reset_next_upgrade_override()
-    |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)
+    |> tap(&Plausible.Billing.SiteLocker.update_for/1)
     |> maybe_adjust_api_key_limits()
   end
 
