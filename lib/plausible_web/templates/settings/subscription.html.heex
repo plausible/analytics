@@ -94,6 +94,14 @@
           <.button_link theme="danger" href={@subscription.cancel_url}>
             Cancel my subscription
           </.button_link>
+          <%= if Mix.env() == :dev do %>
+            <a
+              href={@subscription.update_url}
+              class="ml-2 font-medium rounded-md px-3.5 py-2.5 text-sm shadow-sm border border-gray-300 dark:border-gray-500 text-yellow-600 dark:text-yellow-400 bg-white dark:bg-gray-900"
+            >
+              [DEV ONLY] Change subscription status
+            </a>
+          <% end %>
         </div>
       <% true -> %>
         <div class="mt-8">

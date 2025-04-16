@@ -1,0 +1,130 @@
+<.focus_box>
+  <div class="text-lg mb-6 font-bold dark:text-gray-100">
+    [Test Mode] Update your subscription status
+  </div>
+  <form action={Routes.dev_subscription_path(@conn, :update)} method="POST" class="text-sm">
+    <div class="block text-gray-500 dark:text-gray-200 text-sm">
+      Simulate subscription status change events. On production, this happens through Paddle webhooks.
+      This implementation is calling the underlying functions as close as possible to how it happens on
+      production. Check out the below links to find out more in Paddle documentation.<br /><br />
+      -
+      <a class="text-indigo-600" href="https://developer.paddle.com/classic">
+        Paddle "Classic" docs homepage
+      </a>
+      <br /> -
+      <a
+        class="text-indigo-600"
+        href="https://developer.paddle.com/classic/reference/zg9joji1mzu0mdi2-subscription-status-reference"
+      >
+        Paddle subscription status reference
+      </a>
+      <br /> -
+      <a
+        class="text-indigo-600"
+        href="https://developer.paddle.com/classic/guides/zg9joji1mzu0mduy-payment-failures"
+      >
+        Payment Failures
+      </a>
+      <br />
+      <br />
+    </div>
+
+    <%= if @current_status == Plausible.Billing.Subscription.Status.active() do %>
+      Current subscription status: <b class="text-green-400">ACTIVE</b>
+      <br /><br />
+
+      <label>
+        <input type="radio" name="status" value="past_due" /> Set to
+        <b class="text-yellow-400">PAST DUE</b>
+      </label>
+      <br />
+      <p class="text-xs ml-4 pl-1 italic text-gray-500">
+        Simulate a "subscription_updated" webhook notifying us about a failed payment.
+      </p>
+      <br />
+
+      <label>
+        <input type="radio" name="status" value="paused" /> Set to
+        <b class="text-red-400">PAUSED</b>
+      </label>
+      <br />
+      <p class="text-xs ml-4 pl-1 italic text-gray-500">
+        Simulate a "subscription_updated" webhook notifying us about the failure of the final payment attempt.
+      </p>
+      <br />
+    <% end %>
+
+    <%= if @current_status == Plausible.Billing.Subscription.Status.past_due() do %>
+      Current subscription status: <b class="text-yellow-400">PAST DUE</b>
+      <br /><br />
+
+      <label>
+        <input type="radio" name="status" value="active" /> Set to
+        <b class="text-green-400">ACTIVE</b>
+      </label>
+      <br />
+      <p class="text-xs ml-4 pl-1 italic text-gray-500">
+        Simulate a "subscription_updated" webhook notifying us about a successful payment.
+      </p>
+      <br />
+
+      <label>
+        <input type="radio" name="status" value="paused" /> Set to
+        <b class="text-red-400">PAUSED</b>
+      </label>
+      <br />
+      <p class="text-xs ml-4 pl-1 italic text-gray-500">
+        Simulate a "subscription_updated" webhook notifying us about the failure of the final payment attempt.
+      </p>
+      <br />
+    <% end %>
+
+    <%= if @current_status == Plausible.Billing.Subscription.Status.paused() do %>
+      Current subscription status: <b class="text-red-400">PAUSED</b>
+      <br /><br />
+
+      <label>
+        <input type="radio" name="status" value="active" /> Set to
+        <b class="text-green-400">ACTIVE</b>
+      </label>
+      <br />
+      <p class="text-xs ml-4 pl-1 italic text-gray-500">
+        Simulate a "subscription_payment_succeeded" webhook notifying us about a successful payment. On production
+        this action would correspond to the customer updating their billing details, and Paddle charging their card
+        successfully.
+      </p>
+      <br />
+
+      <label>
+        <input type="radio" name="status" value="past_due" disabled />
+        <p class="inline text-gray-500">Set to <b>PAST DUE</b> (not available)</p>
+      </label>
+      <br />
+      <p class="text-xs ml-4 pl-1 italic text-gray-500">
+        A status change from "paused" to "past_due" cannot happen naturally, and is therefore prohibited in this flow. Please update first to "active", and then to "past_due".
+      </p>
+      <br />
+    <% end %>
+
+    <div class="flex items-center justify-between mt-10">
+      <span class="flex rounded-md shadow-sm">
+        <a
+          href={@back_link}
+          type="button"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 dark:active:text-gray-200 active:bg-gray-50 transition ease-in-out duration-150"
+        >
+          Back
+        </a>
+      </span>
+      <button id="submit-button" type="submit" class="button">
+        Update Subscription
+      </button>
+    </div>
+  </form>
+  <script>
+    // const radios = document.querySelectorAll('input[name="status"]')
+    // const firstEnabled = Array.from(radios).find(function (radio) { return !radio.disabled })
+    // firstEnabled.checked = true
+    document.querySelectorAll('input[name="status"]')[0].checked = true
+  </script>
+</.focus_box>

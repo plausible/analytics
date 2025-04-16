@@ -31,7 +31,7 @@ defmodule Plausible.Billing.DevSubscriptions do
         "email" => "",
         "subscription_id" => Ecto.UUID.generate(),
         "subscription_plan_id" => plan_id,
-        "update_url" => "update",
+        "update_url" => Routes.dev_subscription_path(PlausibleWeb.Endpoint, :update_form),
         "cancel_url" => Routes.dev_subscription_path(PlausibleWeb.Endpoint, :cancel_form),
         "status" => "active",
         "next_bill_date" => next_bill_date(plan_or_enterprise_plan, plan_id),
@@ -43,6 +43,37 @@ defmodule Plausible.Billing.DevSubscriptions do
       {:ok, Repo.reload(get_team_subscription(team_id))}
     else
       {:error, "Plan with id '#{plan_id}' not found."}
+    end
+  end
+
+  def update(team_id, new_status) do
+    if subscription = get_team_subscription(team_id) do
+      current_plan_id = subscription.paddle_plan_id
+      current_plan = get_plan_or_enterprise_plan(current_plan_id)
+
+      next_bill_date =
+        case new_status do
+          "active" -> next_bill_date(current_plan, current_plan_id)
+          "past_due" -> Date.utc_today() |> Date.shift(day: 5) |> Date.to_iso8601()
+          "paused" -> subscription.next_bill_date |> Date.to_iso8601()
+        end
+
+      %{
+        "subscription_id" => subscription.paddle_subscription_id,
+        "subscription_plan_id" => current_plan_id,
+        "update_url" => subscription.update_url,
+        "cancel_url" => subscription.cancel_url,
+        "old_status" => to_string(subscription.status),
+        "status" => new_status,
+        "next_bill_date" => next_bill_date,
+        "new_unit_price" => "#{to_string(DevPaddleApiMock.all_prices()[current_plan_id])}.00",
+        "currency" => "EUR"
+      }
+      |> Plausible.Billing.subscription_updated()
+
+      :ok
+    else
+      {:error, :no_subscription}
     end
   end
 
@@ -102,6 +133,6 @@ defmodule Plausible.Billing.DevSubscriptions do
     if plan_id == plan.monthly_product_id, do: next_month(), else: next_year()
   end
 
-  defp next_month(), do: Date.utc_today() |> Date.shift(month: 1)
-  defp next_year(), do: Date.utc_today() |> Date.shift(year: 1)
+  defp next_month(), do: Date.utc_today() |> Date.shift(month: 1) |> Date.to_iso8601()
+  defp next_year(), do: Date.utc_today() |> Date.shift(year: 1) |> Date.to_iso8601()
 end
