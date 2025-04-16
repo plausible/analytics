@@ -182,13 +182,17 @@ defmodule PlausibleWeb.Site.MembershipController do
       {:error, :no_plan} ->
         conn
         |> render_change_team_form(conn.assigns.current_user, site,
-          error: "This team has no subscription"
+          error:
+            "This team doesn't have a subscription. Please start a subscription for " <>
+              "the team first and then try moving the site again"
         )
 
       {:error, {:over_plan_limits, _}} ->
         conn
         |> render_change_team_form(conn.assigns.current_user, site,
-          error: "This team's subscription outgrows site usage"
+          error:
+            "This site's usage is over the limits of the team's subscription. " <>
+              "Please upgrade the team to an appropriate subscription and then try moving the site again"
         )
 
       {:error, _} ->

@@ -1946,7 +1946,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         )
 
       html = html_response(conn, 200)
-      assert html =~ "This team has no subscription"
+      assert text(html) =~ "This team doesn't have a subscription"
     end
 
     @tag :ee_only
@@ -1969,7 +1969,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         )
 
       html = html_response(conn, 200)
-      assert text(html) =~ "This team's subscription outgrows site usage"
+      assert text(html) =~ "This site's usage is over the limits of the team's subscription"
     end
 
     test "change team form error: unknown team identifier", %{
