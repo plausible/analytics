@@ -1,4 +1,4 @@
-defmodule Plausible.Site.Memberships.AcceptInvitation do
+defmodule Plausible.Teams.Invitations.Accept do
   use Plausible
 
   @moduledoc """

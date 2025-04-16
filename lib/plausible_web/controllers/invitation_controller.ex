@@ -1,6 +1,8 @@
 defmodule PlausibleWeb.InvitationController do
   use PlausibleWeb, :controller
 
+  alias Plausible.Teams
+
   plug PlausibleWeb.RequireAccountPlug
 
   plug PlausibleWeb.Plugs.AuthorizeSiteAccess,
@@ -10,7 +12,7 @@ defmodule PlausibleWeb.InvitationController do
     current_user = conn.assigns.current_user
     team = conn.assigns.current_team
 
-    case Plausible.Site.Memberships.accept_invitation(invitation_id, current_user, team) do
+    case Teams.Invitations.Accept.accept_invitation(invitation_id, current_user, team) do
       {:ok, result} ->
         team = result.team
 
@@ -72,7 +74,7 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   def reject_invitation(conn, %{"invitation_id" => invitation_id}) do
-    case Plausible.Site.Memberships.reject_invitation(invitation_id, conn.assigns.current_user) do
+    case Teams.Invitations.Reject.reject_invitation(invitation_id, conn.assigns.current_user) do
       {:ok, _invitation} ->
         conn
         |> put_flash(:success, "You have rejected the invitation")
@@ -86,7 +88,7 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   def remove_invitation(conn, %{"invitation_id" => invitation_id}) do
-    case Plausible.Site.Memberships.remove_invitation(invitation_id, conn.assigns.site) do
+    case Teams.Invitations.RemoveFromSite.remove_invitation(invitation_id, conn.assigns.site) do
       {:ok, invitation_or_transfer} ->
         {site, email} =
           case invitation_or_transfer do
@@ -111,7 +113,7 @@ defmodule PlausibleWeb.InvitationController do
   def remove_team_invitation(conn, %{"invitation_id" => invitation_id}) do
     %{current_team: team, current_user: current_user} = conn.assigns
 
-    case Plausible.Teams.Invitations.Remove.remove(team, invitation_id, current_user) do
+    case Teams.Invitations.RemoveFromTeam.remove(team, invitation_id, current_user) do
       {:ok, invitation} ->
         conn
         |> put_flash(:success, "You have removed the invitation for #{invitation.email}")

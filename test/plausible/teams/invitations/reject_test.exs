@@ -1,4 +1,4 @@
-defmodule Plausible.Site.Memberships.RejectInvitationTest do
+defmodule Plausible.Teams.Invitations.RejectTest do
   use Plausible
   use Plausible.Teams.Test
   use Plausible.DataCase, async: true
@@ -6,7 +6,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
-  alias Plausible.Site.Memberships.RejectInvitation
+  alias Plausible.Teams.Invitations.Reject
 
   test "rejects guest invitation and sends email to inviter" do
     inviter = new_user()
@@ -16,7 +16,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
     invitation = invite_guest(site, invitee, inviter: inviter, role: :editor)
 
     assert {:ok, rejected_invitation} =
-             RejectInvitation.reject_invitation(invitation.invitation_id, invitee)
+             Reject.reject_invitation(invitation.invitation_id, invitee)
 
     assert rejected_invitation.id == invitation.id
     refute Repo.reload(rejected_invitation)
@@ -36,7 +36,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
     invitation = invite_member(team, invitee, inviter: inviter, role: :editor)
 
     assert {:ok, rejected_invitation} =
-             RejectInvitation.reject_invitation(invitation.invitation_id, invitee)
+             Reject.reject_invitation(invitation.invitation_id, invitee)
 
     assert rejected_invitation.id == invitation.id
     refute Repo.reload(rejected_invitation)
@@ -56,7 +56,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
     site_transfer = invite_transfer(site, invitee, inviter: inviter)
 
     assert {:ok, rejected_transfer} =
-             RejectInvitation.reject_invitation(site_transfer.transfer_id, invitee)
+             Reject.reject_invitation(site_transfer.transfer_id, invitee)
 
     assert rejected_transfer.id == site_transfer.id
     refute Repo.reload(rejected_transfer)
@@ -72,7 +72,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
     invitee = new_user()
 
     assert {:error, :invitation_not_found} =
-             RejectInvitation.reject_invitation("does_not_exist", invitee)
+             Reject.reject_invitation("does_not_exist", invitee)
   end
 
   test "does not allow rejecting invitation by anyone other than invitee" do
@@ -83,7 +83,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
     invitation = invite_guest(site, invitee, role: :editor, inviter: inviter)
 
     assert {:error, :invitation_not_found} =
-             RejectInvitation.reject_invitation(invitation.invitation_id, other_user)
+             Reject.reject_invitation(invitation.invitation_id, other_user)
 
     assert Repo.reload(invitation)
   end

@@ -87,7 +87,7 @@ defmodule Plausible.Teams.Management.Layout.Entry do
         %__MODULE__{type: :invitation_sent, queued_op: :delete, meta: meta},
         context
       ) do
-    Plausible.Teams.Invitations.Remove.remove(
+    Plausible.Teams.Invitations.RemoveFromTeam.remove(
       context.current_team,
       meta.invitation_id,
       context.current_user

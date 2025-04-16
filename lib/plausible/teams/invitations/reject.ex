@@ -1,4 +1,4 @@
-defmodule Plausible.Site.Memberships.RejectInvitation do
+defmodule Plausible.Teams.Invitations.Reject do
   @moduledoc """
   Service for rejecting invitations.
   """

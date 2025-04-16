@@ -1,8 +1,8 @@
-defmodule Plausible.Site.Memberships.RemoveInvitationTest do
+defmodule Plausible.Teams.Invitations.RemoveFromSiteTest do
   use Plausible.DataCase, async: true
   use Plausible.Teams.Test
 
-  alias Plausible.Site.Memberships.RemoveInvitation
+  alias Plausible.Teams.Invitations.RemoveFromSite
 
   test "removes invitation" do
     inviter = new_user()
@@ -13,7 +13,7 @@ defmodule Plausible.Site.Memberships.RemoveInvitationTest do
       invite_guest(site, invitee, inviter: inviter, role: :editor)
 
     assert {:ok, removed_invitation} =
-             RemoveInvitation.remove_invitation(invitation.invitation_id, site)
+             RemoveFromSite.remove_invitation(invitation.invitation_id, site)
 
     assert removed_invitation.id == invitation.id
     refute Repo.reload(removed_invitation)
@@ -23,7 +23,7 @@ defmodule Plausible.Site.Memberships.RemoveInvitationTest do
     site = new_site()
 
     assert {:error, :invitation_not_found} =
-             RemoveInvitation.remove_invitation("does_not_exist", site)
+             RemoveFromSite.remove_invitation("does_not_exist", site)
   end
 
   test "does not allow removing invitation from another site" do
@@ -34,7 +34,7 @@ defmodule Plausible.Site.Memberships.RemoveInvitationTest do
     invitation = invite_guest(site, invitee, role: :editor, inviter: inviter)
 
     assert {:error, :invitation_not_found} =
-             RemoveInvitation.remove_invitation(invitation.invitation_id, other_site)
+             RemoveFromSite.remove_invitation(invitation.invitation_id, other_site)
 
     assert Repo.reload(invitation)
   end
