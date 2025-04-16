@@ -29,11 +29,11 @@ defmodule PlausibleWeb.InvitationController do
         if site do
           conn
           |> put_flash(:success, "You now have access to #{site.domain}")
-          |> redirect(external: "/#{URI.encode_www_form(site.domain)}")
+          |> redirect(to: Routes.stats_path(conn, :stats, site.domain, []))
         else
           conn
           |> put_flash(:success, "You now have access to \"#{team.name}\" team")
-          |> redirect(external: "/sites")
+          |> redirect(to: Routes.site_path(conn, :index))
         end
 
       {:error, :invitation_not_found} ->
@@ -99,12 +99,12 @@ defmodule PlausibleWeb.InvitationController do
 
         conn
         |> put_flash(:success, "You have removed the invitation for #{email}")
-        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, :invitation_not_found} ->
         conn
         |> put_flash(:error, "Invitation missing or already removed")
-        |> redirect(external: Routes.site_path(conn, :settings_people, conn.assigns.site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_people, conn.assigns.site.domain))
     end
   end
 
@@ -115,12 +115,12 @@ defmodule PlausibleWeb.InvitationController do
       {:ok, invitation} ->
         conn
         |> put_flash(:success, "You have removed the invitation for #{invitation.email}")
-        |> redirect(external: Routes.settings_path(conn, :team_general))
+        |> redirect(to: Routes.settings_path(conn, :team_general))
 
       {:error, :invitation_not_found} ->
         conn
         |> put_flash(:error, "Invitation missing or already removed")
-        |> redirect(external: Routes.settings_path(conn, :team_general))
+        |> redirect(to: Routes.settings_path(conn, :team_general))
 
       {:error, :permission_denied} ->
         conn
