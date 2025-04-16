@@ -159,6 +159,7 @@ Plausible.Session.Balancer.html
 Plausible.Session.BalancerSupervisor.html
 Plausible.Session.CacheStore.html
 Plausible.Session.Salts.html
+Plausible.Session.Transfer.html
 Plausible.Shield.CountryRule.html
 Plausible.Shield.CountryRuleCache.html
 Plausible.Shield.HostnameRule.html
@@ -470,8 +471,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-66F1CC2C.js
-dist/sidebar_items-1E9A18AD.js
+dist/search_data-8D7D8190.js
+dist/sidebar_items-A5FC60FB.js
 index.html
 readme.html
 search.html
