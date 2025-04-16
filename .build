@@ -175,11 +175,6 @@ Plausible.Site.GateKeeper.html
 Plausible.Site.GoogleAuth.html
 Plausible.Site.ImportedData.html
 Plausible.Site.InstallationMeta.html
-Plausible.Site.Memberships.AcceptInvitation.html
-Plausible.Site.Memberships.CreateInvitation.html
-Plausible.Site.Memberships.RejectInvitation.html
-Plausible.Site.Memberships.RemoveInvitation.html
-Plausible.Site.Memberships.html
 Plausible.Site.MonthlyReport.html
 Plausible.Site.Removal.html
 Plausible.Site.SharedLink.html
@@ -235,8 +230,12 @@ Plausible.Teams.GracePeriod.html
 Plausible.Teams.GuestInvitation.html
 Plausible.Teams.GuestMembership.html
 Plausible.Teams.Invitation.html
+Plausible.Teams.Invitations.Accept.html
+Plausible.Teams.Invitations.InviteToSite.html
 Plausible.Teams.Invitations.InviteToTeam.html
-Plausible.Teams.Invitations.Remove.html
+Plausible.Teams.Invitations.Reject.html
+Plausible.Teams.Invitations.RemoveFromSite.html
+Plausible.Teams.Invitations.RemoveFromTeam.html
 Plausible.Teams.Management.Layout.Entry.html
 Plausible.Teams.Management.Layout.html
 Plausible.Teams.Membership.html
@@ -471,8 +470,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-8D7D8190.js
-dist/sidebar_items-A5FC60FB.js
+dist/search_data-9133E066.js
+dist/sidebar_items-C40B7DDA.js
 index.html
 readme.html
 search.html
