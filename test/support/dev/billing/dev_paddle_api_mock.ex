@@ -6,14 +6,17 @@ defmodule Plausible.Billing.DevPaddleApiMock do
   `Plausible.Billing.DevSubscriptions`.
   """
 
+  import Ecto.Query
+  alias Plausible.Repo
+  alias Plausible.Billing.EnterprisePlan
+
   @prices_file_path Application.app_dir(:plausible, ["priv", "plan_prices.json"])
   @prices File.read!(@prices_file_path) |> Jason.decode!()
 
   def all_prices() do
     enterprise_plan_prices =
-      Plausible.Billing.EnterprisePlan
-      |> Plausible.Repo.all()
-      |> Map.new(fn ep -> {ep.paddle_plan_id, 123} end)
+      Repo.all(from p in EnterprisePlan, select: {p.paddle_plan_id, 123})
+      |> Map.new()
 
     Map.merge(@prices, enterprise_plan_prices)
   end
