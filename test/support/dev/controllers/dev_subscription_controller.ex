@@ -1,83 +1,87 @@
 defmodule PlausibleWeb.DevSubscriptionController do
-  use PlausibleWeb, :controller
+  use Plausible
 
-  alias Plausible.Billing.DevSubscriptions
+  on_ee do
+    use PlausibleWeb, :controller
 
-  plug PlausibleWeb.RequireAccountPlug
+    alias Plausible.Billing.DevSubscriptions
 
-  plug Plausible.Plugs.AuthorizeTeamAccess, [:owner, :admin, :billing]
+    plug PlausibleWeb.RequireAccountPlug
 
-  def create_form(conn, %{"plan_id" => plan_id}) do
-    render(conn, "create_dev_subscription.html",
-      back_link: Routes.billing_path(conn, :choose_plan),
-      plan_id: plan_id
-    )
-  end
+    plug Plausible.Plugs.AuthorizeTeamAccess, [:owner, :admin, :billing]
 
-  def update_form(conn, _params) do
-    team = conn.assigns.current_team |> Plausible.Teams.with_subscription()
+    def create_form(conn, %{"plan_id" => plan_id}) do
+      render(conn, "create_dev_subscription.html",
+        back_link: Routes.billing_path(conn, :choose_plan),
+        plan_id: plan_id
+      )
+    end
 
-    if is_nil(team.subscription),
-      do: raise("Can't render subscription update form without subscription")
+    def update_form(conn, _params) do
+      team = conn.assigns.current_team |> Plausible.Teams.with_subscription()
 
-    render(conn, "update_dev_subscription.html",
-      back_link: Routes.settings_path(conn, :subscription),
-      current_status: team.subscription.status
-    )
-  end
+      if is_nil(team.subscription),
+        do: raise("Can't render subscription update form without subscription")
 
-  def cancel_form(conn, _params) do
-    team = conn.assigns.current_team |> Plausible.Teams.with_subscription()
+      render(conn, "update_dev_subscription.html",
+        back_link: Routes.settings_path(conn, :subscription),
+        current_status: team.subscription.status
+      )
+    end
 
-    if is_nil(team.subscription),
-      do: raise("Can't render subscription cancel form without subscription")
+    def cancel_form(conn, _params) do
+      team = conn.assigns.current_team |> Plausible.Teams.with_subscription()
 
-    render(conn, "cancel_dev_subscription.html",
-      back_link: Routes.settings_path(conn, :subscription),
-      enterprise_plan?: Plausible.Teams.Billing.enterprise_configured?(team)
-    )
-  end
+      if is_nil(team.subscription),
+        do: raise("Can't render subscription cancel form without subscription")
 
-  def create(conn, %{"plan_id" => plan_id}) do
-    team = conn.assigns.current_team
-    DevSubscriptions.create_after_1s(team.id, plan_id)
-    redirect(conn, to: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success))
-  end
+      render(conn, "cancel_dev_subscription.html",
+        back_link: Routes.settings_path(conn, :subscription),
+        enterprise_plan?: Plausible.Teams.Billing.enterprise_configured?(team)
+      )
+    end
 
-  def update(conn, %{"status" => status}) do
-    team = conn.assigns.current_team
+    def create(conn, %{"plan_id" => plan_id}) do
+      team = conn.assigns.current_team
+      DevSubscriptions.create_after_1s(team.id, plan_id)
+      redirect(conn, to: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success))
+    end
 
-    :ok = DevSubscriptions.update(team.id, status)
+    def update(conn, %{"status" => status}) do
+      team = conn.assigns.current_team
 
-    conn
-    |> put_flash(:success, "Subscription status set to '#{status}'")
-    |> redirect(to: Routes.settings_path(conn, :subscription))
-  end
+      :ok = DevSubscriptions.update(team.id, status)
 
-  def cancel(conn, %{"action" => action}) do
-    team = conn.assigns.current_team
+      conn
+      |> put_flash(:success, "Subscription status set to '#{status}'")
+      |> redirect(to: Routes.settings_path(conn, :subscription))
+    end
 
-    flash_msg =
-      case action do
-        "cancel" ->
-          DevSubscriptions.cancel(team.id)
-          "Subscription cancelled"
+    def cancel(conn, %{"action" => action}) do
+      team = conn.assigns.current_team
 
-        "cancel_and_expire" ->
-          DevSubscriptions.cancel(team.id, set_expired?: true)
-          "Subscription cancelled and set as 'expired'"
+      flash_msg =
+        case action do
+          "cancel" ->
+            DevSubscriptions.cancel(team.id)
+            "Subscription cancelled"
 
-        "delete" ->
-          DevSubscriptions.delete(team.id)
-          "Subscription deleted"
+          "cancel_and_expire" ->
+            DevSubscriptions.cancel(team.id, set_expired?: true)
+            "Subscription cancelled and set as 'expired'"
 
-        "delete_enterprise" ->
-          DevSubscriptions.delete(team.id, delete_enterprise?: true)
-          "Subscription and enterprise plans deleted"
-      end
+          "delete" ->
+            DevSubscriptions.delete(team.id)
+            "Subscription deleted"
 
-    conn
-    |> put_flash(:success, flash_msg)
-    |> redirect(to: Routes.settings_path(conn, :subscription))
+          "delete_enterprise" ->
+            DevSubscriptions.delete(team.id, delete_enterprise?: true)
+            "Subscription and enterprise plans deleted"
+        end
+
+      conn
+      |> put_flash(:success, flash_msg)
+      |> redirect(to: Routes.settings_path(conn, :subscription))
+    end
   end
 end
