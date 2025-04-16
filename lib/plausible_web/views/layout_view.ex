@@ -124,7 +124,9 @@ defmodule PlausibleWeb.LayoutView do
         "Team Settings",
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
-          %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
+          if(current_team_role in [:owner, :admin, :billing],
+            do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
+          ),
           if(current_team_role in [:owner, :admin, :billing],
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
