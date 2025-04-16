@@ -85,7 +85,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           reporter_options: [
             buckets: [100, 250, 500, 750, 1000, 2500, 5000, 7500, 10_000]
           ],
-          unit: {:native, :millisecond},
+          unit: {:native, :microsecond},
           measurement: :duration
         )
       ]
