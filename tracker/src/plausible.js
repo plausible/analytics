@@ -341,7 +341,7 @@
       }
     }
 
-    if (document.visibilityState === 'prerender') {
+    if (document.visibilityState === 'hidden' || document.visibilityState === 'prerender') {
       document.addEventListener('visibilitychange', handleVisibilityChange);
     } else {
       page()
