@@ -50,7 +50,6 @@ export type DashboardQuery = {
   resolvedFilters: Filter[]
   labels: FilterClauseLabels
   with_imported: boolean
-  legacy_time_on_page_cutoff: string | undefined
 }
 
 export const queryDefaultValue: DashboardQuery = {
@@ -65,8 +64,7 @@ export const queryDefaultValue: DashboardQuery = {
   filters: [],
   resolvedFilters: [],
   labels: {},
-  with_imported: true,
-  legacy_time_on_page_cutoff: undefined
+  with_imported: true
 }
 
 export type BreakdownResultMeta = {

@@ -167,6 +167,15 @@
   function trigger(eventName, options) {
     var isPageview = eventName === 'pageview'
 
+    if (isPageview && listeningOnEngagement) {
+      // If we're listening on engagement already, at least one pageview
+      // has been sent by the current script (i.e. it's most likely a SPA).
+      // Trigger an engagement marking the "exit from the previous page".
+      triggerEngagement()
+      currentDocumentHeight = getDocumentHeight()
+      maxScrollDepthPx = getCurrentScrollDepthPx()
+    }
+
     {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
       return onIgnoredEvent(eventName, 'localhost', options)
@@ -287,7 +296,7 @@
         body: JSON.stringify(payload)
       }).then(function(response) {
         options && options.callback && options.callback({status: response.status})
-      })
+      }).catch(function() {})
     }
     {{/if}}
   }
@@ -305,12 +314,6 @@
       {{#unless hash}}
       if (isSPANavigation && lastPage === location.pathname) return;
       {{/unless}}
-
-      if (isSPANavigation && listeningOnEngagement) {
-        triggerEngagement()
-        currentDocumentHeight = getDocumentHeight()
-        maxScrollDepthPx = getCurrentScrollDepthPx()
-      }
 
       lastPage = location.pathname
       trigger('pageview')

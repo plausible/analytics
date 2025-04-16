@@ -1,10 +1,10 @@
 defmodule Plausible.IngestRepo.Migrations.CleanUpOldTablesAfterV2Migration do
   use Ecto.Migration
 
-  def change do
-    selfhost? = Application.fetch_env!(:plausible, :is_selfhost)
+  import Plausible.MigrationUtils
 
-    unless selfhost? do
+  def change do
+    unless community_edition?() do
       drop_if_exists table(:events)
       drop_if_exists table(:sessions)
     end

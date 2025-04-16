@@ -14,7 +14,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           Ecto.Changeset.t()
           | :already_a_member
           | {:over_limit, non_neg_integer()}
-          | :forbidden
+          | :permission_denied
 
   @type invitation :: %Teams.GuestInvitation{} | %Teams.SiteTransfer{}
 
@@ -26,7 +26,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   and sends the invitee an email to accept this invitation.
 
   The inviter must have enough permissions to invite the new team member,
-  otherwise this function returns `{:error, :forbidden}`.
+  otherwise this function returns `{:error, :permission_denied}`.
 
   If the new team member role is `:owner`, this function handles the invitation
   as an ownership transfer and requires the inviter to be the owner of the site.

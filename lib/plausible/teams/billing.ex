@@ -17,9 +17,7 @@ defmodule Plausible.Teams.Billing do
 
   require Plausible.Billing.Subscription.Status
 
-  @team_member_limit_for_trials 3
   @limit_sites_since ~D[2021-05-05]
-  @site_limit_for_trials 10
 
   @type cycles_usage() :: %{cycle() => usage_cycle()}
 
@@ -193,16 +191,33 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-  def site_limit(nil) do
-    @site_limit_for_trials
-  end
+  on_ee do
+    @site_limit_for_trials 10
 
-  def site_limit(team) do
-    if grandfathered_team?(team) do
-      :unlimited
-    else
-      get_site_limit_from_plan(team)
+    def site_limit(nil) do
+      @site_limit_for_trials
     end
+
+    def site_limit(team) do
+      if grandfathered_team?(team) do
+        :unlimited
+      else
+        get_site_limit_from_plan(team)
+      end
+    end
+
+    defp get_site_limit_from_plan(team) do
+      team =
+        Teams.with_subscription(team)
+
+      case Plans.get_subscription_plan(team.subscription) do
+        %{site_limit: site_limit} -> site_limit
+        :free_10k -> 50
+        nil -> @site_limit_for_trials
+      end
+    end
+  else
+    def site_limit(_team), do: :unlimited
   end
 
   @doc """
@@ -217,29 +232,24 @@ defmodule Plausible.Teams.Billing do
     |> length()
   end
 
-  defp get_site_limit_from_plan(team) do
-    team =
-      Teams.with_subscription(team)
+  on_ee do
+    @team_member_limit_for_trials 3
 
-    case Plans.get_subscription_plan(team.subscription) do
-      %{site_limit: site_limit} -> site_limit
-      :free_10k -> 50
-      nil -> @site_limit_for_trials
+    def team_member_limit(nil) do
+      @team_member_limit_for_trials
     end
-  end
 
-  def team_member_limit(nil) do
-    @team_member_limit_for_trials
-  end
+    def team_member_limit(team) do
+      team = Teams.with_subscription(team)
 
-  def team_member_limit(team) do
-    team = Teams.with_subscription(team)
-
-    case Plans.get_subscription_plan(team.subscription) do
-      %{team_member_limit: limit} -> limit
-      :free_10k -> :unlimited
-      nil -> @team_member_limit_for_trials
+      case Plans.get_subscription_plan(team.subscription) do
+        %{team_member_limit: limit} -> limit
+        :free_10k -> :unlimited
+        nil -> @team_member_limit_for_trials
+      end
     end
+  else
+    def team_member_limit(_team), do: :unlimited
   end
 
   @doc """

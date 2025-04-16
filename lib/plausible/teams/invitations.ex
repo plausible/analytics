@@ -410,7 +410,8 @@ defmodule Plausible.Teams.Invitations do
     end
 
     on_ee do
-      :unlocked = Billing.SiteLocker.update_sites_for(team, send_email?: false)
+      Billing.SiteLocker.update_for(prior_team, send_email?: false)
+      :unlocked = Billing.SiteLocker.update_for(team, send_email?: false)
     end
 
     :ok
@@ -461,19 +462,16 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def send_transfer_accepted_email(site_transfer, team) do
-    initiator_as_editor? =
-      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) == {:ok, :editor}
-
-    initiator_as_guest? =
-      Teams.Memberships.team_role(team, site_transfer.initiator) == {:ok, :guest}
+    initiator_as_guest_editor? =
+      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) ==
+        {:ok, {:guest_member, :editor}}
 
     PlausibleWeb.Email.ownership_transfer_accepted(
       site_transfer.email,
       site_transfer.initiator.email,
       team,
       site_transfer.site,
-      initiator_as_editor?,
-      initiator_as_guest?
+      initiator_as_guest_editor?
     )
     |> Plausible.Mailer.send()
   end
@@ -501,27 +499,23 @@ defmodule Plausible.Teams.Invitations do
           :ok
 
         _ ->
-          {:error, :forbidden}
+          {:error, :permission_denied}
       end
     else
       :ok
     end
   end
 
-  def check_invitation_permissions(%Plausible.Site{} = site, inviter, invitation_role, opts) do
+  def check_invitation_permissions(%Plausible.Site{} = site, inviter, _invitation_role, opts) do
     check_permissions? = Keyword.get(opts, :check_permissions, true)
 
     if check_permissions? do
       case Teams.Memberships.site_role(site, inviter) do
-        {:ok, inviter_role} when inviter_role in [:owner, :admin] and invitation_role == :owner ->
-          :ok
-
-        {:ok, inviter_role}
-        when inviter_role in [:owner, :admin, :editor] and invitation_role != :owner ->
+        {:ok, {:team_member, inviter_role}} when inviter_role in [:owner, :admin] ->
           :ok
 
         _ ->
-          {:error, :forbidden}
+          {:error, :permission_denied}
       end
     else
       :ok

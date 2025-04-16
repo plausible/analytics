@@ -30,6 +30,7 @@ defmodule Plausible.ReleaseTest do
     end
   end
 
+  @tag :ee_only
   test "dump_plans/0 inserts plans" do
     stdout =
       capture_io(fn ->

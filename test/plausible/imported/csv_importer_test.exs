@@ -734,9 +734,6 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["pageviews"] == imported["pageviews"]
         assert exported["visit_duration"] == imported["visit_duration"]
         assert exported["bounce_rate"] == imported["bounce_rate"]
-
-        # time on page is not being exported/imported right now
-        assert imported["time_on_page"] == 0
       end)
 
       # NOTE: page breakdown's visitors difference is up to 28%
@@ -1059,9 +1056,10 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
 
     @tag :tmp_dir
-    test "scroll_depth", %{conn: conn, user: user, tmp_dir: tmp_dir} do
+    test "scroll_depth and time_on_page", %{conn: conn, user: user, tmp_dir: tmp_dir} do
       exported_site = new_site(owner: user)
       imported_site = new_site(owner: user)
+      FunWithFlags.enable(:new_time_on_page, for_actor: exported_site)
 
       t0 =
         NaiveDateTime.utc_now(:second)
@@ -1073,19 +1071,61 @@ defmodule Plausible.Imported.CSVImporterTest do
       stats =
         [
           build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-          build(:engagement, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
+          build(:engagement,
+            user_id: 12,
+            pathname: "/blog",
+            timestamp: t1,
+            scroll_depth: 20,
+            engagement_time: 50_000
+          ),
           build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-          build(:engagement, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
+          build(:engagement,
+            user_id: 12,
+            pathname: "/another",
+            timestamp: t2,
+            scroll_depth: 24,
+            engagement_time: 30_000
+          ),
           build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-          build(:engagement, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
+          build(:engagement,
+            user_id: 34,
+            pathname: "/blog",
+            timestamp: t1,
+            scroll_depth: 17,
+            engagement_time: 10_000
+          ),
           build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-          build(:engagement, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
+          build(:engagement,
+            user_id: 34,
+            pathname: "/another",
+            timestamp: t2,
+            scroll_depth: 26,
+            engagement_time: 20_000
+          ),
           build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-          build(:engagement, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
+          build(:engagement,
+            user_id: 34,
+            pathname: "/blog",
+            timestamp: t3,
+            scroll_depth: 60,
+            engagement_time: 30_000
+          ),
           build(:pageview, user_id: 56, pathname: "/blog", timestamp: t0),
-          build(:engagement, user_id: 56, pathname: "/blog", timestamp: t1, scroll_depth: 100),
+          build(:engagement,
+            user_id: 56,
+            pathname: "/blog",
+            timestamp: t1,
+            scroll_depth: 100,
+            engagement_time: 40_000
+          ),
           build(:pageview, user_id: 78, pathname: "/", timestamp: t0),
-          build(:engagement, user_id: 78, pathname: "/", timestamp: t1, scroll_depth: 20),
+          build(:engagement,
+            user_id: 78,
+            pathname: "/",
+            timestamp: t1,
+            scroll_depth: 20,
+            engagement_time: 10_000
+          ),
           build(:pageview, pathname: "/", timestamp: t1),
           build(:pageview, pathname: "/blog", timestamp: NaiveDateTime.add(t0, 1, :day))
         ]
@@ -1132,7 +1172,9 @@ defmodule Plausible.Imported.CSVImporterTest do
             date: i.date,
             page: i.page,
             total_scroll_depth: i.total_scroll_depth,
-            total_scroll_depth_visits: i.total_scroll_depth_visits
+            total_scroll_depth_visits: i.total_scroll_depth_visits,
+            total_time_on_page: i.total_time_on_page,
+            total_time_on_page_visits: i.total_time_on_page_visits
           }
         )
         |> Plausible.IngestRepo.all()
@@ -1141,28 +1183,36 @@ defmodule Plausible.Imported.CSVImporterTest do
                date: expected_start_date,
                page: "/",
                total_scroll_depth: 20,
-               total_scroll_depth_visits: 1
+               total_scroll_depth_visits: 1,
+               total_time_on_page: 10,
+               total_time_on_page_visits: 1
              } in imported_data
 
       assert %{
                date: expected_start_date,
                page: "/another",
                total_scroll_depth: 50,
-               total_scroll_depth_visits: 2
+               total_scroll_depth_visits: 2,
+               total_time_on_page: 50,
+               total_time_on_page_visits: 2
              } in imported_data
 
       assert %{
                date: expected_start_date,
                page: "/blog",
                total_scroll_depth: 180,
-               total_scroll_depth_visits: 3
+               total_scroll_depth_visits: 3,
+               total_time_on_page: 130,
+               total_time_on_page_visits: 3
              } in imported_data
 
       assert %{
                date: expected_end_date,
                page: "/blog",
                total_scroll_depth: 0,
-               total_scroll_depth_visits: 0
+               total_scroll_depth_visits: 0,
+               total_time_on_page: 0,
+               total_time_on_page_visits: 0
              } in imported_data
 
       # assert via stats queries that scroll_depth from imported
@@ -1195,7 +1245,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     context =
       on_ee do
         assert {:ok, _job} =
-                 Plausible.Exports.schedule_s3_export(exported_site.id, nil, user.email)
+                 Plausible.Exports.schedule_s3_export(exported_site.id, user.email)
 
         context
       else

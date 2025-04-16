@@ -199,6 +199,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       )
     end
 
+    @tag :ee_only
     test "fails to save layout with limits breached", %{conn: conn} do
       lv = get_child_lv(conn)
       html = render(lv)

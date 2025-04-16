@@ -430,7 +430,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
 
-      if Plausible.ee?() do
+      if ee?() do
         assert html_response(conn, 200) =~ "support@plausible.io"
       else
         refute html_response(conn, 200) =~ "support@plausible.io"
@@ -453,7 +453,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
 
-      if Plausible.ee?() do
+      if ee?() do
         assert html_response(conn, 200) =~ "support@plausible.io"
       else
         refute html_response(conn, 200) =~ "support@plausible.io"
@@ -505,6 +505,78 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "Site Timezone"
       assert resp =~ "Site Domain"
       assert resp =~ "Site Installation"
+    end
+
+    @tag :ee_only
+    test "all site settings sidebar items are working links", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user, domain: "example.com")
+      conn = get(conn, "/#{site.domain}/settings/general")
+      resp = html_response(conn, 200)
+
+      items =
+        resp
+        |> find("[data-testid=site_settings_sidebar] a")
+        |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
+
+      assert items == [
+               {"General", "/#{site.domain}/settings/general"},
+               {"People", "/#{site.domain}/settings/people"},
+               {"Visibility", "/#{site.domain}/settings/visibility"},
+               {"Goals", "/#{site.domain}/settings/goals"},
+               {"Funnels", "/#{site.domain}/settings/funnels"},
+               {"Custom Properties", "/#{site.domain}/settings/properties"},
+               {"Integrations", "/#{site.domain}/settings/integrations"},
+               {"Imports & Exports", "/#{site.domain}/settings/imports-exports"},
+               {"Shields", ""},
+               {"IP Addresses", "/#{site.domain}/settings/shields/ip_addresses"},
+               {"Countries", "/#{site.domain}/settings/shields/countries"},
+               {"Pages", "/#{site.domain}/settings/shields/pages"},
+               {"Hostnames", "/#{site.domain}/settings/shields/hostnames"},
+               {"Email Reports", "/#{site.domain}/settings/email-reports"},
+               {"Danger Zone", "/#{site.domain}/settings/danger-zone"}
+             ]
+    end
+
+    @tag :ce_build_only
+    test "all site settings sidebar items are working links on CE", %{
+      conn: conn,
+      user: user
+    } do
+      site = new_site(owner: user, domain: "example.com")
+      conn = get(conn, "/#{site.domain}/settings/general")
+      resp = html_response(conn, 200)
+
+      items =
+        resp
+        |> find("[data-testid=site_settings_sidebar] a")
+        |> Enum.map(fn a -> {text(a), text_of_attr(a, "href")} end)
+
+      assert items == [
+               {"General", "/#{site.domain}/settings/general"},
+               {"People", "/#{site.domain}/settings/people"},
+               {"Visibility", "/#{site.domain}/settings/visibility"},
+               {"Goals", "/#{site.domain}/settings/goals"},
+               {"Custom Properties", "/#{site.domain}/settings/properties"},
+               {"Integrations", "/#{site.domain}/settings/integrations"},
+               {"Imports & Exports", "/#{site.domain}/settings/imports-exports"},
+               {"Shields", ""},
+               {"IP Addresses", "/#{site.domain}/settings/shields/ip_addresses"},
+               {"Countries", "/#{site.domain}/settings/shields/countries"},
+               {"Pages", "/#{site.domain}/settings/shields/pages"},
+               {"Hostnames", "/#{site.domain}/settings/shields/hostnames"},
+               {"Email Reports", "/#{site.domain}/settings/email-reports"},
+               {"Danger Zone", "/#{site.domain}/settings/danger-zone"}
+             ]
+    end
+
+    test "header and footer are shown", %{conn: conn, site: site, user: user} do
+      conn = get(conn, "/#{site.domain}/settings/general")
+      resp = html_response(conn, 200)
+      assert resp =~ user.name
+      assert resp =~ "Getting started"
     end
   end
 

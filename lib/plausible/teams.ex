@@ -66,6 +66,11 @@ defmodule Plausible.Teams do
     def on_trial?(_), do: always(true)
   end
 
+  @spec locked?(Teams.Team.t() | nil) :: boolean()
+  def locked?(nil), do: false
+
+  def locked?(%Teams.Team{locked: locked}), do: locked
+
   @spec trial_days_left(Teams.Team.t()) :: integer()
   def trial_days_left(nil) do
     nil
@@ -93,19 +98,6 @@ defmodule Plausible.Teams do
         where: s.team_id == ^team.id,
         select: s.id,
         order_by: [desc: s.id]
-      )
-    )
-  end
-
-  def owned_sites_locked?(nil) do
-    false
-  end
-
-  def owned_sites_locked?(team) do
-    Repo.exists?(
-      from(s in Plausible.Site,
-        where: s.team_id == ^team.id,
-        where: s.locked == true
       )
     )
   end
@@ -354,16 +346,12 @@ defmodule Plausible.Teams do
     team =
       %Teams.Team{}
       |> Teams.Team.changeset(%{name: default_name()})
-      |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
-      |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!()
 
     team_membership =
       team
       |> Teams.Membership.changeset(user, :owner)
       |> Ecto.Changeset.put_change(:is_autocreated, true)
-      |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
-      |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!(
         on_conflict: :nothing,
         conflict_target:

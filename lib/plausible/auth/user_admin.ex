@@ -62,7 +62,7 @@ defmodule Plausible.Auth.UserAdmin do
     teams
     |> Enum.map_join("<br>\n", fn team ->
       """
-      <a href="/crm/teams/team/#{team.id}">#{team.name}</a>
+      <a href="/crm/teams/team/#{team.id}">#{html_escape(team.name)}</a>
       """
     end)
   end
@@ -71,5 +71,11 @@ defmodule Plausible.Auth.UserAdmin do
 
   defp format_date(date) do
     Calendar.strftime(date, "%b %-d, %Y")
+  end
+
+  def html_escape(string) do
+    string
+    |> Phoenix.HTML.html_escape()
+    |> Phoenix.HTML.safe_to_string()
   end
 end

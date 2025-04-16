@@ -3,6 +3,12 @@ defmodule Plausible.Stats.Compare do
     Float.round(new_value - old_value, 1)
   end
 
+  def calculate_change(:exit_rate, old_value, new_value) do
+    if is_float(old_value) and is_float(new_value) do
+      Float.round(new_value - old_value, 1)
+    end
+  end
+
   def calculate_change(:bounce_rate, old_count, new_count) do
     if old_count > 0, do: new_count - old_count
   end

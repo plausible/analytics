@@ -225,39 +225,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(date, date, site.timezone)}
   end
 
-  defp parse_time_range(site, shorthand, date, _now)
-       when shorthand in ["7d", "28d", "30d", "90d"] do
-    {days, "d"} = Integer.parse(shorthand)
-    last = date |> Date.add(-1)
-    first = date |> Date.add(-days)
-    {:ok, DateTimeRange.new!(first, last, site.timezone)}
-  end
-
   defp parse_time_range(site, "month", date, _now) do
     last = date |> Date.end_of_month()
     first = last |> Date.beginning_of_month()
-    {:ok, DateTimeRange.new!(first, last, site.timezone)}
-  end
-
-  defp parse_time_range(site, "6mo", date, _now) do
-    last = date |> Date.end_of_month()
-
-    first =
-      last
-      |> Date.shift(month: -5)
-      |> Date.beginning_of_month()
-
-    {:ok, DateTimeRange.new!(first, last, site.timezone)}
-  end
-
-  defp parse_time_range(site, "12mo", date, _now) do
-    last = date |> Date.end_of_month()
-
-    first =
-      last
-      |> Date.shift(month: -11)
-      |> Date.beginning_of_month()
-
     {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
@@ -273,6 +243,23 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(start_date, date, site.timezone)}
   end
 
+  defp parse_time_range(site, shorthand, date, _now) when is_binary(shorthand) do
+    case Integer.parse(shorthand) do
+      {n, "d"} when n > 0 and n <= 5_000 ->
+        last = date |> Date.add(-1)
+        first = date |> Date.add(-n)
+        {:ok, DateTimeRange.new!(first, last, site.timezone)}
+
+      {n, "mo"} when n > 0 and n <= 100 ->
+        last = date |> Date.end_of_month()
+        first = last |> Date.shift(month: -n + 1) |> Date.beginning_of_month()
+        {:ok, DateTimeRange.new!(first, last, site.timezone)}
+
+      _ ->
+        {:error, "Invalid date_range #{i(shorthand)}"}
+    end
+  end
+
   defp parse_time_range(site, [from, to], _date, _now) when is_binary(from) and is_binary(to) do
     case date_range_from_date_strings(site, from, to) do
       {:ok, date_range} -> {:ok, date_range}
@@ -281,7 +268,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_time_range(_site, unknown, _date, _now),
-    do: {:error, "Invalid date_range '#{i(unknown)}'."}
+    do: {:error, "Invalid date_range #{i(unknown)}"}
 
   defp date_range_from_date_strings(site, from, to) do
     with {:ok, from_date} <- Date.from_iso8601(from),
@@ -629,6 +616,20 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_metric(:exit_rate = metric, query) do
+    case {query.dimensions, TableDecider.sessions_join_events?(query)} do
+      {["visit:exit_page"], false} ->
+        :ok
+
+      {["visit:exit_page"], true} ->
+        {:error, "Metric `#{metric}` cannot be queried when filtering on event dimensions."}
+
+      _ ->
+        {:error,
+         "Metric `#{metric}` requires a `\"visit:exit_page\"` dimension. No other dimensions are allowed."}
+    end
+  end
+
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
       Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) ->
@@ -639,6 +640,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
       true ->
         :ok
+    end
+  end
+
+  defp validate_metric(:time_on_page = metric, query) do
+    cond do
+      Enum.member?(query.dimensions, "event:page") ->
+        :ok
+
+      Filters.filtering_on_dimension?(query, "event:page", behavioral_filters: :ignore) ->
+        :ok
+
+      true ->
+        {:error, "Metric `#{metric}` can only be queried with event:page filters or dimensions."}
     end
   end
 

@@ -75,7 +75,7 @@ export default function TopStats({
     )
   }
 
-  function warningText(metric, site) {
+  function warningText(metric) {
     const warning = data.meta.metric_warnings?.[metric]
     if (!warning) {
       return null
@@ -88,7 +88,7 @@ export default function TopStats({
       return 'Does not include imported data'
     }
 
-    if (metric === 'time_on_page' && site.flags.new_time_on_page) {
+    if (metric === 'time_on_page') {
       return warning.message
     }
 
@@ -141,7 +141,7 @@ export default function TopStats({
         {statExtraName && (
           <span className="hidden sm:inline-block ml-1">{statExtraName}</span>
         )}
-        {warningText(stat.graph_metric, site) && (
+        {warningText(stat.graph_metric) && (
           <span className="inline-block ml-1">*</span>
         )}
       </div>

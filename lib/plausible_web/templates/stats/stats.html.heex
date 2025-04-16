@@ -1,7 +1,7 @@
 <div class={stats_container_class(@conn)} data-site-domain={@site.domain}>
   <PlausibleWeb.Components.FirstDashboardLaunchBanner.render site={@site} />
 
-  <%= if @site.locked do %>
+  <%= if Plausible.Teams.locked?(@site.team) do %>
     <div
       class="w-full px-4 py-4 text-sm font-bold text-center text-yellow-800 bg-yellow-100 rounded transition"
       style="top: 91px"
@@ -36,7 +36,6 @@
     data-logged-in={to_string(!!@conn.assigns[:current_user])}
     data-stats-begin={@stats_start_date}
     data-native-stats-begin={@native_stats_start_date}
-    data-legacy-time-on-page-cutoff={@legacy_time_on_page_cutoff}
     data-shared-link-auth={assigns[:shared_link_auth]}
     data-embedded={to_string(@conn.assigns[:embedded])}
     data-background={@conn.assigns[:background]}
