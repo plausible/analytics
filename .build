@@ -24,6 +24,8 @@ Plausible.Auth.UserAdmin.html
 Plausible.Auth.UserSession.html
 Plausible.Auth.UserSessions.html
 Plausible.Auth.html
+Plausible.Billing.DevPaddleApiMock.html
+Plausible.Billing.DevSubscriptions.html
 Plausible.Billing.Ecto.Feature.html
 Plausible.Billing.Ecto.FeatureList.html
 Plausible.Billing.Ecto.Limit.html
@@ -317,6 +319,8 @@ PlausibleWeb.ControllerHelpers.html
 PlausibleWeb.Controllers.API.Revenue.html
 PlausibleWeb.DebugController.html
 PlausibleWeb.DebugView.html
+PlausibleWeb.DevSubscriptionController.html
+PlausibleWeb.DevSubscriptionView.html
 PlausibleWeb.Dogfood.html
 PlausibleWeb.Email.html
 PlausibleWeb.EmailView.html
@@ -470,8 +474,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-9133E066.js
-dist/sidebar_items-C40B7DDA.js
+dist/search_data-6798EA80.js
+dist/sidebar_items-7AC1F5FE.js
 index.html
 readme.html
 search.html
