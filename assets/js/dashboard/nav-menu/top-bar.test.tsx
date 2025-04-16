@@ -57,12 +57,12 @@ test('user can open and close site switcher', async () => {
   await userEvent.click(toggleSiteSwitcher)
   expect(screen.queryAllByRole('link').map((el) => el.textContent)).toEqual(
     [
+      ['Site settings'],
+      ['dummy.site', '1'],
       ['example.com', '2'],
-      ['blog.example.com', '3']
+      ['blog.example.com', '3'],
+      ['View all']
     ].map((a) => a.join(''))
-  )
-  expect(screen.queryAllByRole('menuitem').map((el) => el.textContent)).toEqual(
-    ['Site Settings', 'View All']
   )
   await userEvent.click(toggleSiteSwitcher)
   await waitForElementToBeRemoved(() => screen.queryByTestId('sitemenu'))
