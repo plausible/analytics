@@ -42,7 +42,11 @@ defmodule Plausible.Stats.DateTimeRange do
     first = DateTime.truncate(first, :second)
     last = DateTime.truncate(last, :second)
 
-    %__MODULE__{first: first, last: last}
+    if DateTime.before?(first, last) do
+      %__MODULE__{first: first, last: last}
+    else
+      %__MODULE__{first: last, last: first}
+    end
   end
 
   def to_timezone(%__MODULE__{first: first, last: last}, timezone) do
