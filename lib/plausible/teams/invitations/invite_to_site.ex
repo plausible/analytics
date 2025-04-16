@@ -1,4 +1,4 @@
-defmodule Plausible.Site.Memberships.CreateInvitation do
+defmodule Plausible.Teams.Invitations.InviteToSite do
   @moduledoc """
   Service for inviting new or existing users to a sites, including ownershhip
   transfers.

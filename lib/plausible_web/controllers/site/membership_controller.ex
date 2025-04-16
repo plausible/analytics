@@ -12,7 +12,8 @@ defmodule PlausibleWeb.Site.MembershipController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use Plausible
-  alias Plausible.Site.Memberships
+
+  alias Plausible.Teams
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -24,8 +25,8 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> Plausible.Sites.get_for_user!(conn.assigns.site.domain)
       |> Plausible.Repo.preload(:owners)
 
-    limit = Plausible.Teams.Billing.team_member_limit(site.team)
-    usage = Plausible.Teams.Billing.team_member_usage(site.team)
+    limit = Teams.Billing.team_member_limit(site.team)
+    usage = Teams.Billing.team_member_usage(site.team)
     below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
 
     render(
@@ -45,7 +46,12 @@ defmodule PlausibleWeb.Site.MembershipController do
       Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
       |> Plausible.Repo.preload(:owners)
 
-    case Memberships.create_invitation(site, conn.assigns.current_user, email, role) do
+    case Teams.Invitations.InviteToSite.create_invitation(
+           site,
+           conn.assigns.current_user,
+           email,
+           role
+         ) do
       {:ok, invitation} ->
         conn
         |> put_flash(
@@ -107,7 +113,12 @@ defmodule PlausibleWeb.Site.MembershipController do
     site =
       Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
-    case Memberships.create_invitation(site, conn.assigns.current_user, email, :owner) do
+    case Teams.Invitations.InviteToSite.create_invitation(
+           site,
+           conn.assigns.current_user,
+           email,
+           :owner
+         ) do
       {:ok, _invitation} ->
         conn
         |> put_flash(:success, "Site transfer request has been sent to #{email}")
@@ -165,11 +176,9 @@ defmodule PlausibleWeb.Site.MembershipController do
       Plausible.Sites.get_for_user!(user, site_domain)
 
     destination_team =
-      Repo.one!(
-        Plausible.Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier)
-      )
+      Repo.one!(Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier))
 
-    case Memberships.AcceptInvitation.change_team(
+    case Teams.Invitations.Accept.change_team(
            site,
            conn.assigns.current_user,
            destination_team
@@ -213,7 +222,7 @@ defmodule PlausibleWeb.Site.MembershipController do
   def update_role_by_user(conn, %{"id" => user_id, "new_role" => new_role_str}) do
     %{site: site, current_user: current_user, site_role: site_role} = conn.assigns
 
-    case Plausible.Teams.Memberships.update_role(
+    case Teams.Memberships.update_role(
            site,
            user_id,
            new_role_str,
@@ -247,7 +256,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site = conn.assigns.site
 
     if user = Repo.get(Plausible.Auth.User, user_id) do
-      Plausible.Teams.Memberships.remove(site, user)
+      Teams.Memberships.remove(site, user)
 
       redirect_target =
         if user_id == conn.assigns[:current_user].id do

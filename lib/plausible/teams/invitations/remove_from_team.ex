@@ -1,4 +1,4 @@
-defmodule Plausible.Teams.Invitations.Remove do
+defmodule Plausible.Teams.Invitations.RemoveFromTeam do
   @moduledoc """
   Service for removing a team invitation.
   """
