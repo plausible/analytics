@@ -769,7 +769,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     %{"results" => results} =
       get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
 
-    assert length(results) == 730
+    assert length(results) == 731
 
     # The `event:page` breakdown is currently using the `entry_page`
     # property to allow querying session metrics.
@@ -786,13 +786,11 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              "visit_duration" => 45.0
            }
 
-    # This page was never an entry_page in the imported data, and
-    # therefore the session metrics are returned as `nil`.
-    assert List.last(results) == %{
+    assert Enum.at(results, 729) == %{
              "bounce_rate" => 0.0,
-             "page" => "/znamenitosti-rima-koje-treba-vidjeti/",
+             "page" => "/znamenitosti-rima-koje-treba-vidjeti",
              "time_on_page" => 40,
-             "visit_duration" => 0.0,
+             "visit_duration" => 40.0,
              "visitors" => 1,
              "visits" => 1
            }
