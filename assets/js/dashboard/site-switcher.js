@@ -270,6 +270,7 @@ export default class SiteSwitcher extends React.Component {
           leaveTo="opacity-0 scale-95"
         >
           <div
+            data-testid='sitemenu'
             className="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg z-10"
             ref={(node) => (this.dropDownNode = node)}
           >

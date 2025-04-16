@@ -65,6 +65,7 @@ test('user can open and close site switcher', async () => {
     ['Site Settings', 'View All']
   )
   await userEvent.click(toggleSiteSwitcher)
+  await waitForElementToBeRemoved(() => screen.queryByTestId('sitemenu'))
   expect(screen.queryAllByRole('menuitem')).toEqual([])
 })
 
