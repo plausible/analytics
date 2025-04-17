@@ -8,7 +8,7 @@ defmodule PlausibleWeb.BillingController do
 
   plug PlausibleWeb.RequireAccountPlug
 
-  plug Plausible.Plugs.AuthorizeTeamAccess, [:owner, :admin, :billing]
+  plug Plausible.Plugs.AuthorizeTeamAccess, [:owner, :billing]
 
   def ping_subscription(%Plug.Conn{} = conn, _params) do
     subscribed? = Plausible.Teams.Billing.has_active_subscription?(conn.assigns.current_team)
