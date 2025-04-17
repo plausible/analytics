@@ -1,21 +1,21 @@
-import { TransitionClasses } from '@headlessui/react'
 import classNames from 'classnames'
 
-const TRANSITION_CONFIG: TransitionClasses = {
-  enter: 'transition ease-out duration-100',
-  enterFrom: 'opacity-0 scale-95',
-  enterTo: 'opacity-100 scale-100',
-  leave: 'transition ease-in duration-75',
-  leaveFrom: 'opacity-100 scale-100',
-  leaveTo: 'opacity-0 scale-95'
-}
+const transitionClasses = classNames(
+  'transition ease-in-out',
+  // Shared closed styles
+  'data-[closed]:opacity-0',
+  // Entering styles
+  'ease-out data-[enter]:duration-100 data-[enter]:data-[closed]:scale-95 data-[enter]:scale-100',
+  // Leaving styles
+  'ease-in data-[leave]:duration-75 data-[leave]:data-[closed]:scale-95 data-[leave]:scale-100'
+)
 
 const transition = {
-  props: TRANSITION_CONFIG,
+  props: {},
   classNames: {
-    fullwidth: 'z-10 absolute left-0 right-0',
-    left: 'z-10 absolute left-0',
-    right: 'z-10 absolute right-0'
+    fullwidth: classNames(transitionClasses, 'z-10 absolute left-0 right-0'),
+    left: classNames(transitionClasses, 'z-10 absolute left-0'),
+    right: classNames(transitionClasses, 'z-10 absolute right-0')
   }
 }
 
