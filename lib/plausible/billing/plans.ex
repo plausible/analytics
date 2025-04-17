@@ -10,7 +10,7 @@ defmodule Plausible.Billing.Plans do
         :plans_v2,
         :plans_v3,
         :plans_v4,
-        :sandbox_plans
+        :sandbox_plans_v4
       ] do
     path = Application.app_dir(:plausible, ["priv", "#{f}.json"])
 
@@ -36,7 +36,7 @@ defmodule Plausible.Billing.Plans do
     owned_plan = get_regular_plan(subscription)
 
     cond do
-      Application.get_env(:plausible, :environment) == "staging" -> @sandbox_plans
+      Application.get_env(:plausible, :environment) == "staging" -> @sandbox_plans_v4
       is_nil(owned_plan) -> @plans_v4
       subscription && Subscriptions.expired?(subscription) -> @plans_v4
       owned_plan.kind == :business -> @plans_v4
@@ -52,7 +52,7 @@ defmodule Plausible.Billing.Plans do
     owned_plan = get_regular_plan(subscription)
 
     cond do
-      Application.get_env(:plausible, :environment) == "staging" -> @sandbox_plans
+      Application.get_env(:plausible, :environment) == "staging" -> @sandbox_plans_v4
       subscription && Subscriptions.expired?(subscription) -> @plans_v4
       owned_plan && owned_plan.generation < 4 -> @plans_v3
       true -> @plans_v4
@@ -228,7 +228,7 @@ defmodule Plausible.Billing.Plans do
 
   defp sandbox_plans() do
     if Application.get_env(:plausible, :environment) == "staging" do
-      @sandbox_plans
+      @sandbox_plans_v4
     else
       []
     end
