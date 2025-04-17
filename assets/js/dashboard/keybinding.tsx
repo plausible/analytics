@@ -4,7 +4,6 @@ import {
   useAppNavigate
 } from './navigation/use-app-navigate'
 import classNames from 'classnames'
-import { useRoutelessModalsContext } from './navigation/routeless-modals-context'
 
 /**
  * Returns whether a keydown or keyup event should be ignored or not.
