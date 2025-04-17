@@ -10,6 +10,10 @@ defmodule Plausible.Billing.Plans do
         :plans_v2,
         :plans_v3,
         :plans_v4,
+        :sandbox_legacy_plans,
+        :sandbox_plans_v1,
+        :sandbox_plans_v2,
+        :sandbox_plans_v3,
         :sandbox_plans_v4
       ] do
     path = Application.app_dir(:plausible, ["priv", "#{f}.json"])
@@ -25,6 +29,18 @@ defmodule Plausible.Billing.Plans do
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
+  # Generate functions returning a specific generation of plans depending on
+  # the app environment
+  for fn_name <- [:legacy_plans, :plans_v1, :plans_v2, :plans_v3, :plans_v4] do
+    defp unquote(fn_name)() do
+      if Application.get_env(:plausible, :environment) == "staging" do
+        unquote(Macro.escape(Module.get_attribute(__MODULE__, :"sandbox_#{fn_name}")))
+      else
+        unquote(Macro.escape(Module.get_attribute(__MODULE__, fn_name)))
+      end
+    end
+  end
+
   @spec growth_plans_for(Subscription.t()) :: [Plan.t()]
   @doc """
   Returns a list of growth plans available for the subscription to choose.
@@ -36,14 +52,13 @@ defmodule Plausible.Billing.Plans do
     owned_plan = get_regular_plan(subscription)
 
     cond do
-      Application.get_env(:plausible, :environment) == "staging" -> @sandbox_plans_v4
-      is_nil(owned_plan) -> @plans_v4
-      subscription && Subscriptions.expired?(subscription) -> @plans_v4
-      owned_plan.kind == :business -> @plans_v4
-      owned_plan.generation == 1 -> @plans_v1 |> drop_high_plans(owned_plan)
-      owned_plan.generation == 2 -> @plans_v2 |> drop_high_plans(owned_plan)
-      owned_plan.generation == 3 -> @plans_v3
-      owned_plan.generation == 4 -> @plans_v4
+      is_nil(owned_plan) -> plans_v4()
+      subscription && Subscriptions.expired?(subscription) -> plans_v4()
+      owned_plan.kind == :business -> plans_v4()
+      owned_plan.generation == 1 -> plans_v1() |> drop_high_plans(owned_plan)
+      owned_plan.generation == 2 -> plans_v2() |> drop_high_plans(owned_plan)
+      owned_plan.generation == 3 -> plans_v3()
+      owned_plan.generation == 4 -> plans_v4()
     end
     |> Enum.filter(&(&1.kind == :growth))
   end
@@ -52,10 +67,9 @@ defmodule Plausible.Billing.Plans do
     owned_plan = get_regular_plan(subscription)
 
     cond do
-      Application.get_env(:plausible, :environment) == "staging" -> @sandbox_plans_v4
-      subscription && Subscriptions.expired?(subscription) -> @plans_v4
-      owned_plan && owned_plan.generation < 4 -> @plans_v3
-      true -> @plans_v4
+      subscription && Subscriptions.expired?(subscription) -> plans_v4()
+      owned_plan && owned_plan.generation < 4 -> plans_v3()
+      true -> plans_v4()
     end
     |> Enum.filter(&(&1.kind == :business))
   end
@@ -223,14 +237,6 @@ defmodule Plausible.Billing.Plans do
   end
 
   def all() do
-    @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4 ++ sandbox_plans()
-  end
-
-  defp sandbox_plans() do
-    if Application.get_env(:plausible, :environment) == "staging" do
-      @sandbox_plans_v4
-    else
-      []
-    end
+    legacy_plans() ++ plans_v1() ++ plans_v2() ++ plans_v3() ++ plans_v4()
   end
 end
