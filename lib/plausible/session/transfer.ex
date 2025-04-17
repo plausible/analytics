@@ -18,7 +18,7 @@ defmodule Plausible.Session.Transfer do
   @cmd_dump_cache :get
   @cmd_takeover_done :done
 
-  def telemetry_event, do: [:plausible, :sessions, :transfer]
+  def telemetry_event, do: [:plausible, :sessions, :takeover]
 
   @doc """
   Starts the `:sessions` transfer supervisor.
