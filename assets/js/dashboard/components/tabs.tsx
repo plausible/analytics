@@ -7,9 +7,8 @@ import {
 } from '@headlessui/react'
 import classNames from 'classnames'
 import React, { ReactNode, useRef } from 'react'
-import { BlurMenuButtonOnEscape } from '../keybinding'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { popover } from './popover'
+import { popover, BlurMenuButtonOnEscape } from './popover'
 
 export const TabWrapper = ({
   className,

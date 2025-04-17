@@ -12,10 +12,9 @@ import {
   PopoverPanel,
   Transition
 } from '@headlessui/react'
-import { popover } from '../components/popover'
+import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { BlurMenuButtonOnEscape } from '../keybinding'
 import { SearchableSegmentsSection } from './segments/searchable-segments-section'
 
 export function getFilterListItems({
