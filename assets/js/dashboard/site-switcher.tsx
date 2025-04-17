@@ -105,7 +105,6 @@ export const SiteSwitcher = () => {
                 keyboardKey={`${index + 1}`}
                 type="keydown"
                 handler={() => {
-                  closePopover()
                   window.location.assign(
                     getSwitchToSiteURL(currentSite, { domain })
                   )
@@ -149,7 +148,6 @@ export const SiteSwitcher = () => {
                   <a
                     className={menuItemClassName}
                     href={`/${encodeURIComponent(currentSite.domain)}/settings/general`}
-                    onClick={() => closePopover()}
                   >
                     <Cog8ToothIcon className="h-4 w-4 block mr-2" />
                     <span className="mr-auto">Site settings</span>
@@ -179,7 +177,11 @@ export const SiteSwitcher = () => {
                     key={domain}
                     className={menuItemClassName}
                     href={getSwitchToSiteURL(currentSite, { domain })}
-                    onClick={() => closePopover()}
+                    onClick={
+                      currentSite.domain === domain
+                        ? () => closePopover()
+                        : () => {}
+                    }
                   >
                     <Favicon domain={domain} className="h-4 w-4 block mr-2" />
                     <span className="truncate mr-auto">{domain}</span>
@@ -192,11 +194,7 @@ export const SiteSwitcher = () => {
               {canSeeViewAllSites && (
                 <>
                   <MenuSeparator />
-                  <a
-                    className={menuItemClassName}
-                    href={`/sites`}
-                    onClick={() => closePopover()}
-                  >
+                  <a className={menuItemClassName} href={`/sites`}>
                     View all
                   </a>
                 </>
