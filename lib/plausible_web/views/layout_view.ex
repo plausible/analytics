@@ -124,13 +124,15 @@ defmodule PlausibleWeb.LayoutView do
         "Team Settings",
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
-          if(current_team_role in [:owner, :admin, :billing],
+          if(current_team_role in [:owner, :billing],
             do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
           ),
-          if(current_team_role in [:owner, :admin, :billing],
+          if(current_team_role in [:owner, :billing],
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
-          %{key: "API Keys", value: "api-keys", icon: :key},
+          if(current_team_role in [:owner, :billing, :admin, :editor],
+            do: %{key: "API Keys", value: "api-keys", icon: :key}
+          ),
           if(current_team_role == :owner,
             do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
           )
