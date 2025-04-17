@@ -9,17 +9,12 @@ import {
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
-import {
-  BlurMenuButtonOnEscape,
-  isModifierPressed,
-  isTyping,
-  Keybind
-} from '../../keybinding'
+import { isModifierPressed, isTyping, Keybind } from '../../keybinding'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext, PlausibleSite } from '../../site-context'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
-import { popover } from '../../components/popover'
+import { BlurMenuButtonOnEscape, popover } from '../../components/popover'
 import { DashboardQuery } from '../../query'
 import { Dayjs } from 'dayjs'
 import { QueryPeriod } from '../../query-time-periods'

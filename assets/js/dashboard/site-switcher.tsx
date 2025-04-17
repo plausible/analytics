@@ -11,14 +11,8 @@ import {
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { Cog8ToothIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
-import {
-  BlurMenuButtonOnEscape,
-  isModifierPressed,
-  isTyping,
-  Keybind,
-  KeybindHint
-} from './keybinding'
-import { popover } from './components/popover'
+import { isModifierPressed, isTyping, Keybind, KeybindHint } from './keybinding'
+import { popover, BlurMenuButtonOnEscape } from './components/popover'
 import { useQuery } from '@tanstack/react-query'
 import { Role, useUserContext } from './user-context'
 import { PlausibleSite, useSiteContext } from './site-context'
@@ -147,7 +141,7 @@ export const SiteSwitcher = () => {
             )}
           >
             <PopoverPanel
-              data-testid={BUTTON_ID}
+              data-testid="sitemenu"
               className={classNames(popover.panel.classNames.roundedSheet)}
             >
               {canSeeSiteSettings && (

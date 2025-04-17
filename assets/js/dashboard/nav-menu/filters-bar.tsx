@@ -10,8 +10,7 @@ import {
   PopoverPanel,
   Transition
 } from '@headlessui/react'
-import { popover } from '../components/popover'
-import { BlurMenuButtonOnEscape } from '../keybinding'
+import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardQuery } from '../query'

@@ -16,8 +16,7 @@ import {
 } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
-import { BlurMenuButtonOnEscape } from '../keybinding'
-import { popover } from './popover'
+import { popover, BlurMenuButtonOnEscape } from './popover'
 
 export default function FilterOperatorSelector(props) {
   const filterName = props.forFilter

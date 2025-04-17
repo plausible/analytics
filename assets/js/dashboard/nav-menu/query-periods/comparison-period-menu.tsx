@@ -3,7 +3,6 @@ import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
-import { BlurMenuButtonOnEscape } from '../../keybinding'
 import {
   AppNavigationLink,
   useAppNavigate
@@ -18,7 +17,7 @@ import {
   getSearchToApplyCustomComparisonDates
 } from '../../query-time-periods'
 import { PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
-import { popover } from '../../components/popover'
+import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
   datemenuButtonClassName,
   DateMenuChevron,

@@ -1,4 +1,7 @@
+import React, { RefObject, useEffect } from 'react'
 import classNames from 'classnames'
+import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
+import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 
 const transitionClasses = classNames(
   'transition ease-in-out',
@@ -74,4 +77,77 @@ export const popover = {
   panel,
   transition,
   items
+}
+
+/**
+ * Rendering this component captures the Escape key on targetRef.current, a PopoverButton,
+ * blurring the element on Escape, and stopping the event from propagating.
+ * Needed to prevent other Escape handlers that may exist from running.
+ */
+export function BlurMenuButtonOnEscape({
+  targetRef,
+  ...props
+}: {
+  buttonId?: string
+  targetRef: RefObject<HTMLElement>
+}) {
+  const { registerDropmenuState } = useRoutelessModalsContext()
+
+  useEffect(() => {
+    const buttonId =
+      props.buttonId ?? `button-${Math.floor(Math.random() * 10000)}`
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'data-open'
+        ) {
+          const element = mutation.target as Element
+          registerDropmenuState({
+            id: buttonId,
+            isOpen: element.hasAttribute('data-open')
+          })
+        }
+      })
+    })
+
+    const element = targetRef.current
+
+    if (element) {
+      registerDropmenuState({
+        id: buttonId,
+        isOpen: element.hasAttribute('data-open')
+      })
+      observer.observe(element, {
+        attributes: true,
+        attributeFilter: ['data-open']
+      })
+    }
+
+    return () => {
+      if (element) {
+        registerDropmenuState({ id: buttonId, isOpen: false })
+      }
+      observer.disconnect()
+    }
+  }, [targetRef, registerDropmenuState, props.buttonId])
+
+  return (
+    <Keybind
+      keyboardKey="Escape"
+      type="keyup"
+      handler={(event) => {
+        const t = event.target as HTMLElement | null
+        if (typeof t?.blur === 'function') {
+          if (t === targetRef.current) {
+            t.blur()
+            event.stopPropagation()
+          }
+        }
+      }}
+      targetRef={targetRef}
+      shouldIgnoreWhen={[isModifierPressed, isTyping]}
+    />
+  )
 }
