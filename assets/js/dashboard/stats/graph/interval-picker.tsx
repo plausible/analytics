@@ -157,7 +157,6 @@ export function IntervalPicker({
 
         <Transition
           as="div"
-          {...popover.transition.props}
           className={classNames(
             popover.transition.classNames.right,
             'mt-2 w-56'

@@ -42,7 +42,6 @@ export const CalendarPanel = React.forwardRef<
   return (
     <Transition
       as="div"
-      {...popover.transition.props}
       className={classNames(
         popover.transition.classNames.fullwidth,
         'md:left-auto',

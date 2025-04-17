@@ -43,7 +43,6 @@ export default function FilterOperatorSelector(props) {
         </PopoverButton>
         <Transition
           as="div"
-          {...popover.transition.props}
           className={classNames(popover.transition.classNames.left, 'mt-2')}
         >
           <PopoverPanel

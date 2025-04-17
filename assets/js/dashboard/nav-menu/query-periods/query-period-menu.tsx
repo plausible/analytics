@@ -153,7 +153,6 @@ const QueryPeriodMenuInner = ({
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
       <Transition
         as="div"
-        {...popover.transition.props}
         className={classNames(
           'mt-2',
           popover.transition.classNames.fullwidth,

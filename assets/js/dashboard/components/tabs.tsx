@@ -96,7 +96,6 @@ export const DropdownTabButton = ({
 
       <Transition
         as="div"
-        {...popover.transition.props}
         className={classNames(
           'mt-2',
           popover.transition.classNames.fullwidth,
