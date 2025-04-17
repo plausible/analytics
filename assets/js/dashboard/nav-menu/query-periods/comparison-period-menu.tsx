@@ -3,7 +3,6 @@ import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
-import { BlurMenuButtonOnEscape } from '../../keybinding'
 import {
   AppNavigationLink,
   useAppNavigate
@@ -17,8 +16,8 @@ import {
   getCurrentComparisonPeriodDisplayName,
   getSearchToApplyCustomComparisonDates
 } from '../../query-time-periods'
-import { Popover, Transition } from '@headlessui/react'
-import { popover } from '../../components/popover'
+import { PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
+import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
   datemenuButtonClassName,
   DateMenuChevron,
@@ -46,14 +45,14 @@ export const ComparisonPeriodMenuItems = ({
 
   return (
     <Transition
-      {...popover.transition.props}
+      as="div"
       className={classNames(
         'mt-2',
         popover.transition.classNames.fullwidth,
         'md:left-auto md:w-56'
       )}
     >
-      <Popover.Panel className={popover.panel.classNames.roundedSheet}>
+      <PopoverPanel className={popover.panel.classNames.roundedSheet}>
         {[
           ComparisonMode.off,
           ComparisonMode.previous_period,
@@ -102,7 +101,7 @@ export const ComparisonPeriodMenuItems = ({
             </AppNavigationLink>
           </>
         )}
-      </Popover.Panel>
+      </PopoverPanel>
     </Transition>
   )
 }
@@ -124,12 +123,12 @@ export const ComparisonPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
+      <PopoverButton className={datemenuButtonClassName} ref={buttonRef}>
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentComparisonPeriodDisplayName({ site, query })}
         </span>
         <DateMenuChevron />
-      </Popover.Button>
+      </PopoverButton>
       <ComparisonPeriodMenuItems
         closeDropdown={closeDropdown}
         toggleCalendar={toggleCalendar}
@@ -149,7 +148,7 @@ export const ComparisonCalendarMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
-      <Popover.Button
+      <PopoverButton
         className={hiddenCalendarButtonClassName}
         tabIndex={-1}
         ref={calendarButtonRef}

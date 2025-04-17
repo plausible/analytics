@@ -10,6 +10,15 @@ import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../test-utils/app-context-providers'
 import { TopBar } from './top-bar'
 import { MockAPI } from '../../../test-utils/mock-api'
+import {
+  mockAnimationsApi,
+  mockResizeObserver,
+  mockIntersectionObserver
+} from 'jsdom-testing-mocks'
+
+mockAnimationsApi()
+mockResizeObserver()
+mockIntersectionObserver()
 
 const domain = 'dummy.site'
 const domains = [domain, 'example.com', 'blog.example.com']
@@ -17,23 +26,6 @@ const domains = [domain, 'example.com', 'blog.example.com']
 let mockAPI: MockAPI
 
 beforeAll(() => {
-  global.IntersectionObserver = jest.fn(
-    () =>
-      ({
-        observe: jest.fn(),
-        unobserve: jest.fn(),
-        disconnect: jest.fn()
-      }) as unknown as IntersectionObserver
-  )
-  global.ResizeObserver = jest.fn(
-    () =>
-      ({
-        observe: jest.fn(),
-        unobserve: jest.fn(),
-        disconnect: jest.fn()
-      }) as unknown as ResizeObserver
-  )
-
   mockAPI = new MockAPI().start()
 })
 
@@ -57,14 +49,15 @@ test('user can open and close site switcher', async () => {
   await userEvent.click(toggleSiteSwitcher)
   expect(screen.queryAllByRole('link').map((el) => el.textContent)).toEqual(
     [
+      ['Site settings'],
+      ['dummy.site', '1'],
       ['example.com', '2'],
-      ['blog.example.com', '3']
+      ['blog.example.com', '3'],
+      ['View all']
     ].map((a) => a.join(''))
   )
-  expect(screen.queryAllByRole('menuitem').map((el) => el.textContent)).toEqual(
-    ['Site Settings', 'View All']
-  )
   await userEvent.click(toggleSiteSwitcher)
+  await waitForElementToBeRemoved(() => screen.queryByTestId('sitemenu'))
   expect(screen.queryAllByRole('menuitem')).toEqual([])
 })
 
@@ -89,7 +82,8 @@ test('user can open and close filters dropdown', async () => {
     'Goal'
   ])
   await userEvent.click(toggleFilters)
-  expect(screen.queryAllByRole('menuitem')).toEqual([])
+  await waitForElementToBeRemoved(() => screen.queryByTestId('filtermenu'))
+  expect(screen.queryAllByRole('link')).toEqual([])
 })
 
 test('current visitors renders when visitors are present and disappears after visitors are null', async () => {

@@ -15,6 +15,7 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
+import { TabButton, TabWrapper } from '../../components/tabs'
 
 function Countries({ query, site, onClick, afterFetchData }) {
   function fetchData() {
@@ -244,27 +245,6 @@ class Locations extends React.Component {
     }
   }
 
-  renderPill(name, mode) {
-    const isActive = this.state.mode === mode
-
-    if (isActive) {
-      return (
-        <button className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading">
-          {name}
-        </button>
-      )
-    }
-
-    return (
-      <button
-        className="hover:text-indigo-600 cursor-pointer"
-        onClick={this.setMode(mode)}
-      >
-        {name}
-      </button>
-    )
-  }
-
   render() {
     return (
       <div>
@@ -278,12 +258,22 @@ class Locations extends React.Component {
               skipImportedReason={this.state.skipImportedReason}
             />
           </div>
-          <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-            {this.renderPill('Map', 'map')}
-            {this.renderPill('Countries', 'countries')}
-            {this.renderPill('Regions', 'regions')}
-            {this.renderPill('Cities', 'cities')}
-          </div>
+          <TabWrapper>
+            {[
+              { label: 'Map', value: 'map' },
+              { label: 'Countries', value: 'countries' },
+              { label: 'Regions', value: 'regions' },
+              { label: 'Cities', value: 'cities' }
+            ].map(({ value, label }) => (
+              <TabButton
+                key={value}
+                onClick={this.setMode(value)}
+                active={this.state.mode === value}
+              >
+                {label}
+              </TabButton>
+            ))}
+          </TabWrapper>
         </div>
         {this.renderContent()}
       </div>

@@ -5,24 +5,14 @@ import { TestContextProviders } from '../../../test-utils/app-context-providers'
 import { FiltersBar, handleVisibility } from './filters-bar'
 import { getRouterBasepath } from '../router'
 import { stringifySearch } from '../util/url-search-params'
+import { mockAnimationsApi, mockResizeObserver } from 'jsdom-testing-mocks'
+
+mockAnimationsApi()
+const resizeObserver = mockResizeObserver()
 
 const domain = 'dummy.site'
 
-beforeAll(() => {
-  const mockResizeObserver = jest.fn(
-    (handleEntries) =>
-      ({
-        observe: jest.fn().mockImplementation((entry) => {
-          handleEntries([entry], null as unknown as ResizeObserver)
-        }),
-        unobserve: jest.fn(),
-        disconnect: jest.fn()
-      }) as unknown as ResizeObserver
-  )
-  global.ResizeObserver = mockResizeObserver
-})
-
-test('user can see expected filters and clear them one by one or all together', async () => {
+test('user can see expected filters and clear them one by one or all together on small screens', async () => {
   const searchRecord = {
     filters: [
       ['is', 'country', ['DE']],
@@ -67,10 +57,13 @@ test('user can see expected filters and clear them one by one or all together', 
     }
   )
 
+  // needed to initiate the layout calculation effect of the component
+  resizeObserver.resize()
+
   const queryFilterPills = () =>
     screen.queryAllByRole('link', { hidden: false, name: /.* is .*/i })
 
-  // all filters appear in See more menu
+  // all filters appear in See more menu (see the mock widths in props)
   expect(queryFilterPills().map((m) => m.textContent)).toEqual([])
 
   await userEvent.click(

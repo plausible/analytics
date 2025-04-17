@@ -4,9 +4,13 @@ import React, { useRef, useState, useLayoutEffect } from 'react'
 import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { Popover, Transition } from '@headlessui/react'
-import { popover } from '../components/popover'
-import { BlurMenuButtonOnEscape } from '../keybinding'
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition
+} from '@headlessui/react'
+import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardQuery } from '../query'
@@ -244,7 +248,7 @@ const SeeMoreMenu = ({
   return (
     <Popover className={className}>
       <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
-      <Popover.Button
+      <PopoverButton
         title={title}
         ref={seeMoreRef}
         className={classNames(
@@ -271,16 +275,16 @@ const SeeMoreMenu = ({
             </div>
           </div>
         )}
-      </Popover.Button>
+      </PopoverButton>
       <Transition
-        {...popover.transition.props}
+        as="div"
         className={classNames(
           'mt-2',
           popover.transition.classNames.fullwidth,
           'md:right-auto'
         )}
       >
-        <Popover.Panel
+        <PopoverPanel
           className={classNames(
             popover.panel.classNames.roundedSheet,
             'flex flex-col'
@@ -334,7 +338,7 @@ const SeeMoreMenu = ({
               })}
             </div>
           )}
-        </Popover.Panel>
+        </PopoverPanel>
       </Transition>
     </Popover>
   )

@@ -1,11 +1,19 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import {
+  render,
+  screen,
+  waitForElementToBeRemoved
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
 import { stringifySearch } from '../../util/url-search-params'
 import { useNavigate } from 'react-router-dom'
 import { getRouterBasepath } from '../../router'
 import { QueryPeriodsPicker } from './query-periods-picker'
+import { mockAnimationsApi, mockResizeObserver } from 'jsdom-testing-mocks'
+
+mockAnimationsApi()
+mockResizeObserver()
 
 const domain = 'picking-query-dates.test'
 const periodStorageKey = `period__${domain}`
@@ -47,10 +55,11 @@ test('user can select a new period and its value is stored', async () => {
     )
   })
 
+  expect(screen.queryByTestId('datemenu')).toBeNull()
   await userEvent.click(screen.getByText('Last 28 days'))
   expect(screen.getByTestId('datemenu')).toBeVisible()
   await userEvent.click(screen.getByText('All time'))
-  expect(screen.queryByTestId('datemenu')).toBeNull()
+  await waitForElementToBeRemoved(() => screen.queryByTestId('datemenu'))
   expect(localStorage.getItem(periodStorageKey)).toBe('all')
 })
 
@@ -165,10 +174,14 @@ test('going back resets the stored query period to previous value', async () => 
 
   await userEvent.click(screen.getByText('Last 28 days'))
   await userEvent.click(screen.getByText('Year to Date'))
+  await waitForElementToBeRemoved(() => screen.queryByTestId('datemenu'))
+
   expect(localStorage.getItem(periodStorageKey)).toBe('year')
 
   await userEvent.click(screen.getByText('Year to Date'))
   await userEvent.click(screen.getByText('Month to Date'))
+  await waitForElementToBeRemoved(() => screen.queryByTestId('datemenu'))
+
   expect(localStorage.getItem(periodStorageKey)).toBe('month')
 
   await userEvent.click(screen.getByTestId('browser-back'))

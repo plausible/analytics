@@ -6,11 +6,15 @@ import {
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { Popover, Transition } from '@headlessui/react'
-import { popover } from '../components/popover'
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition
+} from '@headlessui/react'
+import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { BlurMenuButtonOnEscape } from '../keybinding'
 import { SearchableSegmentsSection } from './segments/searchable-segments-section'
 
 export function getFilterListItems({
@@ -53,7 +57,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <Popover.Button
+      <PopoverButton
         ref={buttonRef}
         className={classNames(
           popover.toggleButton.classNames.rounded,
@@ -65,17 +69,18 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         <span className={popover.toggleButton.classNames.truncatedText}>
           Filter
         </span>
-      </Popover.Button>
+      </PopoverButton>
       <Transition
-        {...popover.transition.props}
+        as="div"
         className={classNames(
           'mt-2',
           popover.transition.classNames.fullwidth,
           'md:left-auto md:w-80'
         )}
       >
-        <Popover.Panel
+        <PopoverPanel
           className={classNames(popover.panel.classNames.roundedSheet)}
+          data-testid="filtermenu"
         >
           <div className="flex">
             {columns.map((filterGroups, index) => (
@@ -106,7 +111,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
             ))}
           </div>
           <SearchableSegmentsSection closeList={closeDropdown} />
-        </Popover.Panel>
+        </PopoverPanel>
       </Transition>
     </>
   )
