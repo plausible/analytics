@@ -73,7 +73,6 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
       </PopoverButton>
       <Transition
         as="div"
-        {...popover.transition.props}
         className={classNames(
           'mt-2',
           popover.transition.classNames.fullwidth,
