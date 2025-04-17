@@ -95,17 +95,17 @@ export const SiteSwitcher = () => {
 
   return (
     <Popover className="md:relative">
-      {({ close }) => (
+      {({ close: closePopover }) => (
         <>
           {!!dashboardRouteMatch &&
-            sitesQuery.data?.data.length &&
+            !!sitesQuery.data?.data.length &&
             sitesQuery.data.data.slice(0, 8).map(({ domain }, index) => (
               <Keybind
                 key={domain}
                 keyboardKey={`${index + 1}`}
                 type="keydown"
                 handler={() => {
-                  close()
+                  closePopover()
                   window.location.assign(
                     getSwitchToSiteURL(currentSite, { domain })
                   )
@@ -135,9 +135,8 @@ export const SiteSwitcher = () => {
           </PopoverButton>
           <Transition
             as="div"
-            {...popover.transition.props}
             className={classNames(
-              'mt-2 md:w-64',
+              'mt-2 md:w-80 md:right-auto',
               popover.transition.classNames.fullwidth
             )}
           >
@@ -150,7 +149,7 @@ export const SiteSwitcher = () => {
                   <a
                     className={menuItemClassName}
                     href={`/${encodeURIComponent(currentSite.domain)}/settings/general`}
-                    onClick={() => close()}
+                    onClick={() => closePopover()}
                   >
                     <Cog8ToothIcon className="h-4 w-4 block mr-2" />
                     <span className="mr-auto">Site settings</span>
@@ -180,7 +179,7 @@ export const SiteSwitcher = () => {
                     key={domain}
                     className={menuItemClassName}
                     href={getSwitchToSiteURL(currentSite, { domain })}
-                    onClick={() => close()}
+                    onClick={() => closePopover()}
                   >
                     <Favicon domain={domain} className="h-4 w-4 block mr-2" />
                     <span className="truncate mr-auto">{domain}</span>
@@ -196,7 +195,7 @@ export const SiteSwitcher = () => {
                   <a
                     className={menuItemClassName}
                     href={`/sites`}
-                    onClick={() => close()}
+                    onClick={() => closePopover()}
                   >
                     View all
                   </a>
