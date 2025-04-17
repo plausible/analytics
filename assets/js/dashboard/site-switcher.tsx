@@ -54,10 +54,10 @@ const menuItemClassName = classNames(
 const getSwitchToSiteURL = (
   currentSite: PlausibleSite,
   site: { domain: string }
-) => {
+): null | string => {
   // Prevents reloading the page when the current site is selected
   if (currentSite.domain === site.domain) {
-    return '#'
+    return null
   }
   return `/${encodeURIComponent(site.domain)}`
 }
@@ -105,9 +105,12 @@ export const SiteSwitcher = () => {
                 keyboardKey={`${index + 1}`}
                 type="keydown"
                 handler={() => {
-                  window.location.assign(
-                    getSwitchToSiteURL(currentSite, { domain })
-                  )
+                  const url = getSwitchToSiteURL(currentSite, { domain })
+                  if (!url) {
+                    closePopover()
+                  } else {
+                    window.location.assign(url)
+                  }
                 }}
                 shouldIgnoreWhen={[isModifierPressed, isTyping]}
                 targetRef="document"
@@ -177,7 +180,9 @@ export const SiteSwitcher = () => {
                     data-selected={currentSite.domain === domain}
                     key={domain}
                     className={menuItemClassName}
-                    href={getSwitchToSiteURL(currentSite, { domain })}
+                    href={
+                      getSwitchToSiteURL(currentSite, { domain }) ?? undefined
+                    }
                     onClick={
                       currentSite.domain === domain
                         ? () => closePopover()

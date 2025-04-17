@@ -46,7 +46,8 @@ const items = {
   classNames: {
     navigationLink: classNames(
       'flex items-center justify-between',
-      'px-4 py-2 text-sm leading-tight'
+      'px-4 py-2 text-sm leading-tight',
+      'cursor-pointer'
     ),
     selectedOption: classNames('data-[selected=true]:font-bold'),
     hoverLink: classNames(
