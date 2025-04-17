@@ -27,6 +27,7 @@ import { useMatch } from 'react-router-dom'
 import { rootRoute } from './router'
 import { get } from './api'
 import { ErrorPanel } from './components/error-panel'
+import { useRoutelessModalsContext } from './navigation/routeless-modals-context'
 
 const Favicon = ({
   domain,
@@ -67,8 +68,11 @@ const getSwitchToSiteURL = (
   return `/${encodeURIComponent(site.domain)}`
 }
 
+const BUTTON_ID = 'site-switcher'
+
 export const SiteSwitcher = () => {
   const dashboardRouteMatch = useMatch(rootRoute.path)
+  const { openDropmenus, modal } = useRoutelessModalsContext()
   const user = useUserContext()
   const currentSite = useSiteContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -98,6 +102,8 @@ export const SiteSwitcher = () => {
       {({ close: closePopover }) => (
         <>
           {!!dashboardRouteMatch &&
+            !modal &&
+            openDropmenus.every((id) => id === BUTTON_ID) &&
             !!sitesQuery.data?.data.length &&
             sitesQuery.data.data.slice(0, 8).map(({ domain }, index) => (
               <Keybind
@@ -114,8 +120,9 @@ export const SiteSwitcher = () => {
               />
             ))}
 
-          <BlurMenuButtonOnEscape targetRef={buttonRef} />
+          <BlurMenuButtonOnEscape targetRef={buttonRef} buttonId={BUTTON_ID} />
           <PopoverButton
+            id={BUTTON_ID}
             ref={buttonRef}
             className={classNames(
               'flex items-center rounded h-9 leading-5 font-bold dark:text-gray-100',
@@ -140,7 +147,7 @@ export const SiteSwitcher = () => {
             )}
           >
             <PopoverPanel
-              data-testid="sitemenu"
+              data-testid={BUTTON_ID}
               className={classNames(popover.panel.classNames.roundedSheet)}
             >
               {canSeeSiteSettings && (

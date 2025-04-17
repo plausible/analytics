@@ -4,6 +4,7 @@ import {
   useAppNavigate
 } from './navigation/use-app-navigate'
 import classNames from 'classnames'
+import { useRoutelessModalsContext } from './navigation/routeless-modals-context'
 
 /**
  * Returns whether a keydown or keyup event should be ignored or not.
@@ -160,10 +161,54 @@ export function KeybindHint({
  * Needed to prevent other Escape handlers that may exist from running.
  */
 export function BlurMenuButtonOnEscape({
-  targetRef: targetRef
+  targetRef,
+  ...props
 }: {
+  buttonId?: string
   targetRef: RefObject<HTMLElement>
 }) {
+  const { registerDropmenuState } = useRoutelessModalsContext()
+
+  useEffect(() => {
+    const buttonId =
+      props.buttonId ?? `button-${Math.floor(Math.random() * 10000)}`
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'data-open'
+        ) {
+          const element = mutation.target as Element
+          registerDropmenuState({
+            id: buttonId,
+            isOpen: element.hasAttribute('data-open')
+          })
+        }
+      })
+    })
+
+    const element = targetRef.current
+
+    if (element) {
+      registerDropmenuState({
+        id: buttonId,
+        isOpen: element.hasAttribute('data-open')
+      })
+      observer.observe(element, {
+        attributes: true,
+        attributeFilter: ['data-open']
+      })
+    }
+
+    return () => {
+      if (element) {
+        registerDropmenuState({ id: buttonId, isOpen: false })
+      }
+      observer.disconnect()
+    }
+  }, [targetRef, registerDropmenuState, props.buttonId])
+
   return (
     <Keybind
       keyboardKey="Escape"
