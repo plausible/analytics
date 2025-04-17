@@ -10,20 +10,13 @@ import { stringifySearch } from '../../util/url-search-params'
 import { useNavigate } from 'react-router-dom'
 import { getRouterBasepath } from '../../router'
 import { QueryPeriodsPicker } from './query-periods-picker'
+import { mockAnimationsApi, mockResizeObserver } from 'jsdom-testing-mocks'
+
+mockAnimationsApi()
+mockResizeObserver()
 
 const domain = 'picking-query-dates.test'
 const periodStorageKey = `period__${domain}`
-
-beforeAll(() => {
-  global.ResizeObserver = jest.fn(
-    () =>
-      ({
-        observe: jest.fn(),
-        unobserve: jest.fn(),
-        disconnect: jest.fn()
-      }) as unknown as ResizeObserver
-  )
-})
 
 test('if no period is stored, loads with default value of "Last 28 days", all expected options are present', async () => {
   expect(localStorage.getItem(periodStorageKey)).toBe(null)

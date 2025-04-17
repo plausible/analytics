@@ -82,6 +82,7 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
       >
         <PopoverPanel
           className={classNames(popover.panel.classNames.roundedSheet)}
+          data-testid="filtermenu"
         >
           <div className="flex">
             {columns.map((filterGroups, index) => (

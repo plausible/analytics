@@ -8,7 +8,8 @@ import {
   PopoverPanel,
   Transition
 } from '@headlessui/react'
-import { Cog8ToothIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { Cog8ToothIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
 import {
   BlurMenuButtonOnEscape,
