@@ -83,7 +83,17 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           metric_prefix ++ [:sessions, :transfer, :duration],
           event_name: Plausible.Session.Transfer.telemetry_event(),
           reporter_options: [
-            buckets: [100, 250, 500, 750, 1000, 2500, 5000, 7500, 10_000]
+            buckets: [
+              100_000,
+              250_000,
+              500_000,
+              750_000,
+              1_000_000,
+              2_500_000,
+              5_000_000,
+              7_500_000,
+              10_000_000
+            ]
           ],
           unit: {:native, :microsecond},
           measurement: :duration
