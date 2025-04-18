@@ -4,26 +4,17 @@ defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
   alias Plausible.Teams
 
-  for f <- [
-        :legacy_plans,
-        :plans_v1,
-        :plans_v2,
-        :plans_v3,
-        :plans_v4,
-        :sandbox_legacy_plans,
-        :sandbox_plans_v1,
-        :sandbox_plans_v2,
-        :sandbox_plans_v3,
-        :sandbox_plans_v4
-      ] do
-    path = Application.app_dir(:plausible, ["priv", "#{f}.json"])
+  @generations [:legacy_plans, :plans_v1, :plans_v2, :plans_v3, :plans_v4]
+
+  for group <- Enum.flat_map(@generations, &[&1, :"sandbox_#{&1}"]) do
+    path = Application.app_dir(:plausible, ["priv", "#{group}.json"])
 
     plans_list =
       for attrs <- path |> File.read!() |> Jason.decode!() do
         %Plan{} |> Plan.changeset(attrs) |> Ecto.Changeset.apply_action!(nil)
       end
 
-    Module.put_attribute(__MODULE__, f, plans_list)
+    Module.put_attribute(__MODULE__, group, plans_list)
 
     # https://hexdocs.pm/elixir/1.15/Module.html#module-external_resource
     Module.put_attribute(__MODULE__, :external_resource, path)
@@ -31,7 +22,7 @@ defmodule Plausible.Billing.Plans do
 
   # Generate functions returning a specific generation of plans depending on
   # the app environment
-  for fn_name <- [:legacy_plans, :plans_v1, :plans_v2, :plans_v3, :plans_v4] do
+  for fn_name <- @generations do
     defp unquote(fn_name)() do
       if Application.get_env(:plausible, :environment) == "staging" do
         unquote(Macro.escape(Module.get_attribute(__MODULE__, :"sandbox_#{fn_name}")))
