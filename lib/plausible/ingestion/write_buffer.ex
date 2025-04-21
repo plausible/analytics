@@ -150,5 +150,5 @@ defmodule Plausible.Ingestion.WriteBuffer do
     }
   end
 
-  defp fields_to_ignore(), do: [:acquisition_channel]
+  defp fields_to_ignore(), do: [:acquisition_channel, :interactive?]
 end

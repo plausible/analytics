@@ -47,6 +47,9 @@ defmodule Plausible.ClickhouseEventV2 do
     field :browser_version, Ch, type: "LowCardinality(String)"
 
     field :acquisition_channel, Ch, type: "LowCardinality(String)", writable: :never
+
+    # Virtual field used during event processing
+    field :interactive?, :boolean, default: true, virtual: true, writable: :never
   end
 
   def new(attrs) do
