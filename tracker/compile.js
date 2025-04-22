@@ -4,7 +4,7 @@ const path = require('path')
 const Handlebars = require("handlebars");
 const g = require("generatorics");
 const { parseArgs } = require('node:util');
-const { canSkipCompile } = require("./dev-compile/can-skip-compile");
+const { canSkipCompile } = require("./compiler/can-skip-compile");
 const { tracker_script_version } = require("./package.json");
 
 const { values } = parseArgs({
