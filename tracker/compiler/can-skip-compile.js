@@ -1,6 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+import fs from 'fs'
+import path from 'path'
+import crypto from 'crypto'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const LAST_HASH_FILEPATH = path.join(__dirname, './last-hash.txt')
 
@@ -39,7 +42,7 @@ function lastHash() {
  * will be updated. Compilation can be skipped if the hash hasn't changed since
  * the last execution.
  */
-exports.canSkipCompile = function() {
+export function canSkipCompile() {
   const current = currentHash()
   const last = lastHash()
 
