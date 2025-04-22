@@ -12,26 +12,15 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  alias Plausible.Billing.{Plan, Plans, EnterprisePlan, Feature}
+  alias Plausible.Billing.{EnterprisePlan, Feature, Plan, Plans, Quota}
   alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
 
   require Plausible.Billing.Subscription.Status
 
   @limit_sites_since ~D[2021-05-05]
 
-  @type cycles_usage() :: %{cycle() => usage_cycle()}
-
-  @typep cycle :: :current_cycle | :last_cycle | :penultimate_cycle
-
-  @typep usage_cycle :: %{
-           date_range: Date.Range.t(),
-           pageviews: non_neg_integer(),
-           custom_events: non_neg_integer(),
-           total: non_neg_integer()
-         }
-
-  @typep last_30_days_usage() :: %{:last_30_days => usage_cycle()}
-  @typep monthly_pageview_usage() :: cycles_usage() | last_30_days_usage()
+  @typep last_30_days_usage() :: %{:last_30_days => Quota.usage_cycle()}
+  @typep monthly_pageview_usage() :: Quota.cycles_usage() | last_30_days_usage()
 
   def grandfathered_team?(nil), do: false
 
