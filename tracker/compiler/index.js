@@ -44,19 +44,32 @@ export function compileAll(options = {}) {
   const startTime = Date.now();
   console.log(`Starting compilation of ${targetVariants.length} variants...`)
 
-  const code = getCode()
+  const baseCode = getCode()
 
   const bar = new progress.SingleBar({ clearOnComplete: true }, progress.Presets.shades_classic)
   bar.start(targetVariants.length, 0)
 
-  targetVariants.forEach(({ name, features }) => {
-    compilefile(code, relPath(`../../priv/tracker/js/${name}2`), getCompileVars(features))
+  targetVariants.forEach((variant) => {
+    compileFile(variant, { baseCode })
     bar.increment()
   })
 
   bar.stop()
 
   console.log(`Completed compilation of ${targetVariants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
+}
+
+export function compileFile({ name, features }, options = {}) {
+  const baseCode = options.baseCode || getBaseCode()
+  const compileVars = getCompileVars(features)
+
+  const code = minify(baseCode, compileVars)
+
+  if (options.returnCode) {
+    return code
+  } else {
+    fs.writeFileSync(relPath(`../../priv/tracker/js/${name}`), code)
+  }
 }
 
 function relPath(segment) {
@@ -78,8 +91,8 @@ function getCompileVars(features) {
   return { ...DEFAULT_COMPILE_VARS, ...overrides }
 }
 
-function compilefile(code, output, compileVars) {
-  const result = uglify.minify(code, {
+function minify(baseCode, output, compileVars) {
+  const result = uglify.minify(baseCode, {
     compress: {
       global_defs: compileVars,
       passes: 2
@@ -87,8 +100,8 @@ function compilefile(code, output, compileVars) {
   })
 
   if (result.code) {
-    fs.writeFileSync(output, result.code)
+    return result.code
   } else {
-    throw new Error(`Failed to compile ${output.split('/').pop()}.\n${result.error}\n`)
+    throw result.error
   }
 }
