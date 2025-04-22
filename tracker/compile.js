@@ -20,4 +20,4 @@ if (values.help) {
   process.exit(0);
 }
 
-compileAll({ targets: values.target ? values.target.split(',') : null })
+compileAll({ targets: values.target ? values.target.split(/[.,]/) : null })
