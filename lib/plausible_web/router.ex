@@ -459,6 +459,8 @@ defmodule PlausibleWeb.Router do
 
       live "/sites", Sites, :index, as: :site
       live "/team/setup", TeamSetup, :setup, as: :team_setup
+      live "/cs", CustomerSupport, :index, as: :customer_support
+      live "/cs/:resource/:id", CustomerSupport, :details, as: :customer_support_resource
     end
 
     get "/sites/new", SiteController, :new
