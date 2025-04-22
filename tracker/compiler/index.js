@@ -59,14 +59,10 @@ function relPath(segment) {
 }
 
 function getCode() {
-  const code = (
-    fs.readFileSync(relPath('../src/plausible.js')).toString() +
-    fs.readFileSync(relPath('../src/customEvents.js')).toString()
-  )
-
   return `
 (function(){
-  ${code}
+  ${fs.readFileSync(relPath('../src/plausible.js')).toString()}
+  ${fs.readFileSync(relPath('../src/customEvents.js')).toString()}
 })();`
 }
 
