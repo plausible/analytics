@@ -10,6 +10,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "chokidar": "^4.0.3",
     "generatorics": "^1.1.0",
     "uglify-js": "^3.19.3"
   },
