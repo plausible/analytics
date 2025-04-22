@@ -1,13 +1,8 @@
-defmodule PlausibleWeb.CustomerSupport.LiveUser do
-  use PlausibleWeb, :live_component
-
-  def get(id) do
-    Plausible.Repo.get!(Plausible.Auth.User, id)
-    |> Plausible.Repo.preload(owned_teams: :sites)
-  end
+defmodule PlausibleWeb.CustomerSupport.Live.User do
+  use Plausible.CustomerSupport.Resource, :component
 
   def update(assigns, socket) do
-    user = get(assigns.resource_id)
+    user = Resource.User.get(assigns.resource_id)
     {:ok, assign(socket, user: user)}
   end
 
@@ -39,8 +34,17 @@ defmodule PlausibleWeb.CustomerSupport.LiveUser do
     """
   end
 
+  def render_result(assigns) do
+    ~H"""
+    <div class="flex items-center">
+    <Heroicons.user class="h-6 w-6 mr-4"/>
+    {@resource.object.name} 
+    &lt;{@resource.object.email}&gt;
+    </div>
+    """
+  end
+
   def handle_event("delete", _params, socket) do
-    IO.inspect(socket.assigns)
     raise "delete"
   end
 end

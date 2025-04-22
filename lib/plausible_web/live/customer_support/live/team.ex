@@ -1,13 +1,8 @@
-defmodule PlausibleWeb.CustomerSupport.LiveTeam do
-  use PlausibleWeb, :live_component
-
-  def get(id) do
-    Plausible.Repo.get(Plausible.Teams.Team, id)
-    |> Plausible.Repo.preload(:owners)
-  end
+defmodule PlausibleWeb.CustomerSupport.Live.Team do
+  use Plausible.CustomerSupport.Resource, :component
 
   def update(assigns, socket) do
-    team = get(assigns.resource_id)
+    team = Resource.Team.get(assigns.resource_id)
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
     form = to_form(changeset)
     {:ok, assign(socket, team: team, form: form)}
@@ -32,6 +27,18 @@ defmodule PlausibleWeb.CustomerSupport.LiveTeam do
           </.form>
         </div>
       </div>
+    </div>
+    """
+  end
+
+  def render_result(assigns) do
+    ~H"""
+    <div class="flex items-center">
+    <Heroicons.user_group class="h-6 w-6 mr-4"/>
+    {@resource.object.name} 
+    ({@resource.object.identifier |> String.slice(0, 8)})
+     owned by 
+    {@resource.object.owners |> Enum.map(& &1.name) |> Enum.join(",")}
     </div>
     """
   end
