@@ -4,8 +4,6 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   import Phoenix.LiveViewTest, only: [render_component: 2]
   alias PlausibleWeb.Components.Billing.Notice
 
-  # TODO: Your account tests
-
   test "premium_feature/1 does not render a notice when team is on trial" do
     me = new_user(trial_expiry_date: Date.utc_today())
 
@@ -73,6 +71,18 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       )
 
     assert rendered == ""
+  end
+
+  test "premium_feature/1 for team-less account" do
+    rendered =
+      render_component(&Notice.premium_feature/1,
+        current_role: nil,
+        current_team: nil,
+        feature_mod: Plausible.Billing.Feature.Funnels
+      )
+
+    assert rendered =~ "This account does not have access to Funnels"
+    assert rendered =~ "upgrade your subscription"
   end
 
   test "limit_exceeded/1 when team is on growth displays upgrade link" do
