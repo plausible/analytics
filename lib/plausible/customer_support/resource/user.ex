@@ -7,12 +7,12 @@ defmodule Plausible.CustomerSupport.Resource.User do
     |> Plausible.Repo.preload(owned_teams: :sites)
   end
 
-
   @impl true
   def search(input) do
     q =
       from u in Plausible.Auth.User,
-      where: ilike(u.email, ^"%#{input}%") or ilike(u.name, ^"%#{input}%"),
+        where: ilike(u.email, ^"%#{input}%") or ilike(u.name, ^"%#{input}%"),
+        order_by: fragment("CASE WHEN email = ? OR name = ? THEN 0 ELSE 1 END", ^input, ^input),
         limit: 10
 
     Plausible.Repo.all(q)

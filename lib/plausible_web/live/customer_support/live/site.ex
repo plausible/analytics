@@ -9,14 +9,17 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
   def render(assigns) do
     ~H"""
     <div>
-      <div id="site">
-        <div>
-          {@site.domain} owned by
+      <.tile>
+        <:title>
+          {@site.domain}
+        </:title>
+        <:subtitle>
+          from team:
           <.styled_link phx-click="open" phx-value-id={@site.team.id} phx-value-type="team">
             {@site.team.name}
           </.styled_link>
-        </div>
-      </div>
+        </:subtitle>
+      </.tile>
     </div>
     """
   end
@@ -29,7 +32,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
         <strong>{@resource.object.domain}</strong>
         part of {@resource.object.team.name} owned by {@resource.object.team.owners
         |> Enum.map(& &1.name)
-        |> Enum.join(",")}
+        |> Enum.join(", ")}
       </div>
     </div>
     """
