@@ -34,11 +34,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   def render_result(assigns) do
     ~H"""
     <div class="flex items-center">
-    <Heroicons.user_group class="h-6 w-6 mr-4"/>
-    {@resource.object.name} 
-    ({@resource.object.identifier |> String.slice(0, 8)})
-     owned by 
-    {@resource.object.owners |> Enum.map(& &1.name) |> Enum.join(",")}
+      <Heroicons.user_group class="h-6 w-6 mr-4" />
+      {@resource.object.name} ({@resource.object.identifier |> String.slice(0, 8)})
+      owned by {@resource.object.owners |> Enum.map(& &1.name) |> Enum.join(",")}
     </div>
     """
   end

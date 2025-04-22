@@ -37,9 +37,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
   def render_result(assigns) do
     ~H"""
     <div class="flex items-center">
-    <Heroicons.user class="h-6 w-6 mr-4"/>
-    {@resource.object.name} 
-    &lt;{@resource.object.email}&gt;
+      <Heroicons.user class="h-6 w-6 mr-4" />
+      {@resource.object.name} &lt;{@resource.object.email}&gt;
     </div>
     """
   end
