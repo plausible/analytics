@@ -1,15 +1,14 @@
-(function(){
   'use strict';
 
   var location = window.location
   var document = window.document
 
-  {{#if compat}}
+  if (COMPILE_COMPAT) {
   var scriptEl = document.getElementById('plausible');
-  {{else}}
+  } else {
   var scriptEl = document.currentScript;
-  {{/if}}
-  var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
+  }
+  var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint()
   var dataDomain = scriptEl.getAttribute('data-domain')
 
   function onIgnoredEvent(eventName, reason, options) {
@@ -21,15 +20,15 @@
     }
   }
 
-  function defaultEndpoint(el) {
-    {{#if compat}}
-    var pathArray = el.src.split( '/' );
+  function defaultEndpoint() {
+    if (COMPILE_COMPAT) {
+    var pathArray = scriptEl.src.split( '/' );
     var protocol = pathArray[0];
     var host = pathArray[2];
     return protocol + '//' + host  + '/api/event';
-    {{else}}
-    return new URL(el.src).origin + '/api/event'
-    {{/if}}
+    } else {
+    return new URL(scriptEl.src).origin + '/api/event'
+    }
   }
 
   var currentEngagementIgnored
@@ -127,16 +126,16 @@
         u: currentEngagementURL,
         p: currentEngagementProps,
         e: engagementTime,
-        v: {{TRACKER_SCRIPT_VERSION}}
+        v: COMPILE_TRACKER_SCRIPT_VERSION
       }
 
       // Reset current engagement time metrics. They will restart upon when page becomes visible or the next SPA pageview
       runningEngagementStart = null
       currentEngagementTime = 0
 
-      {{#if hash}}
+      if (COMPILE_HASH) {
       payload.h = 1
-      {{/if}}
+      }
 
       sendRequest(endpoint, payload)
     }
@@ -176,14 +175,14 @@
       maxScrollDepthPx = getCurrentScrollDepthPx()
     }
 
-    {{#unless local}}
+    if (!COMPILE_LOCAL) {
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
       return onIgnoredEvent(eventName, 'localhost', options)
     }
     if ((window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) && !window.__plausible) {
       return onIgnoredEvent(eventName, null, options)
     }
-    {{/unless}}
+    }
     try {
       if (window.localStorage.plausible_ignore === 'true') {
         return onIgnoredEvent(eventName, 'localStorage flag', options)
@@ -191,7 +190,7 @@
     } catch (e) {
 
     }
-    {{#if exclusions}}
+    if (COMPILE_EXCLUSIONS) {
     var dataIncludeAttr = scriptEl && scriptEl.getAttribute('data-include')
     var dataExcludeAttr = scriptEl && scriptEl.getAttribute('data-exclude')
 
@@ -205,25 +204,25 @@
     function pathMatches(wildcardPath) {
       var actualPath = location.pathname
 
-      {{#if hash}}
+      if (COMPILE_HASH) {
       actualPath += location.hash
-      {{/if}}
+      }
 
       return actualPath.match(new RegExp('^' + wildcardPath.trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$'))
     }
-    {{/if}}
+    }
 
     var payload = {}
     payload.n = eventName
-    payload.v = {{TRACKER_SCRIPT_VERSION}}
+    payload.v = COMPILE_TRACKER_SCRIPT_VERSION
 
-    {{#if manual}}
+    if (COMPILE_MANUAL) {
     var customURL = options && options.u
 
     payload.u = customURL ? customURL : location.href
-    {{else}}
+    } else {
     payload.u = location.href
-    {{/if}}
+    }
 
     payload.d = dataDomain
     payload.r = document.referrer || null
@@ -236,13 +235,13 @@
     if (options && options.interactive === false) {
       payload.i = false
     }
-    {{#if revenue}}
+    if (COMPILE_REVENUE) {
     if (options && options.revenue) {
       payload.$ = options.revenue
     }
-    {{/if}}
+    }
 
-    {{#if pageview_props}}
+    if (COMPILE_PAGEVIEW_PROPS) {
     var propAttributes = scriptEl.getAttributeNames().filter(function (name) {
       return name.substring(0, 6) === 'event-'
     })
@@ -256,11 +255,11 @@
     })
 
     payload.p = props
-    {{/if}}
+    }
 
-    {{#if hash}}
+    if (COMPILE_HASH) {
     payload.h = 1
-    {{/if}}
+    }
 
     if (isPageview) {
       currentEngagementIgnored = false
@@ -276,7 +275,7 @@
   }
 
   function sendRequest(endpoint, payload, options) {
-    {{#if compat}}
+    if (COMPILE_COMPAT) {
     var request = new XMLHttpRequest();
     request.open('POST', endpoint, true);
     request.setRequestHeader('Content-Type', 'text/plain');
@@ -288,7 +287,7 @@
         options && options.callback && options.callback({status: request.status})
       }
     }
-    {{else}}
+    } else {
     if (window.fetch) {
       fetch(endpoint, {
         method: 'POST',
@@ -301,7 +300,7 @@
         options && options.callback && options.callback({status: response.status})
       }).catch(function() {})
     }
-    {{/if}}
+    }
   }
 
   var queue = (window.plausible && window.plausible.q) || []
@@ -310,13 +309,13 @@
     trigger.apply(this, queue[i])
   }
 
-  {{#unless manual}}
+  if (!COMPILE_MANUAL) {
     var lastPage;
 
     function page(isSPANavigation) {
-      {{#unless hash}}
+      if (!COMPILE_HASH) {
       if (isSPANavigation && lastPage === location.pathname) return;
-      {{/unless}}
+      }
 
       lastPage = location.pathname
       trigger('pageview')
@@ -324,9 +323,9 @@
 
     var onSPANavigation = function() {page(true)}
 
-    {{#if hash}}
+    if (COMPILE_HASH) {
     window.addEventListener('hashchange', onSPANavigation)
-    {{else}}
+    } else {
     var his = window.history
     if (his.pushState) {
       var originalPushState = his['pushState']
@@ -336,7 +335,7 @@
       }
       window.addEventListener('popstate', onSPANavigation)
     }
-    {{/if}}
+    }
 
     function handleVisibilityChange() {
       if (!lastPage && document.visibilityState === 'visible') {
@@ -356,9 +355,4 @@
         page();
       }
     })
-  {{/unless}}
-
-  {{#if (any outbound_links file_downloads tagged_events)}}
-  {{> customEvents}}
-  {{/if}}
-})();
+  }

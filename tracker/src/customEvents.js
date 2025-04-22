@@ -1,3 +1,4 @@
+if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
 function getLinkEl(link) {
   while (link && (typeof link.tagName === 'undefined' || !isLink(link) || !link.href)) {
     link = link.parentNode
@@ -26,25 +27,25 @@ function handleLinkClickEvent(event) {
   var link = getLinkEl(event.target)
   var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
-  {{#if tagged_events}}
+  if (COMPILE_TAGGED_EVENTS) {
   if (isElementOrParentTagged(link, 0)) {
     // Return to prevent sending multiple events with the same action.
     // Clicks on tagged links are handled by another function.
     return
   }
-  {{/if}}
+  }
 
-  {{#if outbound_links}}
+  if (COMPILE_OUTBOUND_LINKS) {
   if (isOutboundLink(link)) {
     return sendLinkClickEvent(event, link, { name: 'Outbound Link: Click', props: { url: link.href } })
   }
-  {{/if}}
+  }
 
-  {{#if file_downloads}}
+  if (COMPILE_FILE_DOWNLOADS) {
   if (isDownloadToTrack(hrefWithoutQuery)) {
     return sendLinkClickEvent(event, link, { name: 'File Download', props: { url: hrefWithoutQuery } })
   }
-  {{/if}}
+  }
 }
 
 function sendLinkClickEvent(event, link, eventAttrs) {
@@ -59,17 +60,17 @@ function sendLinkClickEvent(event, link, eventAttrs) {
 
   if (shouldFollowLink(event, link)) {
     var attrs = { props: eventAttrs.props, callback: followLink }
-    {{#if revenue}}
+    if (COMPILE_REVENUE) {
     attrs.revenue = eventAttrs.revenue
-    {{/if}}
+    }
     plausible(eventAttrs.name, attrs)
     setTimeout(followLink, 5000)
     event.preventDefault()
   } else {
     var attrs = { props: eventAttrs.props }
-    {{#if revenue}}
+    if (COMPILE_REVENUE) {
     attrs.revenue = eventAttrs.revenue
-    {{/if}}
+    }
     plausible(eventAttrs.name, attrs)
   }
 }
@@ -77,13 +78,13 @@ function sendLinkClickEvent(event, link, eventAttrs) {
 document.addEventListener('click', handleLinkClickEvent)
 document.addEventListener('auxclick', handleLinkClickEvent)
 
-{{#if outbound_links}}
+if (COMPILE_OUTBOUND_LINKS) {
 function isOutboundLink(link) {
   return link && link.href && link.host && link.host !== location.host
 }
-{{/if}}
+}
 
-{{#if file_downloads}}
+if (COMPILE_FILE_DOWNLOADS) {
 var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma', 'dmg']
 var fileTypesAttr = scriptEl.getAttribute('file-types')
 var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
@@ -97,17 +98,17 @@ function isDownloadToTrack(url) {
     return fileTypeToTrack === fileType
   })
 }
-{{/if}}
+}
 
-{{#if tagged_events}}
+if (COMPILE_TAGGED_EVENTS) {
 // Finds event attributes by iterating over the given element's (or its
 // parent's) classList. Returns an object with `name` and `props` keys.
 function getTaggedEventAttributes(htmlElement) {
   var taggedElement = isTagged(htmlElement) ? htmlElement : htmlElement && htmlElement.parentNode
   var eventAttrs = { name: null, props: {} }
-  {{#if revenue}}
+  if (COMPILE_REVENUE) {
   eventAttrs.revenue = {}
-  {{/if}}
+  }
 
   var classList = taggedElement && taggedElement.classList
   if (!classList) { return eventAttrs }
@@ -127,14 +128,14 @@ function getTaggedEventAttributes(htmlElement) {
       }
     }
 
-    {{#if revenue}}
+    if (COMPILE_REVENUE) {
     var revenueMatchList = className.match(/plausible-revenue-(.+)(=|--)(.+)/)
     if (revenueMatchList) {
       var key = revenueMatchList[1]
       var value = revenueMatchList[3]
       eventAttrs.revenue[key] = value
     }
-    {{/if}}
+    }
   }
 
   return eventAttrs
@@ -158,9 +159,9 @@ function handleTaggedFormSubmitEvent(event) {
   setTimeout(submitForm, 5000)
 
   var attrs = { props: eventAttrs.props, callback: submitForm }
-  {{#if revenue}}
+  if (COMPILE_REVENUE) {
   attrs.revenue = eventAttrs.revenue
-  {{/if}}
+  }
   plausible(eventAttrs.name, attrs)
 }
 
@@ -200,9 +201,9 @@ function handleTaggedElementClickEvent(event) {
     } else {
       var attrs = {}
       attrs.props = eventAttrs.props
-      {{#if revenue}}
+      if (COMPILE_REVENUE) {
       attrs.revenue = eventAttrs.revenue
-      {{/if}}
+      }
       plausible(eventAttrs.name, attrs)
     }
   }
@@ -227,4 +228,5 @@ function isElementOrParentTagged(element, parentsChecked) {
 document.addEventListener('submit', handleTaggedFormSubmitEvent)
 document.addEventListener('click', handleTaggedElementClickEvent)
 document.addEventListener('auxclick', handleTaggedElementClickEvent)
-{{/if}}
+}
+}
