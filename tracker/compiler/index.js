@@ -30,9 +30,14 @@ export function compileAll(options = {}) {
   }
 
   let targetVariants = variants.variants
-  if (options.targets) {
+  if (options.targets !== null) {
     targetVariants = targetVariants.filter(variant =>
       options.targets.every(target => variant.features.includes(target))
+    )
+  }
+  if (options.only !== null) {
+    targetVariants = targetVariants.filter(variant =>
+      options.only.some(target_features => equal_lists(variant.features, target_features))
     )
   }
 
