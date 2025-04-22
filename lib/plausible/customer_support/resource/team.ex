@@ -1,5 +1,4 @@
 defmodule Plausible.CustomerSupport.Resource.Team do
-
   use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Team
 
   @impl true
@@ -15,7 +14,7 @@ defmodule Plausible.CustomerSupport.Resource.Team do
     Plausible.Repo.all(q)
   end
 
-@impl true
+  @impl true
   def get(id) do
     Plausible.Teams.Team
     |> Repo.get(id)

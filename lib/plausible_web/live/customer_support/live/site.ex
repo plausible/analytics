@@ -24,8 +24,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
   def render_result(assigns) do
     ~H"""
     <div class="flex items-center">
-    <Heroicons.newspaper class="h-6 w-6 mr-4"/>
-    <div><strong>{@resource.object.domain}</strong> part of {@resource.object.team.name} owned by {@resource.object.team.owners |> Enum.map(& &1.name) |> Enum.join(",")}</div>
+      <Heroicons.newspaper class="h-6 w-6 mr-4" />
+      <div>
+        <strong>{@resource.object.domain}</strong>
+        part of {@resource.object.team.name} owned by {@resource.object.team.owners
+        |> Enum.map(& &1.name)
+        |> Enum.join(",")}
+      </div>
     </div>
     """
   end
