@@ -6,6 +6,7 @@ import Handlebars from 'handlebars'
 import variants from './variants.json' with { type: 'json' }
 import { canSkipCompile } from './can-skip-compile.js'
 import packageJson from '../package.json' with { type: 'json' }
+import progress from 'cli-progress'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -31,7 +32,15 @@ export function compileAll(options = {}) {
   const startTime = Date.now();
   console.log(`Starting compilation of ${targetVariants.length} variants...`)
 
-  targetVariants.forEach(compile)
+  const bar = new progress.SingleBar({ clearOnComplete: true }, progress.Presets.shades_classic)
+  bar.start(targetVariants.length, 0)
+
+  targetVariants.forEach((variant) => {
+    compile(variant)
+    bar.increment()
+  })
+
+  bar.stop()
 
   console.log(`Completed compilation of ${targetVariants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
 }
