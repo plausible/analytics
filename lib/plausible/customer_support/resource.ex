@@ -1,0 +1,72 @@
+defmodule Plausible.CustomerSupport.Resource do
+  defstruct [:id, :type, :module, :object]
+
+  @type schema() :: map()
+
+  @type t() :: %__MODULE__{
+          id: pos_integer(),
+          module: atom(),
+          object: schema(),
+          type: String.t()
+        }
+
+  @callback search(String.t()) :: list(schema())
+  @callback get(pos_integer()) :: schema()
+  @callback component() :: module()
+  @callback type() :: String.t()
+  @callback dump(schema()) :: t()
+
+  defmodule Component do
+    @callback render_result(assigns :: Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
+  end
+
+  defmacro __using__(:component) do
+    quote do
+      use PlausibleWeb, :live_component
+      alias Plausible.CustomerSupport.Resource
+      @behaviour Plausible.CustomerSupport.Resource.Component
+    end
+  end
+
+  defmacro __using__(component: component) do
+    quote do
+      @behaviour Plausible.CustomerSupport.Resource
+      alias Plausible.CustomerSupport.Resource
+
+      import Ecto.Query
+      alias Plausible.Repo
+
+      @impl true
+      def dump(schema) do
+        Resource.new(__MODULE__, schema)
+      end
+
+      defoverridable dump: 1
+
+      @impl true
+      def type do 
+        __MODULE__
+        |> Module.split()
+        |> Enum.reverse()
+        |> hd()
+        |> String.downcase()
+      end
+
+      defoverridable type: 0
+
+      @impl true
+      def component, do: unquote(component)
+
+      defoverridable component: 0
+    end
+  end
+
+  def new(module, schema) do
+    %__MODULE__{
+      id: schema.id,
+      type: module.type(),
+      module: module,
+      object: schema
+    }
+  end
+end
