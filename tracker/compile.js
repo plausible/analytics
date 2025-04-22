@@ -3,8 +3,30 @@ const fs = require('fs')
 const path = require('path')
 const Handlebars = require("handlebars");
 const g = require("generatorics");
+const { parseArgs } = require('node:util');
 const { canSkipCompile } = require("./dev-compile/can-skip-compile");
 const { tracker_script_version } = require("./package.json");
+
+const { values } = parseArgs({
+  options: {
+    'target': {
+      type: 'string',
+    },
+    'help': {
+      type: 'boolean',
+    }
+  }
+})
+
+if (values.help) {
+  console.log('Usage: node compile.js [options]');
+  console.log('Options:');
+  console.log('  --target hash,outbound-links,exclusions   Only compile variants that contain all specified features');
+  console.log('  --help                                    Show this help message');
+  process.exit(0);
+}
+
+const targetVariants = values.target ? values.target.split(',') : null;
 
 if (process.env.NODE_ENV === 'dev' && canSkipCompile()) {
   console.info('COMPILATION SKIPPED: No changes detected in tracker dependencies')
@@ -34,11 +56,22 @@ function compilefile(input, output, templateVars = {}) {
 }
 
 const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "pageview-props", "tagged-events", "revenue"]
-const variants = [...g.clone.powerSet(base_variants)].filter(a => a.length > 0).map(a => a.sort());
+let variants = [...g.clone.powerSet(base_variants)].map(a => a.sort());
 
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.js'))
+if (targetVariants) {
+  variants = variants.filter(variant =>
+    targetVariants.every(target => variant.includes(target))
+  )
+}
+
+const startTime = Date.now();
+console.log(`Starting compilation of ${variants.length} variants...`);
 
 variants.map(variant => {
   const options = variant.map(variant => variant.replace('-', '_')).reduce((acc, curr) => (acc[curr] = true, acc), {})
-  compilefile(relPath('src/plausible.js'), relPath(`../priv/tracker/js/plausible.${variant.join('.')}.js`), options)
+  const ext = variant.length > 0 ? `.${variant.join('.')}` : ''
+
+  compilefile(relPath('src/plausible.js'), relPath(`../priv/tracker/js/plausible${ext}.js`), options)
 })
+
+console.log(`Completed compilation of ${variants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
