@@ -25,6 +25,16 @@ defmodule Plausible.CustomerSupport.Resource do
       use PlausibleWeb, :live_component
       alias Plausible.CustomerSupport.Resource
       @behaviour Plausible.CustomerSupport.Resource.Component
+
+      def success(socket, msg) do
+        send(socket.root_pid, {:success, msg})
+        socket
+      end
+
+      def failure(socket, msg) do
+        send(socket.root_pid, {:failure, msg})
+        socket
+      end
     end
   end
 
@@ -44,7 +54,7 @@ defmodule Plausible.CustomerSupport.Resource do
       defoverridable dump: 1
 
       @impl true
-      def type do 
+      def type do
         __MODULE__
         |> Module.split()
         |> Enum.reverse()

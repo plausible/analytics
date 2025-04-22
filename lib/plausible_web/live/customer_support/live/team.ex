@@ -36,17 +36,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     <div class="flex items-center">
       <Heroicons.user_group class="h-6 w-6 mr-4" />
       {@resource.object.name} ({@resource.object.identifier |> String.slice(0, 8)})
-      owned by {@resource.object.owners |> Enum.map(& &1.name) |> Enum.join(",")}
+      owned by {@resource.object.owners |> Enum.map(& &1.name) |> Enum.join(", ")}
     </div>
     """
   end
 
   def handle_event("change", %{"team" => params}, socket) do
-    IO.inspect(params, label: :change)
-
-    changeset =
-      Plausible.Teams.Team.crm_changeset(socket.assigns.team, params)
-      |> IO.inspect(label: :cs)
+    changeset = Plausible.Teams.Team.crm_changeset(socket.assigns.team, params)
 
     case Plausible.Repo.update(changeset) do
       {:ok, team} ->

@@ -1,8 +1,4 @@
 defmodule PlausibleWeb.Live.CustomerSupport do
-  @moduledoc """
-  LiveView for Team setup
-  """
-
   use PlausibleWeb, :live_view
   alias Plausible.CustomerSupport.Resource
 
@@ -17,6 +13,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   @impl true
   def render(assigns) do
     ~H"""
+    <.flash_messages flash={@flash} />
     <div class="container pt-6">
       <div class="flex items-center mt-16">
         <form class="w-full">
@@ -42,7 +39,6 @@ defmodule PlausibleWeb.Live.CustomerSupport do
           phx-click-away="close"
           class="overflow-auto bg-white w-full h-2/3 max-w-4xl max-h-full p-6 rounded-lg shadow-lg"
         >
-          <h2 class="text-xl font-bold mb-4">Details</h2>
           <.live_component
             :if={@current}
             module={@current.component()}
@@ -87,6 +83,14 @@ defmodule PlausibleWeb.Live.CustomerSupport do
 
   def handle_event("close", _, socket) do
     {:noreply, assign(socket, current: nil)}
+  end
+
+  def handle_info({:success, msg}, socket) do
+    {:noreply, put_live_flash(socket, :success, msg)}
+  end
+
+  def handle_info({:failure, msg}, socket) do
+    {:noreply, put_live_flash(socket, :error, msg)}
   end
 
   defp spawn_searches(input) do
