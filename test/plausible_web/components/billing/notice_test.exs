@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         feature_mod: Plausible.Billing.Feature.Props
       )
 
-    assert rendered =~ "Your account does not have access to Custom Properties"
+    assert rendered =~ "This team does not have access to Custom Properties"
     assert rendered =~ "upgrade your subscription"
     assert rendered =~ "/billing/choose-plan"
   end
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         feature_mod: Plausible.Billing.Feature.Props
       )
 
-    assert rendered =~ "Your account does not have access to Custom Properties"
+    assert rendered =~ "This team does not have access to Custom Properties"
     assert rendered =~ "upgrade your subscription"
     assert rendered =~ "/billing/choose-plan"
   end
@@ -56,8 +56,8 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         feature_mod: Plausible.Billing.Feature.Funnels
       )
 
-    assert rendered =~ "The owner of this site does not have access to Funnels"
-    assert rendered =~ "please reach out to the site owner to upgrade their subscription"
+    assert rendered =~ "This team does not have access to Funnels"
+    assert rendered =~ "please reach out to the team owner to upgrade their subscription"
   end
 
   test "premium_feature/1 does not render a notice when the user has access to the feature" do
@@ -73,6 +73,18 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
     assert rendered == ""
   end
 
+  test "premium_feature/1 for team-less account" do
+    rendered =
+      render_component(&Notice.premium_feature/1,
+        current_role: nil,
+        current_team: nil,
+        feature_mod: Plausible.Billing.Feature.Funnels
+      )
+
+    assert rendered =~ "This account does not have access to Funnels"
+    assert rendered =~ "upgrade your subscription"
+  end
+
   test "limit_exceeded/1 when team is on growth displays upgrade link" do
     me = new_user() |> subscribe_to_growth_plan()
     team = team_of(me)
@@ -85,7 +97,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         resource: "users"
       )
 
-    assert rendered =~ "Your account is limited to 10 users. To increase this limit"
+    assert rendered =~ "This team is limited to 10 users. To increase this limit"
     assert rendered =~ "upgrade your subscription"
     assert rendered =~ "/billing/choose-plan"
   end
@@ -101,8 +113,8 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         resource: "users"
       )
 
-    assert rendered =~ "The owner of this site is limited to 10 users"
-    assert rendered =~ "please reach out to the site owner to upgrade their subscription"
+    assert rendered =~ "This team is limited to 10 users"
+    assert rendered =~ "please reach out to the team owner to upgrade their subscription"
   end
 
   @tag :ee_only
@@ -117,7 +129,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         resource: "users"
       )
 
-    assert rendered =~ "Your account is limited to 10 users"
+    assert rendered =~ "This team is limited to 10 users"
     assert rendered =~ "upgrade your subscription"
     assert rendered =~ "/billing/choose-plan"
   end
@@ -134,7 +146,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         resource: "users"
       )
 
-    assert rendered =~ "Your account is limited to 10 users."
+    assert rendered =~ "This team is limited to 10 users."
 
     assert rendered =~ "hello@plausible.io"
     assert rendered =~ "upgrade your subscription"
@@ -153,7 +165,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
         resource: "users"
       )
 
-    assert rendered =~ "Your account is limited to 10 users."
+    assert rendered =~ "This team is limited to 10 users."
 
     assert rendered =~ "hello@plausible.io"
     assert rendered =~ "upgrade your subscription"

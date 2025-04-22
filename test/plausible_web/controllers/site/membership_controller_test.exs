@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         |> get("/sites/#{site.domain}/memberships/invite")
         |> html_response(200)
 
-      assert html =~ "Your account is limited to 3 team members"
+      assert html =~ "This team is limited to 3 members"
     end
   end
 

@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       title="Notice"
       {@rest}
     >
-      {account_label(@current_role)} does not have access to {@feature_mod.display_name()}. To get access to this feature,
+      {account_label(@current_team)} does not have access to {@feature_mod.display_name()}. To gain access to this feature,
       <.upgrade_call_to_action current_role={@current_role} current_team={@current_team} />.
     </.notice>
     """
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def limit_exceeded(assigns) do
     ~H"""
     <.notice {@rest} title="Notice">
-      {account_label(@current_role)} is limited to {@limit} {@resource}. To increase this limit,
+      {account_label(@current_team)} is limited to {@limit} {@resource}. To increase this limit,
       <.upgrade_call_to_action current_team={@current_team} current_role={@current_role} />.
     </.notice>
     """
@@ -330,8 +330,8 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       end
 
     cond do
-      assigns.current_role not in [:owner, :billing] ->
-        ~H"please reach out to the site owner to upgrade their subscription"
+      not is_nil(assigns.current_role) and assigns.current_role not in [:owner, :billing] ->
+        ~H"please reach out to the team owner to upgrade their subscription"
 
       upgrade_assistance_required? ->
         ~H"""
@@ -352,11 +352,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     end
   end
 
-  defp account_label(current_role) do
-    if current_role in [:owner, :billing] do
-      "Your account"
+  defp account_label(current_team) do
+    if current_team do
+      "This team"
     else
-      "The owner of this site"
+      "This account"
     end
   end
 end
