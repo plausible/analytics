@@ -1,13 +1,14 @@
 defmodule PlausibleWeb.Live.Components.ComboBox do
   @moduledoc """
   Phoenix LiveComponent for a combobox UI element with search and selection
-  functionality.
+  functionality. 
 
   The component allows users to select an option from a list of options,
   which can be searched by typing in the input field.
 
   The component renders an input field with a dropdown anchor and a
-  hidden input field for submitting the selected value.
+  hidden input field for submitting the selected value. In order to remain
+  functional, the comopnent must be embedded in a `<form/>`.
 
   The number of options displayed in the dropdown is limited to 15
   by default but can be customized. When a user types into the input
