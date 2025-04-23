@@ -47,6 +47,72 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </div>
         </div>
       </div>
+
+      <div>
+        <div class="grid grid-cols-1 sm:hidden">
+          <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
+          <select
+            aria-label="Select a tab"
+            class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+          >
+            <option>Overview</option>
+            <option>Sites</option>
+            <option selected>Members</option>
+            <option>Billing</option>
+          </select>
+          <svg
+            class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end fill-gray-500"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+            data-slot="icon"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+        <div class="hidden sm:block">
+          <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+            <!-- Current: "text-gray-900", Default: "text-gray-500 hover:text-gray-700" -->
+            <a
+              href="#"
+              class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10"
+            >
+              <span>Overview</span>
+              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
+              </span>
+            </a>
+            <a
+              href="#"
+              class="group relative min-w-0 flex-1 overflow-hidden bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10"
+            >
+              <span>Sites</span>
+              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
+              </span>
+            </a>
+            <a
+              href="#"
+              class="group relative min-w-0 flex-1 overflow-hidden bg-white px-4 py-4 text-center text-sm font-medium text-gray-900 hover:bg-gray-50 focus:z-10"
+              aria-current="page"
+            >
+              <span>Members</span>
+              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5 bg-indigo-500"></span>
+            </a>
+            <a
+              href="#"
+              class="group relative min-w-0 flex-1 overflow-hidden rounded-r-lg bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10"
+            >
+              <span>Billing</span>
+              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
+              </span>
+            </a>
+          </nav>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 divide-y divide-gray-200 border-t border-gray-200 bg-gray-50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <div class="px-6 py-5 text-center text-sm font-medium">
           <span class="text-gray-900">
