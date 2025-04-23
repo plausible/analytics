@@ -1,10 +1,7 @@
 import { expect } from "@playwright/test"
-import { expectPlausibleInAction, hideAndShowCurrentTab, focus, blur, blurAndFocusPage } from './support/test-utils'
+import { expectPlausibleInAction, hideAndShowCurrentTab, focus, blur, blurAndFocusPage, tracker_script_version } from './support/test-utils'
 import { test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
-import packageJson from '../package.json' with { type: 'json' }
-
-const tracker_script_version = packageJson.tracker_script_version
 
 test.describe('engagement events', () => {
   test('sends an engagement event with time measurement when navigating to the next page', async ({ page }) => {
