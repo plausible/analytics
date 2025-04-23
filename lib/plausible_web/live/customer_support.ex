@@ -6,28 +6,79 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   @resources_by_type @resources |> Enum.into(%{}, fn mod -> {mod.type(), mod} end)
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, results: [], current: nil)}
+  def mount(params, _session, socket) do
+    uri =
+      ("/cs?" <> URI.encode_query(Map.take(params, ["filter_text"])))
+      |> URI.new!()
+
+    {:ok,
+     assign(socket, results: [], current: nil, uri: uri, filter_text: params["filter_text"] || "")}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
     <.flash_messages flash={@flash} />
+
     <div class="container pt-6">
-      <div class="flex items-center mt-16">
-        <form class="w-full">
-          <.input value="" name="spotlight" id="spotlight" phx-change="search" />
+      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
+        <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
+          💬 Customer Support
+        </h2>
+      </div>
+
+      <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
+        <form id="filter-form" phx-change="search" action={@uri} method="GET">
+          <div class="text-gray-800 text-sm inline-flex items-center w-full">
+            <div class="relative rounded-md flex">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
+              </div>
+              <input
+                type="text"
+                name="filter_text"
+                id="filter-text"
+                phx-debounce={200}
+                class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md"
+                placeholder="Press / to search"
+                autocomplete="off"
+                value={@filter_text}
+                x-ref="filter_text"
+                x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter?.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
+                x-on:keydown.prevent.slash.window="$refs.filter_text.focus(); $refs.filter_text.select();"
+                x-on:blur="$refs.filter_text.placeholder = 'Press / to search"
+                x-on:focus="$refs.filter_text.placeholder = 'Search';"
+              />
+            </div>
+
+            <button
+              :if={String.trim(@filter_text) != ""}
+              class="phx-change-loading:hidden ml-2"
+              phx-click="reset-filter-text"
+              id="reset-filter"
+              x-ref="reset_filter"
+              type="button"
+            >
+              <Heroicons.backspace class="feather hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500" />
+            </button>
+
+            <.spinner class="hidden phx-change-loading:inline ml-2" />
+          </div>
         </form>
       </div>
-      <div id="results" class="mt-8">
-        <h1>Results</h1>
-        <div :for={r <- @results} class="m-2 p-4 rounded-md border border-gray-300">
-          <.styled_link phx-click="open" phx-value-id={r.id} phx-value-type={r.type}>
-            <.render_result resource={r} />
-          </.styled_link>
-        </div>
-      </div>
+
+      <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <li :for={r <- @results} class="group relative">
+          <a href={} phx-click="open" phx-value-id={r.id} phx-value-type={r.type}>
+            <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
+              <div class="w-full flex items-center justify-between space-x-4">
+                <.render_result resource={r} />
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+
       <div
         id="modal"
         class={[
@@ -67,11 +118,13 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   @impl true
-  def handle_event("search", %{"spotlight" => ""}, socket) do
+  def handle_event("search", %{"filter_text" => ""}, socket) do
+    socket = set_filter_text(socket, "")
     {:noreply, assign(socket, results: [])}
   end
 
-  def handle_event("search", %{"spotlight" => input}, socket) do
+  def handle_event("search", %{"filter_text" => input}, socket) do
+    socket = set_filter_text(socket, input)
     results = spawn_searches(input)
     {:noreply, assign(socket, results: results)}
   end
@@ -103,5 +156,22 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     |> Enum.reduce([], fn {:ok, results}, acc ->
       acc ++ results
     end)
+  end
+
+  defp set_filter_text(socket, filter_text) do
+    uri = socket.assigns.uri
+
+    uri_params =
+      uri.query
+      |> URI.decode_query()
+      |> Map.put("filter_text", filter_text)
+      |> URI.encode_query()
+
+    uri = %{uri | query: uri_params}
+
+    socket
+    |> assign(:filter_text, filter_text)
+    |> assign(:uri, uri)
+    |> push_patch(to: URI.to_string(uri), replace: true)
   end
 end
