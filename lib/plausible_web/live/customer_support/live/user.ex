@@ -14,9 +14,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
       <.form :let={f} for={@form} phx-target={@myself} phx-submit="change">
         <.tile>
           <:title>
-    <div class="flex items-center"><Heroicons.user class="h-4 w-4 mr-2" />
-            {@user.name}
-    </div>
+            <div class="flex items-center"><Heroicons.user class="h-4 w-4 mr-2" />
+              {@user.name}</div>
           </:title>
           <:subtitle>
             e-mail: {@user.email}
@@ -68,9 +67,29 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
 
   def render_result(assigns) do
     ~H"""
-    <div class="flex items-center">
-      <Heroicons.user class="h-6 w-6 mr-4" />
-      {@resource.object.name} &lt;{@resource.object.email}&gt;
+    <div class="flex-1 -mt-px w-full">
+      <div class="w-full flex items-center justify-between space-x-4">
+        <img
+          src={Plausible.Auth.User.profile_img_url(@resource.object)}
+          class="w-4 rounded-full bg-gray-300"
+        />
+        <h3
+          class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
+          style="width: calc(100% - 4rem)"
+        >
+          {@resource.object.name}
+        </h3>
+
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+          User
+        </span>
+      </div>
+
+      <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />
+      <div class="text-sm">
+        {@resource.object.name} &lt;{@resource.object.email}&gt; <br />
+        Owns {length(@resource.object.owned_teams)} team(s)
+      </div>
     </div>
     """
   end

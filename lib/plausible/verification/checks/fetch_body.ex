@@ -13,6 +13,8 @@ defmodule Plausible.Verification.Checks.FetchBody do
   def perform(%State{url: "https://" <> _ = url} = state) do
     fetch_body_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
 
+    IO.puts(:yo)
+
     opts =
       Keyword.merge(
         [
@@ -26,7 +28,7 @@ defmodule Plausible.Verification.Checks.FetchBody do
 
     {req, resp} = opts |> Req.new() |> Req.Request.run_request()
 
-    case resp do
+    case resp |> IO.inspect(label: :resp) do
       %Req.Response{body: body}
       when is_binary(body) ->
         state
