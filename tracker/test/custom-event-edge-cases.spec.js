@@ -1,6 +1,6 @@
-const { expectPlausibleInAction } = require('./support/test-utils')
-const { test } = require('@playwright/test')
-const { LOCAL_SERVER_ADDR } = require('./support/server')
+import { expectPlausibleInAction } from './support/test-utils'
+import { test } from '@playwright/test'
+import { LOCAL_SERVER_ADDR } from './support/server'
 
 test.describe('script.file-downloads.outbound-links.tagged-events.js', () => {
   test('sends only outbound link event when clicked link is both download and outbound', async ({ page }) => {

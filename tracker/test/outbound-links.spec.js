@@ -1,5 +1,5 @@
-const { mockRequest, metaKey, expectPlausibleInAction } = require('./support/test-utils')
-const { expect, test } = require('@playwright/test')
+import { mockRequest, metaKey, expectPlausibleInAction } from './support/test-utils'
+import { expect, test } from '@playwright/test'
 
 test.describe('outbound-links extension', () => {
   test('sends event and does not navigate when link opens in new tab', async ({ page }) => {
@@ -7,7 +7,7 @@ test.describe('outbound-links extension', () => {
     const outboundURL = await page.locator('#link').getAttribute('href')
 
     const navigationRequestMock = mockRequest(page, outboundURL)
-    
+
     await expectPlausibleInAction(page, {
       action: () => page.click('#link', { modifiers: [metaKey()] }),
       expectedRequests: [{n: 'Outbound Link: Click', p: { url: outboundURL }}]

@@ -1,5 +1,5 @@
-const { expectPlausibleInAction } = require('./support/test-utils')
-const { test } = require('@playwright/test')
+import { expectPlausibleInAction } from './support/test-utils'
+import { test } from '@playwright/test'
 
 test.describe('with revenue script extension', () => {
   test('sends revenue currency and amount in manual mode', async ({ page }) => {

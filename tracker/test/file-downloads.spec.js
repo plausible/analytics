@@ -1,6 +1,6 @@
-const { mockRequest, mockManyRequests, metaKey, expectPlausibleInAction } = require('./support/test-utils')
-const { expect, test } = require('@playwright/test')
-const { LOCAL_SERVER_ADDR } = require('./support/server')
+import { mockRequest, mockManyRequests, metaKey, expectPlausibleInAction } from './support/test-utils'
+import { expect, test } from '@playwright/test'
+import { LOCAL_SERVER_ADDR } from './support/server'
 
 test.describe('file-downloads extension', () => {
   test('sends event and does not start download when link opens in new tab', async ({ page }) => {
