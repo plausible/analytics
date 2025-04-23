@@ -46,7 +46,7 @@ export function compileAll(options = {}) {
 
   bar.stop()
 
-  console.log(`Completed compilation of ${targetVariants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
+  console.log(`Completed compilation of ${variants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
 }
 
 export function compileFile({ name, features }, options = {}) {
@@ -97,6 +97,7 @@ function getCompileVars(features) {
   return { ...DEFAULT_COMPILE_VARS, ...overrides }
 }
 
+
 function minify(baseCode, compileVars) {
   const result = uglify.minify(baseCode, {
     compress: {
@@ -110,4 +111,16 @@ function minify(baseCode, compileVars) {
   } else {
     throw result.error
   }
+}
+
+function equal_lists(a, b) {
+  if (a.length != b.length) {
+    return false
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false
+    }
+  }
+  return true
 }

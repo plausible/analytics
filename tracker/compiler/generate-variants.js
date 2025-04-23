@@ -1,6 +1,9 @@
-const fs = require('fs')
-const path = require('path')
-const g = require("generatorics");
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import g from 'generatorics'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "pageview-props", "tagged-events", "revenue"]
 let variants = [...g.clone.powerSet(base_variants)]
@@ -10,4 +13,4 @@ let variants = [...g.clone.powerSet(base_variants)]
     features: variant
   }))
 
-fs.writeFileSync(path.join(__dirname, 'variants.json'), JSON.stringify({ variants }, null, 2))
+fs.writeFileSync(path.join(__dirname, 'variants.json'), JSON.stringify({ variants }, null, 2) + "\n")

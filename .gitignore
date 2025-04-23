@@ -84,7 +84,7 @@ plausible-report.xml
 /priv/geodb/*.mmdb.gz
 
 # Auto-generated tracker files
-/priv/tracker/js/plausible*.js
+/priv/tracker/js/plausible*.js*
 
 # Docker volumes
 .clickhouse_db_vol*
