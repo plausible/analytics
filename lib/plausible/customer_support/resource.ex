@@ -10,7 +10,7 @@ defmodule Plausible.CustomerSupport.Resource do
           type: String.t()
         }
 
-  @callback search(String.t()) :: list(schema())
+  @callback search(String.t(), pos_integer()) :: list(schema())
   @callback get(pos_integer()) :: schema()
   @callback component() :: module()
   @callback type() :: String.t()

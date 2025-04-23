@@ -53,7 +53,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
       <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />
       <div class="text-sm">
-        Team identifier: {@resource.object.identifier |> String.slice(0, 8)}
+        Team identifier:
+        <code class="font-mono">{@resource.object.identifier |> String.slice(0, 8)}</code>
         <br />
         Owned by: {@resource.object.owners
         |> Enum.map(& &1.name)
