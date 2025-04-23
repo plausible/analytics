@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
       >
         <div
           phx-click-away="close"
-          class="overflow-auto bg-white w-full h-2/3 max-w-4xl max-h-full p-6 rounded-lg shadow-lg"
+          class="overflow-auto bg-white w-full h-3/4 max-w-7xl max-h-full p-6 rounded-lg shadow-lg"
         >
           <.live_component
             :if={@current}
@@ -122,17 +122,12 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     {:noreply, assign(socket, type: type, current: mod, id: id)}
   end
 
-  def handle_params(%{"filter_text" => ""} = p, _uri, socket) do
-    {:noreply, assign(socket, results: [])}
-  end
-
-  def handle_params(%{"filter_text" => _} = p, _uri, socket) do
+  def handle_params(%{"filter_text" => _}, _uri, socket) do
     socket = search(socket)
     {:noreply, socket}
   end
 
-  def handle_params(p, _uri, socket) do
-    IO.inspect(p, label: :unknown_params)
+  def handle_params(_, _uri, socket) do
     {:noreply, socket}
   end
 
@@ -142,17 +137,13 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   @impl true
-  def handle_event("search", %{"filter_text" => ""}, socket) do
-    socket = set_filter_text(socket, "")
-    {:noreply, assign(socket, results: [])}
+  def handle_event("search", %{"filter_text" => input}, socket) do
+    socket = set_filter_text(socket, input)
+    {:noreply, socket}
   end
 
-  def handle_event("search", %{"filter_text" => input} = params, socket) do
-    IO.inspect input, label: :SEARCH
-    socket =
-      socket
-      |> set_filter_text(input)
-
+  def handle_event("reset-filter-text", _params, socket) do
+    socket = set_filter_text(socket, "")
     {:noreply, socket}
   end
 
@@ -174,15 +165,38 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   defp spawn_searches(input) do
-    @resources
+    input = String.trim(input)
+    {resources, input, limit} = maybe_focus_search(input)
+
+    resources
     |> Task.async_stream(fn resource ->
       input
-      |> resource.search(30)
+      |> resource.search(limit)
       |> Enum.map(&resource.dump/1)
     end)
     |> Enum.reduce([], fn {:ok, results}, acc ->
       acc ++ results
     end)
+  end
+
+  defp maybe_focus_search(empty) when empty in ["", "site:", "team:", "user:"] do
+    {[], "", 0}
+  end
+
+  defp maybe_focus_search("site:" <> rest) do
+    {[Resource.Site], rest, 90}
+  end
+
+  defp maybe_focus_search("team:" <> rest) do
+    {[Resource.Team], rest, 90}
+  end
+
+  defp maybe_focus_search("user:" <> rest) do
+    {[Resource.User], rest, 90}
+  end
+
+  defp maybe_focus_search(input) do
+    {@resources, input, 30}
   end
 
   defp set_filter_text(socket, filter_text) do
