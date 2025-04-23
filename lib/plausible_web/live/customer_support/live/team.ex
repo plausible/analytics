@@ -3,7 +3,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   alias Plausible.Billing.Subscription
 
-  import PlausibleWeb.Live.Components.Team
   alias Plausible.Teams.Management.Layout
 
   def update(assigns, socket) do
@@ -13,27 +12,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     form = to_form(changeset)
     {:ok, assign(socket, layout: layout, team: team, form: form)}
   end
-
-  # def render(assigns) do
-  #   ~H"""
-  #   <div>
-  #     <div>
-  #       {@team.name} owned by
-  #       <div :for={o <- @team.owners}>
-  #         <.styled_link phx-click="open" phx-value-id={o.id} phx-value-type="user">
-  #           {o.name} {o.email}
-  #         </.styled_link>
-  #       </div>
-  #       <.form :let={f} for={@form} phx-submit="change" phx-target={@myself}>
-  #         <.input field={f[:trial_expiry_date]} />
-  #         <.button type="submit">
-  #           Change
-  #         </.button>
-  #       </.form>
-  #     </div>
-  #   </div>
-  #   """
-  # end
 
   def render(assigns) do
     ~H"""
@@ -90,16 +68,49 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       </div>
 
       <div class="m-4">
-        <h3 class="text-sm/6 font-medium text-gray-900">Members</h3>
         <div class="mt-2">
-          <.member
-            :for={{_email, entry} <- Layout.sorted_for_display(@layout)}
-            user={%Plausible.Auth.User{email: entry.email, name: entry.name}}
-            role={entry.role}
-            label={entry_label(entry)}
-            my_role={:superadmin}
-            disabled={true}
-          />
+          <.table rows={Layout.sorted_for_display(@layout)}>
+            <:thead>
+              <.th>User</.th>
+              <.th>Type</.th>
+              <.th>Role</.th>
+            </:thead>
+            <:tbody :let={{_, member}}>
+              <.td>
+                <div :if={member.id != 0}>
+                  <a
+                    phx-click="open"
+                    phx-value-id={member.id}
+                    phx-value-type="user"
+                    class="cursor-pointer flex block items-center"
+                  >
+                    <img
+                      src={
+                        Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})
+                      }
+                      class="mr-4 w-6 rounded-full bg-gray-300"
+                    />
+                    {member.name} &lt;{member.email}&gt;
+                  </a>
+                </div>
+                <div :if={member.id == 0} class="flex items-center">
+                  <img
+                    src={
+                      Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})
+                    }
+                    class="mr-4 w-6 rounded-full bg-gray-300"
+                  />
+                  {member.name} &lt;{member.email}&gt;
+                </div>
+              </.td>
+              <.td>
+                {member.type}
+              </.td>
+              <.td>
+                {member.role}
+              </.td>
+            </:tbody>
+          </.table>
         </div>
       </div>
 
@@ -217,10 +228,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           PlausibleWeb.SettingsView.present_subscription_status(team.subscription.status)
 
         if team.subscription.paddle_subscription_id do
-          assigns = %{}
+          assigns = %{status_str: status_str, subscription: team.subscription}
 
           ~H"""
-          <.styled_link new_tab={true} href={manage_url(team.subscription)}>{status_str}</.styled_link>
+          <.styled_link new_tab={true} href={manage_url(@subscription)}>{@status_str}</.styled_link>
           """
         else
           status_str
@@ -246,10 +257,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       quota = PlausibleWeb.AuthView.subscription_quota(subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(subscription)
 
-      assigns = %{}
+      assigns = %{quota: quota, interval: interval, subscription: subscription}
 
       ~H"""
-      <.styled_link new_tab={true} href={manage_url(subscription)}>{quota} ({interval})</.styled_link>
+      <.styled_link new_tab={true} href={manage_url(@subscription)}>
+        {@quota} ({@interval})
+      </.styled_link>
       """
     else
       "--"
@@ -278,29 +291,23 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     end
   end
 
-  defp lock(team) do
-    if team.grace_period do
-      Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
-      Plausible.Teams.end_grace_period(team)
-      {:ok, team}
-    else
-      {:error, team, "No active grace period on this team"}
-    end
-  end
-
-  defp unlock(team) do
-    if team.grace_period do
-      Plausible.Teams.remove_grace_period(team)
-      Plausible.Billing.SiteLocker.set_lock_status_for(team, false)
-      {:ok, team}
-    else
-      {:error, team, "No active grace period on this team"}
-    end
-  end
-
-  defp entry_label(%Layout.Entry{role: :guest, type: :membership}), do: nil
-  defp entry_label(%Layout.Entry{type: :invitation_pending}), do: "Invitation Pending"
-  defp entry_label(%Layout.Entry{type: :invitation_sent}), do: "Invitation Sent"
-  defp entry_label(%Layout.Entry{meta: %{user: %{id: id}}}), do: "You"
-  defp entry_label(_), do: "Team Member"
+  # defp lock(team) do
+  #   if team.grace_period do
+  #     Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
+  #     Plausible.Teams.end_grace_period(team)
+  #     {:ok, team}
+  #   else
+  #     {:error, team, "No active grace period on this team"}
+  #   end
+  # end
+  #
+  # defp unlock(team) do
+  #   if team.grace_period do
+  #     Plausible.Teams.remove_grace_period(team)
+  #     Plausible.Billing.SiteLocker.set_lock_status_for(team, false)
+  #     {:ok, team}
+  #   else
+  #     {:error, team, "No active grace period on this team"}
+  #   end
+  # end
 end
