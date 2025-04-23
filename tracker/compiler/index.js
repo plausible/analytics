@@ -60,7 +60,7 @@ export function compileAll(options = {}) {
 }
 
 export function compileFile({ name, features }, options = {}) {
-  const baseCode = options.baseCode || getBaseCode()
+  const baseCode = options.baseCode || getCode()
   const compileVars = getCompileVars(features)
 
   const code = minify(baseCode, compileVars)
@@ -91,7 +91,7 @@ function getCompileVars(features) {
   return { ...DEFAULT_COMPILE_VARS, ...overrides }
 }
 
-function minify(baseCode, output, compileVars) {
+function minify(baseCode, compileVars) {
   const result = uglify.minify(baseCode, {
     compress: {
       global_defs: compileVars,
