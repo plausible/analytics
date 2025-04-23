@@ -2,15 +2,15 @@ defmodule Plausible.CustomerSupport.Resource.Site do
   use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Site
 
   @impl true
-  def search(input) do
+  def search(input, limit) do
     q =
       from s in Plausible.Site,
         inner_join: t in assoc(s, :team),
         inner_join: o in assoc(t, :owners),
-        or_where: ilike(s.domain, ^"%#{input}%"),
-        or_where: ilike(t.name, ^"%#{input}%"),
-        or_where: ilike(o.name, ^"%#{input}%"),
-        limit: 10,
+        where:
+          ilike(s.domain, ^"%#{input}%") or ilike(t.name, ^"%#{input}%") or
+            ilike(o.name, ^"%#{input}%"),
+        limit: ^limit,
         preload: [team: {t, owners: o}]
 
     Plausible.Repo.all(q)

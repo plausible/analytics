@@ -12,7 +12,14 @@ defmodule PlausibleWeb.Live.CustomerSupport do
       |> URI.new!()
 
     {:ok,
-     assign(socket, results: [], current: nil, uri: uri, filter_text: params["filter_text"] || "")}
+     assign(socket,
+       resources_by_type: @resources_by_type,
+       results: [],
+       current: nil,
+       params: params,
+       uri: uri,
+       filter_text: params["filter_text"] || ""
+     )}
   end
 
   @impl true
@@ -63,6 +70,8 @@ defmodule PlausibleWeb.Live.CustomerSupport do
             </button>
 
             <.spinner class="hidden phx-change-loading:inline ml-2" />
+
+            <div class="ml-8"></div>
           </div>
         </form>
       </div>
@@ -113,8 +122,23 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     {:noreply, assign(socket, type: type, current: mod, id: id)}
   end
 
-  def handle_params(_params, _uri, socket) do
+  def handle_params(%{"filter_text" => ""} = p, _uri, socket) do
+    {:noreply, assign(socket, results: [])}
+  end
+
+  def handle_params(%{"filter_text" => _} = p, _uri, socket) do
+    socket = search(socket)
     {:noreply, socket}
+  end
+
+  def handle_params(p, _uri, socket) do
+    IO.inspect(p, label: :unknown_params)
+    {:noreply, socket}
+  end
+
+  def search(%{assigns: assigns} = socket) do
+    results = spawn_searches(assigns.filter_text)
+    assign(socket, results: results)
   end
 
   @impl true
@@ -123,10 +147,13 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     {:noreply, assign(socket, results: [])}
   end
 
-  def handle_event("search", %{"filter_text" => input}, socket) do
-    socket = set_filter_text(socket, input)
-    results = spawn_searches(input)
-    {:noreply, assign(socket, results: results)}
+  def handle_event("search", %{"filter_text" => input} = params, socket) do
+    IO.inspect input, label: :SEARCH
+    socket =
+      socket
+      |> set_filter_text(input)
+
+    {:noreply, socket}
   end
 
   def handle_event("open", %{"type" => type, "id" => id}, socket) do
@@ -150,7 +177,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     @resources
     |> Task.async_stream(fn resource ->
       input
-      |> resource.search()
+      |> resource.search(30)
       |> Enum.map(&resource.dump/1)
     end)
     |> Enum.reduce([], fn {:ok, results}, acc ->

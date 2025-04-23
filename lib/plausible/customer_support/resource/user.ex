@@ -8,13 +8,13 @@ defmodule Plausible.CustomerSupport.Resource.User do
   end
 
   @impl true
-  def search(input) do
+  def search(input, limit) do
     q =
       from u in Plausible.Auth.User,
         where: ilike(u.email, ^"%#{input}%") or ilike(u.name, ^"%#{input}%"),
         order_by: fragment("CASE WHEN email = ? OR name = ? THEN 0 ELSE 1 END", ^input, ^input),
         preload: [:owned_teams],
-        limit: 10
+        limit: ^limit
 
     Plausible.Repo.all(q)
   end
