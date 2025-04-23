@@ -1,11 +1,6 @@
 import { expect } from "@playwright/test"
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import packageJson from '../../package.json' with { type: 'json' }
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../../package.json')))
 export const tracker_script_version = packageJson.tracker_script_version
 
 // Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request

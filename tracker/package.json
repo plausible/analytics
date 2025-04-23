@@ -15,7 +15,7 @@
     "uglify-js": "^3.19.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.48.1",
+    "@playwright/test": "^1.49.1",
     "@types/node": "^22.13.4",
     "cli-progress": "^3.12.0",
     "eslint": "^9.20.1",
