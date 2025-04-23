@@ -13,6 +13,10 @@ const { values, positionals } = parseArgs({
     },
     'help': {
       type: 'boolean',
+    },
+    'suffix': {
+      type: 'string',
+      default: ''
     }
   },
   allowPositionals: true
@@ -24,6 +28,7 @@ if (values.help) {
   console.log('  --target hash,outbound-links,exclusions   Only compile variants that contain all specified features')
   console.log('  --only hash,outbound-links,exclusions     Only compile a specific variant')
   console.log('  --watch, -w                               Watch src/ directory for changes and recompile')
+  console.log('  --suffix, -s                              Suffix to add to the output file name. Used for testing script size changes')
   console.log('  --help                                    Show this help message')
   process.exit(0);
 }
@@ -41,7 +46,8 @@ function parse(value) {
 
 const compileOptions = {
   targets: parse(values.target),
-  only: positionals ? positionals.map(parse) : null
+  only: positionals ? positionals.map(parse) : null,
+  suffix: values.suffix
 }
 
 compileAll(compileOptions)

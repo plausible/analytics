@@ -40,7 +40,7 @@ export function compileAll(options = {}) {
   bar.start(variants.length, 0)
 
   variants.forEach((variant) => {
-    compileFile(variant, { baseCode })
+    compileFile(variant, { ...options, baseCode })
     bar.increment()
   })
 
@@ -58,7 +58,7 @@ export function compileFile({ name, features }, options = {}) {
   if (options.returnCode) {
     return code
   } else {
-    fs.writeFileSync(relPath(`../../priv/tracker/js/${name}`), code)
+    fs.writeFileSync(relPath(`../../priv/tracker/js/${name}${options.suffix}`), code)
   }
 }
 
