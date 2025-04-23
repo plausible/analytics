@@ -29,27 +29,17 @@ export function compileAll(options = {}) {
     return
   }
 
-  let targetVariants = variants.variants
-  if (options.targets !== null) {
-    targetVariants = targetVariants.filter(variant =>
-      options.targets.every(target => variant.features.includes(target))
-    )
-  }
-  if (options.only !== null) {
-    targetVariants = targetVariants.filter(variant =>
-      options.only.some(target_features => equal_lists(variant.features, target_features))
-    )
-  }
+  const variants = getVariantsToCompile(options)
 
   const startTime = Date.now();
-  console.log(`Starting compilation of ${targetVariants.length} variants...`)
+  console.log(`Starting compilation of ${variants.length} variants...`)
 
   const baseCode = getCode()
 
   const bar = new progress.SingleBar({ clearOnComplete: true }, progress.Presets.shades_classic)
-  bar.start(targetVariants.length, 0)
+  bar.start(variants.length, 0)
 
-  targetVariants.forEach((variant) => {
+  variants.forEach((variant) => {
     compileFile(variant, { baseCode })
     bar.increment()
   })
@@ -70,6 +60,22 @@ export function compileFile({ name, features }, options = {}) {
   } else {
     fs.writeFileSync(relPath(`../../priv/tracker/js/${name}`), code)
   }
+}
+
+function getVariantsToCompile(options) {
+  let targetVariants = variants.variants
+  if (options.targets !== null) {
+    targetVariants = targetVariants.filter(variant =>
+      options.targets.every(target => variant.features.includes(target))
+    )
+  }
+  if (options.only !== null) {
+    targetVariants = targetVariants.filter(variant =>
+      options.only.some(target_features => equal_lists(variant.features, target_features))
+    )
+  }
+
+  return targetVariants
 }
 
 function relPath(segment) {
