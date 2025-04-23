@@ -109,7 +109,10 @@ export const SiteSwitcher = () => {
                   if (!url) {
                     closePopover()
                   } else {
-                    window.location.assign(url)
+                    closePopover()
+                    setTimeout(() => {
+                      window.location.assign(url)
+                    }, 50)
                   }
                 }}
                 shouldIgnoreWhen={[isModifierPressed, isTyping]}
