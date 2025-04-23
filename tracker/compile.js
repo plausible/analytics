@@ -46,7 +46,7 @@ function parse(value) {
 
 const compileOptions = {
   targets: parse(values.target),
-  only: positionals ? positionals.map(parse) : null,
+  only: positionals && positionals.length > 0 ? positionals.map(parse) : null,
   suffix: values.suffix
 }
 
