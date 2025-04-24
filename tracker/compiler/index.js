@@ -79,11 +79,8 @@ function getVariantsToCompile(options) {
 }
 
 function getCode() {
-  return `
-(function(){
-  ${fs.readFileSync(relPath('../src/plausible.js')).toString()}
-  ${fs.readFileSync(relPath('../src/customEvents.js')).toString()}
-})();`
+  // Wrap the code in an instantly evaluating function
+  return `(function(){${fs.readFileSync(relPath('../src/plausible.js')).toString()}})()`
 }
 
 function getCompileVars(features) {
