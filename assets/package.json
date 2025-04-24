@@ -36,7 +36,7 @@
     "react-flip-move": "^3.0.4",
     "react-intersection-observer": "^9.5.2",
     "react-popper": "^2.3.0",
-    "react-router-dom": "^6.25.1",
+    "react-router-dom": "^7.5.2",
     "react-transition-group": "^4.4.2",
     "topojson-client": "^3.1.0",
     "url-search-params-polyfill": "^8.2.5",
