@@ -1,7 +1,7 @@
 import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'url'
-import { compileFile } from '../../compiler/index.js'
+import { compileFile, featureToCompileKey } from '../../compiler/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const isMainModule = fileURLToPath(import.meta.url) === process.argv[1];
@@ -18,8 +18,13 @@ export function runLocalFileServer() {
   app.get('/tracker/js/:name', (req, res) => {
     const name = req.params.name
     const features = name.split('.').filter((feature) => !['js', 'plausible'].includes(feature))
+    const variant = {
+      name,
+      features,
+      globals: Object.fromEntries(features.map((feature) => [featureToCompileKey(feature), true]))
+    }
 
-    const code = compileFile({ name, features }, { returnCode: true })
+    const code = compileFile(variant, { returnCode: true })
     res.send(code)
   });
 

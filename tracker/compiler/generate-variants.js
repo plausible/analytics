@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import g from 'generatorics'
+import { featureToCompileKey } from './index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -11,7 +12,7 @@ let legacyVariants = [...g.clone.powerSet(base_variants)]
   .map((variant) => ({
     name: variant.length > 0 ? `plausible.${variant.join('.')}.js` : 'plausible.js',
     features: variant,
-    globals: Object.fromEntries(variant.map(feature => [`COMPILE_${feature.replace('-', '_').toUpperCase()}`, true]))
+    globals: Object.fromEntries(variant.map(feature => [featureToCompileKey(feature), true]))
   }))
 
 const variantsFile = path.join(__dirname, 'variants.json')

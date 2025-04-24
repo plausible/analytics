@@ -67,6 +67,10 @@ export function compileFile(variant, options) {
   }
 }
 
+export function featureToCompileKey(feature) {
+  return `COMPILE_${feature.replace('-', '_').toUpperCase()}`
+}
+
 function getVariantsToCompile(options) {
   let targetVariants = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
   if (options.targets !== null) {
