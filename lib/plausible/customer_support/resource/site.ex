@@ -10,6 +10,12 @@ defmodule Plausible.CustomerSupport.Resource.Site do
         where:
           ilike(s.domain, ^"%#{input}%") or ilike(t.name, ^"%#{input}%") or
             ilike(o.name, ^"%#{input}%"),
+        order_by: [
+          desc: fragment("?.domain = ?", s, ^input),
+          desc: fragment("?.name = ?", t, ^input),
+          desc: fragment("?.name = ?", o, ^input),
+          asc: s.domain
+        ],
         limit: ^limit,
         preload: [team: {t, owners: o}]
 
