@@ -6,6 +6,7 @@ import variantsFile from './variants.json' with { type: 'json' }
 import { canSkipCompile } from './can-skip-compile.js'
 import packageJson from '../package.json' with { type: 'json' }
 import progress from 'cli-progress'
+import { spawn, Worker, Pool } from "threads"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -23,27 +24,31 @@ const DEFAULT_GLOBALS = {
   COMPILE_TRACKER_SCRIPT_VERSION: packageJson.tracker_script_version
 }
 
-export function compileAll(options = {}) {
+export async function compileAll(options = {}) {
   if (process.env.NODE_ENV === 'dev' && canSkipCompile()) {
     console.info('COMPILATION SKIPPED: No changes detected in tracker dependencies')
     return
   }
 
   const variants = getVariantsToCompile(options)
+  const baseCode = getCode()
 
   const startTime = Date.now();
   console.log(`Starting compilation of ${variants.length} variants...`)
 
-  const baseCode = getCode()
-
   const bar = new progress.SingleBar({ clearOnComplete: true }, progress.Presets.shades_classic)
   bar.start(variants.length, 0)
 
-  variants.forEach((variant) => {
-    compileFile(variant, { ...options, baseCode })
-    bar.increment()
+  const workerPool = Pool(() => spawn(new Worker('./worker-thread.js')))
+  variants.forEach(variant => {
+    workerPool.queue(async (worker) => {
+      await worker.compileFile(variant, { ...options, baseCode })
+      bar.increment()
+    })
   })
 
+  await workerPool.completed()
+  await workerPool.terminate()
   bar.stop()
 
   console.log(`Completed compilation of ${variants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);

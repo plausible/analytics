@@ -50,17 +50,17 @@ const compileOptions = {
   suffix: values.suffix
 }
 
-compileAll(compileOptions)
+await compileAll(compileOptions)
 
 if (values.watch) {
   console.log('Watching src/ directory for changes...')
 
-  chokidar.watch('./src').on('change', (event, path) => {
+  chokidar.watch('./src').on('change', async (event, path) => {
     if (path) {
       console.log(`\nFile changed: ${path}`)
       console.log('Recompiling...')
 
-      compileAll(compileOptions)
+      await compileAll(compileOptions)
 
       console.log('Done. Watching for changes...')
     }

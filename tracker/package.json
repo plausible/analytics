@@ -20,6 +20,7 @@
     "cli-progress": "^3.12.0",
     "eslint": "^9.20.1",
     "eslint-plugin-playwright": "^2.2.0",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "threads": "^1.7.0"
   }
 }
