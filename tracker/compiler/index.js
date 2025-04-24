@@ -2,14 +2,14 @@ import uglify from 'uglify-js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import variants from './variants.json' with { type: 'json' }
+import variantsFile from './variants.json' with { type: 'json' }
 import { canSkipCompile } from './can-skip-compile.js'
 import packageJson from '../package.json' with { type: 'json' }
 import progress from 'cli-progress'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const DEFAULT_COMPILE_VARS = {
+const DEFAULT_GLOBALS = {
   COMPILE_HASH: false,
   COMPILE_OUTBOUND_LINKS: false,
   COMPILE_EXCLUSIONS: false,
@@ -49,21 +49,21 @@ export function compileAll(options = {}) {
   console.log(`Completed compilation of ${variants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
 }
 
-export function compileFile({ name, features }, options) {
+export function compileFile(variant, options) {
   const baseCode = options.baseCode || getCode()
-  const compileVars = getCompileVars(features)
+  const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
 
-  const code = minify(baseCode, compileVars)
+  const code = minify(baseCode, globals)
 
   if (options.returnCode) {
     return code
   } else {
-    fs.writeFileSync(relPath(`../../priv/tracker/js/${name}${options.suffix || ""}`), code)
+    fs.writeFileSync(relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`), code)
   }
 }
 
 function getVariantsToCompile(options) {
-  let targetVariants = variants.variants
+  let targetVariants = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
   if (options.targets !== null) {
     targetVariants = targetVariants.filter(variant =>
       options.targets.every(target => variant.features.includes(target))
@@ -83,17 +83,10 @@ function getCode() {
   return `(function(){${fs.readFileSync(relPath('../src/plausible.js')).toString()}})()`
 }
 
-function getCompileVars(features) {
-  const names = features.map(feature => feature.replace('-', '_'))
-  const overrides = names.reduce((acc, curr) => (acc[`COMPILE_${curr.toUpperCase()}`] = true, acc), {})
-
-  return { ...DEFAULT_COMPILE_VARS, ...overrides }
-}
-
-function minify(baseCode, compileVars) {
+function minify(baseCode, globals) {
   const result = uglify.minify(baseCode, {
     compress: {
-      global_defs: compileVars
+      global_defs: globals
     }
   })
 
