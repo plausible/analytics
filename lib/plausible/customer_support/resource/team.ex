@@ -6,9 +6,13 @@ defmodule Plausible.CustomerSupport.Resource.Team do
     q =
       from t in Plausible.Teams.Team,
         inner_join: o in assoc(t, :owners),
-        or_where: ilike(t.name, ^"%#{input}%"),
-        or_where: ilike(o.name, ^"%#{input}%"),
+        where: ilike(t.name, ^"%#{input}%") or ilike(o.name, ^"%#{input}%"),
         limit: ^limit,
+        order_by: [
+          desc: fragment("?.name = ?", t, ^input),
+          desc: fragment("?.name = ?", o, ^input),
+          asc: t.name
+        ],
         preload: [owners: o]
 
     Plausible.Repo.all(q)

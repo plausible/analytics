@@ -12,7 +12,11 @@ defmodule Plausible.CustomerSupport.Resource.User do
     q =
       from u in Plausible.Auth.User,
         where: ilike(u.email, ^"%#{input}%") or ilike(u.name, ^"%#{input}%"),
-        order_by: fragment("CASE WHEN email = ? OR name = ? THEN 0 ELSE 1 END", ^input, ^input),
+        order_by: [
+          desc: fragment("?.name = ?", u, ^input),
+          desc: fragment("?.email = ?", u, ^input),
+          asc: u.name
+        ],
         preload: [:owned_teams],
         limit: ^limit
 
