@@ -2,14 +2,30 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   use Plausible.CustomerSupport.Resource, :component
 
   alias Plausible.Billing.Subscription
-
+  alias Plausible.Teams
   alias Plausible.Teams.Management.Layout
 
   def update(assigns, socket) do
     team = Resource.Team.get(assigns.resource_id)
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
     form = to_form(changeset)
-    {:ok, assign(socket, team: team, form: form, tab: nil)}
+
+    usage = Teams.Billing.quota_usage(team, with_features: true)
+
+    limits = %{
+      monthly_pageviews: Teams.Billing.monthly_pageview_limit(team),
+      sites: Teams.Billing.site_limit(team),
+      team_members: Teams.Billing.team_member_limit(team)
+    }
+
+    {:ok,
+     assign(socket,
+       team: team,
+       form: form,
+       tab: nil,
+       usage: usage,
+       limits: limits
+     )}
   end
 
   def render(assigns) do
@@ -63,7 +79,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         <div class="hidden sm:block">
           <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
             <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
-            <.tab to="members" target={@myself} tab={@tab}>Members</.tab>
+            <.tab to="members" target={@myself} tab={@tab}>
+              Members ({@usage.team_members}/{@limits.team_members})
+            </.tab>
+            <.tab to="sites" target={@myself} tab={@tab}>
+              Sites ({@usage.sites}/{@limits.sites})
+            </.tab>
           </nav>
         </div>
       </div>
@@ -86,24 +107,33 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </span>
           </span>
         </div>
-      </div>
 
-      <div :if={@tab == "members"} class="mt-2 m-4">
-        <.table rows={Layout.sorted_for_display(@layout)}>
-          <:thead>
-            <.th>User</.th>
-            <.th>Type</.th>
-            <.th>Role</.th>
-          </:thead>
-          <:tbody :let={{_, member}}>
-            <.td>
-              <div :if={member.id != 0}>
-                <.styled_link
-                  phx-click="open"
-                  phx-value-id={member.id}
-                  phx-value-type="user"
-                  class="cursor-pointer flex block items-center"
-                >
+        <div :if={@tab == "members"} class="mt-2 m-4">
+          <.table rows={Layout.sorted_for_display(@layout)}>
+            <:thead>
+              <.th>User</.th>
+              <.th>Type</.th>
+              <.th>Role</.th>
+            </:thead>
+            <:tbody :let={{_, member}}>
+              <.td>
+                <div :if={member.id != 0}>
+                  <.styled_link
+                    phx-click="open"
+                    phx-value-id={member.id}
+                    phx-value-type="user"
+                    class="cursor-pointer flex block items-center"
+                  >
+                    <img
+                      src={
+                        Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})
+                      }
+                      class="mr-4 w-6 rounded-full bg-gray-300"
+                    />
+                    {member.name} &lt;{member.email}&gt;
+                  </.styled_link>
+                </div>
+                <div :if={member.id == 0} class="flex items-center">
                   <img
                     src={
                       Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})
@@ -111,24 +141,17 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                     class="mr-4 w-6 rounded-full bg-gray-300"
                   />
                   {member.name} &lt;{member.email}&gt;
-                </.styled_link>
-              </div>
-              <div :if={member.id == 0} class="flex items-center">
-                <img
-                  src={Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})}
-                  class="mr-4 w-6 rounded-full bg-gray-300"
-                />
-                {member.name} &lt;{member.email}&gt;
-              </div>
-            </.td>
-            <.td>
-              {member.type}
-            </.td>
-            <.td>
-              {member.role}
-            </.td>
-          </:tbody>
-        </.table>
+                </div>
+              </.td>
+              <.td>
+                {member.type}
+              </.td>
+              <.td>
+                {member.role}
+              </.td>
+            </:tbody>
+          </.table>
+        </div>
       </div>
 
       <div :if={@tab == "overview"} class="p-4">
@@ -138,6 +161,26 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             Change
           </.button>
         </.form>
+      </div>
+
+      <div :if={@tab == "sites"} class="mt-2 m-4">
+        <.table rows={@sites.entries}>
+          <:thead>
+            <.th>Domain</.th>
+          </:thead>
+          <:tbody :let={site}>
+            <.td>
+              <.styled_link
+                phx-click="open"
+                phx-value-id={site.id}
+                phx-value-type="site"
+                class="cursor-pointer flex block items-center"
+              >
+                {site.domain}
+              </.styled_link>
+            </.td>
+          </:tbody>
+        </.table>
       </div>
     </div>
     """
@@ -197,6 +240,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   def handle_event("switch", %{"to" => "members"}, socket) do
     layout = Layout.init(socket.assigns.team)
     {:noreply, assign(socket, tab: "members", layout: layout)}
+  end
+
+  def handle_event("switch", %{"to" => "sites"}, socket) do
+    any_owner = Plausible.Repo.preload(socket.assigns.team, [:owners]).owners |> hd()
+
+    sites = Teams.Sites.list(any_owner, %{}, team: socket.assigns.team)
+
+    {:noreply, assign(socket, tab: "sites", sites: sites)}
   end
 
   def team_bg(term) do
