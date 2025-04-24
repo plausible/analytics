@@ -78,10 +78,6 @@ function getVariantsToCompile(options) {
   return targetVariants
 }
 
-function relPath(segment) {
-  return path.join(__dirname, segment)
-}
-
 function getCode() {
   return `
 (function(){
@@ -97,12 +93,10 @@ function getCompileVars(features) {
   return { ...DEFAULT_COMPILE_VARS, ...overrides }
 }
 
-
 function minify(baseCode, compileVars) {
   const result = uglify.minify(baseCode, {
     compress: {
-      global_defs: compileVars,
-      passes: 2
+      global_defs: compileVars
     }
   })
 
@@ -123,4 +117,8 @@ function equal_lists(a, b) {
     }
   }
   return true
+}
+
+function relPath(segment) {
+  return path.join(__dirname, segment)
 }
