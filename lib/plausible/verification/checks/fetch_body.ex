@@ -28,7 +28,7 @@ defmodule Plausible.Verification.Checks.FetchBody do
 
     {req, resp} = opts |> Req.new() |> Req.Request.run_request()
 
-    case resp |> IO.inspect(label: :resp) do
+    case resp do
       %Req.Response{body: body}
       when is_binary(body) ->
         state

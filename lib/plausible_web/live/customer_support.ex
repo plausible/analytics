@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
       >
         <div
           phx-click-away="close"
-          class="overflow-auto bg-white w-full h-3/4 max-w-7xl max-h-full p-6 rounded-lg shadow-lg"
+          class="overflow-auto bg-white w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg"
         >
           <.live_component
             :if={@current}

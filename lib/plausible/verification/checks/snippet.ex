@@ -11,7 +11,6 @@ defmodule Plausible.Verification.Checks.Snippet do
 
   @impl true
   def perform(%State{assigns: %{document: document}} = state) do
-    IO.inspect(document, label: :doc)
     in_head = Floki.find(document, "head script[data-domain][src]")
     in_body = Floki.find(document, "body script[data-domain][src]")
 
