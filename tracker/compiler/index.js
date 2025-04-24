@@ -49,7 +49,7 @@ export function compileAll(options = {}) {
   console.log(`Completed compilation of ${variants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
 }
 
-export function compileFile({ name, features }, options = {}) {
+export function compileFile({ name, features }, options) {
   const baseCode = options.baseCode || getCode()
   const compileVars = getCompileVars(features)
 
