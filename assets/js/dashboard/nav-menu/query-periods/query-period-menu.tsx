@@ -23,7 +23,7 @@ import {
 } from '../../query-time-periods'
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
-import { PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
+import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
   datemenuButtonClassName,
@@ -95,12 +95,12 @@ export const QueryPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <PopoverButton ref={buttonRef} className={datemenuButtonClassName}>
+      <Popover.Button ref={buttonRef} className={datemenuButtonClassName}>
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentPeriodDisplayName({ query, site })}
         </span>
         <DateMenuChevron />
-      </PopoverButton>
+      </Popover.Button>
       <QueryPeriodMenuInner
         toggleCalendar={toggleCalendar}
         closeDropdown={closeDropdown}
@@ -158,7 +158,7 @@ const QueryPeriodMenuInner = ({
           'md:left-auto md:w-56'
         )}
       >
-        <PopoverPanel
+        <Popover.Panel
           className={popover.panel.classNames.roundedSheet}
           data-testid="datemenu"
         >
@@ -190,7 +190,7 @@ const QueryPeriodMenuInner = ({
               {index < groups.length - 1 && <MenuSeparator />}
             </React.Fragment>
           ))}
-        </PopoverPanel>
+        </Popover.Panel>
       </Transition>
     </>
   )
@@ -207,7 +207,7 @@ export const MainCalendar = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
-      <PopoverButton
+      <Popover.Button
         className={hiddenCalendarButtonClassName}
         tabIndex={-1}
         ref={calendarButtonRef}

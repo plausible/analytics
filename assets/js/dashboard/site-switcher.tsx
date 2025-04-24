@@ -2,12 +2,7 @@
  * @prettier
  */
 import React, { useRef } from 'react'
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition
-} from '@headlessui/react'
+import { Popover, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { Cog8ToothIcon } from '@heroicons/react/24/outline'
 import classNames from 'classnames'
@@ -121,7 +116,7 @@ export const SiteSwitcher = () => {
             ))}
 
           <BlurMenuButtonOnEscape targetRef={buttonRef} buttonId={BUTTON_ID} />
-          <PopoverButton
+          <Popover.Button
             id={BUTTON_ID}
             ref={buttonRef}
             className={classNames(
@@ -138,7 +133,7 @@ export const SiteSwitcher = () => {
               {currentSite.domain}
             </span>
             <ChevronDownIcon className="hidden lg:block h-5 w-5 ml-2 dark:text-gray-100" />
-          </PopoverButton>
+          </Popover.Button>
           <Transition
             as="div"
             className={classNames(
@@ -146,7 +141,7 @@ export const SiteSwitcher = () => {
               popover.transition.classNames.fullwidth
             )}
           >
-            <PopoverPanel
+            <Popover.Panel
               data-testid="sitemenu"
               className={classNames(popover.panel.classNames.roundedSheet)}
             >
@@ -208,7 +203,7 @@ export const SiteSwitcher = () => {
                   </a>
                 </>
               )}
-            </PopoverPanel>
+            </Popover.Panel>
           </Transition>
         </>
       )}

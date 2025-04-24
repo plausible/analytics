@@ -16,7 +16,7 @@ import {
   getCurrentComparisonPeriodDisplayName,
   getSearchToApplyCustomComparisonDates
 } from '../../query-time-periods'
-import { PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
+import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
   datemenuButtonClassName,
@@ -52,7 +52,7 @@ export const ComparisonPeriodMenuItems = ({
         'md:left-auto md:w-56'
       )}
     >
-      <PopoverPanel className={popover.panel.classNames.roundedSheet}>
+      <Popover.Panel className={popover.panel.classNames.roundedSheet}>
         {[
           ComparisonMode.off,
           ComparisonMode.previous_period,
@@ -101,7 +101,7 @@ export const ComparisonPeriodMenuItems = ({
             </AppNavigationLink>
           </>
         )}
-      </PopoverPanel>
+      </Popover.Panel>
     </Transition>
   )
 }
@@ -123,12 +123,12 @@ export const ComparisonPeriodMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={buttonRef} />
-      <PopoverButton className={datemenuButtonClassName} ref={buttonRef}>
+      <Popover.Button className={datemenuButtonClassName} ref={buttonRef}>
         <span className={popover.toggleButton.classNames.truncatedText}>
           {getCurrentComparisonPeriodDisplayName({ site, query })}
         </span>
         <DateMenuChevron />
-      </PopoverButton>
+      </Popover.Button>
       <ComparisonPeriodMenuItems
         closeDropdown={closeDropdown}
         toggleCalendar={toggleCalendar}
@@ -148,7 +148,7 @@ export const ComparisonCalendarMenu = ({
   return (
     <>
       <BlurMenuButtonOnEscape targetRef={calendarButtonRef} />
-      <PopoverButton
+      <Popover.Button
         className={hiddenCalendarButtonClassName}
         tabIndex={-1}
         ref={calendarButtonRef}

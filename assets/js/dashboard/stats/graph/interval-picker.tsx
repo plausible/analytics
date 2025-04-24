@@ -1,11 +1,5 @@
 import React, { useRef } from 'react'
-import {
-  CloseButton,
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition
-} from '@headlessui/react'
+import { Popover, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
@@ -138,50 +132,56 @@ export function IntervalPicker({
         />
       )}
       <Popover className="relative inline-block pl-2">
-        <BlurMenuButtonOnEscape targetRef={menuElement} />
-        <PopoverButton
-          ref={menuElement}
-          className={classNames(
-            popover.toggleButton.classNames.linkLike,
-            'rounded-sm text-sm flex items-center'
-          )}
-        >
-          {INTERVAL_LABELS[currentInterval]}
-          <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
-        </PopoverButton>
+        {({ close: closeDropdown }) => (
+          <>
+            <BlurMenuButtonOnEscape targetRef={menuElement} />
+            <Popover.Button
+              ref={menuElement}
+              className={classNames(
+                popover.toggleButton.classNames.linkLike,
+                'rounded-sm text-sm flex items-center'
+              )}
+            >
+              {INTERVAL_LABELS[currentInterval]}
+              <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
+            </Popover.Button>
 
-        <Transition
-          as="div"
-          className={classNames(
-            popover.transition.classNames.right,
-            'mt-2 w-56'
-          )}
-        >
-          <PopoverPanel
-            className={classNames(
-              popover.panel.classNames.roundedSheet,
-              'font-normal'
-            )}
-          >
-            {options.map((option) => (
-              <CloseButton
-                as="button"
-                key={option}
-                onClick={() => updateInterval(option)}
-                data-selected={option == currentInterval}
+            <Transition
+              as="div"
+              className={classNames(
+                popover.transition.classNames.right,
+                'mt-2 w-56'
+              )}
+            >
+              <Popover.Panel
                 className={classNames(
-                  popover.items.classNames.navigationLink,
-                  popover.items.classNames.selectedOption,
-                  popover.items.classNames.hoverLink,
-                  popover.items.classNames.roundedStartEnd,
-                  'w-full'
+                  popover.panel.classNames.roundedSheet,
+                  'font-normal'
                 )}
               >
-                {INTERVAL_LABELS[option]}
-              </CloseButton>
-            ))}
-          </PopoverPanel>
-        </Transition>
+                {options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      updateInterval(option)
+                      closeDropdown()
+                    }}
+                    data-selected={option == currentInterval}
+                    className={classNames(
+                      popover.items.classNames.navigationLink,
+                      popover.items.classNames.selectedOption,
+                      popover.items.classNames.hoverLink,
+                      popover.items.classNames.roundedStartEnd,
+                      'w-full'
+                    )}
+                  >
+                    {INTERVAL_LABELS[option]}
+                  </button>
+                ))}
+              </Popover.Panel>
+            </Transition>
+          </>
+        )}
       </Popover>
     </>
   )

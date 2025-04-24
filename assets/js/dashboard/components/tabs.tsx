@@ -1,10 +1,4 @@
-import {
-  CloseButton,
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition
-} from '@headlessui/react'
+import { Popover, Transition } from '@headlessui/react'
 import classNames from 'classnames'
 import React, { ReactNode, useRef } from 'react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
@@ -78,51 +72,57 @@ export const DropdownTabButton = ({
 
   return (
     <Popover className={className}>
-      <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
-      <PopoverButton
-        className={classNames('inline-flex justify-between rounded-sm')}
-        ref={dropdownButtonRef}
-      >
-        <TabButtonText active={active}>{children}</TabButtonText>
+      {({ close: closeDropdown }) => (
+        <>
+          <BlurMenuButtonOnEscape targetRef={dropdownButtonRef} />
+          <Popover.Button
+            className={classNames('inline-flex justify-between rounded-sm')}
+            ref={dropdownButtonRef}
+          >
+            <TabButtonText active={active}>{children}</TabButtonText>
 
-        <div
-          className="flex self-stretch -mr-1 ml-1 items-center"
-          aria-hidden="true"
-        >
-          <ChevronDownIcon className="h-4 w-4" />
-        </div>
-      </PopoverButton>
+            <div
+              className="flex self-stretch -mr-1 ml-1 items-center"
+              aria-hidden="true"
+            >
+              <ChevronDownIcon className="h-4 w-4" />
+            </div>
+          </Popover.Button>
 
-      <Transition
-        as="div"
-        className={classNames(
-          'mt-2',
-          popover.transition.classNames.fullwidth,
-          transitionClassName
-        )}
-      >
-        <PopoverPanel className={popover.panel.classNames.roundedSheet}>
-          {options.map(({ selected, label, onClick }, index) => {
-            return (
-              <CloseButton
-                key={index}
-                as="button"
-                onClick={onClick}
-                data-selected={selected}
-                className={classNames(
-                  'w-full text-left',
-                  popover.items.classNames.navigationLink,
-                  popover.items.classNames.selectedOption,
-                  popover.items.classNames.hoverLink,
-                  popover.items.classNames.roundedStartEnd
-                )}
-              >
-                {label}
-              </CloseButton>
-            )
-          })}
-        </PopoverPanel>
-      </Transition>
+          <Transition
+            as="div"
+            className={classNames(
+              'mt-2',
+              popover.transition.classNames.fullwidth,
+              transitionClassName
+            )}
+          >
+            <Popover.Panel className={popover.panel.classNames.roundedSheet}>
+              {options.map(({ selected, label, onClick }, index) => {
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      onClick()
+                      closeDropdown()
+                    }}
+                    data-selected={selected}
+                    className={classNames(
+                      'w-full text-left',
+                      popover.items.classNames.navigationLink,
+                      popover.items.classNames.selectedOption,
+                      popover.items.classNames.hoverLink,
+                      popover.items.classNames.roundedStartEnd
+                    )}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </Popover.Panel>
+          </Transition>
+        </>
+      )}
     </Popover>
   )
 }

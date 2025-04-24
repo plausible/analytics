@@ -4,12 +4,7 @@ import React, { useRef, useState, useLayoutEffect } from 'react'
 import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition
-} from '@headlessui/react'
+import { Popover, Transition } from '@headlessui/react'
 import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
@@ -248,7 +243,7 @@ const SeeMoreMenu = ({
   return (
     <Popover className={className}>
       <BlurMenuButtonOnEscape targetRef={seeMoreRef} />
-      <PopoverButton
+      <Popover.Button
         title={title}
         ref={seeMoreRef}
         className={classNames(
@@ -275,7 +270,7 @@ const SeeMoreMenu = ({
             </div>
           </div>
         )}
-      </PopoverButton>
+      </Popover.Button>
       <Transition
         as="div"
         className={classNames(
@@ -284,7 +279,7 @@ const SeeMoreMenu = ({
           'md:right-auto'
         )}
       >
-        <PopoverPanel
+        <Popover.Panel
           className={classNames(
             popover.panel.classNames.roundedSheet,
             'flex flex-col'
@@ -338,7 +333,7 @@ const SeeMoreMenu = ({
               })}
             </div>
           )}
-        </PopoverPanel>
+        </Popover.Panel>
       </Transition>
     </Popover>
   )
