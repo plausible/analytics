@@ -58,7 +58,7 @@ export function compileFile({ name, features }, options) {
   if (options.returnCode) {
     return code
   } else {
-    fs.writeFileSync(relPath(`../../priv/tracker/js/${name}${options.suffix}`), code)
+    fs.writeFileSync(relPath(`../../priv/tracker/js/${name}${options.suffix || ""}`), code)
   }
 }
 
