@@ -7,10 +7,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def update(assigns, socket) do
     team = Resource.Team.get(assigns.resource_id)
-    layout = Layout.init(team)
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
     form = to_form(changeset)
-    {:ok, assign(socket, layout: layout, team: team, form: form)}
+    {:ok, assign(socket, team: team, form: form, tab: nil)}
   end
 
   def render(assigns) do
@@ -60,55 +59,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             <option selected>Members</option>
             <option>Billing</option>
           </select>
-          <svg
-            class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end fill-gray-500"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            aria-hidden="true"
-            data-slot="icon"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-              clip-rule="evenodd"
-            />
-          </svg>
         </div>
         <div class="hidden sm:block">
           <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
-            <!-- Current: "text-gray-900", Default: "text-gray-500 hover:text-gray-700" -->
-            <a
-              href="#"
-              class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10"
-            >
-              <span>Overview</span>
-              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
-              </span>
-            </a>
-            <a
-              href="#"
-              class="group relative min-w-0 flex-1 overflow-hidden bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10"
-            >
-              <span>Sites</span>
-              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
-              </span>
-            </a>
-            <a
-              href="#"
-              class="group relative min-w-0 flex-1 overflow-hidden bg-white px-4 py-4 text-center text-sm font-medium text-gray-900 hover:bg-gray-50 focus:z-10"
-              aria-current="page"
-            >
-              <span>Members</span>
-              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5 bg-indigo-500"></span>
-            </a>
-            <a
-              href="#"
-              class="group relative min-w-0 flex-1 overflow-hidden rounded-r-lg bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10"
-            >
-              <span>Billing</span>
-              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
-              </span>
-            </a>
+            <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
+            <.tab to="members" target={@myself} tab={@tab}>Members</.tab>
           </nav>
         </div>
       </div>
@@ -133,33 +88,22 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         </div>
       </div>
 
-      <div class="m-4">
-        <div class="mt-2">
-          <.table rows={Layout.sorted_for_display(@layout)}>
-            <:thead>
-              <.th>User</.th>
-              <.th>Type</.th>
-              <.th>Role</.th>
-            </:thead>
-            <:tbody :let={{_, member}}>
-              <.td>
-                <div :if={member.id != 0}>
-                  <a
-                    phx-click="open"
-                    phx-value-id={member.id}
-                    phx-value-type="user"
-                    class="cursor-pointer flex block items-center"
-                  >
-                    <img
-                      src={
-                        Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})
-                      }
-                      class="mr-4 w-6 rounded-full bg-gray-300"
-                    />
-                    {member.name} &lt;{member.email}&gt;
-                  </a>
-                </div>
-                <div :if={member.id == 0} class="flex items-center">
+      <div :if={@tab == "members"} class="mt-2 m-4">
+        <.table rows={Layout.sorted_for_display(@layout)}>
+          <:thead>
+            <.th>User</.th>
+            <.th>Type</.th>
+            <.th>Role</.th>
+          </:thead>
+          <:tbody :let={{_, member}}>
+            <.td>
+              <div :if={member.id != 0}>
+                <.styled_link
+                  phx-click="open"
+                  phx-value-id={member.id}
+                  phx-value-type="user"
+                  class="cursor-pointer flex block items-center"
+                >
                   <img
                     src={
                       Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})
@@ -167,20 +111,27 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                     class="mr-4 w-6 rounded-full bg-gray-300"
                   />
                   {member.name} &lt;{member.email}&gt;
-                </div>
-              </.td>
-              <.td>
-                {member.type}
-              </.td>
-              <.td>
-                {member.role}
-              </.td>
-            </:tbody>
-          </.table>
-        </div>
+                </.styled_link>
+              </div>
+              <div :if={member.id == 0} class="flex items-center">
+                <img
+                  src={Plausible.Auth.User.profile_img_url(%Plausible.Auth.User{email: member.email})}
+                  class="mr-4 w-6 rounded-full bg-gray-300"
+                />
+                {member.name} &lt;{member.email}&gt;
+              </div>
+            </.td>
+            <.td>
+              {member.type}
+            </.td>
+            <.td>
+              {member.role}
+            </.td>
+          </:tbody>
+        </.table>
       </div>
 
-      <div class="p-4">
+      <div :if={@tab == "overview"} class="p-4">
         <.form :let={f} for={@form} phx-submit="change" phx-target={@myself}>
           <.input field={f[:trial_expiry_date]} />
           <.button type="submit">
@@ -237,6 +188,15 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       {:error, changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  def handle_event("switch", %{"to" => "overview"}, socket) do
+    {:noreply, assign(socket, tab: "overview")}
+  end
+
+  def handle_event("switch", %{"to" => "members"}, socket) do
+    layout = Layout.init(socket.assigns.team)
+    {:noreply, assign(socket, tab: "members", layout: layout)}
   end
 
   def team_bg(term) do
@@ -355,6 +315,34 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         days_left = Date.diff(end_date, Date.utc_today())
         "#{days_left} days left"
     end
+  end
+
+  attr :to, :string, required: true
+  attr :tab, :string, required: true
+  attr :target, :any, required: true
+  slot :inner_block, required: true
+
+  defp tab(assigns) do
+    ~H"""
+    <a
+      phx-click="switch"
+      phx-value-to={@to}
+      phx-target={@target}
+      class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10 cursor-pointer"
+    >
+      <span>
+        {render_slot(@inner_block)}
+      </span>
+      <span
+        aria-hidden="true"
+        class={[
+          "absolute inset-x-0 bottom-0 h-0.5",
+          if(@tab == @to, do: "bg-indigo-500", else: "bg-transparent")
+        ]}
+      >
+      </span>
+    </a>
+    """
   end
 
   # defp lock(team) do
