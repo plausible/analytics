@@ -93,10 +93,10 @@ export const SegmentMenu = () => {
             </Popover.Button>
             <Transition
               as="div"
+              {...popover.transition.props}
               className={classNames(
-                'mt-2',
                 popover.transition.classNames.fullwidth,
-                'md:w-auto md:left-auto'
+                'mt-2 md:w-auto md:left-auto md:origin-top-right'
               )}
             >
               <Popover.Panel className={popover.panel.classNames.roundedSheet}>

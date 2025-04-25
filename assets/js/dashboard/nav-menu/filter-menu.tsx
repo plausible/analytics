@@ -67,10 +67,10 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
       </Popover.Button>
       <Transition
         as="div"
+        {...popover.transition.props}
         className={classNames(
-          'mt-2',
           popover.transition.classNames.fullwidth,
-          'md:left-auto md:w-80'
+          'mt-2 md:left-auto md:w-80 md:origin-top-right'
         )}
       >
         <Popover.Panel

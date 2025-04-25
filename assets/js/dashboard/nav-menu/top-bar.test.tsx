@@ -21,7 +21,6 @@ mockResizeObserver()
 mockIntersectionObserver()
 
 const domain = 'dummy.site'
-const domains = [domain, 'example.com', 'blog.example.com']
 
 let mockAPI: MockAPI
 
@@ -35,10 +34,18 @@ afterAll(() => {
 
 beforeEach(() => {
   mockAPI.clear()
-  mockAPI.get('/api/sites', { data: domains.map((domain) => ({ domain })) })
+  mockAPI.get('/api/sites', { data: [{ domain }] })
 })
 
 test('user can open and close site switcher', async () => {
+  mockAPI.get('/api/sites', {
+    data: [domain, 'example.com', 'blog.example.com', 'aççented.ca'].map(
+      (domain) => ({
+        domain
+      })
+    )
+  })
+
   render(<TopBar showCurrentVisitors={false} />, {
     wrapper: (props) => (
       <TestContextProviders siteOptions={{ domain }} {...props} />
@@ -47,17 +54,24 @@ test('user can open and close site switcher', async () => {
 
   const toggleSiteSwitcher = screen.getByRole('button', { name: domain })
   await userEvent.click(toggleSiteSwitcher)
-  expect(screen.queryAllByRole('link').map((el) => el.textContent)).toEqual(
+  expect(
+    screen
+      .queryAllByRole('link')
+      .map((el) => ({ text: el.textContent, href: el.getAttribute('href') }))
+  ).toEqual(
     [
-      ['Site settings'],
-      ['dummy.site', '1'],
-      ['example.com', '2'],
-      ['blog.example.com', '3'],
-      ['View all']
-    ].map((a) => a.join(''))
+      { text: ['Site settings'], href: `/${domain}/settings/general` },
+      { text: ['dummy.site', '1'], href: '#' },
+      { text: ['example.com', '2'], href: `/example.com` },
+      { text: ['blog.example.com', '3'], href: `/blog.example.com` },
+      { text: ['aççented.ca', '4'], href: `/a%C3%A7%C3%A7ented.ca` },
+      { text: ['View all'], href: '/sites' }
+    ].map((l) => ({ ...l, text: l.text.join('') }))
   )
+
+  expect(screen.queryByTestId('sitemenu')).toBeInTheDocument()
   await userEvent.click(toggleSiteSwitcher)
-  await waitForElementToBeRemoved(() => screen.queryByTestId('sitemenu'))
+  expect(screen.queryByTestId('sitemenu')).not.toBeInTheDocument()
   expect(screen.queryAllByRole('menuitem')).toEqual([])
 })
 
@@ -82,7 +96,7 @@ test('user can open and close filters dropdown', async () => {
     'Goal'
   ])
   await userEvent.click(toggleFilters)
-  await waitForElementToBeRemoved(() => screen.queryByTestId('filtermenu'))
+  expect(screen.queryByTestId('filtermenu')).not.toBeInTheDocument()
   expect(screen.queryAllByRole('link')).toEqual([])
 })
 

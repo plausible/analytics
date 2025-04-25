@@ -49,7 +49,7 @@ const menuItemClassName = classNames(
 const getSwitchToSiteURL = (
   currentSite: PlausibleSite,
   site: { domain: string }
-): null | string => {
+): string | null => {
   // Prevents reloading the page when the current site is selected
   if (currentSite.domain === site.domain) {
     return null
@@ -105,9 +105,7 @@ export const SiteSwitcher = () => {
                     closePopover()
                   } else {
                     closePopover()
-                    setTimeout(() => {
-                      window.location.assign(url)
-                    }, 50)
+                    window.location.assign(url)
                   }
                 }}
                 shouldIgnoreWhen={[isModifierPressed, isTyping]}
@@ -136,9 +134,10 @@ export const SiteSwitcher = () => {
           </Popover.Button>
           <Transition
             as="div"
+            {...popover.transition.props}
             className={classNames(
-              'mt-2 md:w-80 md:right-auto',
-              popover.transition.classNames.fullwidth
+              popover.transition.classNames.fullwidth,
+              'mt-2 md:w-80 md:right-auto md:origin-top-left'
             )}
           >
             <Popover.Panel
@@ -178,9 +177,7 @@ export const SiteSwitcher = () => {
                     data-selected={currentSite.domain === domain}
                     key={domain}
                     className={menuItemClassName}
-                    href={
-                      getSwitchToSiteURL(currentSite, { domain }) ?? undefined
-                    }
+                    href={getSwitchToSiteURL(currentSite, { domain }) ?? '#'}
                     onClick={
                       currentSite.domain === domain
                         ? () => closePopover()
@@ -194,7 +191,6 @@ export const SiteSwitcher = () => {
                     )}
                   </a>
                 ))}
-
               {canSeeViewAllSites && (
                 <>
                   <MenuSeparator />

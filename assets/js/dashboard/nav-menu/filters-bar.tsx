@@ -273,10 +273,10 @@ const SeeMoreMenu = ({
       </Popover.Button>
       <Transition
         as="div"
+        {...popover.transition.props}
         className={classNames(
-          'mt-2',
           popover.transition.classNames.fullwidth,
-          'md:right-auto'
+          'mt-2 md:right-auto md:origin-top-left'
         )}
       >
         <Popover.Panel

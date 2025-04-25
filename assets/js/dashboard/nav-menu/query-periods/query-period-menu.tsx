@@ -152,10 +152,10 @@ const QueryPeriodMenuInner = ({
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
       <Transition
         as="div"
+        {...popover.transition.props}
         className={classNames(
-          'mt-2',
           popover.transition.classNames.fullwidth,
-          'md:left-auto md:w-56'
+          'mt-2 md:w-56 md:left-auto origin-top-right'
         )}
       >
         <Popover.Panel

@@ -1,9 +1,5 @@
 import React from 'react'
-import {
-  render,
-  screen,
-  waitForElementToBeRemoved
-} from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TestContextProviders } from '../../../../test-utils/app-context-providers'
 import { stringifySearch } from '../../util/url-search-params'
@@ -59,7 +55,7 @@ test('user can select a new period and its value is stored', async () => {
   await userEvent.click(screen.getByText('Last 28 days'))
   expect(screen.getByTestId('datemenu')).toBeVisible()
   await userEvent.click(screen.getByText('All time'))
-  await waitForElementToBeRemoved(() => screen.queryByTestId('datemenu'))
+  expect(screen.queryByTestId('datemenu')).not.toBeInTheDocument()
   expect(localStorage.getItem(periodStorageKey)).toBe('all')
 })
 
@@ -174,13 +170,13 @@ test('going back resets the stored query period to previous value', async () => 
 
   await userEvent.click(screen.getByText('Last 28 days'))
   await userEvent.click(screen.getByText('Year to Date'))
-  await waitForElementToBeRemoved(() => screen.queryByTestId('datemenu'))
+  expect(screen.queryByTestId('datemenu')).not.toBeInTheDocument()
 
   expect(localStorage.getItem(periodStorageKey)).toBe('year')
 
   await userEvent.click(screen.getByText('Year to Date'))
   await userEvent.click(screen.getByText('Month to Date'))
-  await waitForElementToBeRemoved(() => screen.queryByTestId('datemenu'))
+  expect(screen.queryByTestId('datemenu')).not.toBeInTheDocument()
 
   expect(localStorage.getItem(periodStorageKey)).toBe('month')
 
