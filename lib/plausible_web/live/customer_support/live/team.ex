@@ -5,6 +5,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   alias Plausible.Teams
   alias Plausible.Teams.Management.Layout
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
+
   def update(assigns, socket) do
     team = Resource.Team.get(assigns.resource_id)
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
@@ -22,7 +24,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
      assign(socket,
        team: team,
        form: form,
-       tab: nil,
+       tab: "overview",
        usage: usage,
        limits: limits
      )}
@@ -30,82 +32,140 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def render(assigns) do
     ~H"""
-    <div class="overflow-hidden rounded-lg bg-white shadow">
-      <h2 class="sr-only" id="profile-overview-title">Profile Overview</h2>
-      <div class="bg-white p-6">
-        <div class="sm:flex sm:items-center sm:justify-between">
-          <div class="sm:flex sm:space-x-5">
-            <div class="shrink-0">
-              <div class={[
-                team_bg(@team.identifier),
-                "rounded-full p-1 flex items-center justify-center"
-              ]}>
-                <Heroicons.user_group class="h-14 w-14 text-white" />
+    <div class="shadow">
+      <div class="overflow-hidden rounded-lg bg-white shadow">
+        <h2 class="sr-only" id="profile-overview-title">Profile Overview</h2>
+        <div class="bg-white p-6">
+          <div class="sm:flex sm:items-center sm:justify-between">
+            <div class="sm:flex sm:space-x-5">
+              <div class="shrink-0">
+                <div class={[
+                  team_bg(@team.identifier),
+                  "rounded-full p-1 flex items-center justify-center"
+                ]}>
+                  <Heroicons.user_group class="h-14 w-14 text-white" />
+                </div>
+              </div>
+              <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
+                <p class="text-xl font-bold text-gray-900 sm:text-2xl">{@team.name}</p>
+                <p class="text-sm font-medium text-gray-600">
+                  <span :if={@team.setup_complete}>Set up at {@team.setup_at}</span>
+                  <span :if={!@team.setup_complete}>Not set up yet</span>
+                </p>
               </div>
             </div>
-            <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-              <p class="text-xl font-bold text-gray-900 sm:text-2xl">{@team.name}</p>
-              <p class="text-sm font-medium text-gray-600">
-                <span :if={@team.setup_complete}>Set up at {@team.setup_at}</span>
-                <span :if={!@team.setup_complete}>Not set up yet</span>
-              </p>
+            <div class="mt-5 flex justify-center sm:mt-0">
+              <.input_with_clipboard
+                id="team-identifier"
+                name="team-identifier"
+                label="Team Identifier"
+                value={@team.identifier}
+                onfocus="this.value = this.value;"
+              />
             </div>
           </div>
-          <div class="mt-5 flex justify-center sm:mt-0">
-            <.input_with_clipboard
-              id="team-identifier"
-              name="team-identifier"
-              label="Team Identifier"
-              value={@team.identifier}
-              onfocus="this.value = this.value;"
-            />
+        </div>
+
+        <div>
+          <div class="grid grid-cols-1 sm:hidden">
+            <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
+            <select
+              aria-label="Select a tab"
+              class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+            >
+              <option>Overview</option>
+              <option>Sites</option>
+              <option selected>Members</option>
+              <option>Billing</option>
+            </select>
+          </div>
+          <div class="hidden sm:block">
+            <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+              <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
+              <.tab to="members" target={@myself} tab={@tab}>
+                Members ({@usage.team_members}/{@limits.team_members})
+              </.tab>
+              <.tab to="sites" target={@myself} tab={@tab}>
+                Sites ({@usage.sites}/{@limits.sites})
+              </.tab>
+            </nav>
           </div>
         </div>
-      </div>
 
-      <div>
-        <div class="grid grid-cols-1 sm:hidden">
-          <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
-          <select
-            aria-label="Select a tab"
-            class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
-          >
-            <option>Overview</option>
-            <option>Sites</option>
-            <option selected>Members</option>
-            <option>Billing</option>
-          </select>
-        </div>
-        <div class="hidden sm:block">
-          <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
-            <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
-            <.tab to="members" target={@myself} tab={@tab}>
-              Members ({@usage.team_members}/{@limits.team_members})
-            </.tab>
-            <.tab to="sites" target={@myself} tab={@tab}>
-              Sites ({@usage.sites}/{@limits.sites})
-            </.tab>
-          </nav>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 divide-y divide-gray-200 border-t border-gray-200 bg-gray-50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        <div class="px-6 py-5 text-center text-sm font-medium">
-          <span class="text-gray-900">
-            <strong>Subscription status</strong> <br />{subscription_status(@team)}
-          </span>
-        </div>
-        <div class="px-6 py-5 text-center text-sm font-medium">
-          <span class="text-gray-900">
-            <strong>Subscription plan</strong> <br />{subscription_plan(@team)}
-          </span>
-        </div>
-        <div class="px-6 py-5 text-center text-sm font-medium">
-          <span class="text-gray-900">
+        <div class="grid grid-cols-1 divide-y divide-gray-200 border-t border-gray-200 bg-gray-50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <div class="px-6 py-5 text-center text-sm font-medium">
             <span class="text-gray-900">
-              <strong>Grace Period</strong> <br />{grace_period_status(@team)}
+              <strong>Subscription status</strong> <br />{subscription_status(@team)}
             </span>
-          </span>
+          </div>
+          <div class="px-6 py-5 text-center text-sm font-medium">
+            <span class="text-gray-900">
+              <strong>Subscription plan</strong> <br />{subscription_plan(@team)}
+            </span>
+          </div>
+          <div class="px-6 py-5 text-center text-sm font-medium">
+            <span class="text-gray-900">
+              <span class="text-gray-900">
+                <strong>Grace Period</strong> <br />{grace_period_status(@team)}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div :if={@tab == "overview"} class="mt-2 m-4">
+          <.form :let={f} for={@form} phx-submit="change" phx-target={@myself}>
+            <.input field={f[:trial_expiry_date]} label="Trial Expiry Date" />
+            <.input field={f[:accept_traffic_until]} label="Accept  traffic Until" />
+            <.input
+              type="checkbox"
+              field={f[:allow_next_upgrade_override] |> IO.inspect(label: :f)}
+              label="Allow Next Upgrade Override"
+            />
+
+            <.input type="textarea" field={f[:notes]} label="Notes" />
+            <.button type="submit">
+              Save
+            </.button>
+          </.form>
+        </div>
+
+        <div :if={@tab == "sites"} class="mt-2 m-4">
+          <.table rows={@sites.entries}>
+            <:thead>
+              <.th>Domain</.th>
+              <.th>Timezone</.th>
+              <.th invisible>Dashboard</.th>
+            </:thead>
+            <:tbody :let={site}>
+              <.td>
+                <div class="flex items-center">
+                  <img
+                    src="/favicon/sources/{site.domain}"
+                    onerror="this.onerror=null; this.src='/favicon/sources/placeholder';"
+                    class="w-4 h-4 flex-shrink-0 mt-px mr-2"
+                  />
+                  <.styled_link
+                    phx-click="open"
+                    phx-value-id={site.id}
+                    phx-value-type="site"
+                    class="cursor-pointer flex block items-center"
+                  >
+                    {site.domain}
+                  </.styled_link>
+                </div>
+              </.td>
+              <.td>{site.domain_changed_from}</.td>
+              <.td>{site.timezone}</.td>
+              <.td>
+                <.styled_link
+                  new_tab={true}
+                  href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain, [])}
+                >
+                  Go to dashboard
+                </.styled_link>
+              </.td>
+            </:tbody>
+          </.table>
         </div>
 
         <div :if={@tab == "members"} class="mt-2 m-4">
@@ -152,35 +212,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </:tbody>
           </.table>
         </div>
-      </div>
-
-      <div :if={@tab == "overview"} class="p-4">
-        <.form :let={f} for={@form} phx-submit="change" phx-target={@myself}>
-          <.input field={f[:trial_expiry_date]} />
-          <.button type="submit">
-            Change
-          </.button>
-        </.form>
-      </div>
-
-      <div :if={@tab == "sites"} class="mt-2 m-4">
-        <.table rows={@sites.entries}>
-          <:thead>
-            <.th>Domain</.th>
-          </:thead>
-          <:tbody :let={site}>
-            <.td>
-              <.styled_link
-                phx-click="open"
-                phx-value-id={site.id}
-                phx-value-type="site"
-                class="cursor-pointer flex block items-center"
-              >
-                {site.domain}
-              </.styled_link>
-            </.td>
-          </:tbody>
-        </.table>
       </div>
     </div>
     """
@@ -381,7 +412,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       phx-target={@target}
       class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10 cursor-pointer"
     >
-      <span>
+      <span class={if(@tab == @to, do: "font-bold text-gray-800")}>
         {render_slot(@inner_block)}
       </span>
       <span
