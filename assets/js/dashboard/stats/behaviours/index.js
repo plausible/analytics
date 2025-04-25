@@ -374,7 +374,7 @@ export default function Behaviours({ importedDataInView }) {
               (site.funnels.length > 0 && site.funnelsAvailable ? (
                 <DropdownTabButton
                   className="md:relative"
-                  transitionClassName="md:left-auto md:w-96"
+                  transitionClassName="md:left-auto md:w-96 md:origin-top-right"
                   active={mode === FUNNELS}
                   options={site.funnels.map(({ name }) => ({
                     label: name,

@@ -273,7 +273,7 @@ export default function SourceList() {
           ))}
           <DropdownTabButton
             className="md:relative"
-            transitionClassName="md:left-auto md:w-56"
+            transitionClassName="md:left-auto md:w-56 md:origin-top-right"
             active={Object.keys(UTM_TAGS).includes(currentTab)}
             options={Object.entries(UTM_TAGS).map(([value, { title }]) => ({
               value,
