@@ -1,6 +1,5 @@
-import React, { RefObject, useEffect } from 'react'
+import React, { RefObject } from 'react'
 import classNames from 'classnames'
-import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { isModifierPressed, isTyping, Keybind } from '../keybinding'
 import { TransitionClasses } from '@headlessui/react'
 
@@ -88,54 +87,10 @@ export const popover = {
  * Needed to prevent other Escape handlers that may exist from running.
  */
 export function BlurMenuButtonOnEscape({
-  targetRef,
-  ...props
+  targetRef
 }: {
-  buttonId?: string
   targetRef: RefObject<HTMLElement>
 }) {
-  const { registerDropmenuState } = useRoutelessModalsContext()
-
-  useEffect(() => {
-    const buttonId =
-      props.buttonId ?? `button-${Math.floor(Math.random() * 10000)}`
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (
-          mutation.type === 'attributes' &&
-          mutation.attributeName === 'data-open'
-        ) {
-          const element = mutation.target as Element
-          registerDropmenuState({
-            id: buttonId,
-            isOpen: element.hasAttribute('data-open')
-          })
-        }
-      })
-    })
-
-    const element = targetRef.current
-
-    if (element) {
-      registerDropmenuState({
-        id: buttonId,
-        isOpen: element.hasAttribute('data-open')
-      })
-      observer.observe(element, {
-        attributes: true,
-        attributeFilter: ['data-open']
-      })
-    }
-
-    return () => {
-      if (element) {
-        registerDropmenuState({ id: buttonId, isOpen: false })
-      }
-      observer.disconnect()
-    }
-  }, [targetRef, registerDropmenuState, props.buttonId])
-
   return (
     <Keybind
       keyboardKey="Escape"

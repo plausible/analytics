@@ -57,11 +57,9 @@ const getSwitchToSiteURL = (
   return `/${encodeURIComponent(site.domain)}`
 }
 
-const BUTTON_ID = 'site-switcher'
-
 export const SiteSwitcher = () => {
   const dashboardRouteMatch = useMatch(rootRoute.path)
-  const { openDropmenus, modal } = useRoutelessModalsContext()
+  const { modal } = useRoutelessModalsContext()
   const user = useUserContext()
   const currentSite = useSiteContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -92,9 +90,7 @@ export const SiteSwitcher = () => {
         <>
           {!!dashboardRouteMatch &&
             !modal &&
-            openDropmenus.every((id) => id === BUTTON_ID) &&
-            !!sitesQuery.data?.data.length &&
-            sitesQuery.data.data.slice(0, 8).map(({ domain }, index) => (
+            sitesQuery.data?.data.slice(0, 8).map(({ domain }, index) => (
               <Keybind
                 key={domain}
                 keyboardKey={`${index + 1}`}
@@ -113,9 +109,8 @@ export const SiteSwitcher = () => {
               />
             ))}
 
-          <BlurMenuButtonOnEscape targetRef={buttonRef} buttonId={BUTTON_ID} />
+          <BlurMenuButtonOnEscape targetRef={buttonRef} />
           <Popover.Button
-            id={BUTTON_ID}
             ref={buttonRef}
             className={classNames(
               'flex items-center rounded h-9 leading-5 font-bold dark:text-gray-100',
