@@ -20,8 +20,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
       |> assign_new(:team_identifier, fn %{invitation: invitation} ->
         if invitation do
           invitation.team_identifier
-        else
-          "none"
         end
       end)
 
@@ -108,7 +106,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
         phx-trigger-action={@trigger_submit}
       >
         <input name="user[register_action]" type="hidden" value={@live_action} />
-        <input name="user[team_identifier]" type="hidden" value={@team_identifier} />
+        <input
+          :if={@team_identifier}
+          name="user[team_identifier]"
+          type="hidden"
+          value={@team_identifier}
+        />
 
         <%= if @invitation do %>
           <.email_input field={f[:email]} for_invitation={true} />
@@ -405,7 +408,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
          %{
            type: :guest_invitation,
            email: guest_invitation.team_invitation.email,
-           team_identifier: "none"
+           team_identifier: nil
          }}
     end
   end
@@ -424,7 +427,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
          %{
            type: :site_transfer,
            email: transfer.email,
-           team_identifier: "none"
+           team_identifier: nil
          }}
     end
   end

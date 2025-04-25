@@ -20,6 +20,29 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
+  @spec find_by_team_identifier(String.t() | nil, Plausible.Auth.User.t()) ::
+          {:ok, Teams.Invitation.t()} | {:error, :invitation_not_found}
+  def find_by_team_identifier(nil, _user), do: {:error, :invitation_not_found}
+
+  def find_by_team_identifier(team_identifier, user) do
+    invitation_query =
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        inner_join: team in assoc(ti, :team),
+        where: ti.email == ^user.email,
+        where: team.identifier == ^team_identifier,
+        where: ti.role != :guest,
+        preload: [inviter: inviter, team: team]
+
+    case Repo.one(invitation_query) do
+      nil ->
+        {:error, :invitation_not_found}
+
+      invitation ->
+        {:ok, invitation}
+    end
+  end
+
   def find_for_user(invitation_or_transfer_id, user) do
     with {:error, :invitation_not_found} <-
            find_team_invitation_for_user(invitation_or_transfer_id, user),
