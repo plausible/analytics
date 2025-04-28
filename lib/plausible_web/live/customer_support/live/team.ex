@@ -47,12 +47,25 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </div>
               </div>
               <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-                <p class="text-xl font-bold text-gray-900 sm:text-2xl">{@team.name}</p>
+                <p class="text-xl font-bold text-gray-900 sm:text-2xl">
+                  {@team.name}
+                </p>
                 <p class="text-sm font-medium text-gray-600">
                   <span :if={@team.setup_complete}>Set up at {@team.setup_at}</span>
                   <span :if={!@team.setup_complete}>Not set up yet</span>
                 </p>
               </div>
+            </div>
+            <div :if={@team.grace_period}>
+              <span :if={@team.locked} class="flex items-center">
+                <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
+                <.styled_link phx-click="unlock" phx-target={@myself}>Unlock Team</.styled_link>
+              </span>
+
+              <span :if={!@team.locked} class="flex items-center">
+                <Heroicons.lock_open class="inline stroke-2 w-4 h-4 text-gray-800 mr-2" />
+                <.styled_link phx-click="lock" phx-target={@myself}>Lock Team</.styled_link>
+              </span>
             </div>
             <div class="mt-5 flex justify-center sm:mt-0">
               <.input_with_clipboard
@@ -257,11 +270,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
     case Plausible.Repo.update(changeset) do
       {:ok, team} ->
+        success(socket, "Team saved")
         {:noreply, assign(socket, team: team, form: to_form(changeset))}
 
       {:error, changeset} ->
+        failure(socket, "Error saving team: #{inspect(changeset.errors)}")
         {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  def handle_event("unlock", _, socket) do
+    {:noreply, unlock_team(socket)}
+  end
+
+  def handle_event("lock", _, socket) do
+    {:noreply, lock_team(socket)}
   end
 
   def handle_event("switch", %{"to" => "overview"}, socket) do
@@ -427,23 +450,32 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     """
   end
 
-  # defp lock(team) do
-  #   if team.grace_period do
-  #     Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
-  #     Plausible.Teams.end_grace_period(team)
-  #     {:ok, team}
-  #   else
-  #     {:error, team, "No active grace period on this team"}
-  #   end
-  # end
-  #
-  # defp unlock(team) do
-  #   if team.grace_period do
-  #     Plausible.Teams.remove_grace_period(team)
-  #     Plausible.Billing.SiteLocker.set_lock_status_for(team, false)
-  #     {:ok, team}
-  #   else
-  #     {:error, team, "No active grace period on this team"}
-  #   end
-  # end
+  defp lock_team(socket) do
+    if socket.assigns.team.grace_period do
+      team =
+        socket.assigns.team
+        |> Plausible.Billing.SiteLocker.set_lock_status_for(true)
+        |> Plausible.Teams.end_grace_period()
+
+      success(socket, "Team locked. Grace period ended.")
+      assign(socket, team: team)
+    else
+      failure(socket, "No grace period")
+      socket
+    end
+  end
+
+  defp unlock_team(socket) do
+    if socket.assigns.team.grace_period do
+      team =
+        socket.assigns.team
+        |> Plausible.Teams.remove_grace_period()
+        |> Plausible.Billing.SiteLocker.set_lock_status_for(false)
+
+      success(socket, "Team unlocked. Grace period removed.")
+      assign(socket, team: team)
+    else
+      socket
+    end
+  end
 end
