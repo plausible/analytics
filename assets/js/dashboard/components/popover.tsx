@@ -62,15 +62,9 @@ const items = {
       'dark:focus-within:bg-gray-900',
       'dark:focus-within:text-gray-100'
     ),
-    roundedStartEnd: classNames(
-      'first-of-type:rounded-t-md',
-      'last-of-type:rounded-b-md'
-    ),
-    roundedEnd: classNames('last-of-type:rounded-b-md'),
-    groupRoundedStartEnd: classNames(
-      'group-first-of-type:rounded-t-md',
-      'group-last-of-type:rounded-b-md'
-    )
+    roundedStart: 'first-of-type:rounded-t-md',
+    roundedEnd: 'last-of-type:rounded-b-md',
+    groupRoundedEnd: 'group-last-of-type:rounded-b-md'
   }
 }
 

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import {
   formatSegmentIdAsLabelKey,
-  getFilterSegmentsByNameInsensitive,
   isSegmentFilter,
   SavedSegmentPublic,
   SavedSegment,
@@ -21,15 +20,16 @@ import { AppNavigationLink } from '../../navigation/use-app-navigate'
 import { MenuSeparator } from '../nav-menu-components'
 import { Role, useUserContext } from '../../user-context'
 import { useSegmentsContext } from '../../filtering/segments-context'
+import { useSearchableItems } from '../../hooks/use-searchable-items'
 
 const linkClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
   popover.items.classNames.hoverLink,
-  popover.items.classNames.groupRoundedStartEnd
+  popover.items.classNames.groupRoundedEnd
 )
 
-const initialSliceLength = 5
+const INITIAL_SEGMENTS_SHOWN = 5
 
 export const SearchableSegmentsSection = ({
   closeList
@@ -44,105 +44,109 @@ export const SearchableSegmentsSection = ({
 
   const isPublicListQuery = !user.loggedIn || user.role === Role.public
 
-  const data = segmentsContext.segments.filter((segment) =>
-    isListableSegment({ segment, site, user })
-  )
-
-  const [searchValue, setSearch] = useState<string>()
-  const [showAll, setShowAll] = useState(false)
-
-  const searching = !searchValue?.trim().length
-
-  useEffect(() => {
-    setShowAll(false)
-  }, [searching])
-
-  const filteredData = data?.filter(
-    getFilterSegmentsByNameInsensitive(searchValue)
-  )
-
-  const showableSlice = showAll
-    ? filteredData
-    : filteredData?.slice(0, initialSliceLength)
+  const {
+    data,
+    filteredData,
+    showableData,
+    showSearch,
+    countOfMoreToShow,
+    handleShowAll,
+    handleClearSearch,
+    handleSearchInput,
+    searchRef,
+    searching
+  } = useSearchableItems({
+    data: segmentsContext.segments.filter((segment) =>
+      isListableSegment({ segment, site, user })
+    ),
+    maxItemsInitially: INITIAL_SEGMENTS_SHOWN,
+    itemMatchesSearchValue: (segment, trimmedSearch) =>
+      segment.name.toLowerCase().includes(trimmedSearch.toLowerCase())
+  })
 
   if (expandedSegment) {
     return null
   }
 
+  if (!data.length) {
+    return null
+  }
+
   return (
     <>
-      {!!data?.length && (
-        <>
-          <MenuSeparator />
-          <div className="flex items-center pt-2 px-4 pb-2">
-            <div className="text-sm font-bold uppercase text-indigo-500 dark:text-indigo-400 mr-4">
-              Segments
-            </div>
-            {data.length > initialSliceLength && (
-              <SearchInput
-                placeholderUnfocused="Press / to search"
-                className="ml-auto w-full py-1 text-sm"
-                onSearch={setSearch}
-              />
-            )}
-          </div>
+      <MenuSeparator />
+      <div className="flex items-center py-2 px-4">
+        <div className="text-sm font-bold uppercase text-indigo-500 dark:text-indigo-400 mr-4">
+          Segments
+        </div>
+        {showSearch && (
+          <SearchInput
+            searchRef={searchRef}
+            placeholderUnfocused="Press / to search"
+            className="ml-auto w-full py-1 text-sm"
+            onSearch={handleSearchInput}
+          />
+        )}
+      </div>
 
-          {showableSlice!.map((segment) => {
-            return (
-              <Tooltip
-                className="group"
-                key={segment.id}
-                info={
-                  <div className="max-w-60">
-                    <div className="break-all">{segment.name}</div>
-                    <div className="font-normal text-xs">
-                      {SEGMENT_TYPE_LABELS[segment.type]}
-                    </div>
-
-                    <SegmentAuthorship
-                      className="font-normal text-xs"
-                      {...(isPublicListQuery
-                        ? {
-                            showOnlyPublicData: true,
-                            segment: segment as SavedSegmentPublic
-                          }
-                        : {
-                            showOnlyPublicData: false,
-                            segment: segment as SavedSegment
-                          })}
-                    />
+      <div className="max-h-[210px] overflow-y-scroll">
+        {showableData.map((segment) => {
+          return (
+            <Tooltip
+              className="group"
+              key={segment.id}
+              info={
+                <div className="max-w-60">
+                  <div className="break-all">{segment.name}</div>
+                  <div className="font-normal text-xs">
+                    {SEGMENT_TYPE_LABELS[segment.type]}
                   </div>
-                }
-              >
-                <SegmentLink {...segment} closeList={closeList} />
-              </Tooltip>
-            )
-          })}
-          {!!filteredData?.length &&
-            !!showableSlice?.length &&
-            filteredData?.length > showableSlice?.length &&
-            showAll === false && (
-              <Tooltip className="group" info={null}>
-                <AppNavigationLink
-                  className={classNames(
-                    linkClassName,
-                    'font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
-                  )}
-                  search={(s) => s}
-                  onClick={() => setShowAll(true)}
-                >
-                  {`Show ${filteredData.length - showableSlice.length} more`}
-                  <EllipsisHorizontalIcon className="block w-5 h-5" />
-                </AppNavigationLink>
-              </Tooltip>
-            )}
-        </>
-      )}
-      {!!data?.length && searchValue && !showableSlice?.length && (
+
+                  <SegmentAuthorship
+                    className="font-normal text-xs"
+                    {...(isPublicListQuery
+                      ? {
+                          showOnlyPublicData: true,
+                          segment: segment as SavedSegmentPublic
+                        }
+                      : {
+                          showOnlyPublicData: false,
+                          segment: segment as SavedSegment
+                        })}
+                  />
+                </div>
+              }
+            >
+              <SegmentLink {...segment} closeList={closeList} />
+            </Tooltip>
+          )
+        })}
+        {countOfMoreToShow > 0 && (
+          <Tooltip className="group" info={null}>
+            <button
+              className={classNames(
+                linkClassName,
+                'w-full text-left font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
+              )}
+              onClick={handleShowAll}
+            >
+              {`Show ${countOfMoreToShow} more`}
+              <EllipsisHorizontalIcon className="block w-5 h-5" />
+            </button>
+          </Tooltip>
+        )}
+      </div>
+      {searching && !filteredData.length && (
         <Tooltip className="group" info={null}>
-          <div className={classNames(linkClassName)}>
+          <button
+            className={classNames(
+              linkClassName,
+              'w-full text-left font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
+            )}
+            onClick={handleClearSearch}
+          >
             No segments found. Clear search to show all.
-          </div>
+          </button>
         </Tooltip>
       )}
     </>

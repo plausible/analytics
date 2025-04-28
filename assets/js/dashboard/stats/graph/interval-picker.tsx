@@ -172,8 +172,9 @@ export function IntervalPicker({
                       popover.items.classNames.navigationLink,
                       popover.items.classNames.selectedOption,
                       popover.items.classNames.hoverLink,
-                      popover.items.classNames.roundedStartEnd,
-                      'w-full'
+                      popover.items.classNames.roundedStart,
+                      popover.items.classNames.roundedEnd,
+                      'w-full text-left'
                     )}
                   >
                     {INTERVAL_LABELS[option]}

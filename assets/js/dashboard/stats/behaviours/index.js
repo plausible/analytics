@@ -381,6 +381,8 @@ export default function Behaviours({ importedDataInView }) {
                     onClick: setFunnelFactory(name),
                     selected: mode === FUNNELS && selectedFunnel === name
                   }))}
+                  collectionTitle="Funnels"
+                  searchable={true}
                 >
                   Funnels
                 </DropdownTabButton>

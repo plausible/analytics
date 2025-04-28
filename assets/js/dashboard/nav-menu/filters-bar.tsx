@@ -304,14 +304,15 @@ const SeeMoreMenu = ({
           )}
           {showSomeActions && (
             <div className="flex flex-col">
-              {actions.map((action, index) => {
+              {actions.map((action) => {
                 const linkClassName = classNames(
                   popover.items.classNames.navigationLink,
                   popover.items.classNames.selectedOption,
                   popover.items.classNames.hoverLink,
-                  index === 0 && !showMoreFilters
-                    ? popover.items.classNames.roundedStartEnd
-                    : popover.items.classNames.roundedEnd,
+                  {
+                    [popover.items.classNames.roundedStart]: !showMoreFilters // rounded start is needed when there's no filters panel above
+                  },
+                  popover.items.classNames.roundedEnd,
                   'whitespace-nowrap'
                 )
 

@@ -3,6 +3,9 @@ import classNames from 'classnames'
 import React, { ReactNode, useRef } from 'react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { popover, BlurMenuButtonOnEscape } from './popover'
+import { useSearchableItems } from '../hooks/use-searchable-items'
+import { SearchInput } from './search-input'
+import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 
 export const TabWrapper = ({
   className,
@@ -60,15 +63,44 @@ export const DropdownTabButton = ({
   transitionClassName,
   active,
   children,
-  options
+  options,
+  searchable,
+  collectionTitle
 }: {
   className?: string
   transitionClassName?: string
   active: boolean
   children: ReactNode
   options: Array<{ selected: boolean; onClick: () => void; label: string }>
+  searchable?: boolean
+  collectionTitle?: string
 }) => {
   const dropdownButtonRef = useRef<HTMLButtonElement>(null)
+  const {
+    filteredData,
+    showableData,
+    showSearch,
+    searching,
+    searchRef,
+    handleSearchInput,
+    handleClearSearch,
+    handleShowAll,
+    countOfMoreToShow
+  } = useSearchableItems({
+    data: options,
+    maxItemsInitially: searchable ? 5 : options.length,
+    itemMatchesSearchValue: (option, trimmedSearchString) =>
+      option.label.toLowerCase().includes(trimmedSearchString.toLowerCase())
+  })
+
+  const itemClassName = classNames(
+    'w-full text-left',
+    popover.items.classNames.navigationLink,
+    popover.items.classNames.selectedOption,
+    popover.items.classNames.hoverLink,
+    { [popover.items.classNames.roundedStart]: !searchable },
+    popover.items.classNames.roundedEnd
+  )
 
   return (
     <Popover className={className}>
@@ -99,27 +131,61 @@ export const DropdownTabButton = ({
             )}
           >
             <Popover.Panel className={popover.panel.classNames.roundedSheet}>
-              {options.map(({ selected, label, onClick }, index) => {
-                return (
+              {searchable && showSearch && (
+                <div className="flex items-center py-2 px-4">
+                  {collectionTitle && (
+                    <div className="text-sm font-bold uppercase text-indigo-500 dark:text-indigo-400 mr-4">
+                      {collectionTitle}
+                    </div>
+                  )}
+                  <SearchInput
+                    searchRef={searchRef}
+                    placeholderUnfocused="Press / to search"
+                    className="ml-auto w-full py-1 text-sm"
+                    onSearch={handleSearchInput}
+                  />
+                </div>
+              )}
+              <div className={'max-h-[210px] overflow-y-scroll'}>
+                {showableData.map(({ selected, label, onClick }, index) => {
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        onClick()
+                        closeDropdown()
+                      }}
+                      data-selected={selected}
+                      className={itemClassName}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+                {countOfMoreToShow > 0 && (
                   <button
-                    key={index}
-                    onClick={() => {
-                      onClick()
-                      closeDropdown()
-                    }}
-                    data-selected={selected}
+                    onClick={handleShowAll}
                     className={classNames(
-                      'w-full text-left',
-                      popover.items.classNames.navigationLink,
-                      popover.items.classNames.selectedOption,
-                      popover.items.classNames.hoverLink,
-                      popover.items.classNames.roundedStartEnd
+                      itemClassName,
+                      'w-full text-left font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
                     )}
                   >
-                    {label}
+                    {`Show ${countOfMoreToShow} more`}
+                    <EllipsisHorizontalIcon className="block w-5 h-5" />
                   </button>
-                )
-              })}
+                )}
+                {searching && !filteredData.length && (
+                  <button
+                    className={classNames(
+                      itemClassName,
+                      'w-full text-left font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
+                    )}
+                    onClick={handleClearSearch}
+                  >
+                    No items found. Clear search to show all.
+                  </button>
+                )}
+              </div>
             </Popover.Panel>
           </Transition>
         </>

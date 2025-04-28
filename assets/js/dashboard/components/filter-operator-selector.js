@@ -77,7 +77,8 @@ export default function FilterOperatorSelector(props) {
                         popover.items.classNames.navigationLink,
                         popover.items.classNames.selectedOption,
                         popover.items.classNames.hoverLink,
-                        popover.items.classNames.roundedStartEnd
+                        popover.items.classNames.roundedStart,
+                        popover.items.classNames.roundedEnd
                       )}
                     >
                       {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}

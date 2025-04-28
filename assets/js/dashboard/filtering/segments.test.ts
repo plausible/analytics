@@ -1,7 +1,6 @@
 import { remapToApiFilters } from '../util/filters'
 import {
   formatSegmentIdAsLabelKey,
-  getFilterSegmentsByNameInsensitive,
   getSearchToApplySingleSegmentFilter,
   getSegmentNamePlaceholder,
   isSegmentIdLabelKey,
@@ -16,36 +15,6 @@ import {
 import { Filter } from '../query'
 import { PlausibleSite } from '../site-context'
 import { Role, UserContextValue } from '../user-context'
-
-describe(`${getFilterSegmentsByNameInsensitive.name}`, () => {
-  const unfilteredSegments = [
-    { name: 'APAC Region' },
-    { name: 'EMEA Region' },
-    { name: 'Scandinavia' }
-  ]
-  it('generates insensitive filter function', () => {
-    expect(
-      unfilteredSegments.filter(getFilterSegmentsByNameInsensitive('region'))
-    ).toEqual([{ name: 'APAC Region' }, { name: 'EMEA Region' }])
-  })
-
-  it('ignores preceding and following whitespace', () => {
-    expect(
-      unfilteredSegments.filter(getFilterSegmentsByNameInsensitive(' scandi '))
-    ).toEqual([{ name: 'Scandinavia' }])
-  })
-
-  it.each([[undefined], [''], ['   '], ['\n\n']])(
-    'generates always matching filter for search value %p',
-    (searchValue) => {
-      expect(
-        unfilteredSegments.filter(
-          getFilterSegmentsByNameInsensitive(searchValue)
-        )
-      ).toEqual(unfilteredSegments)
-    }
-  )
-})
 
 describe(`${getSegmentNamePlaceholder.name}`, () => {
   it('gives readable result', () => {
