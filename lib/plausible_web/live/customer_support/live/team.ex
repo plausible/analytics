@@ -126,6 +126,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         </div>
 
         <div :if={@tab == "overview"} class="mt-2 m-4">
+          <div class="bg-gray-100 p-4 rounded-md mt-8 mb-8">
+            <span class="text-gray-900">
+              <span class="text-gray-900">
+                <strong>Usage</strong> <br />
+                <ul>
+                  <li :for={
+                    {cycle, date, total, limit} <-
+                      monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)
+                  }>
+                    {cycle} ({date}): {total} / {limit}
+                  </li>
+                </ul>
+              </span>
+            </span>
+          </div>
           <.form :let={f} for={@form} phx-submit="change" phx-target={@myself}>
             <.input field={f[:trial_expiry_date]} label="Trial Expiry Date" />
             <.input field={f[:accept_traffic_until]} label="Accept  traffic Until" />
@@ -477,5 +492,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     else
       socket
     end
+  end
+
+  defp monthly_pageviews_usage(usage, limit) do
+    usage
+    |> Enum.sort_by(fn {_cycle, usage} -> usage.date_range.first end, :desc)
+    |> Enum.map(fn {cycle, usage} ->
+      {cycle, PlausibleWeb.TextHelpers.format_date_range(usage.date_range), usage.total, limit}
+    end)
   end
 end
