@@ -98,7 +98,10 @@ export const DropdownTabButton = ({
     popover.items.classNames.navigationLink,
     popover.items.classNames.selectedOption,
     popover.items.classNames.hoverLink,
-    { [popover.items.classNames.roundedStart]: !searchable },
+    {
+      [popover.items.classNames.roundedStart]: !searchable || !showSearch
+      // when the menu is not searchable, the first item needs rounded top
+    },
     popover.items.classNames.roundedEnd
   )
 

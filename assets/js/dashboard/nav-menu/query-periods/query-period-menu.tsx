@@ -155,7 +155,7 @@ const QueryPeriodMenuInner = ({
         {...popover.transition.props}
         className={classNames(
           popover.transition.classNames.fullwidth,
-          'mt-2 md:w-56 md:left-auto origin-top-right'
+          'mt-2 md:w-56 md:left-auto md:origin-top-right'
         )}
       >
         <Popover.Panel
