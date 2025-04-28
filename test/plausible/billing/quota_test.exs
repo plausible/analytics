@@ -601,7 +601,7 @@ defmodule Plausible.Billing.QuotaTest do
     test "returns all features when user in on trial" do
       team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
 
-      assert Plausible.Billing.Feature.list() ==
+      assert Plausible.Billing.Feature.list() -- [Plausible.Billing.Feature.SitesAPI] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -619,7 +619,7 @@ defmodule Plausible.Billing.QuotaTest do
     test "returns all features for enterprise users who have not upgraded yet and are on trial" do
       team = new_user() |> subscribe_to_enterprise_plan(subscription?: false) |> team_of()
 
-      assert Plausible.Billing.Feature.list() ==
+      assert Plausible.Billing.Feature.list() -- [Plausible.Billing.Feature.SitesAPI] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -639,6 +639,19 @@ defmodule Plausible.Billing.QuotaTest do
       team = team_of(user)
 
       assert [Plausible.Billing.Feature.StatsAPI] ==
+               Plausible.Teams.Billing.allowed_features_for(team)
+    end
+
+    test "returns SitesAPI feature for enterprise customers with appropriate plan" do
+      user = new_user()
+
+      subscribe_to_enterprise_plan(user,
+        features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+      )
+
+      team = team_of(user)
+
+      assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
   end

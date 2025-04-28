@@ -73,6 +73,7 @@ defmodule Plausible.Billing.Feature do
   @features [
     Plausible.Billing.Feature.Goals,
     Plausible.Billing.Feature.StatsAPI,
+    Plausible.Billing.Feature.SitesAPI,
     Plausible.Billing.Feature.Props,
     Plausible.Billing.Feature.Funnels,
     Plausible.Billing.Feature.RevenueGoals,
@@ -211,4 +212,13 @@ defmodule Plausible.Billing.Feature.StatsAPI do
   use Plausible.Billing.Feature,
     name: :stats_api,
     display_name: "Stats API"
+end
+
+defmodule Plausible.Billing.Feature.SitesAPI do
+  use Plausible
+
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :sites_api,
+    display_name: "Sites API"
 end
