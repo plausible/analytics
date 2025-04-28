@@ -244,6 +244,7 @@ Plausible.Teams.Membership.html
 Plausible.Teams.Memberships.Remove.html
 Plausible.Teams.Memberships.UpdateRole.html
 Plausible.Teams.SiteTransfer.html
+Plausible.Teams.Sites.Transfer.html
 Plausible.Teams.Team.html
 Plausible.Teams.TeamAdmin.html
 Plausible.Teams.Test.html
@@ -474,8 +475,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-A6620D03.js
-dist/sidebar_items-632918BC.js
+dist/search_data-FC826C8E.js
+dist/sidebar_items-554F360B.js
 index.html
 readme.html
 search.html

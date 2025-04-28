@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-632918BC.js"></script>
+    <script src="dist/sidebar_items-554F360B.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -168,22 +168,6 @@ the invitation and accepting it.</p>
 
     </div>
 
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:membership/0" data-no-tooltip translate="no">membership()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:transfer_error/0" data-no-tooltip translate="no">transfer_error()</a>
-
-      </div>
-
-    </div>
-
 </div>
 <div class="summary-functions summary">
   <h2>
@@ -192,23 +176,7 @@ the invitation and accepting it.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#accept_invitation/3" data-no-tooltip translate="no">accept_invitation(invitation_or_transfer_id, user, team \\ nil)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#bulk_transfer_ownership_direct/3" data-no-tooltip translate="no">bulk_transfer_ownership_direct(sites, new_owner, team \\ nil)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#change_team/3" data-no-tooltip translate="no">change_team(site, user, new_team)</a>
+        <a href="#accept/3" data-no-tooltip translate="no">accept(invitation_or_transfer_id, user, team \\ nil)</a>
 
       </div>
 
@@ -235,7 +203,7 @@ the invitation and accepting it.</p>
     </a>
     <h1 class="signature" translate="no">accept_error()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/invitations/accept.ex#L31" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/invitations/accept.ex#L19" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -260,76 +228,6 @@ the invitation and accepting it.</p>
 
   </section>
 </section>
-<section class="detail" id="t:membership/0">
-
-  <div class="detail-header">
-    <a href="#t:membership/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">membership()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/invitations/accept.ex#L40" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> membership() :: %Plausible.Teams.Membership{
-  __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  guest_memberships: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  is_autocreated: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  role: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  team: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  team_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  user: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  user_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
-}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:transfer_error/0">
-
-  <div class="detail-header">
-    <a href="#t:transfer_error/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">transfer_error()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/invitations/accept.ex#L23" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> transfer_error() ::
-  Plausible.Billing.Quota.Limits.over_limits_error()
-  | <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
-  | :transfer_to_self
-  | :no_plan
-  | :multiple_teams
-  | :permission_denied</pre>
-
-      </div>
-
-
-  </section>
-</section>
 
     </div>
   </section>
@@ -342,17 +240,17 @@ the invitation and accepting it.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="accept_invitation/3">
+<section class="detail" id="accept/3">
 
-    <span id="accept_invitation/2"></span>
+    <span id="accept/2"></span>
 
   <div class="detail-header">
-    <a href="#accept_invitation/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#accept/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">accept_invitation(invitation_or_transfer_id, user, team \\ nil)</h1>
+    <h1 class="signature" translate="no">accept(invitation_or_transfer_id, user, team \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/invitations/accept.ex#L69" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/invitations/accept.ex#L30" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -363,75 +261,8 @@ the invitation and accepting it.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> accept_invitation(
-  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
-  <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil
-) ::
+          <pre translate="no"><span class="attribute">@spec</span> accept(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil) ::
   {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, <a href="#t:accept_error/0">accept_error</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="bulk_transfer_ownership_direct/3">
-
-    <span id="bulk_transfer_ownership_direct/2"></span>
-
-  <div class="detail-header">
-    <a href="#bulk_transfer_ownership_direct/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">bulk_transfer_ownership_direct(sites, new_owner, team \\ nil)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/invitations/accept.ex#L44" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> bulk_transfer_ownership_direct(
-  [<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()],
-  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
-  <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil
-) :: {:ok, [<a href="#t:membership/0">membership</a>()]} | {:error, <a href="#t:transfer_error/0">transfer_error</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="change_team/3">
-
-  <div class="detail-header">
-    <a href="#change_team/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">change_team(site, user, new_team)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/teams/invitations/accept.ex#L60" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> change_team(
-  <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(),
-  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
-  <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()
-) ::
-  :ok | {:error, <a href="#t:transfer_error/0">transfer_error</a>()}</pre>
 
       </div>
 
