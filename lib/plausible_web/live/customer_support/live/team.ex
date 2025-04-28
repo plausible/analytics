@@ -32,8 +32,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def render(assigns) do
     ~H"""
-    <div class="shadow">
-      <div class="overflow-hidden rounded-lg bg-white shadow">
+    <div>
+      <div class="overflow-hidden rounded-lg bg-white">
         <h2 class="sr-only" id="profile-overview-title">Profile Overview</h2>
         <div class="bg-white p-6">
           <div class="sm:flex sm:items-center sm:justify-between">
@@ -313,7 +313,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def handle_event("switch", %{"to" => "sites"}, socket) do
     any_owner = Plausible.Repo.preload(socket.assigns.team, [:owners]).owners |> hd()
-
     sites = Teams.Sites.list(any_owner, %{}, team: socket.assigns.team)
 
     {:noreply, assign(socket, tab: "sites", sites: sites)}
