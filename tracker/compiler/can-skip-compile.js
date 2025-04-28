@@ -9,9 +9,9 @@ const LAST_HASH_FILEPATH = path.join(__dirname, './last-hash.txt')
 
 // Re-compilation is only required if any of these files have been changed.
 const COMPILE_DEPENDENCIES = [
+  path.join(__dirname, './index.js'),
   path.join(__dirname, '../compile.js'),
-  path.join(__dirname, '../src/plausible.js'),
-  path.join(__dirname, '../src/customEvents.js')
+  path.join(__dirname, '../src/plausible.js')
 ]
 
 function currentHash() {
