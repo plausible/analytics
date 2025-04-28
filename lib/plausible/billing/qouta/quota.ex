@@ -4,19 +4,8 @@ defmodule Plausible.Billing.Quota do
   """
 
   use Plausible
-  alias Plausible.Billing.{EnterprisePlan, Plan}
+  alias Plausible.Billing.{Plan, EnterprisePlan}
   alias Plausible.Billing.Quota.Limits
-
-  @type cycle() :: :current_cycle | :last_cycle | :penultimate_cycle
-
-  @type cycles_usage() :: %{cycle() => usage_cycle()}
-
-  @type usage_cycle() :: %{
-          date_range: Date.Range.t(),
-          pageviews: non_neg_integer(),
-          custom_events: non_neg_integer(),
-          total: non_neg_integer()
-        }
 
   @doc """
   Ensures that the given usage map is within the limits
@@ -115,14 +104,14 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec exceeds_last_two_usage_cycles?(cycles_usage(), non_neg_integer()) ::
+  @spec exceeds_last_two_usage_cycles?(Plausible.Teams.Billing.cycles_usage(), non_neg_integer()) ::
           boolean()
   def exceeds_last_two_usage_cycles?(cycles_usage, allowed_volume) do
     exceeded = exceeded_cycles(cycles_usage, allowed_volume)
     :penultimate_cycle in exceeded && :last_cycle in exceeded
   end
 
-  @spec exceeded_cycles(cycles_usage(), non_neg_integer()) :: list()
+  @spec exceeded_cycles(Plausible.Teams.Billing.cycles_usage(), non_neg_integer()) :: list()
   def exceeded_cycles(cycles_usage, allowed_volume) do
     limit = Limits.pageview_limit_with_margin(allowed_volume)
 

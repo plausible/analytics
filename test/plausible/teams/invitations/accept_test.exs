@@ -9,6 +9,272 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
+  describe "change_team/3" do
+    @tag :ce_build_only
+    test "changes the team if owner in both teams (CE)" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :owner)
+
+      assert :ok = Accept.change_team(site, user, team2)
+    end
+
+    @tag :ee_only
+    test "changes the team if owner in both teams (EE)" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :owner)
+
+      assert {:error, :no_plan} = Accept.change_team(site, user, team2)
+
+      subscribe_to_growth_plan(another)
+
+      assert :ok = Accept.change_team(site, user, team2)
+      assert Repo.reload!(site).team_id == team2.id
+      assert_team_membership(user, team2, :owner)
+
+      assert_email_delivered_with(
+        to: [nil: another.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
+
+      assert_email_delivered_with(
+        to: [nil: user.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
+    end
+
+    test "changes the team if admin in second team" do
+      user = new_user()
+      site = new_site(owner: user)
+
+      another = new_user()
+      subscribe_to_growth_plan(another)
+      new_site(owner: another)
+
+      team2 = team_of(another)
+
+      add_member(team2, user: user, role: :admin)
+
+      assert :ok = Accept.change_team(site, user, team2)
+      assert Repo.reload!(site).team_id == team2.id
+      assert_team_membership(user, team2, :admin)
+
+      assert_email_delivered_with(
+        to: [nil: another.email],
+        subject:
+          @subject_prefix <>
+            "#{user.email} has transferred #{site.domain} to \"#{team2.name}\" team"
+      )
+    end
+
+    for role <- Plausible.Teams.Membership.roles() -- [:admin, :owner] do
+      test "refuses to change the team if #{role} in second team" do
+        user = new_user()
+        site = new_site(owner: user)
+
+        another = new_user()
+        subscribe_to_growth_plan(another)
+        new_site(owner: another)
+
+        team2 = team_of(another)
+
+        add_member(team2, user: user, role: unquote(role))
+
+        assert {:error, :permission_denied} = Accept.change_team(site, user, team2)
+        refute Repo.reload!(site).team_id == team2.id
+      end
+    end
+  end
+
+  describe "bulk_transfer_ownership_direct/2" do
+    test "transfers ownership for multiple sites in one action" do
+      current_owner = new_user()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      assert {:ok, _} =
+               Accept.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 new_owner
+               )
+
+      team = assert_team_exists(Repo.reload!(new_owner))
+      assert_team_membership(new_owner, team, :owner)
+      assert_team_membership(new_owner, team, :owner)
+      assert_guest_membership(team, site1, current_owner, :editor)
+      assert_guest_membership(team, site2, current_owner, :editor)
+    end
+
+    test "returns error when user is already an owner for one of the sites" do
+      current_owner = new_user()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: new_owner)
+
+      assert {:error, :transfer_to_self} =
+               Accept.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 new_owner
+               )
+
+      assert_team_membership(current_owner, site1.team, :owner)
+      assert_team_membership(new_owner, site2.team, :owner)
+    end
+
+    test "does not allow transferring ownership without selecting team for owner of more than one team" do
+      new_owner = new_user() |> subscribe_to_growth_plan()
+
+      other_site1 = new_site()
+      add_member(other_site1.team, user: new_owner, role: :owner)
+      other_site2 = new_site()
+      add_member(other_site2.team, user: new_owner, role: :owner)
+
+      current_owner = new_user()
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      assert {:error, :multiple_teams} =
+               Accept.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 new_owner
+               )
+    end
+
+    test "allows transferring between teams of the same owner" do
+      current_owner = new_user() |> subscribe_to_growth_plan()
+      another_owner = new_user() |> subscribe_to_growth_plan()
+
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      new_team = team_of(another_owner)
+      add_member(new_team, user: current_owner, role: :owner)
+
+      assert {:ok, _} =
+               Accept.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 current_owner,
+                 new_team
+               )
+    end
+
+    test "does not allow transferring ownership to a team where user has no permission" do
+      other_owner = new_user() |> subscribe_to_growth_plan()
+      other_team = team_of(other_owner)
+      new_owner = new_user()
+      add_member(other_team, user: new_owner, role: :viewer)
+
+      current_owner = new_user()
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      assert {:error, :permission_denied} =
+               Accept.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 new_owner,
+                 other_team
+               )
+    end
+
+    test "allows transferring ownership to a team where user has permission" do
+      other_owner = new_user() |> subscribe_to_growth_plan()
+      other_team = team_of(other_owner)
+      new_owner = new_user()
+      add_member(other_team, user: new_owner, role: :admin)
+
+      current_owner = new_user()
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
+
+      assert {:ok, _} =
+               Accept.bulk_transfer_ownership_direct(
+                 [site1, site2],
+                 new_owner,
+                 other_team
+               )
+
+      assert Repo.reload(site1).team_id == other_team.id
+      assert_guest_membership(other_team, site1, current_owner, :editor)
+      assert Repo.reload(site2).team_id == other_team.id
+      assert_guest_membership(other_team, site2, current_owner, :editor)
+    end
+
+    @tag :ee_only
+    test "does not allow transferring ownership to a non-member user when at team members limit" do
+      old_owner = new_user() |> subscribe_to_business_plan()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: old_owner)
+      for _ <- 1..3, do: add_guest(site, role: :editor)
+
+      assert {:error, {:over_plan_limits, [:team_member_limit]}} =
+               Accept.bulk_transfer_ownership_direct([site], new_owner)
+    end
+
+    @tag :ee_only
+    test "allows transferring ownership to existing site member when at team members limit" do
+      old_owner = new_user() |> subscribe_to_business_plan()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+      site = new_site(owner: old_owner)
+      add_guest(site, user: new_owner, role: :editor)
+      for _ <- 1..2, do: add_guest(site, role: :editor)
+
+      assert {:ok, _} =
+               Accept.bulk_transfer_ownership_direct([site], new_owner)
+    end
+
+    @tag :ee_only
+    test "does not allow transferring ownership when sites limit exceeded" do
+      old_owner = new_user() |> subscribe_to_business_plan()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+
+      for _ <- 1..10, do: new_site(owner: new_owner)
+
+      site = new_site(owner: old_owner)
+
+      assert {:error, {:over_plan_limits, [:site_limit]}} =
+               Accept.bulk_transfer_ownership_direct([site], new_owner)
+    end
+
+    @tag :ee_only
+    test "exceeding limits error takes precedence over missing features" do
+      old_owner = new_user() |> subscribe_to_business_plan()
+      new_owner = new_user() |> subscribe_to_growth_plan()
+
+      for _ <- 1..10, do: new_site(owner: new_owner)
+
+      site =
+        new_site(
+          owner: old_owner,
+          props_enabled: true,
+          allowed_event_props: ["author"]
+        )
+
+      for _ <- 1..3, do: add_guest(site, role: :editor)
+
+      assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit]}} =
+               Accept.bulk_transfer_ownership_direct([site], new_owner)
+    end
+  end
+
   describe "accept_invitation/3 - team invitations" do
     @roles Plausible.Teams.Membership.roles() -- [:guest]
 
@@ -22,7 +288,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
         invitation = invite_member(team, invitee, inviter: inviter, role: unquote(role))
 
         assert {:ok, _} =
-                 Accept.accept(invitation.invitation_id, invitee)
+                 Accept.accept_invitation(invitation.invitation_id, invitee)
 
         assert_team_membership(invitee, team, unquote(role))
 
@@ -55,7 +321,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
         invitation = invite_member(team, member, inviter: user, role: unquote(new_role))
 
         assert {:ok, %{team_membership: new_team_membership, guest_memberships: []}} =
-                 Accept.accept(invitation.invitation_id, member)
+                 Accept.accept_invitation(invitation.invitation_id, member)
 
         new_team_membership = Repo.reload!(new_team_membership)
         assert existing_team_membership.id == new_team_membership.id
@@ -76,7 +342,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
         invitation = invite_member(team, member, inviter: user, role: unquote(role))
 
         assert {:ok, _} =
-                 Accept.accept(invitation.invitation_id, member)
+                 Accept.accept_invitation(invitation.invitation_id, member)
       end
     end
 
@@ -97,7 +363,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       invitation = invite_member(team, member, inviter: user, role: :editor)
 
       assert {:ok, %{team_membership: new_team_membership, guest_memberships: []}} =
-               Accept.accept(invitation.invitation_id, member)
+               Accept.accept_invitation(invitation.invitation_id, member)
 
       new_team_membership = Repo.reload!(new_team_membership)
       assert existing_team_membership.id == new_team_membership.id
@@ -117,7 +383,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       invitation = invite_guest(site, invitee, inviter: inviter, role: :editor)
 
       assert {:ok, _} =
-               Accept.accept(invitation.invitation_id, invitee)
+               Accept.accept_invitation(invitation.invitation_id, invitee)
 
       assert_guest_membership(site.team, site, invitee, :editor)
 
@@ -134,7 +400,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       invitation = invite_guest(site, user, inviter: user, role: :editor)
 
       assert {:ok, _} =
-               Accept.accept(invitation.invitation_id, user)
+               Accept.accept_invitation(invitation.invitation_id, user)
 
       assert_team_membership(user, site.team, :owner)
     end
@@ -155,7 +421,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
 
       assert {:ok,
               %{team_membership: new_team_membership, guest_memberships: [new_guest_membership]}} =
-               Accept.accept(invitation.invitation_id, invitee)
+               Accept.accept_invitation(invitation.invitation_id, invitee)
 
       new_team_membership = Repo.reload!(new_team_membership)
       new_guest_membership = Repo.reload!(new_guest_membership)
@@ -172,7 +438,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       invitee = insert(:user)
 
       assert {:error, :invitation_not_found} =
-               Accept.accept("does_not_exist", invitee)
+               Accept.accept_invitation("does_not_exist", invitee)
     end
   end
 
@@ -187,7 +453,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: existing_owner)
 
       assert {:ok, _new_membership} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  new_owner
                )
@@ -217,7 +483,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
         invite_transfer(site, new_owner, inviter: existing_owner)
 
       assert {:ok, _new_membership} =
-               Accept.accept(site_transfer.transfer_id, new_owner)
+               Accept.accept_invitation(site_transfer.transfer_id, new_owner)
 
       assert_guest_invitation(new_team, site, "some@example.com", :viewer)
       assert_team_attached(site, new_team.id)
@@ -236,7 +502,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: existing_owner)
 
       assert {:ok, _new_membership} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  new_owner
                )
@@ -259,7 +525,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
           invite_transfer(site, new_owner, inviter: existing_owner)
 
         assert {:ok, _} =
-                 Accept.accept(transfer.transfer_id, new_owner)
+                 Accept.accept_invitation(transfer.transfer_id, new_owner)
 
         assert_guest_membership(new_team, site, existing_owner, :editor)
 
@@ -282,7 +548,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:error, :multiple_teams} =
-               Accept.accept(transfer.transfer_id, new_owner)
+               Accept.accept_invitation(transfer.transfer_id, new_owner)
     end
 
     test "does not allow transferring ownership to a team where user has no permission" do
@@ -297,7 +563,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:error, :permission_denied} =
-               Accept.accept(transfer.transfer_id, new_owner, another_team)
+               Accept.accept_invitation(transfer.transfer_id, new_owner, another_team)
     end
 
     test "allows transferring ownership to a team where user has permission" do
@@ -313,7 +579,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:ok, _} =
-               Accept.accept(transfer.transfer_id, new_owner, another_team)
+               Accept.accept_invitation(transfer.transfer_id, new_owner, another_team)
 
       assert_guest_membership(another_team, site, old_owner, :editor)
       assert Repo.reload(site).team_id == another_team.id
@@ -330,7 +596,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:team_member_limit]}} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  new_owner
                )
@@ -349,7 +615,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:ok, _} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  new_owner
                )
@@ -367,7 +633,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:site_limit]}} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  new_owner
                )
@@ -393,7 +659,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(old_owner_site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:monthly_pageview_limit]}} =
-               Accept.accept(transfer.transfer_id, new_owner)
+               Accept.accept_invitation(transfer.transfer_id, new_owner)
     end
 
     @tag :ee_only
@@ -418,7 +684,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer_id = invite_transfer(old_owner_site, new_owner, inviter: old_owner).transfer_id
 
       assert {:error, {:over_plan_limits, [:monthly_pageview_limit]}} =
-               Accept.accept(transfer_id, new_owner)
+               Accept.accept_invitation(transfer_id, new_owner)
     end
 
     @tag :ee_only
@@ -440,7 +706,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: old_owner)
 
       assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit]}} =
-               Accept.accept(transfer.transfer_id, new_owner)
+               Accept.accept_invitation(transfer.transfer_id, new_owner)
     end
 
     @tag :ee_only
@@ -466,28 +732,28 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, trial_user, inviter: current_owner)
 
       assert {:error, :no_plan} =
-               Accept.accept(transfer.transfer_id, trial_user)
+               Accept.accept_invitation(transfer.transfer_id, trial_user)
 
       Repo.delete!(transfer)
 
       transfer = invite_transfer(site, invited_user, inviter: current_owner)
 
       assert {:error, :no_plan} =
-               Accept.accept(transfer.transfer_id, invited_user)
+               Accept.accept_invitation(transfer.transfer_id, invited_user)
 
       Repo.delete!(transfer)
 
       transfer = invite_transfer(site, user_on_free_10k, inviter: current_owner)
 
       assert {:error, :no_plan} =
-               Accept.accept(transfer.transfer_id, user_on_free_10k)
+               Accept.accept_invitation(transfer.transfer_id, user_on_free_10k)
 
       Repo.delete!(transfer)
 
       transfer = invite_transfer(site, user_on_expired_subscription, inviter: current_owner)
 
       assert {:error, :no_plan} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  user_on_expired_subscription
                )
@@ -497,7 +763,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, user_on_paused_subscription, inviter: current_owner)
 
       assert {:error, :no_plan} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  user_on_paused_subscription
                )
@@ -512,7 +778,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, current_owner, inviter: current_owner)
 
       assert {:error, :transfer_to_self} =
-               Accept.accept(transfer.transfer_id, current_owner)
+               Accept.accept_invitation(transfer.transfer_id, current_owner)
     end
 
     test "allows transferring between different teams of the same owner" do
@@ -526,7 +792,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, current_owner, inviter: current_owner)
 
       assert {:ok, _} =
-               Accept.accept(transfer.transfer_id, current_owner, new_team)
+               Accept.accept_invitation(transfer.transfer_id, current_owner, new_team)
     end
 
     @tag :ee_only
@@ -541,7 +807,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, new_owner, inviter: current_owner)
 
       assert {:error, {:over_plan_limits, [:site_limit]}} =
-               Accept.accept(transfer.transfer_id, new_owner)
+               Accept.accept_invitation(transfer.transfer_id, new_owner)
     end
 
     @tag :ce_build_only
@@ -567,22 +833,22 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, trial_user, inviter: current_owner)
 
       assert {:ok, _} =
-               Accept.accept(transfer.transfer_id, trial_user)
+               Accept.accept_invitation(transfer.transfer_id, trial_user)
 
       transfer = invite_transfer(site, invited_user, inviter: current_owner)
 
       assert {:ok, _} =
-               Accept.accept(transfer.transfer_id, invited_user)
+               Accept.accept_invitation(transfer.transfer_id, invited_user)
 
       transfer = invite_transfer(site, user_on_free_10k, inviter: current_owner)
 
       assert {:ok, _} =
-               Accept.accept(transfer.transfer_id, user_on_free_10k)
+               Accept.accept_invitation(transfer.transfer_id, user_on_free_10k)
 
       transfer = invite_transfer(site, user_on_expired_subscription, inviter: current_owner)
 
       assert {:ok, _} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  user_on_expired_subscription
                )
@@ -590,7 +856,7 @@ defmodule Plausible.Teams.Invitations.AcceptTest do
       transfer = invite_transfer(site, user_on_paused_subscription, inviter: current_owner)
 
       assert {:ok, _} =
-               Accept.accept(
+               Accept.accept_invitation(
                  transfer.transfer_id,
                  user_on_paused_subscription
                )

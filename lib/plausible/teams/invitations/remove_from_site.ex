@@ -5,10 +5,10 @@ defmodule Plausible.Teams.Invitations.RemoveFromSite do
 
   alias Plausible.Teams
 
-  @spec remove(String.t(), Plausible.Site.t()) ::
+  @spec remove_invitation(String.t(), Plausible.Site.t()) ::
           {:ok, Teams.GuestInvitation.t() | Teams.SiteTransfer.t()}
           | {:error, :invitation_not_found}
-  def remove(invitation_or_transfer_id, site) do
+  def remove_invitation(invitation_or_transfer_id, site) do
     with {:ok, invitation_or_transfer} <-
            Teams.Invitations.find_for_site(invitation_or_transfer_id, site) do
       do_delete(invitation_or_transfer)

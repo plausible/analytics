@@ -135,7 +135,7 @@ defmodule Plausible.SiteAdmin do
 
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
          {:ok, _} <-
-           Teams.Invitations.InviteToSite.bulk_invite(
+           Teams.Invitations.InviteToSite.bulk_create_invitation(
              sites,
              inviter,
              new_owner.email,
@@ -159,7 +159,12 @@ defmodule Plausible.SiteAdmin do
   defp transfer_ownership_direct(_conn, sites, %{"email" => email} = params) do
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
          {:ok, team} <- get_team_by_id(params["team_id"]),
-         {:ok, _} <- Teams.Sites.Transfer.bulk_transfer(sites, new_owner, team) do
+         {:ok, _} <-
+           Teams.Invitations.Accept.bulk_transfer_ownership_direct(
+             sites,
+             new_owner,
+             team
+           ) do
       :ok
     else
       {:error, :user_not_found} ->
