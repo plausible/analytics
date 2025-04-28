@@ -5,6 +5,7 @@ defmodule Plausible.Teams.Invitations do
 
   import Ecto.Query
 
+  alias Plausible.Auth
   alias Plausible.Billing
   alias Plausible.Repo
   alias Plausible.Teams
@@ -482,6 +483,18 @@ defmodule Plausible.Teams.Invitations do
     for owner <- owners do
       PlausibleWeb.Email.team_changed(owner.email, user, team, site)
       |> Plausible.Mailer.send()
+    end
+  end
+
+  @spec check_can_transfer_site(Teams.Team.t(), Auth.User.t()) ::
+          :ok | {:error, :permission_denied}
+  def check_can_transfer_site(team, user) do
+    case Teams.Memberships.team_role(team, user) do
+      {:ok, role} when role in [:owner, :admin] ->
+        :ok
+
+      _ ->
+        {:error, :permission_denied}
     end
   end
 

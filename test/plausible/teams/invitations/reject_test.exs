@@ -16,7 +16,7 @@ defmodule Plausible.Teams.Invitations.RejectTest do
     invitation = invite_guest(site, invitee, inviter: inviter, role: :editor)
 
     assert {:ok, rejected_invitation} =
-             Reject.reject_invitation(invitation.invitation_id, invitee)
+             Reject.reject(invitation.invitation_id, invitee)
 
     assert rejected_invitation.id == invitation.id
     refute Repo.reload(rejected_invitation)
@@ -36,7 +36,7 @@ defmodule Plausible.Teams.Invitations.RejectTest do
     invitation = invite_member(team, invitee, inviter: inviter, role: :editor)
 
     assert {:ok, rejected_invitation} =
-             Reject.reject_invitation(invitation.invitation_id, invitee)
+             Reject.reject(invitation.invitation_id, invitee)
 
     assert rejected_invitation.id == invitation.id
     refute Repo.reload(rejected_invitation)
@@ -56,7 +56,7 @@ defmodule Plausible.Teams.Invitations.RejectTest do
     site_transfer = invite_transfer(site, invitee, inviter: inviter)
 
     assert {:ok, rejected_transfer} =
-             Reject.reject_invitation(site_transfer.transfer_id, invitee)
+             Reject.reject(site_transfer.transfer_id, invitee)
 
     assert rejected_transfer.id == site_transfer.id
     refute Repo.reload(rejected_transfer)
@@ -72,7 +72,7 @@ defmodule Plausible.Teams.Invitations.RejectTest do
     invitee = new_user()
 
     assert {:error, :invitation_not_found} =
-             Reject.reject_invitation("does_not_exist", invitee)
+             Reject.reject("does_not_exist", invitee)
   end
 
   test "does not allow rejecting invitation by anyone other than invitee" do
@@ -83,7 +83,7 @@ defmodule Plausible.Teams.Invitations.RejectTest do
     invitation = invite_guest(site, invitee, role: :editor, inviter: inviter)
 
     assert {:error, :invitation_not_found} =
-             Reject.reject_invitation(invitation.invitation_id, other_user)
+             Reject.reject(invitation.invitation_id, other_user)
 
     assert Repo.reload(invitation)
   end
