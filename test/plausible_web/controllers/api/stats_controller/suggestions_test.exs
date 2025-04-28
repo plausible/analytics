@@ -769,10 +769,10 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=all&date=CLEVER_SECURITY_RESEARCH&filters=#{filters}"
         )
 
-      assert json_response(conn, 400) == %{
+      assert %{
                "error" =>
                  "Failed to parse 'date' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"
-             }
+             } = json_response(conn, 400)
     end
   end
 

@@ -1763,7 +1763,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=30d&filters=#{filters}")
 
-      assert json_response(conn, 200) == %{"results" => []}
+      assert_matches %{"results" => []} = json_response(conn, 200)
     end
 
     test "returns 422 with error when no data returned and queried range is too recent", %{

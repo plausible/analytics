@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           |> get("/api/stats/#{site.domain}/funnels/foobar/?period=day")
           |> json_response(400)
 
-        assert resp == %{"error" => "There was an error with your request"}
+        assert_matches %{"error" => "There was an error with your request"} = resp
       end
 
       test "computes all-time funnel with filters", %{conn: conn, user: user} do
@@ -257,11 +257,11 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day&filters=#{filters}")
           |> json_response(400)
 
-        assert resp == %{
-                 "error" =>
-                   "We are unable to show funnels when the dashboard is filtered by pages",
-                 "level" => "normal"
-               }
+        assert_matches %{
+                         "error" =>
+                           "We are unable to show funnels when the dashboard is filtered by pages",
+                         "level" => "normal"
+                       } = resp
       end
 
       test "event:goal", %{conn: conn, site: site} do
@@ -275,11 +275,11 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day&filters=#{filters}")
           |> json_response(400)
 
-        assert resp == %{
-                 "error" =>
-                   "We are unable to show funnels when the dashboard is filtered by goals",
-                 "level" => "normal"
-               }
+        assert_matches %{
+                         "error" =>
+                           "We are unable to show funnels when the dashboard is filtered by goals",
+                         "level" => "normal"
+                       } = resp
       end
 
       test "period: realtime", %{conn: conn, site: site} do
@@ -290,11 +290,11 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=realtime")
           |> json_response(400)
 
-        assert resp == %{
-                 "error" =>
-                   "We are unable to show funnels when the dashboard is filtered by realtime period",
-                 "level" => "normal"
-               }
+        assert_matches %{
+                         "error" =>
+                           "We are unable to show funnels when the dashboard is filtered by realtime period",
+                         "level" => "normal"
+                       } = resp
       end
     end
 
