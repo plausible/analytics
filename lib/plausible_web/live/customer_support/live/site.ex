@@ -3,7 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
 
   def update(assigns, socket) do
     site = Resource.Site.get(assigns.resource_id)
-    {:ok, assign(socket, site: site)}
+    {:ok, assign(socket, site: site, people: Plausible.Sites.list_people(site))}
   end
 
   def render(assigns) do
@@ -23,11 +23,47 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
             <p class="text-sm font-medium text-gray-900">
               Timezone: {@site.timezone}
             </p>
+            <p class="text-sm font-medium text-gray-900">
+              Team:
+              <.styled_link phx-click="open" phx-value-id={@site.team.id} phx-value-type="team">
+                {@site.team.name}
+              </.styled_link>
+            </p>
             <p class="text-sm font-medium text-gray-600">
               <span :if={@site.domain_changed_from}>(previously: {@site.domain_changed_from})</span>
             </p>
           </div>
         </div>
+      </div>
+
+      <div class="mt-8">
+        <.table rows={@people.memberships}>
+          <:thead>
+            <.th>User</.th>
+            <.th>Role</.th>
+          </:thead>
+          <:tbody :let={membership}>
+            <.td>
+              <.styled_link phx-click="open" phx-value-id={membership.user.id} phx-value-type="user">
+                {membership.user.name}
+              </.styled_link>
+            </.td>
+            <.td>{membership.role}</.td>
+          </:tbody>
+        </.table>
+
+        <.table rows={@people.invitations}>
+          <:thead>
+            <.th>E-mail</.th>
+            <.th>Role</.th>
+          </:thead>
+          <:tbody :let={invitation}>
+            <.td>
+              {invitation.email}
+            </.td>
+            <.td>{invitation.role}</.td>
+          </:tbody>
+        </.table>
       </div>
     </div>
     """
