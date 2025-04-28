@@ -10,57 +10,53 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
 
   def render(assigns) do
     ~H"""
-    <div>
-      <.form :let={f} for={@form} phx-target={@myself} phx-submit="change">
-        <.tile>
-          <:title>
-            <div class="flex items-center"><Heroicons.user class="h-4 w-4 mr-2" />
-              {@user.name}</div>
-          </:title>
-          <:subtitle>
-            e-mail: {@user.email}
-            <span :if={@user.previous_email}>
-              / previous e-mail: {@user.previous_email}
-            </span>
-          </:subtitle>
-          <div :for={t <- @user.owned_teams}>
-            <.styled_link phx-click="open" phx-value-id={t.id} phx-value-type="team">
-              {t.name}
-            </.styled_link>
-            <div class="ml-4">
-              <div :for={s <- Enum.take(t.sites, 10)}>
-                <.styled_link phx-click="open" phx-value-id={s.id} phx-value-type="site">
-                  {s.domain}
-                </.styled_link>
-              </div>
-
-              <div :if={length(t.sites) > 10}>
-                ...
-              </div>
+    <div class="bg-white p-6">
+      <div class="sm:flex sm:items-center sm:justify-between">
+        <div class="sm:flex sm:space-x-5">
+          <div class="shrink-0">
+            <div class="rounded-full p-1 flex items-center justify-center">
+              <img
+                src={Plausible.Auth.User.profile_img_url(@user)}
+                class="w-14 rounded-full bg-gray-300"
+              />
             </div>
           </div>
-        </.tile>
-        <.tile>
-          <:title>Notes</:title>
-          <:subtitle></:subtitle>
-          <textarea
-            rows="8"
-            class="block w-full border-gray-300 dark:border-gray-700 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
-            name={f[:notes].name}
-          >{f[:notes].value}</textarea>
-        </.tile>
-        <.tile>
-          <:title>Actions</:title>
-          <:subtitle></:subtitle>
+          <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
+            <p class="text-xl font-bold text-gray-900 sm:text-2xl">
+              {@user.name}
+            </p>
+            <p class="text-sm font-medium text-gray-600">
+              <span>{@user.email}</span>
 
+              <span :if={@user.previous_email}>(previously: {@user.previous_email})</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <.table rows={@user.team_memberships}>
+          <:thead>
+            <.th>Team</.th>
+            <.th>Role</.th>
+          </:thead>
+          <:tbody :let={membership}>
+            <.td>
+              <.styled_link phx-click="open" phx-value-id={membership.team.id} phx-value-type="team">
+                {membership.team.name}
+              </.styled_link>
+            </.td>
+            <.td>{membership.role}</.td>
+          </:tbody>
+        </.table>
+
+        <.form :let={f} for={@form} phx-target={@myself} phx-submit="change" class="mt-8">
+          <.input type="textarea" field={f[:notes]} label="Notes" />
           <.button phx-target={@myself} type="submit">
             Save
           </.button>
-          <.button phx-target={@myself} phx-click="delete" theme="danger">
-            Delete
-          </.button>
-        </.tile>
-      </.form>
+        </.form>
+      </div>
     </div>
     """
   end

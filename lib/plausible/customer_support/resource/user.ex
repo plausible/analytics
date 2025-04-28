@@ -4,7 +4,7 @@ defmodule Plausible.CustomerSupport.Resource.User do
   @impl true
   def get(id) do
     Plausible.Repo.get!(Plausible.Auth.User, id)
-    |> Plausible.Repo.preload(owned_teams: :sites)
+    |> Plausible.Repo.preload(team_memberships: :team)
   end
 
   @impl true
