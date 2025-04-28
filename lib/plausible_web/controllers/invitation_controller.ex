@@ -35,7 +35,7 @@ defmodule PlausibleWeb.InvitationController do
         else
           conn
           |> put_flash(:success, "You now have access to \"#{team.name}\" team")
-          |> redirect(to: Routes.site_path(conn, :index))
+          |> redirect(to: Routes.site_path(conn, :index, __team: team.identifier))
         end
 
       {:error, :invitation_not_found} ->
