@@ -105,7 +105,7 @@ test.describe('engagement events', () => {
     })
   })
 
-  test('script.exclusions.hash.pageleave.js sends an event only from URLs where a pageview was sent', async ({ page }) => {
+  test('script.exclusions.hash.js sends an event only from URLs where a pageview was sent', async ({ page }) => {
     const pageBaseURL = `${LOCAL_SERVER_ADDR}/engagement-hash-exclusions.html`
 
     await expectPlausibleInAction(page, {

@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 
+- `pageleave` tracker script variant is no longer compiled but is still available from /js endpoint.
+
 ### Changed
 
 - A session is now marked as a bounce if it has less than 2 pageviews and no interactive custom events.

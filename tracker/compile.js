@@ -33,11 +33,10 @@ function compilefile(input, output, templateVars = {}) {
   }
 }
 
-const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "pageview-props", "tagged-events", "revenue", "pageleave"]
+const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "pageview-props", "tagged-events", "revenue"]
 const variants = [...g.clone.powerSet(base_variants)].filter(a => a.length > 0).map(a => a.sort());
 
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.js'))
-compilefile(relPath('src/p.js'), relPath('../priv/tracker/js/p.js'))
 
 variants.map(variant => {
   const options = variant.map(variant => variant.replace('-', '_')).reduce((acc, curr) => (acc[curr] = true, acc), {})
