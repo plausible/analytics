@@ -3,8 +3,8 @@
   "type": "module",
   "scripts": {
     "deploy": "node compile.js",
-    "test": "npm run deploy && npx playwright test",
-    "test:local": "NODE_ENV=dev npm run deploy && npx playwright test",
+    "test": "npx playwright test",
+    "test:local": "npx playwright test",
     "report-sizes": "node report-sizes.js",
     "start": "node test/support/server.js"
   },
