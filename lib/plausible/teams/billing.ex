@@ -13,7 +13,7 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Teams
 
   alias Plausible.Billing.{EnterprisePlan, Feature, Plan, Plans, Quota}
-  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
 
   require Plausible.Billing.Subscription.Status
 
@@ -494,28 +494,8 @@ defmodule Plausible.Teams.Billing do
             )
       )
 
-    site_scoped_feature_usage =
-      if stats_api_used? do
-        site_scoped_feature_usage ++ [Feature.StatsAPI]
-      else
-        site_scoped_feature_usage
-      end
-
-    sites_api_used? =
-      Repo.exists?(
-        from tm in Plausible.Teams.Membership,
-          as: :team_membership,
-          where: tm.team_id == ^team.id,
-          where:
-            exists(
-              from ak in Plausible.Auth.ApiKey,
-                where: ak.user_id == parent_as(:team_membership).user_id,
-                where: "sites:provision:*" in ak.scopes
-            )
-      )
-
-    if sites_api_used? do
-      site_scoped_feature_usage ++ [SitesAPI]
+    if stats_api_used? do
+      site_scoped_feature_usage ++ [Feature.StatsAPI]
     else
       site_scoped_feature_usage
     end
@@ -617,7 +597,7 @@ defmodule Plausible.Teams.Billing do
 
       nil ->
         if Teams.on_trial?(team) do
-          Feature.list() -- [SitesAPI]
+          Feature.list()
         else
           [Goals]
         end
