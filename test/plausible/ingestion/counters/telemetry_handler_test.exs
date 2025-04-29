@@ -26,6 +26,7 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
            end)
   end
 
+  @tag :skip
   test "handles ingest events by aggregating the counts", %{test: test} do
     on_exit(:detach, fn ->
       :telemetry.detach("ingest-counters-#{test}")

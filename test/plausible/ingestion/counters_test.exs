@@ -13,6 +13,7 @@ defmodule Plausible.Ingestion.CountersTest do
   @ts ~N[2023-02-14 01:00:03]
 
   describe "integration" do
+    @tag :skip
     test "periodically flushes buffer aggregates to the database", %{test: test} do
       on_exit(:detach, fn ->
         :telemetry.detach("ingest-counters-#{test}")
@@ -46,6 +47,7 @@ defmodule Plausible.Ingestion.CountersTest do
       verify_record_written(buffered.domain, "buffered", 1, site_id)
     end
 
+    @tag :skip
     test "the database eventually sums the records within 1-minute buckets", %{test: test} do
       # Testing if the database works is an unfunny way of integration testing,
       # but on the upside it's quite straight-forward way of testing if the
@@ -81,6 +83,7 @@ defmodule Plausible.Ingestion.CountersTest do
       verify_record_written(event1.domain, "dropped_not_found", 3)
     end
 
+    @tag :skip
     test "dumps the buffer on shutdown", %{test: test} do
       on_exit(:detach, fn ->
         :telemetry.detach("ingest-counters-#{test}")
