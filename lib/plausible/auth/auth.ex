@@ -163,20 +163,43 @@ defmodule Plausible.Auth do
     query =
       from(a in Auth.ApiKey,
         where: a.user_id == ^user.id,
-        order_by: [desc: a.id]
+        order_by: [desc: a.id],
+        select: %{
+          a
+          | type:
+              fragment(
+                "CASE WHEN ? = ANY(?) THEN ? ELSE ? END",
+                "sites:provision:*",
+                a.scopes,
+                "sites_api",
+                "stats_api"
+              )
+        }
       )
       |> scope_api_keys_by_team(team)
 
     Repo.all(query)
   end
 
-  @spec create_api_key(Auth.User.t(), Teams.Team.t(), String.t(), String.t()) ::
+  @spec create_stats_api_key(Auth.User.t(), Teams.Team.t(), String.t(), String.t()) ::
           {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
-  def create_api_key(user, team, name, key) do
+  def create_stats_api_key(user, team, name, key) do
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, team, params)
 
     with :ok <- Billing.Feature.StatsAPI.check_availability(team) do
+      Repo.insert(changeset)
+    end
+  end
+
+  @spec create_sites_api_key(Auth.User.t(), Teams.Team.t(), String.t(), String.t()) ::
+          {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
+  def create_sites_api_key(user, team, name, key) do
+    params = %{name: name, user_id: user.id, key: key, scopes: ["sites:provision:*"]}
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, team, params)
+
+    with :ok <- Billing.Feature.StatsAPI.check_availability(team),
+         :ok <- Billing.Feature.SitesAPI.check_availability(team) do
       Repo.insert(changeset)
     end
   end

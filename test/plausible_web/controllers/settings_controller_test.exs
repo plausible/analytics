@@ -1037,7 +1037,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
-            "key" => "swordfish"
+            "key" => "swordfish",
+            "type" => "stats_api"
           }
         })
 
@@ -1061,7 +1062,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
-            "key" => "swordfish"
+            "key" => "swordfish",
+            "type" => "stats_api"
           }
         })
 
@@ -1079,7 +1081,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
-            "key" => "swordfish"
+            "key" => "swordfish",
+            "type" => "stats_api"
           }
         })
 
@@ -1088,7 +1091,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
           "api_key" => %{
             "user_id" => user.id,
             "name" => "all your code are belong to us",
-            "key" => "swordfish"
+            "key" => "swordfish",
+            "type" => "stats_api"
           }
         })
 
@@ -1105,7 +1109,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
           "api_key" => %{
             "user_id" => other_user.id,
             "name" => "all your code are belong to us",
-            "key" => "swordfish"
+            "key" => "swordfish",
+            "type" => "stats_api"
           }
         })
 

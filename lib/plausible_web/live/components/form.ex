@@ -52,6 +52,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:mt?, :boolean, default: true)
   attr(:max_one_error, :boolean, default: false)
+  slot(:help_content)
   slot(:inner_block)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
@@ -102,6 +103,52 @@ defmodule PlausibleWeb.Live.Components.Form do
         class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
       />
       <.label for={@id}>{@label}</.label>
+    </div>
+    """
+  end
+
+  def input(%{type: "radio"} = assigns) do
+    input_class =
+      if assigns.rest[:disabled] do
+        "dark:bg-gray-500 bg-gray-200 border-gray-300"
+      else
+        "dark:bg-gray-700 border-gray-300"
+      end
+
+    label_class =
+      if assigns.rest[:disabled] do
+        "flex flex-col flex-inline dark:text-gray-300 text-gray-500"
+      else
+        "flex flex-col flex-inline"
+      end
+
+    assigns = assign(assigns, input_class: input_class, label_class: label_class)
+
+    ~H"""
+    <div class={[
+      "flex flex-inline items-top justify-start gap-x-2",
+      @mt? && "mt-2"
+    ]}>
+      <input
+        type="radio"
+        value={@value}
+        id={@id}
+        name={@name}
+        checked={assigns[:checked]}
+        class={["block h-5 w-5 text-indigo-600 focus:ring-indigo-600", @input_class]}
+        {@rest}
+      />
+      <.label class={@label_class} for={@id}>
+        <span>{@label}</span>
+
+        <span
+          :if={@help_text || @help_content != []}
+          class="text-gray-500 dark:text-gray-400 mb-2 text-sm"
+        >
+          {@help_text}
+          {render_slot(@help_content)}
+        </span>
+      </.label>
     </div>
     """
   end

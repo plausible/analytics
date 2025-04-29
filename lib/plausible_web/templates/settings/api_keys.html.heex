@@ -30,6 +30,9 @@
         <.th hide_on_mobile>
           Key
         </.th>
+        <.th hide_on_mobile>
+          Type
+        </.th>
         <.th invisible>
           Actions
         </.th>
@@ -42,6 +45,10 @@
         <.td hide_on_mobile>
           {api_key.key_prefix}
           {String.duplicate("*", 32 - 6)}
+        </.td>
+        <.td>
+          <span :if={api_key.type == "stats_api"}>Stats API</span>
+          <span :if={api_key.type == "sites_api"}>Sites API</span>
         </.td>
         <.td actions>
           <.delete_button
