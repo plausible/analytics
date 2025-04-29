@@ -204,6 +204,7 @@ test.describe('engagement events', () => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.click('#to-pageleave-pageview-props')
+        await page.waitForTimeout(500)
         await page.click('#back-button-trigger')
       },
       expectedRequests: [
