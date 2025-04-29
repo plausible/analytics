@@ -13,30 +13,27 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
   def render(assigns) do
     ~H"""
     <div class="bg-white p-6">
-      <div class="sm:flex sm:items-center sm:justify-between">
-        <div class="sm:flex sm:space-x-5">
-          <div class="shrink-0">
-            <div class="rounded-full p-1 flex items-center justify-center">
-              <.favicon domain={@site.domain} />
-            </div>
-          </div>
-          <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-            <p class="text-xl font-bold text-gray-900 sm:text-2xl">
-              {@site.domain}
-            </p>
-            <p class="text-sm font-medium text-gray-900">
-              Timezone: {@site.timezone}
-            </p>
-            <p class="text-sm font-medium text-gray-900">
-              Team:
-              <.styled_link phx-click="open" phx-value-id={@site.team.id} phx-value-type="team">
-                {@site.team.name}
-              </.styled_link>
-            </p>
-            <p class="text-sm font-medium text-gray-600">
-              <span :if={@site.domain_changed_from}>(previously: {@site.domain_changed_from})</span>
-            </p>
-          </div>
+      <div class="flex items-center">
+        <div class="rounded-full p-1 mr-4">
+          <.favicon class="w-8" domain={@site.domain} />
+        </div>
+
+        <div>
+          <p class="text-xl font-bold text-gray-900 sm:text-2xl">
+            {@site.domain}
+          </p>
+          <p class="text-sm font-medium text-gray-900">
+            Timezone: {@site.timezone}
+          </p>
+          <p class="text-sm font-medium text-gray-900">
+            Team:
+            <.styled_link phx-click="open" phx-value-id={@site.team.id} phx-value-type="team">
+              {@site.team.name}
+            </.styled_link>
+          </p>
+          <p class="text-sm font-medium text-gray-600">
+            <span :if={@site.domain_changed_from}>(previously: {@site.domain_changed_from})</span>
+          </p>
         </div>
       </div>
 
@@ -144,7 +141,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
     ~H"""
     <div class="flex-1 -mt-px w-full">
       <div class="w-full flex items-center justify-between space-x-4">
-        <.favicon domain={@resource.object.domain} />
+        <.favicon class="w-5" domain={@resource.object.domain} />
         <h3
           class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
           style="width: calc(100% - 4rem)"
@@ -168,12 +165,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
     """
   end
 
-  def favicon(assigns) do
-    src = "/favicon/sources/#{assigns.domain}"
-    assigns = assign(assigns, :src, src)
+  attr :domain, :string, required: true
+  attr :class, :string, required: true
 
+  def favicon(assigns) do
     ~H"""
-    <img src={@src} class="w-8" />
+    <img src={"/favicon/sources/#{@domain}"} class={@class} />
     """
   end
 
