@@ -39,7 +39,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
        form: form,
        tab: "overview",
        usage: usage,
-       limits: limits
+       limits: limits,
+       show_plan_form?: false
      )}
   end
 
@@ -153,7 +154,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         <div :if={@tab == "billing"} class="mt-2 m-4">
           <div class="bg-gray-100 p-4 rounded-md mt-8 mb-8">
             <span class="text-gray-900">
-              <span class="text-gray-900">
+              <p class="text-gray-900">
                 <strong>Usage</strong> <br />
                 <ul>
                   <li :for={
@@ -163,11 +164,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                     {cycle} ({date}): <strong>{number_format(total)}</strong> / {number_format(limit)}
                   </li>
                 </ul>
-              </span>
-            </span>
+              </p>
+          </span>
+
+          <p class="text-gray-900 mt-4">
+          <strong>Features used: </strong>
+          <span>{@usage.features |> Enum.map(& &1.display_name) |> Enum.join(", ")}</span>
+          </p>
           </div>
 
-          <.table rows={@plans}>
+          <.table rows={@plans} :if={!@show_plan_form?}>
             <:thead>
               <.th>Inserted At</.th>
               <.th>Interval</.th>
@@ -197,7 +203,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </:tbody>
           </.table>
 
-          <.form :let={f} for={@plan_form} phx-submit="save-plan" phx-target={@myself}>
+          <.form :if={@show_plan_form?} :let={f} for={@plan_form} phx-submit="save-plan" phx-target={@myself}>
             <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" />
             <.input
               type="select"
@@ -233,9 +239,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             <.input field={f[:features]} label="Features" />
 
             <.button type="submit">
-              Save Plan
+              Save Custom Plan
             </.button>
           </.form>
+
+          <.button :if={!@show_plan_form?} phx-click="show-plan-form" phx-target={@myself}>New Custom Plan</.button>
+          <.button theme="bright" :if={@show_plan_form?} phx-click="hide-plan-form" phx-target={@myself}>Cancel</.button>
         </div>
 
         <div :if={@tab == "overview"} class="mt-2 m-4">
@@ -386,6 +395,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     """
   end
 
+  def handle_event("show-plan-form", _, socket) do
+    {:noreply, assign(socket, show_plan_form?: true)}
+  end
+
+  def handle_event("hide-plan-form", _, socket) do
+    {:noreply, assign(socket, show_plan_form?: false)}
+  end
+
   def handle_event("change", %{"team" => params}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(socket.assigns.team, params)
 
@@ -401,6 +418,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
+    params = sanitize_params(params)
     changeset = EnterprisePlan.changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
 
     case Plausible.Repo.insert(changeset) do
@@ -617,4 +635,38 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def number_format(other), do: other
+
+  @numeric_fields [
+    "team_id",
+    "paddle_plan_id",
+    "monthly_pageview_limit",
+    "site_limit",
+    "team_member_limit",
+    "hourly_api_request_limit"
+  ]
+
+  defp sanitize_params(params) do
+    params
+    |> Enum.map(&clear_param/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Map.new()
+  end
+
+  defp clear_param({key, value}) when key in @numeric_fields do
+    value =
+      value
+      |> to_string()
+      |> String.replace(~r/[^0-9-]/, "")
+      |> String.trim()
+
+    {key, value}
+  end
+
+  defp clear_param({key, value}) when is_binary(value) do
+    {key, String.trim(value)}
+  end
+
+  defp clear_param(other) do
+    other
+  end
 end
