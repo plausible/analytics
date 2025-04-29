@@ -4,8 +4,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   alias Plausible.Billing.Subscription
   alias Plausible.Teams
   alias Plausible.Teams.Management.Layout
+  alias Plausible.Billing.EnterprisePlan
 
   alias PlausibleWeb.Router.Helpers, as: Routes
+
+  alias Plausible.Repo
+  import Ecto.Query
 
   def update(assigns, socket) do
     team = Resource.Team.get(assigns.resource_id)
@@ -20,9 +24,18 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       team_members: Teams.Billing.team_member_limit(team)
     }
 
+    plan_form =
+      to_form(
+        EnterprisePlan.changeset(
+          %EnterprisePlan{},
+          %{site_limit: "10,000"}
+        )
+      )
+
     {:ok,
      assign(socket,
        team: team,
+       plan_form: plan_form,
        form: form,
        tab: "overview",
        usage: usage,
@@ -33,6 +46,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   def render(assigns) do
     ~H"""
     <div>
+      <script type="text/javascript">
+        function numberFormatCallback(e) {
+          console.info(e)
+          console.info(e.target)
+          console.info(e.target.value)
+          const numeric = Number(e.target.value.replace(/[^0-9]/g, ''))
+          const value = numeric > 0 ? new Intl.NumberFormat("en-GB").format(numeric) : ''
+          e.target.value = value
+        }
+      </script>
       <div class="overflow-hidden rounded-lg bg-white">
         <div class="bg-white p-6">
           <div class="sm:flex sm:items-center sm:justify-between">
@@ -95,10 +118,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
               <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
               <.tab to="members" target={@myself} tab={@tab}>
-                Members ({@usage.team_members}/{@limits.team_members})
+                Members ({number_format(@usage.team_members)}/{number_format(@limits.team_members)})
               </.tab>
               <.tab to="sites" target={@myself} tab={@tab}>
-                Sites ({@usage.sites}/{@limits.sites})
+                Sites ({number_format(@usage.sites)}/{number_format(@limits.sites)})
+              </.tab>
+              <.tab to="billing" target={@myself} tab={@tab}>
+                Billing
               </.tab>
             </nav>
           </div>
@@ -124,7 +150,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </div>
         </div>
 
-        <div :if={@tab == "overview"} class="mt-2 m-4">
+        <div :if={@tab == "billing"} class="mt-2 m-4">
           <div class="bg-gray-100 p-4 rounded-md mt-8 mb-8">
             <span class="text-gray-900">
               <span class="text-gray-900">
@@ -134,12 +160,85 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                     {cycle, date, total, limit} <-
                       monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)
                   }>
-                    {cycle} ({date}): {total} / {limit}
+                    {cycle} ({date}): <strong>{number_format(total)}</strong> / {number_format(limit)}
                   </li>
                 </ul>
               </span>
             </span>
           </div>
+
+          <.table rows={@plans}>
+            <:thead>
+              <.th>Inserted At</.th>
+              <.th>Interval</.th>
+              <.th>Paddle Plan ID</.th>
+              <.th>Limits</.th>
+              <.th>Features</.th>
+            </:thead>
+            <:tbody :let={plan}>
+              <.td>{plan.inserted_at}</.td>
+              <.td>{plan.billing_interval}</.td>
+              <.td>{plan.paddle_plan_id}</.td>
+              <.td>
+                <div class="flex justify-between">
+                  <span>Pageviews</span> <span>{number_format(plan.monthly_pageview_limit)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Sites</span> <span>{number_format(plan.site_limit)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Members</span> <span>{number_format(plan.team_member_limit)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>API Requests</span>
+                  <span>{number_format(plan.hourly_api_request_limit)} / hour</span>
+                </div>
+              </.td>
+            </:tbody>
+          </.table>
+
+          <.form :let={f} for={@plan_form} phx-submit="save-plan" phx-target={@myself}>
+            <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" />
+            <.input
+              type="select"
+              options={["monthly", "yearly"]}
+              field={f[:billing_interval]}
+              label="Billing Interval"
+            />
+
+            <.input
+              onchange="numberFormatCallback(event)"
+              onkeyup="numberFormatCallback(event)"
+              field={f[:monthly_pageview_limit]}
+              label="Monthly Pageview Limit"
+            />
+            <.input
+              onchange="numberFormatCallback(event)"
+              onkeyup="numberFormatCallback(event)"
+              field={f[:site_limit]}
+              label="Site Limit"
+            />
+            <.input
+              onchange="numberFormatCallback(event)"
+              onkeyup="numberFormatCallback(event)"
+              field={f[:team_member_limit]}
+              label="Team Member Limit"
+            />
+            <.input
+              onchange="numberFormatCallback(event)"
+              onkeyup="numberFormatCallback(event)"
+              field={f[:hourly_api_request_limit]}
+              label="Hourly API Request Limit"
+            />
+            <.input field={f[:features]} label="Features" />
+
+            <.button type="submit">
+              Save Plan
+            </.button>
+          </.form>
+        </div>
+
+        <div :if={@tab == "overview"} class="mt-2 m-4">
           <.form :let={f} for={@form} phx-submit="change" phx-target={@myself}>
             <.input field={f[:trial_expiry_date]} label="Trial Expiry Date" />
             <.input field={f[:accept_traffic_until]} label="Accept  traffic Until" />
@@ -160,7 +259,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           <.table rows={@sites.entries}>
             <:thead>
               <.th>Domain</.th>
-              <.th>Timezone</.th>
+              <.th>Previous Domain</.th>
+              <.th invisible>Settings</.th>
               <.th invisible>Dashboard</.th>
             </:thead>
             <:tbody :let={site}>
@@ -181,14 +281,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                   </.styled_link>
                 </div>
               </.td>
-              <.td>{site.domain_changed_from}</.td>
-              <.td>{site.timezone}</.td>
+              <.td>{site.domain_changed_from || "--"}</.td>
               <.td>
                 <.styled_link
                   new_tab={true}
                   href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, site.domain, [])}
                 >
-                  Go to dashboard
+                  Dashboard
+                </.styled_link>
+              </.td>
+              <.td>
+                <.styled_link
+                  new_tab={true}
+                  href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, site.domain, [])}
+                >
+                  Setting
                 </.styled_link>
               </.td>
             </:tbody>
@@ -293,6 +400,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     end
   end
 
+  def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
+    changeset = EnterprisePlan.changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
+
+    case Plausible.Repo.insert(changeset) do
+      {:ok, _plan} ->
+        success(socket, "Plan saved")
+        plans = get_plans(socket.assigns.team.id)
+        {:noreply, assign(socket, plans: plans, plan_form: to_form(changeset))}
+
+      {:error, changeset} ->
+        failure(socket, "Error saving team: #{inspect(changeset.errors)}")
+        {:noreply, assign(socket, plan_form: to_form(changeset))}
+    end
+  end
+
   def handle_event("unlock", _, socket) do
     {:noreply, unlock_team(socket)}
   end
@@ -303,6 +425,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def handle_event("switch", %{"to" => "overview"}, socket) do
     {:noreply, assign(socket, tab: "overview")}
+  end
+
+  def handle_event("switch", %{"to" => "billing"}, socket) do
+    plans = get_plans(socket.assigns.team.id)
+
+    {:noreply, assign(socket, tab: "billing", plans: plans)}
   end
 
   def handle_event("switch", %{"to" => "members"}, socket) do
@@ -471,4 +599,22 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       {cycle, PlausibleWeb.TextHelpers.format_date_range(usage.date_range), usage.total, limit}
     end)
   end
+
+  defp get_plans(team_id) do
+    Repo.all(
+      from ep in EnterprisePlan,
+        where: ep.team_id == ^team_id,
+        order_by: [desc: :id]
+    )
+  end
+
+  def number_format(number) when is_integer(number) do
+    number
+    |> Integer.to_string()
+    |> String.reverse()
+    |> String.replace(~r/.{3}(?=.)/, "\\0,")
+    |> String.reverse()
+  end
+
+  def number_format(other), do: other
 end
