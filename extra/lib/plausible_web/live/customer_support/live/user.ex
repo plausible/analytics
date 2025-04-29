@@ -65,10 +65,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
     ~H"""
     <div class="flex-1 -mt-px w-full">
       <div class="w-full flex items-center justify-between space-x-4">
-        <img
-          src={Plausible.Auth.User.profile_img_url(@resource.object)}
-          class="w-4 rounded-full bg-gray-300"
-        />
+        <img src={Plausible.Auth.User.profile_img_url(@resource.object)} class="h-5 w-5 rounded-full" />
         <h3
           class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"
           style="width: calc(100% - 4rem)"

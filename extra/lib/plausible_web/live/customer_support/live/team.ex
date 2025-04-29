@@ -165,15 +165,15 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                   </li>
                 </ul>
               </p>
-          </span>
+            </span>
 
-          <p class="text-gray-900 mt-4">
-          <strong>Features used: </strong>
-          <span>{@usage.features |> Enum.map(& &1.display_name) |> Enum.join(", ")}</span>
-          </p>
+            <p class="text-gray-900 mt-4">
+              <strong>Features used: </strong>
+              <span>{@usage.features |> Enum.map(& &1.display_name) |> Enum.join(", ")}</span>
+            </p>
           </div>
 
-          <.table rows={@plans} :if={!@show_plan_form?}>
+          <.table :if={!@show_plan_form?} rows={@plans}>
             <:thead>
               <.th>Inserted At</.th>
               <.th>Interval</.th>
@@ -203,7 +203,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </:tbody>
           </.table>
 
-          <.form :if={@show_plan_form?} :let={f} for={@plan_form} phx-submit="save-plan" phx-target={@myself}>
+          <.form
+            :let={f}
+            :if={@show_plan_form?}
+            for={@plan_form}
+            phx-submit="save-plan"
+            phx-target={@myself}
+          >
             <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" />
             <.input
               type="select"
@@ -243,8 +249,17 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </.button>
           </.form>
 
-          <.button :if={!@show_plan_form?} phx-click="show-plan-form" phx-target={@myself}>New Custom Plan</.button>
-          <.button theme="bright" :if={@show_plan_form?} phx-click="hide-plan-form" phx-target={@myself}>Cancel</.button>
+          <.button :if={!@show_plan_form?} phx-click="show-plan-form" phx-target={@myself}>
+            New Custom Plan
+          </.button>
+          <.button
+            :if={@show_plan_form?}
+            theme="bright"
+            phx-click="hide-plan-form"
+            phx-target={@myself}
+          >
+            Cancel
+          </.button>
         </div>
 
         <div :if={@tab == "overview"} class="mt-2 m-4">
