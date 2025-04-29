@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
         <li :for={r <- @results} class="group relative">
           <a href={} phx-click="open" phx-value-id={r.id} phx-value-type={r.type}>
             <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
-              <div class="w-full flex items-center justify-between space-x-4">
+              <div class="text-gray-800 dark:text-gray-500 w-full flex items-center justify-between space-x-4">
                 <.render_result resource={r} />
               </div>
             </div>
@@ -92,12 +92,12 @@ defmodule PlausibleWeb.Live.CustomerSupport do
         id="modal"
         class={[
           if(is_nil(@current), do: "hidden"),
-          "fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center"
+          "fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center"
         ]}
       >
         <div
           phx-click-away="close"
-          class="overflow-auto bg-white w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg"
+          class="overflow-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300 w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg"
         >
           <.live_component
             :if={@current}

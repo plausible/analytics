@@ -12,16 +12,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.Shared do
       phx-click="switch"
       phx-value-to={@to}
       phx-target={@target}
-      class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10 cursor-pointer"
+      class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg px-4 py-4 text-center text-sm font-medium focus:z-10 cursor-pointer text-gray-800 dark:text-gray-200"
     >
-      <span class={if(@tab == @to, do: "font-bold text-gray-800")}>
+      <span class={if(@tab == @to, do: "font-bold")}>
         {render_slot(@inner_block)}
       </span>
       <span
         aria-hidden="true"
         class={[
           "absolute inset-x-0 bottom-0 h-0.5",
-          if(@tab == @to, do: "bg-indigo-500", else: "bg-transparent")
+          if(@tab == @to, do: "dark:bg-indigo-300 bg-indigo-500", else: "bg-transparent")
         ]}
       >
       </span>

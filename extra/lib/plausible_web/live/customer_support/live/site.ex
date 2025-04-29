@@ -12,26 +12,26 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
 
   def render(assigns) do
     ~H"""
-    <div class="bg-white p-6">
+    <div class="p-6">
       <div class="flex items-center">
         <div class="rounded-full p-1 mr-4">
           <.favicon class="w-8" domain={@site.domain} />
         </div>
 
         <div>
-          <p class="text-xl font-bold text-gray-900 sm:text-2xl">
+          <p class="text-xl font-bold sm:text-2xl">
             {@site.domain}
           </p>
-          <p class="text-sm font-medium text-gray-900">
+          <p class="text-sm font-medium">
             Timezone: {@site.timezone}
           </p>
-          <p class="text-sm font-medium text-gray-900">
+          <p class="text-sm font-medium">
             Team:
             <.styled_link phx-click="open" phx-value-id={@site.team.id} phx-value-type="team">
               {@site.team.name}
             </.styled_link>
           </p>
-          <p class="text-sm font-medium text-gray-600">
+          <p class="text-sm font-medium">
             <span :if={@site.domain_changed_from}>(previously: {@site.domain_changed_from})</span>
           </p>
         </div>
@@ -49,7 +49,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
           </select>
         </div>
         <div class="hidden sm:block">
-          <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+          <nav
+            class="isolate flex divide-x dark:divide-gray-900 divide-gray-200 rounded-lg shadow dark:shadow-1"
+            aria-label="Tabs"
+          >
             <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
             <.tab to="people" target={@myself} tab={@tab}>
               People
