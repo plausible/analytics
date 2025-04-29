@@ -24,6 +24,8 @@ defmodule Plausible.CustomerSupport.Resource do
     quote do
       use PlausibleWeb, :live_component
       alias Plausible.CustomerSupport.Resource
+      import PlausibleWeb.CustomerSupport.Live.Shared
+
       @behaviour Plausible.CustomerSupport.Resource.Component
 
       def success(socket, msg) do
