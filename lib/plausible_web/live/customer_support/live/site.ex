@@ -3,7 +3,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
 
   def update(assigns, socket) do
     site = Resource.Site.get(assigns.resource_id)
-    {:ok, assign(socket, site: site, people: Plausible.Sites.list_people(site))}
+
+    changeset = Plausible.Site.crm_changeset(site, %{})
+    form = to_form(changeset)
+
+    {:ok, assign(socket, site: site, form: form, tab: "overview")}
   end
 
   def render(assigns) do
@@ -36,32 +40,99 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
         </div>
       </div>
 
-      <div class="mt-8">
-        <.table rows={@people.memberships}>
+      <div>
+        <div class="grid grid-cols-1 sm:hidden">
+          <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
+          <select
+            aria-label="Select a tab"
+            class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+          >
+            <option>Overview</option>
+            <option>People</option>
+          </select>
+        </div>
+        <div class="hidden sm:block">
+          <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+            <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
+            <.tab to="people" target={@myself} tab={@tab}>
+              People
+            </.tab>
+          </nav>
+        </div>
+      </div>
+
+      <.form
+        :let={f}
+        :if={@tab == "overview"}
+        for={@form}
+        phx-target={@myself}
+        phx-submit="change"
+        class="mt-8"
+      >
+        <.input
+          type="select"
+          field={f[:timezone]}
+          label="Timezone"
+          options={Plausible.Timezones.options()}
+        />
+        <.input type="checkbox" field={f[:public]} label="Public?" />
+        <.input type="datetime-local" field={f[:native_stats_start_at]} label="Native Stats Start At" />
+        <.input
+          type="text"
+          field={f[:ingest_rate_limit_threshold]}
+          label="Ingest Rate Limit Threshold"
+        />
+        <.input
+          type="text"
+          field={f[:ingest_rate_limit_scale_seconds]}
+          label="Ingest Rate Limit Scale Seconds"
+        />
+        <.button phx-target={@myself} type="submit">
+          Save
+        </.button>
+      </.form>
+
+      <div :if={@tab == "people"} class="mt-8">
+        <.table rows={@people}>
           <:thead>
             <.th>User</.th>
+            <.th>Kind</.th>
             <.th>Role</.th>
           </:thead>
-          <:tbody :let={membership}>
-            <.td>
-              <.styled_link phx-click="open" phx-value-id={membership.user.id} phx-value-type="user">
-                {membership.user.name}
+          <:tbody :let={{kind, person, role}}>
+            <.td :if={kind == :membership}>
+              <.styled_link
+                class="flex items-center"
+                phx-click="open"
+                phx-value-id={person.id}
+                phx-value-type="user"
+              >
+                <img
+                  src={Plausible.Auth.User.profile_img_url(person)}
+                  class="w-4 rounded-full bg-gray-300 mr-2"
+                />
+                {person.name}
               </.styled_link>
             </.td>
-            <.td>{membership.role}</.td>
-          </:tbody>
-        </.table>
 
-        <.table rows={@people.invitations}>
-          <:thead>
-            <.th>E-mail</.th>
-            <.th>Role</.th>
-          </:thead>
-          <:tbody :let={invitation}>
-            <.td>
-              {invitation.email}
+            <.td :if={kind == :invitation}>
+              <div class="flex items-center">
+                <img
+                  src={Plausible.Auth.User.profile_img_url(person)}
+                  class="w-4 rounded-full bg-gray-300 mr-2"
+                />
+                {person}
+              </div>
             </.td>
-            <.td>{invitation.role}</.td>
+
+            <.td :if={kind == :membership}>
+              Membership
+            </.td>
+
+            <.td :if={kind == :invitation}>
+              Invitation
+            </.td>
+            <.td>{role}</.td>
           </:tbody>
         </.table>
       </div>
@@ -104,5 +175,67 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
     ~H"""
     <img src={@src} class="w-8" />
     """
+  end
+
+  attr :to, :string, required: true
+  attr :tab, :string, required: true
+  attr :target, :any, required: true
+  slot :inner_block, required: true
+
+  defp tab(assigns) do
+    ~H"""
+    <a
+      phx-click="switch"
+      phx-value-to={@to}
+      phx-target={@target}
+      class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg bg-white px-4 py-4 text-center text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:z-10 cursor-pointer"
+    >
+      <span class={if(@tab == @to, do: "font-bold text-gray-800")}>
+        {render_slot(@inner_block)}
+      </span>
+      <span
+        aria-hidden="true"
+        class={[
+          "absolute inset-x-0 bottom-0 h-0.5",
+          if(@tab == @to, do: "bg-indigo-500", else: "bg-transparent")
+        ]}
+      >
+      </span>
+    </a>
+    """
+  end
+
+  def handle_event("switch", %{"to" => "overview"}, socket) do
+    {:noreply, assign(socket, tab: "overview")}
+  end
+
+  def handle_event("switch", %{"to" => "people"}, socket) do
+    people = Plausible.Sites.list_people(socket.assigns.site)
+
+    people =
+      (people.invitations ++ people.memberships)
+      |> Enum.map(fn p ->
+        if Map.has_key?(p, :invitation_id) do
+          {:invitation, p.email, p.role}
+        else
+          {:membership, p.user, p.role}
+        end
+      end)
+
+    {:noreply, assign(socket, tab: "people", people: people)}
+  end
+
+  def handle_event("change", %{"site" => params}, socket) do
+    changeset = Plausible.Site.crm_changeset(socket.assigns.site, params)
+
+    case Plausible.Repo.update(changeset) do
+      {:ok, site} ->
+        success(socket, "Site saved")
+        {:noreply, assign(socket, site: site, form: to_form(changeset))}
+
+      {:error, changeset} ->
+        failure(socket, "Error saving site: #{inspect(changeset.errors)}")
+        {:noreply, assign(socket, form: to_form(changeset))}
+    end
   end
 end

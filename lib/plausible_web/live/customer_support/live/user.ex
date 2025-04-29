@@ -90,10 +90,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
     """
   end
 
-  def handle_event("delete", _params, socket) do
-    raise "delete"
-  end
-
   def handle_event("change", %{"user" => params}, socket) do
     changeset = Plausible.Auth.User.changeset(socket.assigns.user, params)
 

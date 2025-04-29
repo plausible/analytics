@@ -34,7 +34,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     ~H"""
     <div>
       <div class="overflow-hidden rounded-lg bg-white">
-        <h2 class="sr-only" id="profile-overview-title">Profile Overview</h2>
         <div class="bg-white p-6">
           <div class="sm:flex sm:items-center sm:justify-between">
             <div class="sm:flex sm:space-x-5">
@@ -88,7 +87,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             >
               <option>Overview</option>
               <option>Sites</option>
-              <option selected>Members</option>
+              <option>Members</option>
               <option>Billing</option>
             </select>
           </div>
@@ -146,7 +145,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             <.input field={f[:accept_traffic_until]} label="Accept  traffic Until" />
             <.input
               type="checkbox"
-              field={f[:allow_next_upgrade_override] |> IO.inspect(label: :f)}
+              field={f[:allow_next_upgrade_override]}
               label="Allow Next Upgrade Override"
             />
 
