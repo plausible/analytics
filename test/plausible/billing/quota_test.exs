@@ -3,7 +3,7 @@ defmodule Plausible.Billing.QuotaTest do
   use Plausible.DataCase, async: true
   use Plausible
   alias Plausible.Billing.{Quota, Plans}
-  alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI}
 
   use Plausible.Teams.Test
 
@@ -515,6 +515,18 @@ defmodule Plausible.Billing.QuotaTest do
       insert(:api_key, user: user)
 
       assert [StatsAPI] == Plausible.Teams.Billing.features_usage(team)
+    end
+
+    test "returns [SitesAPI] when user has a Sites API enabled api key" do
+      user =
+        new_user()
+        |> subscribe_to_enterprise_plan(features: [StatsAPI, SitesAPI])
+
+      team = team_of(user)
+
+      insert(:api_key, user: user, scopes: ["sites:provision:*"])
+
+      assert [StatsAPI, SitesAPI] == Plausible.Teams.Billing.features_usage(team)
     end
 
     test "returns feature usage based on a user and a custom list of site_ids" do
