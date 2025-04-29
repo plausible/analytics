@@ -68,7 +68,7 @@ defmodule PlausibleWeb.AuthControllerTest do
           }
         )
 
-      assert redirected_to(conn, 302) == "/activate?flow=register"
+      assert redirected_to(conn, 302) == "/activate?flow=register&team_identifier="
     end
 
     test "logs the user in", %{conn: conn} do
@@ -136,7 +136,8 @@ defmodule PlausibleWeb.AuthControllerTest do
           email: "user@example.com",
           password: "very-secret-and-very-long-123",
           password_confirmation: "very-secret-and-very-long-123",
-          register_action: "register_from_invitation_form"
+          register_action: "register_from_invitation_form",
+          team_identifier: ""
         }
       )
 
@@ -153,11 +154,31 @@ defmodule PlausibleWeb.AuthControllerTest do
             email: "user@example.com",
             password: "very-secret-and-very-long-123",
             password_confirmation: "very-secret-and-very-long-123",
-            register_action: "register_from_invitation_form"
+            register_action: "register_from_invitation_form",
+            team_identifier: ""
           }
         )
 
-      assert redirected_to(conn, 302) == "/activate?flow=invitation"
+      assert redirected_to(conn, 302) == "/activate?flow=invitation&team_identifier="
+    end
+
+    test "user with team invite is redirected to activate page after registration", %{conn: conn} do
+      team_identifier = Ecto.UUID.generate()
+
+      conn =
+        post(conn, "/login",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123",
+            register_action: "register_from_invitation_form",
+            team_identifier: team_identifier
+          }
+        )
+
+      assert redirected_to(conn, 302) ==
+               "/activate?flow=invitation&team_identifier=#{team_identifier}"
     end
 
     test "logs the user in", %{conn: conn, user: user} do
@@ -168,12 +189,97 @@ defmodule PlausibleWeb.AuthControllerTest do
             email: "user@example.com",
             password: "very-secret-and-very-long-123",
             password_confirmation: "very-secret-and-very-long-123",
-            register_action: "register_from_invitation_form"
+            register_action: "register_from_invitation_form",
+            team_identifier: ""
           }
         )
 
       assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert get_session(conn, :user_token) == token
+    end
+
+    test "logs the user in and redirects to sites index when email is already verified", %{
+      conn: conn,
+      user: user
+    } do
+      user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+
+      conn =
+        post(conn, "/login",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123",
+            register_action: "register_from_invitation_form",
+            team_identifier: ""
+          }
+        )
+
+      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+      assert get_session(conn, :user_token) == token
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+    end
+
+    test "logs the user in, accepts team invite and redirects to team sites index", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+
+      invite_member(team, user, role: :viewer, inviter: owner)
+
+      user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+
+      conn =
+        post(conn, "/login",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123",
+            register_action: "register_from_invitation_form",
+            team_identifier: team.identifier
+          }
+        )
+
+      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+      assert get_session(conn, :user_token) == token
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
+
+      assert_team_membership(user, team, :viewer)
+    end
+
+    test "logs the user in and redirects to team sites index even when there's no matching team invite",
+         %{
+           conn: conn,
+           user: user
+         } do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+
+      add_member(team, user: user, role: :viewer)
+
+      user |> Ecto.Changeset.change(email_verified: true) |> Repo.update!()
+
+      conn =
+        post(conn, "/login",
+          user: %{
+            name: "Jane Doe",
+            email: "user@example.com",
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123",
+            register_action: "register_from_invitation_form",
+            team_identifier: team.identifier
+          }
+        )
+
+      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+      assert get_session(conn, :user_token) == token
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
     end
   end
 
@@ -193,6 +299,18 @@ defmodule PlausibleWeb.AuthControllerTest do
         |> get("/activate")
 
       assert html_response(conn, 200) =~ "Please enter the 4-digit code we sent to"
+    end
+
+    test "passes team identifier in form data", %{conn: conn, user: user} do
+      Auth.EmailVerification.issue_code(user)
+
+      team_identifier = Ecto.UUID.generate()
+
+      conn = get(conn, "/activate?team_identifier=#{team_identifier}")
+
+      assert html = html_response(conn, 200)
+
+      assert text_of_attr(html, "input[name=team_identifier]", "value") == team_identifier
     end
   end
 
@@ -296,9 +414,49 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
-      conn = post(conn, "/activate", %{code: verification.code})
+      conn = post(conn, "/activate", %{code: verification.code, team_identifier: ""})
 
       assert redirected_to(conn) == "/sites?flow="
+    end
+
+    test "accepts team invite and redirects to team sites, if team provided", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+      invite_member(team, user, role: :viewer, inviter: owner)
+
+      Repo.update!(Auth.User.changeset(user, %{email_verified: false}))
+
+      {:ok, %{code: code}} = Auth.EmailVerification.issue_code(user)
+
+      conn = post(conn, "/activate", %{code: code, team_identifier: team.identifier})
+
+      assert redirected_to(conn) ==
+               Routes.site_path(conn, :index, __team: team.identifier, flow: "")
+
+      assert_team_membership(user, team, :viewer)
+    end
+
+    test "redirects to team sites if team provided, even if there's no invite", %{
+      conn: conn,
+      user: user
+    } do
+      owner = new_user()
+      _site = new_site(owner: owner)
+      team = team_of(owner)
+      add_member(team, user: user, role: :viewer)
+
+      Repo.update!(Auth.User.changeset(user, %{email_verified: false}))
+
+      {:ok, %{code: code}} = Auth.EmailVerification.issue_code(user)
+
+      conn = post(conn, "/activate", %{code: code, team_identifier: team.identifier})
+
+      assert redirected_to(conn) ==
+               Routes.site_path(conn, :index, __team: team.identifier, flow: "")
     end
 
     test "removes used up verification code", %{conn: conn, user: user} do
