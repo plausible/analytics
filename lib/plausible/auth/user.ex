@@ -187,6 +187,10 @@ defmodule Plausible.Auth.User do
     Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
   end
 
+  def profile_img_url(email) when is_binary(email) do
+    profile_img_url(%__MODULE__{email: email})
+  end
+
   defp validate_email_changed(changeset) do
     if !get_change(changeset, :email) && !changeset.errors[:email] do
       add_error(changeset, :email, "can't be the same", validation: :different_email)
