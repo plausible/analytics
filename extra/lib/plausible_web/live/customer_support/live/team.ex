@@ -57,8 +57,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           e.target.value = value
         }
       </script>
-      <div class="overflow-hidden rounded-lg bg-white">
-        <div class="bg-white p-6">
+      <div class="overflow-hidden rounded-lg">
+        <div class="p-6">
           <div class="sm:flex sm:items-center sm:justify-between">
             <div class="sm:flex sm:space-x-5">
               <div class="shrink-0">
@@ -66,14 +66,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                   team_bg(@team.identifier),
                   "rounded-full p-1 flex items-center justify-center"
                 ]}>
-                  <Heroicons.user_group class="h-14 w-14 text-white" />
+                  <Heroicons.user_group class="h-14 w-14 text-white dark:text-gray-300" />
                 </div>
               </div>
               <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-                <p class="text-xl font-bold text-gray-900 sm:text-2xl">
+                <p class="text-xl font-bold dark:text-gray-300 text-gray-900 sm:text-2xl">
                   {@team.name}
                 </p>
-                <p class="text-sm font-medium text-gray-600">
+                <p class="text-sm font-medium">
                   <span :if={@team.setup_complete}>Set up at {@team.setup_at}</span>
                   <span :if={!@team.setup_complete}>Not set up yet</span>
                 </p>
@@ -107,7 +107,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
             <select
               aria-label="Select a tab"
-              class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
+              class="col-start-1 row-start-1 w-full appearance-none rounded-md py-2 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
             >
               <option>Overview</option>
               <option>Sites</option>
@@ -116,7 +116,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </select>
           </div>
           <div class="hidden sm:block">
-            <nav class="isolate flex divide-x divide-gray-200 rounded-lg shadow" aria-label="Tabs">
+            <nav
+              class="isolate flex divide-x dark:divide-gray-900 divide-gray-200 rounded-lg shadow dark:shadow-none"
+              aria-label="Tabs"
+            >
               <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
               <.tab to="members" target={@myself} tab={@tab}>
                 Members ({number_format(@usage.team_members)}/{number_format(@limits.team_members)})
@@ -131,30 +134,28 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </div>
         </div>
 
-        <div class="grid grid-cols-1 divide-y divide-gray-200 border-t border-gray-200 bg-gray-50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <div class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-900 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600">
           <div class="px-6 py-5 text-center text-sm font-medium">
-            <span class="text-gray-900">
+            <span>
               <strong>Subscription status</strong> <br />{subscription_status(@team)}
             </span>
           </div>
           <div class="px-6 py-5 text-center text-sm font-medium">
-            <span class="text-gray-900">
+            <span>
               <strong>Subscription plan</strong> <br />{subscription_plan(@team)}
             </span>
           </div>
           <div class="px-6 py-5 text-center text-sm font-medium">
-            <span class="text-gray-900">
-              <span class="text-gray-900">
-                <strong>Grace Period</strong> <br />{grace_period_status(@team)}
-              </span>
+            <span>
+              <strong>Grace Period</strong> <br />{grace_period_status(@team)}
             </span>
           </div>
         </div>
 
-        <div :if={@tab == "billing"} class="mt-2 m-4">
-          <div class="bg-gray-100 p-4 rounded-md mt-8 mb-8">
-            <span class="text-gray-900">
-              <p class="text-gray-900">
+        <div :if={@tab == "billing"} class="mt-2 text-gray-900 dark:text-gray-400">
+          <div class="bg-gray-100 dark:bg-gray-900 dark:border dark:border-gray-500 p-4 rounded-md mt-8 mb-8">
+            <span class="">
+              <p>
                 <strong>Usage</strong> <br />
                 <ul>
                   <li :for={
@@ -167,7 +168,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               </p>
             </span>
 
-            <p class="text-gray-900 mt-4">
+            <p class="mt-4">
               <strong>Features used: </strong>
               <span>{@usage.features |> Enum.map(& &1.display_name) |> Enum.join(", ")}</span>
             </p>
@@ -262,7 +263,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </.button>
         </div>
 
-        <div :if={@tab == "overview"} class="mt-2 m-4">
+        <div :if={@tab == "overview"} class="mt-8">
           <.form :let={f} for={@form} phx-submit="change" phx-target={@myself}>
             <.input field={f[:trial_expiry_date]} label="Trial Expiry Date" />
             <.input field={f[:accept_traffic_until]} label="Accept  traffic Until" />
@@ -279,7 +280,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </.form>
         </div>
 
-        <div :if={@tab == "sites"} class="mt-2 m-4">
+        <div :if={@tab == "sites"} class="mt-2">
           <.table rows={@sites.entries}>
             <:thead>
               <.th>Domain</.th>
@@ -319,14 +320,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                   new_tab={true}
                   href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, site.domain, [])}
                 >
-                  Setting
+                  Settings
                 </.styled_link>
               </.td>
             </:tbody>
           </.table>
         </div>
 
-        <div :if={@tab == "members"} class="mt-2 m-4">
+        <div :if={@tab == "members"} class="mt-2">
           <.table rows={Layout.sorted_for_display(@layout)}>
             <:thead>
               <.th>User</.th>
@@ -484,10 +485,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       "bg-blue-600",
       "bg-blue-700",
       "bg-blue-800",
-      "bg-indigo-500",
-      "bg-indigo-600",
-      "bg-indigo-700",
-      "bg-indigo-800",
       "bg-cyan-500",
       "bg-cyan-600",
       "bg-cyan-700",

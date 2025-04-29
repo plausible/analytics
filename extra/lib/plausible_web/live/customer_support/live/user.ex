@@ -10,7 +10,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
 
   def render(assigns) do
     ~H"""
-    <div class="bg-white p-6">
+    <div class="p-6">
       <div class="sm:flex sm:items-center sm:justify-between">
         <div class="sm:flex sm:space-x-5">
           <div class="shrink-0">
@@ -22,10 +22,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
             </div>
           </div>
           <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-            <p class="text-xl font-bold text-gray-900 sm:text-2xl">
+            <p class="text-xl font-bold sm:text-2xl">
               {@user.name}
             </p>
-            <p class="text-sm font-medium text-gray-600">
+            <p class="text-sm font-medium">
               <span>{@user.email}</span>
 
               <span :if={@user.previous_email}>(previously: {@user.previous_email})</span>
