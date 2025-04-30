@@ -80,7 +80,7 @@ function getVariantsToCompile(options) {
   }
   if (options.only !== null) {
     targetVariants = targetVariants.filter(variant =>
-      options.only.some(target_features => equal_lists(variant.features, target_features))
+      options.only.some(target_features => equalLists(variant.features, target_features))
     )
   }
 
@@ -106,7 +106,7 @@ function minify(baseCode, globals) {
   }
 }
 
-function equal_lists(a, b) {
+function equalLists(a, b) {
   if (a.length != b.length) {
     return false
   }
