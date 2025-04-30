@@ -146,19 +146,6 @@ defmodule Plausible.Site.CacheTest do
       assert Cache.get("new.example.com", force?: true, cache_name: test)
     end
 
-    test "cache exposes hit rate", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      new_site(domain: "site1.example.com")
-      :ok = Cache.refresh_all(cache_name: test)
-
-      assert Cache.hit_rate(test) == 0
-      assert Cache.get("site1.example.com", force?: true, cache_name: test)
-      assert Cache.hit_rate(test) == 100
-      refute Cache.get("nonexisting.example.com", force?: true, cache_name: test)
-      assert Cache.hit_rate(test) == 50
-    end
-
     test "only recently updated sites can be refreshed", %{test: test} do
       {:ok, _} = start_test_cache(test)
 

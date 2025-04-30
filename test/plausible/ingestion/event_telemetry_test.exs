@@ -7,7 +7,6 @@ defmodule Plausible.Ingestion.EventTelemetryTest do
 
   use Plausible.DataCase, async: false
 
-  @tag :skip
   test "telemetry is emitted for all events", %{test: test} do
     test_pid = self()
 
