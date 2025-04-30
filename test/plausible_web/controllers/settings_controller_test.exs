@@ -1022,6 +1022,23 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert html_response(conn, 200)
     end
+
+    test "lists types of keys", %{conn: conn, user: user} do
+      user
+      |> subscribe_to_enterprise_plan(
+        features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+      )
+
+      insert(:api_key, user: user)
+      insert(:api_key, user: user, scopes: ["sites:provision:*"])
+
+      conn = get(conn, Routes.settings_path(conn, :api_keys))
+
+      assert html = html_response(conn, 200)
+
+      assert html =~ "Stats API"
+      assert html =~ "Sites API"
+    end
   end
 
   describe "POST /settings/api-keys" do
@@ -1046,6 +1063,57 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert conn.status == 302
       assert key.name == "all your code are belong to us"
       assert key.team_id == team.id
+    end
+
+    test "can create a Sites API key", %{conn: conn, user: user} do
+      user
+      |> subscribe_to_enterprise_plan(
+        features: [
+          Plausible.Billing.Feature.StatsAPI,
+          Plausible.Billing.Feature.SitesAPI
+        ]
+      )
+
+      new_site(owner: user)
+
+      team = team_of(user)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :api_keys), %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish",
+            "type" => "sites_api"
+          }
+        })
+
+      key = Plausible.Auth.ApiKey |> where(user_id: ^user.id) |> Repo.one()
+      assert conn.status == 302
+      assert key.name == "all your code are belong to us"
+      assert key.team_id == team.id
+      assert key.scopes == ["sites:provision:*"]
+    end
+
+    test "can't create a Sites API key without Sites API feature", %{conn: conn, user: user} do
+      user |> subscribe_to_business_plan()
+
+      new_site(owner: user)
+
+      conn =
+        post(conn, Routes.settings_path(conn, :api_keys), %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish",
+            "type" => "sites_api"
+          }
+        })
+
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :new_api_key)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Your current subscription plan does not include Sites API access"
     end
 
     test "can create an API key when switched to another team", %{conn: conn, user: user} do
