@@ -1175,7 +1175,7 @@ hence an internal storage is used.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Subscribes to telemetry events emitted by <a href="Plausible.Ingestion.Event.html"><code class="inline">Plausible.Ingestion.Event</code></a>.
-Every time a request derived event is either dispatched to clickhouse or dropped,
+Every time a request derived event is dropped,
 a telemetry event is emitted respectively. That event is captured here,
 its metadata is extracted and sent for internal stats aggregation via
 <code class="inline">Counters.Buffer</code> interface.</p></div>
