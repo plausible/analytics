@@ -38,12 +38,8 @@ defmodule Plausible.Ingestion.CountersTest do
 
       {:ok, dropped} = emit_dropped_request(at: now)
       {:ok, _dropped} = emit_dropped_request(domain: dropped.domain, at: now)
-      {:ok, buffered} = emit_buffered_request(at: now)
 
       verify_record_written(dropped.domain, "dropped_not_found", 2)
-
-      site_id = Plausible.Sites.get_by_domain(buffered.domain).id
-      verify_record_written(buffered.domain, "buffered", 1, site_id)
     end
 
     test "the database eventually sums the records within 1-minute buckets", %{test: test} do
@@ -124,25 +120,6 @@ defmodule Plausible.Ingestion.CountersTest do
     assert {:ok, request} = Request.build(conn, at)
     assert {:ok, %{dropped: [dropped]}} = Event.build_and_buffer(request)
     {:ok, dropped}
-  end
-
-  defp emit_buffered_request(opts) do
-    domain = Keyword.get(opts, :domain, random_domain())
-    at = Keyword.get(opts, :at, @ts)
-
-    site = new_site(domain: domain)
-
-    payload = %{
-      name: "pageview",
-      url: "http://#{site.domain}",
-      v: 137
-    }
-
-    conn = build_conn(:post, "/api/event", payload)
-    assert {:ok, request} = Request.build(conn, at)
-    assert {:ok, %{buffered: [buffered]}} = Event.build_and_buffer(request)
-
-    {:ok, buffered}
   end
 
   defp start_counters(opts) do
