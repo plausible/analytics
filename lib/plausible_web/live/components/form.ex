@@ -108,25 +108,9 @@ defmodule PlausibleWeb.Live.Components.Form do
   end
 
   def input(%{type: "radio"} = assigns) do
-    input_class =
-      if assigns.rest[:disabled] do
-        "dark:bg-gray-500 bg-gray-200 border-gray-300"
-      else
-        "dark:bg-gray-700 border-gray-300"
-      end
-
-    label_class =
-      if assigns.rest[:disabled] do
-        "flex flex-col flex-inline dark:text-gray-300 text-gray-500"
-      else
-        "flex flex-col flex-inline"
-      end
-
-    assigns = assign(assigns, input_class: input_class, label_class: label_class)
-
     ~H"""
     <div class={[
-      "flex flex-inline items-top justify-start gap-x-2",
+      "flex flex-inline items-center justify-start gap-x-3",
       @mt? && "mt-2"
     ]}>
       <input
@@ -135,10 +119,10 @@ defmodule PlausibleWeb.Live.Components.Form do
         id={@id}
         name={@name}
         checked={assigns[:checked]}
-        class={["block h-5 w-5 text-indigo-600 focus:ring-indigo-600", @input_class]}
+        class="block dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
         {@rest}
       />
-      <.label class={@label_class} for={@id}>
+      <.label :if={@label} class="flex flex-col flex-inline" for={@id}>
         <span>{@label}</span>
 
         <span
