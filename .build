@@ -39,7 +39,6 @@ Plausible.Billing.SiteLocker.html
 Plausible.Billing.Subscription.Status.html
 Plausible.Billing.html
 Plausible.Cache.Adapter.html
-Plausible.Cache.Stats.html
 Plausible.Cache.Warmer.html
 Plausible.Cache.html
 Plausible.ChangesetHelpers.html
@@ -475,8 +474,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-F771FED8.js
-dist/sidebar_items-554F360B.js
+dist/search_data-237DBC68.js
+dist/sidebar_items-D44D35DF.js
 index.html
 readme.html
 search.html
