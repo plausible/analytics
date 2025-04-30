@@ -30,7 +30,7 @@
         <.th hide_on_mobile>
           Key
         </.th>
-        <.th hide_on_mobile>
+        <.th :if={ee?()} hide_on_mobile>
           Type
         </.th>
         <.th invisible>
@@ -46,7 +46,7 @@
           {api_key.key_prefix}
           {String.duplicate("*", 32 - 6)}
         </.td>
-        <.td>
+        <.td :if={ee?()}>
           <span :if={api_key.type == "stats_api"}>Stats API</span>
           <span :if={api_key.type == "sites_api"}>Sites API</span>
         </.td>

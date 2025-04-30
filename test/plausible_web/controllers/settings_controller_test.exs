@@ -1023,6 +1023,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html_response(conn, 200)
     end
 
+    @tag :ee_only
     test "lists types of keys", %{conn: conn, user: user} do
       user
       |> subscribe_to_enterprise_plan(

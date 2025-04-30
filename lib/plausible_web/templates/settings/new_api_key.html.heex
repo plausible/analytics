@@ -4,7 +4,9 @@
   <.form :let={f} for={@changeset} action={Routes.settings_path(@conn, :api_keys)}>
     <.input type="text" field={f[:name]} label="Name" placeholder="Development" />
 
-    <div x-data="{ showNotice: false }" class="mt-4 flex flex-col gap-y-2">
+    <input :if={ce?()} type="hidden" name={f[:type].name} value={f[:type].value} />
+
+    <div :if={ee?()} x-data="{ showNotice: false }" class="mt-4 flex flex-col gap-y-2">
       <div>
         <.label>Type</.label>
       </div>
