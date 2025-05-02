@@ -185,6 +185,8 @@ console.log(createMarkdownTable([
   summary.median_result
 ]))
 
+console.log(`\nIn total, ${summary.brotli_increase_percentaged_variants} variants brotli size increased and ${summary.brotli_decreased_variants} variants brotli size decreased.`)
+
 function createMarkdownTable(rows) {
   return markdownTable([HEADER].concat(rows.map(markdownRow)))
 }
