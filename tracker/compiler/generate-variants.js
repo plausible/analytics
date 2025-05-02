@@ -6,8 +6,8 @@ import { featureToCompileKey } from './index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "pageview-props", "tagged-events", "revenue"]
-let legacyVariants = [...g.clone.powerSet(base_variants)]
+const LEGACY_VARIANT_NAMES = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "pageview-props", "tagged-events", "revenue"]
+let legacyVariants = [...g.clone.powerSet(LEGACY_VARIANT_NAMES)]
   .map(a => a.sort())
   .map((variant) => ({
     name: variant.length > 0 ? `plausible.${variant.join('.')}.js` : 'plausible.js',
