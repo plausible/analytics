@@ -13,7 +13,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_GLOBALS = {
   COMPILE_HASH: false,
   COMPILE_OUTBOUND_LINKS: false,
-  COMPILE_EXCLUSIONS: false,
   COMPILE_COMPAT: false,
   COMPILE_LOCAL: false,
   COMPILE_MANUAL: false,
@@ -21,7 +20,9 @@ const DEFAULT_GLOBALS = {
   COMPILE_PAGEVIEW_PROPS: false,
   COMPILE_TAGGED_EVENTS: false,
   COMPILE_REVENUE: false,
-  COMPILE_TRACKER_SCRIPT_VERSION: packageJson.tracker_script_version
+  COMPILE_EXCLUSIONS: false,
+  COMPILE_TRACKER_SCRIPT_VERSION: packageJson.tracker_script_version,
+  COMPILE_CONFIG: false
 }
 
 export async function compileAll(options = {}) {
