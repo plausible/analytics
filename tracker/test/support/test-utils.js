@@ -187,12 +187,20 @@ export const blurAndFocusPage = async function(page, options = {}) {
   await focus(page)
 }
 
+// Custom assertion methods for checking plausible request bodies
+export const e = {
+  stringContaining: (value) => ({
+    expected: value,
+    __expectation__: (actual) => actual.includes(value)
+  })
+}
+
 function includesSubset(body, subset) {
   return Object.keys(subset).every((key) => {
-    if (typeof subset[key] === 'object') {
+    if (typeof subset[key] === 'object' && !subset[key].__expectation__) {
       return typeof body[key] === 'object' && areFlatObjectsEqual(body[key], subset[key])
     } else {
-      return body[key] === subset[key]
+      return checkEqual(body[key], subset[key])
     }
   })
 }
@@ -205,7 +213,14 @@ function areFlatObjectsEqual(obj1, obj2) {
 
   if (keys1.length !== keys2.length) return false;
 
-  return keys1.every(key => obj2[key] === obj1[key])
+  return keys1.every(key => checkEqual(obj2[key], obj1[key]))
+}
+
+function checkEqual(a, b) {
+  if (typeof b === 'object' && b.__expectation__) {
+    return b.__expectation__(a)
+  }
+  return a === b
 }
 
 function delay(ms) {
