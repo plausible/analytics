@@ -15,8 +15,8 @@
     config = "<%= @config_json %>"
   }
 
-  var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint()
-  var dataDomain = scriptEl.getAttribute('data-domain')
+  var endpoint = COMPILE_CONFIG ? config.endpoint : (scriptEl.getAttribute('data-api') || defaultEndpoint())
+  var dataDomain = COMPILE_CONFIG ? config.domain : scriptEl.getAttribute('data-domain')
 
   function onIgnoredEvent(eventName, reason, options) {
     if (reason) console.warn('Ignoring Event: ' + reason);

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Plausible Playwright tests</title>
+</head>
+
+<body>
+  <script>
+    const params = new URLSearchParams(window.location.search)
+    const config = params.get('script_config')
+
+    // Trick to load the script with the passed config
+    const script = document.createElement('script')
+    script.src = `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(config)}`
+    document.body.appendChild(script)
+  </script>
+</body>
+</html>
