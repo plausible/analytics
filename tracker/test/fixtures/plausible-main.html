@@ -9,13 +9,31 @@
 </head>
 
 <body>
+  <a id="file-download" href="https://awesome.website.com/file.pdf">Download</a>
+
+  <a id="outbound-link" href="https://example.com">Outbound link</a>
+
+  <a id="manual-pageview" onclick="plausible('pageview', { u: '/:test-plausible-main' })">Manual pageview</a>
+
+  <button id="tagged-event" class="plausible-event-name=Purchase plausible-event-foo=bar plausible-revenue-currency=EUR plausible-revenue-amount=13.32">
+    Tagged event
+  </button>
+
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
   <script>
     const params = new URLSearchParams(window.location.search)
-    const config = params.get('script_config')
+
+    if (params.has('before_script_loaded')) {
+      const beforeScriptLoaded = params.get('before_script_loaded')
+      eval(beforeScriptLoaded)
+    }
 
     // Trick to load the script with the passed config
+    const config = params.get('script_config')
     const script = document.createElement('script')
     script.src = `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(config)}`
+    script.setAttribute('event-some-prop', '456')
+
     document.body.appendChild(script)
   </script>
 </body>

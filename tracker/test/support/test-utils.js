@@ -79,6 +79,7 @@ export const expectPlausibleInAction = async function (page, {
   action,
   expectedRequests = [],
   refutedRequests = [],
+  pathToMock = '/api/event',
   awaitedRequestCount,
   expectedRequestCount,
   responseDelay,
@@ -90,7 +91,7 @@ export const expectPlausibleInAction = async function (page, {
 
   const plausibleRequestMockList = mockManyRequests({
     page,
-    path: '/api/event',
+    path: pathToMock,
     responseDelay,
     shouldIgnoreRequest,
     numberOfRequests: requestsToAwait,
@@ -192,6 +193,10 @@ export const e = {
   stringContaining: (value) => ({
     expected: value,
     __expectation__: (actual) => actual.includes(value)
+  }),
+  toBeUndefined: () => ({
+    expected: undefined,
+    __expectation__: (actual) => actual === undefined
   })
 }
 
