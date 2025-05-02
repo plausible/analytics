@@ -5,7 +5,6 @@
     "deploy": "node compile.js",
     "test": "npx playwright test",
     "test:local": "npx playwright test",
-    "report-sizes": "node report-sizes.js",
     "start": "node test/support/server.js"
   },
   "license": "MIT",
