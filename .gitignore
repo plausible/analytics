@@ -44,6 +44,8 @@ npm-debug.log
 # Stored hash of source tracker files used in development environment
 # to detect changes in /tracker/src and avoid unnecessary compilation.
 /tracker/compiler/last-hash.txt
+# Temporary file used by analyze-sizes.js
+/tracker/compiler/.analyze-sizes.json
 
 # test coverage directory
 /assets/coverage
