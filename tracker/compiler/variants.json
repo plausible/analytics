@@ -9,7 +9,6 @@
         "COMPILE_CONFIG": true,
         "COMPILE_HASH": true,
         "COMPILE_OUTBOUND_LINKS": true,
-        "COMPILE_EXCLUSIONS": true,
         "COMPILE_LOCAL": true,
         "COMPILE_MANUAL": true,
         "COMPILE_FILE_DOWNLOADS": true,
