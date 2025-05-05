@@ -30,6 +30,12 @@ defmodule Plausible.Application do
           n_lock_partitions: 1,
           global_ttl: :timer.minutes(60)
         ),
+        Plausible.Cache.Adapter.child_spec(:site_throttles, :cache_site_throttles,
+          ttl_check_interval: :timer.minutes(5),
+          global_ttl: :timer.minutes(15),
+          n_lock_partitions: 1,
+          ets_options: [read_concurrency: true, write_concurrency: true]
+        ),
         Plausible.Cache.Adapter.child_spec(:user_agents, :cache_user_agents,
           ttl_check_interval: :timer.minutes(5),
           global_ttl: :timer.minutes(60),
