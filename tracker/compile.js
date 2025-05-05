@@ -23,10 +23,9 @@ const { values, positionals } = parseArgs({
 })
 
 if (values.help) {
-  console.log('Usage: node compile.js [options]')
+  console.log('Usage: node compile.js [...compile-ids] [flags]')
   console.log('Options:')
   console.log('  --target hash,outbound-links,exclusions   Only compile variants that contain all specified features')
-  console.log('  --only hash,outbound-links,exclusions     Only compile a specific variant')
   console.log('  --watch, -w                               Watch src/ directory for changes and recompile')
   console.log('  --suffix, -s                              Suffix to add to the output file name. Used for testing script size changes')
   console.log('  --help                                    Show this help message')
