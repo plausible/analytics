@@ -58,9 +58,10 @@ minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
 
 loadtest-server:
+	@echo "Ensure your OTP installation is built with --enable-lock-counter"
 	MIX_ENV=dev LOADTEST=1 ERL_FLAGS="-emu_type lcnt +Mdai max" iex -S mix phx.server
 
 loadtest-client:
-	echo "Set your ulimits/ephermeal ports high..."
-	sleep 3
+	@echo "Set your limits for file descriptors/ephermeal ports high... Test begins shortly"
+	@sleep 5
 	k6 run test/load/script.js 

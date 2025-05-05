@@ -334,8 +334,6 @@ config :plausible, PlausibleWeb.Endpoint,
 if config_env() in [:dev, :ce_dev] do
   loadtest_mode = get_var_from_path_or_env(config_dir, "LOADTEST")
 
-  IO.puts("LOADTEST")
-
   if loadtest_mode do
     config :plausible, PlausibleWeb.Endpoint,
       debug_errors: false,
