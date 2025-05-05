@@ -82,12 +82,14 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         counter(
           metric_prefix ++ [:plausible_cache, :hit],
           event_name: ConCache.Operations.telemetry_hit(),
-          tags: [:name]
+          tags: [:name],
+          tag_values: &%{name: &1.cache.name}
         ),
         counter(
           metric_prefix ++ [:plausible_cache, :miss],
           event_name: ConCache.Operations.telemetry_miss(),
-          tags: [:name]
+          tags: [:name],
+          tag_values: &%{name: &1.cache.name}
         ),
         distribution(
           metric_prefix ++ [:sessions, :transfer, :duration],
