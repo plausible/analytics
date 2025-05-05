@@ -331,6 +331,41 @@ config :plausible, PlausibleWeb.Endpoint,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
 
+if config_env() in [:dev, :ce_dev] do
+  loadtest_mode = get_var_from_path_or_env(config_dir, "LOADTEST")
+
+  if loadtest_mode do
+    config :plausible, PlausibleWeb.Endpoint,
+      debug_errors: false,
+      code_reloader: false
+  else
+    config :plausible, PlausibleWeb.Endpoint,
+      debug_errors: true,
+      code_reloader: true,
+      watchers: [
+        esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+        tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]},
+        storybook_tailwind: {Tailwind, :install_and_run, [:storybook, ~w(--watch)]},
+        npm: ["--prefix", "assets", "run", "typecheck", "--", "--watch", "--preserveWatchOutput"],
+        npm: [
+          "run",
+          "deploy",
+          cd: Path.expand("../tracker", __DIR__)
+        ]
+      ],
+      live_reload: [
+        dirs: [
+          "extra"
+        ],
+        patterns: [
+          ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
+          ~r"lib/plausible_web/(controllers|live|components|templates|views|plugs)/.*(ex|heex)$",
+          ~r"storybook/.*(exs)$"
+        ]
+      ]
+  end
+end
+
 # maybe enable HTTPS in CE
 if config_env() in [:ce, :ce_dev, :ce_test] do
   if https_port do
