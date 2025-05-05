@@ -211,7 +211,7 @@ clean-up process to act as a rate limiter.</p>
     </a>
     <h1 class="signature" translate="no">check_rate(table \\ __MODULE__, key, scale, limit, increment \\ 1)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/rate_limit.ex#L35" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/rate_limit.ex#L33" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -281,7 +281,7 @@ when key: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term
 
       </div>
 
-<p>Starts the process that creates and cleans the ETS table.</p><p>Accepts the following options:</p><ul><li><code class="inline">GenServer.options()</code></li><li><code class="inline">:table</code> for the ETS table name, defaults to <a href="Plausible.RateLimit.html"><code class="inline">Elixir.Plausible.RateLimit</code></a></li><li><code class="inline">:clean_period</code> for how often to perform garbage collection</li></ul>
+<p>Starts the process that creates and cleans the ETS table.</p><p>Accepts the following options:</p><ul><li><code class="inline">GenServer.option()</code></li><li><code class="inline">:table</code> for the ETS table name, defaults to <a href="Plausible.RateLimit.html"><code class="inline">Elixir.Plausible.RateLimit</code></a></li><li><code class="inline">:clean_period</code> for how often to perform garbage collection</li></ul>
   </section>
 </section>
 

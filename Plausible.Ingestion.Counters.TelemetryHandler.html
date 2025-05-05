@@ -139,7 +139,7 @@ Pages
 
     <section id="moduledoc">
 <p>Subscribes to telemetry events emitted by <a href="Plausible.Ingestion.Event.html"><code class="inline">Plausible.Ingestion.Event</code></a>.
-Every time a request derived event is dropped,
+Every time a request derived event is either dispatched to clickhouse or dropped,
 a telemetry event is emitted respectively. That event is captured here,
 its metadata is extracted and sent for internal stats aggregation via
 <code class="inline">Counters.Buffer</code> interface.</p>
@@ -196,7 +196,7 @@ its metadata is extracted and sent for internal stats aggregation via
     </a>
     <h1 class="signature" translate="no">handle_event(list, measurements, map, buffer)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/counters/telemetry_handler.ex#L29" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/counters/telemetry_handler.ex#L30" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -223,7 +223,7 @@ its metadata is extracted and sent for internal stats aggregation via
     </a>
     <h1 class="signature" translate="no">install(buffer)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/counters/telemetry_handler.ex#L18" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/counters/telemetry_handler.ex#L19" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
