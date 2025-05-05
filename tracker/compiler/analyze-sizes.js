@@ -225,7 +225,7 @@ function formatPercentage(value) {
 }
 
 function addSign(value) {
-  return +value > 0 ? `+${value}` : +value
+  return +value >= 0 ? `+${value}` : +value
 }
 
 function readPlausibleScriptSizes() {
