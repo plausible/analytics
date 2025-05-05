@@ -19,6 +19,11 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
              handler.config == buffer and
                handler.event_name == Event.telemetry_event_dropped()
            end)
+
+    assert Enum.find(all_handlers, fn handler ->
+             handler.config == buffer and
+               handler.event_name == Event.telemetry_event_buffered()
+           end)
   end
 
   test "handles ingest events by aggregating the counts", %{test: test} do
@@ -39,8 +44,14 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
       request: %{timestamp: NaiveDateTime.utc_now(), tracker_script_version: 137}
     }
 
+    e3 = %{
+      domain: "c.example.com",
+      request: %{timestamp: NaiveDateTime.utc_now(), tracker_script_version: 137}
+    }
+
     :ok = Event.emit_telemetry_dropped(e1, :invalid)
     :ok = Event.emit_telemetry_dropped(e2, :not_found)
+    :ok = Event.emit_telemetry_buffered(e3)
     :ok = Event.emit_telemetry_dropped(e2, :not_found)
 
     future = DateTime.utc_now() |> DateTime.add(120, :second)
@@ -49,5 +60,6 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
 
     assert Enum.find(aggregates, &match?({_, "dropped_invalid", "a.example.com", 137, 1}, &1))
     assert Enum.find(aggregates, &match?({_, "dropped_not_found", "b.example.com", 137, 2}, &1))
+    assert Enum.find(aggregates, &match?({_, "buffered", "c.example.com", 137, 1}, &1))
   end
 end
