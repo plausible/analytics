@@ -28,7 +28,7 @@
       </.input>
 
       <.input
-        x-on:click="showNotice = true"
+        x-on:click={"showNotice = " <> if(@sites_api_enabled?, do: "false", else: "true")}
         type="radio"
         id={f[:type].id <> "_1"}
         name={f[:type].name}
