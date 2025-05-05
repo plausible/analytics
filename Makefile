@@ -56,3 +56,11 @@ minio: ## Start a transient container with a recent version of minio (s3)
 
 minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
+
+loadtest-server:
+	MIX_ENV=dev LOADTEST=1 ERL_FLAGS="-emu_type lcnt +Mdai max" iex -S mix phx.server
+
+loadtest-client:
+	echo "Set your ulimits/ephermeal ports high..."
+	sleep 3
+	k6 run test/load/script.js 
