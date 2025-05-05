@@ -29,32 +29,14 @@ function newParams() {
 }
 
 export const options = {
-  scenarios: {
-    wave1: {
-      executor: "constant-vus",
-      startTime: "0s",
-      vus: 30000,
-      duration: "60s",
-    },
-    wave2: {
-      executor: "constant-vus",
-      startTime: "61s",
-      vus: 20000,
-      duration: "60s",
-    },
-    wave3: {
-      executor: "constant-vus",
-      startTime: "121s",
-      vus: 30000,
-      duration: "60s",
-    },
-    wave4: {
-      executor: "constant-vus",
-      startTime: "180s",
-      vus: 25000,
-      duration: "60s",
-    },
-  },
+  stages: [
+    { target: 10000, duration: "10s" },
+    { target: 15000, duration: "20s" },
+    { target: 20000, duration: "30s" },
+    { target: 20000, duration: "30s" },
+    { target: 30000, duration: "30s" },
+    { target: 30000, duration: "90s" },
+  ],
 };
 
 export default function () {
