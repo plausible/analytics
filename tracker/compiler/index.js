@@ -67,20 +67,16 @@ export function compileFile(variant, options) {
   }
 }
 
-export function featureToCompileKey(feature) {
-  return `COMPILE_${feature.replace('-', '_').toUpperCase()}`
-}
-
 function getVariantsToCompile(options) {
   let targetVariants = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
   if (options.targets !== null) {
     targetVariants = targetVariants.filter(variant =>
-      options.targets.every(target => variant.features.includes(target))
+      options.targets.every(target => variant.compileIds.includes(target))
     )
   }
   if (options.only !== null) {
     targetVariants = targetVariants.filter(variant =>
-      options.only.some(target_features => equalLists(variant.features, target_features))
+      options.only.some(targetCompileIds => equalLists(variant.compileIds, targetCompileIds))
     )
   }
 

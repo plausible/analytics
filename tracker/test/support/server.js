@@ -1,7 +1,8 @@
 import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'url'
-import { compileFile, featureToCompileKey } from '../../compiler/index.js'
+import { compileFile } from '../../compiler/index.js'
+import variantsFile from '../../compiler/variants.json' with { type: 'json' }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const isMainModule = fileURLToPath(import.meta.url) === process.argv[1];
@@ -9,6 +10,7 @@ const isMainModule = fileURLToPath(import.meta.url) === process.argv[1];
 const app = express();
 const LOCAL_SERVER_PORT = 3000
 const FIXTURES_PATH = path.join(__dirname, '/../fixtures')
+const VARIANTS = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
 
 export const LOCAL_SERVER_ADDR = `http://localhost:${LOCAL_SERVER_PORT}`
 
@@ -17,14 +19,10 @@ export function runLocalFileServer() {
 
   app.get('/tracker/js/:name', (req, res) => {
     const name = req.params.name
-    const features = name.split('.').filter((feature) => !['js', 'plausible'].includes(feature))
-    const variant = {
-      name,
-      features,
-      globals: Object.fromEntries(features.map((feature) => [featureToCompileKey(feature), true]))
-    }
+    const variant = VARIANTS.find((variant) => variant.name === name)
 
     const code = compileFile(variant, { returnCode: true })
+
     res.send(code)
   });
 
