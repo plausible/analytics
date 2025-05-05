@@ -70,17 +70,9 @@ defmodule Plausible.Site.GateKeeper do
     key = Keyword.get(opts, :key, key(site.domain))
     scale_ms = site.ingest_rate_limit_scale_seconds * 1_000
 
-    if Plausible.Cache.Adapter.get(:site_throttles, key(site.domain)) do
-      :throttle
-    else
-      case RateLimit.check_rate(key, scale_ms, threshold) do
-        {:deny, _} ->
-          Plausible.Cache.Adapter.put(:site_throttles, key(site.domain), true)
-          :throttle
-
-        {:allow, _} ->
-          {:allow, site}
-      end
+    case RateLimit.check_rate(key, scale_ms, threshold) do
+      {:deny, _} -> :throttle
+      {:allow, _} -> {:allow, site}
     end
   end
 end
