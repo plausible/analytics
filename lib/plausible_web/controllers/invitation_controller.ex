@@ -12,7 +12,7 @@ defmodule PlausibleWeb.InvitationController do
     current_user = conn.assigns.current_user
     team = conn.assigns.current_team
 
-    case Teams.Invitations.Accept.accept_invitation(invitation_id, current_user, team) do
+    case Teams.Invitations.Accept.accept(invitation_id, current_user, team) do
       {:ok, result} ->
         team = result.team
 
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.InvitationController do
         else
           conn
           |> put_flash(:success, "You now have access to \"#{team.name}\" team")
-          |> redirect(to: Routes.site_path(conn, :index))
+          |> redirect(to: Routes.site_path(conn, :index, __team: team.identifier))
         end
 
       {:error, :invitation_not_found} ->
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   def reject_invitation(conn, %{"invitation_id" => invitation_id}) do
-    case Teams.Invitations.Reject.reject_invitation(invitation_id, conn.assigns.current_user) do
+    case Teams.Invitations.Reject.reject(invitation_id, conn.assigns.current_user) do
       {:ok, _invitation} ->
         conn
         |> put_flash(:success, "You have rejected the invitation")
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   def remove_invitation(conn, %{"invitation_id" => invitation_id}) do
-    case Teams.Invitations.RemoveFromSite.remove_invitation(invitation_id, conn.assigns.site) do
+    case Teams.Invitations.RemoveFromSite.remove(invitation_id, conn.assigns.site) do
       {:ok, invitation_or_transfer} ->
         {site, email} =
           case invitation_or_transfer do

@@ -44,7 +44,7 @@ defmodule Plausible.MixProject do
           :runtime_tools,
           :tls_certificate_check,
           :opentelemetry_exporter
-        ] ++ if(Mix.env() == :dev, do: [:observer, :wx], else: [])
+        ] ++ if(Mix.env() == :dev, do: [:tools, :observer, :wx], else: [])
     ]
   end
 

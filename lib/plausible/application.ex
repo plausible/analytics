@@ -18,7 +18,6 @@ defmodule Plausible.Application do
         {PartitionSupervisor,
          child_spec: Task.Supervisor, name: Plausible.UserAgentParseTaskSupervisor},
         Plausible.Session.BalancerSupervisor,
-        Plausible.Cache.Stats,
         Plausible.PromEx,
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         Plausible.Repo,

@@ -11,9 +11,15 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   def mount(params, _session, socket) do
     socket =
-      assign_new(socket, :invitation, fn ->
+      socket
+      |> assign_new(:invitation, fn ->
         if invitation_id = params["invitation_id"] do
           find_by_id_unified(invitation_id)
+        end
+      end)
+      |> assign_new(:team_identifier, fn %{invitation: invitation} ->
+        if invitation do
+          invitation.team_identifier
         end
       end)
 
@@ -100,6 +106,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
         phx-trigger-action={@trigger_submit}
       >
         <input name="user[register_action]" type="hidden" value={@live_action} />
+        <input
+          :if={@team_identifier}
+          name="user[team_identifier]"
+          type="hidden"
+          value={@team_identifier}
+        />
 
         <%= if @invitation do %>
           <.email_input field={f[:email]} for_invitation={true} />
@@ -365,7 +377,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     invitation =
       Teams.Invitation
       |> Repo.get_by(invitation_id: id)
-      |> Repo.preload(:inviter)
+      |> Repo.preload(:team)
 
     case invitation do
       nil ->
@@ -375,7 +387,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
         {:ok,
          %{
            type: :team_invitation,
-           email: team_invitation.email
+           email: team_invitation.email,
+           team_identifier: team_invitation.team.identifier
          }}
     end
   end
@@ -384,7 +397,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     invitation =
       Teams.GuestInvitation
       |> Repo.get_by(invitation_id: id)
-      |> Repo.preload([:site, team_invitation: :inviter])
+      |> Repo.preload(:team_invitation)
 
     case invitation do
       nil ->
@@ -394,7 +407,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
         {:ok,
          %{
            type: :guest_invitation,
-           email: guest_invitation.team_invitation.email
+           email: guest_invitation.team_invitation.email,
+           team_identifier: nil
          }}
     end
   end
@@ -403,7 +417,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
     transfer =
       Teams.SiteTransfer
       |> Repo.get_by(transfer_id: id)
-      |> Repo.preload([:site, :initiator])
 
     case transfer do
       nil ->
@@ -413,7 +426,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
         {:ok,
          %{
            type: :site_transfer,
-           email: transfer.email
+           email: transfer.email,
+           team_identifier: nil
          }}
     end
   end

@@ -215,7 +215,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           status: existing.status
         })
       else
-        case Teams.Invitations.InviteToSite.create_invitation(
+        case Teams.Invitations.InviteToSite.invite(
                site,
                conn.assigns.current_user,
                email,

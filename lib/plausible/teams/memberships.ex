@@ -56,16 +56,6 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
-  def can_transfer_site?(team, user) do
-    case team_role(team, user) do
-      {:ok, role} when role in [:owner, :admin] ->
-        true
-
-      _ ->
-        false
-    end
-  end
-
   @spec site_role(Plausible.Site.t(), Auth.User.t() | nil) ::
           {:ok, {:team_member | :guest_member, Teams.Membership.role()}} | {:error, :not_a_member}
 

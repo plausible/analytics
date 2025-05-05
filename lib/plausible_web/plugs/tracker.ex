@@ -61,12 +61,15 @@ defmodule PlausibleWeb.Tracker do
     end
   end
 
+  # Variants which do not factor into output
+  @ignore_variants ["js", "pageleave"]
+
   defp sorted_script_variant(requested_filename) do
     case String.split(requested_filename, ".") do
       [base_filename | rest] when base_filename in @base_filenames ->
         sorted_variants =
           rest
-          |> List.delete("js")
+          |> Enum.reject(&(&1 in @ignore_variants))
           |> Enum.sort()
 
         Enum.join(["plausible"] ++ sorted_variants ++ ["js"], ".")

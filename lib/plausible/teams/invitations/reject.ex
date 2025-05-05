@@ -6,10 +6,10 @@ defmodule Plausible.Teams.Invitations.Reject do
   alias Plausible.Auth
   alias Plausible.Teams
 
-  @spec reject_invitation(String.t(), Auth.User.t()) ::
+  @spec reject(String.t(), Auth.User.t()) ::
           {:ok, Teams.GuestInvitation.t() | Teams.SiteTransfer.t()}
           | {:error, :invitation_not_found}
-  def reject_invitation(invitation_or_transfer_id, user) do
+  def reject(invitation_or_transfer_id, user) do
     with {:ok, invitation_or_transfer} <-
            Teams.Invitations.find_for_user(invitation_or_transfer_id, user) do
       do_reject(invitation_or_transfer)

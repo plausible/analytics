@@ -233,6 +233,9 @@
     if (options && options.props) {
       payload.p = options.props
     }
+    if (options && options.interactive === false) {
+      payload.i = false
+    }
     {{#if revenue}}
     if (options && options.revenue) {
       payload.$ = options.revenue

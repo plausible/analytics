@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
                "You now have access to \"#{team.name}\" team"
 
-      assert redirected_to(conn) == "/sites"
+      assert redirected_to(conn) == "/sites?__team=#{team.identifier}"
 
       refute Repo.get_by(Teams.Invitation, email: user.email)
 

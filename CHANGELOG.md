@@ -3,11 +3,18 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-### Added 
+### Added
 
-### Removed 
+- Custom events can now be marked as non-interactive in events API and tracker script. Events marked as non-interactive are not counted towards bounce rate.
 
-### Changed 
+
+### Removed
+
+- `pageleave` tracker script variant is no longer compiled but is still available from /js endpoint.
+
+### Changed
+
+- A session is now marked as a bounce if it has less than 2 pageviews and no interactive custom events.
 
 ### Fixed
 

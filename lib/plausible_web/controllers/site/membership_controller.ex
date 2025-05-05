@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
       |> Plausible.Repo.preload(:owners)
 
-    case Teams.Invitations.InviteToSite.create_invitation(
+    case Teams.Invitations.InviteToSite.invite(
            site,
            conn.assigns.current_user,
            email,
@@ -113,7 +113,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site =
       Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
-    case Teams.Invitations.InviteToSite.create_invitation(
+    case Teams.Invitations.InviteToSite.invite(
            site,
            conn.assigns.current_user,
            email,
@@ -178,7 +178,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     destination_team =
       Repo.one!(Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier))
 
-    case Teams.Invitations.Accept.change_team(
+    case Teams.Sites.Transfer.change_team(
            site,
            conn.assigns.current_user,
            destination_team
