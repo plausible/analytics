@@ -1,142 +1,142 @@
 [
   {
-    "features": [
-      "goals",
-      "props",
-      "stats_api"
-    ],
-    "generation": 2,
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 10000,
     "monthly_product_id": "78053",
+    "yearly_product_id": "78054",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78054"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 100000,
     "monthly_product_id": "78055",
+    "yearly_product_id": "78056",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78056"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 200000,
     "monthly_product_id": "78057",
+    "yearly_product_id": "78058",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78058"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 500000,
     "monthly_product_id": "78059",
+    "yearly_product_id": "78060",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78060"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 1000000,
     "monthly_product_id": "78061",
+    "yearly_product_id": "78062",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78062"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 2000000,
     "monthly_product_id": "78063",
+    "yearly_product_id": "78064",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78064"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 5000000,
     "monthly_product_id": "78065",
+    "yearly_product_id": "78066",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78066"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 10000000,
     "monthly_product_id": "78067",
+    "yearly_product_id": "78068",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78068"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 20000000,
     "monthly_product_id": "78069",
+    "yearly_product_id": "78070",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78070"
-  },
-  {
     "features": [
       "goals",
       "props",
       "stats_api"
-    ],
-    "generation": 2,
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 2,
     "monthly_pageview_limit": 50000000,
     "monthly_product_id": "78071",
+    "yearly_product_id": "78072",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78072"
+    "features": [
+      "goals",
+      "props",
+      "stats_api"
+    ]
   }
 ]

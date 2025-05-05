@@ -158,9 +158,30 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
           "monthly_product_id" => to_string(sandbox_monthly_product_id),
           "yearly_product_id" => to_string(sandbox_yearly_product_id)
         })
+        |> order_keys()
       end)
 
-    File.write!(filepath, JSON.encode!(sandbox_plans))
+    content = Jason.encode!(sandbox_plans, pretty: true)
+    File.write!(filepath, content)
+  end
+
+  @plan_key_order [
+    "kind",
+    "generation",
+    "monthly_pageview_limit",
+    "monthly_product_id",
+    "yearly_product_id",
+    "site_limit",
+    "team_member_limit",
+    "features"
+  ]
+  defp order_keys(plan) do
+    plan
+    |> Map.to_list()
+    |> Enum.sort_by(fn {key, _value} ->
+      Enum.find_index(@plan_key_order, fn ordered_key -> ordered_key == key end) || 99
+    end)
+    |> Jason.OrderedObject.new()
   end
 
   defp put_prices(plans) do
