@@ -19,6 +19,7 @@ import { fileURLToPath } from 'url'
 import { execSync } from 'child_process'
 import { parseArgs } from 'node:util'
 import { markdownTable } from 'markdown-table'
+import variantsFile from './variants.json' with { type: 'json' }
 
 const { values } = parseArgs({
   options: {
@@ -65,10 +66,10 @@ if (values.usePreviousData) {
   fs.writeFileSync(path.join(__dirname, '.analyze-sizes.json'), JSON.stringify(fileData))
 }
 
-// :TODO: list of new_variants could come from variants.json
+const manualVariants = variantsFile.manualVariants.map((variant) => `'${variant.name}'`).join(', ')
 const ctes = `
 WITH
-  array('plausible-main.js') as new_variants,
+  array(${manualVariants}) as manual_variants,
   array(
     'plausible.js',
     'plausible.hash.js',
@@ -79,7 +80,7 @@ WITH
   data AS (
     SELECT
       variant,
-      not has(new_variants, variant) as is_legacy_variant,
+      not has(manual_variants, variant) as is_legacy_variant,
       sumIf(uncompressed, suffix = '${baselineSuffix}') as baseline_uncompressed,
       sumIf(gzip, suffix = '${baselineSuffix}') as baseline_gzip,
       sumIf(brotli, suffix = '${baselineSuffix}') as baseline_brotli,
