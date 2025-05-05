@@ -115,7 +115,7 @@ defmodule PlausibleWeb.SettingsController do
     current_team = conn.assigns.current_team
 
     sites_api_enabled? =
-      Plausible.Billing.Feature.SitesAPI.check_availability(current_team) != :ok
+      Plausible.Billing.Feature.SitesAPI.check_availability(current_team) == :ok
 
     api_key_fn =
       if type == "sites_api" do
