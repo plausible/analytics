@@ -73,6 +73,28 @@ defmodule Plausible.CrmExtensions do
       [
         Phoenix.HTML.raw("""
         <script type="text/javascript">
+          (() => {
+            const statsFeature = document.querySelector(`input[type=checkbox][value=stats_api]`)
+            const sitesFeature = document.querySelector(`input[type=checkbox][value=sites_api]`)
+
+            statsFeature.addEventListener("change", () => {
+              if (!statsFeature.checked) {
+                sitesFeature.checked = false
+              }
+              return true;
+            })
+
+            sitesFeature.addEventListener("change", () => {
+              if (sitesFeature.checked) {
+                statsFeature.checked = true
+              }
+              return true;
+            })
+          })()
+        </script>
+        """),
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
           (async () => {
             const CHECK_INTERVAL = 300
 

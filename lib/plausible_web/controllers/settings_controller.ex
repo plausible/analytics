@@ -102,23 +102,44 @@ defmodule PlausibleWeb.SettingsController do
   def new_api_key(conn, _params) do
     current_team = conn.assigns[:current_team]
 
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, current_team, %{})
+    sites_api_enabled? =
+      Plausible.Billing.Feature.SitesAPI.check_availability(current_team) == :ok
 
-    render(conn, "new_api_key.html", changeset: changeset)
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{type: "stats_api"}, current_team, %{})
+
+    render(conn, "new_api_key.html", changeset: changeset, sites_api_enabled?: sites_api_enabled?)
   end
 
-  def create_api_key(conn, %{"api_key" => %{"name" => name, "key" => key}}) do
+  def create_api_key(conn, %{"api_key" => %{"name" => name, "key" => key, "type" => type}}) do
     current_user = conn.assigns.current_user
     current_team = conn.assigns.current_team
 
-    case Auth.create_api_key(current_user, current_team, name, key) do
+    sites_api_enabled? =
+      Plausible.Billing.Feature.SitesAPI.check_availability(current_team) == :ok
+
+    api_key_fn =
+      if type == "sites_api" do
+        &Auth.create_sites_api_key/4
+      else
+        &Auth.create_stats_api_key/4
+      end
+
+    case api_key_fn.(current_user, current_team, name, key) do
       {:ok, _api_key} ->
         conn
         |> put_flash(:success, "API key created successfully")
         |> redirect(to: Routes.settings_path(conn, :api_keys) <> "#api-keys")
 
+      {:error, :upgrade_required} ->
+        conn
+        |> put_flash(:error, "Your current subscription plan does not include Sites API access")
+        |> redirect(to: Routes.settings_path(conn, :new_api_key))
+
       {:error, changeset} ->
-        render(conn, "new_api_key.html", changeset: changeset)
+        render(conn, "new_api_key.html",
+          changeset: changeset,
+          sites_api_enabled?: sites_api_enabled?
+        )
     end
   end
 

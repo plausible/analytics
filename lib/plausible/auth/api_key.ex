@@ -14,6 +14,8 @@ defmodule Plausible.Auth.ApiKey do
     field :name, :string
     field :scopes, {:array, :string}, default: ["stats:read:*"]
 
+    field :type, :string, virtual: true
+
     field :key, :string, virtual: true
     field :key_hash, :string
     field :key_prefix, :string
