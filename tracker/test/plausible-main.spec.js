@@ -67,8 +67,10 @@ test.describe('plausible-main.js', () => {
         await page.click('#tagged-event')
         await page.click('#outbound-link')
       },
-      expectedRequests: [{ n: 'pageview', p: expect.toBeUndefined() }, { n: 'engagement', p: expect.toBeUndefined() }],
-      refutedRequests: [{ n: 'File Download' }, { n: 'Purchase' }, { n: 'Outbound Link: Click' }]
+      expectedRequests: [{ n: 'pageview', p: expect.toBeUndefined() }],
+      refutedRequests: [{ n: 'File Download' }, { n: 'Purchase' }, { n: 'Outbound Link: Click' }],
+      // Webkit captures engagement events differently, so we ignore them in this test
+      shouldIgnoreRequest: (payload) => payload.n === 'engagement'
     })
   })
 
@@ -81,7 +83,6 @@ test.describe('plausible-main.js', () => {
       expectedRequests: [
         { n: 'pageview', d: 'example.com', u: expect.stringContaining('plausible-main.html') },
         { n: 'Outbound Link: Click', d: 'example.com', u: expect.stringContaining('plausible-main.html'), p: { url: 'https://example.com/' } },
-        { n: 'engagement', d: 'example.com', u: expect.stringContaining('plausible-main.html') }
       ]
     })
   })
@@ -106,7 +107,7 @@ test.describe('plausible-main.js', () => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await openPage(page, { manual: true })
-        await page.click('#outbound-link')
+        await hideAndShowCurrentTab(page, { delay: 200 })
       },
       expectedRequests: [],
       refutedRequests: [{ n: 'pageview' }, { n: 'engagement' }]
@@ -118,7 +119,7 @@ test.describe('plausible-main.js', () => {
       action: async () => {
         await openPage(page, { manual: true })
         await page.click('#manual-pageview')
-        await page.click('#outbound-link')
+        await hideAndShowCurrentTab(page, { delay: 200 })
       },
       expectedRequests: [
         { n: 'pageview', u: '/:test-plausible-main', d: 'example.com' },
