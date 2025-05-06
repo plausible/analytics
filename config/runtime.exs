@@ -759,7 +759,7 @@ cron_enabled = !disable_cron
 
 thirty_days_in_seconds = 60 * 60 * 24 * 30
 
-if config_env() in [:prod, :ce] do
+if config_env() in [:prod, :ce, :load] do
   config :plausible, Oban,
     repo: Plausible.Repo,
     plugins: [
