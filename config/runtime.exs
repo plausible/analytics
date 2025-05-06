@@ -2,7 +2,7 @@ import Config
 import Plausible.ConfigHelpers
 require Logger
 
-if config_env() in [:dev, :test] do
+if config_env() in [:dev, :test, :load] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
