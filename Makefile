@@ -59,7 +59,7 @@ minio-stop: ## Stop and remove the minio container
 
 loadtest-server:
 	@echo "Ensure your OTP installation is built with --enable-lock-counter"
-	MIX_ENV=load LOADTEST=1 ERL_FLAGS="-emu_type lcnt +Mdai max +sbt db" iex -S mix do phx.digest + phx.server
+	MIX_ENV=load ERL_FLAGS="-emu_type lcnt +Mdai max +sbt db" iex -S mix do phx.digest + phx.server
 
 loadtest-client:
 	@echo "Set your limits for file descriptors/ephemeral ports high... Test begins shortly"
