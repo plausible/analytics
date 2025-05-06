@@ -6,6 +6,7 @@ better test the script in isolation of the plausible codebase.
 */
 
 import {
+  openPage,
   expectPlausibleInAction,
   hideAndShowCurrentTab,
   metaKey,
@@ -20,20 +21,10 @@ const DEFAULT_CONFIG = {
   local: true
 }
 
-async function openPage(page, config, options = {}) {
-  const configJson = JSON.stringify({ ...DEFAULT_CONFIG, ...config })
-  let path = `/plausible-main.html?script_config=${configJson}`
-  if (options.beforeScriptLoaded) {
-    path += `&before_script_loaded=${options.beforeScriptLoaded}`
-  }
-  await page.goto(path)
-  await page.waitForFunction('window.plausible !== undefined')
-}
-
 test.describe('plausible-main.js', () => {
   test('triggers pageview and engagement automatically', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => openPage(page, {}),
+      action: () => openPage(page, {...DEFAULT_CONFIG}),
       expectedRequests: [{ n: 'pageview', d: 'example.com', u: expect.stringContaining('plausible-main.html')}]
     })
 
@@ -45,7 +36,7 @@ test.describe('plausible-main.js', () => {
 
   test('does not trigger any events when `local` config is disabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => openPage(page, { local: false }),
+      action: () => openPage(page, { ...DEFAULT_CONFIG, local: false }),
       expectedRequests: [],
       refutedRequests: [{ n: 'pageview' }]
     })
@@ -54,7 +45,7 @@ test.describe('plausible-main.js', () => {
   test('supports overriding the endpoint with a custom proxy endpoint', async ({ page }) => {
     await expectPlausibleInAction(page, {
       pathToMock: 'http://proxy.io/endpoint',
-      action: () => openPage(page, { endpoint: 'http://proxy.io/endpoint' }),
+      action: () => openPage(page, { ...DEFAULT_CONFIG, endpoint: 'http://proxy.io/endpoint' }),
       expectedRequests: [{ n: 'pageview', d: 'example.com', u: expect.stringContaining('plausible-main.html')}]
     })
   })
@@ -62,7 +53,7 @@ test.describe('plausible-main.js', () => {
   test('does not track pageview props, outbound links, file downloads or tagged events without features being enabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await openPage(page, {})
+        await openPage(page, {...DEFAULT_CONFIG})
         await page.click('#file-download', { modifiers: [metaKey()] })
         await page.click('#tagged-event')
         await page.click('#outbound-link')
@@ -77,7 +68,7 @@ test.describe('plausible-main.js', () => {
   test('tracks outbound links (when feature enabled)', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await openPage(page, { outboundLinks: true })
+        await openPage(page, { ...DEFAULT_CONFIG, outboundLinks: true })
         await page.click('#outbound-link')
       },
       expectedRequests: [
@@ -88,7 +79,7 @@ test.describe('plausible-main.js', () => {
   })
 
   test('tracks file downloads (when feature enabled)', async ({ page }) => {
-    await openPage(page, { fileDownloads: true })
+    await openPage(page, { ...DEFAULT_CONFIG, fileDownloads: true })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#file-download'),
@@ -98,7 +89,7 @@ test.describe('plausible-main.js', () => {
 
   test('tracks pageview props (when feature enabled)', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => openPage(page, { pageviewProps: true}),
+      action: () => openPage(page, { ...DEFAULT_CONFIG, pageviewProps: true}),
       expectedRequests: [{ n: 'pageview', p: { "some-prop": "456" } }]
     })
   })
@@ -106,7 +97,7 @@ test.describe('plausible-main.js', () => {
   test('manual mode does not track pageviews', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await openPage(page, { manual: true })
+        await openPage(page, { ...DEFAULT_CONFIG, manual: true })
         await hideAndShowCurrentTab(page, { delay: 200 })
       },
       expectedRequests: [],
@@ -117,7 +108,7 @@ test.describe('plausible-main.js', () => {
   test('manual mode after manual pageview continues tracking', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await openPage(page, { manual: true })
+        await openPage(page, { ...DEFAULT_CONFIG, manual: true })
         await page.click('#manual-pageview')
         await hideAndShowCurrentTab(page, { delay: 200 })
       },
