@@ -2,7 +2,6 @@ import React, {
   ChangeEventHandler,
   useCallback,
   useState,
-  useRef,
   RefObject
 } from 'react'
 import { isModifierPressed, Keybind } from '../keybinding'
@@ -16,13 +15,12 @@ export const SearchInput = ({
   placeholderFocused = 'Search',
   placeholderUnfocused = 'Press / to search'
 }: {
-  searchRef?: RefObject<HTMLInputElement>
+  searchRef: RefObject<HTMLInputElement>
   onSearch: (value: string) => void
   className?: string
   placeholderFocused?: string
   placeholderUnfocused?: string
 }) => {
-  const ref = useRef<HTMLInputElement>(null)
   const [isFocused, setIsFocused] = useState(false)
 
   const onSearchInputChange: ChangeEventHandler<HTMLInputElement> = useCallback(
@@ -34,12 +32,12 @@ export const SearchInput = ({
   const debouncedOnSearchInputChange = useDebounce(onSearchInputChange)
 
   const blurSearchBox = useCallback(() => {
-    ;(searchRef ?? ref).current?.blur()
+    searchRef.current?.blur()
   }, [searchRef])
 
   const focusSearchBox = useCallback(
     (event: KeyboardEvent) => {
-      ;(searchRef ?? ref).current?.focus()
+      searchRef.current?.focus()
       event.stopPropagation()
     },
     [searchRef]
@@ -52,7 +50,7 @@ export const SearchInput = ({
         type="keyup"
         handler={blurSearchBox}
         shouldIgnoreWhen={[isModifierPressed, () => !isFocused]}
-        targetRef={searchRef ?? ref}
+        targetRef={searchRef}
       />
       <Keybind
         keyboardKey="/"
@@ -64,7 +62,7 @@ export const SearchInput = ({
       <input
         onBlur={() => setIsFocused(false)}
         onFocus={() => setIsFocused(true)}
-        ref={searchRef ?? ref}
+        ref={searchRef}
         type="text"
         placeholder={isFocused ? placeholderFocused : placeholderUnfocused}
         className={classNames(
