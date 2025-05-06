@@ -29,14 +29,16 @@ function newParams() {
 }
 
 export const options = {
-  stages: [
-    { target: 10000, duration: "10s" },
-    { target: 15000, duration: "20s" },
-    { target: 20000, duration: "30s" },
-    { target: 20000, duration: "30s" },
-    { target: 30000, duration: "30s" },
-    { target: 30000, duration: "90s" },
-  ],
+  scenarios: {
+    constant_rps: {
+      executor: "constant-arrival-rate",
+      rate: 12000,
+      timeUnit: "1s",
+      duration: "15m",
+      preAllocatedVUs: 10000,
+      maxVUs: 30000,
+    },
+  },
 };
 
 export default function () {

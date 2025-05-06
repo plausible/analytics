@@ -10,7 +10,7 @@ defmodule Plausible.MixProject do
       version: System.get_env("APP_VERSION", "0.0.1"),
       elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
-      start_permanent: Mix.env() in [:prod, :ce],
+      start_permanent: Mix.env() in [:prod, :ce, :load],
       aliases: aliases(),
       deps: deps(),
       test_coverage: [
@@ -44,7 +44,7 @@ defmodule Plausible.MixProject do
           :runtime_tools,
           :tls_certificate_check,
           :opentelemetry_exporter
-        ] ++ if(Mix.env() == :dev, do: [:tools, :observer, :wx], else: [])
+        ] ++ if(Mix.env() in [:dev, :load], do: [:tools, :observer, :wx], else: [])
     ]
   end
 
@@ -91,7 +91,8 @@ defmodule Plausible.MixProject do
       {:gen_cycle, "~> 1.0.4"},
       {:hackney, "~> 1.8"},
       {:jason, "~> 1.3"},
-      {:kaffy, git: "https://github.com/aesmail/kaffy.git", only: [:dev, :test, :staging, :prod]},
+      {:kaffy,
+       git: "https://github.com/aesmail/kaffy.git", only: [:dev, :test, :staging, :prod, :load]},
       {:location, git: "https://github.com/plausible/location.git"},
       {:mox, "~> 1.0", only: [:test, :ce_test]},
       {:nanoid, "~> 2.1.0"},
