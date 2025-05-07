@@ -42,6 +42,22 @@
                 >
                   CRM
                 </.styled_link>
+
+                <.styled_link
+                  class="text-sm mr-6"
+                  href={
+                    Routes.customer_support_resource_path(
+                      @conn,
+                      :details,
+                      "sites",
+                      "site",
+                      @conn.assigns[:site].id
+                    )
+                  }
+                  new_tab={true}
+                >
+                  CS
+                </.styled_link>
               </li>
               <li
                 :if={ee?() and Plausible.Teams.on_trial?(@conn.assigns[:current_team])}
