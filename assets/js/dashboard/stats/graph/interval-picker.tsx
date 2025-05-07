@@ -131,7 +131,7 @@ export function IntervalPicker({
           shouldIgnoreWhen={[isModifierPressed, isTyping]}
         />
       )}
-      <Popover className="relative inline-block pl-2">
+      <Popover className="relative inline-block">
         {({ close: closeDropdown }) => (
           <>
             <BlurMenuButtonOnEscape targetRef={menuElement} />
