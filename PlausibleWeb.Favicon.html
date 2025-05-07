@@ -206,7 +206,7 @@ headers that should not be forwarded as defined in <a href="https://www.rfc-edit
     </a>
     <h1 class="signature" translate="no">call(conn, list)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/favicon.ex#L92" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/favicon.ex#L91" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -224,8 +224,7 @@ headers that should not be forwarded as defined in <a href="https://www.rfc-edit
 </h2>
 <p>Cases where we show a placeholder icon instead:</p><ol><li>In case of network error to DuckDuckGo</li><li>In case of non-2xx status code from DuckDuckGo</li><li>In case of broken image response body from DuckDuckGo</li></ol><p>I'm not sure why DDG sometimes returns a broken PNG image in their response
 but we filter that out.  When the icon request fails, we show a placeholder
-favicon instead. The placeholder is an emoji from
-<a href="https://favicon.io/emoji-favicons/">https://favicon.io/emoji-favicons/</a></p><p>DuckDuckGo favicon service has some issues with <a href="https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/">SVG favicons</a>.
+favicon instead. The placeholder is an svg from <a href="https://heroicons.com/">https://heroicons.com/</a>.</p><p>DuckDuckGo favicon service has some issues with <a href="https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/">SVG favicons</a>.
 For some reason, they return them with <code class="inline">content-type=image/x-icon</code> whereas SVG
 icons should be returned with <code class="inline">content-type=image/svg+xml</code>. This Plug detects
 when the response body starts with <code class="inline">&lt;svg</code> and will override the <code class="inline">Content-Type</code>
