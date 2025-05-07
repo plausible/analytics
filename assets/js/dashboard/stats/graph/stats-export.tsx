@@ -3,6 +3,7 @@ import * as api from '../../api'
 import { getCurrentInterval } from './interval-picker'
 import { useSiteContext } from '../../site-context'
 import { useQueryContext } from '../../query-context'
+import { Tooltip } from '../../util/tooltip'
 
 export default function StatsExport() {
   const site = useSiteContext()
@@ -56,7 +57,12 @@ export default function StatsExport() {
     const endpoint = `/${encodeURIComponent(site.domain)}/export?${queryParams}`
 
     return (
-      <a href={endpoint} download onClick={startExport}>
+      <a
+        className="block h-4 w-4"
+        href={endpoint}
+        download
+        onClick={startExport}
+      >
         <svg
           className="absolute text-gray-700 feather dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600"
           xmlns="http://www.w3.org/2000/svg"
@@ -76,9 +82,12 @@ export default function StatsExport() {
   }
 
   return (
-    <div className="w-4 h-4 mx-2">
+    <Tooltip
+      info={<div className="font-normal truncate">Click to export stats</div>}
+      className="w-4 h-4"
+    >
       {exporting && renderLoading()}
       {!exporting && renderExportLink()}
-    </div>
+    </Tooltip>
   )
 }

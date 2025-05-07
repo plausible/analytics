@@ -6,14 +6,13 @@ import TopStats from './top-stats'
 import { IntervalPicker, getCurrentInterval } from './interval-picker'
 import StatsExport from './stats-export'
 import WithImportedSwitch from './with-imported-switch'
-import SamplingNotice from './sampling-notice'
+import { getSamplingNotice, NoticesIcon } from './notices'
 import FadeIn from '../../fade-in'
 import * as url from '../../util/url'
 import { isComparisonEnabled } from '../../query-time-periods'
 import LineGraphWithRouter from './line-graph'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
-import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 
 function fetchTopStats(site, query) {
   const q = { ...query }
@@ -152,23 +151,18 @@ export default function VisitorGraph({ updateImportedDataInView }) {
     )
   }
 
-  function renderImportedIntervalUnsupportedWarning() {
+  function getImportedIntervalUnsupportedNotice() {
     const unsupportedInterval = ['hour', 'minute'].includes(
       getCurrentInterval(site, query)
     )
     const showingImported =
       importedSwitchVisible() && query.with_imported === true
 
-    return (
-      <FadeIn
-        show={showingImported && unsupportedInterval}
-        className="h-6 mr-1"
-      >
-        <span tooltip={'Interval is too short to graph imported data'}>
-          <ExclamationCircleIcon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-        </span>
-      </FadeIn>
-    )
+    if (showingImported && unsupportedInterval) {
+      return 'Interval is too short to graph imported data'
+    }
+
+    return null
   }
 
   return (
@@ -194,10 +188,14 @@ export default function VisitorGraph({ updateImportedDataInView }) {
         </div>
         <div className="relative px-2">
           {graphRefreshing && renderLoader()}
-          <div className="absolute right-4 -top-8 py-1 flex items-center">
-            {renderImportedIntervalUnsupportedWarning()}
+          <div className="absolute right-4 -top-8 py-1 flex items-center gap-x-4">
+            <NoticesIcon
+              notices={[
+                getImportedIntervalUnsupportedNotice(),
+                getSamplingNotice(topStatData)
+              ].filter((n) => !!n)}
+            />
             {!isRealtime && <StatsExport />}
-            <SamplingNotice samplePercent={topStatData} />
             {importedSwitchVisible() && (
               <WithImportedSwitch
                 tooltipMessage={topStatData.with_imported_switch.tooltip_msg}
