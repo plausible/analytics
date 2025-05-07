@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
   use PlausibleWeb, :live_view
 
   def mount(
-        %{"domain" => domain} = params,
+        %{"domain" => domain},
         _session,
         socket
       ) do
@@ -18,7 +18,13 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         :viewer
       ])
 
-    {:ok, assign(socket, site: site, flow: "provisioning", installation_type: "manual")}
+    {:ok,
+     assign(socket,
+       site: site,
+       installation_form: to_form(site.installation_meta.script_config),
+       flow: "provisioning",
+       installation_type: "manual"
+     )}
   end
 
   def render(assigns) do
@@ -41,7 +47,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         </:subtitle>
 
         <div :if={@installation_type in ["manual", "GTM"]}>
-          <.snippet_form installation_type={@installation_type} flow={@flow} site={@site} />
+          <.snippet_form
+            installation_form={@installation_form}
+            installation_type={@installation_type}
+            flow={@flow}
+            site={@site}
+          />
         </div>
       </.focus_box>
     </div>
@@ -50,7 +61,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   defp snippet_form(assigns) do
     ~H"""
-    <form id="snippet-form" phx-change="update-script-config">
+    <form id="snippet-form">
       <div class="relative">
         <textarea
           id="snippet"
@@ -72,30 +83,26 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       </div>
 
       <.h2 class="mt-8 text-sm font-medium">Optional measurements</.h2>
-      <.script_extension_control
-        config={@site.installation_meta.script_config}
-        variant="outbound-links"
+      <.script_config_control
+        field={@installation_form["outbound-links"]}
         label="Outbound links"
         tooltip="Automatically track clicks on external links. These count towards your billable pageviews."
         learn_more="https://plausible.io/docs/outbound-link-click-tracking"
       />
-      <.script_extension_control
-        config={@site.installation_meta.script_config}
-        variant="file-downloads"
+      <.script_config_control
+        field={@installation_form["file-downloads"]}
         label="File downloads"
         tooltip="Automatically track file downloads. These count towards your billable pageviews."
         learn_more="https://plausible.io/docs/file-downloads-tracking"
       />
-      <.script_extension_control
-        config={@site.installation_meta.script_config}
-        variant="form-submissions"
+      <.script_config_control
+        field={@installation_form["form-submissions"]}
         label="Form submissions"
         tooltip="Automatically track form submissions. These count towards your billable pageviews."
         learn_more="https://plausible.io/docs/form-submissions-tracking"
       />
-      <.script_extension_control
-        config={@site.installation_meta.script_config}
-        variant="tagged-events"
+      <.script_config_control
+        field={@installation_form["tagged-events"]}
         label="Manual tagging"
         tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
         learn_more="https://plausible.io/docs/custom-event-goals"
@@ -160,20 +167,11 @@ defmodule PlausibleWeb.Live.InstallationV2 do
     """
   end
 
-  defp script_extension_control(assigns) do
+  defp script_config_control(assigns) do
     ~H"""
     <div class="mt-2 p-1 text-sm">
       <div class="flex items-center">
-        <input
-          type="checkbox"
-          id={"check-#{@variant}"}
-          name={@variant}
-          checked={@config[@variant]}
-          class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
-        />
-        <label for={"check-#{@variant}"}>
-          {@label}
-        </label>
+        <.input mt?={false} field={@field} label={@label} type="checkbox" />
         <div class="ml-2 collapse md:visible">
           <.tooltip sticky?={false}>
             <:tooltip_content>
