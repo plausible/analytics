@@ -21,7 +21,8 @@ const linkClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
   popover.items.classNames.hoverLink,
-  popover.items.classNames.roundedStartEnd
+  popover.items.classNames.roundedStart,
+  popover.items.classNames.roundedEnd
 )
 const buttonClassName = classNames(
   'text-white font-medium bg-indigo-600 hover:bg-indigo-700'
@@ -92,11 +93,11 @@ export const SegmentMenu = () => {
               />
             </Popover.Button>
             <Transition
+              as="div"
               {...popover.transition.props}
               className={classNames(
-                'mt-2',
                 popover.transition.classNames.fullwidth,
-                'md:w-auto md:left-auto'
+                'mt-2 md:w-auto md:left-auto md:origin-top-right'
               )}
             >
               <Popover.Panel className={popover.panel.classNames.roundedSheet}>

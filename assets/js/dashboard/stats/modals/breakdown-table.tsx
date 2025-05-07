@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useRef } from 'react'
 
 import { SearchInput } from '../../components/search-input'
 import { ColumnConfiguraton, Table } from '../../components/table'
@@ -34,36 +34,41 @@ export const BreakdownTable = <TListItem extends { name: string }>({
   error?: Error | null
   /** Controls whether the component displays API request errors or ignores them. */
   displayError?: boolean
-}) => (
-  <div className="w-full h-full">
-    <div className="flex justify-between items-center">
-      <div className="flex items-center gap-x-2">
-        <h1 className="text-xl font-bold dark:text-gray-100">{title}</h1>
-        {!isPending && isFetching && <SmallLoadingSpinner />}
+}) => {
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  return (
+    <div className="w-full h-full">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-x-2">
+          <h1 className="text-xl font-bold dark:text-gray-100">{title}</h1>
+          {!isPending && isFetching && <SmallLoadingSpinner />}
+        </div>
+        {!!onSearch && (
+          <SearchInput
+            searchRef={searchRef}
+            onSearch={onSearch}
+            className={
+              displayError && status === 'error' ? 'pointer-events-none' : ''
+            }
+          />
+        )}
       </div>
-      {!!onSearch && (
-        <SearchInput
-          onSearch={onSearch}
-          className={
-            displayError && status === 'error' ? 'pointer-events-none' : ''
-          }
-        />
-      )}
+      <div className="my-4 border-b border-gray-300"></div>
+      <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
+        {displayError && status === 'error' && <ErrorMessage error={error} />}
+        {isPending && <InitialLoadingSpinner />}
+        {data && <Table<TListItem> data={data} columns={columns} />}
+        {!isPending && !isFetching && hasNextPage && (
+          <LoadMore
+            onClick={() => fetchNextPage()}
+            isFetchingNextPage={isFetchingNextPage}
+          />
+        )}
+      </div>
     </div>
-    <div className="my-4 border-b border-gray-300"></div>
-    <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
-      {displayError && status === 'error' && <ErrorMessage error={error} />}
-      {isPending && <InitialLoadingSpinner />}
-      {data && <Table<TListItem> data={data} columns={columns} />}
-      {!isPending && !isFetching && hasNextPage && (
-        <LoadMore
-          onClick={() => fetchNextPage()}
-          isFetchingNextPage={isFetchingNextPage}
-        />
-      )}
-    </div>
-  </div>
-)
+  )
+}
 
 const InitialLoadingSpinner = () => (
   <div

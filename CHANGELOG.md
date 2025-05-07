@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
 
 - A session is now marked as a bounce if it has less than 2 pageviews and no interactive custom events.
 
+- All dropmenus on dashboard are navigable with Tab (used to be a mix between tab and arrow keys), and no two dropmenus can be open at once on the dashboard
+
 ### Fixed
 
 - Make clicking Compare / Disable Comparison in period picker menu close the menu

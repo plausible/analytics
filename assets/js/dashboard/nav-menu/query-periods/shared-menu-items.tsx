@@ -8,7 +8,8 @@ export const linkClassName = classNames(
   popover.items.classNames.navigationLink,
   popover.items.classNames.selectedOption,
   popover.items.classNames.hoverLink,
-  popover.items.classNames.roundedStartEnd
+  popover.items.classNames.roundedStart,
+  popover.items.classNames.roundedEnd
 )
 
 export const datemenuButtonClassName = classNames(
@@ -41,10 +42,11 @@ export const CalendarPanel = React.forwardRef<
 >(({ children, className }, ref) => {
   return (
     <Transition
+      as="div"
       {...popover.transition.props}
       className={classNames(
         popover.transition.classNames.fullwidth,
-        'md:left-auto',
+        'md:left-auto md:origin-top-right',
         className
       )}
     >
