@@ -32,6 +32,14 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
+  defp starter_plans_for(v5?) do
+    if v5? do
+      Enum.filter(plans_v5(), &(&1.kind == :starter))
+    else
+      []
+    end
+  end
+
   @spec growth_plans_for(Subscription.t(), boolean()) :: [Plan.t()]
   @doc """
   Returns a list of growth plans available for the subscription to choose.
@@ -75,8 +83,11 @@ defmodule Plausible.Billing.Plans do
     v5? = Keyword.get(opts, :v5?, false)
 
     plans =
-      growth_plans_for(subscription, v5?) ++
+      Enum.concat([
+        starter_plans_for(v5?),
+        growth_plans_for(subscription, v5?),
         business_plans_for(subscription, v5?)
+      ])
 
     plans =
       if Keyword.get(opts, :with_prices) do

@@ -124,7 +124,7 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Paid",
                   plan_link: ^plan_link,
-                  plan_label: "10k Plan (€10 monthly)"
+                  plan_label: "10k Plan (€19 monthly)"
                 }} = HelpScout.get_details_for_customer("500")
       end
 
@@ -149,7 +149,7 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Paid",
                   plan_link: ^plan_link,
-                  plan_label: "10k Plan (€100 yearly)"
+                  plan_label: "10k Plan (€190 yearly)"
                 }} = HelpScout.get_details_for_customer("500")
       end
 
@@ -183,7 +183,7 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Paid",
                   plan_link: _,
-                  plan_label: "1M Enterprise Plan (€10 monthly)"
+                  plan_label: "1M Enterprise Plan (€123 monthly)"
                 }} = HelpScout.get_details_for_customer("500")
       end
 
@@ -202,7 +202,7 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Paid",
                   plan_link: _,
-                  plan_label: "1M Enterprise Plan (€10 yearly)"
+                  plan_label: "1M Enterprise Plan (€123 yearly)"
                 }} = HelpScout.get_details_for_customer("500")
       end
 
@@ -220,7 +220,7 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Pending cancellation",
                   plan_link: _,
-                  plan_label: "10k Plan (€10 monthly)"
+                  plan_label: "10k Plan (€19 monthly)"
                 }} = HelpScout.get_details_for_customer("500")
       end
 
@@ -239,7 +239,7 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Canceled",
                   plan_link: _,
-                  plan_label: "10k Plan (€10 monthly)"
+                  plan_label: "10k Plan (€19 monthly)"
                 }} = HelpScout.get_details_for_customer("500")
       end
 
@@ -257,7 +257,7 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Paused",
                   plan_link: _,
-                  plan_label: "10k Plan (€10 monthly)"
+                  plan_label: "10k Plan (€19 monthly)"
                 }} = HelpScout.get_details_for_customer("500")
       end
 
@@ -275,7 +275,7 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Dashboard locked",
                   plan_link: _,
-                  plan_label: "10k Plan (€10 monthly)",
+                  plan_label: "10k Plan (€19 monthly)",
                   sites_count: 1
                 }} = HelpScout.get_details_for_customer("500")
       end

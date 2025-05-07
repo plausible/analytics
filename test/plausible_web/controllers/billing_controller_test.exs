@@ -146,7 +146,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
       assert doc =~ ~r/Up to\s*<b>\s*20k\s*<\/b>\s*sites/
       assert doc =~ ~r/Up to\s*<b>\s*5k\s*<\/b>\s*hourly api requests/
-      assert doc =~ ~r/The plan is priced at\s*<b>\s*€10\s*<\/b>\s*/
+      assert doc =~ ~r/The plan is priced at\s*<b>\s*€123\s*<\/b>\s*/
       assert doc =~ "per year"
     end
 
@@ -197,7 +197,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
       assert doc =~ ~r/Up to\s*<b>\s*20k\s*<\/b>\s*sites/
       assert doc =~ ~r/Up to\s*<b>\s*5k\s*<\/b>\s*hourly api requests/
-      assert doc =~ ~r/The plan is priced at\s*<b>\s*€10\s*<\/b>\s*/
+      assert doc =~ ~r/The plan is priced at\s*<b>\s*€123\s*<\/b>\s*/
       assert doc =~ "per year"
     end
 
@@ -321,7 +321,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
       assert doc =~ ~r/Up to\s*<b>\s*20k\s*<\/b>\s*sites/
       assert doc =~ ~r/Up to\s*<b>\s*5k\s*<\/b>\s*hourly api requests/
-      assert doc =~ ~r/The plan is priced at\s*<b>\s*€10\s*<\/b>\s*/
+      assert doc =~ ~r/The plan is priced at\s*<b>\s*€123\s*<\/b>\s*/
       assert doc =~ "per year"
     end
 
