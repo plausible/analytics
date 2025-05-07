@@ -99,6 +99,9 @@ defmodule PlausibleWeb.Live.CustomerSupport do
           phx-click-away="close"
           class="overflow-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300 w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg"
         >
+          <.styled_link class="text-xs float-right" new_tab={true} href={kaffy_url(@current, @id)}>
+            open in Kaffy
+          </.styled_link>
           <.live_component
             :if={@current}
             module={@current.component()}
@@ -148,7 +151,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   def handle_event("open", %{"type" => type, "id" => id}, socket) do
-    socket = push_patch(socket, to: "/cs/#{type}/#{id}")
+    socket = push_patch(socket, to: "/cs/#{type}s/#{type}/#{id}")
     {:noreply, socket}
   end
 
@@ -214,5 +217,21 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     |> assign(:filter_text, filter_text)
     |> assign(:uri, uri)
     |> push_patch(to: URI.to_string(uri), replace: true)
+  end
+
+  defp kaffy_url(nil, _id), do: ""
+
+  defp kaffy_url(current, id) do
+    r =
+      current.type()
+
+    kaffy_r =
+      case r do
+        "user" -> "auth"
+        "team" -> "teams"
+        "site" -> "sites"
+      end
+
+    "/crm/#{kaffy_r}/#{r}/#{id}"
   end
 end
