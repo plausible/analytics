@@ -366,23 +366,16 @@
 
 if (COMPILE_CONFIG && config.trackFormSubmissions) {
   function trackFormSubmission(e) {
-    if (e.target.checkValidity()) {
+    if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
       plausible('WP Form Completions', { props: { path: location.pathname } });
     }
   }
 
-  function getForms() {
-    return document.querySelectorAll('form');
+  function attachFormSubmitTracking() {
+    document.addEventListener('submit', trackFormSubmission, true);
   }
 
-  function attachTrackingToForms(formElements) {
-    formElements.forEach((form) =>
-      {form.addEventListener('submit', trackFormSubmission)
-      console.log('added listener to form')}
-    );
-  }
-
-  attachTrackingToForms(getForms());
+  attachFormSubmitTracking();
 }
 
 if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
