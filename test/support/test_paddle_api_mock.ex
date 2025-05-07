@@ -1,4 +1,4 @@
-defmodule Plausible.PaddleApi.Mock do
+defmodule Plausible.Billing.TestPaddleApiMock do
   def get_subscription(_) do
     {:ok,
      %{
@@ -72,20 +72,7 @@ defmodule Plausible.PaddleApi.Mock do
     end
   end
 
-  # to give a reasonable testing structure for monthly and yearly plan
-  # prices, this function returns prices with the following logic:
-  # 10, 100, 20, 200, 30, 300, ...and so on.
-  def fetch_prices([_ | _] = product_ids, _customer_ip) do
-    {prices, _index} =
-      Enum.reduce(product_ids, {%{}, 1}, fn p, {acc, i} ->
-        price =
-          if rem(i, 2) == 1,
-            do: ceil(i / 2.0) * 10.0,
-            else: ceil(i / 2.0) * 100.0
-
-        {Map.put(acc, p, Money.from_float!(:EUR, price)), i + 1}
-      end)
-
-    {:ok, prices}
+  def fetch_prices(product_ids, customer_ip) do
+    Plausible.Billing.DevPaddleApiMock.fetch_prices(product_ids, customer_ip)
   end
 end

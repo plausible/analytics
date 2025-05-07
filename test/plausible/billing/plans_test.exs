@@ -179,7 +179,7 @@ defmodule Plausible.Billing.PlansTest do
         Plausible.Teams.Billing.latest_enterprise_plan_with_price(team, "127.0.0.1")
 
       assert enterprise_plan.paddle_plan_id == "123"
-      assert price == Money.new(:EUR, "10.0")
+      assert price == Money.new(:EUR, "123.00")
     end
   end
 
