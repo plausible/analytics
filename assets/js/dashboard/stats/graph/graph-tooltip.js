@@ -102,9 +102,7 @@ let tooltipRoot
 export default function GraphTooltip(graphData, metric, query) {
   return (context) => {
     const tooltipModel = context.tooltip
-    const offset = document
-      .getElementById('main-graph-canvas')
-      .getBoundingClientRect()
+
     let tooltipEl = document.getElementById('chartjs-tooltip')
 
     if (!tooltipEl) {
@@ -114,14 +112,6 @@ export default function GraphTooltip(graphData, metric, query) {
       tooltipEl.style.opacity = 0
       document.body.appendChild(tooltipEl)
       tooltipRoot = createRoot(tooltipEl)
-    }
-
-    if (tooltipEl && offset && window.innerWidth < 768) {
-      tooltipEl.style.top =
-        offset.y + offset.height + window.scrollY + 15 + 'px'
-      tooltipEl.style.left = offset.x + 'px'
-      tooltipEl.style.right = null
-      tooltipEl.style.opacity = 1
     }
 
     if (tooltipModel.opacity === 0) {

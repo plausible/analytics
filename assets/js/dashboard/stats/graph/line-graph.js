@@ -26,6 +26,7 @@ class LineGraph extends React.Component {
   constructor(props) {
     super(props)
     this.regenerateChart = this.regenerateChart.bind(this)
+    this.repositionTooltip = this.repositionTooltip.bind(this)
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this)
   }
 
@@ -158,25 +159,30 @@ class LineGraph extends React.Component {
 
   repositionTooltip(e) {
     const tooltipEl = document.getElementById('chartjs-tooltip')
-    if (tooltipEl && window.innerWidth >= 768) {
-      if (e.clientX > 0.66 * window.innerWidth) {
-        tooltipEl.style.right =
+    if (tooltipEl) {
+      if (this.chart?.canvas?.contains(e.target)) {
+        if (e.clientX > 0.5 * window.innerWidth) {
+          tooltipEl.style.right =
           window.innerWidth - e.clientX + window.pageXOffset + 'px'
-        tooltipEl.style.left = null
+          tooltipEl.style.left = null
+        } else {
+          tooltipEl.style.right = null
+          tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
+        }
+        tooltipEl.style.top = e.clientY + window.pageYOffset + 'px'
+        tooltipEl.style.opacity = 1
       } else {
-        tooltipEl.style.right = null
-        tooltipEl.style.left = e.clientX + window.pageXOffset + 'px'
+        tooltipEl.style.opacity = 0
+        tooltipEl.style.display = 'none'
       }
-      tooltipEl.style.top = e.clientY + window.pageYOffset + 'px'
-      tooltipEl.style.opacity = 1
     }
   }
 
   componentDidMount() {
     if (this.props.graphData) {
       this.chart = this.regenerateChart()
+      window.addEventListener('mousemove', this.repositionTooltip)
     }
-    window.addEventListener('mousemove', this.repositionTooltip)
   }
 
   componentDidUpdate(prevProps) {
