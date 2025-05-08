@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Tracker do
+defmodule PlausibleWeb.TrackerPlug do
   import Plug.Conn
   use Agent
 
