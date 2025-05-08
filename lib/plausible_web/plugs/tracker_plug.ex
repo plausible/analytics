@@ -18,7 +18,7 @@ defmodule PlausibleWeb.TrackerPlug do
   ]
 
   # Generates Power Set of all variants
-  variants =
+  legacy_variants =
     1..Enum.count(base_variants)
     |> Enum.map(fn x ->
       Combination.combine(base_variants, x)
@@ -26,8 +26,9 @@ defmodule PlausibleWeb.TrackerPlug do
     end)
     |> List.flatten()
 
-  @base_filenames ["plausible", "script", "analytics"]
-  @files_available ["plausible.js", "p.js"] ++ Enum.map(variants, fn v -> "plausible.#{v}.js" end)
+  @base_legacy_filenames ["plausible", "script", "analytics"]
+  @files_available ["plausible.js", "p.js"] ++
+                     Enum.map(legacy_variants, fn v -> "plausible.#{v}.js" end)
 
   def init(opts) do
     Keyword.merge(opts, files_available: MapSet.new(@files_available))
@@ -95,7 +96,7 @@ defmodule PlausibleWeb.TrackerPlug do
 
   defp sorted_script_variant(requested_filename) do
     case String.split(requested_filename, ".") do
-      [base_filename | rest] when base_filename in @base_filenames ->
+      [base_filename | rest] when base_filename in @base_legacy_filenames ->
         sorted_variants =
           rest
           |> Enum.reject(&(&1 in @ignore_variants))
