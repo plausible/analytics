@@ -1,4 +1,5 @@
 import http from "k6/http";
+import { check } from "k6";
 
 const PAYLOAD = JSON.stringify({
   n: "pageview",
@@ -42,5 +43,14 @@ export const options = {
 };
 
 export default function () {
-  http.post("http://localhost:8000/api/event", PAYLOAD, newParams());
+  const res = http.post(
+    "http://localhost:8000/api/event",
+    PAYLOAD,
+    newParams(),
+  );
+
+  check(res, {
+    "is accepted": (r) => r.body === "ok",
+    "is buffered": (r) => r.headers["X-Plausible-Dropped"] !== "1",
+  });
 }
