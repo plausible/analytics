@@ -100,7 +100,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Comment script size report on PR
-        uses: thollander/actions-comment-pull-request@v3
+        uses: thollander/actions-comment-pull-request@v3.0.1
         with:
           message: |
             ${{ steps.analyze.outputs.sizes }}
