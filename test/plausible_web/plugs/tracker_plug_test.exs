@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.TrackerTest do
+defmodule PlausibleWeb.TrackerPlugTest do
   @moduledoc """
   This test module uses auto-generated JavaScript tracker files in priv/tracker/js.
 
@@ -67,10 +67,10 @@ defmodule PlausibleWeb.TrackerTest do
   end
 
   def get_script(filename) do
-    opts = PlausibleWeb.Tracker.init([])
+    opts = PlausibleWeb.TrackerPlug.init([])
 
     conn(:get, "/js/#{filename}")
-    |> PlausibleWeb.Tracker.call(opts)
+    |> PlausibleWeb.TrackerPlug.call(opts)
     |> response(200)
   end
 end
