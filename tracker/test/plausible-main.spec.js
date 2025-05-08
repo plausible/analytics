@@ -9,6 +9,7 @@ import {
   expectPlausibleInAction,
   hideAndShowCurrentTab,
   metaKey,
+  mockRequest,
   e as expect
 } from './support/test-utils'
 import { test } from '@playwright/test'
@@ -31,6 +32,11 @@ async function openPage(page, config, options = {}) {
 }
 
 test.describe('plausible-main.js', () => {
+  test.beforeEach(({ page }) => {
+    // Mock file download requests
+    mockRequest(page, 'https://awesome.website.com/file.pdf')
+  })
+
   test('triggers pageview and engagement automatically', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => openPage(page, {}),
