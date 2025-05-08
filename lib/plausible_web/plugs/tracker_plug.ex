@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.TrackerPlug do
   import Plug.Conn
+  import Ecto.Query
   use Agent
 
   base_variants = [
@@ -33,18 +34,46 @@ defmodule PlausibleWeb.TrackerPlug do
   end
 
   def call(conn, files_available: files_available) do
-    filename =
-      case conn.request_path do
-        "/js/p.js" ->
-          "p.js"
+    case conn.request_path do
+      "/js/s-" <> path ->
+        if String.ends_with?(path, ".js") do
+          tag = String.replace_trailing(path, ".js", "")
+          request_tracker_script(tag, conn)
+        else
+          conn
+        end
 
-        "/js/" <> requested_filename ->
-          sorted_script_variant(requested_filename)
+      "/js/p.js" ->
+        legacy_request_file("p.js", files_available, conn)
 
-        _ ->
-          nil
-      end
+      "/js/" <> requested_filename ->
+        sorted_script_variant(requested_filename) |> legacy_request_file(files_available, conn)
 
+      _ ->
+        conn
+    end
+  end
+
+  defp request_tracker_script(tag, conn) do
+    site = Plausible.Repo.one(from s in Plausible.Site, where: s.installation_meta["id"] == ^tag)
+
+    if site do
+      script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(site)
+
+      conn
+      |> put_resp_header("content-type", "application/javascript")
+      |> put_resp_header("x-content-type-options", "nosniff")
+      |> put_resp_header("cross-origin-resource-policy", "cross-origin")
+      |> put_resp_header("access-control-allow-origin", "*")
+      |> put_resp_header("cache-control", "public, max-age=60, no-transform")
+      |> send_resp(200, script_tag)
+      |> halt()
+    else
+      conn
+    end
+  end
+
+  defp legacy_request_file(filename, files_available, conn) do
     if filename && MapSet.member?(files_available, filename) do
       location = Application.app_dir(:plausible, "priv/tracker/js/" <> filename)
 
