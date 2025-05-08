@@ -1,20 +1,274 @@
 {
   "manualVariants": [
     {
-      "name": "plausible-main.js",
-      "features": [
-        "plausible-main"
+      "name": "plausible.main.js",
+      "compileIds": [],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true
+      }
+    },
+    {
+      "name": "plausible.main.outbound-links.js",
+      "compileIds": [
+        "outbound-links"
       ],
       "globals": {
         "COMPILE_CONFIG": true,
         "COMPILE_HASH": true,
-        "COMPILE_OUTBOUND_LINKS": true,
         "COMPILE_LOCAL": true,
         "COMPILE_MANUAL": true,
-        "COMPILE_FILE_DOWNLOADS": true,
         "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_OUTBOUND_LINKS": true
+      }
+    },
+    {
+      "name": "plausible.main.outbound-links.track-form-submissions.js",
+      "compileIds": [
+        "outbound-links",
+        "track-form-submissions"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_OUTBOUND_LINKS": true,
+        "COMPILE_TRACK_FORM-SUBMISSIONS": true
+      }
+    },
+    {
+      "name": "plausible.main.file-downloads.outbound-links.track-form-submissions.js",
+      "compileIds": [
+        "file-downloads",
+        "outbound-links",
+        "track-form-submissions"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_FILE_DOWNLOADS": true,
+        "COMPILE_OUTBOUND_LINKS": true,
+        "COMPILE_TRACK_FORM-SUBMISSIONS": true
+      }
+    },
+    {
+      "name": "plausible.main.file-downloads.outbound-links.tagged-events.track-form-submissions.js",
+      "compileIds": [
+        "file-downloads",
+        "outbound-links",
+        "tagged-events",
+        "track-form-submissions"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_FILE_DOWNLOADS": true,
+        "COMPILE_OUTBOUND_LINKS": true,
         "COMPILE_TAGGED_EVENTS": true,
-        "COMPILE_REVENUE": true
+        "COMPILE_TRACK_FORM-SUBMISSIONS": true
+      }
+    },
+    {
+      "name": "plausible.main.outbound-links.tagged-events.track-form-submissions.js",
+      "compileIds": [
+        "outbound-links",
+        "tagged-events",
+        "track-form-submissions"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_OUTBOUND_LINKS": true,
+        "COMPILE_TAGGED_EVENTS": true,
+        "COMPILE_TRACK_FORM-SUBMISSIONS": true
+      }
+    },
+    {
+      "name": "plausible.main.file-downloads.outbound-links.js",
+      "compileIds": [
+        "file-downloads",
+        "outbound-links"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_FILE_DOWNLOADS": true,
+        "COMPILE_OUTBOUND_LINKS": true
+      }
+    },
+    {
+      "name": "plausible.main.file-downloads.outbound-links.tagged-events.js",
+      "compileIds": [
+        "file-downloads",
+        "outbound-links",
+        "tagged-events"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_FILE_DOWNLOADS": true,
+        "COMPILE_OUTBOUND_LINKS": true,
+        "COMPILE_TAGGED_EVENTS": true
+      }
+    },
+    {
+      "name": "plausible.main.outbound-links.tagged-events.js",
+      "compileIds": [
+        "outbound-links",
+        "tagged-events"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_OUTBOUND_LINKS": true,
+        "COMPILE_TAGGED_EVENTS": true
+      }
+    },
+    {
+      "name": "plausible.main.track-form-submissions.js",
+      "compileIds": [
+        "track-form-submissions"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_TRACK_FORM-SUBMISSIONS": true
+      }
+    },
+    {
+      "name": "plausible.main.file-downloads.track-form-submissions.js",
+      "compileIds": [
+        "file-downloads",
+        "track-form-submissions"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_FILE_DOWNLOADS": true,
+        "COMPILE_TRACK_FORM-SUBMISSIONS": true
+      }
+    },
+    {
+      "name": "plausible.main.file-downloads.tagged-events.track-form-submissions.js",
+      "compileIds": [
+        "file-downloads",
+        "tagged-events",
+        "track-form-submissions"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_FILE_DOWNLOADS": true,
+        "COMPILE_TAGGED_EVENTS": true,
+        "COMPILE_TRACK_FORM-SUBMISSIONS": true
+      }
+    },
+    {
+      "name": "plausible.main.tagged-events.track-form-submissions.js",
+      "compileIds": [
+        "tagged-events",
+        "track-form-submissions"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_TAGGED_EVENTS": true,
+        "COMPILE_TRACK_FORM-SUBMISSIONS": true
+      }
+    },
+    {
+      "name": "plausible.main.file-downloads.js",
+      "compileIds": [
+        "file-downloads"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_FILE_DOWNLOADS": true
+      }
+    },
+    {
+      "name": "plausible.main.file-downloads.tagged-events.js",
+      "compileIds": [
+        "file-downloads",
+        "tagged-events"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_FILE_DOWNLOADS": true,
+        "COMPILE_TAGGED_EVENTS": true
+      }
+    },
+    {
+      "name": "plausible.main.tagged-events.js",
+      "compileIds": [
+        "tagged-events"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_REVENUE": true,
+        "COMPILE_TAGGED_EVENTS": true
       }
     }
   ],

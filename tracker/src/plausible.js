@@ -364,7 +364,7 @@
     })
   }
 
-if (COMPILE_CONFIG && config.trackFormSubmissions) {
+if (COMPILE_TRACK_FORM_SUBMISSIONS) {
   function trackFormSubmission(e) {
     if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
       plausible('WP Form Completions', { props: { path: location.pathname } });
@@ -407,7 +407,7 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
     var link = getLinkEl(event.target)
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
-    if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
+    if (COMPILE_TAGGED_EVENTS) {
     if (isElementOrParentTagged(link, 0)) {
       // Return to prevent sending multiple events with the same action.
       // Clicks on tagged links are handled by another function.
@@ -415,13 +415,13 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
     }
     }
 
-    if (COMPILE_OUTBOUND_LINKS && (!COMPILE_CONFIG || config.outboundLinks)) {
+    if (COMPILE_OUTBOUND_LINKS) {
     if (isOutboundLink(link)) {
       return sendLinkClickEvent(event, link, { name: 'Outbound Link: Click', props: { url: link.href } })
     }
     }
 
-    if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
+    if (COMPILE_FILE_DOWNLOADS) {
     if (isDownloadToTrack(hrefWithoutQuery)) {
       return sendLinkClickEvent(event, link, { name: 'File Download', props: { url: hrefWithoutQuery } })
     }
@@ -458,13 +458,13 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
   document.addEventListener('click', handleLinkClickEvent)
   document.addEventListener('auxclick', handleLinkClickEvent)
 
-  if (COMPILE_OUTBOUND_LINKS && (!COMPILE_CONFIG || config.outboundLinks)) {
+  if (COMPILE_OUTBOUND_LINKS) {
   function isOutboundLink(link) {
     return link && link.href && link.host && link.host !== location.host
   }
   }
 
-  if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
+  if (COMPILE_FILE_DOWNLOADS) {
   var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma', 'dmg']
   var fileTypesAttr = scriptEl.getAttribute('file-types')
   var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
@@ -480,7 +480,7 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
   }
   }
 
-  if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
+  if (COMPILE_TAGGED_EVENTS) {
   // Finds event attributes by iterating over the given element's (or its
   // parent's) classList. Returns an object with `name` and `props` keys.
   function getTaggedEventAttributes(htmlElement) {
