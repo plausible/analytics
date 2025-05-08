@@ -5,7 +5,7 @@ defmodule Plausible.Teams.Management.Layout.Entry do
   """
   alias Plausible.Teams
 
-  defstruct [:email, :name, :role, :type, :meta, :queued_op]
+  defstruct [:email, :name, :role, :type, :meta, :queued_op, :id]
 
   @type t() :: %__MODULE__{}
 
@@ -19,6 +19,7 @@ defmodule Plausible.Teams.Management.Layout.Entry do
       when is_integer(existing) do
     %__MODULE__{
       name: "Invited User",
+      id: 0,
       email: invitation.email,
       role: invitation.role,
       type: :invitation_sent,
@@ -30,6 +31,7 @@ defmodule Plausible.Teams.Management.Layout.Entry do
   def new(%Teams.Invitation{id: nil} = pending, attrs) do
     %__MODULE__{
       name: "Invited User",
+      id: 0,
       email: pending.email,
       role: pending.role,
       type: :invitation_pending,
@@ -42,6 +44,7 @@ defmodule Plausible.Teams.Management.Layout.Entry do
     %__MODULE__{
       name: membership.user.name,
       role: membership.role,
+      id: membership.user.id,
       email: membership.user.email,
       type: :membership,
       meta: membership

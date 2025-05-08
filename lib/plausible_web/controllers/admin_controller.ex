@@ -42,6 +42,7 @@ defmodule PlausibleWeb.AdminController do
     teams_list = Plausible.Auth.UserAdmin.teams(user.owned_teams)
 
     html_response = """
+      <a style="margin-bottom: 2em; float: right;" target="_blank" href="/cs/users/user/#{user_id}">Open in CS</a>
       <div style="margin-bottom: 1.1em;">
         <p><b>Owned teams:</b></p>
         #{teams_list}
@@ -186,6 +187,7 @@ defmodule PlausibleWeb.AdminController do
 
   defp usage_and_limits_html(team, usage, limits, embed?) do
     content = """
+    <a style="margin-bottom: 2em; float: right;" target="_blank" href="/cs/teams/team/#{team.id}">Open in CS</a>
       <ul>
         <li>Team: <b>#{html_escape(Teams.name(team))}</b></li>
         <li>Setup: <b>#{if(team.setup_complete, do: "Yes", else: "No")}</b></li>
