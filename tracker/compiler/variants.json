@@ -5,11 +5,8 @@
       "compileIds": [],
       "globals": {
         "COMPILE_CONFIG": true,
-        "COMPILE_HASH": true,
         "COMPILE_LOCAL": true,
-        "COMPILE_MANUAL": true,
-        "COMPILE_PAGEVIEW_PROPS": true,
-        "COMPILE_REVENUE": true
+        "COMPILE_MANUAL": true
       }
     },
     {
