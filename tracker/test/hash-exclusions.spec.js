@@ -1,5 +1,5 @@
-const { mockRequest } = require('./support/test-utils')
-const { expect, test } = require('@playwright/test')
+import { mockRequest } from './support/test-utils'
+import { expect, test } from '@playwright/test'
 
 test.describe('combination of hash and exclusions script extensions', () => {
   test('excludes by hash part of the URL', async ({ page }) => {

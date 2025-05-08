@@ -43,7 +43,7 @@ npm-debug.log
 
 # Stored hash of source tracker files used in development environment
 # to detect changes in /tracker/src and avoid unnecessary compilation.
-/tracker/dev-compile/last-hash.txt
+/tracker/compiler/last-hash.txt
 
 # test coverage directory
 /assets/coverage
@@ -84,7 +84,7 @@ plausible-report.xml
 /priv/geodb/*.mmdb.gz
 
 # Auto-generated tracker files
-/priv/tracker/js/plausible*.js
+/priv/tracker/js/plausible*.js*
 
 # Docker volumes
 .clickhouse_db_vol*

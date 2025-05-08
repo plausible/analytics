@@ -53,6 +53,19 @@ defmodule PlausibleWeb.TrackerTest do
     assert get_script("script.manual.pageleave.js") == get_script("script.manual.js")
   end
 
+  for variant <- [
+        "plausible.js",
+        "script.manual.pageview-props.tagged-events.pageleave.js",
+        "script.compat.local.exclusions.js",
+        "script.hash.revenue.file-downloads.pageview-props.js"
+      ] do
+    test "variant #{variant} is available" do
+      script = get_script(unquote(variant))
+      assert String.starts_with?(script, "!function(){var")
+      assert String.length(script) > 200
+    end
+  end
+
   def get_script(filename) do
     opts = PlausibleWeb.Tracker.init([])
 

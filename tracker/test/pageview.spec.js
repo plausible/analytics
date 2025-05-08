@@ -1,6 +1,5 @@
-const { mockRequest } = require('./support/test-utils')
-const { expect, test } = require('@playwright/test')
-const { tracker_script_version } = require('../package.json')
+import { mockRequest, tracker_script_version } from './support/test-utils'
+import { expect, test } from '@playwright/test'
 
 test.describe('Basic installation', () => {
   test('Sends pageview automatically', async ({ page }) => {
