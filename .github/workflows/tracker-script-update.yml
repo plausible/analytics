@@ -20,8 +20,7 @@ jobs:
       - name: Checkout master for comparison
         uses: actions/checkout@v4
         with:
-          # :TODO: Update this to use the master branch once the dependent PR is merged
-          ref: improve-compile
+          ref: master
           path: master-branch
 
       - name: Install jq and clickhouse-local
