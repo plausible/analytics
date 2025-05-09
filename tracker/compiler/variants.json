@@ -1,6 +1,22 @@
 {
   "manualVariants": [
-
+    {
+      "name": "plausible-main.js",
+      "features": [
+        "plausible-main"
+      ],
+      "globals": {
+        "COMPILE_CONFIG": true,
+        "COMPILE_HASH": true,
+        "COMPILE_OUTBOUND_LINKS": true,
+        "COMPILE_LOCAL": true,
+        "COMPILE_MANUAL": true,
+        "COMPILE_FILE_DOWNLOADS": true,
+        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_TAGGED_EVENTS": true,
+        "COMPILE_REVENUE": true
+      }
+    }
   ],
   "legacyVariants": [
     {

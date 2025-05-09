@@ -8,8 +8,15 @@
   } else {
   var scriptEl = document.currentScript;
   }
-  var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint()
-  var dataDomain = scriptEl.getAttribute('data-domain')
+
+  var config = {}
+
+  if (COMPILE_CONFIG) {
+    config = "<%= @config_json %>"
+  }
+
+  var endpoint = COMPILE_CONFIG ? config.endpoint : (scriptEl.getAttribute('data-api') || defaultEndpoint())
+  var dataDomain = COMPILE_CONFIG ? config.domain : scriptEl.getAttribute('data-domain')
 
   function onIgnoredEvent(eventName, reason, options) {
     if (reason) console.warn('Ignoring Event: ' + reason);
@@ -133,7 +140,7 @@
       runningEngagementStart = null
       currentEngagementTime = 0
 
-      if (COMPILE_HASH) {
+      if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
       payload.h = 1
       }
 
@@ -175,7 +182,7 @@
       maxScrollDepthPx = getCurrentScrollDepthPx()
     }
 
-    if (!COMPILE_LOCAL) {
+    if (!(COMPILE_LOCAL && (!COMPILE_CONFIG || config.local))) {
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
       return onIgnoredEvent(eventName, 'localhost', options)
     }
@@ -190,7 +197,7 @@
     } catch (e) {
 
     }
-    if (COMPILE_EXCLUSIONS) {
+    if (COMPILE_EXCLUSIONS && (!COMPILE_CONFIG || config.exclusions)) {
     var dataIncludeAttr = scriptEl && scriptEl.getAttribute('data-include')
     var dataExcludeAttr = scriptEl && scriptEl.getAttribute('data-exclude')
 
@@ -204,7 +211,7 @@
     function pathMatches(wildcardPath) {
       var actualPath = location.pathname
 
-      if (COMPILE_HASH) {
+      if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
       actualPath += location.hash
       }
 
@@ -216,7 +223,7 @@
     payload.n = eventName
     payload.v = COMPILE_TRACKER_SCRIPT_VERSION
 
-    if (COMPILE_MANUAL) {
+    if (COMPILE_MANUAL && (!COMPILE_CONFIG || config.manual)) {
     var customURL = options && options.u
 
     payload.u = customURL ? customURL : location.href
@@ -235,13 +242,13 @@
     if (options && options.interactive === false) {
       payload.i = false
     }
-    if (COMPILE_REVENUE) {
+    if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
     if (options && options.revenue) {
       payload.$ = options.revenue
     }
     }
 
-    if (COMPILE_PAGEVIEW_PROPS) {
+    if (COMPILE_PAGEVIEW_PROPS && (!COMPILE_CONFIG || config.pageviewProps)) {
     var propAttributes = scriptEl.getAttributeNames().filter(function (name) {
       return name.substring(0, 6) === 'event-'
     })
@@ -257,7 +264,7 @@
     payload.p = props
     }
 
-    if (COMPILE_HASH) {
+    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
     payload.h = 1
     }
 
@@ -309,11 +316,11 @@
     trigger.apply(this, queue[i])
   }
 
-  if (!COMPILE_MANUAL) {
+  if (!(COMPILE_MANUAL && (!COMPILE_CONFIG || config.manual))) {
     var lastPage;
 
     function page(isSPANavigation) {
-      if (!COMPILE_HASH) {
+      if (!(COMPILE_HASH && (!COMPILE_CONFIG || config.hash))) {
       if (isSPANavigation && lastPage === location.pathname) return;
       }
 
@@ -323,7 +330,7 @@
 
     var onSPANavigation = function() {page(true)}
 
-    if (COMPILE_HASH) {
+    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
     window.addEventListener('hashchange', onSPANavigation)
     } else {
     var his = window.history
@@ -386,7 +393,7 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
     var link = getLinkEl(event.target)
     var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
-    if (COMPILE_TAGGED_EVENTS) {
+    if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
     if (isElementOrParentTagged(link, 0)) {
       // Return to prevent sending multiple events with the same action.
       // Clicks on tagged links are handled by another function.
@@ -394,13 +401,13 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
     }
     }
 
-    if (COMPILE_OUTBOUND_LINKS) {
+    if (COMPILE_OUTBOUND_LINKS && (!COMPILE_CONFIG || config.outboundLinks)) {
     if (isOutboundLink(link)) {
       return sendLinkClickEvent(event, link, { name: 'Outbound Link: Click', props: { url: link.href } })
     }
     }
 
-    if (COMPILE_FILE_DOWNLOADS) {
+    if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
     if (isDownloadToTrack(hrefWithoutQuery)) {
       return sendLinkClickEvent(event, link, { name: 'File Download', props: { url: hrefWithoutQuery } })
     }
@@ -419,7 +426,7 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
 
     if (shouldFollowLink(event, link)) {
       var attrs = { props: eventAttrs.props, callback: followLink }
-      if (COMPILE_REVENUE) {
+      if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
       attrs.revenue = eventAttrs.revenue
       }
       plausible(eventAttrs.name, attrs)
@@ -427,7 +434,7 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
       event.preventDefault()
     } else {
       var attrs = { props: eventAttrs.props }
-      if (COMPILE_REVENUE) {
+      if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
       attrs.revenue = eventAttrs.revenue
       }
       plausible(eventAttrs.name, attrs)
@@ -437,13 +444,13 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
   document.addEventListener('click', handleLinkClickEvent)
   document.addEventListener('auxclick', handleLinkClickEvent)
 
-  if (COMPILE_OUTBOUND_LINKS) {
+  if (COMPILE_OUTBOUND_LINKS && (!COMPILE_CONFIG || config.outboundLinks)) {
   function isOutboundLink(link) {
     return link && link.href && link.host && link.host !== location.host
   }
   }
 
-  if (COMPILE_FILE_DOWNLOADS) {
+  if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
   var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma', 'dmg']
   var fileTypesAttr = scriptEl.getAttribute('file-types')
   var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
@@ -459,13 +466,13 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
   }
   }
 
-  if (COMPILE_TAGGED_EVENTS) {
+  if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
   // Finds event attributes by iterating over the given element's (or its
   // parent's) classList. Returns an object with `name` and `props` keys.
   function getTaggedEventAttributes(htmlElement) {
     var taggedElement = isTagged(htmlElement) ? htmlElement : htmlElement && htmlElement.parentNode
     var eventAttrs = { name: null, props: {} }
-    if (COMPILE_REVENUE) {
+    if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
     eventAttrs.revenue = {}
     }
 
@@ -487,7 +494,7 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
         }
       }
 
-      if (COMPILE_REVENUE) {
+      if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
       var revenueMatchList = className.match(/plausible-revenue-(.+)(=|--)(.+)/)
       if (revenueMatchList) {
         var key = revenueMatchList[1]
@@ -518,7 +525,7 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
     setTimeout(submitForm, 5000)
 
     var attrs = { props: eventAttrs.props, callback: submitForm }
-    if (COMPILE_REVENUE) {
+    if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
     attrs.revenue = eventAttrs.revenue
     }
     plausible(eventAttrs.name, attrs)
@@ -560,7 +567,7 @@ if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
       } else {
         var attrs = {}
         attrs.props = eventAttrs.props
-        if (COMPILE_REVENUE) {
+        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
         attrs.revenue = eventAttrs.revenue
         }
         plausible(eventAttrs.name, attrs)
