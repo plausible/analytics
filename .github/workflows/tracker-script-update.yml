@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Checkout master for comparison
         uses: actions/checkout@v4
@@ -74,8 +79,6 @@ jobs:
           github_token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
           add: |
             - tracker/package.json
-          # Uncomment this once they're whitelisted by CLA agent
-          # default_author: github_actions
 
       - name: Compile tracker code
         run: |
