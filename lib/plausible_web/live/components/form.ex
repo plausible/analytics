@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         name={@name}
         class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
       />
-      <.label for={@id}>{@label}</.label>
+      <.label class="font-normal" for={@id}>{@label}</.label>
     </div>
     """
   end
