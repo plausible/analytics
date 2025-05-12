@@ -11,8 +11,6 @@ defmodule Plausible.CustomerSupport.Resource.Team do
         order_by: [desc: :id],
         preload: [owners: o]
 
-    IO.inspect(:search_empty)
-
     Plausible.Repo.all(q)
   end
 
