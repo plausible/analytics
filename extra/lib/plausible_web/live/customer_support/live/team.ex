@@ -182,7 +182,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
             <p class="mt-4">
               <strong>Features used: </strong>
-              <span>{@usage.features |> Enum.map(& &1.display_name) |> Enum.join(", ")}</span>
+              <span>{@usage.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}</span>
             </p>
           </div>
 
@@ -198,22 +198,19 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.td>{plan.inserted_at}</.td>
               <.td>{plan.billing_interval}</.td>
               <.td>{plan.paddle_plan_id}</.td>
-              <.td>
+              <.td max_width="max-w-40">
                 <.tooltip sticky?={false}>
                   <:tooltip_content>
-                    <div class="flex justify-between">
-                      <span>Pageviews</span> <span>{number_format(plan.monthly_pageview_limit)}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Sites</span> <span>{number_format(plan.site_limit)}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Members</span> <span>{number_format(plan.team_member_limit)}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>API Requests</span>
-                      <span>{number_format(plan.hourly_api_request_limit)} / hour</span>
-                    </div>
+                    <dl class="text-xs">
+                      <dt class="font-semibold">Pageviews</dt>
+                      <dd>{number_format(plan.monthly_pageview_limit)}</dd>
+                      <dt class="font-semibold">Sites</dt>
+                      <dd>{number_format(plan.site_limit)}</dd>
+                      <dt class="font-semibold">Members</dt>
+                      <dd>{number_format(plan.team_member_limit)}</dd>
+                      <dt class="font-semibold">API Requests</dt>
+                      <dd>{number_format(plan.hourly_api_request_limit)} / hour</dd>
+                    </dl>
                   </:tooltip_content>
                   <a href={} target="_blank" rel="noopener noreferrer">
                     <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
@@ -221,14 +218,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </.tooltip>
               </.td>
               <.td>
-                <.tooltip sticky?={false}>
-                  <:tooltip_content>
-                    <span :for={f <- plan.features}>
-                      {f.display_name()}<br />
-                    </span>
-                  </:tooltip_content>
-                  {plan.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}
-                </.tooltip>
+                <span class="text-xs">
+                  {plan.features |> Enum.map(& &1.display_name()) |> Enum.sort() |> Enum.join(", ")}
+                </span>
               </.td>
             </:tbody>
           </.table>
