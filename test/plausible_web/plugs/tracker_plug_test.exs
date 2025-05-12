@@ -42,6 +42,17 @@ defmodule PlausibleWeb.TrackerPlugTest do
       assert not String.contains?(response, "outboundLinks:!0")
     end
 
+    # window.plausible is a substring checked for by the wordpress plugin to avoid 'optimization' by other wordpress plugins
+    test "script contains window.plausible" do
+      site =
+        new_site()
+        |> Plausible.Sites.update_installation_meta!(%{script_config: @example_config})
+
+      response = get(conn, "/js/s-#{site.installation_meta.id}.js") |> response(200)
+
+      assert String.contains?(response, "window.plausible")
+    end
+
     test "returns 404 for unknown site", %{conn: conn} do
       conn
       |> get("/js/s-a14125a2-000-000-0000-000000000000.js")
@@ -97,6 +108,8 @@ defmodule PlausibleWeb.TrackerPlugTest do
         script = get_script(unquote(variant))
         assert String.starts_with?(script, "!function(){var")
         assert String.length(script) > 200
+
+        assert String.contains?(script, "window.plausible")
       end
     end
   end

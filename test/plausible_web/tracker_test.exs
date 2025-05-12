@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.TrackerPlugTest do
+defmodule PlausibleWeb.TrackerTest do
   use Plausible.DataCase, async: true
   use Plausible.Teams.Test
 
