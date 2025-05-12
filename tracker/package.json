@@ -1,11 +1,10 @@
 {
-  "tracker_script_version": 8,
+  "tracker_script_version": 9,
   "type": "module",
   "scripts": {
     "deploy": "node compile.js",
     "test": "npx playwright test",
     "test:local": "npx playwright test",
-    "report-sizes": "node report-sizes.js",
     "start": "node test/support/server.js"
   },
   "license": "MIT",
@@ -21,6 +20,7 @@
     "@types/node": "^22.13.4",
     "eslint": "^9.20.1",
     "eslint-plugin-playwright": "^2.2.0",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "markdown-table": "^3.0.4"
   }
 }
