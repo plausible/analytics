@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.LegacyChoosePlan do
                                           } ->
         highest_growth_plan = List.last(available_plans.growth)
         highest_business_plan = List.last(available_plans.business)
-        Quota.suggest_tier(usage, highest_growth_plan, highest_business_plan, owned_tier)
+        Quota.legacy_suggest_tier(usage, highest_growth_plan, highest_business_plan, owned_tier)
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)

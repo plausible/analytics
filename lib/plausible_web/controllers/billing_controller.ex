@@ -31,6 +31,7 @@ defmodule PlausibleWeb.BillingController do
     else
       render(conn, "choose_plan.html",
         live_module: live_module,
+        hide_header?: true,
         disable_global_notices?: true,
         skip_plausible_tracking: true,
         connect_live_socket: true
