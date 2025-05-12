@@ -1,14 +1,11 @@
 defmodule PlausibleWeb.CustomerSupport.Live.Shared do
+  @moduledoc false
   use Phoenix.Component
 
   attr :to, :string, required: true
   attr :tab, :string, required: true
   attr :target, :any, required: true
   slot :inner_block, required: true
-
-  # phx-click="switch"
-  # phx-value-to={@to}
-  # phx-target={@target}
 
   def tab(assigns) do
     ~H"""

@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Live.CustomerSupport do
+  @moduledoc """
+  Customer Support UI
+  """
   use PlausibleWeb, :live_view
   alias Plausible.CustomerSupport.Resource
 

@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.CustomerSupport.Live.Site do
+  @moduledoc false
   use Plausible.CustomerSupport.Resource, :component
 
   def update(assigns, socket) do

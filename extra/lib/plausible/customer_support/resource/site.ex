@@ -1,4 +1,5 @@
 defmodule Plausible.CustomerSupport.Resource.Site do
+  @moduledoc false
   use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Site
 
   @impl true

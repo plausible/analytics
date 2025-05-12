@@ -1,4 +1,7 @@
 defmodule Plausible.CustomerSupport.Resource do
+  @moduledoc """
+  Generic behaviour for CS resources and their components
+  """
   defstruct [:id, :type, :module, :object]
 
   @type schema() :: map()
@@ -17,6 +20,7 @@ defmodule Plausible.CustomerSupport.Resource do
   @callback dump(schema()) :: t()
 
   defmodule Component do
+    @moduledoc false
     @callback render_result(assigns :: Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
   end
 

@@ -1,4 +1,5 @@
 defmodule Plausible.CustomerSupport.Resource.Team do
+  @moduledoc false
   use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Team
 
   @impl true

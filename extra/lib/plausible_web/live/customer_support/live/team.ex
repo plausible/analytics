@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.CustomerSupport.Live.Team do
+  @moduledoc false
   use Plausible.CustomerSupport.Resource, :component
 
   alias Plausible.Billing.Subscription

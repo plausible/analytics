@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.CustomerSupport.Live.User do
+  @moduledoc false
   use Plausible.CustomerSupport.Resource, :component
   use PlausibleWeb.Live.Flash
 
