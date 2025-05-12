@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.TrackerPlug do
+  @moduledoc """
+  Plug to serve the Plausible tracker script.
+  """
+
   import Plug.Conn
   import Ecto.Query
   use Agent

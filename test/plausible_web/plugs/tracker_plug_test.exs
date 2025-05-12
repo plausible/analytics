@@ -43,7 +43,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
     end
 
     # window.plausible is a substring checked for by the wordpress plugin to avoid 'optimization' by other wordpress plugins
-    test "script contains window.plausible" do
+    test "script contains window.plausible", %{conn: conn} do
       site =
         new_site()
         |> Plausible.Sites.update_installation_meta!(%{script_config: @example_config})
