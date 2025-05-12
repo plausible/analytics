@@ -611,10 +611,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   defp lock_team(socket) do
     if socket.assigns.team.grace_period do
-      team =
-        socket.assigns.team
-        |> Plausible.Billing.SiteLocker.set_lock_status_for(true)
-        |> Plausible.Teams.end_grace_period()
+      team = socket.assigns.team
+      Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
+      Plausible.Teams.end_grace_period(team)
 
       success(socket, "Team locked. Grace period ended.")
       assign(socket, team: team)

@@ -21,7 +21,8 @@ defmodule Plausible.CustomerSupport.Resource do
 
   defmodule Component do
     @moduledoc false
-    @callback render_result(assigns :: Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
+    @callback render_result(assigns :: Phoenix.LiveView.Socket.assigns()) ::
+                Phoenix.LiveView.Rendered.t()
   end
 
   defmacro __using__(:component) do
