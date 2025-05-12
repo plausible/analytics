@@ -1,4 +1,6 @@
 defmodule Plausible.Billing.TestPaddleApiMock do
+  @moduledoc false
+
   def get_subscription(_) do
     {:ok,
      %{

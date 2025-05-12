@@ -483,6 +483,62 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  slot :inner_block, required: true
+
+  def accordion_menu(assigns) do
+    ~H"""
+    <dl class="divide-y divide-gray-200">
+      {render_slot(@inner_block)}
+    </dl>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :title, :string, required: true
+  attr :open_by_default, :boolean, default: false
+  slot :inner_block, required: true
+
+  def accordion_item(assigns) do
+    ~H"""
+    <div x-data={"{ open: #{@open_by_default}}"} class="py-4">
+      <dt>
+        <button
+          type="button"
+          class="flex w-full items-start justify-between text-left text-gray-900 dark:text-gray-100"
+          @click="open = !open"
+        >
+          <span class="text-base font-semibold">{@title}</span>
+          <span class="ml-6 flex h-6 items-center">
+            <svg
+              x-show="!open"
+              class="size-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+            </svg>
+            <svg
+              x-show="open"
+              class="size-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6" />
+            </svg>
+          </span>
+        </button>
+      </dt>
+      <dd x-show="open" id={@id} class="mt-2 pr-12 text-gray-600 text-sm">
+        {render_slot(@inner_block)}
+      </dd>
+    </div>
+    """
+  end
+
   attr(:rest, :global, include: ~w(fill stroke stroke-width))
   attr(:name, :atom, required: true)
   attr(:outline, :boolean, default: true)

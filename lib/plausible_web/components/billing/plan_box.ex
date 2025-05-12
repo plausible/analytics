@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <div
       id={"#{@kind}-plan-box"}
       class={[
-        "shadow-lg bg-white rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
+        "shadow-lg border border-gray-200 bg-white rounded-xl px-6 sm:px-4 py-4 sm:py-3 dark:bg-gray-800",
         !@highlight && "dark:ring-gray-600",
         @highlight && "ring-2 ring-indigo-600 dark:ring-indigo-300"
       ]}
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <div
       id="enterprise-plan-box"
       class={[
-        "rounded-3xl px-6 sm:px-8 py-4 sm:py-6 bg-gray-900 shadow-xl dark:bg-gray-800",
+        "rounded-xl px-6 sm:px-4 py-4 sm:py-3 bg-gray-900 shadow-xl dark:bg-gray-800",
         !@recommended && "dark:ring-gray-600",
         @recommended && "ring-4 ring-indigo-500 dark:ring-2 dark:ring-indigo-300"
       ]}
@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
     <.tooltip :if={@exceeded_plan_limits != [] && @disabled_message}>
-      <div class="pt-2 text-sm w-full flex items-center text-red-700 dark:text-red-500 justify-center">
+      <div class="absolute top-0 text-sm w-full flex items-center text-red-700 dark:text-red-500 justify-center">
         {@disabled_message}
         <Heroicons.information_circle class="hidden sm:block w-5 h-5 sm:ml-2" />
       </div>
@@ -303,10 +303,16 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
          } = _assigns
        ) do
     cond do
+      from_kind in [:growth, :business] && to_kind == :starter ->
+        "Downgrade to Starter"
+
       from_kind == :business && to_kind == :growth ->
         "Downgrade to Growth"
 
-      from_kind == :growth && to_kind == :business ->
+      from_kind == :starter && to_kind == :growth ->
+        "Upgrade to Growth"
+
+      from_kind in [:starter, :growth] && to_kind == :business ->
         "Upgrade to Business"
 
       from_volume == to_volume && from_interval == to_interval ->

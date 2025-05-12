@@ -57,12 +57,35 @@ defmodule Plausible.Billing.Quota do
   `:custom` is returned. This means that this kind of usage should get on
   a custom plan.
 
-  To avoid confusion, we do not recommend Growth tiers for customers that
-  are already on a Business tier (even if their usage would fit Growth).
+  To avoid confusion, we do not recommend a lower tier for customers that
+  are already on a higher tier (even if their usage is low enough).
 
   `nil` is returned if the usage is not eligible for upgrade.
   """
-  def suggest_tier(usage, highest_growth, highest_business, owned_tier) do
+  def suggest_tier(usage, highest_starter, highest_growth, highest_business, owned_tier) do
+    cond do
+      not eligible_for_upgrade?(usage) ->
+        nil
+
+      usage_fits_plan?(usage, highest_starter) and owned_tier not in [:business, :growth] ->
+        :starter
+
+      usage_fits_plan?(usage, highest_growth) and owned_tier != :business ->
+        :growth
+
+      usage_fits_plan?(usage, highest_business) ->
+        :business
+
+      true ->
+        :custom
+    end
+  end
+
+  @doc """
+  [DEPRECATED] Used in LegacyChoosePlan in order to suggest a tier
+  when `starter_tier` flag is not enabled.
+  """
+  def legacy_suggest_tier(usage, highest_growth, highest_business, owned_tier) do
     cond do
       not eligible_for_upgrade?(usage) -> nil
       usage_fits_plan?(usage, highest_growth) and owned_tier != :business -> :growth
