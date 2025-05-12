@@ -20,6 +20,7 @@
     "@types/node": "^22.13.4",
     "eslint": "^9.20.1",
     "eslint-plugin-playwright": "^2.2.0",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "markdown-table": "^3.0.4"
   }
 }
