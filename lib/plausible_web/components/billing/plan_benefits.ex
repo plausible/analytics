@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     <p>
       Sites API access for
       <.link
-        class="text-indigo-500 hover:text-indigo-400"
+        class="text-indigo-500 hover:underline"
         href="https://plausible.io/white-label-web-analytics"
       >
         reselling
