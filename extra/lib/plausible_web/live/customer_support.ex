@@ -180,7 +180,6 @@ defmodule PlausibleWeb.Live.CustomerSupport do
       maybe_focus_search(input)
 
     resources
-    |> IO.inspect(label: :resources)
     |> Task.async_stream(fn resource ->
       input
       |> resource.search(limit)
