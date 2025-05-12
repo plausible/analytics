@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <div
       id={"#{@kind}-plan-box"}
       class={[
-        "shadow-lg border border-gray-200 bg-white rounded-xl px-6 sm:px-4 py-4 sm:py-3 dark:bg-gray-800",
+        "shadow-lg border border-gray-200 dark:border-none bg-white rounded-xl px-6 sm:px-4 py-4 sm:py-3 dark:bg-gray-800",
         !@highlight && "dark:ring-gray-600",
         @highlight && "ring-2 ring-indigo-600 dark:ring-indigo-300"
       ]}

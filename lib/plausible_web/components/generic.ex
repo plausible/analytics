@@ -487,7 +487,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def accordion_menu(assigns) do
     ~H"""
-    <dl class="divide-y divide-gray-200">
+    <dl class="divide-y divide-gray-200 dark:divide-gray-700">
       {render_slot(@inner_block)}
     </dl>
     """
@@ -496,6 +496,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :id, :string, required: true
   attr :title, :string, required: true
   attr :open_by_default, :boolean, default: false
+  attr :title_class, :string, default: ""
   slot :inner_block, required: true
 
   def accordion_item(assigns) do
@@ -504,7 +505,7 @@ defmodule PlausibleWeb.Components.Generic do
       <dt>
         <button
           type="button"
-          class="flex w-full items-start justify-between text-left text-gray-900 dark:text-gray-100"
+          class={"flex w-full items-start justify-between text-left #{@title_class}"}
           @click="open = !open"
         >
           <span class="text-base font-semibold">{@title}</span>
@@ -532,7 +533,7 @@ defmodule PlausibleWeb.Components.Generic do
           </span>
         </button>
       </dt>
-      <dd x-show="open" id={@id} class="mt-2 pr-12 text-gray-600 text-sm">
+      <dd x-show="open" id={@id} class="mt-2 pr-12 text-sm">
         {render_slot(@inner_block)}
       </dd>
     </div>

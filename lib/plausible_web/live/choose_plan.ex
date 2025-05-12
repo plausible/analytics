@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="mt-6 w-full md:flex">
           <a
             href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="hidden md:flex md:w-1/6 h-max text-indigo-600 text-sm font-semibold gap-1 items-center"
+            class="hidden md:flex md:w-1/6 h-max text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-bold gap-1 items-center"
           >
             <span>←</span>
             <p>Back to Settings</p>
@@ -162,7 +162,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="md:hidden mt-6 max-w-md mx-auto">
           <a
             href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="text-indigo-600 text-sm font-semibold"
+            class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-bold"
           >
             ← Back to Settings
           </a>
@@ -209,15 +209,25 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         </div>
         <div class="mt-2 mx-auto max-w-md lg:max-w-3xl">
           <.accordion_menu>
-            <.accordion_item open_by_default={true} id="usage" title="What's my current usage?">
-              <.render_usage pageview_usage={@usage.monthly_pageviews} />
+            <.accordion_item
+              open_by_default={true}
+              id="usage"
+              title="What's my current usage?"
+              title_class="text-gray-900 dark:text-gray-200"
+            >
+              <p class="text-gray-600 dark:text-gray-300">
+                <.render_usage pageview_usage={@usage.monthly_pageviews} />
+              </p>
             </.accordion_item>
 
             <.accordion_item
               id="over-limit"
               title="What happens if I go over my monthly pageview limit?"
+              title_class="text-gray-900 dark:text-gray-200"
             >
-              You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly.               If your page views exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
+              <p class="text-gray-600 dark:text-gray-300">
+                You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly. If your pageviews exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
+              </p>
             </.accordion_item>
           </.accordion_menu>
         </div>
@@ -341,8 +351,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp help_links(assigns) do
     ~H"""
     <div class="mt-16 -mb-16 text-center">
-      Any other questions? <a class="text-indigo-600" href={contact_link()}>Contact us</a>
-      or see <a class="text-indigo-600" href={billing_faq_link()}>billing FAQ</a>
+      Any other questions?
+      <a class="text-indigo-600 hover:underline" href={contact_link()}>Contact us</a>
+      or see <a class="text-indigo-600 hover:underline" href={billing_faq_link()}>billing FAQ</a>
     </div>
     """
   end
