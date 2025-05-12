@@ -75,6 +75,8 @@ defmodule PlausibleWeb.TrackerPlug do
       |> halt()
     else
       conn
+      |> send_resp(404, "Not found")
+      |> halt()
     end
   end
 
