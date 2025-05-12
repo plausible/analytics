@@ -168,7 +168,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           <div class="bg-gray-100 dark:bg-gray-900 dark:border dark:border-gray-500 p-4 rounded-md mt-8 mb-8">
             <span class="">
               <p>
-                <strong>Usage</strong> <br />
+                <strong class="text-xs">Usage</strong> <br />
                 <ul>
                   <li :for={
                     {cycle, date, total, limit} <-
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </span>
 
             <p class="mt-4">
-              <strong>Features used: </strong>
+              <strong class="text-xs">Features used</strong> <br />
               <span>{@usage.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}</span>
             </p>
           </div>

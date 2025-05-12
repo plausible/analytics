@@ -2,6 +2,20 @@ defmodule Plausible.CustomerSupport.Resource.Site do
   use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Site
 
   @impl true
+  def search("", limit) do
+    q =
+      from s in Plausible.Site,
+        inner_join: t in assoc(s, :team),
+        inner_join: o in assoc(t, :owners),
+        order_by: [
+          desc: :id
+        ],
+        limit: ^limit,
+        preload: [team: {t, owners: o}]
+
+    Plausible.Repo.all(q)
+  end
+
   def search(input, limit) do
     q =
       from s in Plausible.Site,

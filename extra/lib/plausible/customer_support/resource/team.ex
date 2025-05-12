@@ -2,6 +2,20 @@ defmodule Plausible.CustomerSupport.Resource.Team do
   use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Team
 
   @impl true
+  def search("", limit) do
+    q =
+      from t in Plausible.Teams.Team,
+        inner_join: o in assoc(t, :owners),
+        limit: ^limit,
+        where: not is_nil(t.trial_expiry_date),
+        order_by: [desc: :id],
+        preload: [owners: o]
+
+    IO.inspect(:search_empty)
+
+    Plausible.Repo.all(q)
+  end
+
   def search(input, limit) do
     q =
       from t in Plausible.Teams.Team,

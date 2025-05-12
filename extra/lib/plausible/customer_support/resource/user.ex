@@ -8,6 +8,18 @@ defmodule Plausible.CustomerSupport.Resource.User do
   end
 
   @impl true
+  def search("", limit) do
+    q =
+      from u in Plausible.Auth.User,
+        order_by: [
+          desc: :id
+        ],
+        preload: [:owned_teams],
+        limit: ^limit
+
+    Plausible.Repo.all(q)
+  end
+
   def search(input, limit) do
     q =
       from u in Plausible.Auth.User,

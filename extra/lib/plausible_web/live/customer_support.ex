@@ -130,12 +130,14 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   def handle_params(%{"filter_text" => _}, _uri, socket) do
-    socket = search(assign(socket, current: nil))
+    socket =
+      search(assign(socket, current: nil))
+
     {:noreply, socket}
   end
 
   def handle_params(_, _uri, socket) do
-    {:noreply, socket}
+    {:noreply, search(socket)}
   end
 
   def search(%{assigns: assigns} = socket) do
@@ -173,9 +175,12 @@ defmodule PlausibleWeb.Live.CustomerSupport do
 
   defp spawn_searches(input) do
     input = String.trim(input)
-    {resources, input, limit} = maybe_focus_search(input)
+
+    {resources, input, limit} =
+      maybe_focus_search(input)
 
     resources
+    |> IO.inspect(label: :resources)
     |> Task.async_stream(fn resource ->
       input
       |> resource.search(limit)
@@ -186,7 +191,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     end)
   end
 
-  defp maybe_focus_search(empty) when empty in ["", "site:", "team:", "user:"] do
+  defp maybe_focus_search(lone_modifier) when lone_modifier in ["site:", "team:", "user:"] do
     {[], "", 0}
   end
 
