@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   The component renders an input field with a dropdown anchor and a
   hidden input field for submitting the selected value. In order to remain
-  functional, the comopnent must be embedded in a `<form/>`.
+  functional, the component must be embedded in a `<form/>`.
 
   The number of options displayed in the dropdown is limited to 15
   by default but can be customized. When a user types into the input
