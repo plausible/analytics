@@ -140,15 +140,15 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <Notice.subscription_paused class="pb-6" subscription={@subscription} />
         <Notice.upgrade_ineligible :if={not Quota.eligible_for_upgrade?(@usage)} />
 
-        <div class="mt-6 w-full flex">
+        <div class="mt-6 w-full md:flex">
           <a
             href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="w-1/6 h-max flex text-indigo-600 text-sm font-semibold gap-1 items-center"
+            class="hidden md:flex md:w-1/6 h-max text-indigo-600 text-sm font-semibold gap-1 items-center"
           >
-            <Heroicons.arrow_left class="h-5 w-5" />
+            <span>←</span>
             <p>Back to Settings</p>
           </a>
-          <div class="w-4/6">
+          <div class="md:w-4/6">
             <h1 class="mx-auto max-w-4xl text-center text-2xl font-bold tracking-tight lg:text-3xl">
               Traffic based plans that match your growth
             </h1>
@@ -158,6 +158,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
                 else: "Upgrade your trial to a paid plan"}
             </p>
           </div>
+        </div>
+        <div class="md:hidden mt-6 max-w-md mx-auto">
+          <a
+            href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
+            class="text-indigo-600 text-sm font-semibold"
+          >
+            ← Back to Settings
+          </a>
         </div>
         <div class="mt-10 flex flex-col gap-8 lg:flex-row items-center lg:items-baseline">
           <.interval_picker selected_interval={@selected_interval} />
@@ -199,7 +207,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             recommended={@recommended_tier == :custom}
           />
         </div>
-        <div class="mt-2 mx-auto max-w-4xl">
+        <div class="mt-2 mx-auto max-w-md lg:max-w-3xl">
           <.accordion_menu>
             <.accordion_item open_by_default={true} id="usage" title="What's my current usage?">
               <.render_usage pageview_usage={@usage.monthly_pageviews} />
@@ -223,19 +231,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp render_usage(assigns) do
     ~H"""
     You have used
-    <span :if={@pageview_usage[:last_30_days]} class="inline-block">
-      <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_30_days.total) %></b> billable pageviews in the last 30 days
+    <span :if={@pageview_usage[:last_30_days]} class="inline">
+      <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_30_days.total) %></b> billable pageviews in the last 30 days.
     </span>
-    <span :if={@pageview_usage[:last_cycle]} class="inline-block">
-      <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_cycle.total) %></b> billable pageviews in the last billing cycle
-    </span>.
+    <span :if={@pageview_usage[:last_cycle]} class="inline">
+      <b>{PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_cycle.total)}</b>
+      billable pageviews in the last billing cycle.
+    </span>
     Please see your full usage report (including sites and team members) under the
     <a
-      class="text-indigo-600 inline-block hover:underline"
+      class="text-indigo-600 inline hover:underline"
       href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
     >
-      "Subscription" section in your account settings
-    </a>.
+      "Subscription" section
+    </a> in your account settings.
     """
   end
 
@@ -331,7 +340,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp help_links(assigns) do
     ~H"""
-    <div class="mt-16 text-center">
+    <div class="mt-16 -mb-16 text-center">
       Any other questions? <a class="text-indigo-600" href={contact_link()}>Contact us</a>
       or see <a class="text-indigo-600" href={billing_faq_link()}>billing FAQ</a>
     </div>
