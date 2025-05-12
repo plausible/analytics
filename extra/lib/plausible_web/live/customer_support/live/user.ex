@@ -3,7 +3,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
   use PlausibleWeb.Live.Flash
 
   def update(assigns, socket) do
-    user = Resource.User.get(assigns.resource_id)
+    user = socket.assigns[:user] || Resource.User.get(assigns.resource_id)
     form = user |> Plausible.Auth.User.changeset() |> to_form()
     {:ok, assign(socket, user: user, form: form)}
   end

@@ -12,7 +12,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   import Ecto.Query
 
   def update(assigns, socket) do
-    team = Resource.Team.get(assigns.resource_id)
+    team = socket.assigns[:team] || Resource.Team.get(assigns[:resource_id])
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
     form = to_form(changeset)
 
@@ -24,6 +24,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       team_members: Teams.Billing.team_member_limit(team)
     }
 
+    plans = get_plans(team.id)
+    layout = Layout.init(team)
+
+    any_owner = Plausible.Repo.preload(team, [:owners]).owners |> hd()
+    sites = Teams.Sites.list(any_owner, %{}, team: team)
+
     plan_form =
       to_form(
         EnterprisePlan.changeset(
@@ -34,10 +40,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
     {:ok,
      assign(socket,
+       sites: sites,
+       plans: plans,
        team: team,
        plan_form: plan_form,
+       layout: layout,
        form: form,
-       tab: "overview",
+       tab: assigns[:tab] || "overview",
        usage: usage,
        limits: limits,
        show_plan_form?: false
@@ -134,7 +143,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </div>
         </div>
 
-        <div class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-900 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600" :if={!@show_plan_form?}>
+        <div
+          :if={!@show_plan_form?}
+          class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-900 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600"
+        >
           <div class="px-6 py-5 text-center text-sm font-medium">
             <span>
               <strong>Subscription status</strong> <br />{subscription_status(@team)}
@@ -176,9 +188,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
           <.table :if={!@show_plan_form?} rows={@plans}>
             <:thead>
-              <.th>Inserted At</.th>
+              <.th>Created</.th>
               <.th>Interval</.th>
-              <.th>Paddle Plan ID</.th>
+              <.th>PaddlePlan ID</.th>
               <.th>Limits</.th>
               <.th>Features</.th>
             </:thead>
@@ -187,19 +199,36 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.td>{plan.billing_interval}</.td>
               <.td>{plan.paddle_plan_id}</.td>
               <.td>
-                <div class="flex justify-between">
-                  <span>Pageviews</span> <span>{number_format(plan.monthly_pageview_limit)}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>Sites</span> <span>{number_format(plan.site_limit)}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>Members</span> <span>{number_format(plan.team_member_limit)}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>API Requests</span>
-                  <span>{number_format(plan.hourly_api_request_limit)} / hour</span>
-                </div>
+                <.tooltip sticky?={false}>
+                  <:tooltip_content>
+                    <div class="flex justify-between">
+                      <span>Pageviews</span> <span>{number_format(plan.monthly_pageview_limit)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>Sites</span> <span>{number_format(plan.site_limit)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>Members</span> <span>{number_format(plan.team_member_limit)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>API Requests</span>
+                      <span>{number_format(plan.hourly_api_request_limit)} / hour</span>
+                    </div>
+                  </:tooltip_content>
+                  <a href={} target="_blank" rel="noopener noreferrer">
+                    <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
+                  </a>
+                </.tooltip>
+              </.td>
+              <.td>
+                <.tooltip sticky?={false}>
+                  <:tooltip_content>
+                    <span :for={f <- plan.features}>
+                      {f.display_name()}<br />
+                    </span>
+                  </:tooltip_content>
+                  {plan.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}
+                </.tooltip>
               </.td>
             </:tbody>
           </.table>
@@ -211,12 +240,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             phx-submit="save-plan"
             phx-target={@myself}
           >
-            <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" />
+            <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" autocomplete="off" />
             <.input
               type="select"
               options={["monthly", "yearly"]}
               field={f[:billing_interval]}
               label="Billing Interval"
+              autocomplete="off"
             />
 
             <.input
@@ -224,31 +254,35 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               onkeyup="numberFormatCallback(event)"
               field={f[:monthly_pageview_limit]}
               label="Monthly Pageview Limit"
+              autocomplete="off"
             />
             <.input
               onchange="numberFormatCallback(event)"
               onkeyup="numberFormatCallback(event)"
               field={f[:site_limit]}
               label="Site Limit"
+              autocomplete="off"
             />
             <.input
               onchange="numberFormatCallback(event)"
               onkeyup="numberFormatCallback(event)"
               field={f[:team_member_limit]}
               label="Team Member Limit"
+              autocomplete="off"
             />
             <.input
               onchange="numberFormatCallback(event)"
               onkeyup="numberFormatCallback(event)"
               field={f[:hourly_api_request_limit]}
               label="Hourly API Request Limit"
+              autocomplete="off"
             />
 
             <.input
               :for={mod <- Plausible.Billing.Feature.list()}
               :if={not mod.free?()}
               type="checkbox"
-              name={"#{f.name}[features[]]"}
+              name={"#{f.name}[features[]][]"}
               value={mod.name()}
               label={mod.display_name()}
             />
@@ -442,6 +476,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
+    params = Map.put(params, "features", Enum.reject(params["features[]"], &(&1 == "false")))
     params = sanitize_params(params)
     changeset = EnterprisePlan.changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
 
@@ -449,7 +484,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       {:ok, _plan} ->
         success(socket, "Plan saved")
         plans = get_plans(socket.assigns.team.id)
-        {:noreply, assign(socket, plans: plans, plan_form: to_form(changeset))}
+
+        {:noreply,
+         assign(socket, plans: plans, plan_form: to_form(changeset), show_plan_form?: false)}
 
       {:error, changeset} ->
         failure(socket, "Error saving team: #{inspect(changeset.errors)}")
@@ -463,28 +500,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def handle_event("lock", _, socket) do
     {:noreply, lock_team(socket)}
-  end
-
-  def handle_event("switch", %{"to" => "overview"}, socket) do
-    {:noreply, assign(socket, tab: "overview")}
-  end
-
-  def handle_event("switch", %{"to" => "billing"}, socket) do
-    plans = get_plans(socket.assigns.team.id)
-
-    {:noreply, assign(socket, tab: "billing", plans: plans)}
-  end
-
-  def handle_event("switch", %{"to" => "members"}, socket) do
-    layout = Layout.init(socket.assigns.team)
-    {:noreply, assign(socket, tab: "members", layout: layout)}
-  end
-
-  def handle_event("switch", %{"to" => "sites"}, socket) do
-    any_owner = Plausible.Repo.preload(socket.assigns.team, [:owners]).owners |> hd()
-    sites = Teams.Sites.list(any_owner, %{}, team: socket.assigns.team)
-
-    {:noreply, assign(socket, tab: "sites", sites: sites)}
   end
 
   def team_bg(term) do

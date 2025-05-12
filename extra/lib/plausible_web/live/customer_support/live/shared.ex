@@ -6,12 +6,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Shared do
   attr :target, :any, required: true
   slot :inner_block, required: true
 
+  # phx-click="switch"
+  # phx-value-to={@to}
+  # phx-target={@target}
+
   def tab(assigns) do
     ~H"""
-    <a
-      phx-click="switch"
-      phx-value-to={@to}
-      phx-target={@target}
+    <.link
+      patch={"?tab=#{@to}"}
       class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg px-4 py-4 text-center text-sm font-medium focus:z-10 cursor-pointer text-gray-800 dark:text-gray-200"
     >
       <span class={if(@tab == @to, do: "font-bold")}>
@@ -25,7 +27,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Shared do
         ]}
       >
       </span>
-    </a>
+    </.link>
     """
   end
 end

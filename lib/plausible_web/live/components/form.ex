@@ -103,7 +103,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
       <input
         type="checkbox"
-        value="true"
+        value={assigns[:value] || "true"}
         checked={@checked}
         id={@id}
         name={@name}

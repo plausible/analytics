@@ -2,12 +2,25 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
   use Plausible.CustomerSupport.Resource, :component
 
   def update(assigns, socket) do
-    site = Resource.Site.get(assigns.resource_id)
+    site = socket.assigns[:site] || Resource.Site.get(assigns.resource_id)
 
     changeset = Plausible.Site.crm_changeset(site, %{})
     form = to_form(changeset)
 
-    {:ok, assign(socket, site: site, form: form, tab: "overview")}
+    people = Plausible.Sites.list_people(site)
+
+    people =
+      (people.invitations ++ people.memberships)
+      |> Enum.map(fn p ->
+        if Map.has_key?(p, :invitation_id) do
+          {:invitation, p.email, p.role}
+        else
+          {:membership, p.user, p.role}
+        end
+      end)
+
+    {:ok,
+     assign(socket, site: site, form: form, tab: assigns[:tab] || "overview", people: people)}
   end
 
   def render(assigns) do
@@ -175,26 +188,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
     ~H"""
     <img src={"/favicon/sources/#{@domain}"} class={@class} />
     """
-  end
-
-  def handle_event("switch", %{"to" => "overview"}, socket) do
-    {:noreply, assign(socket, tab: "overview")}
-  end
-
-  def handle_event("switch", %{"to" => "people"}, socket) do
-    people = Plausible.Sites.list_people(socket.assigns.site)
-
-    people =
-      (people.invitations ++ people.memberships)
-      |> Enum.map(fn p ->
-        if Map.has_key?(p, :invitation_id) do
-          {:invitation, p.email, p.role}
-        else
-          {:membership, p.user, p.role}
-        end
-      end)
-
-    {:noreply, assign(socket, tab: "people", people: people)}
   end
 
   def handle_event("change", %{"site" => params}, socket) do

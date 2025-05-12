@@ -116,9 +116,16 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   @impl true
-  def handle_params(%{"id" => id, "resource" => type}, _uri, socket) do
+  def handle_params(%{"id" => id, "resource" => type} = p, _uri, socket) do
     mod = Map.fetch!(@resources_by_type, type)
+
     id = String.to_integer(id)
+
+    send_update(self(), mod.component(),
+      id: "#{mod.type()}-#{id}",
+      tab: p["tab"]
+    )
+
     {:noreply, assign(socket, type: type, current: mod, id: id)}
   end
 
