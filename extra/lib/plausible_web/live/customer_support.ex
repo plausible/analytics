@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
         </h2>
       </div>
 
-      <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
+      <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between mb-4">
         <form id="filter-form" phx-change="search" action={@uri} method="GET">
           <div class="text-gray-800 text-sm inline-flex items-center w-full">
             <div class="relative rounded-md flex">
@@ -48,6 +48,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
                 phx-debounce={200}
                 class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md"
                 placeholder="Press / to search"
+                phx-click="close"
                 autocomplete="off"
                 value={@filter_text}
                 x-ref="filter_text"
@@ -76,7 +77,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
         </form>
       </div>
 
-      <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <ul :if={!@current} class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <li :for={r <- @results} class="group relative">
           <a href={} phx-click="open" phx-value-id={r.id} phx-value-type={r.type}>
             <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
@@ -91,15 +92,11 @@ defmodule PlausibleWeb.Live.CustomerSupport do
       <div
         id="modal"
         class={[
-          if(is_nil(@current), do: "hidden"),
-          "fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center"
+          if(is_nil(@current), do: "hidden")
         ]}
       >
-        <div
-          phx-click-away="close"
-          class="overflow-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300 w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg"
-        >
-          <.styled_link class="text-xs float-right" new_tab={true} href={kaffy_url(@current, @id)}>
+        <div class="overflow-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300 w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg">
+          <.styled_link :if={@current} class="text-xs" new_tab={true} href={kaffy_url(@current, @id)}>
             open in Kaffy
           </.styled_link>
           <.live_component
@@ -126,7 +123,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   def handle_params(%{"filter_text" => _}, _uri, socket) do
-    socket = search(socket)
+    socket = search(assign(socket, current: nil))
     {:noreply, socket}
   end
 
@@ -216,7 +213,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     socket
     |> assign(:filter_text, filter_text)
     |> assign(:uri, uri)
-    |> push_patch(to: URI.to_string(uri), replace: true)
+    |> push_patch(to: URI.to_string(uri))
   end
 
   defp kaffy_url(nil, _id), do: ""

@@ -134,7 +134,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </div>
         </div>
 
-        <div class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-900 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600">
+        <div class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-900 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600" :if={!@show_plan_form?}>
           <div class="px-6 py-5 text-center text-sm font-medium">
             <span>
               <strong>Subscription status</strong> <br />{subscription_status(@team)}
@@ -243,7 +243,15 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               field={f[:hourly_api_request_limit]}
               label="Hourly API Request Limit"
             />
-            <.input field={f[:features]} label="Features" />
+
+            <.input
+              :for={mod <- Plausible.Billing.Feature.list()}
+              :if={not mod.free?()}
+              type="checkbox"
+              name={"#{f.name}[features[]]"}
+              value={mod.name()}
+              label={mod.display_name()}
+            />
 
             <.button type="submit">
               Save Custom Plan
