@@ -36,10 +36,13 @@ defmodule PlausibleWeb.Live.CustomerSupport do
         </h2>
       </div>
 
-      <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between mb-4">
+      <div
+        class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between mb-4"
+        x-data
+      >
         <form id="filter-form" phx-change="search" action={@uri} method="GET">
           <div class="text-gray-800 text-sm inline-flex items-center w-full">
-            <div class="relative rounded-md flex x-data">
+            <div class="relative rounded-md flex">
               <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
               </div>
@@ -73,8 +76,6 @@ defmodule PlausibleWeb.Live.CustomerSupport do
             </button>
 
             <.spinner class="hidden phx-change-loading:inline ml-2" />
-
-            <div class="ml-8"></div>
           </div>
         </form>
       </div>
