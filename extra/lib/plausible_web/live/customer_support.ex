@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
                 x-ref="filter_text"
                 x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter?.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
                 x-on:keydown.prevent.slash.window="$refs.filter_text.focus(); $refs.filter_text.select();"
-                x-on:blur="$refs.filter_text.placeholder = 'Press / to search"
+                x-on:blur="$refs.filter_text.placeholder = 'Press / to search';"
                 x-on:focus="$refs.filter_text.placeholder = 'Search';"
               />
             </div>
