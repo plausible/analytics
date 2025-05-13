@@ -51,7 +51,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
           </:tbody>
         </.table>
 
-        <.form :let={f} for={@form} phx-target={@myself} phx-submit="change" class="mt-8">
+        <.form :let={f} for={@form} phx-target={@myself} phx-submit="save-user" class="mt-8">
           <.input type="textarea" field={f[:notes]} label="Notes" />
           <.button phx-target={@myself} type="submit">
             Save
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
     """
   end
 
-  def handle_event("change", %{"user" => params}, socket) do
+  def handle_event("save-user", %{"user" => params}, socket) do
     changeset = Plausible.Auth.User.changeset(socket.assigns.user, params)
 
     case Plausible.Repo.update(changeset) do

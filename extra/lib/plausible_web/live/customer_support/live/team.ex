@@ -283,7 +283,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         </div>
 
         <div :if={@tab == "overview"} class="mt-8">
-          <.form :let={f} for={@form} phx-submit="change" phx-target={@myself}>
+          <.form :let={f} for={@form} phx-submit="save-team" phx-target={@myself}>
             <.input field={f[:trial_expiry_date]} label="Trial Expiry Date" />
             <.input field={f[:accept_traffic_until]} label="Accept  traffic Until" />
             <.input
@@ -434,7 +434,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     {:noreply, assign(socket, show_plan_form?: false)}
   end
 
-  def handle_event("change", %{"team" => params}, socket) do
+  def handle_event("save-team", %{"team" => params}, socket) do
     changeset = Plausible.Teams.Team.crm_changeset(socket.assigns.team, params)
 
     case Plausible.Repo.update(changeset) do
