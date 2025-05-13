@@ -162,8 +162,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
       </div>
 
       <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />
-      <div class="text-sm">
+      <div class="text-sm truncate">
         Part of <strong>{@resource.object.team.name}</strong>
+        <br/>
         owned by {@resource.object.team.owners
         |> Enum.map(& &1.name)
         |> Enum.join(", ")}

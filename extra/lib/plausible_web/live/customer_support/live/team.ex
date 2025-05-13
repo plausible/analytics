@@ -418,7 +418,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       </div>
 
       <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />
-      <div class="text-sm">
+      <div class="text-sm truncate">
         Team identifier:
         <code class="font-mono">{@resource.object.identifier |> String.slice(0, 8)}</code>
         <br />
