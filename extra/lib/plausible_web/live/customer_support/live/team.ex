@@ -59,9 +59,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     <div>
       <script type="text/javascript">
         function numberFormatCallback(e) {
-          console.info(e)
-          console.info(e.target)
-          console.info(e.target.value)
           const numeric = Number(e.target.value.replace(/[^0-9]/g, ''))
           const value = numeric > 0 ? new Intl.NumberFormat("en-GB").format(numeric) : ''
           e.target.value = value
@@ -113,18 +110,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         </div>
 
         <div>
-          <div class="grid grid-cols-1 sm:hidden">
-            <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
-            <select
-              aria-label="Select a tab"
-              class="col-start-1 row-start-1 w-full appearance-none rounded-md py-2 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
-            >
-              <option>Overview</option>
-              <option>Sites</option>
-              <option>Members</option>
-              <option>Billing</option>
-            </select>
-          </div>
           <div class="hidden sm:block">
             <nav
               class="isolate flex divide-x dark:divide-gray-900 divide-gray-200 rounded-lg shadow dark:shadow-none"

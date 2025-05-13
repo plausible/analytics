@@ -19,7 +19,6 @@ defmodule PlausibleWeb.Live.CustomerSupport do
        resources_by_type: @resources_by_type,
        results: [],
        current: nil,
-       params: params,
        uri: uri,
        filter_text: params["filter_text"] || ""
      )}

@@ -52,15 +52,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
       </div>
 
       <div>
-        <div class="grid grid-cols-1 sm:hidden">
-          <select
-            aria-label="Select a tab"
-            class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
-          >
-            <option>Overview</option>
-            <option>People</option>
-          </select>
-        </div>
         <div class="hidden sm:block">
           <nav
             class="isolate flex divide-x dark:divide-gray-900 divide-gray-200 rounded-lg shadow dark:shadow-1"
