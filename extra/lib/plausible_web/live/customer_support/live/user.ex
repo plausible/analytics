@@ -43,7 +43,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
           </:thead>
           <:tbody :let={membership}>
             <.td>
-              <.styled_link phx-click="open" phx-value-id={membership.team.id} phx-value-type="team">
+              <.styled_link patch={"/cs/teams/team/#{membership.team.id}"}>
                 {membership.team.name}
               </.styled_link>
             </.td>

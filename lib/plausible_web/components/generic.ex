@@ -207,7 +207,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:href, :string, default: "#")
   attr(:new_tab, :boolean, default: false)
   attr(:class, :string, default: "")
-  attr(:rest, :global)
+  attr(:rest, :global, include: ~w(patch))
   attr(:method, :string, default: "get")
   slot(:inner_block)
 

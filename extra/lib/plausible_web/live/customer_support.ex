@@ -81,13 +81,13 @@ defmodule PlausibleWeb.Live.CustomerSupport do
 
       <ul :if={!@current} class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <li :for={r <- @results} class="group relative">
-          <a href={} phx-click="open" phx-value-id={r.id} phx-value-type={r.type}>
+          <.link patch={"/cs/#{r.type}s/#{r.type}/#{r.id}"}>
             <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
               <div class="text-gray-800 dark:text-gray-500 w-full flex items-center justify-between space-x-4">
                 <.render_result resource={r} />
               </div>
             </div>
-          </a>
+          </.link>
         </li>
       </ul>
 
@@ -165,11 +165,6 @@ defmodule PlausibleWeb.Live.CustomerSupport do
 
   def handle_event("reset-filter-text", _params, socket) do
     socket = set_filter_text(socket, "")
-    {:noreply, socket}
-  end
-
-  def handle_event("open", %{"type" => type, "id" => id}, socket) do
-    socket = push_patch(socket, to: "/cs/#{type}s/#{type}/#{id}")
     {:noreply, socket}
   end
 

@@ -41,7 +41,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
           </p>
           <p class="text-sm font-medium">
             Team:
-            <.styled_link phx-click="open" phx-value-id={@site.team.id} phx-value-type="team">
+            <.styled_link patch={"/cs/teams/team/#{@site.team.id}"}>
               {@site.team.name}
             </.styled_link>
           </p>
@@ -105,12 +105,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
           </:thead>
           <:tbody :let={{kind, person, role}}>
             <.td :if={kind == :membership}>
-              <.styled_link
-                class="flex items-center"
-                phx-click="open"
-                phx-value-id={person.id}
-                phx-value-type="user"
-              >
+              <.styled_link class="flex items-center" patch={"/cs/users/user/#{person.id}"}>
                 <img
                   src={Plausible.Auth.User.profile_img_url(person)}
                   class="w-4 rounded-full bg-gray-300 mr-2"

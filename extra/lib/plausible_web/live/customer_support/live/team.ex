@@ -316,9 +316,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                     class="w-4 h-4 flex-shrink-0 mt-px mr-2"
                   />
                   <.styled_link
-                    phx-click="open"
-                    phx-value-id={site.id}
-                    phx-value-type="site"
+                    patch={"/cs/sites/site/#{site.id}"}
                     class="cursor-pointer flex block items-center"
                   >
                     {site.domain}
@@ -357,9 +355,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.td>
                 <div :if={member.id != 0}>
                   <.styled_link
-                    phx-click="open"
-                    phx-value-id={member.id}
-                    phx-value-type="user"
+                    patch={"/cs/users/user/#{member.id}"}
                     class="cursor-pointer flex block items-center"
                   >
                     <img
