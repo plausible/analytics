@@ -82,8 +82,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
       <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />
       <div class="text-sm truncate">
         {@resource.object.name} &lt;{@resource.object.email}&gt; <br />
-        <br/>
-        Owns {length(@resource.object.owned_teams)} team(s)
+        <br /> Owns {length(@resource.object.owned_teams)} team(s)
       </div>
     </div>
     """
