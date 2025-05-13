@@ -79,8 +79,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
   def for_business(plan, growth_benefits, starter_benefits) do
     [
       "Everything in Growth",
-      team_member_limit_benefit(plan),
       site_limit_benefit(plan),
+      team_member_limit_benefit(plan),
       data_retention_benefit(plan)
     ]
     |> Kernel.++(feature_benefits(plan))
@@ -133,6 +133,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
       case feature_mod.name() do
         :goals -> ["Goals and custom events"]
         :stats_api -> ["Stats API (600 requests per hour)", "Looker Studio Connector"]
+        :shared_links -> ["Shared Links", "Embedded Dashboards"]
         :revenue_goals -> ["Ecommerce revenue attribution"]
         _ -> [feature_mod.display_name()]
       end
