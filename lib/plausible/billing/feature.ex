@@ -71,13 +71,13 @@ defmodule Plausible.Billing.Feature do
               :ok | {:error, :upgrade_required} | {:error, :not_implemented}
 
   @features [
-    Plausible.Billing.Feature.Goals,
-    Plausible.Billing.Feature.StatsAPI,
-    Plausible.Billing.Feature.SitesAPI,
     Plausible.Billing.Feature.Props,
     Plausible.Billing.Feature.Funnels,
+    Plausible.Billing.Feature.Goals,
     Plausible.Billing.Feature.RevenueGoals,
-    Plausible.Billing.Feature.SiteSegments
+    Plausible.Billing.Feature.SiteSegments,
+    Plausible.Billing.Feature.SitesAPI,
+    Plausible.Billing.Feature.StatsAPI
   ]
 
   # Generate a union type for features
