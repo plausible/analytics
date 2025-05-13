@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
       <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between mb-4">
         <form id="filter-form" phx-change="search" action={@uri} method="GET">
           <div class="text-gray-800 text-sm inline-flex items-center w-full">
-            <div class="relative rounded-md flex">
+            <div class="relative rounded-md flex x-data">
               <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
               </div>
