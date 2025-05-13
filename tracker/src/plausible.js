@@ -293,6 +293,11 @@ function defaultEndpoint() {
 }
 
 function init(overrides) {
+  if (COMPILE_CONFIG && window.plausible && window.plausible.l) {
+    console.warn('Plausible analytics script was already initialized, skipping init')
+    return
+  }
+
   if (COMPILE_CONFIG && overrides) {
     config.endpoint = overrides.endpoint || config.endpoint
     config.domain = overrides.domain || config.domain
@@ -620,6 +625,8 @@ function init(overrides) {
   }
 
   window.plausible = trigger
+  window.plausible.init = init
+  window.plausible.l = true
 }
 
 if (COMPILE_CONFIG) {
