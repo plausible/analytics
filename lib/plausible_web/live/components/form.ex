@@ -90,14 +90,21 @@ defmodule PlausibleWeb.Live.Components.Form do
   end
 
   def input(%{type: "checkbox"} = assigns) do
+    assigns =
+      assign_new(assigns, :checked, fn ->
+        Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
+      end)
+
     ~H"""
     <div class={[
       "flex flex-inline items-center sm:justify-start justify-center gap-x-2",
       @mt? && "mt-2"
     ]}>
+      <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
       <input
         type="checkbox"
-        value={@value || "true"}
+        value={assigns[:value] || "true"}
+        checked={@checked}
         id={@id}
         name={@name}
         class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
@@ -133,6 +140,22 @@ defmodule PlausibleWeb.Live.Components.Form do
           {render_slot(@help_content)}
         </span>
       </.label>
+    </div>
+    """
+  end
+
+  def input(%{type: "textarea"} = assigns) do
+    ~H"""
+    <div class="mt-2">
+      <.label for={@id}>{@label}</.label>
+      <textarea
+        id={@id}
+        rows="6"
+        name={@name}
+        class="block w-full textarea border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
+        {@rest}
+      >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
