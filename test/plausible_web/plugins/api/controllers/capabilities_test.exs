@@ -31,7 +31,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "RevenueGoals" => false,
                    "StatsAPI" => false,
                    "SitesAPI" => false,
-                   "SiteSegments" => false
+                   "SiteSegments" => false,
+                   "Teams" => false,
+                   "SharedLinks" => false
                  }
                }
 
@@ -57,7 +59,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "RevenueGoals" => false,
                    "StatsAPI" => false,
                    "SitesAPI" => false,
-                   "SiteSegments" => false
+                   "SiteSegments" => false,
+                   "Teams" => false,
+                   "SharedLinks" => false
                  }
                }
 
@@ -85,7 +89,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "RevenueGoals" => true,
                    "StatsAPI" => true,
                    "SitesAPI" => false,
-                   "SiteSegments" => true
+                   "SiteSegments" => true,
+                   "Teams" => true,
+                   "SharedLinks" => true
                  }
                }
 
@@ -115,7 +121,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "RevenueGoals" => false,
                    "StatsAPI" => false,
                    "SitesAPI" => false,
-                   "SiteSegments" => false
+                   "SiteSegments" => false,
+                   "Teams" => true,
+                   "SharedLinks" => true
                  }
                }
 
@@ -148,7 +156,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "RevenueGoals" => false,
                    "StatsAPI" => true,
                    "SitesAPI" => true,
-                   "SiteSegments" => false
+                   "SiteSegments" => false,
+                   "Teams" => false,
+                   "SharedLinks" => false
                  }
                }
 

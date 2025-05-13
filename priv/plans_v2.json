@@ -10,7 +10,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -24,7 +26,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -38,7 +42,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -52,7 +58,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -66,7 +74,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -80,7 +90,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -94,7 +106,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -108,7 +122,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -122,7 +138,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   },
   {
@@ -136,7 +154,9 @@
     "features": [
       "goals",
       "props",
-      "stats_api"
+      "stats_api",
+      "teams",
+      "shared_links"
     ]
   }
 ]

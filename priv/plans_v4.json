@@ -8,7 +8,9 @@
     "site_limit": 10,
     "team_member_limit": 3,
     "features": [
-      "goals"
+      "goals",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 3
   },
@@ -21,7 +23,9 @@
     "site_limit": 10,
     "team_member_limit": 3,
     "features": [
-      "goals"
+      "goals",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 3
   },
@@ -34,7 +38,9 @@
     "site_limit": 10,
     "team_member_limit": 3,
     "features": [
-      "goals"
+      "goals",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 3
   },
@@ -47,7 +53,9 @@
     "site_limit": 10,
     "team_member_limit": 3,
     "features": [
-      "goals"
+      "goals",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 3
   },
@@ -60,7 +68,9 @@
     "site_limit": 10,
     "team_member_limit": 3,
     "features": [
-      "goals"
+      "goals",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 3
   },
@@ -73,7 +83,9 @@
     "site_limit": 10,
     "team_member_limit": 3,
     "features": [
-      "goals"
+      "goals",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 3
   },
@@ -86,7 +98,9 @@
     "site_limit": 10,
     "team_member_limit": 3,
     "features": [
-      "goals"
+      "goals",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 3
   },
@@ -99,7 +113,9 @@
     "site_limit": 10,
     "team_member_limit": 3,
     "features": [
-      "goals"
+      "goals",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 3
   },
@@ -117,7 +133,9 @@
       "revenue_goals",
       "funnels",
       "stats_api",
-      "site_segments"
+      "site_segments",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 5
   },
@@ -135,7 +153,9 @@
       "revenue_goals",
       "funnels",
       "stats_api",
-      "site_segments"
+      "site_segments",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 5
   },
@@ -153,7 +173,9 @@
       "revenue_goals",
       "funnels",
       "stats_api",
-      "site_segments"
+      "site_segments",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 5
   },
@@ -171,7 +193,9 @@
       "revenue_goals",
       "funnels",
       "stats_api",
-      "site_segments"
+      "site_segments",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 5
   },
@@ -189,7 +213,9 @@
       "revenue_goals",
       "funnels",
       "stats_api",
-      "site_segments"
+      "site_segments",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 5
   },
@@ -207,7 +233,9 @@
       "revenue_goals",
       "funnels",
       "stats_api",
-      "site_segments"
+      "site_segments",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 5
   },
@@ -225,7 +253,9 @@
       "revenue_goals",
       "funnels",
       "stats_api",
-      "site_segments"
+      "site_segments",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 5
   },
@@ -243,7 +273,9 @@
       "revenue_goals",
       "funnels",
       "stats_api",
-      "site_segments"
+      "site_segments",
+      "teams",
+      "shared_links"
     ],
     "data_retention_in_years": 5
   }

@@ -75,6 +75,8 @@ defmodule Plausible.Billing.Feature do
     Plausible.Billing.Feature.StatsAPI,
     Plausible.Billing.Feature.SitesAPI,
     Plausible.Billing.Feature.Props,
+    Plausible.Billing.Feature.Teams,
+    Plausible.Billing.Feature.SharedLinks,
     Plausible.Billing.Feature.Funnels,
     Plausible.Billing.Feature.RevenueGoals,
     Plausible.Billing.Feature.SiteSegments
@@ -196,6 +198,20 @@ defmodule Plausible.Billing.Feature.Props do
     name: :props,
     display_name: "Custom Properties",
     toggle_field: :props_enabled
+end
+
+defmodule Plausible.Billing.Feature.Teams do
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :teams,
+    display_name: "Team Accounts"
+end
+
+defmodule Plausible.Billing.Feature.SharedLinks do
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :shared_links,
+    display_name: "Shared Links"
 end
 
 defmodule Plausible.Billing.Feature.SiteSegments do
