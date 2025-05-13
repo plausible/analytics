@@ -9,6 +9,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Shared do
   def tab(assigns) do
     ~H"""
     <.link
+      replace
       patch={"?tab=#{@to}"}
       class="group relative min-w-0 flex-1 overflow-hidden rounded-l-lg px-4 py-4 text-center text-sm font-medium focus:z-10 cursor-pointer text-gray-800 dark:text-gray-200"
     >
