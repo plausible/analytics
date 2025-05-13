@@ -4,10 +4,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Shared do
 
   attr :to, :string, required: true
   attr :tab, :string, required: true
-  attr :target, :any, required: true
   slot :inner_block, required: true
 
   def tab(assigns) do
+    title = """
+      hello
+    """
+
     ~H"""
     <.link
       patch={"?tab=#{@to}"}

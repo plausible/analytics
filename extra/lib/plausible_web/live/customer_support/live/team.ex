@@ -130,14 +130,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               class="isolate flex divide-x dark:divide-gray-900 divide-gray-200 rounded-lg shadow dark:shadow-none"
               aria-label="Tabs"
             >
-              <.tab to="overview" target={@myself} tab={@tab}>Overview</.tab>
-              <.tab to="members" target={@myself} tab={@tab}>
+              <.tab to="overview" tab={@tab}>Overview</.tab>
+              <.tab to="members" tab={@tab}>
                 Members ({number_format(@usage.team_members)}/{number_format(@limits.team_members)})
               </.tab>
-              <.tab to="sites" target={@myself} tab={@tab}>
+              <.tab to="sites" tab={@tab}>
                 Sites ({number_format(@usage.sites)}/{number_format(@limits.sites)})
               </.tab>
-              <.tab to="billing" target={@myself} tab={@tab}>
+              <.tab to="billing" tab={@tab}>
                 Billing
               </.tab>
             </nav>
@@ -146,7 +146,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
         <div
           :if={!@show_plan_form?}
-          class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-900 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600"
+          class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-850 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600"
         >
           <div class="px-6 py-5 text-center text-sm font-medium">
             <span>
@@ -191,7 +191,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             <:thead>
               <.th>Created</.th>
               <.th>Interval</.th>
-              <.th>PaddlePlan ID</.th>
+              <.th>PaddlePlanID</.th>
               <.th>Limits</.th>
               <.th>Features</.th>
             </:thead>
@@ -200,26 +200,25 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <.td>{plan.billing_interval}</.td>
               <.td>{plan.paddle_plan_id}</.td>
               <.td max_width="max-w-40">
-                <.tooltip sticky?={false}>
-                  <:tooltip_content>
-                    <dl class="text-xs">
-                      <dt class="font-semibold">Pageviews</dt>
-                      <dd>{number_format(plan.monthly_pageview_limit)}</dd>
-                      <dt class="font-semibold">Sites</dt>
-                      <dd>{number_format(plan.site_limit)}</dd>
-                      <dt class="font-semibold">Members</dt>
-                      <dd>{number_format(plan.team_member_limit)}</dd>
-                      <dt class="font-semibold">API Requests</dt>
-                      <dd>{number_format(plan.hourly_api_request_limit)} / hour</dd>
-                    </dl>
-                  </:tooltip_content>
-                  <a href={} target="_blank" rel="noopener noreferrer">
-                    <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
-                  </a>
-                </.tooltip>
+                <% title =
+                  [
+                    {"Pageviews", number_format(plan.monthly_pageview_limit)},
+                    {"Sites", number_format(plan.site_limit)},
+                    {"Members", number_format(plan.team_member_limit)},
+                    {"API Requests", number_format(plan.hourly_api_request_limit)}
+                  ]
+                  |> Enum.map_join("\n", fn {t, v} -> "#{t}: #{v}" end) %>
+                <a class="cursor-help" title={title}>
+                  <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
+                </a>
               </.td>
               <.td>
-                <span class="text-xs">
+                <span
+                  class="cursor-help text-xs"
+                  title={
+                    plan.features |> Enum.map(& &1.display_name()) |> Enum.sort() |> Enum.join(", ")
+                  }
+                >
                   {plan.features |> Enum.map(& &1.display_name()) |> Enum.sort() |> Enum.join(", ")}
                 </span>
               </.td>
@@ -653,15 +652,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     )
   end
 
-  def number_format(number) when is_integer(number) do
-    number
-    |> Integer.to_string()
-    |> String.reverse()
-    |> String.replace(~r/.{3}(?=.)/, "\\0,")
-    |> String.reverse()
+  defp number_format(number) when is_integer(number) do
+    Cldr.Number.to_string!(number)
   end
 
-  def number_format(other), do: other
+  defp number_format(other), do: other
 
   @numeric_fields [
     "team_id",
