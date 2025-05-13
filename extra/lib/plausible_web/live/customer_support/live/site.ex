@@ -70,7 +70,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
         :if={@tab == "overview"}
         for={@form}
         phx-target={@myself}
-        phx-submit="change"
+        phx-submit="save-site"
         class="mt-8"
       >
         <.input
@@ -177,7 +177,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
     """
   end
 
-  def handle_event("change", %{"site" => params}, socket) do
+  def handle_event("save-site", %{"site" => params}, socket) do
     changeset = Plausible.Site.crm_changeset(socket.assigns.site, params)
 
     case Plausible.Repo.update(changeset) do
