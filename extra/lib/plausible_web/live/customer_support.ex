@@ -99,9 +99,19 @@ defmodule PlausibleWeb.Live.CustomerSupport do
         ]}
       >
         <div class="overflow-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300 w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg">
-          <.styled_link :if={@current} class="text-xs" new_tab={true} href={kaffy_url(@current, @id)}>
-            open in Kaffy
-          </.styled_link>
+          <div class="flex justify-between text-xs">
+            <.styled_link onclick="window.history.go(-1); return false;">
+              &larr; Previous
+            </.styled_link>
+            <.styled_link
+              :if={@current}
+              class="text-xs"
+              new_tab={true}
+              href={kaffy_url(@current, @id)}
+            >
+              open in Kaffy
+            </.styled_link>
+          </div>
           <.live_component
             :if={@current}
             module={@current.component()}
