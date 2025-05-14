@@ -37,7 +37,6 @@ defmodule PlausibleWeb.Tracker do
       hash: Map.get(script_config, "hash", false),
       outboundLinks: Map.get(script_config, "outbound-links", false),
       fileDownloads: Map.get(script_config, "file-downloads", false),
-      pageviewProps: Map.get(script_config, "pageview-props", false),
       taggedEvents: Map.get(script_config, "tagged-events", false),
       revenue: Map.get(script_config, "revenue", false),
       # Options not directly exposed via onboarding

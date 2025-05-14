@@ -24,7 +24,6 @@ defmodule PlausibleWeb.TrackerTest do
                hash: true,
                outboundLinks: false,
                fileDownloads: false,
-               pageviewProps: false,
                taggedEvents: true,
                revenue: false,
                local: false,
