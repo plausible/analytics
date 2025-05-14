@@ -732,10 +732,10 @@ defmodule PlausibleWeb.Components.Generic do
 
   def filter_bar(assigns) do
     ~H"""
-    <div class="mb-6 flex items-center justify-between">
-      <div class="text-gray-800 inline-flex items-center">
-        <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
-          <form id="filter-form" phx-change="filter" class="flex items-center">
+    <div class="mb-6 flex items-center justify-between" x-data>
+      <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
+        <form id="filter-form" phx-change="filter" class="flex items-center">
+          <div class="text-gray-800 inline-flex items-center">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
             </div>
@@ -744,8 +744,15 @@ defmodule PlausibleWeb.Components.Generic do
               name="filter-text"
               id="filter-text"
               class="w-36 sm:w-full pl-8 text-sm shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
-              placeholder={@placeholder}
+              placeholder="Press / to search"
+              x-ref="filter_text"
+              phx-debounce={200}
+              autocomoplete="off"
+              x-on:keydown.prevent.slash.window="$refs.filter_text.focus(); $refs.filter_text.select();"
+              x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter?.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
               value={@filter_text}
+              x-on:focus={"$refs.filter_text.placeholder = '#{@placeholder}';"}
+              x-on:blur="$refs.filter_text.placeholder = 'Press / to search';"
             />
 
             <Heroicons.backspace
@@ -753,9 +760,10 @@ defmodule PlausibleWeb.Components.Generic do
               class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
               phx-click="reset-filter-text"
               id="reset-filter"
+              x-ref="reset_filter"
             />
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
       {render_slot(@inner_block)}
     </div>

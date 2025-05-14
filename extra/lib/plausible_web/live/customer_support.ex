@@ -36,47 +36,9 @@ defmodule PlausibleWeb.Live.CustomerSupport do
         </h2>
       </div>
 
-      <div
-        class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between mb-4"
-        x-data
-      >
+      <div class="mb-4 mt-4">
         <form id="filter-form" phx-change="search" action={@uri} method="GET">
-          <div class="text-gray-800 text-sm inline-flex items-center w-full">
-            <div class="relative rounded-md flex">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
-              </div>
-              <input
-                type="text"
-                name="filter_text"
-                id="filter-text"
-                phx-debounce={200}
-                class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md"
-                placeholder="Press / to search"
-                phx-click="close"
-                autocomplete="off"
-                value={@filter_text}
-                x-ref="filter_text"
-                x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter?.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
-                x-on:keydown.prevent.slash.window="$refs.filter_text.focus(); $refs.filter_text.select();"
-                x-on:blur="$refs.filter_text.placeholder = 'Press / to search';"
-                x-on:focus="$refs.filter_text.placeholder = 'Search';"
-              />
-            </div>
-
-            <button
-              :if={String.trim(@filter_text) != ""}
-              class="phx-change-loading:hidden ml-2"
-              phx-click="reset-filter-text"
-              id="reset-filter"
-              x-ref="reset_filter"
-              type="button"
-            >
-              <Heroicons.backspace class="feather hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500" />
-            </button>
-
-            <.spinner class="hidden phx-change-loading:inline ml-2" />
-          </div>
+          <.filter_bar filter_text={@filter_text} placeholder="Search everything"></.filter_bar>
         </form>
       </div>
 
@@ -159,7 +121,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   @impl true
-  def handle_event("search", %{"filter_text" => input}, socket) do
+  def handle_event("search", %{"filter-text" => input}, socket) do
     socket = set_filter_text(socket, input)
     {:noreply, socket}
   end
