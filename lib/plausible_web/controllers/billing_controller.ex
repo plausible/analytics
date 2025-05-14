@@ -19,11 +19,11 @@ defmodule PlausibleWeb.BillingController do
   def choose_plan(conn, _params) do
     team = conn.assigns.current_team
 
-    live_module =
+    {live_module, hide_header?} =
       if FunWithFlags.enabled?(:starter_tier, for: conn.assigns.current_user) do
-        PlausibleWeb.Live.ChoosePlan
+        {PlausibleWeb.Live.ChoosePlan, true}
       else
-        PlausibleWeb.Live.LegacyChoosePlan
+        {PlausibleWeb.Live.LegacyChoosePlan, false}
       end
 
     if Plausible.Teams.Billing.enterprise_configured?(team) do
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.BillingController do
     else
       render(conn, "choose_plan.html",
         live_module: live_module,
-        hide_header?: true,
+        hide_header?: hide_header?,
         disable_global_notices?: true,
         skip_plausible_tracking: true,
         connect_live_socket: true
