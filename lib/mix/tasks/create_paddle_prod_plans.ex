@@ -318,7 +318,6 @@ defmodule Mix.Tasks.CreatePaddleProdPlans do
       plan["monthly_pageview_limit"]
       |> PlausibleWeb.StatsView.large_number_format(capitalize_k?: true)
 
-    [type, kind, volume] |> Enum.join("_")
     "Plausible #{kind} #{type} Plan (#{volume})"
   end
 
