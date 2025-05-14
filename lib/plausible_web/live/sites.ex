@@ -51,6 +51,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <.flash_messages flash={@flash} />
     <div
+      x-ref="invitation_data"
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
       class="container pt-6"
@@ -539,9 +540,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   def search_form(assigns) do
     ~H"""
-    <form id="filter-form" phx-change="filter" action={@uri} method="GET">
-      <.filter_bar filter_text={@filter_text} placeholder="Search Sites"></.filter_bar>
-    </form>
+    <.filter_bar filter_text={@filter_text} placeholder="Search Sites"></.filter_bar>
     """
   end
 

@@ -37,9 +37,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
       </div>
 
       <div class="mb-4 mt-4">
-        <form id="filter-form" phx-change="search" action={@uri} method="GET">
-          <.filter_bar filter_text={@filter_text} placeholder="Search everything"></.filter_bar>
-        </form>
+        <.filter_bar filter_text={@filter_text} placeholder="Search everything"></.filter_bar>
       </div>
 
       <ul :if={!@current} class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
