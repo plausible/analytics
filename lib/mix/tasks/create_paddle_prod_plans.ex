@@ -57,14 +57,18 @@ defmodule Mix.Tasks.CreatePaddleProdPlans do
 
   ## Requirement 2: Paddle production credentials
 
-  You also need to obtain the Paddle credentials of prod environment (i.e.
-  `vendor_id` and `vendor_auth_code`). Those are needed to fetch the plans via
-  an actual API call after the plans have been created in Paddle.
+  You also need to obtain the Paddle credentials from prod environment and
+  replace them into the module attributes. See `@paddle_vendor_id` and
+  `@paddle_vendor_auth_code`. Those are needed to fetch the plans via an
+  actual API call after the plans have been created in Paddle.
   """
 
   use Mix.Task
 
   @requirements ["app.config"]
+
+  @paddle_vendor_id "REPLACE ME"
+  @paddle_vendor_auth_code "REPLACE ME"
 
   def run([filename]) do
     {:ok, _} = Application.ensure_all_started(:telemetry)
@@ -198,8 +202,8 @@ defmodule Mix.Tasks.CreatePaddleProdPlans do
   defp fetch_all_prod_plans() do
     "https://vendors.paddle.com/api/2.0/subscription/plans"
     |> fetch_all_paddle_plans(%{
-      vendor_id: "REPLACE ME",
-      vendor_auth_code: "REPLACE ME"
+      vendor_id: @paddle_vendor_id,
+      vendor_auth_code: @paddle_vendor_auth_code
     })
   end
 
