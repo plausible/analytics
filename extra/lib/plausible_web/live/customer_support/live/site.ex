@@ -2,12 +2,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
   @moduledoc false
   use Plausible.CustomerSupport.Resource, :component
 
-  def update(assigns, socket) do
-    site = socket.assigns[:site] || Resource.Site.get(assigns.resource_id)
-
+  def update(%{resource_id: resource_id}, socket) do
+    site = Resource.Site.get(resource_id)
     changeset = Plausible.Site.crm_changeset(site, %{})
     form = to_form(changeset)
+    {:ok, assign(socket, site: site, form: form)}
+  end
 
+  def update(%{tab: "people"}, %{assigns: %{site: site}} = socket) do
     people = Plausible.Sites.list_people(site)
 
     people =
@@ -20,9 +22,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
         end
       end)
 
-    {:ok,
-     assign(socket, site: site, form: form, tab: assigns[:tab] || "overview", people: people)}
+    {:ok, assign(socket, people: people, tab: "people")}
   end
+
+  def update(_, socket) do
+    {:ok, assign(socket, tab: "overview")}
+  end
+
+  attr :tab, :string, default: "overview"
 
   def render(assigns) do
     ~H"""
