@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   @impl true
-  def handle_event("search", %{"filter-text" => input}, socket) do
+  def handle_event("filter", %{"filter-text" => input}, socket) do
     socket = set_filter_text(socket, input)
     {:noreply, socket}
   end
