@@ -12,8 +12,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   alias Plausible.Repo
   import Ecto.Query
 
-  def update(assigns, socket) do
-    team = socket.assigns[:team] || Resource.Team.get(assigns[:resource_id])
+  def update(%{resource_id: resource_id}, socket) do
+    team = Resource.Team.get(resource_id)
     changeset = Plausible.Teams.Team.crm_changeset(team, %{})
     form = to_form(changeset)
 
@@ -25,11 +25,17 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       team_members: Teams.Billing.team_member_limit(team)
     }
 
-    plans = get_plans(team.id)
-    layout = Layout.init(team)
+    {:ok, assign(socket, team: team, form: form, usage: usage, limits: limits)}
+  end
 
+  def update(%{tab: "sites"}, %{assigns: %{team: team}} = socket) do
     any_owner = Plausible.Repo.preload(team, [:owners]).owners |> hd()
     sites = Teams.Sites.list(any_owner, %{}, team: team)
+    {:ok, assign(socket, sites: sites, tab: "sites")}
+  end
+
+  def update(%{tab: "billing"}, %{assigns: %{team: team}} = socket) do
+    plans = get_plans(team.id)
 
     plan_form =
       to_form(
@@ -41,18 +47,23 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
     {:ok,
      assign(socket,
-       sites: sites,
        plans: plans,
-       team: team,
        plan_form: plan_form,
-       layout: layout,
-       form: form,
-       tab: assigns[:tab] || "overview",
-       usage: usage,
-       limits: limits,
-       show_plan_form?: false
+       show_plan_form?: false,
+       tab: "billing"
      )}
   end
+
+  def update(%{tab: "members"}, %{assigns: %{team: team}} = socket) do
+    team_layout = Layout.init(team)
+    {:ok, assign(socket, team_layout: team_layout, tab: "members")}
+  end
+
+  def update(_, socket) do
+    {:ok, assign(socket, tab: "overview")}
+  end
+
+  attr :tab, :string, default: "overview"
 
   def render(assigns) do
     ~H"""
@@ -129,10 +140,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </div>
         </div>
 
-        <div
-          :if={!@show_plan_form?}
-          class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-850 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600"
-        >
+        <div class="grid grid-cols-1 divide-y border-t sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:bg-gray-850 text-gray-900 dark:text-gray-400 dark:divide-gray-800 dark:border-gray-600">
           <div class="px-6 py-5 text-center text-sm font-medium">
             <span>
               <strong>Subscription status</strong> <br />{subscription_status(@team)}
@@ -345,14 +353,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         </div>
 
         <div :if={@tab == "members"} class="mt-2">
-          <.table rows={Layout.sorted_for_display(@layout)}>
+          <.table rows={Layout.sorted_for_display(@team_layout)}>
             <:thead>
               <.th>User</.th>
               <.th>Type</.th>
               <.th>Role</.th>
             </:thead>
             <:tbody :let={{_, member}}>
-              <.td>
+              <.td truncate>
                 <div :if={member.id != 0}>
                   <.styled_link
                     patch={"/cs/users/user/#{member.id}"}
