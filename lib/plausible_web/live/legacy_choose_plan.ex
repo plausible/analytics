@@ -1,12 +1,21 @@
-defmodule PlausibleWeb.Live.ChoosePlan do
+defmodule PlausibleWeb.Live.LegacyChoosePlan do
   @moduledoc """
-  LiveView for upgrading to a plan, or changing an existing plan.
+  [DEPRECATED] This file is essentially a copy of
+  `PlausibleWeb.Live.ChoosePlan` with the
+  intent of keeping the old behaviour in place for the users without
+  the `starter_tier` feature flag enabled.
   """
   use PlausibleWeb, :live_view
 
   require Plausible.Billing.Subscription.Status
 
-  alias PlausibleWeb.Components.Billing.{PlanBox, PlanBenefits, Notice, PageviewSlider}
+  alias PlausibleWeb.Components.Billing.{
+    LegacyPlanBox,
+    LegacyPlanBenefits,
+    Notice,
+    PageviewSlider
+  }
+
   alias Plausible.Billing.{Plans, Quota}
 
   @contact_link "https://plausible.io/contact"
@@ -40,11 +49,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         current_user_subscription_interval(subscription)
       end)
       |> assign_new(:available_plans, fn %{subscription: subscription} ->
-        Plans.available_plans_for(subscription,
-          with_prices: true,
-          customer_ip: remote_ip,
-          v5?: true
-        )
+        Plans.available_plans_for(subscription, with_prices: true, customer_ip: remote_ip)
       end)
       |> assign_new(:recommended_tier, fn %{
                                             usage: usage,
@@ -91,12 +96,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       assigns.selected_business_plan || List.last(assigns.available_plans.business)
 
     growth_benefits =
-      PlanBenefits.for_growth(growth_plan_to_render)
+      LegacyPlanBenefits.for_growth(growth_plan_to_render)
 
     business_benefits =
-      PlanBenefits.for_business(business_plan_to_render, growth_benefits)
+      LegacyPlanBenefits.for_business(business_plan_to_render, growth_benefits)
 
-    enterprise_benefits = PlanBenefits.for_enterprise(business_benefits)
+    enterprise_benefits = LegacyPlanBenefits.for_enterprise(business_benefits)
 
     assigns =
       assigns
@@ -131,7 +136,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           />
         </div>
         <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-          <PlanBox.standard
+          <LegacyPlanBox.standard
             kind={:growth}
             owned={@owned_tier == :growth}
             recommended={@recommended_tier == :growth}
@@ -140,7 +145,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             available={!!@selected_growth_plan}
             {assigns}
           />
-          <PlanBox.standard
+          <LegacyPlanBox.standard
             kind={:business}
             owned={@owned_tier == :business}
             recommended={@recommended_tier == :business}
@@ -149,7 +154,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             available={!!@selected_business_plan}
             {assigns}
           />
-          <PlanBox.enterprise
+          <LegacyPlanBox.enterprise
             benefits={@enterprise_benefits}
             recommended={@recommended_tier == :custom}
           />

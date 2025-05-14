@@ -1,4 +1,8 @@
-defmodule PlausibleWeb.Live.ChoosePlanTest do
+defmodule PlausibleWeb.Live.LegacyChoosePlanTest do
+  @moduledoc """
+  [Deprecated]. This file tests the legacy behaviour of the
+  /billing/choose-plan page without the `starter_tier` feature flag enabled.
+  """
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Teams.Test
   @moduletag :ee_only
@@ -13,9 +17,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @v2_20m_yearly_plan_id "653258"
   @v4_growth_10k_yearly_plan_id "857079"
   @v4_growth_200k_yearly_plan_id "857081"
-  @v5_growth_200k_yearly_plan_id "910434"
   @v4_business_5m_monthly_plan_id "857111"
-  @v5_business_5m_monthly_plan_id "910457"
   @v3_business_10k_monthly_plan_id "857481"
 
   @monthly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="monthly"]/
@@ -43,7 +45,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
   describe "for a user with no subscription" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -211,7 +213,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "disableLogout" => true,
                "email" => user.email,
                "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
-               "product" => @v5_growth_200k_yearly_plan_id,
+               "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
@@ -220,7 +222,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       doc = element(lv, @monthly_interval_button) |> render_click()
 
       assert get_paddle_checkout_params(find(doc, @business_checkout_button))["product"] ==
-               @v5_business_5m_monthly_plan_id
+               @v4_business_5m_monthly_plan_id
     end
 
     test "warns about losing access to a feature", %{conn: conn, site: site} do
@@ -379,7 +381,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with an active v4 growth subscription plan" do
-    setup [:create_user, :create_site, :log_in, :subscribe_v4_growth]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in, :subscribe_v4_growth]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -583,7 +585,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with an active v4 business subscription plan" do
-    setup [:create_user, :create_site, :log_in, :subscribe_v4_business]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in, :subscribe_v4_business]
 
     test "sets pageview slider according to last cycle usage", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -744,7 +746,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v3 business (unlimited team members) subscription plan" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v3_business_10k_monthly_plan_id)
@@ -796,7 +798,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a past_due subscription" do
-    setup [:create_user, :create_site, :log_in, :create_past_due_subscription]
+    setup [
+      :create_user,
+      :disable_starter_tier,
+      :create_site,
+      :log_in,
+      :create_past_due_subscription
+    ]
 
     test "renders failed payment notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -830,7 +838,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a paused subscription" do
-    setup [:create_user, :create_site, :log_in, :create_paused_subscription]
+    setup [
+      :create_user,
+      :disable_starter_tier,
+      :create_site,
+      :log_in,
+      :create_paused_subscription
+    ]
 
     test "renders subscription paused notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -864,7 +878,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a cancelled, but still active subscription" do
-    setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
+    setup [
+      :create_user,
+      :disable_starter_tier,
+      :create_site,
+      :log_in,
+      :create_cancelled_subscription
+    ]
 
     test "does not render any global notices", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -891,7 +911,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a cancelled and expired subscription" do
-    setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
+    setup [
+      :create_user,
+      :disable_starter_tier,
+      :create_site,
+      :log_in,
+      :create_cancelled_subscription
+    ]
 
     setup %{user: user} do
       user
@@ -917,7 +943,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a grandfathered user with a high volume plan" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     test "does not render any global notices", %{conn: conn, user: user} do
       create_subscription_for(user, paddle_plan_id: @v1_50m_yearly_plan_id)
@@ -974,7 +1000,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a grandfathered user on a v1 10k plan" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
@@ -1035,7 +1061,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user without a trial_expiry_date (invited user) who owns a site (transferred)" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     setup %{user: user} do
       user
@@ -1061,7 +1087,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a free_10k subscription" do
-    setup [:create_user, :create_site, :log_in, :subscribe_free_10k]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in, :subscribe_free_10k]
 
     test "recommends growth tier when no premium features used", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -1089,7 +1115,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "disableLogout" => true,
                "email" => user.email,
                "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
-               "product" => @v5_growth_200k_yearly_plan_id,
+               "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
@@ -1097,7 +1123,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with no sites" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :disable_starter_tier, :log_in]
 
     test "does not allow to subscribe and renders notice", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -1111,7 +1137,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with no sites but pending ownership transfer" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :disable_starter_tier, :log_in]
 
     setup %{user: user} do
       old_owner = new_user()
@@ -1224,5 +1250,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     lv
     |> element(@slider_input)
     |> render_change(%{slider: index})
+  end
+
+  defp disable_starter_tier(%{user: user}) do
+    FunWithFlags.disable(:starter_tier, for_actor: user)
+    :ok
   end
 end

@@ -1,7 +1,9 @@
-defmodule PlausibleWeb.Components.Billing.PlanBenefits do
+defmodule PlausibleWeb.Components.Billing.LegacyPlanBenefits do
   @moduledoc """
-  This module exposes functions for rendering and returning plan
-  benefits for Growth, Business, and Enterprise plans.
+  [DEPRECATED] This file is essentially a copy of
+  `PlausibleWeb.Components.Billing.PlanBenefits` with the
+  intent of keeping the old behaviour in place for the users without
+  the `starter_tier` feature flag enabled.
   """
 
   use Phoenix.Component
@@ -114,6 +116,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     Enum.flat_map(plan.features, fn feature_mod ->
       case feature_mod.name() do
         :goals -> ["Goals and custom events"]
+        :teams -> []
+        :shared_links -> []
         :stats_api -> ["Stats API (600 requests per hour)", "Looker Studio Connector"]
         :revenue_goals -> ["Ecommerce revenue attribution"]
         _ -> [feature_mod.display_name()]
