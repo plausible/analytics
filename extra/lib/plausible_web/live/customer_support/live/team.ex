@@ -235,29 +235,25 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             />
 
             <.input
-              onchange="numberFormatCallback(event)"
-              onkeyup="numberFormatCallback(event)"
+              x-on:input="numberFormatCallback(event)"
               field={f[:monthly_pageview_limit]}
               label="Monthly Pageview Limit"
               autocomplete="off"
             />
             <.input
-              onchange="numberFormatCallback(event)"
-              onkeyup="numberFormatCallback(event)"
+              x-on:input="numberFormatCallback(event)"
               field={f[:site_limit]}
               label="Site Limit"
               autocomplete="off"
             />
             <.input
-              onchange="numberFormatCallback(event)"
-              onkeyup="numberFormatCallback(event)"
+              x-on:input="numberFormatCallback(event)"
               field={f[:team_member_limit]}
               label="Team Member Limit"
               autocomplete="off"
             />
             <.input
-              onchange="numberFormatCallback(event)"
-              onkeyup="numberFormatCallback(event)"
+              x-on:input="numberFormatCallback(event)"
               field={f[:hourly_api_request_limit]}
               label="Hourly API Request Limit"
               autocomplete="off"
