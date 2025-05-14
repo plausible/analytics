@@ -1,4 +1,4 @@
-import uglify from 'uglify-js'
+import { minifySync as swcMinify } from '@swc/core'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -101,7 +101,7 @@ function getCode() {
 }
 
 function minify(baseCode, globals) {
-  const result = uglify.minify(baseCode, {
+  const result = swcMinify(baseCode, {
     compress: {
       global_defs: globals
     }
