@@ -12,7 +12,7 @@
         "COMPILE_LOCAL": true,
         "COMPILE_MANUAL": true,
         "COMPILE_FILE_DOWNLOADS": true,
-        "COMPILE_PAGEVIEW_PROPS": true,
+        "COMPILE_CUSTOM_PROPERTIES": true,
         "COMPILE_TAGGED_EVENTS": true,
         "COMPILE_REVENUE": true
       }
