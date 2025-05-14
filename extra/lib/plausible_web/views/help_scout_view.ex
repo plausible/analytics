@@ -85,7 +85,7 @@ defmodule PlausibleWeb.HelpScoutView do
 
           <div class="sites">
             <p class="label">
-              Owner of <b><a href={@sites_link} target="_blank">{@sites_count} sites</a></b>
+              Owner of {@sites_count} sites
             </p>
             <p class="value"></p>
           </div>
