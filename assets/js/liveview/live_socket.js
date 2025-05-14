@@ -6,6 +6,7 @@
 import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
+import topbar from 'topbar'
 /* eslint-enable import/no-unresolved */
 
 import Alpine from 'alpinejs'
@@ -65,6 +66,14 @@ if (csrfToken && websocketUrl) {
       }
     }
   })
+
+  topbar.config({
+    barColors: { 0: '#303f9f' },
+    shadowColor: 'rgba(0, 0, 0, .3)',
+    barThickness: 4
+  })
+  window.addEventListener('phx:page-loading-start', (info) => topbar.show())
+  window.addEventListener('phx:page-loading-stop', (info) => topbar.hide())
 
   liveSocket.connect()
   window.liveSocket = liveSocket
