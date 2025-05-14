@@ -69,6 +69,16 @@ export function compileFile(variant, options) {
   }
 }
 
+export function compileWebSnippet() {
+  const code = fs.readFileSync(relPath('../src/web-snippet.js')).toString()
+  return `
+<script>
+  ${minify(code)}
+  plausible.init()
+</script>
+  `
+}
+
 function getVariantsToCompile(options) {
   let targetVariants = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
   if (options.targets !== null) {
