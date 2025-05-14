@@ -1,5 +1,3 @@
-'use strict';
-
 var location = window.location
 var document = window.document
 
