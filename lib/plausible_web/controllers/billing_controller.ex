@@ -19,10 +19,18 @@ defmodule PlausibleWeb.BillingController do
   def choose_plan(conn, _params) do
     team = conn.assigns.current_team
 
+    live_module =
+      if FunWithFlags.enabled?(:starter_tier, for: conn.assigns.current_user) do
+        PlausibleWeb.Live.ChoosePlan
+      else
+        PlausibleWeb.Live.LegacyChoosePlan
+      end
+
     if Plausible.Teams.Billing.enterprise_configured?(team) do
       redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
     else
       render(conn, "choose_plan.html",
+        live_module: live_module,
         disable_global_notices?: true,
         skip_plausible_tracking: true,
         connect_live_socket: true

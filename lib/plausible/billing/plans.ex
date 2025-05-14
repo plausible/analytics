@@ -4,7 +4,7 @@ defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
   alias Plausible.Teams
 
-  @generations [:legacy_plans, :plans_v1, :plans_v2, :plans_v3, :plans_v4]
+  @generations [:legacy_plans, :plans_v1, :plans_v2, :plans_v3, :plans_v4, :plans_v5]
 
   for group <- Enum.flat_map(@generations, &[&1, :"sandbox_#{&1}"]) do
     path = Application.app_dir(:plausible, ["priv", "#{group}.json"])
@@ -32,41 +32,51 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  @spec growth_plans_for(Subscription.t()) :: [Plan.t()]
+  @spec growth_plans_for(Subscription.t(), boolean()) :: [Plan.t()]
   @doc """
   Returns a list of growth plans available for the subscription to choose.
 
   As new versions of plans are introduced, subscriptions which were on old plans can
   still choose from old plans.
   """
-  def growth_plans_for(subscription) do
+  def growth_plans_for(subscription, v5? \\ false) do
     owned_plan = get_regular_plan(subscription)
 
+    default_plans = if v5?, do: plans_v5(), else: plans_v4()
+
     cond do
-      is_nil(owned_plan) -> plans_v4()
-      subscription && Subscriptions.expired?(subscription) -> plans_v4()
-      owned_plan.kind == :business -> plans_v4()
+      is_nil(owned_plan) -> default_plans
+      subscription && Subscriptions.expired?(subscription) -> default_plans
+      owned_plan.kind == :business -> default_plans
       owned_plan.generation == 1 -> plans_v1() |> drop_high_plans(owned_plan)
       owned_plan.generation == 2 -> plans_v2() |> drop_high_plans(owned_plan)
       owned_plan.generation == 3 -> plans_v3()
       owned_plan.generation == 4 -> plans_v4()
+      owned_plan.generation == 5 -> plans_v5()
     end
     |> Enum.filter(&(&1.kind == :growth))
   end
 
-  def business_plans_for(subscription) do
+  def business_plans_for(subscription, v5? \\ false) do
     owned_plan = get_regular_plan(subscription)
 
+    default_plans = if v5?, do: plans_v5(), else: plans_v4()
+
     cond do
-      subscription && Subscriptions.expired?(subscription) -> plans_v4()
+      subscription && Subscriptions.expired?(subscription) -> default_plans
       owned_plan && owned_plan.generation < 4 -> plans_v3()
-      true -> plans_v4()
+      owned_plan && owned_plan.generation < 5 -> plans_v4()
+      true -> default_plans
     end
     |> Enum.filter(&(&1.kind == :business))
   end
 
   def available_plans_for(subscription, opts \\ []) do
-    plans = growth_plans_for(subscription) ++ business_plans_for(subscription)
+    v5? = Keyword.get(opts, :v5?, false)
+
+    plans =
+      growth_plans_for(subscription, v5?) ++
+        business_plans_for(subscription, v5?)
 
     plans =
       if Keyword.get(opts, :with_prices) do
@@ -228,6 +238,6 @@ defmodule Plausible.Billing.Plans do
   end
 
   def all() do
-    legacy_plans() ++ plans_v1() ++ plans_v2() ++ plans_v3() ++ plans_v4()
+    legacy_plans() ++ plans_v1() ++ plans_v2() ++ plans_v3() ++ plans_v4() ++ plans_v5()
   end
 end
