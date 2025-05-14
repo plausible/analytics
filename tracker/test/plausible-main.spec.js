@@ -25,7 +25,10 @@ async function openPage(page, config, options = {}) {
   const configJson = JSON.stringify({ ...DEFAULT_CONFIG, ...config })
   let path = `/plausible-main.html?script_config=${configJson}`
   if (options.beforeScriptLoaded) {
-    path += `&before_script_loaded=${options.beforeScriptLoaded}`
+    path += `&beforeScriptLoaded=${options.beforeScriptLoaded}`
+  }
+  if (options.skipPlausibleInit) {
+    path += `&skipPlausibleInit=1`
   }
   await page.goto(path)
   await page.waitForFunction('window.plausible !== undefined')
@@ -102,10 +105,49 @@ test.describe('plausible-main.js', () => {
     })
   })
 
-  test('tracks pageview props (when feature enabled)', async ({ page }) => {
+  test('tracks static custom pageview properties (when feature enabled)', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => openPage(page, { pageviewProps: true}),
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ customProperties: { "some-prop": "456" } })
+        })
+      },
       expectedRequests: [{ n: 'pageview', p: { "some-prop": "456" } }]
+    })
+  })
+
+  test('tracks dynamic custom pageview properties (when feature enabled)', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ customProperties: () => ({ "title": document.title }) })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', p: { "title": "plausible-main.js tests" } }]
+    })
+  })
+
+  test('tracks dynamic custom pageview properties with custom events and engagements', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({
+            customProperties: (eventName) => ({ "author": "Uku", "some-prop": "456", [eventName]: "1" })
+          })
+        })
+        await page.click('#custom-event')
+        await hideAndShowCurrentTab(page, { delay: 200 })
+      },
+      expectedRequests: [
+        { n: 'pageview', p: { "author": "Uku", "some-prop": "456", "pageview": "1"} },
+        // Passed property to `plausible` call overrides the default from `config.customProperties`
+        { n: 'Custom event', p: { "author": "Karl", "some-prop": "456", "Custom event": "1" } },
+        // Engagement event inherits props from the pageview event
+        { n: 'engagement', p: { "author": "Uku", "some-prop": "456", "pageview": "1"} },
+      ]
     })
   })
 

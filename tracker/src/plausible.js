@@ -98,7 +98,7 @@ function trigger(eventName, options) {
     }
   }
 
-  if (COMPILE_PAGEVIEW_PROPS && (!COMPILE_CONFIG || config.pageviewProps)) {
+  if (COMPILE_PAGEVIEW_PROPS) {
     var propAttributes = scriptEl.getAttributeNames().filter(function (name) {
       return name.substring(0, 6) === 'event-'
     })
@@ -112,6 +112,17 @@ function trigger(eventName, options) {
     })
 
     payload.p = props
+  }
+
+  // Track custom properties for pageviews and other events
+  // Note that engagement events track custom properties differently, using `currentEngagementProps`
+  if (COMPILE_CUSTOM_PROPERTIES && config.customProperties && eventName !== 'engagement') {
+    var props = (typeof config.customProperties === 'object') ? config.customProperties : config.customProperties(eventName)
+
+    payload.p = payload.p || {}
+    for (var key in props) {
+      payload.p[key] = payload.p[key] || props[key]
+    }
   }
 
   if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
@@ -303,10 +314,10 @@ function init(overrides) {
     config.domain = overrides.domain || config.domain
     config.hash = overrides.hash || config.hash
     config.exclusions = overrides.exclusions || config.exclusions
-    config.pageviewProps = overrides.pageviewProps || config.pageviewProps
     config.revenue = overrides.revenue || config.revenue
-    config.manual = overrides.manual || config.manual
-    config.local = overrides.local || config.local
+    config.manual = config.manual || overrides.manual
+    config.local = config.local || overrides.local
+    config.customProperties = overrides.customProperties
   }
 
   endpoint = COMPILE_CONFIG ? config.endpoint : (scriptEl.getAttribute('data-api') || defaultEndpoint())
