@@ -69,7 +69,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     ~H"""
     <div>
       <script type="text/javascript">
-        function numberFormatCallback(e) {
+        const numberFormatCallback = function(e) {
           const numeric = Number(e.target.value.replace(/[^0-9]/g, ''))
           const value = numeric > 0 ? new Intl.NumberFormat("en-GB").format(numeric) : ''
           e.target.value = value
