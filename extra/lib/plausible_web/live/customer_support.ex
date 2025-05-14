@@ -232,7 +232,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     socket
     |> assign(:filter_text, filter_text)
     |> assign(:uri, uri)
-    |> push_patch(to: URI.to_string(uri))
+    |> push_patch(to: URI.to_string(uri), replace: true)
   end
 
   defp kaffy_url(nil, _id), do: ""
