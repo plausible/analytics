@@ -103,7 +103,8 @@ function getCode() {
 function minify(baseCode, globals) {
   const result = swcMinify(baseCode, {
     compress: {
-      global_defs: globals
+      global_defs: globals,
+      passes: 4
     }
   })
 
