@@ -312,7 +312,7 @@ function init(overrides) {
   dataDomain = COMPILE_CONFIG ? config.domain : scriptEl.getAttribute('data-domain')
 
   if (COMPILE_CONFIG) {
-    Object.assign(config, overrides || {})
+    Object.assign(config, overrides)
   }
 
   endpoint = COMPILE_CONFIG ? config.endpoint : (scriptEl.getAttribute('data-api') || defaultEndpoint())
