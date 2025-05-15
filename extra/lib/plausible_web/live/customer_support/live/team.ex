@@ -342,6 +342,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             <:thead>
               <.th>Domain</.th>
               <.th>Previous Domain</.th>
+              <.th>Timezone</.th>
               <.th invisible>Settings</.th>
               <.th invisible>Dashboard</.th>
             </:thead>
@@ -362,6 +363,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </div>
               </.td>
               <.td>{site.domain_changed_from || "--"}</.td>
+              <.td>{site.timezone}</.td>
               <.td>
                 <.styled_link
                   new_tab={true}
