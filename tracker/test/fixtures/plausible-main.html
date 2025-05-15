@@ -45,7 +45,6 @@
       const config = params.get('script_config')
       const script = document.createElement('script')
       script.src = `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(config)}`
-      script.setAttribute('event-some-prop', '456')
 
       var r = document.getElementsByTagName("script")[0]
       r.parentNode.insertBefore(script, r);
