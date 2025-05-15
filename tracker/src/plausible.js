@@ -44,7 +44,7 @@ function trigger(eventName, options) {
   } catch (e) {
 
   }
-  if (COMPILE_EXCLUSIONS && (!COMPILE_CONFIG || config.exclusions)) {
+  if (COMPILE_EXCLUSIONS) {
     var dataIncludeAttr = scriptEl && scriptEl.getAttribute('data-include')
     var dataExcludeAttr = scriptEl && scriptEl.getAttribute('data-exclude')
 
