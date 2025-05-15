@@ -2,7 +2,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   @moduledoc false
   use Plausible.CustomerSupport.Resource, :component
 
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.{Plans, Subscription}
   alias Plausible.Teams
   alias Plausible.Teams.Management.Layout
   alias Plausible.Billing.EnterprisePlan
@@ -37,11 +37,32 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   def update(%{tab: "billing"}, %{assigns: %{team: team}} = socket) do
     plans = get_plans(team.id)
 
+    attrs =
+      if team.subscription do
+        plan = Plans.get_subscription_plan(team.subscription)
+
+        if is_map(plan) do
+          Map.take(plan, [
+            :billing_interval,
+            :monthly_pageview_limit,
+            :site_limit,
+            :team_member_limit,
+            :hourly_api_request_limit,
+            :features
+          ])
+          |> Map.update(:features, [], fn features ->
+            Enum.map(features, &to_string(&1.name()))
+          end)
+        end
+      else
+        %{site_limit: "10,000"}
+      end
+
     plan_form =
       to_form(
         EnterprisePlan.changeset(
           %EnterprisePlan{},
-          %{site_limit: "10,000"}
+          attrs
         )
       )
 
@@ -266,6 +287,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               name={"#{f.name}[features[]][]"}
               value={mod.name()}
               label={mod.display_name()}
+              checked={mod in (f.source.changes[:features] || [])}
             />
 
             <.button type="submit">
