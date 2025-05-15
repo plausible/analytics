@@ -344,9 +344,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             />
 
             <.input type="textarea" field={f[:notes]} label="Notes" />
-            <.button type="submit">
-              Save
-            </.button>
+
+            <div class="flex justify-between">
+              <.button type="submit">
+                Save
+              </.button>
+
+              <.button
+                phx-target={@myself}
+                phx-click="delete-team"
+                data-confirm="Are you sure you want to delete this team?"
+                theme="danger"
+              >
+                Delete Team
+              </.button>
+            </div>
           </.form>
         </div>
 
@@ -498,6 +510,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       {:error, changeset} ->
         failure(socket, "Error saving team: #{inspect(changeset.errors)}")
         {:noreply, assign(socket, form: to_form(changeset))}
+    end
+  end
+
+  def handle_event("delete-team", _params, socket) do
+    case Teams.delete(socket.assigns.team) do
+      {:ok, :deleted} ->
+        {:noreply, push_navigate(put_flash(socket, :success, "Team deleted"), to: "/cs")}
+
+      {:error, :active_subscription} ->
+        failure(
+          socket,
+          "The team has an active subscription which must be canceled first."
+        )
+
+        {:noreply, socket}
     end
   end
 
