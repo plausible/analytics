@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Plausible Playwright tests</title>
+  <title>plausible-main.js tests</title>
 </head>
 
 <body>
@@ -15,26 +15,42 @@
 
   <a id="manual-pageview" onclick="plausible('pageview', { u: '/:test-plausible-main' })">Manual pageview</a>
 
+  <a id="custom-event" onclick="plausible('Custom event', { props: { author: 'Karl' } })">Custom event</a>
+
   <button id="tagged-event" class="plausible-event-name=Purchase plausible-event-foo=bar plausible-revenue-currency=EUR plausible-revenue-amount=13.32">
     Tagged event
   </button>
 
-  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
   <script>
     const params = new URLSearchParams(window.location.search)
 
-    if (params.has('before_script_loaded')) {
-      const beforeScriptLoaded = params.get('before_script_loaded')
-      eval(beforeScriptLoaded)
+
+    window.pageviewProps = { someProp: 123 }
+
+    window.includePlausibleScript = function(src) {
+      // Base snippet (minus script inclusion)
+      window.plausible=window.plausible||function(){(window.plausible.q = window.plausible.q || []).push(arguments)}
+      window.plausible.init = function(overrides) { window.plausible.o = overrides || {} }
+
+      if (params.has('beforeScriptLoaded')) {
+        const beforeScriptLoaded = params.get('beforeScriptLoaded')
+        eval(beforeScriptLoaded)
+      }
+
+      if (!params.has('skipPlausibleInit')) {
+        plausible.init()
+      }
+
+      // Load the script with the passed config
+      const config = params.get('script_config')
+      const script = document.createElement('script')
+      script.src = `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(config)}`
+
+      var r = document.getElementsByTagName("script")[0]
+      r.parentNode.insertBefore(script, r);
     }
 
-    // Trick to load the script with the passed config
-    const config = params.get('script_config')
-    const script = document.createElement('script')
-    script.src = `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(config)}`
-    script.setAttribute('event-some-prop', '456')
-
-    document.body.appendChild(script)
+    includePlausibleScript()
   </script>
 </body>
 </html>

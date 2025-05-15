@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util'
-import { compileAll } from './compiler/index.js'
+import { compileAll, compileWebSnippet } from './compiler/index.js'
 import chokidar from 'chokidar'
 
 const { values, positionals } = parseArgs({
@@ -17,6 +17,9 @@ const { values, positionals } = parseArgs({
     'suffix': {
       type: 'string',
       default: ''
+    },
+    'web-snippet': {
+      type: 'boolean',
     }
   },
   allowPositionals: true
@@ -29,6 +32,7 @@ if (values.help) {
   console.log('  --watch, -w                               Watch src/ directory for changes and recompile')
   console.log('  --suffix, -s                              Suffix to add to the output file name. Used for testing script size changes')
   console.log('  --help                                    Show this help message')
+  console.log('  --web-snippet                             Compile and output the web snippet')
   process.exit(0);
 }
 
@@ -47,6 +51,11 @@ const compileOptions = {
   targets: parse(values.target),
   only: positionals && positionals.length > 0 ? positionals.map(parse) : null,
   suffix: values.suffix
+}
+
+if (values['web-snippet']) {
+  console.log(compileWebSnippet())
+  process.exit(0)
 }
 
 await compileAll(compileOptions)

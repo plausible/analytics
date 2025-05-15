@@ -155,12 +155,31 @@ test.describe('engagement events', () => {
   test('sends an event with the same props as pageview (pageview-props extension)', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-pageview-props.html'),
-      expectedRequests: [{n: 'pageview', p: {author: 'John'}}],
+      expectedRequests: [{n: 'pageview', p: {author: 'John', index: "0"}}],
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', p: {author: 'John'}}]
+      expectedRequests: [{n: 'engagement', p: {author: 'John', index: "0"}}]
+    })
+  })
+
+  test('pageview props with custom events and values changing mid-view (pageview-props extension)', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement-pageview-props.html'),
+      expectedRequests: [{n: 'pageview', p: {author: 'John', index: "0"}}],
+    })
+
+    await page.click('#increment-event-index')
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#custom-event-button'),
+      expectedRequests: [{n: 'Custom event', p: {author: 'Karl', index: "1"}}]
+    })
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#navigate-away'),
+      expectedRequests: [{n: 'engagement', p: {author: 'John', index: "0"}}]
     })
   })
 
@@ -209,8 +228,8 @@ test.describe('engagement events', () => {
       },
       expectedRequests: [
         {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John'}},
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John'}},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John', index: "0"}},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John', index: "0"}},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html`}
       ],
       responseDelay: 1000

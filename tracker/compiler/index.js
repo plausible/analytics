@@ -1,4 +1,4 @@
-import uglify from 'uglify-js'
+import { minifySync as swcMinify } from '@swc/core'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -18,6 +18,7 @@ const DEFAULT_GLOBALS = {
   COMPILE_MANUAL: false,
   COMPILE_FILE_DOWNLOADS: false,
   COMPILE_PAGEVIEW_PROPS: false,
+  COMPILE_CUSTOM_PROPERTIES: false,
   COMPILE_TAGGED_EVENTS: false,
   COMPILE_REVENUE: false,
   COMPILE_EXCLUSIONS: false,
@@ -68,6 +69,16 @@ export function compileFile(variant, options) {
   }
 }
 
+export function compileWebSnippet() {
+  const code = fs.readFileSync(relPath('../src/web-snippet.js')).toString()
+  return `
+<script>
+  ${minify(code)}
+  plausible.init()
+</script>
+  `
+}
+
 function getVariantsToCompile(options) {
   let targetVariants = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
   if (options.targets !== null) {
@@ -90,9 +101,10 @@ function getCode() {
 }
 
 function minify(baseCode, globals) {
-  const result = uglify.minify(baseCode, {
+  const result = swcMinify(baseCode, {
     compress: {
-      global_defs: globals
+      global_defs: globals,
+      passes: 4
     }
   })
 
