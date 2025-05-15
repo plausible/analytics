@@ -3,7 +3,7 @@ defmodule Plausible.Billing.QuotaTest do
   use Plausible.DataCase, async: true
   use Plausible
   alias Plausible.Billing.{Quota, Plans}
-  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, Teams, SharedLinks}
 
   use Plausible.Teams.Test
 
@@ -581,9 +581,14 @@ defmodule Plausible.Billing.QuotaTest do
       team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
       team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id) |> team_of()
 
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team_on_v1)
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team_on_v2)
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team_on_v3)
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team_on_v1)
+
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team_on_v2)
+
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team_on_v3)
     end
 
     test "returns [Goals, Props, StatsAPI] when user is on free_10k plan" do
@@ -625,7 +630,8 @@ defmodule Plausible.Billing.QuotaTest do
 
       team = team_of(user)
 
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team)
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team)
     end
 
     test "returns all features for enterprise users who have not upgraded yet and are on trial" do
