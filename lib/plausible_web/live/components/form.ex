@@ -97,19 +97,20 @@ defmodule PlausibleWeb.Live.Components.Form do
 
     ~H"""
     <div class={[
-      "flex flex-inline items-center sm:justify-start justify-center gap-x-2",
       @mt? && "mt-2"
     ]}>
-      <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
-      <input
-        type="checkbox"
-        value={assigns[:value] || "true"}
-        checked={@checked}
-        id={@id}
-        name={@name}
-        class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-      />
-      <.label for={@id}>{@label}</.label>
+      <.label for={@id} class="gap-x-2 flex flex-inline items-center sm:justify-start justify-center ">
+        <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
+        <input
+          type="checkbox"
+          value={assigns[:value] || "true"}
+          checked={@checked}
+          id={@id}
+          name={@name}
+          class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+        />
+        {@label}
+      </.label>
     </div>
     """
   end
