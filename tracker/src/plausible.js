@@ -113,8 +113,7 @@ function trigger(eventName, options) {
   }
 
   // Track custom properties for pageviews and other events
-  // Note that engagement events track custom properties differently, using `currentEngagementProps`
-  if (COMPILE_CUSTOM_PROPERTIES && config.customProperties && eventName !== 'engagement') {
+  if (COMPILE_CUSTOM_PROPERTIES && config.customProperties) {
     var props = (typeof config.customProperties === 'object') ? config.customProperties : config.customProperties(eventName)
 
     payload.p = payload.p || {}
