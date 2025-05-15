@@ -151,6 +151,30 @@ test.describe('plausible-main.js', () => {
     })
   })
 
+  test('invalid function customProperties are ignored', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ customProperties: () => document.title })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }]
+    })
+  })
+
+  test('invalid customProperties are ignored', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ customProperties: "abcdef" })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }]
+    })
+  })
+
   test('manual mode does not track pageviews', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
