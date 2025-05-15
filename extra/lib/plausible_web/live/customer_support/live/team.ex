@@ -179,62 +179,71 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           </div>
         </div>
 
-        <div :if={@tab == "billing"} class="mt-2 text-gray-900 dark:text-gray-400">
-          <div class="bg-gray-100 dark:bg-gray-900 dark:border dark:border-gray-500 p-4 rounded-md mt-8 mb-8">
-            <span class="">
-              <p>
-                <strong class="text-xs">Usage</strong> <br />
-                <ul>
-                  <li :for={
-                    {cycle, date, total, limit} <-
-                      monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)
-                  }>
-                    {cycle} ({date}): <strong>{number_format(total)}</strong> / {number_format(limit)}
-                  </li>
-                </ul>
-              </p>
+        <div :if={@tab == "billing"} class="mt-4 mb-4 text-gray-900 dark:text-gray-400">
+          <h1 class="text-xs font-semibold">Usage</h1>
+          <.table rows={monthly_pageviews_usage(@usage.monthly_pageviews, @limits.monthly_pageviews)}>
+            <:thead>
+              <.th invisible>Cycle</.th>
+              <.th invisible>Dates</.th>
+              <.th>Total</.th>
+              <.th>Limit</.th>
+            </:thead>
+            <:tbody :let={{cycle, date, total, limit}}>
+              <.td>{cycle}</.td>
+              <.td>{date}</.td>
+              <.td>
+                <span class={if total > limit, do: "text-red-600"}>{number_format(total)}</span>
+              </.td>
+              <.td>{number_format(limit)}</.td>
+            </:tbody>
+          </.table>
+
+          <p class="mt-6 mb-4">
+            <h1 class="text-xs font-semibold">Features Used</h1>
+            <span class="text-sm">
+              {@usage.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}
             </span>
+          </p>
 
-            <p class="mt-4">
-              <strong class="text-xs">Features used</strong> <br />
-              <span>{@usage.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}</span>
-            </p>
-          </div>
-
+          <h1 class="mt-8 text-xs font-semibold">Custom Plans</h1>
           <.table :if={!@show_plan_form?} rows={@plans}>
             <:thead>
-              <.th>Created</.th>
-              <.th>Interval</.th>
-              <.th>PaddlePlanID</.th>
+              <.th invisible>Interval</.th>
+              <.th>Paddle Plan ID</.th>
               <.th>Limits</.th>
               <.th>Features</.th>
             </:thead>
             <:tbody :let={plan}>
-              <.td>{plan.inserted_at}</.td>
-              <.td>{plan.billing_interval}</.td>
-              <.td>{plan.paddle_plan_id}</.td>
-              <.td max_width="max-w-40">
-                <% title =
-                  [
-                    {"Pageviews", number_format(plan.monthly_pageview_limit)},
-                    {"Sites", number_format(plan.site_limit)},
-                    {"Members", number_format(plan.team_member_limit)},
-                    {"API Requests", number_format(plan.hourly_api_request_limit)}
-                  ]
-                  |> Enum.map_join("\n", fn {t, v} -> "#{t}: #{v}" end) %>
-                <a class="cursor-help" title={title}>
-                  <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
-                </a>
+              <.td class="align-top">
+                {plan.billing_interval}
               </.td>
-              <.td>
+              <.td class="align-top">
+                {plan.paddle_plan_id}
+
                 <span
-                  class="cursor-help text-xs"
-                  title={
-                    plan.features |> Enum.map(& &1.display_name()) |> Enum.sort() |> Enum.join(", ")
+                  :if={
+                    (@team.subscription && @team.subscription.paddle_plan_id) == plan.paddle_plan_id
                   }
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-xs bg-red-100 text-red-800"
                 >
-                  {plan.features |> Enum.map(& &1.display_name()) |> Enum.sort() |> Enum.join(", ")}
+                  CURRENT
                 </span>
+              </.td>
+              <.td max_width="max-w-40">
+                <.table rows={[
+                  {"Pageviews", number_format(plan.monthly_pageview_limit)},
+                  {"Sites", number_format(plan.site_limit)},
+                  {"Members", number_format(plan.team_member_limit)},
+                  {"API Requests", number_format(plan.hourly_api_request_limit)}
+                ]}>
+                  <:tbody :let={{label, value}}>
+                    <.td>{label}</.td>
+                    <.td>{value}</.td>
+                  </:tbody>
+                </.table>
+              </.td>
+              <.td class="align-top">
+                <span :for={feat <- plan.features}>{feat.display_name()}<br /></span>
               </.td>
             </:tbody>
           </.table>

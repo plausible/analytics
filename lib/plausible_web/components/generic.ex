@@ -592,6 +592,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :truncate, :boolean, default: false
   attr :max_width, :string, default: ""
   attr :height, :string, default: ""
+  attr :class, :string, default: ""
   attr :actions, :boolean, default: nil
   attr :hide_on_mobile, :boolean, default: nil
   attr :rest, :global
@@ -614,7 +615,8 @@ defmodule PlausibleWeb.Components.Generic do
         @truncate && "truncate",
         @max_width,
         @actions && "flex text-right justify-end",
-        @hide_on_mobile && "hidden md:table-cell"
+        @hide_on_mobile && "hidden md:table-cell",
+        @class
       ]}
       {@rest}
     >
