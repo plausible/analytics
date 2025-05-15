@@ -114,11 +114,16 @@ function trigger(eventName, options) {
 
   // Track custom properties for pageviews and other events
   if (COMPILE_CUSTOM_PROPERTIES && config.customProperties) {
-    var props = (typeof config.customProperties === 'object') ? config.customProperties : config.customProperties(eventName)
+    var props = config.customProperties
+    if (typeof props === 'function') {
+      props = config.customProperties(eventName)
+    }
 
-    payload.p = payload.p || {}
-    for (var key in props) {
-      payload.p[key] = payload.p[key] || props[key]
+    if (typeof props === 'object') {
+      payload.p = payload.p || {}
+      for (var key in props) {
+        payload.p[key] = payload.p[key] || props[key]
+      }
     }
   }
 
