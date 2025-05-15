@@ -85,7 +85,7 @@ defmodule Plausible.Teams do
   end
 
   def owned_sites(team) do
-    Repo.preload(team, :sites).sites
+    Repo.all(from(s in Plausible.Site, where: s.team_id == ^team.id))
   end
 
   def owned_sites(team, limit) when is_integer(limit) do
