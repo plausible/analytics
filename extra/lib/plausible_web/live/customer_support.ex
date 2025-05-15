@@ -63,11 +63,7 @@ defmodule PlausibleWeb.Live.CustomerSupport do
             <.styled_link onclick="window.history.go(-1); return false;">
               &larr; Previous
             </.styled_link>
-            <.styled_link
-              :if={@current}
-              class="text-xs"
-              href={kaffy_url(@current, @id)}
-            >
+            <.styled_link :if={@current} class="text-xs" href={kaffy_url(@current, @id)}>
               open in Kaffy
             </.styled_link>
           </div>
