@@ -364,6 +364,21 @@
     })
   }
 
+if (COMPILE_CONFIG && config.trackFormSubmissions) {
+  function trackFormSubmission(e) {
+    if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
+      plausible('WP Form Completions', { props: { path: location.pathname } });
+    }
+  }
+
+  function attachFormSubmitTracking() {
+    document.addEventListener('submit', trackFormSubmission, true);
+    window.trackingFormSubmission = true
+  }
+
+  attachFormSubmitTracking();
+}
+
 if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
   function getLinkEl(link) {
     while (link && (typeof link.tagName === 'undefined' || !isLink(link) || !link.href)) {
