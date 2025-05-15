@@ -120,10 +120,7 @@ function trigger(eventName, options) {
     }
 
     if (typeof props === 'object') {
-      payload.p = payload.p || {}
-      for (var key in props) {
-        payload.p[key] = payload.p[key] || props[key]
-      }
+      payload.p = Object.assign({}, props, payload.p)
     }
   }
 
@@ -311,19 +308,14 @@ function init(overrides) {
     return
   }
 
-  if (COMPILE_CONFIG && overrides) {
-    config.endpoint = overrides.endpoint || config.endpoint
-    config.domain = overrides.domain || config.domain
-    config.hash = overrides.hash || config.hash
-    config.exclusions = overrides.exclusions || config.exclusions
-    config.revenue = overrides.revenue || config.revenue
-    config.manual = config.manual || overrides.manual
-    config.local = config.local || overrides.local
-    config.customProperties = overrides.customProperties
+  // Explicitly set dataDomain before any overrides are applied as `plausible-main` does not support overriding it
+  dataDomain = COMPILE_CONFIG ? config.domain : scriptEl.getAttribute('data-domain')
+
+  if (COMPILE_CONFIG) {
+    Object.assign(config, overrides || {})
   }
 
   endpoint = COMPILE_CONFIG ? config.endpoint : (scriptEl.getAttribute('data-api') || defaultEndpoint())
-  dataDomain = COMPILE_CONFIG ? config.domain : scriptEl.getAttribute('data-domain')
 
   currentDocumentHeight = getDocumentHeight()
   maxScrollDepthPx = getCurrentScrollDepthPx()

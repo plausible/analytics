@@ -60,14 +60,6 @@ test.describe('plausible-main.js', () => {
     })
   })
 
-  test('supports overriding the endpoint with a custom proxy endpoint', async ({ page }) => {
-    await expectPlausibleInAction(page, {
-      pathToMock: 'http://proxy.io/endpoint',
-      action: () => openPage(page, { endpoint: 'http://proxy.io/endpoint' }),
-      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html')}]
-    })
-  })
-
   test('does not track pageview props, outbound links, file downloads or tagged events without features being enabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
@@ -275,5 +267,34 @@ test.describe('plausible-main.js', () => {
     const warning = await consolePromise
     expect(warning.type()).toBe("warning")
     expect(warning.text()).toContain('Plausible analytics script was already initialized, skipping init')
+  })
+
+  test('does not support overriding domain via `init`', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({
+            domain: 'another-domain.com'
+          })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html') }]
+    })
+  })
+
+  test('supports overriding the endpoint with a custom proxy via `init`', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      pathToMock: 'http://proxy.io/endpoint',
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({
+            endpoint: 'http://proxy.io/endpoint'
+          })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html')}]
+    })
   })
 })
