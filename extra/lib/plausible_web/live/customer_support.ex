@@ -66,7 +66,6 @@ defmodule PlausibleWeb.Live.CustomerSupport do
             <.styled_link
               :if={@current}
               class="text-xs"
-              new_tab={true}
               href={kaffy_url(@current, @id)}
             >
               open in Kaffy
