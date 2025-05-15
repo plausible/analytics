@@ -2,6 +2,7 @@
 Mix.Tasks.CancelSubscription.html
 Mix.Tasks.CleanClickhouse.html
 Mix.Tasks.CreateFreeSubscription.html
+Mix.Tasks.CreatePaddleProdPlans.html
 Mix.Tasks.CreatePaddleSandboxPlans.html
 Mix.Tasks.DownloadCountryDatabase.html
 Mix.Tasks.GenerateReferrerFavicons.html
@@ -477,8 +478,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-B47A9213.js
-dist/sidebar_items-2BC0C87E.js
+dist/search_data-E91486DE.js
+dist/sidebar_items-0E368BAE.js
 index.html
 readme.html
 search.html

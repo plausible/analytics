@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-2BC0C87E.js"></script>
+    <script src="dist/sidebar_items-0E368BAE.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -138,16 +138,23 @@ Pages
 
 
     <section id="moduledoc">
-<p>Utility for creating Sandbox plans that are used on staging. The <code class="inline">filename</code>
-argument should be the name of the JSON file containing the production plans.
-E.g.: <code class="inline">plans_v4.json</code>.</p><p>Unfortunately, there's no API in Paddle that would allow &quot;bulk creating&quot;
-plans - it has to be done through the UI. As a hack though, we can automate
-the process by copying the curl request with the help of browser devtools.</p><p>Therefore, this Mix.Task <strong>does not work out of the box</strong> and the actual curl
-command that it executes must be replaced by the developer. Here's how:</p><ol start="0"><li>Obtain access to the Sandbox Paddle account and log in</li><li>Navigate to <a href="https://sandbox-vendors.paddle.com/subscriptions/plans">https://sandbox-vendors.paddle.com/subscriptions/plans</a></li><li>Click the &quot;+ New Plan&quot; button to open the form</li><li>Open browser devtools, fill in the required fields and submit the form</li><li>Find the POST request from the &quot;Network&quot; tab and copy it as cURL</li><li>Come back here and paste it into the <code class="inline">create_paddle_plan</code> function</li><li>Replace the params within the string with the real params (these should
-be available in the function already)</li></ol><p>Once the plans are created successfully, the task will also fetch the IDs
-(i.e. paddle_plan_id's) and write the <code class="inline">sandbox_plans_v*.json</code> file (which is
-basically the same set of production plans but with <code class="inline">monthly_product_id</code> and
-<code class="inline">yearly_product_id</code> replaced with the sandbox ones).</p>
+<p>Utility for creating Sandbox plans that are used on staging. The product of
+this task is a <code class="inline">sandbox_plans_v*.json</code> file matching with the production
+plans, just with the monthly/yearly product_id's of the sandbox plans.</p><p>In principle, this task works like <a href="Mix.Tasks.CreatePaddleProdPlans.html"><code class="inline">Mix.Tasks.CreatePaddleProdPlans</code></a>, with
+the following differences:</p><ul><li><p>The <code class="inline">filename</code> argument should be the name of the JSON file containing the
+production plans (meaning that those should be created as the first step).
+No special &quot;input file&quot; required.</p></li><li><p>To copy the curl command from the browser, you need to add a plan from
+<a href="https://sandbox-vendors.paddle.com/subscriptions/plans">https://sandbox-vendors.paddle.com/subscriptions/plans</a>. Everything else is
+the same - please see <code class="inline">create_paddle_prod_plans.ex</code> for instructions.</p></li><li><p>This task can be executed multiple times in a row - it will not create
+duplicates in Sandbox Paddle. On staging we can use a specific plan-naming
+structure to determine whether a plan has been created already. On prod we
+cannot do that since the plan names need to look nice.</p></li><li><p>No need to copy paddle API credentials.</p></li></ul><h2 id="module-usage-example" class="section-heading">
+  <a href="#module-usage-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Usage example:</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="n">mix</span><span class="w"> </span><span class="n">create_paddle_sandbox_plans</span><span class="w"> </span><span class="n">plans_v5</span><span class="o">.</span><span class="n">json</span></code></pre>
     </section>
 
 </div>
@@ -195,7 +202,7 @@ basically the same set of production plans but with <code class="inline">monthly
     </a>
     <h1 class="signature" translate="no">run(list)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/mix/tasks/create_paddle_sandbox_plans.ex#L33" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/mix/tasks/create_paddle_sandbox_plans.ex#L37" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
