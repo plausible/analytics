@@ -14,14 +14,13 @@ defmodule PlausibleWeb.Tracker do
     config_js_content =
       site
       |> plausible_main_config()
-      |> Enum.map(fn
-        {key, value} when is_binary(value) -> "#{key}:#{Jason.encode!(value)}"
+      |> Enum.flat_map(fn
+        {key, value} when is_binary(value) -> ["#{key}:#{Jason.encode!(value)}"]
         # :TRICKY: Save bytes by using short-hand for true
-        {key, true} -> "#{key}:!0"
+        {key, true} -> ["#{key}:!0"]
         # Not enabled values can be omitted
-        {_key, false} -> nil
+        {_key, false} -> []
       end)
-      |> Enum.reject(&(&1 == nil))
       |> Enum.sort_by(&String.length/1, :desc)
       |> Enum.join(",")
 
