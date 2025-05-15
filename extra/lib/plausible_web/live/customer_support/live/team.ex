@@ -290,7 +290,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             />
 
             <.input
-              :for={mod <- Plausible.Billing.Feature.list()}
+              :for={
+                mod <-
+                  Plausible.Billing.Feature.list()
+                  |> Enum.sort_by(fn item -> if item.name() == :stats_api, do: 0, else: 1 end)
+              }
               :if={not mod.free?()}
               type="checkbox"
               name={"#{f.name}[features[]][]"}
