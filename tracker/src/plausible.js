@@ -10,7 +10,7 @@ if (COMPILE_COMPAT) {
 var config = {}
 
 if (COMPILE_CONFIG) {
-  config = "<%= @config_json %>"
+  config = "<%= @config_js %>"
 }
 
 var endpoint

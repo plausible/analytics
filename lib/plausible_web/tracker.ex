@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Tracker do
       |> Enum.join(",")
 
     @plausible_main_script
-    |> String.replace("\"<%= @config_json %>\"", "{#{config_js_content}}")
+    |> String.replace("\"<%= @config_js %>\"", "{#{config_js_content}}")
   end
 
   def plausible_main_config(site) do
