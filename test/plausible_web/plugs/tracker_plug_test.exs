@@ -39,7 +39,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
       assert String.contains?(response, "domain:\"#{site.domain}\"")
       assert String.contains?(response, "hash:!0")
       assert String.contains?(response, "taggedEvents:!0")
-      assert not String.contains?(response, "outboundLinks:!0")
+      refute String.contains?(response, "outboundLinks:!0")
     end
 
     # window.plausible is a substring checked for by the wordpress plugin to avoid 'optimization' by other wordpress plugins
@@ -80,7 +80,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
       assert String.contains?(response, "hashchange")
       assert String.contains?(response, "Outbound Link: Click")
 
-      assert !String.contains?(response, "data-exclude")
+      refute String.contains?(response, "data-exclude")
       # local extension disabled
       assert String.contains?(response, "/^localhost$|^127(\\.[0-9]+)")
 
