@@ -3,9 +3,12 @@ defmodule PlausibleWeb.Tracker do
   Helper module for building the dynamic tracker script. Used by PlausibleWeb.TrackerPlug.
   """
 
+  path = Application.app_dir(:plausible, "priv/tracker/js/plausible-main.js")
+  # On CI, the file might not be present for static checks so we create an empty one
+  File.touch!(path)
+
+  @plausible_main_script File.read!(path)
   @external_resource "priv/tracker/js/plausible-main.js"
-  @plausible_main_script Application.app_dir(:plausible, "priv/tracker/js/plausible-main.js")
-                         |> File.read!()
 
   def plausible_main_script_tag(site) do
     config_js_content =
