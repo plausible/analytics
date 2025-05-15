@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-160113B8.js"></script>
+    <script src="dist/sidebar_items-2BC0C87E.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -139,9 +139,10 @@ Pages
 
     <section id="moduledoc">
 <p>Phoenix LiveComponent for a combobox UI element with search and selection
-functionality.</p><p>The component allows users to select an option from a list of options,
+functionality. </p><p>The component allows users to select an option from a list of options,
 which can be searched by typing in the input field.</p><p>The component renders an input field with a dropdown anchor and a
-hidden input field for submitting the selected value.</p><p>The number of options displayed in the dropdown is limited to 15
+hidden input field for submitting the selected value. In order to remain
+functional, the component must be embedded in a <code class="inline">&lt;form/&gt;</code>.</p><p>The number of options displayed in the dropdown is limited to 15
 by default but can be customized. When a user types into the input
 field, the component searches the available options and provides
 suggestions based on the input.</p><p>Any function can be supplied via <code class="inline">suggest_fun</code> attribute</p><ul><li>see the provided <code class="inline">ComboBox.StaticSearch</code>.</li></ul><p>In most cases the <code class="inline">suggest_fun</code> runs an operation that could be deferred,
@@ -261,7 +262,7 @@ verification.</p>
     </a>
     <h1 class="signature" translate="no">combo_dropdown(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L175" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L176" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -287,7 +288,7 @@ verification.</p>
     </a>
     <h1 class="signature" translate="no">dropdown_anchor(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L147" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L148" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -313,7 +314,7 @@ verification.</p>
     </a>
     <h1 class="signature" translate="no">handle_event(binary, params, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L282" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L283" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -333,7 +334,7 @@ verification.</p>
     </a>
     <h1 class="signature" translate="no">option(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L234" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L235" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -359,7 +360,7 @@ verification.</p>
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L77" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L78" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -387,7 +388,7 @@ verification.</p>
     </a>
     <h1 class="signature" translate="no">select_option(js \\ %JS{}, id, submit_value, display_value)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L269" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L270" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -407,7 +408,7 @@ verification.</p>
     </a>
     <h1 class="signature" translate="no">update(assigns, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L43" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L44" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

@@ -67,6 +67,7 @@ Plausible.ClickhouseSessionV2.BoolUInt8.html
 Plausible.ClickhouseSessionV2.html
 Plausible.ConfigHelpers.html
 Plausible.CrmExtensions.html
+Plausible.CustomerSupport.Resource.html
 Plausible.DataCase.html
 Plausible.DataMigration.AcquisitionChannel.html
 Plausible.DataMigration.BackfillTeams.html
@@ -351,6 +352,7 @@ PlausibleWeb.Live.Components.Pagination.html
 PlausibleWeb.Live.Components.Team.html
 PlausibleWeb.Live.Components.Verification.html
 PlausibleWeb.Live.Components.Visitors.html
+PlausibleWeb.Live.CustomerSupport.html
 PlausibleWeb.Live.Flash.html
 PlausibleWeb.Live.FunnelSettings.Form.html
 PlausibleWeb.Live.FunnelSettings.List.html
@@ -475,8 +477,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-76BD917C.js
-dist/sidebar_items-160113B8.js
+dist/search_data-B47A9213.js
+dist/sidebar_items-2BC0C87E.js
 index.html
 readme.html
 search.html
