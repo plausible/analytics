@@ -38,25 +38,23 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     plans = get_plans(team.id)
 
     attrs =
-      if team.subscription do
-        plan = Plans.get_subscription_plan(team.subscription)
+      plan = Plans.get_subscription_plan(team.subscription)
 
-        if is_map(plan) do
-          Map.take(plan, [
-            :billing_interval,
-            :monthly_pageview_limit,
-            :site_limit,
-            :team_member_limit,
-            :hourly_api_request_limit,
-            :features
-          ])
-          |> Map.update(:features, [], fn features ->
-            Enum.map(features, &to_string(&1.name()))
-          end)
-        end
-      else
-        %{site_limit: "10,000"}
-      end
+    if is_map(plan) do
+      Map.take(plan, [
+        :billing_interval,
+        :monthly_pageview_limit,
+        :site_limit,
+        :team_member_limit,
+        :hourly_api_request_limit,
+        :features
+      ])
+      |> Map.update(:features, [], fn features ->
+        Enum.map(features, &to_string(&1.name()))
+      end)
+    else
+      %{site_limit: "10,000"}
+    end
 
     plan_form =
       to_form(
