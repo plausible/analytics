@@ -182,8 +182,8 @@ var currentEngagementProps = {}
 var currentEngagementMaxScrollDepth = -1
 
 // Timestamp indicating when this particular page last became visible.
-// Reset during pageviews, set to null when page is closed.
-var runningEngagementStart = null
+// Reset during pageviews, set to 0 when page is closed.
+var runningEngagementStart = 0
 
 // When page is hidden, this 'engaged' time is saved to this variable
 var currentEngagementTime = 0
@@ -214,7 +214,7 @@ function triggerEngagement() {
     }
 
     // Reset current engagement time metrics. They will restart upon when page becomes visible or the next SPA pageview
-    runningEngagementStart = null
+    runningEngagementStart = 0
     currentEngagementTime = 0
 
     if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
@@ -226,12 +226,12 @@ function triggerEngagement() {
 }
 
 function onVisibilityChange() {
-  if (document.visibilityState === 'visible' && document.hasFocus() && runningEngagementStart === null) {
+  if (document.visibilityState === 'visible' && document.hasFocus() && runningEngagementStart === 0) {
     runningEngagementStart = Date.now()
   } else if (document.visibilityState === 'hidden' || !document.hasFocus()) {
     // Tab went back to background or lost focus. Save the engaged time so far
     currentEngagementTime = getEngagementTime()
-    runningEngagementStart = null
+    runningEngagementStart = 0
 
     triggerEngagement()
   }
