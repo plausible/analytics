@@ -31,15 +31,15 @@ function trigger(eventName, options) {
 
   if (!(COMPILE_LOCAL && (!COMPILE_CONFIG || config.local))) {
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
-      return onIgnoredEvent(eventName, 'localhost', options)
+      return onIgnoredEvent(eventName, options, 'localhost')
     }
     if ((window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) && !window.__plausible) {
-      return onIgnoredEvent(eventName, null, options)
+      return onIgnoredEvent(eventName, options)
     }
   }
   try {
     if (window.localStorage.plausible_ignore === 'true') {
-      return onIgnoredEvent(eventName, 'localStorage flag', options)
+      return onIgnoredEvent(eventName, options, 'localStorage flag')
     }
   } catch (e) {
 
@@ -281,7 +281,7 @@ function getCurrentScrollDepthPx() {
   return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
 }
 
-function onIgnoredEvent(eventName, reason, options) {
+function onIgnoredEvent(eventName, options, reason) {
   if (reason) console.warn('Ignoring Event: ' + reason);
   options && options.callback && options.callback()
 
