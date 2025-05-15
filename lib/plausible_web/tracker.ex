@@ -3,6 +3,10 @@ defmodule PlausibleWeb.Tracker do
   Helper module for building the dynamic tracker script. Used by PlausibleWeb.TrackerPlug.
   """
 
+  @external_resource "priv/tracker/js/plausible-main.js"
+  @plausible_main_script Application.app_dir(:plausible, "priv/tracker/js/plausible-main.js")
+                         |> File.read!()
+
   def plausible_main_script_tag(site) do
     config_js_content =
       site
@@ -18,8 +22,7 @@ defmodule PlausibleWeb.Tracker do
       |> Enum.sort_by(&String.length/1, :desc)
       |> Enum.join(",")
 
-    Application.app_dir(:plausible, "priv/tracker/js/plausible-main.js")
-    |> File.read!()
+    @plausible_main_script
     |> String.replace("\"<%= @config_json %>\"", "{#{config_js_content}}")
   end
 
