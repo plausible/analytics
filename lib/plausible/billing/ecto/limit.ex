@@ -20,6 +20,7 @@ defmodule Plausible.Billing.Ecto.Limit do
   def dump(:unlimited), do: {:ok, -1}
   def dump(other), do: Ecto.Type.dump(:integer, other)
 
+  # XXX: remove with kaffy
   def render_form(_conn, changeset, form, field, _options) do
     {:ok, value} = changeset |> Ecto.Changeset.get_field(field) |> dump()
 

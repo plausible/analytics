@@ -45,6 +45,7 @@ defmodule Plausible.Billing.Ecto.FeatureList do
   def load(list), do: Ecto.Type.load(type(), list)
   def dump(list), do: Ecto.Type.dump(type(), list)
 
+  # XXX: remove with kaffy
   def render_form(_conn, changeset, form, field, _options) do
     features = Ecto.Changeset.get_field(changeset, field)
 

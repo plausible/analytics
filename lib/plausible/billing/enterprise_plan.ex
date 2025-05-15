@@ -29,9 +29,14 @@ defmodule Plausible.Billing.EnterprisePlan do
     timestamps()
   end
 
+  @max round(:math.pow(2, 31))
+
   def changeset(model, attrs \\ %{}) do
     model
     |> cast(attrs, @required_fields)
+    |> validate_number(:monthly_pageview_limit, less_than: @max)
+    |> validate_number(:site_limit, less_than: @max)
+    |> validate_number(:hourly_api_request_limit, less_than: @max)
     |> validate_required(@required_fields)
   end
 end
