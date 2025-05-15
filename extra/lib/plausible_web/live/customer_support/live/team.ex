@@ -195,14 +195,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </:tbody>
           </.table>
 
-          <p class="mt-6 mb-4">
+          <p :if={@usage.features != []} class="mt-6 mb-4">
             <h1 class="text-xs font-semibold">Features Used</h1>
             <span class="text-sm">
               {@usage.features |> Enum.map(& &1.display_name()) |> Enum.join(", ")}
             </span>
           </p>
 
-          <h1 class="mt-8 text-xs font-semibold">Custom Plans</h1>
+          <h1 :if={!@show_plan_form? and @plans != []} class="mt-8 text-xs font-semibold">
+            Custom Plans
+          </h1>
           <.table :if={!@show_plan_form?} rows={@plans}>
             <:thead>
               <.th invisible>Interval</.th>
