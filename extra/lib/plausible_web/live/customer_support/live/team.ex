@@ -92,6 +92,18 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           const value = numeric > 0 ? new Intl.NumberFormat("en-GB").format(numeric) : ''
           e.target.value = value
         }
+
+        const featureChangeCallback = function(e) {
+          const value = e.target.value
+          const checked = e.target.checked
+          const form = e.target.closest('form')
+
+          if (value === 'sites_api' && checked) {
+            form.querySelector('input[value=stats_api]').checked = true
+          } else if (value === 'stats_api' && !checked) {
+            form.querySelector('input[value=sites_api]').checked = false
+          }
+        }
       </script>
       <div class="overflow-hidden rounded-lg">
         <div class="p-6">
@@ -295,6 +307,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                   |> Enum.sort_by(fn item -> if item.name() == :stats_api, do: 0, else: 1 end)
               }
               :if={not mod.free?()}
+              x-on:change="featureChangeCallback(event)"
               type="checkbox"
               name={"#{f.name}[features[]][]"}
               value={mod.name()}
