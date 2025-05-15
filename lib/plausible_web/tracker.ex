@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Tracker do
       site
       |> plausible_main_config()
       |> Enum.flat_map(fn
-        {key, value} when is_binary(value) -> ["#{key}:#{Jason.encode!(value)}"]
+        {key, value} when is_binary(value) -> ["#{key}:#{JSON.encode!(value)}"]
         # :TRICKY: Save bytes by using short-hand for true
         {key, true} -> ["#{key}:!0"]
         # Not enabled values can be omitted
