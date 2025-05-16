@@ -92,6 +92,18 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           const value = numeric > 0 ? new Intl.NumberFormat("en-GB").format(numeric) : ''
           e.target.value = value
         }
+
+        const featureChangeCallback = function(e) {
+          const value = e.target.value
+          const checked = e.target.checked
+          const form = e.target.closest('form')
+
+          if (value === 'sites_api' && checked) {
+            form.querySelector('input[value=stats_api]').checked = true
+          } else if (value === 'stats_api' && !checked) {
+            form.querySelector('input[value=sites_api]').checked = false
+          }
+        }
       </script>
       <div class="overflow-hidden rounded-lg">
         <div class="p-6">
@@ -295,6 +307,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                   |> Enum.sort_by(fn item -> if item.name() == :stats_api, do: 0, else: 1 end)
               }
               :if={not mod.free?()}
+              x-on:change="featureChangeCallback(event)"
               type="checkbox"
               name={"#{f.name}[features[]][]"}
               value={mod.name()}
@@ -331,9 +344,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             />
 
             <.input type="textarea" field={f[:notes]} label="Notes" />
-            <.button type="submit">
-              Save
-            </.button>
+
+            <div class="flex justify-between">
+              <.button type="submit">
+                Save
+              </.button>
+
+              <.button
+                phx-target={@myself}
+                phx-click="delete-team"
+                data-confirm="Are you sure you want to delete this team?"
+                theme="danger"
+              >
+                Delete Team
+              </.button>
+            </div>
           </.form>
         </div>
 
@@ -485,6 +510,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       {:error, changeset} ->
         failure(socket, "Error saving team: #{inspect(changeset.errors)}")
         {:noreply, assign(socket, form: to_form(changeset))}
+    end
+  end
+
+  def handle_event("delete-team", _params, socket) do
+    case Teams.delete(socket.assigns.team) do
+      {:ok, :deleted} ->
+        {:noreply, push_navigate(put_flash(socket, :success, "Team deleted"), to: "/cs")}
+
+      {:error, :active_subscription} ->
+        failure(
+          socket,
+          "The team has an active subscription which must be canceled first."
+        )
+
+        {:noreply, socket}
     end
   end
 

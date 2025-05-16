@@ -53,9 +53,19 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
 
         <.form :let={f} for={@form} phx-target={@myself} phx-submit="save-user" class="mt-8">
           <.input type="textarea" field={f[:notes]} label="Notes" />
-          <.button phx-target={@myself} type="submit">
-            Save
-          </.button>
+          <div class="flex justify-between">
+            <.button phx-target={@myself} type="submit">
+              Save
+            </.button>
+            <.button
+              phx-target={@myself}
+              phx-click="delete-user"
+              data-confirm="Are you sure you want to delete this user?"
+              theme="danger"
+            >
+              Delete User
+            </.button>
+          </div>
         </.form>
       </div>
     </div>
@@ -86,6 +96,25 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
       </div>
     </div>
     """
+  end
+
+  def handle_event("delete-user", _params, socket) do
+    case Plausible.Auth.delete_user(socket.assigns.user) do
+      {:ok, :deleted} ->
+        {:noreply, push_navigate(put_flash(socket, :success, "User deleted"), to: "/cs")}
+
+      {:error, :active_subscription} ->
+        failure(
+          socket,
+          "User's personal team has an active subscription which must be canceled first."
+        )
+
+        {:noreply, socket}
+
+      {:error, :is_only_team_owner} ->
+        failure(socket, "The user is the only public team owner on one or more teams.")
+        {:noreply, socket}
+    end
   end
 
   def handle_event("save-user", %{"user" => params}, socket) do

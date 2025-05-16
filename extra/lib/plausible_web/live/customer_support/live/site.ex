@@ -98,9 +98,21 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
           field={f[:ingest_rate_limit_scale_seconds]}
           label="Ingest Rate Limit Scale Seconds"
         />
-        <.button phx-target={@myself} type="submit">
-          Save
-        </.button>
+
+        <div class="flex justify-between">
+          <.button phx-target={@myself} type="submit">
+            Save
+          </.button>
+
+          <.button
+            phx-target={@myself}
+            phx-click="delete-site"
+            data-confirm="Are you sure you want to delete this site?"
+            theme="danger"
+          >
+            Delete Site
+          </.button>
+        </div>
       </.form>
 
       <div :if={@tab == "people"} class="mt-8">
@@ -196,5 +208,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
         failure(socket, "Error saving site: #{inspect(changeset.errors)}")
         {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  def handle_event("delete-site", _, socket) do
+    Plausible.Site.Removal.run(socket.assigns.site)
+
+    {:noreply, push_navigate(put_flash(socket, :success, "Site deleted"), to: "/cs")}
   end
 end
