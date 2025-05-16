@@ -1,5 +1,10 @@
-defmodule PlausibleWeb.Components.Billing.PlanBox do
-  @moduledoc false
+defmodule PlausibleWeb.Components.Billing.LegacyPlanBox do
+  @moduledoc """
+  [DEPRECATED] This file is essentially a copy of
+  `PlausibleWeb.Components.Billing.PlanBox` with the
+  intent of keeping the old behaviour in place for the users without
+  the `starter_tier` feature flag enabled.
+  """
 
   use PlausibleWeb, :component
 
@@ -21,7 +26,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <div
       id={"#{@kind}-plan-box"}
       class={[
-        "shadow-lg border border-gray-200 dark:border-none bg-white rounded-xl px-6 sm:px-4 py-4 sm:py-3 dark:bg-gray-800",
+        "shadow-lg bg-white rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
         !@highlight && "dark:ring-gray-600",
         @highlight && "ring-2 ring-indigo-600 dark:ring-indigo-300"
       ]}
@@ -37,9 +42,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         <.pill :if={@highlight} text={@highlight} />
       </div>
       <div>
-        <div class="h-20 pt-6 max-h-20 whitespace-nowrap overflow-hidden">
-          <.render_price_info available={@available} {assigns} />
-        </div>
+        <.render_price_info available={@available} {assigns} />
         <%= if @available do %>
           <.checkout id={"#{@kind}-checkout"} {assigns} />
         <% else %>
@@ -60,7 +63,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <div
       id="enterprise-plan-box"
       class={[
-        "rounded-xl px-6 sm:px-4 py-4 sm:py-3 bg-gray-900 shadow-xl dark:bg-gray-800",
+        "rounded-3xl px-6 sm:px-8 py-4 sm:py-6 bg-gray-900 shadow-xl dark:bg-gray-800",
         !@recommended && "dark:ring-gray-600",
         @recommended && "ring-4 ring-indigo-500 dark:ring-2 dark:ring-indigo-300"
       ]}
@@ -81,11 +84,12 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
           Recommended
         </span>
       </div>
-      <div class="h-20 pt-6 max-h-20 whitespace-nowrap overflow-hidden">
-        <span class="text-3xl lg:text-2xl xl:text-3xl font-bold tracking-tight text-white dark:text-gray-100">
+      <p class="mt-6 flex items-baseline gap-x-1">
+        <span class="text-4xl font-bold tracking-tight text-white dark:text-gray-100">
           Custom
         </span>
-      </div>
+      </p>
+      <p class="h-4 mt-1"></p>
       <.contact_button class="" />
       <PlanBenefits.render benefits={@benefits} class="text-gray-300 dark:text-gray-100" />
     </div>
@@ -107,8 +111,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
   defp render_price_info(%{available: false} = assigns) do
     ~H"""
-    <p id={"#{@kind}-custom-price"} class="flex items-baseline gap-x-1">
-      <span class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+    <p id={"#{@kind}-custom-price"} class="mt-6 flex items-baseline gap-x-1">
+      <span class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
         Custom
       </span>
     </p>
@@ -118,7 +122,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
   defp render_price_info(assigns) do
     ~H"""
-    <p class="flex items-baseline gap-x-1">
+    <p class="mt-6 flex items-baseline gap-x-1">
       <.price_tag
         kind={@kind}
         selected_interval={@selected_interval}
@@ -131,7 +135,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
   defp price_tag(%{plan_to_render: %Plan{monthly_cost: nil}} = assigns) do
     ~H"""
-    <span class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+    <span class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
       N/A
     </span>
     """
@@ -141,7 +145,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     ~H"""
     <span
       id={"#{@kind}-price-tag-amount"}
-      class="text-3xl lg:text-2xl xl:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+      class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
     >
       {@plan_to_render.monthly_cost |> Plausible.Billing.format_price()}
     </span>
@@ -156,12 +160,12 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
   defp price_tag(%{selected_interval: :yearly} = assigns) do
     ~H"""
-    <span class="text-xl lg:text-lg xl:text-xl font-bold w-max tracking-tight line-through text-gray-500 dark:text-gray-600 mr-1">
+    <span class="text-2xl font-bold w-max tracking-tight line-through text-gray-500 dark:text-gray-600 mr-1">
       {@plan_to_render.monthly_cost |> Money.mult!(12) |> Plausible.Billing.format_price()}
     </span>
     <span
       id={"#{@kind}-price-tag-amount"}
-      class="text-3xl lg:text-2xl xl:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+      class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
     >
       {@plan_to_render.yearly_cost |> Plausible.Billing.format_price()}
     </span>
@@ -238,7 +242,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
     <.tooltip :if={@exceeded_plan_limits != [] && @disabled_message}>
-      <div class="absolute top-0 text-sm w-full flex items-center text-red-700 dark:text-red-500 justify-center">
+      <div class="pt-2 text-sm w-full flex items-center text-red-700 dark:text-red-500 justify-center">
         {@disabled_message}
         <Heroicons.information_circle class="hidden sm:block w-5 h-5 sm:ml-2" />
       </div>
@@ -304,16 +308,10 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
          } = _assigns
        ) do
     cond do
-      from_kind in [:growth, :business] && to_kind == :starter ->
-        "Downgrade to Starter"
-
       from_kind == :business && to_kind == :growth ->
         "Downgrade to Growth"
 
-      from_kind == :starter && to_kind == :growth ->
-        "Upgrade to Growth"
-
-      from_kind in [:starter, :growth] && to_kind == :business ->
+      from_kind == :growth && to_kind == :business ->
         "Upgrade to Business"
 
       from_volume == to_volume && from_interval == to_interval ->

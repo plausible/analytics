@@ -8,6 +8,7 @@ Application.ensure_all_started(:double)
 
 FunWithFlags.enable(:channels)
 FunWithFlags.enable(:scroll_depth)
+FunWithFlags.enable(:starter_tier)
 
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 

@@ -113,9 +113,9 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "site_segments",
       "teams",
-      "shared_links"
+      "shared_links",
+      "site_segments"
     ],
     "data_retention_in_years": 3
   },
@@ -129,9 +129,9 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "site_segments",
       "teams",
-      "shared_links"
+      "shared_links",
+      "site_segments"
     ],
     "data_retention_in_years": 3
   },
@@ -145,9 +145,9 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "site_segments",
       "teams",
-      "shared_links"
+      "shared_links",
+      "site_segments"
     ],
     "data_retention_in_years": 3
   },
@@ -161,9 +161,9 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "site_segments",
       "teams",
-      "shared_links"
+      "shared_links",
+      "site_segments"
     ],
     "data_retention_in_years": 3
   },
@@ -177,9 +177,9 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "site_segments",
       "teams",
-      "shared_links"
+      "shared_links",
+      "site_segments"
     ],
     "data_retention_in_years": 3
   },
@@ -193,9 +193,9 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "site_segments",
       "teams",
-      "shared_links"
+      "shared_links",
+      "site_segments"
     ],
     "data_retention_in_years": 3
   },
@@ -209,9 +209,9 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "site_segments",
       "teams",
-      "shared_links"
+      "shared_links",
+      "site_segments"
     ],
     "data_retention_in_years": 3
   },
@@ -225,9 +225,9 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "site_segments",
       "teams",
-      "shared_links"
+      "shared_links",
+      "site_segments"
     ],
     "data_retention_in_years": 3
   },
@@ -241,13 +241,13 @@
     "team_member_limit": 10,
     "features": [
       "goals",
+      "teams",
+      "shared_links",
+      "site_segments",
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels",
-      "site_segments",
-      "teams",
-      "shared_links"
+      "funnels"
     ],
     "data_retention_in_years": 5
   },
@@ -261,13 +261,13 @@
     "team_member_limit": 10,
     "features": [
       "goals",
+      "teams",
+      "shared_links",
+      "site_segments",
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels",
-      "site_segments",
-      "teams",
-      "shared_links"
+      "funnels"
     ],
     "data_retention_in_years": 5
   },
@@ -281,13 +281,13 @@
     "team_member_limit": 10,
     "features": [
       "goals",
+      "teams",
+      "shared_links",
+      "site_segments",
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels",
-      "site_segments",
-      "teams",
-      "shared_links"
+      "funnels"
     ],
     "data_retention_in_years": 5
   },
@@ -301,13 +301,13 @@
     "team_member_limit": 10,
     "features": [
       "goals",
+      "teams",
+      "shared_links",
+      "site_segments",
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels",
-      "site_segments",
-      "teams",
-      "shared_links"
+      "funnels"
     ],
     "data_retention_in_years": 5
   },
@@ -321,13 +321,13 @@
     "team_member_limit": 10,
     "features": [
       "goals",
+      "teams",
+      "shared_links",
+      "site_segments",
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels",
-      "site_segments",
-      "teams",
-      "shared_links"
+      "funnels"
     ],
     "data_retention_in_years": 5
   },
@@ -341,13 +341,13 @@
     "team_member_limit": 10,
     "features": [
       "goals",
+      "teams",
+      "shared_links",
+      "site_segments",
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels",
-      "site_segments",
-      "teams",
-      "shared_links"
+      "funnels"
     ],
     "data_retention_in_years": 5
   },
@@ -361,13 +361,13 @@
     "team_member_limit": 10,
     "features": [
       "goals",
+      "teams",
+      "shared_links",
+      "site_segments",
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels",
-      "site_segments",
-      "teams",
-      "shared_links"
+      "funnels"
     ],
     "data_retention_in_years": 5
   },
@@ -381,13 +381,13 @@
     "team_member_limit": 10,
     "features": [
       "goals",
+      "teams",
+      "shared_links",
+      "site_segments",
       "props",
       "stats_api",
       "revenue_goals",
-      "funnels",
-      "site_segments",
-      "teams",
-      "shared_links"
+      "funnels"
     ],
     "data_retention_in_years": 5
   }

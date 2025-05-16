@@ -17,11 +17,13 @@ defmodule Plausible.Billing.QuotaTest do
   @v2_plan_id "654177"
   @v3_plan_id "749342"
   @v4_1m_plan_id "857101"
-  @v4_10m_growth_plan_id "857104"
-  @v4_10m_business_plan_id "857112"
+  @v5_10m_starter_plan_id "910427"
+  @v5_10m_growth_plan_id "910443"
+  @v5_10m_business_plan_id "910459"
 
-  @highest_growth_plan Plausible.Billing.Plans.find(@v4_10m_growth_plan_id)
-  @highest_business_plan Plausible.Billing.Plans.find(@v4_10m_business_plan_id)
+  @highest_starter_plan Plausible.Billing.Plans.find(@v5_10m_starter_plan_id)
+  @highest_growth_plan Plausible.Billing.Plans.find(@v5_10m_growth_plan_id)
+  @highest_business_plan Plausible.Billing.Plans.find(@v5_10m_business_plan_id)
 
   on_ee do
     @v3_business_plan_id "857481"
@@ -958,7 +960,12 @@ defmodule Plausible.Billing.QuotaTest do
       suggested_tier =
         team
         |> Plausible.Teams.Billing.quota_usage(with_features: true)
-        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, nil)
+        |> Quota.suggest_tier(
+          @highest_starter_plan,
+          @highest_growth_plan,
+          @highest_business_plan,
+          nil
+        )
 
       assert suggested_tier == nil
     end
@@ -969,9 +976,30 @@ defmodule Plausible.Billing.QuotaTest do
         team
         |> Plausible.Teams.Billing.quota_usage(with_features: true)
         |> Map.merge(%{monthly_pageviews: %{last_30_days: %{total: 12_000_000}}, sites: 1})
-        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, nil)
+        |> Quota.suggest_tier(
+          @highest_starter_plan,
+          @highest_growth_plan,
+          @highest_business_plan,
+          nil
+        )
 
       assert suggested_tier == :custom
+    end
+
+    test "returns :starter if usage within starter limits",
+         %{team: team} do
+      suggested_tier =
+        team
+        |> Plausible.Teams.Billing.quota_usage(with_features: true)
+        |> Map.put(:sites, 2)
+        |> Quota.suggest_tier(
+          @highest_starter_plan,
+          @highest_growth_plan,
+          @highest_business_plan,
+          nil
+        )
+
+      assert suggested_tier == :starter
     end
 
     test "returns :growth if usage within growth limits",
@@ -979,8 +1007,13 @@ defmodule Plausible.Billing.QuotaTest do
       suggested_tier =
         team
         |> Plausible.Teams.Billing.quota_usage(with_features: true)
-        |> Map.put(:sites, 1)
-        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, nil)
+        |> Map.put(:sites, 8)
+        |> Quota.suggest_tier(
+          @highest_starter_plan,
+          @highest_growth_plan,
+          @highest_business_plan,
+          nil
+        )
 
       assert suggested_tier == :growth
     end
@@ -991,7 +1024,12 @@ defmodule Plausible.Billing.QuotaTest do
         team
         |> Plausible.Teams.Billing.quota_usage(with_features: true)
         |> Map.put(:sites, 1)
-        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, :business)
+        |> Quota.suggest_tier(
+          @highest_starter_plan,
+          @highest_growth_plan,
+          @highest_business_plan,
+          :business
+        )
 
       assert suggested_tier == :business
     end
@@ -1002,7 +1040,12 @@ defmodule Plausible.Billing.QuotaTest do
         team
         |> Plausible.Teams.Billing.quota_usage(with_features: true)
         |> Map.merge(%{sites: 1, features: [Plausible.Billing.Feature.Funnels]})
-        |> Quota.suggest_tier(@highest_growth_plan, @highest_business_plan, nil)
+        |> Quota.suggest_tier(
+          @highest_starter_plan,
+          @highest_growth_plan,
+          @highest_business_plan,
+          nil
+        )
 
       assert suggested_tier == :business
     end

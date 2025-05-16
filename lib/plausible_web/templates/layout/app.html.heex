@@ -33,7 +33,7 @@
     ]}
     style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
   >
-    <%= if !assigns[:embedded] do %>
+    <%= if !assigns[:embedded] && !assigns[:hide_header?] do %>
       {render("_header.html", assigns)}
 
       <%= if !assigns[:disable_global_notices?] do %>

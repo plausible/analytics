@@ -40,7 +40,7 @@ defmodule Plausible.ReleaseTest do
     assert stdout =~ "Loading plausible.."
     assert stdout =~ "Starting dependencies.."
     assert stdout =~ "Starting repos.."
-    assert stdout =~ "Inserted 54 plans"
+    assert stdout =~ "Inserted 78 plans"
   end
 
   test "ecto_repos sanity check" do
