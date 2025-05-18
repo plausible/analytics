@@ -30,6 +30,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @starter_plan_tooltip "#starter-plan-box .tooltip-content"
   @starter_price_tag_amount "#starter-price-tag-amount"
   @starter_price_tag_interval "#starter-price-tag-interval"
+  @starter_discount_price_tag_amount "#starter-discount-price-tag-amount"
+  @starter_discount_price_tag_strikethrough_amount "#starter-discount-price-tag-strikethrough-amount"
+  @starter_vat_notice "#starter-vat-notice"
   @starter_highlight_pill "#{@starter_plan_box} #highlight-pill"
   @starter_checkout_button "#starter-checkout"
 
@@ -37,12 +40,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @growth_plan_tooltip "#growth-plan-box .tooltip-content"
   @growth_price_tag_amount "#growth-price-tag-amount"
   @growth_price_tag_interval "#growth-price-tag-interval"
+  @growth_discount_price_tag_amount "#growth-discount-price-tag-amount"
+  @growth_discount_price_tag_strikethrough_amount "#growth-discount-price-tag-strikethrough-amount"
+  @growth_vat_notice "#growth-vat-notice"
   @growth_highlight_pill "#{@growth_plan_box} #highlight-pill"
   @growth_checkout_button "#growth-checkout"
 
   @business_plan_box "#business-plan-box"
   @business_price_tag_amount "#business-price-tag-amount"
   @business_price_tag_interval "#business-price-tag-interval"
+  @business_discount_price_tag_amount "#business-discount-price-tag-amount"
+  @business_discount_price_tag_strikethrough_amount "#business-discount-price-tag-strikethrough-amount"
+  @business_vat_notice "#business-vat-notice"
   @business_highlight_pill "#{@business_plan_box} #highlight-pill"
   @business_checkout_button "#business-checkout"
 
@@ -65,7 +74,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "Any other questions?"
       assert doc =~ "What happens if I go over my monthly pageview limit?"
       assert doc =~ "Enterprise"
-      assert doc =~ "+ VAT if applicable"
+      assert doc =~ "+ VAT"
     end
 
     test "does not render any global notices", %{conn: conn} do
@@ -181,6 +190,27 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @starter_price_tag_amount) == "€1,690"
       assert text_of_element(doc, @growth_price_tag_amount) == "€2,540"
       assert text_of_element(doc, @business_price_tag_amount) == "€3,390"
+    end
+
+    test "displays monthly discount for yearly plans", %{conn: conn} do
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = set_slider(lv, "200k")
+
+      assert text_of_element(doc, @starter_price_tag_amount) == "€290"
+      assert text_of_element(doc, @starter_discount_price_tag_amount) == "€24.17"
+      assert text_of_element(doc, @starter_discount_price_tag_strikethrough_amount) == "€29"
+      assert text_of_element(doc, @starter_vat_notice) == "+ VAT if applicable"
+
+      assert text_of_element(doc, @growth_price_tag_amount) == "€440"
+      assert text_of_element(doc, @growth_discount_price_tag_amount) == "€36.67"
+      assert text_of_element(doc, @growth_discount_price_tag_strikethrough_amount) == "€44"
+      assert text_of_element(doc, @growth_vat_notice) == "+ VAT if applicable"
+
+      assert text_of_element(doc, @business_price_tag_amount) == "€590"
+      assert text_of_element(doc, @business_discount_price_tag_amount) == "€49.17"
+      assert text_of_element(doc, @business_discount_price_tag_strikethrough_amount) == "€59"
+      assert text_of_element(doc, @business_vat_notice) == "+ VAT if applicable"
     end
 
     test "renders contact links for all tiers when enterprise-level volume selected",

@@ -7,6 +7,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   alias PlausibleWeb.Components.Billing.{PlanBenefits, Notice}
   alias Plausible.Billing.{Plan, Quota, Subscription}
 
+  @plan_box_price_container_class "relative h-20 pt-4 max-h-20 whitespace-nowrap overflow-hidden"
+
   def standard(assigns) do
     highlight =
       cond do
@@ -15,7 +17,10 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         true -> nil
       end
 
-    assigns = assign(assigns, :highlight, highlight)
+    assigns =
+      assigns
+      |> assign(:highlight, highlight)
+      |> assign(:price_container_class, @plan_box_price_container_class)
 
     ~H"""
     <div
@@ -37,7 +42,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         <.pill :if={@highlight} text={@highlight} />
       </div>
       <div>
-        <div class="h-20 pt-6 max-h-20 whitespace-nowrap overflow-hidden">
+        <div class={@price_container_class}>
           <.render_price_info available={@available} {assigns} />
         </div>
         <%= if @available do %>
@@ -56,6 +61,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   end
 
   def enterprise(assigns) do
+    assigns = assign(assigns, :price_container_class, @plan_box_price_container_class)
+
     ~H"""
     <div
       id="enterprise-plan-box"
@@ -81,7 +88,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
           Recommended
         </span>
       </div>
-      <div class="h-20 pt-6 max-h-20 whitespace-nowrap overflow-hidden">
+      <div class={@price_container_class}>
         <span class="text-3xl lg:text-2xl xl:text-3xl font-bold tracking-tight text-white dark:text-gray-100">
           Custom
         </span>
@@ -118,56 +125,100 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
   defp render_price_info(assigns) do
     ~H"""
-    <p class="flex items-baseline gap-x-1">
-      <.price_tag
-        kind={@kind}
-        selected_interval={@selected_interval}
-        plan_to_render={@plan_to_render}
-      />
-    </p>
-    <p class="mt-1 text-xs">+ VAT if applicable</p>
-    """
-  end
-
-  defp price_tag(%{plan_to_render: %Plan{monthly_cost: nil}} = assigns) do
-    ~H"""
-    <span class="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-      N/A
-    </span>
+    <.price_tag kind={@kind} selected_interval={@selected_interval} plan_to_render={@plan_to_render} />
+    <div id={"#{@kind}-vat-notice"} class="absolute top-5 right-0 text-xs text-gray-500">
+      + VAT
+      <span class="hidden sm:inline lg:hidden xl:inline">
+        if applicable
+      </span>
+    </div>
     """
   end
 
   defp price_tag(%{selected_interval: :monthly} = assigns) do
+    monthly_cost =
+      case assigns.plan_to_render do
+        %{monthly_cost: nil} -> "N/A"
+        %{monthly_cost: monthly_cost} -> Plausible.Billing.format_price(monthly_cost)
+      end
+
+    assigns = assign(assigns, :monthly_cost, monthly_cost)
+
     ~H"""
-    <span
-      id={"#{@kind}-price-tag-amount"}
-      class="text-3xl lg:text-2xl xl:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
-    >
-      {@plan_to_render.monthly_cost |> Plausible.Billing.format_price()}
-    </span>
-    <span
-      id={"#{@kind}-price-tag-interval"}
-      class="text-sm font-semibold leading-6 text-gray-600 dark:text-gray-500"
-    >
-      /month
-    </span>
+    <p class="flex items-baseline gap-x-1">
+      <span
+        id={"#{@kind}-price-tag-amount"}
+        class="text-3xl lg:text-2xl xl:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+      >
+        {@monthly_cost}
+      </span>
+      <span
+        id={"#{@kind}-price-tag-interval"}
+        class="text-sm font-semibold leading-6 text-gray-600 dark:text-gray-500"
+      >
+        /month
+      </span>
+    </p>
     """
   end
 
   defp price_tag(%{selected_interval: :yearly} = assigns) do
+    monthly_cost =
+      case assigns.plan_to_render do
+        %{monthly_cost: nil} -> "N/A"
+        %{monthly_cost: monthly_cost} -> Plausible.Billing.format_price(monthly_cost)
+      end
+
+    {yearly_cost, monthly_cost_with_discount} =
+      case assigns.plan_to_render do
+        %{yearly_cost: nil} ->
+          {"N/A", "N/A"}
+
+        %{yearly_cost: yearly_cost} ->
+          {
+            Plausible.Billing.format_price(yearly_cost),
+            Plausible.Billing.format_price(Money.div!(yearly_cost, 12))
+          }
+      end
+
+    assigns =
+      assigns
+      |> assign(:monthly_cost, monthly_cost)
+      |> assign(:yearly_cost, yearly_cost)
+      |> assign(:monthly_cost_with_discount, monthly_cost_with_discount)
+
     ~H"""
-    <span class="text-xl lg:text-lg xl:text-xl font-bold w-max tracking-tight line-through text-gray-500 dark:text-gray-600 mr-1">
-      {@plan_to_render.monthly_cost |> Money.mult!(12) |> Plausible.Billing.format_price()}
-    </span>
-    <span
-      id={"#{@kind}-price-tag-amount"}
-      class="text-3xl lg:text-2xl xl:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
-    >
-      {@plan_to_render.yearly_cost |> Plausible.Billing.format_price()}
-    </span>
-    <span id={"#{@kind}-price-tag-interval"} class="text-sm font-semibold leading-6 text-gray-600">
-      /year
-    </span>
+    <div class="grid grid-cols-[max-content_1fr]">
+      <span
+        id={"#{@kind}-price-tag-amount"}
+        class="text-3xl lg:text-2xl xl:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+      >
+        {@yearly_cost}
+      </span>
+
+      <span
+        id={"#{@kind}-price-tag-interval"}
+        class="text-sm font-semibold leading-6 text-gray-600 pl-1 self-end"
+      >
+        /year
+      </span>
+
+      <div class="font-bold tracking-tight text-sm self-center">
+        <span
+          id={"#{@kind}-discount-price-tag-strikethrough-amount"}
+          class="line-through tracking-tight text-gray-500 dark:text-gray-600"
+        >
+          {@monthly_cost}
+        </span>
+        <span id={"#{@kind}-discount-price-tag-amount"} class="ml-1 text-gray-900 dark:text-gray-100">
+          {@monthly_cost_with_discount}
+        </span>
+      </div>
+
+      <span class="text-sm font-semibold text-gray-600 pl-1 self-center">
+        /month
+      </span>
+    </div>
     """
   end
 
