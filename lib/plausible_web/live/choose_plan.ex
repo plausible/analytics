@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="mt-6 w-full md:flex">
           <a
             href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="hidden md:flex md:w-1/6 h-max text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-bold gap-1 items-center"
+            class="hidden md:flex md:w-1/6 h-max md:mt-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-bold gap-1 items-center"
           >
             <span>←</span>
             <p>Back to Settings</p>
