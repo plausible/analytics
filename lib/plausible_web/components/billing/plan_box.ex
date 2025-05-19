@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
           <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
         <% end %>
       </div>
-      <%= if @owned && @kind == :growth && @plan_to_render.generation < 4 do %>
+      <%= if @owned && @kind == :growth && @plan_to_render.generation < 5 do %>
         <Notice.growth_grandfathered />
       <% else %>
         <PlanBenefits.render benefits={@benefits} class="text-gray-600 dark:text-gray-100" />

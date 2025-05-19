@@ -13,8 +13,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @v2_20m_yearly_plan_id "653258"
   @v5_starter_5m_monthly_plan_id "910425"
   @v4_growth_10k_monthly_plan_id "857097"
-  @v4_growth_10k_yearly_plan_id "857079"
   @v4_growth_200k_yearly_plan_id "857081"
+  @v5_growth_10k_yearly_plan_id "910430"
   @v5_growth_200k_yearly_plan_id "910434"
   @v4_business_5m_monthly_plan_id "857111"
   @v5_business_5m_monthly_plan_id "910457"
@@ -464,8 +464,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
-  describe "for a user with an active v4 growth subscription plan" do
-    setup [:create_user, :create_site, :log_in, :subscribe_v4_growth]
+  describe "for a user with an active v5 growth subscription plan" do
+    setup [:create_user, :create_site, :log_in, :subscribe_v5_growth]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -499,7 +499,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert growth_box =~ "Up to 10 sites"
       assert growth_box =~ "Team Accounts"
       assert growth_box =~ "Shared Links"
-      refute growth_box =~ "Shared Segments"
+      assert growth_box =~ "Shared Segments"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Up to 10 team members"
@@ -678,7 +678,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       growth_checkout_button = find(doc, @growth_checkout_button)
 
       assert text_of_attr(growth_checkout_button, "onclick") =~
-               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_growth_10k_yearly_plan_id)}'}"
+               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_growth_10k_yearly_plan_id)}'}"
 
       set_slider(lv, "5M")
       doc = element(lv, @monthly_interval_button) |> render_click()
@@ -691,7 +691,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       business_checkout_button = find(doc, @business_checkout_button)
 
       assert text_of_attr(business_checkout_button, "onclick") =~
-               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_business_5m_monthly_plan_id)}'}"
+               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_business_5m_monthly_plan_id)}'}"
     end
   end
 
@@ -1329,8 +1329,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end)
   end
 
-  defp subscribe_v4_growth(%{user: user}) do
-    create_subscription_for(user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
+  defp subscribe_v5_growth(%{user: user}) do
+    create_subscription_for(user, paddle_plan_id: @v5_growth_200k_yearly_plan_id)
   end
 
   defp subscribe_v4_business(%{user: user}) do
