@@ -27,11 +27,11 @@ defmodule Plausible.Session.Salts do
     state =
       case salts do
         [current, prev] ->
-          Logger.notice("[salts] current current salt hash: #{:erlang.phash2(current)}")
+          Logger.notice("[salts] current salt hash: #{:erlang.phash2(current)}")
           %{previous: prev, current: current}
 
         [current] ->
-          Logger.notice("[salts] current current salt hash: #{:erlang.phash2(current)}")
+          Logger.notice("[salts] current salt hash: #{:erlang.phash2(current)}")
           %{previous: nil, current: current}
 
         [] ->
