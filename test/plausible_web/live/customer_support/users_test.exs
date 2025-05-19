@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
+defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Teams.Test
   use Plausible
