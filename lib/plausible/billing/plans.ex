@@ -32,11 +32,11 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp starter_plans_for(v5?) do
-    if v5? do
-      Enum.filter(plans_v5(), &(&1.kind == :starter))
-    else
+  defp starter_plans_for(legacy?) do
+    if legacy? do
       []
+    else
+      Enum.filter(plans_v5(), &(&1.kind == :starter))
     end
   end
 
@@ -47,10 +47,10 @@ defmodule Plausible.Billing.Plans do
   As new versions of plans are introduced, subscriptions which were on old plans can
   still choose from old plans.
   """
-  def growth_plans_for(subscription, v5? \\ false) do
+  def growth_plans_for(subscription, legacy? \\ false) do
     owned_plan = get_regular_plan(subscription)
 
-    default_plans = if v5?, do: plans_v5(), else: plans_v4()
+    default_plans = if legacy?, do: plans_v4(), else: plans_v5()
 
     cond do
       is_nil(owned_plan) -> default_plans
@@ -65,10 +65,10 @@ defmodule Plausible.Billing.Plans do
     |> Enum.filter(&(&1.kind == :growth))
   end
 
-  def business_plans_for(subscription, v5? \\ false) do
+  def business_plans_for(subscription, legacy? \\ false) do
     owned_plan = get_regular_plan(subscription)
 
-    default_plans = if v5?, do: plans_v5(), else: plans_v4()
+    default_plans = if legacy?, do: plans_v4(), else: plans_v5()
 
     cond do
       subscription && Subscriptions.expired?(subscription) -> default_plans
@@ -80,13 +80,13 @@ defmodule Plausible.Billing.Plans do
   end
 
   def available_plans_for(subscription, opts \\ []) do
-    v5? = Keyword.get(opts, :v5?, false)
+    legacy? = Keyword.get(opts, :legacy?, false)
 
     plans =
       Enum.concat([
-        starter_plans_for(v5?),
-        growth_plans_for(subscription, v5?),
-        business_plans_for(subscription, v5?)
+        starter_plans_for(legacy?),
+        growth_plans_for(subscription, legacy?),
+        business_plans_for(subscription, legacy?)
       ])
 
     plans =

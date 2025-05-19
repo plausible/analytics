@@ -42,7 +42,7 @@ defmodule Plausible.Billing.PlansTest do
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
     test "growth_plans_for/1 shows latest plans for everyone else" do
@@ -50,7 +50,7 @@ defmodule Plausible.Billing.PlansTest do
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
     test "growth_plans_for/1 does not return business plans" do
@@ -69,7 +69,7 @@ defmodule Plausible.Billing.PlansTest do
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
     test "business_plans_for/1 returns v3 business plans for a user on a legacy plan" do
@@ -95,7 +95,7 @@ defmodule Plausible.Billing.PlansTest do
     test "business_plans_for/1 returns latest plans for invited users with trial_expiry = nil" do
       nil
       |> Plans.business_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
     test "business_plans_for/1 returns latest plans for expired legacy subscriptions" do
@@ -107,7 +107,7 @@ defmodule Plausible.Billing.PlansTest do
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.business_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
     test "business_plans_for/1 returns latest business plans for everyone else" do
@@ -121,7 +121,7 @@ defmodule Plausible.Billing.PlansTest do
       business_plans = Plans.business_plans_for(subscription)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
-      assert_generation(business_plans, 4)
+      assert_generation(business_plans, 5)
     end
 
     test "available_plans returns all plans for user with prices when asked for" do

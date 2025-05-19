@@ -49,7 +49,11 @@ defmodule PlausibleWeb.Live.LegacyChoosePlan do
         current_user_subscription_interval(subscription)
       end)
       |> assign_new(:available_plans, fn %{subscription: subscription} ->
-        Plans.available_plans_for(subscription, with_prices: true, customer_ip: remote_ip)
+        Plans.available_plans_for(subscription,
+          with_prices: true,
+          customer_ip: remote_ip,
+          legacy?: true
+        )
       end)
       |> assign_new(:recommended_tier, fn %{
                                             usage: usage,
