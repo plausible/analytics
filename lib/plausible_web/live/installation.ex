@@ -40,6 +40,13 @@ defmodule PlausibleWeb.Live.Installation do
         :viewer
       ])
 
+    socket =
+      if FunWithFlags.enabled?(:scriptv2, for: site) do
+        redirect(socket, to: "/#{domain}/installationv2?flow=#{params["flow"]}")
+      else
+        socket
+      end
+
     flow = params["flow"]
     meta = site.installation_meta || %Plausible.Site.InstallationMeta{}
 
