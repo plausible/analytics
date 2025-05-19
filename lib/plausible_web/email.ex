@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Email do
     |> render("trial_one_week_reminder.html", user: user, team: team)
   end
 
-  def trial_upgrade_email(user, team, day, usage, suggested_plan) do
+  def trial_upgrade_email(user, team, day, usage, suggested_volume) do
     base_email()
     |> to(user)
     |> tag("trial-upgrade-email")
@@ -106,7 +106,7 @@ defmodule PlausibleWeb.Email do
       day: day,
       custom_events: usage.custom_events,
       usage: usage.total,
-      suggested_plan: suggested_plan
+      suggested_volume: suggested_volume
     )
   end
 
@@ -157,7 +157,7 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def over_limit_email(user, team, usage, suggested_plan) do
+  def over_limit_email(user, team, usage, suggested_volume) do
     priority_email()
     |> to(user)
     |> tag("over-limit")
@@ -166,7 +166,7 @@ defmodule PlausibleWeb.Email do
       user: user,
       team: team,
       usage: usage,
-      suggested_plan: suggested_plan
+      suggested_volume: suggested_volume
     })
   end
 
@@ -183,7 +183,7 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def dashboard_locked(user, team, usage, suggested_plan) do
+  def dashboard_locked(user, team, usage, suggested_volume) do
     priority_email()
     |> to(user)
     |> tag("dashboard-locked")
@@ -192,7 +192,7 @@ defmodule PlausibleWeb.Email do
       user: user,
       team: team,
       usage: usage,
-      suggested_plan: suggested_plan
+      suggested_volume: suggested_volume
     })
   end
 

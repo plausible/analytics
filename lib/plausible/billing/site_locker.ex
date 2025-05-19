@@ -55,11 +55,11 @@ defmodule Plausible.Billing.SiteLocker do
   defp send_grace_period_end_email(team, true) do
     team = Repo.preload(team, [:owners, :billing_members])
     usage = Teams.Billing.monthly_pageview_usage(team)
-    suggested_plan = Plausible.Billing.Plans.suggest(team, usage.last_cycle.total)
+    suggested_volume = Plausible.Billing.Plans.suggest_volume(team, usage.last_cycle.total)
 
     for recipient <- team.owners ++ team.billing_members do
       recipient
-      |> PlausibleWeb.Email.dashboard_locked(team, usage, suggested_plan)
+      |> PlausibleWeb.Email.dashboard_locked(team, usage, suggested_volume)
       |> Plausible.Mailer.send()
     end
   end

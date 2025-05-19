@@ -213,39 +213,28 @@ defmodule Plausible.Billing.Plans do
   end
 
   @doc """
-  Returns the most appropriate plan for a team based on its usage during a
-  given cycle.
+  Returns the most appropriate monthly pageview volume for a given usage cycle.
+  The cycle is either last 30 days (for trials) or last billing cycle for teams
+  with an existing subscription.
+
+  The generation and tier from which we're searching for a suitable volume doesn't
+  matter - the monthly pageview volumes for all plans starting from v3 are going from
+  10k to 10M. This function uses v4 Growth but it might as well be e.g. v5 Business.
 
   If the usage during the cycle exceeds the enterprise-level threshold, or if
-  the team already has an enterprise plan, it suggests the :enterprise
-  plan.
-
-  Otherwise, it recommends the plan where the cycle usage falls just under the
-  plan's limit from the available options for the team.
+  the team already has an enterprise plan, it returns `:enterprise`. Otherwise,
+  a string representing the volume, e.g. "100k" or "5M".
   """
-  @enterprise_level_usage 10_000_000
-  @spec suggest(Teams.Team.t(), non_neg_integer()) :: Plan.t()
-  def suggest(team, usage_during_cycle) do
-    cond do
-      usage_during_cycle > @enterprise_level_usage ->
-        :enterprise
-
-      Teams.Billing.enterprise_configured?(team) ->
-        :enterprise
-
-      true ->
-        subscription = Teams.Billing.get_subscription(team)
-        suggest_by_usage(subscription, usage_during_cycle)
+  @spec suggest_volume(Teams.Team.t(), non_neg_integer()) :: String.t() | :enterprise
+  def suggest_volume(team, usage_during_cycle) do
+    if Teams.Billing.enterprise_configured?(team) do
+      :enterprise
+    else
+      plans_v4()
+      |> Enum.filter(&(&1.kind == :growth))
+      |> Enum.find(%{volume: :enterprise}, &(usage_during_cycle < &1.monthly_pageview_limit))
+      |> Map.get(:volume)
     end
-  end
-
-  def suggest_by_usage(subscription, usage_during_cycle) do
-    available_plans =
-      if business_tier?(subscription),
-        do: business_plans_for(subscription),
-        else: growth_plans_for(subscription)
-
-    Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
   end
 
   def all() do
