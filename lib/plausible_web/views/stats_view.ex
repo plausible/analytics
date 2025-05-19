@@ -6,15 +6,17 @@ defmodule PlausibleWeb.StatsView do
     PlausibleWeb.Endpoint.url()
   end
 
-  def large_number_format(n) do
+  def large_number_format(n, opts \\ []) do
+    k = if Keyword.get(opts, :capitalize_k?, false), do: "K", else: "k"
+
     cond do
       n >= 1_000 && n < 1_000_000 ->
         thousands = trunc(n / 100) / 10
 
         if thousands == trunc(thousands) || n >= 100_000 do
-          "#{trunc(thousands)}k"
+          "#{trunc(thousands)}" <> k
         else
-          "#{thousands}k"
+          "#{thousands}" <> k
         end
 
       n >= 1_000_000 && n < 1_000_000_000 ->

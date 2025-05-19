@@ -1,5 +1,5 @@
-const { mockRequest, metaKey, expectPlausibleInAction } = require('./support/test-utils')
-const { expect, test } = require('@playwright/test')
+import { mockRequest, metaKey, expectPlausibleInAction } from './support/test-utils'
+import { expect, test } from '@playwright/test'
 
 test.describe('tagged-events extension', () => {
     test('tracks a tagged link click with custom props + url prop', async ({ page }) => {

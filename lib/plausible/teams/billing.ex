@@ -216,9 +216,7 @@ defmodule Plausible.Teams.Billing do
   def site_usage(nil), do: 0
 
   def site_usage(team) do
-    team
-    |> Teams.owned_sites()
-    |> length()
+    Teams.owned_sites_count(team)
   end
 
   on_ee do
@@ -402,7 +400,7 @@ defmodule Plausible.Teams.Billing do
   def usage_cycle(team, cycle, owned_site_ids \\ nil, today \\ Date.utc_today())
 
   def usage_cycle(team, cycle, nil, today) do
-    owned_site_ids = team |> Teams.owned_sites() |> Enum.map(& &1.id)
+    owned_site_ids = Teams.owned_sites_ids(team)
     usage_cycle(team, cycle, owned_site_ids, today)
   end
 
@@ -475,7 +473,7 @@ defmodule Plausible.Teams.Billing do
   def features_usage(nil, nil), do: []
 
   def features_usage(%Teams.Team{} = team, nil) do
-    owned_site_ids = team |> Teams.owned_sites() |> Enum.map(& &1.id)
+    owned_site_ids = Teams.owned_sites_ids(team)
     features_usage(team, owned_site_ids)
   end
 

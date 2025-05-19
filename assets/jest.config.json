@@ -8,6 +8,7 @@
   },
   "setupFilesAfterEnv": [
     "<rootDir>/test-utils/extend-expect.ts",
+    "<rootDir>/test-utils/jsdom-mocks.ts",
     "<rootDir>/test-utils/reset-state.ts"
   ],
   "transform": {

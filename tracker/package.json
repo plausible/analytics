@@ -1,23 +1,26 @@
 {
-  "tracker_script_version": 6,
+  "tracker_script_version": 9,
+  "type": "module",
   "scripts": {
     "deploy": "node compile.js",
-    "test": "npm run deploy && npx playwright test",
-    "test:local": "NODE_ENV=dev npm run deploy && npx playwright test",
-    "report-sizes": "node report-sizes.js",
+    "test": "npx playwright test",
+    "test:local": "npx playwright test",
     "start": "node test/support/server.js"
   },
   "license": "MIT",
   "dependencies": {
+    "chokidar": "^4.0.3",
+    "cli-progress": "^3.12.0",
     "generatorics": "^1.1.0",
-    "handlebars": "^4.7.8",
+    "threads": "^1.7.0",
     "uglify-js": "^3.19.3"
   },
   "devDependencies": {
-    "express": "^4.21.2",
-    "@playwright/test": "^1.48.1",
+    "@playwright/test": "^1.49.1",
     "@types/node": "^22.13.4",
     "eslint": "^9.20.1",
-    "eslint-plugin-playwright": "^2.2.0"
+    "eslint-plugin-playwright": "^2.2.0",
+    "express": "^4.21.2",
+    "markdown-table": "^3.0.4"
   }
 }

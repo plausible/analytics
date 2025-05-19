@@ -1,31 +1,35 @@
 defmodule Mix.Tasks.CreatePaddleSandboxPlans do
   @moduledoc """
-  Utility for creating Sandbox plans that are used on staging. The `filename`
-  argument should be the name of the JSON file containing the production plans.
-  E.g.: `plans_v4.json`.
+  Utility for creating Sandbox plans that are used on staging. The product of
+  this task is a `sandbox_plans_v*.json` file matching with the production
+  plans, just with the monthly/yearly product_id's of the sandbox plans.
 
-  Unfortunately, there's no API in Paddle that would allow "bulk creating"
-  plans - it has to be done through the UI. As a hack though, we can automate
-  the process by copying the curl request with the help of browser devtools.
+  In principle, this task works like `Mix.Tasks.CreatePaddleProdPlans`, with
+  the following differences:
 
-  Therefore, this Mix.Task **does not work out of the box** and the actual curl
-  command that it executes must be replaced by the developer. Here's how:
+  * The `filename` argument should be the name of the JSON file containing the
+    production plans (meaning that those should be created as the first step).
+    No special "input file" required.
 
-  0) Obtain access to the Sandbox Paddle account and log in
-  1) Navigate to https://sandbox-vendors.paddle.com/subscriptions/plans
-  2) Click the "+ New Plan" button to open the form
-  3) Open browser devtools, fill in the required fields and submit the form
-  4) Find the POST request from the "Network" tab and copy it as cURL
-  5) Come back here and paste it into the `create_paddle_plan` function
-  6) Replace the params within the string with the real params (these should
-     be available in the function already)
+  * To copy the curl command from the browser, you need to add a plan from
+    https://sandbox-vendors.paddle.com/subscriptions/plans. Everything else is
+    the same - please see `create_paddle_prod_plans.ex` for instructions.
 
-  Once the plans are created successfully, the task will also fetch the IDs
-  (i.e. paddle_plan_id's) and write the `sandbox_plans_v*.json` file (which is
-  basically the same set of production plans but with `monthly_product_id` and
-  `yearly_product_id` replaced with the sandbox ones).
+  * This task can be executed multiple times in a row - it will not create
+    duplicates in Sandbox Paddle. On staging we can use a specific plan-naming
+    structure to determine whether a plan has been created already. On prod we
+    cannot do that since the plan names need to look nice.
+
+  * No need to copy paddle API credentials.
+
+  ## Usage example:
+
+  ```
+  mix create_paddle_sandbox_plans plans_v5.json
+  ```
   """
 
+  alias Mix.Tasks.CreatePaddleProdPlans
   use Mix.Task
 
   @requirements ["app.config"]
@@ -76,7 +80,7 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
 
     file_path_to_write = Path.join("priv", "sandbox_" <> filename)
 
-    create_local_sandbox_plans_json_file(prod_plans, file_path_to_write, paddle_plans_after)
+    write_sandbox_plans_json_file(prod_plans, file_path_to_write, paddle_plans_after)
 
     IO.puts("✅ All done! Wrote #{length(prod_plans)} new plans into #{file_path_to_write}!")
   end
@@ -91,7 +95,7 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
     --data-raw '_token=#{your_unique_token}&plan-id=&default-curr=USD&tmpicon=false&name=#{name}&checkout_custom_message=&taxable_type=standard&interval=#{interval_index}&period=1&type=#{type}&trial_length=&price_USD=#{price}&active_EUR=on&price_EUR=#{price}&active_GBP=on&price_GBP=#{price}'
     """
 
-    case curl_quietly(curl_command) do
+    case CreatePaddleProdPlans.curl_quietly(curl_command) do
       :ok ->
         IO.puts("✅ Created #{name}")
 
@@ -99,6 +103,19 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
         IO.puts("❌ Halting. The plan #{name} could not be created. Error: #{reason}")
         System.halt(1)
     end
+  end
+
+  defp fetch_all_sandbox_plans() do
+    url = "https://sandbox-vendors.paddle.com/api/2.0/subscription/plans"
+
+    paddle_config = Application.get_env(:plausible, :paddle)
+
+    paddle_credentials = %{
+      vendor_id: paddle_config[:vendor_id],
+      vendor_auth_code: paddle_config[:vendor_auth_code]
+    }
+
+    CreatePaddleProdPlans.fetch_all_paddle_plans(url, paddle_credentials)
   end
 
   @paddle_interval_indexes %{"monthly" => 2, "yearly" => 5}
@@ -112,36 +129,15 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
     }
   end
 
-  defp fetch_all_sandbox_plans() do
-    paddle_config = Application.get_env(:plausible, :paddle)
+  defp plan_name(plan, type) do
+    generation = "v#{plan["generation"]}"
+    kind = plan["kind"]
+    volume = plan["monthly_pageview_limit"] |> PlausibleWeb.StatsView.large_number_format()
 
-    url = "https://sandbox-vendors.paddle.com/api/2.0/subscription/plans"
-
-    body =
-      JSON.encode!(%{
-        vendor_id: paddle_config[:vendor_id],
-        vendor_auth_code: paddle_config[:vendor_auth_code]
-      })
-
-    headers = [
-      {"Content-type", "application/json"},
-      {"Accept", "application/json"}
-    ]
-
-    request = Finch.build(:post, url, headers, body)
-
-    with {:ok, response} <- Finch.request(request, MyFinch),
-         {:ok, %{"success" => true, "response" => plans} = body} <- JSON.decode(response.body) do
-      IO.puts("✅ Successfully fetched #{body["count"]}/#{body["total"]} sandbox plans")
-      plans
-    else
-      error ->
-        IO.puts("❌ Failed to fetch plans from Paddle - #{inspect(error)}")
-        System.halt(1)
-    end
+    [generation, type, kind, volume] |> Enum.join("_")
   end
 
-  defp create_local_sandbox_plans_json_file(prod_plans, filepath, paddle_plans) do
+  defp write_sandbox_plans_json_file(prod_plans, filepath, paddle_plans) do
     sandbox_plans =
       prod_plans
       |> Enum.map(fn prod_plan ->
@@ -158,9 +154,11 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
           "monthly_product_id" => to_string(sandbox_monthly_product_id),
           "yearly_product_id" => to_string(sandbox_yearly_product_id)
         })
+        |> CreatePaddleProdPlans.order_keys()
       end)
 
-    File.write!(filepath, JSON.encode!(sandbox_plans))
+    content = Jason.encode!(sandbox_plans, pretty: true)
+    File.write!(filepath, content)
   end
 
   defp put_prices(plans) do
@@ -176,28 +174,5 @@ defmodule Mix.Tasks.CreatePaddleSandboxPlans do
         "yearly_price" => prices[plan["yearly_product_id"]]
       })
     end)
-  end
-
-  defp plan_name(plan, type) do
-    generation = "v#{plan["generation"]}"
-    kind = plan["kind"]
-    volume = plan["monthly_pageview_limit"] |> PlausibleWeb.StatsView.large_number_format()
-
-    [generation, type, kind, volume] |> Enum.join("_")
-  end
-
-  defp curl_quietly(cmd) do
-    cmd = String.replace(cmd, "curl", ~s|curl -s -o /dev/null -w "%{http_code}"|)
-
-    case System.cmd("sh", ["-c", cmd], stderr_to_stdout: true) do
-      {"302", 0} ->
-        :ok
-
-      {http_status, 0} ->
-        {:error, "unexpected HTTP response status (#{http_status}). Expected 302."}
-
-      {_, exit_code} ->
-        {:error, "curl command exited with exit code #{exit_code}"}
-    end
   end
 end

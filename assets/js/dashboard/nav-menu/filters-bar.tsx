@@ -5,8 +5,7 @@ import { AppliedFilterPillsList, PILL_X_GAP_PX } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { Popover, Transition } from '@headlessui/react'
-import { popover } from '../components/popover'
-import { BlurMenuButtonOnEscape } from '../keybinding'
+import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import { isSegmentFilter } from '../filtering/segments'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { DashboardQuery } from '../query'
@@ -273,11 +272,11 @@ const SeeMoreMenu = ({
         )}
       </Popover.Button>
       <Transition
+        as="div"
         {...popover.transition.props}
         className={classNames(
-          'mt-2',
           popover.transition.classNames.fullwidth,
-          'md:right-auto'
+          'mt-2 md:right-auto md:origin-top-left'
         )}
       >
         <Popover.Panel
@@ -305,14 +304,15 @@ const SeeMoreMenu = ({
           )}
           {showSomeActions && (
             <div className="flex flex-col">
-              {actions.map((action, index) => {
+              {actions.map((action) => {
                 const linkClassName = classNames(
                   popover.items.classNames.navigationLink,
                   popover.items.classNames.selectedOption,
                   popover.items.classNames.hoverLink,
-                  index === 0 && !showMoreFilters
-                    ? popover.items.classNames.roundedStartEnd
-                    : popover.items.classNames.roundedEnd,
+                  {
+                    [popover.items.classNames.roundedStart]: !showMoreFilters // rounded start is needed when there's no filters panel above
+                  },
+                  popover.items.classNames.roundedEnd,
                   'whitespace-nowrap'
                 )
 

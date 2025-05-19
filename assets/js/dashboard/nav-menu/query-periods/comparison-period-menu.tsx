@@ -3,7 +3,6 @@ import { clearedComparisonSearch } from '../../query'
 import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
-import { BlurMenuButtonOnEscape } from '../../keybinding'
 import {
   AppNavigationLink,
   useAppNavigate
@@ -18,7 +17,7 @@ import {
   getSearchToApplyCustomComparisonDates
 } from '../../query-time-periods'
 import { Popover, Transition } from '@headlessui/react'
-import { popover } from '../../components/popover'
+import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
   datemenuButtonClassName,
   DateMenuChevron,
@@ -46,11 +45,11 @@ export const ComparisonPeriodMenuItems = ({
 
   return (
     <Transition
+      as="div"
       {...popover.transition.props}
       className={classNames(
-        'mt-2',
         popover.transition.classNames.fullwidth,
-        'md:left-auto md:w-56'
+        'mt-2 md:w-56 md:left-auto md:origin-top-right'
       )}
     >
       <Popover.Panel className={popover.panel.classNames.roundedSheet}>

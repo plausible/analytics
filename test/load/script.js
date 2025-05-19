@@ -1,4 +1,5 @@
 import http from "k6/http";
+import { check } from "k6";
 
 const PAYLOAD = JSON.stringify({
   n: "pageview",
@@ -29,16 +30,27 @@ function newParams() {
 }
 
 export const options = {
-  stages: [
-    { target: 10000, duration: "10s" },
-    { target: 15000, duration: "20s" },
-    { target: 20000, duration: "30s" },
-    { target: 20000, duration: "30s" },
-    { target: 30000, duration: "30s" },
-    { target: 30000, duration: "90s" },
-  ],
+  scenarios: {
+    constant_rps: {
+      executor: "constant-arrival-rate",
+      rate: 12000,
+      timeUnit: "1s",
+      duration: "15m",
+      preAllocatedVUs: 10000,
+      maxVUs: 30000,
+    },
+  },
 };
 
 export default function () {
-  http.post("http://localhost:8000/api/event", PAYLOAD, newParams());
+  const res = http.post(
+    "http://localhost:8000/api/event",
+    PAYLOAD,
+    newParams(),
+  );
+
+  check(res, {
+    "is accepted": (r) => r.body === "ok",
+    "is buffered": (r) => r.headers["X-Plausible-Dropped"] !== "1",
+  });
 }

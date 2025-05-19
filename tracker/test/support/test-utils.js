@@ -1,8 +1,11 @@
-const { expect, Page } = require("@playwright/test");
+import { expect } from "@playwright/test"
+import packageJson from '../../package.json' with { type: 'json' }
+
+export const tracker_script_version = packageJson.tracker_script_version
 
 // Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
 // data. If the request is not made, resolves to null after 3 seconds.
-const mockRequest = function (page, path) {
+export const mockRequest = function (page, path) {
   return new Promise((resolve, _reject) => {
     const requestTimeoutTimer = setTimeout(() => resolve(null), 3000)
 
@@ -14,9 +17,7 @@ const mockRequest = function (page, path) {
   })
 }
 
-exports.mockRequest = mockRequest
-
-exports.metaKey = function() {
+export const metaKey = function() {
   if (process.platform === 'darwin') {
     return 'Meta'
   } else {
@@ -26,7 +27,7 @@ exports.metaKey = function() {
 
 // Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
 // list of requests as soon as the specified number of requests is made, or 3 seconds has passed.
-const mockManyRequests = function({ page, path, numberOfRequests, responseDelay, shouldIgnoreRequest, mockRequestTimeout = 3000 }) {
+export const mockManyRequests = function({ page, path, numberOfRequests, responseDelay, shouldIgnoreRequest, mockRequestTimeout = 3000 }) {
   return new Promise((resolve, _reject) => {
     let requestList = []
     const requestTimeoutTimer = setTimeout(() => resolve(requestList), mockRequestTimeout)
@@ -47,8 +48,6 @@ const mockManyRequests = function({ page, path, numberOfRequests, responseDelay,
     })
   })
 }
-
-exports.mockManyRequests = mockManyRequests
 
 /**
  * A powerful utility function that makes it easy to assert on the event
@@ -76,10 +75,11 @@ exports.mockManyRequests = mockManyRequests
  * @param {number} [args.responseDelay] - When provided, delays the response from the Plausible
  *  API by the given number of milliseconds.
  */
-exports.expectPlausibleInAction = async function (page, {
+export const expectPlausibleInAction = async function (page, {
   action,
   expectedRequests = [],
   refutedRequests = [],
+  pathToMock = '/api/event',
   awaitedRequestCount,
   expectedRequestCount,
   responseDelay,
@@ -91,7 +91,7 @@ exports.expectPlausibleInAction = async function (page, {
 
   const plausibleRequestMockList = mockManyRequests({
     page,
-    path: '/api/event',
+    path: pathToMock,
     responseDelay,
     shouldIgnoreRequest,
     numberOfRequests: requestsToAwait,
@@ -131,11 +131,11 @@ exports.expectPlausibleInAction = async function (page, {
   return requestBodies
 }
 
-exports.ignoreEngagementRequests = function(requestPostData) {
+export const ignoreEngagementRequests = function(requestPostData) {
   return requestPostData.n === 'engagement'
 }
 
-exports.ignorePageleaveRequests = function(requestPostData) {
+export const ignorePageleaveRequests = function(requestPostData) {
   return requestPostData.n === 'pageleave'
 }
 
@@ -147,11 +147,11 @@ async function toggleTabVisibility(page, hide) {
   }, hide)
 }
 
-exports.hideCurrentTab = async function(page) {
+export const hideCurrentTab = async function(page) {
   return toggleTabVisibility(page, true)
 }
 
-exports.showCurrentTab = async function(page) {
+export const showCurrentTab = async function(page) {
   return toggleTabVisibility(page, false)
 }
 
@@ -164,36 +164,48 @@ async function setFocus(page, focus) {
   }, focus)
 }
 
-exports.focus = async function(page) {
+export const focus = async function(page) {
   return setFocus(page, true)
 }
 
-exports.blur = async function(page) {
+export const blur = async function(page) {
   return setFocus(page, false)
 }
 
-exports.hideAndShowCurrentTab = async function(page, options = {}) {
-  await exports.hideCurrentTab(page)
+export const hideAndShowCurrentTab = async function(page, options = {}) {
+  await hideCurrentTab(page)
   if (options.delay > 0) {
     await delay(options.delay)
   }
-  await exports.showCurrentTab(page)
+  await showCurrentTab(page)
 }
 
-exports.blurAndFocusPage = async function(page, options = {}) {
-  await exports.blur(page)
+export const blurAndFocusPage = async function(page, options = {}) {
+  await blur(page)
   if (options.delay > 0) {
     await delay(options.delay)
   }
-  await exports.focus(page)
+  await focus(page)
+}
+
+// Custom assertion methods for checking plausible request bodies
+export const e = {
+  stringContaining: (value) => ({
+    expected: value,
+    __expectation__: (actual) => actual.includes(value)
+  }),
+  toBeUndefined: () => ({
+    expected: undefined,
+    __expectation__: (actual) => actual === undefined
+  })
 }
 
 function includesSubset(body, subset) {
   return Object.keys(subset).every((key) => {
-    if (typeof subset[key] === 'object') {
+    if (typeof subset[key] === 'object' && !subset[key].__expectation__) {
       return typeof body[key] === 'object' && areFlatObjectsEqual(body[key], subset[key])
     } else {
-      return body[key] === subset[key]
+      return checkEqual(body[key], subset[key])
     }
   })
 }
@@ -206,7 +218,14 @@ function areFlatObjectsEqual(obj1, obj2) {
 
   if (keys1.length !== keys2.length) return false;
 
-  return keys1.every(key => obj2[key] === obj1[key])
+  return keys1.every(key => checkEqual(obj2[key], obj1[key]))
+}
+
+function checkEqual(a, b) {
+  if (typeof b === 'object' && b.__expectation__) {
+    return b.__expectation__(a)
+  }
+  return a === b
 }
 
 function delay(ms) {

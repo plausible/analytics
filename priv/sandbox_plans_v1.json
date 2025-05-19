@@ -1,142 +1,162 @@
 [
   {
-    "features": [
-      "goals",
-      "props",
-      "stats_api"
-    ],
-    "generation": 1,
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 10000,
     "monthly_product_id": "78008",
+    "yearly_product_id": "78009",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78009"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 100000,
     "monthly_product_id": "78010",
+    "yearly_product_id": "78011",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78011"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 200000,
     "monthly_product_id": "78012",
+    "yearly_product_id": "78013",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78013"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 500000,
     "monthly_product_id": "78014",
+    "yearly_product_id": "78015",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78015"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 1000000,
     "monthly_product_id": "78016",
+    "yearly_product_id": "78017",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78017"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 2000000,
     "monthly_product_id": "78018",
+    "yearly_product_id": "78019",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78019"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 5000000,
     "monthly_product_id": "78020",
+    "yearly_product_id": "78021",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78021"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 10000000,
     "monthly_product_id": "78022",
+    "yearly_product_id": "78023",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78023"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 20000000,
     "monthly_product_id": "78024",
+    "yearly_product_id": "78025",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78025"
-  },
-  {
     "features": [
       "goals",
       "props",
-      "stats_api"
-    ],
-    "generation": 1,
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
     "kind": "growth",
+    "generation": 1,
     "monthly_pageview_limit": 50000000,
     "monthly_product_id": "78026",
+    "yearly_product_id": "78027",
     "site_limit": 50,
     "team_member_limit": "unlimited",
-    "yearly_product_id": "78027"
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
   }
 ]

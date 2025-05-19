@@ -1,15 +1,34 @@
-const express = require('express');
+import express from 'express'
+import path from 'node:path'
+import { fileURLToPath } from 'url'
+import { compileFile } from '../../compiler/index.js'
+import variantsFile from '../../compiler/variants.json' with { type: 'json' }
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const isMainModule = fileURLToPath(import.meta.url) === process.argv[1];
+
 const app = express();
-const path = require('node:path');
-
 const LOCAL_SERVER_PORT = 3000
-const LOCAL_SERVER_ADDR = `http://localhost:${LOCAL_SERVER_PORT}`
 const FIXTURES_PATH = path.join(__dirname, '/../fixtures')
-const TRACKERS_PATH = path.join(__dirname, '/../../../priv/tracker')
+const VARIANTS = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
 
-exports.runLocalFileServer = function () {
+export const LOCAL_SERVER_ADDR = `http://localhost:${LOCAL_SERVER_PORT}`
+
+export function runLocalFileServer() {
   app.use(express.static(FIXTURES_PATH));
-  app.use('/tracker', express.static(TRACKERS_PATH));
+
+  app.get('/tracker/js/:name', (req, res) => {
+    const name = req.params.name
+    const variant = VARIANTS.find((variant) => variant.name === name)
+
+    let code = compileFile(variant, { returnCode: true })
+
+    if (name === 'plausible-main.js') {
+      code = code.replace('"<%= @config_json %>"', req.query.script_config)
+    }
+
+    res.send(code)
+  });
 
   // A test utility - serve an image with an artificial delay
   app.get('/img/slow-image', (_req, res) => {
@@ -23,8 +42,6 @@ exports.runLocalFileServer = function () {
   });
 }
 
-if (require.main === module) {
-  exports.runLocalFileServer()
+if (isMainModule) {
+  runLocalFileServer()
 }
-
-exports.LOCAL_SERVER_ADDR = LOCAL_SERVER_ADDR

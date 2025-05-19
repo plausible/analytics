@@ -7,10 +7,9 @@ import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Popover, Transition } from '@headlessui/react'
-import { popover } from '../components/popover'
+import { popover, BlurMenuButtonOnEscape } from '../components/popover'
 import classNames from 'classnames'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
-import { BlurMenuButtonOnEscape } from '../keybinding'
 import { SearchableSegmentsSection } from './segments/searchable-segments-section'
 
 export function getFilterListItems({
@@ -67,15 +66,16 @@ const FilterMenuItems = ({ closeDropdown }: { closeDropdown: () => void }) => {
         </span>
       </Popover.Button>
       <Transition
+        as="div"
         {...popover.transition.props}
         className={classNames(
-          'mt-2',
           popover.transition.classNames.fullwidth,
-          'md:left-auto md:w-80'
+          'mt-2 md:left-auto md:w-80 md:origin-top-right'
         )}
       >
         <Popover.Panel
           className={classNames(popover.panel.classNames.roundedSheet)}
+          data-testid="filtermenu"
         >
           <div className="flex">
             {columns.map((filterGroups, index) => (

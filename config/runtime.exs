@@ -2,7 +2,7 @@ import Config
 import Plausible.ConfigHelpers
 require Logger
 
-if config_env() in [:dev, :test] do
+if config_env() in [:dev, :test, :load] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
@@ -330,41 +330,6 @@ config :plausible, PlausibleWeb.Endpoint,
   secret_key_base: secret_key_base,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
-
-if config_env() in [:dev, :ce_dev] do
-  loadtest_mode = get_var_from_path_or_env(config_dir, "LOADTEST")
-
-  if loadtest_mode do
-    config :plausible, PlausibleWeb.Endpoint,
-      debug_errors: false,
-      code_reloader: false
-  else
-    config :plausible, PlausibleWeb.Endpoint,
-      debug_errors: true,
-      code_reloader: true,
-      watchers: [
-        esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
-        tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]},
-        storybook_tailwind: {Tailwind, :install_and_run, [:storybook, ~w(--watch)]},
-        npm: ["--prefix", "assets", "run", "typecheck", "--", "--watch", "--preserveWatchOutput"],
-        npm: [
-          "run",
-          "deploy",
-          cd: Path.expand("../tracker", __DIR__)
-        ]
-      ],
-      live_reload: [
-        dirs: [
-          "extra"
-        ],
-        patterns: [
-          ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
-          ~r"lib/plausible_web/(controllers|live|components|templates|views|plugs)/.*(ex|heex)$",
-          ~r"storybook/.*(exs)$"
-        ]
-      ]
-  end
-end
 
 # maybe enable HTTPS in CE
 if config_env() in [:ce, :ce_dev, :ce_test] do
@@ -794,7 +759,7 @@ cron_enabled = !disable_cron
 
 thirty_days_in_seconds = 60 * 60 * 24 * 30
 
-if config_env() in [:prod, :ce] do
+if config_env() in [:prod, :ce, :load] do
   config :plausible, Oban,
     repo: Plausible.Repo,
     plugins: [

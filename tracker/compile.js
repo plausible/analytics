@@ -1,44 +1,67 @@
-const uglify = require("uglify-js");
-const fs = require('fs')
-const path = require('path')
-const Handlebars = require("handlebars");
-const g = require("generatorics");
-const { canSkipCompile } = require("./dev-compile/can-skip-compile");
-const { tracker_script_version } = require("./package.json");
+import { parseArgs } from 'node:util'
+import { compileAll } from './compiler/index.js'
+import chokidar from 'chokidar'
 
-if (process.env.NODE_ENV === 'dev' && canSkipCompile()) {
-  console.info('COMPILATION SKIPPED: No changes detected in tracker dependencies')
-  process.exit(0)
-}
-
-Handlebars.registerHelper('any', function (...args) {
-  return args.slice(0, -1).some(Boolean)
+const { values, positionals } = parseArgs({
+  options: {
+    'target': {
+      type: 'string',
+    },
+    'watch': {
+      type: 'boolean',
+      short: 'w'
+    },
+    'help': {
+      type: 'boolean',
+    },
+    'suffix': {
+      type: 'string',
+      default: ''
+    }
+  },
+  allowPositionals: true
 })
 
-Handlebars.registerPartial('customEvents', Handlebars.compile(fs.readFileSync(relPath('src/customEvents.js')).toString()))
-
-function relPath(segment) {
-  return path.join(__dirname, segment)
+if (values.help) {
+  console.log('Usage: node compile.js [...compile-ids] [flags]')
+  console.log('Options:')
+  console.log('  --target hash,outbound-links,exclusions   Only compile variants that contain all specified compile-ids')
+  console.log('  --watch, -w                               Watch src/ directory for changes and recompile')
+  console.log('  --suffix, -s                              Suffix to add to the output file name. Used for testing script size changes')
+  console.log('  --help                                    Show this help message')
+  process.exit(0);
 }
 
-function compilefile(input, output, templateVars = {}) {
-  const code = fs.readFileSync(input).toString()
-  const template = Handlebars.compile(code)
-  const rendered = template({ ...templateVars, TRACKER_SCRIPT_VERSION: tracker_script_version })
-  const result = uglify.minify(rendered)
-  if (result.code) {
-    fs.writeFileSync(output, result.code)
-  } else {
-    throw new Error(`Failed to compile ${output.split('/').pop()}.\n${result.error}\n`)
+function parse(value) {
+  if (value == null) {
+    return null
   }
+
+  return value
+    .split(/[.,]/)
+    .filter(feature => !['js', 'plausible'].includes(feature))
+    .sort()
 }
 
-const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "pageview-props", "tagged-events", "revenue"]
-const variants = [...g.clone.powerSet(base_variants)].filter(a => a.length > 0).map(a => a.sort());
+const compileOptions = {
+  targets: parse(values.target),
+  only: positionals && positionals.length > 0 ? positionals.map(parse) : null,
+  suffix: values.suffix
+}
 
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.js'))
+await compileAll(compileOptions)
 
-variants.map(variant => {
-  const options = variant.map(variant => variant.replace('-', '_')).reduce((acc, curr) => (acc[curr] = true, acc), {})
-  compilefile(relPath('src/plausible.js'), relPath(`../priv/tracker/js/plausible.${variant.join('.')}.js`), options)
-})
+if (values.watch) {
+  console.log('Watching src/ directory for changes...')
+
+  chokidar.watch('./src').on('change', async (event, path) => {
+    if (path) {
+      console.log(`\nFile changed: ${path}`)
+      console.log('Recompiling...')
+
+      await compileAll(compileOptions)
+
+      console.log('Done. Watching for changes...')
+    }
+  })
+}
