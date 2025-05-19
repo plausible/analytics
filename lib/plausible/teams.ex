@@ -84,10 +84,24 @@ defmodule Plausible.Teams do
     Repo.preload(team, subscription: last_subscription_query())
   end
 
-  def owned_sites(team) do
-    Repo.preload(team, :sites).sites
+  @spec owned_sites(Teams.Team.t() | nil, pos_integer() | nil) :: [Plausible.Site.t()]
+  def owned_sites(team, limit \\ nil)
+
+  def owned_sites(nil, _), do: []
+
+  def owned_sites(team, limit) do
+    query = from(s in Plausible.Site, where: s.team_id == ^team.id, order_by: [asc: s.domain])
+
+    if limit do
+      query
+      |> limit(^limit)
+      |> Repo.all()
+    else
+      Repo.all(query)
+    end
   end
 
+  @spec owned_sites_ids(Teams.Team.t() | nil) :: [pos_integer()]
   def owned_sites_ids(nil) do
     []
   end
@@ -102,6 +116,7 @@ defmodule Plausible.Teams do
     )
   end
 
+  @spec owned_sites_count(Teams.Team.t() | nil) :: non_neg_integer()
   def owned_sites_count(nil), do: 0
 
   def owned_sites_count(team) do

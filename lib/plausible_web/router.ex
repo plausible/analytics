@@ -556,6 +556,12 @@ defmodule PlausibleWeb.Router do
       end
 
       scope assigns: %{
+              dogfood_page_path: "/:website/installationv2"
+            } do
+        live "/:domain/installationv2", InstallationV2, :installation_v2, as: :site
+      end
+
+      scope assigns: %{
               dogfood_page_path: "/:website/verification"
             } do
         live "/:domain/verification", Verification, :verification, as: :site

@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Endpoint do
   #
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
-  plug(PlausibleWeb.Tracker)
+  plug(PlausibleWeb.TrackerPlug)
   plug(PlausibleWeb.Favicon)
 
   static_paths = ~w(css js images favicon.ico)

@@ -850,4 +850,46 @@ defmodule PlausibleWeb.Components.Generic do
     </.h2>
     """
   end
+
+  alias Phoenix.LiveView.JS
+
+  slot :inner_block, required: true
+
+  def disclosure(assigns) do
+    ~H"""
+    <div>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  slot :inner_block, required: true
+  attr :class, :any, default: nil
+
+  def disclosure_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      id="disclosure-button"
+      data-open="false"
+      phx-click={
+        JS.toggle(to: "#disclosure-panel")
+        |> JS.toggle_attribute({"data-open", "true", "false"}, to: "#disclosure-button")
+      }
+      class={@class}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  def disclosure_panel(assigns) do
+    ~H"""
+    <div id="disclosure-panel" style="display: none;">
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
 end
