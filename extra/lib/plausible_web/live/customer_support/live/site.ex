@@ -40,8 +40,25 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
         </div>
 
         <div>
-          <p class="text-xl font-bold sm:text-2xl">
+          <p class="text-xl font-bold sm:text-2xl flex items-center gap-x-2">
             {@site.domain}
+
+            <span
+              :if={
+                @site.team.accept_traffic_until &&
+                  Date.after?(Date.utc_today(), @site.team.accept_traffic_until)
+              }
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+            >
+              Rejecting traffic
+            </span>
+
+            <span
+              :if={@site.ingest_rate_limit_threshold == 0}
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+            >
+              Traffic blocked
+            </span>
           </p>
           <p class="text-sm font-medium">
             Timezone: {@site.timezone}
