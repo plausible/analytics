@@ -101,12 +101,6 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         tooltip="Automatically track form submissions. These count towards your billable pageviews."
         learn_more="https://plausible.io/docs/form-submissions-tracking"
       />
-      <.script_config_control
-        field={@installation_form["tagged-events"]}
-        label="Manual tagging"
-        tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
-        learn_more="https://plausible.io/docs/custom-event-goals"
-      />
 
       <.disclosure>
         <.disclosure_button class="mt-8 flex items-center group">
@@ -115,6 +109,13 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         </.disclosure_button>
         <.disclosure_panel>
           <ul class="list-disc list-inside mt-2 space-y-2">
+            <.advanced_option
+              config={@site.installation_meta.script_config}
+              variant="tagged-events"
+              label="Manual tagging"
+              tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
+              learn_more="https://plausible.io/docs/custom-event-goals"
+            />
             <.advanced_option
               config={@site.installation_meta.script_config}
               variant="404"
