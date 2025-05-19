@@ -88,6 +88,10 @@ defmodule Plausible.Teams do
     Repo.preload(team, :sites).sites
   end
 
+  def owned_sites(team, limit) when is_integer(limit) do
+    Repo.preload(team, sites: from(s in Plausible.Site, limit: ^limit, order_by: [asc: s.domain])).sites
+  end
+
   def owned_sites_ids(nil) do
     []
   end

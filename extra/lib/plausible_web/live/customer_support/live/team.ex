@@ -29,9 +29,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def update(%{tab: "sites"}, %{assigns: %{team: team}} = socket) do
-    any_owner = Plausible.Repo.preload(team, [:owners]).owners |> hd()
-    sites = Teams.Sites.list(any_owner, %{}, team: team)
-    {:ok, assign(socket, sites: sites, tab: "sites")}
+    sites = Teams.owned_sites(team, 100)
+    sites_count = Teams.owned_sites_count(team)
+
+    {:ok, assign(socket, sites: sites, sites_count: sites_count, tab: "sites")}
   end
 
   def update(%{tab: "billing"}, %{assigns: %{team: team}} = socket) do
@@ -363,7 +364,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         </div>
 
         <div :if={@tab == "sites"} class="mt-2">
-          <.table rows={@sites.entries}>
+          <.notice :if={@sites_count > 100} class="mt-4 mb-4">
+            This team owns more than 100 sites. Displaying first 100 below.
+          </.notice>
+          <.table rows={@sites}>
             <:thead>
               <.th>Domain</.th>
               <.th>Previous Domain</.th>
