@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase, async: false
   use Plausible.Teams.Test
   use Plausible
   @moduletag :ee_only

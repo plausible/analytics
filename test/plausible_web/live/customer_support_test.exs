@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Live.CustomerSupportTest do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase, async: false
   use Plausible.Teams.Test
   use Plausible
   @moduletag :ee_only
@@ -78,11 +78,11 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
     defp refute_search_result(doc, type, id) do
       assert find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|) == []
     end
-  end
 
-  defp type_into_input(lv, id, text) do
-    lv
-    |> element("form#filter-form")
-    |> render_change(%{id => text})
+    defp type_into_input(lv, id, text) do
+      lv
+      |> element("form#filter-form")
+      |> render_change(%{id => text})
+    end
   end
 end
