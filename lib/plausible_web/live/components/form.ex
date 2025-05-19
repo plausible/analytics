@@ -99,7 +99,10 @@ defmodule PlausibleWeb.Live.Components.Form do
     <div class={[
       @mt? && "mt-2"
     ]}>
-      <.label for={@id} class="font-normal gap-x-2 flex flex-inline items-center sm:justify-start justify-center ">
+      <.label
+        for={@id}
+        class="font-normal gap-x-2 flex flex-inline items-center sm:justify-start justify-center "
+      >
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <input
           type="checkbox"
