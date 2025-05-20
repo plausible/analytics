@@ -24,7 +24,7 @@ export function runLocalFileServer() {
     let code = compileFile(variant, { returnCode: true })
 
     if (name === 'plausible-main.js') {
-      code = code.replace('"<%= @config_json %>"', req.query.script_config)
+      code = code.replace('"<%= @config_js %>"', req.query.script_config)
     }
 
     res.send(code)

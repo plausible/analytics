@@ -11,14 +11,18 @@
 
 <body>
   <a id="navigate-away" href="/manual.html">Navigate away</a>
-  <button id="back-button-trigger">Back button</button>
+  <button id="custom-event-button" onclick="plausible('Custom event', { props: { author: 'Karl' } })">Custom event</button>
+  <button id="back-button-trigger" onclick="window.history.back()">Back button</button>
+  <button id="increment-event-index" onclick="increment()">Increment event index</button>
 </body>
 
 <script>
-  document.addEventListener('click', (e) => {
-    if (e.target.id === 'back-button-trigger') {
-      window.history.back()
-    }
-  })
+  var i = 0
+
+  function increment() {
+    document.getElementsByTagName('script')[0].setAttribute("event-index", i++)
+  }
+
+  increment()
 </script>
 </html>
