@@ -48,7 +48,11 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
     test "static verification screen renders for flow=domain_change using original installation type",
          %{conn: conn, site: site} do
-      site = Plausible.Sites.update_installation_meta!(site, %{installation_type: "WordPress"})
+      {:ok, _} =
+        Plausible.Site.TrackerScriptConfiguration.upsert(%{
+          site_id: site.id,
+          installation_type: :wordpress
+        })
 
       resp =
         conn
@@ -58,7 +62,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       assert resp =~ "Your domain has been changed"
       assert resp =~ "I understand, I'll update my website"
       assert resp =~ "WordPress plugin"
-      refute resp =~ "Manuial installation"
+      refute resp =~ "Manual installation"
       refute resp =~ "Review your existing installation."
 
       assert resp =~
