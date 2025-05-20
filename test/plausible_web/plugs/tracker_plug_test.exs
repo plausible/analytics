@@ -17,23 +17,27 @@ defmodule PlausibleWeb.TrackerPlugTest do
   use Plug.Test
   use Plausible.Teams.Test
 
+  alias Plausible.Site.TrackerScriptConfiguration
+
   describe "plausible-main.js" do
     @example_config %{
-      "404" => true,
-      "hash" => true,
-      "file-downloads" => false,
-      "outbound-links" => false,
-      "pageview-props" => false,
-      "tagged-events" => true,
-      "revenue" => false
+      installation_type: :manual,
+      track_404_pages: true,
+      hash_based_routing: true,
+      file_downloads: false,
+      outbound_links: false,
+      pageview_props: false,
+      tagged_events: true,
+      revenue_tracking: false
     }
 
     test "returns the script for an existing site", %{conn: conn} do
-      site =
-        new_site()
-        |> Plausible.Sites.update_installation_meta!(%{script_config: @example_config})
+      site = new_site()
 
-      response = get(conn, "/js/s-#{site.installation_meta.id}.js") |> response(200)
+      {:ok, tracker_script_configuration} =
+        TrackerScriptConfiguration.upsert(Map.put(@example_config, :site_id, site.id))
+
+      response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
 
       assert String.contains?(response, "!function(){var")
       assert String.contains?(response, "domain:\"#{site.domain}\"")
@@ -44,11 +48,12 @@ defmodule PlausibleWeb.TrackerPlugTest do
 
     # window.plausible is a substring checked for by the wordpress plugin to avoid 'optimization' by other wordpress plugins
     test "script contains window.plausible", %{conn: conn} do
-      site =
-        new_site()
-        |> Plausible.Sites.update_installation_meta!(%{script_config: @example_config})
+      site = new_site()
 
-      response = get(conn, "/js/s-#{site.installation_meta.id}.js") |> response(200)
+      {:ok, tracker_script_configuration} =
+        TrackerScriptConfiguration.upsert(Map.put(@example_config, :site_id, site.id))
+
+      response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
 
       assert String.contains?(response, "window.plausible")
     end

@@ -60,10 +60,13 @@ defmodule PlausibleWeb.TrackerPlug do
   end
 
   defp request_tracker_script(tag, conn) do
-    site = Plausible.Repo.one(from s in Plausible.Site, where: s.installation_meta["id"] == ^tag)
+    tracker_script_configuration =
+      Plausible.Repo.one(
+        from s in Plausible.Site.TrackerScriptConfiguration, where: s.id == ^tag, preload: [:site]
+      )
 
-    if site do
-      script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(site)
+    if tracker_script_configuration do
+      script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(tracker_script_configuration)
 
       conn
       |> put_resp_header("content-type", "application/javascript")

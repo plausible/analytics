@@ -4,6 +4,7 @@ defmodule Plausible.Site.TrackerScriptConfiguration do
   """
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
   @type t() :: %__MODULE__{}
 
@@ -51,6 +52,20 @@ defmodule Plausible.Site.TrackerScriptConfiguration do
       conflict_target: [:site_id],
       returning: true
     )
+  end
+
+  def get_or_create!(site_id) do
+    existing_configuration =
+      Plausible.Repo.one(
+        from(c in Plausible.Site.TrackerScriptConfiguration, where: c.site_id == ^site_id)
+      )
+
+    if existing_configuration do
+      existing_configuration
+    else
+      {:ok, new_configuration} = upsert(%{site_id: site_id})
+      new_configuration
+    end
   end
 
   defp fields_to_update(configuration_map) do
