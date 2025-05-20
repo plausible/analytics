@@ -1,4 +1,8 @@
-defmodule PlausibleWeb.Live.ChoosePlanTest do
+defmodule PlausibleWeb.Live.LegacyChoosePlanTest do
+  @moduledoc """
+  [Deprecated]. This file tests the legacy behaviour of the
+  /billing/choose-plan page without the `starter_tier` feature flag enabled.
+  """
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Teams.Test
   @moduletag :ee_only
@@ -11,13 +15,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @v1_10k_yearly_plan_id "572810"
   @v1_50m_yearly_plan_id "650653"
   @v2_20m_yearly_plan_id "653258"
-  @v5_starter_5m_monthly_plan_id "910425"
-  @v4_growth_10k_monthly_plan_id "857097"
+  @v4_growth_10k_yearly_plan_id "857079"
   @v4_growth_200k_yearly_plan_id "857081"
-  @v5_growth_10k_yearly_plan_id "910430"
-  @v5_growth_200k_yearly_plan_id "910434"
   @v4_business_5m_monthly_plan_id "857111"
-  @v5_business_5m_monthly_plan_id "910457"
   @v3_business_10k_monthly_plan_id "857481"
 
   @monthly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="monthly"]/
@@ -26,32 +26,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @slider_input ~s/input[name="slider"]/
   @slider_value "#slider-value"
 
-  @starter_plan_box "#starter-plan-box"
-  @starter_plan_tooltip "#starter-plan-box .tooltip-content"
-  @starter_price_tag_amount "#starter-price-tag-amount"
-  @starter_price_tag_interval "#starter-price-tag-interval"
-  @starter_discount_price_tag_amount "#starter-discount-price-tag-amount"
-  @starter_discount_price_tag_strikethrough_amount "#starter-discount-price-tag-strikethrough-amount"
-  @starter_vat_notice "#starter-vat-notice"
-  @starter_highlight_pill "#{@starter_plan_box} #highlight-pill"
-  @starter_checkout_button "#starter-checkout"
-
   @growth_plan_box "#growth-plan-box"
   @growth_plan_tooltip "#growth-plan-box .tooltip-content"
   @growth_price_tag_amount "#growth-price-tag-amount"
   @growth_price_tag_interval "#growth-price-tag-interval"
-  @growth_discount_price_tag_amount "#growth-discount-price-tag-amount"
-  @growth_discount_price_tag_strikethrough_amount "#growth-discount-price-tag-strikethrough-amount"
-  @growth_vat_notice "#growth-vat-notice"
   @growth_highlight_pill "#{@growth_plan_box} #highlight-pill"
   @growth_checkout_button "#growth-checkout"
 
   @business_plan_box "#business-plan-box"
   @business_price_tag_amount "#business-price-tag-amount"
   @business_price_tag_interval "#business-price-tag-interval"
-  @business_discount_price_tag_amount "#business-discount-price-tag-amount"
-  @business_discount_price_tag_strikethrough_amount "#business-discount-price-tag-strikethrough-amount"
-  @business_vat_notice "#business-vat-notice"
   @business_highlight_pill "#{@business_plan_box} #highlight-pill"
   @business_checkout_button "#business-checkout"
 
@@ -61,20 +45,19 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
   describe "for a user with no subscription" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      assert doc =~ "Upgrade your trial"
-      assert doc =~ "Back to Settings"
+      assert doc =~ "Upgrade your account"
       assert doc =~ "You have used"
       assert doc =~ "<b>0</b>"
       assert doc =~ "billable pageviews in the last 30 days"
-      assert doc =~ "Any other questions?"
-      assert doc =~ "What happens if I go over my monthly pageview limit?"
+      assert doc =~ "Questions?"
+      assert doc =~ "What happens if I go over my page views limit?"
       assert doc =~ "Enterprise"
-      assert doc =~ "+ VAT"
+      assert doc =~ "+ VAT if applicable"
     end
 
     test "does not render any global notices", %{conn: conn} do
@@ -85,23 +68,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "displays plan benefits", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      starter_box = text_of_element(doc, @starter_plan_box)
       growth_box = text_of_element(doc, @growth_plan_box)
       business_box = text_of_element(doc, @business_plan_box)
       enterprise_box = text_of_element(doc, @enterprise_plan_box)
 
-      assert starter_box =~ "Intuitive, fast and privacy-friendly dashboard"
-      assert starter_box =~ "Email/Slack reports"
-      assert starter_box =~ "Google Analytics import"
-      assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "Up to 3 sites"
-      assert starter_box =~ "3 years of data retention"
-
       assert growth_box =~ "Up to 3 team members"
       assert growth_box =~ "Up to 10 sites"
-      assert growth_box =~ "Team Accounts"
-      assert growth_box =~ "Shared Links"
-      assert growth_box =~ "Shared Segments"
+      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
+      assert growth_box =~ "Email/Slack reports"
+      assert growth_box =~ "Google Analytics import"
+      assert growth_box =~ "Goals and custom events"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Up to 10 team members"
@@ -126,24 +102,23 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "https://plausible.io/white-label-web-analytics"
     end
 
-    test "default billing interval is yearly, and can switch to monthly", %{conn: conn} do
+    test "default billing interval is monthly, and can switch to yearly", %{conn: conn} do
       {:ok, lv, doc} = get_liveview(conn)
 
-      assert class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
-      refute class_of_element(doc, @monthly_interval_button) =~ @interval_button_active_class
-
-      doc = element(lv, @monthly_interval_button) |> render_click()
-
-      refute class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
       assert class_of_element(doc, @monthly_interval_button) =~ @interval_button_active_class
+      refute class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
+
+      doc = element(lv, @yearly_interval_button) |> render_click()
+
+      refute class_of_element(doc, @monthly_interval_button) =~ @interval_button_active_class
+      assert class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
     end
 
     test "default pageview limit is 10k", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert text_of_element(doc, @slider_value) == "10k"
-      assert text_of_element(doc, @starter_price_tag_amount) == "€90"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€140"
-      assert text_of_element(doc, @business_price_tag_amount) == "€190"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€9"
+      assert text_of_element(doc, @business_price_tag_amount) == "€19"
     end
 
     test "pageview slider changes selected volume and prices shown", %{conn: conn} do
@@ -151,69 +126,41 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = set_slider(lv, "100k")
       assert text_of_element(doc, @slider_value) == "100k"
-      assert text_of_element(doc, @starter_price_tag_amount) == "€190"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€290"
-      assert text_of_element(doc, @business_price_tag_amount) == "€390"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€19"
+      assert text_of_element(doc, @business_price_tag_amount) == "€39"
 
       doc = set_slider(lv, "200k")
       assert text_of_element(doc, @slider_value) == "200k"
-      assert text_of_element(doc, @starter_price_tag_amount) == "€290"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€440"
-      assert text_of_element(doc, @business_price_tag_amount) == "€590"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€29"
+      assert text_of_element(doc, @business_price_tag_amount) == "€59"
 
       doc = set_slider(lv, "500k")
       assert text_of_element(doc, @slider_value) == "500k"
-      assert text_of_element(doc, @starter_price_tag_amount) == "€490"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€740"
-      assert text_of_element(doc, @business_price_tag_amount) == "€990"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€49"
+      assert text_of_element(doc, @business_price_tag_amount) == "€99"
 
       doc = set_slider(lv, "1M")
       assert text_of_element(doc, @slider_value) == "1M"
-      assert text_of_element(doc, @starter_price_tag_amount) == "€690"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€1,040"
-      assert text_of_element(doc, @business_price_tag_amount) == "€1,390"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€69"
+      assert text_of_element(doc, @business_price_tag_amount) == "€139"
 
       doc = set_slider(lv, "2M")
       assert text_of_element(doc, @slider_value) == "2M"
-      assert text_of_element(doc, @starter_price_tag_amount) == "€890"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€1,340"
-      assert text_of_element(doc, @business_price_tag_amount) == "€1,790"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€89"
+      assert text_of_element(doc, @business_price_tag_amount) == "€179"
 
       doc = set_slider(lv, "5M")
       assert text_of_element(doc, @slider_value) == "5M"
-      assert text_of_element(doc, @starter_price_tag_amount) == "€1,290"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€1,940"
-      assert text_of_element(doc, @business_price_tag_amount) == "€2,590"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€129"
+      assert text_of_element(doc, @business_price_tag_amount) == "€259"
 
       doc = set_slider(lv, "10M")
       assert text_of_element(doc, @slider_value) == "10M"
-      assert text_of_element(doc, @starter_price_tag_amount) == "€1,690"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€2,540"
-      assert text_of_element(doc, @business_price_tag_amount) == "€3,390"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€169"
+      assert text_of_element(doc, @business_price_tag_amount) == "€339"
     end
 
-    test "displays monthly discount for yearly plans", %{conn: conn} do
-      {:ok, lv, _doc} = get_liveview(conn)
-
-      doc = set_slider(lv, "200k")
-
-      assert text_of_element(doc, @starter_price_tag_amount) == "€290"
-      assert text_of_element(doc, @starter_discount_price_tag_amount) == "€24.17"
-      assert text_of_element(doc, @starter_discount_price_tag_strikethrough_amount) == "€29"
-      assert text_of_element(doc, @starter_vat_notice) == "+ VAT if applicable"
-
-      assert text_of_element(doc, @growth_price_tag_amount) == "€440"
-      assert text_of_element(doc, @growth_discount_price_tag_amount) == "€36.67"
-      assert text_of_element(doc, @growth_discount_price_tag_strikethrough_amount) == "€44"
-      assert text_of_element(doc, @growth_vat_notice) == "+ VAT if applicable"
-
-      assert text_of_element(doc, @business_price_tag_amount) == "€590"
-      assert text_of_element(doc, @business_discount_price_tag_amount) == "€49.17"
-      assert text_of_element(doc, @business_discount_price_tag_strikethrough_amount) == "€59"
-      assert text_of_element(doc, @business_vat_notice) == "+ VAT if applicable"
-    end
-
-    test "renders contact links for all tiers when enterprise-level volume selected",
+    test "renders contact links for business and growth tiers when enterprise-level volume selected",
          %{
            conn: conn
          } do
@@ -221,8 +168,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = set_slider(lv, "10M+")
 
-      assert text_of_element(doc, "#starter-custom-price") =~ "Custom"
-      assert text_of_element(doc, @starter_plan_box) =~ "Contact us"
       assert text_of_element(doc, "#growth-custom-price") =~ "Custom"
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
       assert text_of_element(doc, "#business-custom-price") =~ "Custom"
@@ -230,36 +175,28 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = set_slider(lv, "10M")
 
-      refute text_of_element(doc, "#starter-custom-price") =~ "Custom"
-      refute text_of_element(doc, @starter_plan_box) =~ "Contact us"
       refute text_of_element(doc, "#growth-custom-price") =~ "Custom"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
       refute text_of_element(doc, "#business-custom-price") =~ "Custom"
       refute text_of_element(doc, @business_plan_box) =~ "Contact us"
     end
 
-    test "switching billing interval changes prices", %{conn: conn} do
+    test "switching billing interval changes business and growth prices", %{conn: conn} do
       {:ok, lv, doc} = get_liveview(conn)
 
-      assert text_of_element(doc, @starter_price_tag_amount) == "€90"
-      assert text_of_element(doc, @starter_price_tag_interval) == "/year"
-
-      assert text_of_element(doc, @growth_price_tag_amount) == "€140"
-      assert text_of_element(doc, @growth_price_tag_interval) == "/year"
-
-      assert text_of_element(doc, @business_price_tag_amount) == "€190"
-      assert text_of_element(doc, @business_price_tag_interval) == "/year"
-
-      doc = element(lv, @monthly_interval_button) |> render_click()
-
-      assert text_of_element(doc, @starter_price_tag_amount) == "€9"
-      assert text_of_element(doc, @starter_price_tag_interval) == "/month"
-
-      assert text_of_element(doc, @growth_price_tag_amount) == "€14"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€9"
       assert text_of_element(doc, @growth_price_tag_interval) == "/month"
 
       assert text_of_element(doc, @business_price_tag_amount) == "€19"
       assert text_of_element(doc, @business_price_tag_interval) == "/month"
+
+      doc = element(lv, @yearly_interval_button) |> render_click()
+
+      assert text_of_element(doc, @growth_price_tag_amount) == "€90"
+      assert text_of_element(doc, @growth_price_tag_interval) == "/year"
+
+      assert text_of_element(doc, @business_price_tag_amount) == "€190"
+      assert text_of_element(doc, @business_price_tag_interval) == "/year"
     end
 
     test "checkout buttons are 'paddle buttons' with dynamic onclick attribute", %{
@@ -276,7 +213,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "disableLogout" => true,
                "email" => user.email,
                "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
-               "product" => @v5_growth_200k_yearly_plan_id,
+               "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
@@ -284,11 +221,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       set_slider(lv, "5M")
       doc = element(lv, @monthly_interval_button) |> render_click()
 
-      assert get_paddle_checkout_params(find(doc, @starter_checkout_button))["product"] ==
-               @v5_starter_5m_monthly_plan_id
-
       assert get_paddle_checkout_params(find(doc, @business_checkout_button))["product"] ==
-               @v5_business_5m_monthly_plan_id
+               @v4_business_5m_monthly_plan_id
     end
 
     test "warns about losing access to a feature", %{conn: conn, site: site} do
@@ -300,30 +234,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "if (confirm(\"This plan does not support Custom Properties, which you have been using. By subscribing to this plan, you will not have access to this feature.\")) {Paddle.Checkout.open"
     end
 
-    test "recommends Starter", %{conn: conn} do
+    test "recommends Growth tier when no premium features were used", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      assert text_of_element(doc, @starter_highlight_pill) == "Recommended"
-      refute element_exists?(doc, @growth_highlight_pill)
-      refute element_exists?(doc, @business_highlight_pill)
-    end
-
-    test "recommends Growth", %{conn: conn, site: site} do
-      for _ <- 1..3, do: add_guest(site, role: :viewer)
-
-      {:ok, _lv, doc} = get_liveview(conn)
-
-      refute element_exists?(doc, @starter_highlight_pill)
       assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
       refute element_exists?(doc, @business_highlight_pill)
     end
 
-    test "recommends Business", %{conn: conn, site: site} do
+    test "recommends Business when Revenue Goals used during trial", %{conn: conn, site: site} do
       insert(:goal, site: site, currency: :USD, event_name: "Purchase")
 
       {:ok, _lv, doc} = get_liveview(conn)
 
-      refute element_exists?(doc, @starter_highlight_pill)
       assert text_of_element(doc, @business_highlight_pill) == "Recommended"
       refute element_exists?(doc, @growth_highlight_pill)
     end
@@ -390,7 +312,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "100k")
 
-      refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
       refute element_exists?(doc, @growth_plan_tooltip)
@@ -400,7 +321,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "100k")
 
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
 
@@ -420,7 +340,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "10k")
 
-      refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
 
@@ -429,7 +348,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "10k")
 
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
     end
@@ -449,7 +367,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "10k")
 
-      refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
 
@@ -458,21 +375,20 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "10k")
 
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
     end
   end
 
-  describe "for a user with an active v5 growth subscription plan" do
-    setup [:create_user, :create_site, :log_in, :subscribe_v5_growth]
+  describe "for a user with an active v4 growth subscription plan" do
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in, :subscribe_v4_growth]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      assert doc =~ "Change your subscription plan"
-      assert doc =~ "Any other questions?"
-      assert doc =~ "What happens if I go over my monthly pageview limit?"
+      assert doc =~ "Change subscription plan"
+      assert doc =~ "Questions?"
+      refute doc =~ "What happens if I go over my page views limit?"
     end
 
     test "does not render any global notices", %{conn: conn} do
@@ -483,23 +399,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "displays plan benefits", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      starter_box = text_of_element(doc, @starter_plan_box)
       growth_box = text_of_element(doc, @growth_plan_box)
       business_box = text_of_element(doc, @business_plan_box)
       enterprise_box = text_of_element(doc, @enterprise_plan_box)
 
-      assert starter_box =~ "Intuitive, fast and privacy-friendly dashboard"
-      assert starter_box =~ "Email/Slack reports"
-      assert starter_box =~ "Google Analytics import"
-      assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "Up to 3 sites"
-      assert starter_box =~ "3 years of data retention"
-
       assert growth_box =~ "Up to 3 team members"
       assert growth_box =~ "Up to 10 sites"
-      assert growth_box =~ "Team Accounts"
-      assert growth_box =~ "Shared Links"
-      assert growth_box =~ "Shared Segments"
+      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
+      assert growth_box =~ "Email/Slack reports"
+      assert growth_box =~ "Google Analytics import"
+      assert growth_box =~ "Goals and custom events"
+      assert growth_box =~ "3 years of data retention"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Up to 10 team members"
@@ -569,9 +479,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       check_notice_titles(doc, [Billing.pending_site_ownerships_notice_title()])
       assert doc =~ "Your account has been invited to become the owner of a site"
 
-      assert text_of_element(doc, @starter_plan_tooltip) ==
-               "Your usage exceeds the following limit(s): Team member limit"
-
       assert text_of_element(doc, @growth_plan_tooltip) ==
                "Your usage exceeds the following limit(s): Team member limit"
 
@@ -602,17 +509,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute element_exists?(doc, @growth_highlight_pill)
     end
 
-    test "gets default selected interval from current subscription plan", %{
-      conn: conn,
-      user: user
-    } do
+    test "gets default selected interval from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
-
-      subscribe_to_plan(user, @v4_growth_10k_monthly_plan_id)
-
-      {:ok, _lv, doc} = get_liveview(conn)
-      assert class_of_element(doc, @monthly_interval_button) =~ @interval_button_active_class
     end
 
     test "sets pageview slider according to last cycle usage", %{conn: conn} do
@@ -645,27 +544,22 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = set_slider(lv, "200k")
 
-      assert text_of_element(doc, @starter_checkout_button) == "Downgrade to Starter"
       assert text_of_element(doc, @growth_checkout_button) == "Currently on this plan"
-      assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
-
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
+      assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
 
       doc = element(lv, @monthly_interval_button) |> render_click()
 
-      assert text_of_element(doc, @starter_checkout_button) == "Downgrade to Starter"
       assert text_of_element(doc, @growth_checkout_button) == "Change billing interval"
       assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
 
       doc = set_slider(lv, "1M")
 
-      assert text_of_element(doc, @starter_checkout_button) == "Downgrade to Starter"
       assert text_of_element(doc, @growth_checkout_button) == "Upgrade"
       assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
 
       doc = set_slider(lv, "100k")
 
-      assert text_of_element(doc, @starter_checkout_button) == "Downgrade to Starter"
       assert text_of_element(doc, @growth_checkout_button) == "Downgrade"
       assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
     end
@@ -678,25 +572,20 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       growth_checkout_button = find(doc, @growth_checkout_button)
 
       assert text_of_attr(growth_checkout_button, "onclick") =~
-               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_growth_10k_yearly_plan_id)}'}"
+               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_growth_10k_yearly_plan_id)}'}"
 
       set_slider(lv, "5M")
       doc = element(lv, @monthly_interval_button) |> render_click()
 
-      starter_checkout_button = find(doc, @starter_checkout_button)
-
-      assert text_of_attr(starter_checkout_button, "onclick") =~
-               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_starter_5m_monthly_plan_id)}'}"
-
       business_checkout_button = find(doc, @business_checkout_button)
 
       assert text_of_attr(business_checkout_button, "onclick") =~
-               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v5_business_5m_monthly_plan_id)}'}"
+               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_business_5m_monthly_plan_id)}'}"
     end
   end
 
   describe "for a user with an active v4 business subscription plan" do
-    setup [:create_user, :create_site, :log_in, :subscribe_v4_business]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in, :subscribe_v4_business]
 
     test "sets pageview slider according to last cycle usage", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -722,7 +611,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class =~ "ring-indigo-600"
       assert text_of_element(doc, @business_highlight_pill) == "Current"
 
-      refute element_exists?(doc, @starter_highlight_pill)
       refute element_exists?(doc, @growth_highlight_pill)
     end
 
@@ -747,7 +635,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert text_of_element(doc, @enterprise_highlight_pill) == "Recommended"
-      refute element_exists?(doc, @starter_highlight_pill)
       refute element_exists?(doc, @business_highlight_pill)
       refute element_exists?(doc, @growth_highlight_pill)
     end
@@ -757,29 +644,23 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = set_slider(lv, "5M")
 
-      assert text_of_element(doc, @starter_checkout_button) == "Downgrade to Starter"
-      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
       assert text_of_element(doc, @business_checkout_button) == "Currently on this plan"
-
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none bg-gray-400"
 
       doc = element(lv, @yearly_interval_button) |> render_click()
 
-      assert text_of_element(doc, @starter_checkout_button) == "Downgrade to Starter"
-      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
       assert text_of_element(doc, @business_checkout_button) == "Change billing interval"
+      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
 
       doc = set_slider(lv, "10M")
 
-      assert text_of_element(doc, @starter_checkout_button) == "Downgrade to Starter"
-      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
       assert text_of_element(doc, @business_checkout_button) == "Upgrade"
+      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
 
       doc = set_slider(lv, "100k")
 
-      assert text_of_element(doc, @starter_checkout_button) == "Downgrade to Starter"
-      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
       assert text_of_element(doc, @business_checkout_button) == "Downgrade"
+      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
     end
 
     test "checkout is disabled when team member usage exceeds rendered plan limit", %{
@@ -790,12 +671,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       {:ok, _lv, doc} = get_liveview(conn)
-
-      assert text_of_element(doc, @starter_plan_box) =~ "Your usage exceeds this plan"
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
-
-      assert text_of_element(doc, @starter_plan_tooltip) ==
-               "Your usage exceeds the following limit(s): Team member limit"
 
       assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
@@ -811,12 +686,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       for _ <- 1..11, do: new_site(owner: user)
 
       {:ok, _lv, doc} = get_liveview(conn)
-
-      assert text_of_element(doc, @starter_plan_box) =~ "Your usage exceeds this plan"
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
-
-      assert text_of_element(doc, @starter_plan_tooltip) ==
-               "Your usage exceeds the following limit(s): Site limit"
 
       assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
@@ -835,9 +704,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       {:ok, _lv, doc} = get_liveview(conn)
-
-      assert text_of_element(doc, @starter_plan_tooltip) =~ "Team member limit"
-      assert text_of_element(doc, @starter_plan_tooltip) =~ "Site limit"
 
       assert text_of_element(doc, @growth_plan_tooltip) =~ "Team member limit"
       assert text_of_element(doc, @growth_plan_tooltip) =~ "Site limit"
@@ -880,7 +746,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v3 business (unlimited team members) subscription plan" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v3_business_10k_monthly_plan_id)
@@ -895,23 +761,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "displays plan benefits", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      starter_box = text_of_element(doc, @starter_plan_box)
       growth_box = text_of_element(doc, @growth_plan_box)
       business_box = text_of_element(doc, @business_plan_box)
       enterprise_box = text_of_element(doc, @enterprise_plan_box)
 
-      assert starter_box =~ "Intuitive, fast and privacy-friendly dashboard"
-      assert starter_box =~ "Email/Slack reports"
-      assert starter_box =~ "Google Analytics import"
-      assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "Up to 3 sites"
-      assert starter_box =~ "3 years of data retention"
-
       assert growth_box =~ "Up to 3 team members"
       assert growth_box =~ "Up to 10 sites"
-      assert growth_box =~ "Team Accounts"
-      assert growth_box =~ "Shared Links"
-      assert growth_box =~ "Shared Segments"
+      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
+      assert growth_box =~ "Email/Slack reports"
+      assert growth_box =~ "Google Analytics import"
+      assert growth_box =~ "Goals and custom events"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Unlimited team members"
@@ -939,7 +798,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a past_due subscription" do
-    setup [:create_user, :create_site, :log_in, :create_past_due_subscription]
+    setup [
+      :create_user,
+      :disable_starter_tier,
+      :create_site,
+      :log_in,
+      :create_past_due_subscription
+    ]
 
     test "renders failed payment notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -969,16 +834,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, "#{@growth_checkout_button} + div") =~
                "Please update your billing details first"
-
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none bg-gray-400"
-
-      assert text_of_element(doc, "#{@starter_checkout_button} + div") =~
-               "Please update your billing details first"
     end
   end
 
   describe "for a user with a paused subscription" do
-    setup [:create_user, :create_site, :log_in, :create_paused_subscription]
+    setup [
+      :create_user,
+      :disable_starter_tier,
+      :create_site,
+      :log_in,
+      :create_paused_subscription
+    ]
 
     test "renders subscription paused notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -1008,16 +874,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, "#{@growth_checkout_button} + div") =~
                "Please update your billing details first"
-
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none bg-gray-400"
-
-      assert text_of_element(doc, "#{@starter_checkout_button} + div") =~
-               "Please update your billing details first"
     end
   end
 
   describe "for a user with a cancelled, but still active subscription" do
-    setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
+    setup [
+      :create_user,
+      :disable_starter_tier,
+      :create_site,
+      :log_in,
+      :create_cancelled_subscription
+    ]
 
     test "does not render any global notices", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -1026,10 +893,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "checkout buttons are paddle buttons", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-
-      assert text_of_attr(find(doc, @starter_checkout_button), "onclick") =~
-               "Paddle.Checkout.open"
-
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~ "Paddle.Checkout.open"
 
       assert text_of_attr(find(doc, @business_checkout_button), "onclick") =~
@@ -1048,7 +911,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a cancelled and expired subscription" do
-    setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
+    setup [
+      :create_user,
+      :disable_starter_tier,
+      :create_site,
+      :log_in,
+      :create_cancelled_subscription
+    ]
 
     setup %{user: user} do
       user
@@ -1068,14 +937,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "highlights recommended tier", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert text_of_element(doc, @starter_highlight_pill) == "Recommended"
-      refute text_of_element(doc, @growth_highlight_pill) == "Recommended"
+      assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
       refute text_of_element(doc, @business_highlight_pill) == "Recommended"
     end
   end
 
   describe "for a grandfathered user with a high volume plan" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     test "does not render any global notices", %{conn: conn, user: user} do
       create_subscription_for(user, paddle_plan_id: @v1_50m_yearly_plan_id)
@@ -1083,7 +951,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       check_notice_titles(doc, [])
     end
 
-    test "on a 50M v1 plan, Growth plans are available at 20M, 50M, 50M+, but Starter and Business plans are not",
+    test "on a 50M v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not",
          %{conn: conn, user: user} do
       create_subscription_for(user, paddle_plan_id: @v1_50m_yearly_plan_id)
 
@@ -1091,27 +959,23 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = set_slider(lv, 8)
       assert text_of_element(doc, @slider_value) == "20M"
-      assert text_of_element(doc, @starter_plan_box) =~ "Contact us"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€1,800"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
       doc = set_slider(lv, 9)
       assert text_of_element(doc, @slider_value) == "50M"
-      assert text_of_element(doc, @starter_plan_box) =~ "Contact us"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€2,640"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
       doc = set_slider(lv, 10)
       assert text_of_element(doc, @slider_value) == "50M+"
-      assert text_of_element(doc, @starter_plan_box) =~ "Contact us"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
 
       doc = set_slider(lv, 7)
       assert text_of_element(doc, @slider_value) == "10M"
-      refute text_of_element(doc, @starter_plan_box) =~ "Contact us"
       refute text_of_element(doc, @business_plan_box) =~ "Contact us"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
     end
@@ -1124,17 +988,19 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = set_slider(lv, 8)
       assert text_of_element(doc, @slider_value) == "20M"
+      assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€2,250"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
       doc = set_slider(lv, 9)
       assert text_of_element(doc, @slider_value) == "20M+"
+      assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
     end
   end
 
   describe "for a grandfathered user on a v1 10k plan" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
@@ -1162,19 +1028,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
     end
 
-    test "displays Starter, Business and Enterprise benefits", %{conn: conn} do
+    test "displays business and enterprise plan benefits", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      starter_box = text_of_element(doc, @starter_plan_box)
       business_box = text_of_element(doc, @business_plan_box)
       enterprise_box = text_of_element(doc, @enterprise_plan_box)
-
-      assert starter_box =~ "Intuitive, fast and privacy-friendly dashboard"
-      assert starter_box =~ "Email/Slack reports"
-      assert starter_box =~ "Google Analytics import"
-      assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "Up to 3 sites"
-      assert starter_box =~ "3 years of data retention"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Funnels"
@@ -1203,7 +1061,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user without a trial_expiry_date (invited user) who owns a site (transferred)" do
-    setup [:create_user, :create_site, :log_in]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in]
 
     setup %{user: user} do
       user
@@ -1223,19 +1081,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "100k")
 
-      refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
     end
   end
 
   describe "for a free_10k subscription" do
-    setup [:create_user, :create_site, :log_in, :subscribe_free_10k]
+    setup [:create_user, :disable_starter_tier, :create_site, :log_in, :subscribe_free_10k]
 
-    test "recommends starter tier", %{conn: conn} do
+    test "recommends growth tier when no premium features used", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert element_exists?(doc, @starter_highlight_pill)
-      refute element_exists?(doc, @growth_highlight_pill)
+      assert element_exists?(doc, @growth_highlight_pill)
       refute element_exists?(doc, @business_highlight_pill)
     end
 
@@ -1246,7 +1102,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, @business_plan_box) =~ "Recommended"
       refute text_of_element(doc, @growth_plan_box) =~ "Recommended"
-      refute text_of_element(doc, @starter_plan_box) =~ "Recommended"
     end
 
     test "renders Paddle upgrade buttons", %{conn: conn, user: user} do
@@ -1260,7 +1115,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "disableLogout" => true,
                "email" => user.email,
                "passthrough" => "ee:true;user:#{user.id};team:#{team.id}",
-               "product" => @v5_growth_200k_yearly_plan_id,
+               "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
@@ -1268,7 +1123,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with no sites" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :disable_starter_tier, :log_in]
 
     test "does not allow to subscribe and renders notice", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -1276,14 +1131,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       check_notice_titles(doc, [Billing.upgrade_ineligible_notice_title()])
 
       assert text_of_element(doc, "#upgrade-eligible-notice") =~ "You cannot start a subscription"
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
     end
   end
 
   describe "for a user with no sites but pending ownership transfer" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :disable_starter_tier, :log_in]
 
     setup %{user: user} do
       old_owner = new_user()
@@ -1301,9 +1155,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "allows to subscribe", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      assert text_of_element(doc, @starter_plan_box) =~ "Recommended"
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+      assert text_of_element(doc, @growth_plan_box) =~ "Recommended"
     end
   end
 
@@ -1329,8 +1183,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end)
   end
 
-  defp subscribe_v5_growth(%{user: user}) do
-    create_subscription_for(user, paddle_plan_id: @v5_growth_200k_yearly_plan_id)
+  defp subscribe_v4_growth(%{user: user}) do
+    create_subscription_for(user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
   end
 
   defp subscribe_v4_business(%{user: user}) do
@@ -1396,5 +1250,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     lv
     |> element(@slider_input)
     |> render_change(%{slider: index})
+  end
+
+  defp disable_starter_tier(%{user: user}) do
+    FunWithFlags.disable(:starter_tier, for_actor: user)
+    :ok
   end
 end

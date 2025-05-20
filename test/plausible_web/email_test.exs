@@ -152,7 +152,6 @@ defmodule PlausibleWeb.EmailTest do
       team = build(:team, identifier: Ecto.UUID.generate())
       penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
       last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
-      suggested_plan = %Plausible.Billing.Plan{volume: "100k"}
 
       usage = %{
         penultimate_cycle: %{date_range: penultimate_cycle, total: 12_300},
@@ -160,7 +159,7 @@ defmodule PlausibleWeb.EmailTest do
       }
 
       %{html_body: html_body, subject: subject} =
-        PlausibleWeb.Email.over_limit_email(user, team, usage, suggested_plan)
+        PlausibleWeb.Email.over_limit_email(user, team, usage, "100k")
 
       assert subject == "[Action required] You have outgrown your Plausible subscription tier"
 
@@ -214,7 +213,6 @@ defmodule PlausibleWeb.EmailTest do
       team = build(:team, identifier: Ecto.UUID.generate())
       penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
       last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
-      suggested_plan = %Plausible.Billing.Plan{volume: "100k"}
 
       usage = %{
         penultimate_cycle: %{date_range: penultimate_cycle, total: 12_300},
@@ -222,7 +220,7 @@ defmodule PlausibleWeb.EmailTest do
       }
 
       %{html_body: html_body, subject: subject} =
-        PlausibleWeb.Email.dashboard_locked(user, team, usage, suggested_plan)
+        PlausibleWeb.Email.dashboard_locked(user, team, usage, "100k")
 
       assert subject == "[Action required] Your Plausible dashboard is now locked"
 

@@ -4,7 +4,7 @@ defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
   alias Plausible.Teams
 
-  @generations [:legacy_plans, :plans_v1, :plans_v2, :plans_v3, :plans_v4]
+  @generations [:legacy_plans, :plans_v1, :plans_v2, :plans_v3, :plans_v4, :plans_v5]
 
   for group <- Enum.flat_map(@generations, &[&1, :"sandbox_#{&1}"]) do
     path = Application.app_dir(:plausible, ["priv", "#{group}.json"])
@@ -32,41 +32,62 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  @spec growth_plans_for(Subscription.t()) :: [Plan.t()]
+  defp starter_plans_for(legacy?) do
+    if legacy? do
+      []
+    else
+      Enum.filter(plans_v5(), &(&1.kind == :starter))
+    end
+  end
+
+  @spec growth_plans_for(Subscription.t(), boolean()) :: [Plan.t()]
   @doc """
   Returns a list of growth plans available for the subscription to choose.
 
   As new versions of plans are introduced, subscriptions which were on old plans can
   still choose from old plans.
   """
-  def growth_plans_for(subscription) do
+  def growth_plans_for(subscription, legacy? \\ false) do
     owned_plan = get_regular_plan(subscription)
 
+    default_plans = if legacy?, do: plans_v4(), else: plans_v5()
+
     cond do
-      is_nil(owned_plan) -> plans_v4()
-      subscription && Subscriptions.expired?(subscription) -> plans_v4()
-      owned_plan.kind == :business -> plans_v4()
+      is_nil(owned_plan) -> default_plans
+      subscription && Subscriptions.expired?(subscription) -> default_plans
+      owned_plan.kind == :business -> default_plans
       owned_plan.generation == 1 -> plans_v1() |> drop_high_plans(owned_plan)
       owned_plan.generation == 2 -> plans_v2() |> drop_high_plans(owned_plan)
       owned_plan.generation == 3 -> plans_v3()
       owned_plan.generation == 4 -> plans_v4()
+      owned_plan.generation == 5 -> plans_v5()
     end
     |> Enum.filter(&(&1.kind == :growth))
   end
 
-  def business_plans_for(subscription) do
+  def business_plans_for(subscription, legacy? \\ false) do
     owned_plan = get_regular_plan(subscription)
 
+    default_plans = if legacy?, do: plans_v4(), else: plans_v5()
+
     cond do
-      subscription && Subscriptions.expired?(subscription) -> plans_v4()
+      subscription && Subscriptions.expired?(subscription) -> default_plans
       owned_plan && owned_plan.generation < 4 -> plans_v3()
-      true -> plans_v4()
+      owned_plan && owned_plan.generation < 5 -> plans_v4()
+      true -> default_plans
     end
     |> Enum.filter(&(&1.kind == :business))
   end
 
   def available_plans_for(subscription, opts \\ []) do
-    plans = growth_plans_for(subscription) ++ business_plans_for(subscription)
+    legacy? = Keyword.get(opts, :legacy?, false)
+
+    plans =
+      Enum.concat([
+        starter_plans_for(legacy?),
+        growth_plans_for(subscription, legacy?),
+        business_plans_for(subscription, legacy?)
+      ])
 
     plans =
       if Keyword.get(opts, :with_prices) do
@@ -192,42 +213,31 @@ defmodule Plausible.Billing.Plans do
   end
 
   @doc """
-  Returns the most appropriate plan for a team based on its usage during a
-  given cycle.
+  Returns the most appropriate monthly pageview volume for a given usage cycle.
+  The cycle is either last 30 days (for trials) or last billing cycle for teams
+  with an existing subscription.
+
+  The generation and tier from which we're searching for a suitable volume doesn't
+  matter - the monthly pageview volumes for all plans starting from v3 are going from
+  10k to 10M. This function uses v4 Growth but it might as well be e.g. v5 Business.
 
   If the usage during the cycle exceeds the enterprise-level threshold, or if
-  the team already has an enterprise plan, it suggests the :enterprise
-  plan.
-
-  Otherwise, it recommends the plan where the cycle usage falls just under the
-  plan's limit from the available options for the team.
+  the team already has an enterprise plan, it returns `:enterprise`. Otherwise,
+  a string representing the volume, e.g. "100k" or "5M".
   """
-  @enterprise_level_usage 10_000_000
-  @spec suggest(Teams.Team.t(), non_neg_integer()) :: Plan.t()
-  def suggest(team, usage_during_cycle) do
-    cond do
-      usage_during_cycle > @enterprise_level_usage ->
-        :enterprise
-
-      Teams.Billing.enterprise_configured?(team) ->
-        :enterprise
-
-      true ->
-        subscription = Teams.Billing.get_subscription(team)
-        suggest_by_usage(subscription, usage_during_cycle)
+  @spec suggest_volume(Teams.Team.t(), non_neg_integer()) :: String.t() | :enterprise
+  def suggest_volume(team, usage_during_cycle) do
+    if Teams.Billing.enterprise_configured?(team) do
+      :enterprise
+    else
+      plans_v4()
+      |> Enum.filter(&(&1.kind == :growth))
+      |> Enum.find(%{volume: :enterprise}, &(usage_during_cycle < &1.monthly_pageview_limit))
+      |> Map.get(:volume)
     end
   end
 
-  def suggest_by_usage(subscription, usage_during_cycle) do
-    available_plans =
-      if business_tier?(subscription),
-        do: business_plans_for(subscription),
-        else: growth_plans_for(subscription)
-
-    Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
-  end
-
   def all() do
-    legacy_plans() ++ plans_v1() ++ plans_v2() ++ plans_v3() ++ plans_v4()
+    legacy_plans() ++ plans_v1() ++ plans_v2() ++ plans_v3() ++ plans_v4() ++ plans_v5()
   end
 end

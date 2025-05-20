@@ -1,7 +1,9 @@
-defmodule PlausibleWeb.Components.Billing.PlanBenefits do
+defmodule PlausibleWeb.Components.Billing.LegacyPlanBenefits do
   @moduledoc """
-  This module exposes functions for rendering and returning plan
-  benefits for Growth, Business, and Enterprise plans.
+  [DEPRECATED] This file is essentially a copy of
+  `PlausibleWeb.Components.Billing.PlanBenefits` with the
+  intent of keeping the old behaviour in place for the users without
+  the `starter_tier` feature flag enabled.
   """
 
   use Phoenix.Component
@@ -13,8 +15,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
   @doc """
   This function takes a list of benefits returned by either one of:
 
-  * `for_starter/1`
-  * `for_growth/2`
+  * `for_growth/1`
   * `for_business/2`
   * `for_enterprise/1`.
 
@@ -26,9 +27,9 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
   """
   def render(assigns) do
     ~H"""
-    <ul role="list" class={["mt-8 space-y-1 text-sm leading-6", @class]}>
-      <li :for={benefit <- @benefits} class="flex gap-x-1">
-        <Heroicons.check class="shrink-0 h-5 w-5 text-indigo-600 dark:text-green-600" />
+    <ul role="list" class={["mt-8 space-y-3 text-sm leading-6 xl:mt-10", @class]}>
+      <li :for={benefit <- @benefits} class="flex gap-x-3">
+        <Heroicons.check class="h-6 w-5 text-indigo-600 dark:text-green-600" />
         {if is_binary(benefit), do: benefit, else: benefit.(assigns)}
       </li>
     </ul>
@@ -36,36 +37,20 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
   end
 
   @doc """
-  This function takes a starter plan and returns a list representing
+  This function takes a growth plan and returns a list representing
   the different benefits a user gets when subscribing to this plan.
   """
-  def for_starter(starter_plan) do
+  def for_growth(plan) do
     [
-      site_limit_benefit(starter_plan),
-      data_retention_benefit(starter_plan),
+      team_member_limit_benefit(plan),
+      site_limit_benefit(plan),
+      data_retention_benefit(plan),
       "Intuitive, fast and privacy-friendly dashboard",
       "Email/Slack reports",
       "Google Analytics import"
     ]
-    |> Kernel.++(feature_benefits(starter_plan))
+    |> Kernel.++(feature_benefits(plan))
     |> Kernel.++(["Saved Segments"])
-  end
-
-  @doc """
-  Returns Growth benefits for the given Growth plan.
-
-  A second argument is also required - list of Starter benefits. This
-  is because we don't want to list the same benefits in both Starter
-  and Growth. Everything in Starter is also included in Growth.
-  """
-  def for_growth(growth_plan, starter_benefits) do
-    [
-      "Everything in Starter",
-      site_limit_benefit(growth_plan),
-      team_member_limit_benefit(growth_plan)
-    ]
-    |> Kernel.++(feature_benefits(growth_plan))
-    |> Kernel.--(starter_benefits)
     |> Enum.filter(& &1)
   end
 
@@ -76,16 +61,15 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
   is because we don't want to list the same benefits in both Growth
   and Business. Everything in Growth is also included in Business.
   """
-  def for_business(plan, growth_benefits, starter_benefits) do
+  def for_business(plan, growth_benefits) do
     [
       "Everything in Growth",
-      site_limit_benefit(plan),
       team_member_limit_benefit(plan),
+      site_limit_benefit(plan),
       data_retention_benefit(plan)
     ]
     |> Kernel.++(feature_benefits(plan))
     |> Kernel.--(growth_benefits)
-    |> Kernel.--(starter_benefits)
     |> Kernel.++(["Priority support"])
     |> Enum.filter(& &1)
   end
@@ -132,8 +116,9 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     Enum.flat_map(plan.features, fn feature_mod ->
       case feature_mod.name() do
         :goals -> ["Goals and custom events"]
+        :teams -> []
+        :shared_links -> []
         :stats_api -> ["Stats API (600 requests per hour)", "Looker Studio Connector"]
-        :shared_links -> ["Shared Links", "Embedded Dashboards"]
         :revenue_goals -> ["Ecommerce revenue attribution"]
         _ -> [feature_mod.display_name()]
       end
@@ -145,7 +130,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     <p>
       Sites API access for
       <.link
-        class="text-indigo-500 hover:underline"
+        class="text-indigo-500 hover:text-indigo-400"
         href="https://plausible.io/white-label-web-analytics"
       >
         reselling

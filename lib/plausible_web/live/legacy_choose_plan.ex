@@ -1,14 +1,22 @@
-defmodule PlausibleWeb.Live.ChoosePlan do
+defmodule PlausibleWeb.Live.LegacyChoosePlan do
   @moduledoc """
-  LiveView for upgrading to a plan, or changing an existing plan.
+  [DEPRECATED] This file is essentially a copy of
+  `PlausibleWeb.Live.ChoosePlan` with the
+  intent of keeping the old behaviour in place for the users without
+  the `starter_tier` feature flag enabled.
   """
   use PlausibleWeb, :live_view
 
   require Plausible.Billing.Subscription.Status
 
-  alias PlausibleWeb.Components.Billing.{PlanBox, PlanBenefits, Notice, PageviewSlider}
+  alias PlausibleWeb.Components.Billing.{
+    LegacyPlanBox,
+    LegacyPlanBenefits,
+    Notice,
+    PageviewSlider
+  }
+
   alias Plausible.Billing.{Plans, Quota}
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
@@ -41,24 +49,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         current_user_subscription_interval(subscription)
       end)
       |> assign_new(:available_plans, fn %{subscription: subscription} ->
-        Plans.available_plans_for(subscription, with_prices: true, customer_ip: remote_ip)
+        Plans.available_plans_for(subscription,
+          with_prices: true,
+          customer_ip: remote_ip,
+          legacy?: true
+        )
       end)
       |> assign_new(:recommended_tier, fn %{
                                             usage: usage,
                                             available_plans: available_plans,
                                             owned_tier: owned_tier
                                           } ->
-        highest_starter_plan = List.last(available_plans.starter)
         highest_growth_plan = List.last(available_plans.growth)
         highest_business_plan = List.last(available_plans.business)
-
-        Quota.suggest_tier(
-          usage,
-          highest_starter_plan,
-          highest_growth_plan,
-          highest_business_plan,
-          owned_tier
-        )
+        Quota.legacy_suggest_tier(usage, highest_growth_plan, highest_business_plan, owned_tier)
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)
@@ -70,13 +74,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         default_selected_volume(usage.monthly_pageviews, available_volumes)
       end)
       |> assign_new(:selected_interval, fn %{current_interval: current_interval} ->
-        current_interval || :yearly
-      end)
-      |> assign_new(:selected_starter_plan, fn %{
-                                                 available_plans: available_plans,
-                                                 selected_volume: selected_volume
-                                               } ->
-        get_plan_by_volume(available_plans.starter, selected_volume)
+        current_interval || :monthly
       end)
       |> assign_new(:selected_growth_plan, fn %{
                                                 available_plans: available_plans,
@@ -95,32 +93,24 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   def render(assigns) do
-    starter_plan_to_render =
-      assigns.selected_starter_plan || List.last(assigns.available_plans.starter)
-
     growth_plan_to_render =
       assigns.selected_growth_plan || List.last(assigns.available_plans.growth)
 
     business_plan_to_render =
       assigns.selected_business_plan || List.last(assigns.available_plans.business)
 
-    starter_benefits =
-      PlanBenefits.for_starter(starter_plan_to_render)
-
     growth_benefits =
-      PlanBenefits.for_growth(growth_plan_to_render, starter_benefits)
+      LegacyPlanBenefits.for_growth(growth_plan_to_render)
 
     business_benefits =
-      PlanBenefits.for_business(business_plan_to_render, growth_benefits, starter_benefits)
+      LegacyPlanBenefits.for_business(business_plan_to_render, growth_benefits)
 
-    enterprise_benefits = PlanBenefits.for_enterprise(business_benefits)
+    enterprise_benefits = LegacyPlanBenefits.for_enterprise(business_benefits)
 
     assigns =
       assigns
-      |> assign(:starter_plan_to_render, starter_plan_to_render)
       |> assign(:growth_plan_to_render, growth_plan_to_render)
       |> assign(:business_plan_to_render, business_plan_to_render)
-      |> assign(:starter_benefits, starter_benefits)
       |> assign(:growth_benefits, growth_benefits)
       |> assign(:business_benefits, business_benefits)
       |> assign(:enterprise_benefits, enterprise_benefits)
@@ -135,52 +125,22 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <Notice.subscription_past_due class="pb-6" subscription={@subscription} />
         <Notice.subscription_paused class="pb-6" subscription={@subscription} />
         <Notice.upgrade_ineligible :if={not Quota.eligible_for_upgrade?(@usage)} />
-
-        <div class="mt-6 w-full md:flex">
-          <a
-            href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="hidden md:flex md:w-1/6 h-max md:mt-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-bold gap-1 items-center"
-          >
-            <span>←</span>
-            <p>Back to Settings</p>
-          </a>
-          <div class="md:w-4/6">
-            <h1 class="mx-auto max-w-4xl text-center text-2xl font-bold tracking-tight lg:text-3xl">
-              Traffic based plans that match your growth
-            </h1>
-            <p class="mx-auto max-w-2xl mt-2 text-center text-gray-600 dark:text-gray-400">
-              {if @owned_plan,
-                do: "Change your subscription plan",
-                else: "Upgrade your trial to a paid plan"}
-            </p>
-          </div>
+        <div class="mx-auto max-w-4xl text-center">
+          <p class="text-4xl font-bold tracking-tight lg:text-5xl">
+            {if @owned_plan,
+              do: "Change subscription plan",
+              else: "Upgrade your account"}
+          </p>
         </div>
-        <div class="md:hidden mt-6 max-w-md mx-auto">
-          <a
-            href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-            class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 text-sm font-bold"
-          >
-            ← Back to Settings
-          </a>
-        </div>
-        <div class="mt-10 flex flex-col gap-8 lg:flex-row items-center lg:items-baseline">
+        <div class="mt-12 flex flex-col gap-8 lg:flex-row items-center lg:items-baseline">
           <.interval_picker selected_interval={@selected_interval} />
           <PageviewSlider.render
             selected_volume={@selected_volume}
             available_volumes={@available_volumes}
           />
         </div>
-        <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-4 lg:mx-0 lg:max-w-none lg:grid-cols-4">
-          <PlanBox.standard
-            kind={:starter}
-            owned={@owned_tier == :starter}
-            recommended={@recommended_tier == :starter}
-            plan_to_render={@starter_plan_to_render}
-            benefits={@starter_benefits}
-            available={!!@selected_starter_plan}
-            {assigns}
-          />
-          <PlanBox.standard
+        <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+          <LegacyPlanBox.standard
             kind={:growth}
             owned={@owned_tier == :growth}
             recommended={@recommended_tier == :growth}
@@ -189,7 +149,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             available={!!@selected_growth_plan}
             {assigns}
           />
-          <PlanBox.standard
+          <LegacyPlanBox.standard
             kind={:business}
             owned={@owned_tier == :business}
             recommended={@recommended_tier == :business}
@@ -198,35 +158,15 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             available={!!@selected_business_plan}
             {assigns}
           />
-          <PlanBox.enterprise
+          <LegacyPlanBox.enterprise
             benefits={@enterprise_benefits}
             recommended={@recommended_tier == :custom}
           />
         </div>
-        <div class="mt-2 mx-auto max-w-md lg:max-w-3xl">
-          <.accordion_menu>
-            <.accordion_item
-              open_by_default={true}
-              id="usage"
-              title="What's my current usage?"
-              title_class="text-gray-900 dark:text-gray-200"
-            >
-              <p class="text-gray-600 dark:text-gray-300">
-                <.render_usage pageview_usage={@usage.monthly_pageviews} />
-              </p>
-            </.accordion_item>
-
-            <.accordion_item
-              id="over-limit"
-              title="What happens if I go over my monthly pageview limit?"
-              title_class="text-gray-900 dark:text-gray-200"
-            >
-              <p class="text-gray-600 dark:text-gray-300">
-                You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly. If your pageviews exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
-              </p>
-            </.accordion_item>
-          </.accordion_menu>
-        </div>
+        <p class="mx-auto mt-8 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
+          <.render_usage pageview_usage={@usage.monthly_pageviews} />
+        </p>
+        <.pageview_limit_notice :if={!@owned_plan} />
         <.help_links />
       </div>
     </div>
@@ -235,23 +175,19 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   defp render_usage(assigns) do
-    ~H"""
-    You have used
-    <span :if={@pageview_usage[:last_30_days]} class="inline">
-      <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_30_days.total) %></b> billable pageviews in the last 30 days.
-    </span>
-    <span :if={@pageview_usage[:last_cycle]} class="inline">
-      <b>{PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_cycle.total)}</b>
-      billable pageviews in the last billing cycle.
-    </span>
-    Please see your full usage report (including sites and team members) under the
-    <a
-      class="text-indigo-600 inline hover:underline"
-      href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
-    >
-      "Subscription" section
-    </a> in your account settings.
-    """
+    case assigns.pageview_usage do
+      %{last_30_days: _} ->
+        ~H"""
+        You have used
+        <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_30_days.total) %></b> billable pageviews in the last 30 days
+        """
+
+      %{last_cycle: _} ->
+        ~H"""
+        You have used
+        <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_cycle.total) %></b> billable pageviews in the last billing cycle
+        """
+    end
   end
 
   def handle_event("set_interval", %{"interval" => interval}, socket) do
@@ -278,7 +214,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     {:noreply,
      assign(socket,
        selected_volume: new_volume,
-       selected_starter_plan: get_plan_by_volume(available_plans.starter, new_volume),
        selected_growth_plan: get_plan_by_volume(available_plans.growth, new_volume),
        selected_business_plan: get_plan_by_volume(available_plans.business, new_volume)
      )}
@@ -344,12 +279,30 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
+  defp pageview_limit_notice(assigns) do
+    ~H"""
+    <div class="mt-12 mx-auto mt-6 max-w-2xl">
+      <dt>
+        <p class="w-full text-center text-gray-900 dark:text-gray-100">
+          <span class="text-center font-semibold leading-7">
+            What happens if I go over my page views limit?
+          </span>
+        </p>
+      </dt>
+      <dd class="mt-3">
+        <div class="text-justify leading-7 block text-gray-600 dark:text-gray-100">
+          You will never be charged extra for an occasional traffic spike. There are no surprise fees and your card will never be charged unexpectedly.               If your page views exceed your plan for two consecutive months, we will contact you to upgrade to a higher plan for the following month. You will have two weeks to make a decision. You can decide to continue with a higher plan or to cancel your account at that point.
+        </div>
+      </dd>
+    </div>
+    """
+  end
+
   defp help_links(assigns) do
     ~H"""
-    <div class="mt-16 -mb-16 text-center">
-      Any other questions?
-      <a class="text-indigo-600 hover:underline" href={contact_link()}>Contact us</a>
-      or see <a class="text-indigo-600 hover:underline" href={billing_faq_link()}>billing FAQ</a>
+    <div class="mt-8 text-center">
+      Questions? <a class="text-indigo-600" href={contact_link()}>Contact us</a>
+      or see <a class="text-indigo-600" href={billing_faq_link()}>billing FAQ</a>
     </div>
     """
   end

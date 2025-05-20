@@ -36,21 +36,21 @@ defmodule Plausible.Billing.PlansTest do
       |> assert_generation(2)
     end
 
-    test "growth_plans_for/1 returns v4 plans for expired legacy subscriptions" do
+    test "growth_plans_for/1 returns latest plans for expired legacy subscriptions" do
       new_user()
       |> subscribe_to_plan(@v1_plan_id, status: :deleted, next_bill_date: ~D[2023-11-10])
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
-    test "growth_plans_for/1 shows v4 plans for everyone else" do
+    test "growth_plans_for/1 shows latest plans for everyone else" do
       new_user(trial_expiry_date: Date.utc_today())
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
     test "growth_plans_for/1 does not return business plans" do
@@ -69,7 +69,7 @@ defmodule Plausible.Billing.PlansTest do
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.growth_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
     test "business_plans_for/1 returns v3 business plans for a user on a legacy plan" do
@@ -92,13 +92,13 @@ defmodule Plausible.Billing.PlansTest do
       assert_generation(business_plans, 3)
     end
 
-    test "business_plans_for/1 returns v4 plans for invited users with trial_expiry = nil" do
+    test "business_plans_for/1 returns latest plans for invited users with trial_expiry = nil" do
       nil
       |> Plans.business_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
-    test "business_plans_for/1 returns v4 plans for expired legacy subscriptions" do
+    test "business_plans_for/1 returns latest plans for expired legacy subscriptions" do
       user =
         new_user()
         |> subscribe_to_plan(@v2_plan_id, status: :deleted, next_bill_date: ~D[2023-11-10])
@@ -107,10 +107,10 @@ defmodule Plausible.Billing.PlansTest do
       |> team_of(with_subscription?: true)
       |> Map.fetch!(:subscription)
       |> Plans.business_plans_for()
-      |> assert_generation(4)
+      |> assert_generation(5)
     end
 
-    test "business_plans_for/1 returns v4 business plans for everyone else" do
+    test "business_plans_for/1 returns latest business plans for everyone else" do
       user = new_user(trial_expiry_date: Date.utc_today())
 
       subscription =
@@ -121,7 +121,7 @@ defmodule Plausible.Billing.PlansTest do
       business_plans = Plans.business_plans_for(subscription)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
-      assert_generation(business_plans, 4)
+      assert_generation(business_plans, 5)
     end
 
     test "available_plans returns all plans for user with prices when asked for" do
@@ -179,7 +179,7 @@ defmodule Plausible.Billing.PlansTest do
         Plausible.Teams.Billing.latest_enterprise_plan_with_price(team, "127.0.0.1")
 
       assert enterprise_plan.paddle_plan_id == "123"
-      assert price == Money.new(:EUR, "10.0")
+      assert price == Money.new(:EUR, "123.00")
     end
   end
 
@@ -214,42 +214,27 @@ defmodule Plausible.Billing.PlansTest do
     end
   end
 
-  describe "suggested_plan/2" do
+  describe "suggest_volume/2" do
     test "returns suggested plan based on usage" do
       team = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
 
-      assert %Plausible.Billing.Plan{
-               monthly_pageview_limit: 100_000,
-               monthly_cost: nil,
-               monthly_product_id: "558745",
-               volume: "100k",
-               yearly_cost: nil,
-               yearly_product_id: "590752"
-             } = Plans.suggest(team, 10_000)
-
-      assert %Plausible.Billing.Plan{
-               monthly_pageview_limit: 200_000,
-               monthly_cost: nil,
-               monthly_product_id: "597485",
-               volume: "200k",
-               yearly_cost: nil,
-               yearly_product_id: "597486"
-             } = Plans.suggest(team, 100_000)
+      assert Plans.suggest_volume(team, 10_000) == "100k"
+      assert Plans.suggest_volume(team, 100_000) == "200k"
     end
 
-    test "returns nil when user has enterprise-level usage" do
+    test "returns :enterprise when user has enterprise-level usage" do
       team = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
-      assert :enterprise == Plans.suggest(team, 100_000_000)
+      assert Plans.suggest_volume(team, 10_000_000) == :enterprise
     end
 
-    test "returns nil when user is on an enterprise plan" do
+    test "returns :enterprise when user is on an enterprise plan" do
       team =
         new_user()
         |> subscribe_to_plan(@v1_plan_id)
         |> subscribe_to_enterprise_plan(billing_interval: :yearly, subscription?: false)
         |> team_of()
 
-      assert :enterprise == Plans.suggest(team, 10_000)
+      assert Plans.suggest_volume(team, 10_000) == :enterprise
     end
   end
 
@@ -309,7 +294,31 @@ defmodule Plausible.Billing.PlansTest do
                "857091",
                "857092",
                "857093",
-               "857094"
+               "857094",
+               "910414",
+               "910416",
+               "910418",
+               "910420",
+               "910422",
+               "910424",
+               "910426",
+               "910428",
+               "910430",
+               "910432",
+               "910434",
+               "910436",
+               "910438",
+               "910440",
+               "910442",
+               "910444",
+               "910446",
+               "910448",
+               "910450",
+               "910452",
+               "910454",
+               "910456",
+               "910458",
+               "910460"
              ] == Plans.yearly_product_ids()
     end
   end

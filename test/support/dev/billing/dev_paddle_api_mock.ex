@@ -13,6 +13,9 @@ defmodule Plausible.Billing.DevPaddleApiMock do
   @prices_file_path Application.app_dir(:plausible, ["priv", "plan_prices.json"])
   @prices File.read!(@prices_file_path) |> Jason.decode!()
 
+  # https://hexdocs.pm/elixir/1.15/Module.html#module-external_resource
+  @external_resource @prices_file_path
+
   def all_prices() do
     enterprise_plan_prices =
       Repo.all(from p in EnterprisePlan, select: {p.paddle_plan_id, 123})

@@ -16,7 +16,7 @@ defmodule Plausible.Billing.Plan do
     # production plans, contain multiple generations of plans in the same file
     # for testing purposes.
     field :generation, :integer
-    field :kind, Ecto.Enum, values: [:growth, :business]
+    field :kind, Ecto.Enum, values: [:starter, :growth, :business]
 
     field :features, Plausible.Billing.Ecto.FeatureList
     field :monthly_pageview_limit, :integer
