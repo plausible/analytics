@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
     test "renders pre-determined installation type: WordPress", %{conn: conn, site: site} do
       resp =
         conn
-        |> get("/#{site.domain}/installation?installation_type=WordPress")
+        |> get("/#{site.domain}/installation?installation_type=wordpress")
         |> html_response(200)
 
       assert resp =~ "Install WordPress plugin"
@@ -79,13 +79,13 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       assert resp =~
                Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 installation_type: "WordPress"
+                 installation_type: "wordpress"
                )
     end
 
     test "renders pre-determined installation type: GTM", %{conn: conn, site: site} do
       resp =
-        conn |> get("/#{site.domain}/installation?installation_type=GTM") |> html_response(200)
+        conn |> get("/#{site.domain}/installation?installation_type=gtm") |> html_response(200)
 
       assert resp =~ "Install Google Tag Manager"
       assert resp =~ "Start collecting data"
@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       assert resp =~
                Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 installation_type: "GTM"
+                 installation_type: "gtm"
                )
     end
 
@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
     } do
       stub_fetch_body(200, "wp-content")
 
-      {lv, _} = get_lv(conn, site, "?installation_type=GTM")
+      {lv, _} = get_lv(conn, site, "?installation_type=gtm")
 
       refute eventually(fn ->
                html = render(lv)
@@ -164,7 +164,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       assert text_of_element(html, "textarea#snippet") ==
                "&amp;lt;script defer data-domain=&amp;quot;#{site.domain}&amp;quot; src=&amp;quot;http://localhost:8000/js/script.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;"
 
-      for param <- PlausibleWeb.Live.Installation.script_extension_params() do
+      for {param, script_extension} <- PlausibleWeb.Live.Installation.script_extension_params() do
         lv
         |> element(~s|form#snippet-form|)
         |> render_change(%{
@@ -172,7 +172,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
         })
 
         html = lv |> render()
-        assert text_of_element(html, "textarea#snippet") =~ "/js/script.#{param}.js"
+        assert text_of_element(html, "textarea#snippet") =~ "/js/script.#{script_extension}.js"
 
         lv
         |> element(~s|form#snippet-form|)
@@ -186,11 +186,11 @@ defmodule PlausibleWeb.Live.InstallationTest do
     end
 
     test "allows GTM snippet customization", %{conn: conn, site: site} do
-      {lv, html} = get_lv(conn, site, "?installation_type=GTM")
+      {lv, html} = get_lv(conn, site, "?installation_type=gtm")
 
       assert text_of_element(html, "textarea#snippet") =~ "script.defer = true"
 
-      for param <- PlausibleWeb.Live.Installation.script_extension_params() do
+      for {param, script_extension} <- PlausibleWeb.Live.Installation.script_extension_params() do
         lv
         |> element(~s|form#snippet-form|)
         |> render_change(%{
@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
         })
 
         html = lv |> render()
-        assert text_of_element(html, "textarea#snippet") =~ "/js/script.#{param}.js"
+        assert text_of_element(html, "textarea#snippet") =~ "/js/script.#{script_extension}.js"
 
         lv
         |> element(~s|form#snippet-form|)
@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       lv
       |> element(~s|form#snippet-form|)
       |> render_change(%{
-        "404" => "on"
+        "track_404_pages" => "on"
       })
 
       html = lv |> render()
@@ -246,17 +246,17 @@ defmodule PlausibleWeb.Live.InstallationTest do
       lv
       |> element(~s|form#snippet-form|)
       |> render_change(%{
-        "file-downloads" => "on",
-        "outbound-links" => "on",
-        "404" => "on"
+        "file_downloads" => "on",
+        "outbound_links" => "on",
+        "track_404_pages" => "on"
       })
 
       lv |> render()
 
-      assert [clicks, downloads, error_404] = Plausible.Goals.for_site(site)
+      assert [clicks, downloads, track_404_pages] = Plausible.Goals.for_site(site)
       assert clicks.event_name == "Outbound Link: Click"
       assert downloads.event_name == "File Download"
-      assert error_404.event_name == "404"
+      assert track_404_pages.event_name == "404"
     end
 
     test "turning off file-downloads, outbound-links and 404 deletes special goals", %{
@@ -270,9 +270,9 @@ defmodule PlausibleWeb.Live.InstallationTest do
       lv
       |> element(~s|form#snippet-form|)
       |> render_change(%{
-        "file-downloads" => "on",
-        "outbound-links" => "on",
-        "404" => "on"
+        "file_downloads" => "on",
+        "outbound_links" => "on",
+        "track_404_pages" => "on"
       })
 
       assert [_, _, _] = Plausible.Goals.for_site(site)
@@ -280,8 +280,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
       lv
       |> element(~s|form#snippet-form|)
       |> render_change(%{
-        "file-downloads" => "on",
-        "outbound-links" => "on"
+        "file_downloads" => "on",
+        "outbound_links" => "on"
       })
 
       assert render(lv) =~ "Snippet updated and goal deleted"
@@ -289,7 +289,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       lv
       |> element(~s|form#snippet-form|)
       |> render_change(%{
-        "file-downloads" => "on"
+        "file_downloads" => "on"
       })
 
       assert render(lv) =~ "Snippet updated and goal deleted"
@@ -312,10 +312,10 @@ defmodule PlausibleWeb.Live.InstallationTest do
       lv
       |> element(~s|form#snippet-form|)
       |> render_change(%{
-        "tagged-events" => "on",
-        "hash" => "on",
-        "pageview-props" => "on",
-        "revenue" => "on"
+        "tagged_events" => "on",
+        "hash_based_routing" => "on",
+        "pageview_props" => "on",
+        "revenue_tracking" => "on"
       })
 
       assert render(lv) =~ "Snippet updated. Please insert the newest snippet into your site"

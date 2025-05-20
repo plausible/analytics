@@ -4,22 +4,23 @@ defmodule PlausibleWeb.Live.Installation do
   """
   use PlausibleWeb, :live_view
   alias Plausible.Verification.{Checks, State}
+  alias Plausible.Site.InstallationMeta
 
-  @script_extension_params [
-    "outbound-links",
-    "tagged-events",
-    "file-downloads",
-    "hash",
-    "pageview-props",
-    "revenue"
-  ]
+  @script_extension_params %{
+    "outbound_links" => "outbound-links",
+    "tagged_events" => "tagged-events",
+    "file_downloads" => "file-downloads",
+    "hash_based_routing" => "hash",
+    "pageview_props" => "pageview-props",
+    "revenue_tracking" => "revenue"
+  }
 
-  @script_config_params ["404" | @script_extension_params]
+  @script_config_params ["track_404_pages" | Map.keys(@script_extension_params)]
 
   @installation_types [
-    "GTM",
+    "gtm",
     "manual",
-    "WordPress"
+    "wordpress"
   ]
 
   @valid_qs_params @script_config_params ++ ["installation_type", "flow"]
@@ -48,15 +49,15 @@ defmodule PlausibleWeb.Live.Installation do
       end
 
     flow = params["flow"]
-    meta = site.installation_meta || %Plausible.Site.InstallationMeta{}
 
-    script_config =
-      @script_config_params
-      |> Enum.into(%{}, &{&1, false})
-      |> Map.merge(meta.script_config)
-      |> Map.take(@script_config_params)
+    tracker_script_configuration = InstallationMeta.to_tracker_script_configuration(site)
+    installation_type = get_installation_type(flow, tracker_script_configuration, params)
 
-    installation_type = get_installation_type(flow, meta, params)
+    config =
+      Map.new(@script_config_params, fn key ->
+        string_key = String.to_existing_atom(key)
+        {key, Map.get(tracker_script_configuration, string_key)}
+      end)
 
     if connected?(socket) and is_nil(installation_type) do
       Checks.run("https://#{domain}", domain,
@@ -80,15 +81,15 @@ defmodule PlausibleWeb.Live.Installation do
        installation_type: installation_type,
        initial_installation_type: installation_type,
        domain: domain,
-       script_config: script_config
+       config: config
      )}
   end
 
   def handle_info({:verification_end, %State{} = state}, socket) do
     installation_type =
       case state.diagnostics do
-        %{wordpress_likely?: true} -> "WordPress"
-        %{gtm_likely?: true} -> "GTM"
+        %{wordpress_likely?: true} -> "wordpress"
+        %{gtm_likely?: true} -> "gtm"
         _ -> "manual"
       end
 
@@ -116,10 +117,10 @@ defmodule PlausibleWeb.Live.Installation do
             <.spinner class="spinner block text-center h-8 w-8" />
           </div>
         </:title>
-        <:title :if={@installation_type == "WordPress"}>
+        <:title :if={@installation_type == "wordpress"}>
           Install WordPress plugin
         </:title>
-        <:title :if={@installation_type == "GTM"}>
+        <:title :if={@installation_type == "gtm"}>
           Install Google Tag Manager
         </:title>
         <:title :if={@installation_type == "manual"}>
@@ -157,7 +158,7 @@ defmodule PlausibleWeb.Live.Installation do
           </p>
         </:subtitle>
 
-        <:subtitle :if={@installation_type == "WordPress"}>
+        <:subtitle :if={@installation_type == "wordpress"}>
           We've detected your website is using WordPress. Here's how to integrate Plausible:
           <.focus_list>
             <:item>
@@ -170,7 +171,7 @@ defmodule PlausibleWeb.Live.Installation do
             </:item>
           </.focus_list>
         </:subtitle>
-        <:subtitle :if={@installation_type == "GTM"}>
+        <:subtitle :if={@installation_type == "gtm"}>
           We've detected your website is using Google Tag Manager. Here's how to integrate Plausible:
           <.focus_list>
             <:item>
@@ -193,12 +194,8 @@ defmodule PlausibleWeb.Live.Installation do
           Once done, click the button below to verify your installation.
         </:subtitle>
 
-        <div :if={@installation_type in ["manual", "GTM"]}>
-          <.snippet_form
-            installation_type={@installation_type}
-            script_config={@script_config}
-            domain={@domain}
-          />
+        <div :if={@installation_type in ["manual", "gtm"]}>
+          <.snippet_form installation_type={@installation_type} config={@config} domain={@domain} />
         </div>
 
         <.button_link
@@ -218,18 +215,18 @@ defmodule PlausibleWeb.Live.Installation do
           <% end %>
         </.button_link>
 
-        <:footer :if={@initial_installation_type == "WordPress" and @installation_type == "manual"}>
-          <.styled_link href={} phx-click="switch-installation-type" phx-value-method="WordPress">
+        <:footer :if={@initial_installation_type == "wordpress" and @installation_type == "manual"}>
+          <.styled_link href={} phx-click="switch-installation-type" phx-value-method="wordpress">
             Click here
           </.styled_link>
           if you prefer WordPress installation method.
         </:footer>
 
         <:footer :if={
-          (@initial_installation_type == "GTM" and @installation_type == "manual") or
+          (@initial_installation_type == "gtm" and @installation_type == "manual") or
             (@initial_installation_type == "manual" and @installation_type == "manual")
         }>
-          <.styled_link href={} phx-click="switch-installation-type" phx-value-method="GTM">
+          <.styled_link href={} phx-click="switch-installation-type" phx-value-method="gtm">
             Click here
           </.styled_link>
           if you prefer Google Tag Manager installation method.
@@ -246,8 +243,8 @@ defmodule PlausibleWeb.Live.Installation do
     """
   end
 
-  defp render_snippet("manual", domain, %{"404" => true} = script_config) do
-    script_config = Map.put(script_config, "404", false)
+  defp render_snippet("manual", domain, %{"track_404_pages" => true} = script_config) do
+    script_config = Map.put(script_config, "track_404_pages", false)
 
     """
     #{render_snippet("manual", domain, script_config)}
@@ -259,16 +256,16 @@ defmodule PlausibleWeb.Live.Installation do
     ~s|<script defer data-domain="#{domain}" src="#{tracker_url(script_config)}"></script>|
   end
 
-  defp render_snippet("GTM", domain, %{"404" => true} = script_config) do
-    script_config = Map.put(script_config, "404", false)
+  defp render_snippet("gtm", domain, %{"track_404_pages" => true} = script_config) do
+    script_config = Map.put(script_config, "track_404_pages", false)
 
     """
-    #{render_snippet("GTM", domain, script_config)}
-    #{render_snippet_404("GTM")}
+    #{render_snippet("gtm", domain, script_config)}
+    #{render_snippet_404("gtm")}
     """
   end
 
-  defp render_snippet("GTM", domain, script_config) do
+  defp render_snippet("gtm", domain, script_config) do
     """
     <script>
     var script = document.createElement('script');
@@ -285,7 +282,7 @@ defmodule PlausibleWeb.Live.Installation do
     "<script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
   end
 
-  def render_snippet_404("GTM") do
+  def render_snippet_404("gtm") do
     render_snippet_404()
   end
 
@@ -297,7 +294,7 @@ defmodule PlausibleWeb.Live.Installation do
           type="checkbox"
           id={"check-#{@variant}"}
           name={@variant}
-          checked={@config[@variant]}
+          checked={Map.get(@config, @variant, false)}
           class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
         />
         <label for={"check-#{@variant}"}>
@@ -333,7 +330,7 @@ defmodule PlausibleWeb.Live.Installation do
           class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
           rows="5"
           readonly
-        ><%= render_snippet(@installation_type, @domain, @script_config) %></textarea>
+        ><%= render_snippet(@installation_type, @domain, @config) %></textarea>
 
         <a
           onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
@@ -349,50 +346,50 @@ defmodule PlausibleWeb.Live.Installation do
 
       <.h2 class="mt-8 text-sm font-medium">Enable optional measurements:</.h2>
       <.script_extension_control
-        config={@script_config}
-        variant="outbound-links"
+        config={@config}
+        variant="outbound_links"
         label="Outbound links"
         tooltip="Automatically track clicks on external links. These count towards your billable pageviews."
         learn_more="https://plausible.io/docs/outbound-link-click-tracking"
       />
       <.script_extension_control
-        config={@script_config}
-        variant="file-downloads"
+        config={@config}
+        variant="file_downloads"
         label="File downloads"
         tooltip="Automatically track file downloads. These count towards your billable pageviews."
         learn_more="https://plausible.io/docs/file-downloads-tracking"
       />
       <.script_extension_control
-        config={@script_config}
-        variant="404"
+        config={@config}
+        variant="track_404_pages"
         label="404 error pages"
         tooltip="Find 404 error pages on your site. These count towards your billable pageviews. Additional action required."
         learn_more="https://plausible.io/docs/error-pages-tracking-404"
       />
       <.script_extension_control
-        config={@script_config}
-        variant="hash"
+        config={@config}
+        variant="hash_based_routing"
         label="Hashed page paths"
         tooltip="Automatically track page paths that use a # in the URL."
         learn_more="https://plausible.io/docs/hash-based-routing"
       />
       <.script_extension_control
-        config={@script_config}
-        variant="tagged-events"
+        config={@config}
+        variant="tagged_events"
         label="Custom events"
         tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
         learn_more="https://plausible.io/docs/custom-event-goals"
       />
       <.script_extension_control
-        config={@script_config}
-        variant="pageview-props"
+        config={@config}
+        variant="pageview_props"
         label="Custom properties"
         tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required."
         learn_more="https://plausible.io/docs/custom-props/introduction"
       />
       <.script_extension_control
-        config={@script_config}
-        variant="revenue"
+        config={@config}
+        variant="revenue_tracking"
         label="Ecommerce revenue"
         tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
         learn_more="https://plausible.io/docs/ecommerce-revenue-tracking"
@@ -408,10 +405,11 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   def handle_event("update-script-config", params, socket) do
-    new_params =
-      Enum.into(@script_config_params, %{}, &{&1, params[&1] == "on"})
+    new_config =
+      @script_config_params
+      |> Map.new(fn key -> {key, Map.get(params, key) == "on"} end)
 
-    flash = snippet_change_flash(socket.assigns.script_config, new_params)
+    flash = snippet_change_flash(socket.assigns.config, new_config)
 
     socket =
       if flash do
@@ -420,21 +418,21 @@ defmodule PlausibleWeb.Live.Installation do
         socket
       end
 
-    socket = update_uri_params(socket, new_params)
+    socket = update_uri_params(socket, new_config)
     {:noreply, socket}
   end
 
   def handle_params(params, _uri, socket) do
-    socket = do_handle_params(socket, params)
-    persist_installation_meta(socket)
+    socket =
+      socket
+      |> update_installation_type(params)
+      |> update_script_config(params)
+      |> persist_tracker_script_configuration()
+
     {:noreply, socket}
   end
 
-  defp do_handle_params(socket, params) when is_map(params) do
-    Enum.reduce(params, socket, &param_reducer/2)
-  end
-
-  defp param_reducer({"installation_type", installation_type}, socket)
+  defp update_installation_type(socket, %{"installation_type" => installation_type})
        when installation_type in @installation_types do
     assign(socket,
       installation_type: installation_type,
@@ -442,52 +440,17 @@ defmodule PlausibleWeb.Live.Installation do
     )
   end
 
-  defp param_reducer({k, v}, socket)
-       when k in @script_config_params do
-    update_script_config(socket, k, v == "true")
-  end
+  defp update_installation_type(socket, _params), do: socket
 
-  defp param_reducer(_, socket) do
-    socket
-  end
+  defp update_script_config(socket, params) do
+    configuration_update =
+      @script_config_params
+      |> Enum.filter(&Map.has_key?(params, &1))
+      |> Map.new(fn key -> {key, Map.get(params, key) == "true"} end)
 
-  defp update_script_config(socket, "outbound-links" = key, true) do
-    Plausible.Goals.create_outbound_links(socket.assigns.site)
-    update_script_config(socket, %{key => true})
-  end
-
-  defp update_script_config(socket, "outbound-links" = key, false) do
-    Plausible.Goals.delete_outbound_links(socket.assigns.site)
-    update_script_config(socket, %{key => false})
-  end
-
-  defp update_script_config(socket, "file-downloads" = key, true) do
-    Plausible.Goals.create_file_downloads(socket.assigns.site)
-    update_script_config(socket, %{key => true})
-  end
-
-  defp update_script_config(socket, "file-downloads" = key, false) do
-    Plausible.Goals.delete_file_downloads(socket.assigns.site)
-    update_script_config(socket, %{key => false})
-  end
-
-  defp update_script_config(socket, "404" = key, true) do
-    Plausible.Goals.create_404(socket.assigns.site)
-    update_script_config(socket, %{key => true})
-  end
-
-  defp update_script_config(socket, "404" = key, false) do
-    Plausible.Goals.delete_404(socket.assigns.site)
-    update_script_config(socket, %{key => false})
-  end
-
-  defp update_script_config(socket, key, value) do
-    update_script_config(socket, %{key => value})
-  end
-
-  defp update_script_config(socket, kv) when is_map(kv) do
-    new_script_config = Map.merge(socket.assigns.script_config, kv)
-    assign(socket, script_config: new_script_config)
+    assign(socket,
+      config: Map.merge(socket.assigns.config, configuration_update)
+    )
   end
 
   defp update_uri_params(socket, params) when is_map(params) do
@@ -508,45 +471,52 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   @domain_change PlausibleWeb.Flows.domain_change()
-  defp get_installation_type(@domain_change, meta, params) do
-    meta.installation_type || get_installation_type(nil, nil, params)
+  defp get_installation_type(@domain_change, tracker_script_configuration, params) do
+    tracker_script_configuration.installation_type || get_installation_type(nil, nil, params)
   end
 
-  defp get_installation_type(_site, _meta, params) do
+  defp get_installation_type(_type, _tracker_script_configuration, params) do
     Enum.find(@installation_types, &(&1 == params["installation_type"]))
   end
 
   defp tracker_url(script_config) do
-    extensions = Enum.filter(script_config, fn {_, value} -> value end)
+    extensions =
+      @script_extension_params
+      |> Enum.flat_map(fn {key, extension} ->
+        if(Map.get(script_config, key), do: [extension], else: [])
+      end)
 
-    tracker =
-      ["script" | Enum.map(extensions, fn {key, _} -> key end)]
-      |> Enum.join(".")
+    tracker = Enum.join(["script" | extensions], ".")
 
     "#{PlausibleWeb.Endpoint.url()}/js/#{tracker}.js"
   end
 
-  defp persist_installation_meta(socket) do
-    Plausible.Sites.update_installation_meta!(
+  defp persist_tracker_script_configuration(socket) do
+    updated_tracker_script_configuration =
+      Map.merge(socket.assigns.config, %{
+        "site_id" => socket.assigns.site.id,
+        "installation_type" => socket.assigns.installation_type
+      })
+
+    PlausibleWeb.Tracker.update_script_configuration(
       socket.assigns.site,
-      %{
-        installation_type: socket.assigns.installation_type,
-        script_config: socket.assigns.script_config
-      }
+      updated_tracker_script_configuration
     )
+
+    socket
   end
 
   defp snippet_change_flash(old_config, new_config) do
     change =
-      Enum.find(new_config, fn {key, _value} ->
-        old_config[key] != new_config[key]
+      Enum.find(new_config, fn {key, new_value} ->
+        Map.get(old_config, key) != new_value
       end)
 
     case change do
       nil ->
         nil
 
-      {k, false} when k in ["outbound-links", "file-downloads", "404"] ->
+      {k, false} when k in ["outbound_links", "file_downloads", "track_404_pages"] ->
         "Snippet updated and goal deleted. Please insert the newest snippet into your site"
 
       {_, _} ->
