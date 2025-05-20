@@ -10,9 +10,9 @@ import {
   hideAndShowCurrentTab,
   metaKey,
   mockRequest,
-  e as expect
+  e as expecting
 } from './support/test-utils'
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 
 const DEFAULT_CONFIG = {
@@ -25,7 +25,10 @@ async function openPage(page, config, options = {}) {
   const configJson = JSON.stringify({ ...DEFAULT_CONFIG, ...config })
   let path = `/plausible-main.html?script_config=${configJson}`
   if (options.beforeScriptLoaded) {
-    path += `&before_script_loaded=${options.beforeScriptLoaded}`
+    path += `&beforeScriptLoaded=${options.beforeScriptLoaded}`
+  }
+  if (options.skipPlausibleInit) {
+    path += `&skipPlausibleInit=1`
   }
   await page.goto(path)
   await page.waitForFunction('window.plausible !== undefined')
@@ -40,12 +43,12 @@ test.describe('plausible-main.js', () => {
   test('triggers pageview and engagement automatically', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => openPage(page, {}),
-      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expect.stringContaining('plausible-main.html')}]
+      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html')}]
     })
 
     await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page, {delay: 2000}),
-      expectedRequests: [{n: 'engagement', d: 'example.com', u: expect.stringContaining('plausible-main.html')}],
+      expectedRequests: [{n: 'engagement', d: 'example.com', u: expecting.stringContaining('plausible-main.html')}],
     })
   })
 
@@ -57,14 +60,6 @@ test.describe('plausible-main.js', () => {
     })
   })
 
-  test('supports overriding the endpoint with a custom proxy endpoint', async ({ page }) => {
-    await expectPlausibleInAction(page, {
-      pathToMock: 'http://proxy.io/endpoint',
-      action: () => openPage(page, { endpoint: 'http://proxy.io/endpoint' }),
-      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expect.stringContaining('plausible-main.html')}]
-    })
-  })
-
   test('does not track pageview props, outbound links, file downloads or tagged events without features being enabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
@@ -73,7 +68,7 @@ test.describe('plausible-main.js', () => {
         await page.click('#tagged-event')
         await page.click('#outbound-link')
       },
-      expectedRequests: [{ n: 'pageview', p: expect.toBeUndefined() }],
+      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }],
       refutedRequests: [{ n: 'File Download' }, { n: 'Purchase' }, { n: 'Outbound Link: Click' }],
       // Webkit captures engagement events differently, so we ignore them in this test
       shouldIgnoreRequest: (payload) => payload.n === 'engagement'
@@ -87,8 +82,8 @@ test.describe('plausible-main.js', () => {
         await page.click('#outbound-link')
       },
       expectedRequests: [
-        { n: 'pageview', d: 'example.com', u: expect.stringContaining('plausible-main.html') },
-        { n: 'Outbound Link: Click', d: 'example.com', u: expect.stringContaining('plausible-main.html'), p: { url: 'https://example.com/' } },
+        { n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html') },
+        { n: 'Outbound Link: Click', d: 'example.com', u: expecting.stringContaining('plausible-main.html'), p: { url: 'https://example.com/' } },
       ]
     })
   })
@@ -102,10 +97,73 @@ test.describe('plausible-main.js', () => {
     })
   })
 
-  test('tracks pageview props (when feature enabled)', async ({ page }) => {
+  test('tracks static custom pageview properties (when feature enabled)', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => openPage(page, { pageviewProps: true}),
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ customProperties: { "some-prop": "456" } })
+        })
+      },
       expectedRequests: [{ n: 'pageview', p: { "some-prop": "456" } }]
+    })
+  })
+
+  test('tracks dynamic custom pageview properties (when feature enabled)', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ customProperties: () => ({ "title": document.title }) })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', p: { "title": "plausible-main.js tests" } }]
+    })
+  })
+
+  test('tracks dynamic custom pageview properties with custom events and engagements', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({
+            customProperties: (eventName) => ({ "author": "Uku", "some-prop": "456", [eventName]: "1" })
+          })
+        })
+        await page.click('#custom-event')
+        await hideAndShowCurrentTab(page, { delay: 200 })
+      },
+      expectedRequests: [
+        { n: 'pageview', p: { "author": "Uku", "some-prop": "456", "pageview": "1"} },
+        // Passed property to `plausible` call overrides the default from `config.customProperties`
+        { n: 'Custom event', p: { "author": "Karl", "some-prop": "456", "Custom event": "1" } },
+        // Engagement event inherits props from the pageview event
+        { n: 'engagement', p: { "author": "Uku", "some-prop": "456", "pageview": "1"} },
+      ]
+    })
+  })
+
+  test('invalid function customProperties are ignored', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ customProperties: () => document.title })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }]
+    })
+  })
+
+  test('invalid customProperties are ignored', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ customProperties: "abcdef" })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }]
     })
   })
 
@@ -137,7 +195,7 @@ test.describe('plausible-main.js', () => {
   test('does not send `h` parameter when `hash` config is disabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => openPage(page, {}),
-      expectedRequests: [{ n: 'pageview', h: expect.toBeUndefined() }]
+      expectedRequests: [{ n: 'pageview', h: expecting.toBeUndefined() }]
     })
   })
 
@@ -153,7 +211,7 @@ test.describe('plausible-main.js', () => {
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#tagged-event'),
-      expectedRequests: [{ n: 'Purchase', p: { foo: 'bar' }, $: expect.toBeUndefined() }]
+      expectedRequests: [{ n: 'Purchase', p: { foo: 'bar' }, $: expecting.toBeUndefined() }]
     })
   })
 
@@ -170,6 +228,73 @@ test.describe('plausible-main.js', () => {
     await expectPlausibleInAction(page, {
       action: () => openPage(page, {}, { beforeScriptLoaded: 'window.plausible("custom-event", { props: { foo: "bar" }, interactive: false })' }),
       expectedRequests: [{ n: 'custom-event', p: { foo: 'bar' }, i: false }, { n: 'pageview' }]
+    })
+  })
+
+  test('handles double-initialization of the script with a console.warn', async ({ page }) => {
+    const consolePromise = page.waitForEvent('console')
+
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {})
+        await page.evaluate(() => {
+          window.plausible.init()
+        })
+        await consolePromise
+      },
+      expectedRequests: [{ n: 'pageview' }]
+    })
+
+    const warning = await consolePromise
+    expect(warning.type()).toBe("warning")
+    expect(warning.text()).toContain('Plausible analytics script was already initialized, skipping init')
+  })
+
+  test('handles the script being loaded and initialized multiple times', async ({ page }) => {
+    const consolePromise = page.waitForEvent('console')
+
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {})
+        await page.evaluate(() => {
+          window.includePlausibleScript()
+        })
+        await consolePromise
+      },
+      expectedRequests: [{ n: 'pageview' }]
+    })
+
+    const warning = await consolePromise
+    expect(warning.type()).toBe("warning")
+    expect(warning.text()).toContain('Plausible analytics script was already initialized, skipping init')
+  })
+
+  test('does not support overriding domain via `init`', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({
+            domain: 'another-domain.com'
+          })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html') }]
+    })
+  })
+
+  test('supports overriding the endpoint with a custom proxy via `init`', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      pathToMock: 'http://proxy.io/endpoint',
+      action: async () => {
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({
+            endpoint: 'http://proxy.io/endpoint'
+          })
+        })
+      },
+      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html')}]
     })
   })
 })
