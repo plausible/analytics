@@ -4,8 +4,31 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+
+- Custom events can now be marked as non-interactive in events API and tracker script. Events marked as non-interactive are not counted towards bounce rate.
+
+
+### Removed
+
+- `pageleave` tracker script variant is no longer compiled but is still available from /js endpoint.
+
+### Changed
+
+- A session is now marked as a bounce if it has less than 2 pageviews and no interactive custom events.
+
+- All dropmenus on dashboard are navigable with Tab (used to be a mix between tab and arrow keys), and no two dropmenus can be open at once on the dashboard
+
+### Fixed
+
+- Make clicking Compare / Disable Comparison in period picker menu close the menu
+- Do not log page views for hidden pages (prerendered pages and new tabs), until pages are viewed
+
+## v3.0.0 - 2025-04-11
+
+### Added
+- Ability to sort by and compare the `exit_rate` metric in the dashboard Exit Pages > Details report
 - Add top 3 pages into the traffic spike email
-- Two new shorthand time periods `28d` and `90d` available on both dashboard and in public API
+- Two new shorthand time periods `28d` and `91d` available on both dashboard and in public API
 - Average scroll depth metric
 - Scroll Depth goals
 - Dashboard shows comparisons for all reports
@@ -22,6 +45,8 @@ All notable changes to this project will be documented in this file.
 - Add support for creating and managing teams owning multiple sites
 - Introduce "billing" team role for users
 - Introduce "editor" role with permissions greater than "viewer" but lesser than "admin"
+- Support behavioral filters `has_done` and `has_not_done` on the Stats API to allow filtering sessions by other events that have been completed.
+- `time_on_page` metric is now graphable, sortable on the dashboard, and available in the Stats API and CSV and GA4 exports/imports
 
 ### Removed
 
@@ -30,6 +55,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Default period for brand new sites is now `today` rather than `last 28 days`. On the next day, the default changes to `last 28 days`.
+- Increase decimal precision of the "Exit rate" metric from 0 to 1 (e.g. 67 -> 66.7)
 - Increase decimal precision of the "Conversion rate" metric from 1 to 2 (e.g. 16.7 -> 16.67)
 - The "Last 30 days" period is now "Last 28 days" on the dashboard and also the new default. Keyboard shortcut `T` still works for last 30 days.
 - Last `7d` and `30d` periods do not include today anymore
@@ -43,6 +70,10 @@ All notable changes to this project will be documented in this file.
 - Main graph now shows `-` instead of `0` for visit duration, scroll depth when hovering a data point with no visit data
 - Make Stats and Sites API keys scoped to teams they are created in
 - Remove permissions to manage sites guests and run destructive actions from team editor and guest editor roles in favour of team admin role
+- Time-on-page metric has been reworked. It now uses `engagement` events sent by plausible tracker script. We still use the old calculation methods for periods before the self-hosted instance was upgraded. Warnings are shown in the dashboard and API when legacy calculation methods are used.
+- Always set site and team member limits to unlimited for Community Edition
+- Stats API now supports more `date_range` shorthand options like `30d`, `3mo`.
+- Stop showing Plausible footer when viewing stats, except when viewing a public dashboard or unembedded shared link dashboard.
 
 ### Fixed
 
@@ -60,8 +91,9 @@ All notable changes to this project will be documented in this file.
 - Fix Conversion Rate graph being unselectable when "Goal is ..." filter is within a segment
 - Fix Channels filter input appearing when clicking Sources in filter menu or clicking an applied "Channel is..." filter
 - Fix Conversion Rate metrics column disappearing from reports when "Goal is ..." filter is within a segment
+- Graph tooltip now shows year when graph has data from multiple years
 
-## v2.1.5-rc.1 - 2025-01-17
+## v2.1.5 - 2025-02-03
 
 ### Added
 

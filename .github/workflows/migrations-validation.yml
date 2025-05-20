@@ -21,6 +21,7 @@ jobs:
           lib:
             - 'lib/**'
             - '!lib/plausible/data_migration/**'
+            - '!lib/plausible/migration_utils.ex'
           extra:
             - 'extra/**'
           config:

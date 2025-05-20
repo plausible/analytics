@@ -169,6 +169,12 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/pageA",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 199_000
+        ),
         build(:pageview,
           pathname: "/pageB",
           user_id: @user_id,
@@ -177,6 +183,12 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview,
           pathname: "/pageA",
           timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:engagement,
+          pathname: "/pageA",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 1_000
         )
       ])
 
@@ -190,7 +202,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 900, "graph_metric" => "time_on_page"} in res[
+      assert %{"name" => "Time on page", "value" => 200, "graph_metric" => "time_on_page"} in res[
                "top_stats"
              ]
     end
@@ -205,19 +217,43 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/pageA",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 199_000
+        ),
         build(:pageview,
           pathname: "/pageB",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:engagement,
+          pathname: "/pageB",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 20_000
         ),
         build(:pageview,
           pathname: "/pageC",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:16:00]
         ),
+        build(:engagement,
+          pathname: "/pageC",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:16:00],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/pageA",
-          timestamp: ~N[2021-01-01 00:15:00]
+          timestamp: ~N[2021-01-01 00:17:00]
+        ),
+        build(:engagement,
+          pathname: "/pageA",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:17:00],
+          engagement_time: 1_000
         )
       ])
 
@@ -231,7 +267,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 480, "graph_metric" => "time_on_page"} in res[
+      assert %{"name" => "Time on page", "value" => 220, "graph_metric" => "time_on_page"} in res[
                "top_stats"
              ]
     end
@@ -246,19 +282,43 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/pageA",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 199_000
+        ),
         build(:pageview,
           pathname: "/pageB",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:engagement,
+          pathname: "/pageB",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 20_000
         ),
         build(:pageview,
           pathname: "/pageC",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:16:00]
         ),
+        build(:engagement,
+          pathname: "/pageC",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:16:00],
+          engagement_time: 30_000
+        ),
         build(:pageview,
           pathname: "/pageA",
-          timestamp: ~N[2021-01-01 00:15:00]
+          timestamp: ~N[2021-01-01 00:17:00]
+        ),
+        build(:engagement,
+          pathname: "/pageA",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:17:00],
+          engagement_time: 1_000
         )
       ])
 
@@ -272,7 +332,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 60, "graph_metric" => "time_on_page"} in res[
+      assert %{"name" => "Time on page", "value" => 20, "graph_metric" => "time_on_page"} in res[
                "top_stats"
              ]
     end
@@ -287,20 +347,44 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:engagement,
+          pathname: "/blog/post-1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 100_000
+        ),
         build(:pageview,
           pathname: "/about",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
+        build(:engagement,
+          pathname: "/about",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:16:00],
+          engagement_time: 20_000
+        ),
         build(:pageview,
           pathname: "/articles/post-1",
           user_id: 321,
-          timestamp: ~N[2021-01-01 00:15:00]
+          timestamp: ~N[2021-01-01 00:16:00]
+        ),
+        build(:engagement,
+          pathname: "/articles/post-1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:17:00],
+          engagement_time: 30_000
         ),
         build(:pageview,
           pathname: "/",
           user_id: 321,
-          timestamp: ~N[2021-01-01 00:16:00]
+          timestamp: ~N[2021-01-01 00:17:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:17:30],
+          engagement_time: 3_000
         )
       ])
 
@@ -314,7 +398,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 480, "graph_metric" => "time_on_page"} in res[
+      assert %{"name" => "Time on page", "value" => 130, "graph_metric" => "time_on_page"} in res[
                "top_stats"
              ]
     end
@@ -326,25 +410,47 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       populate_stats(site, [
         build(:pageview,
           pathname: "/blog/post-1",
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          pathname: "/",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:engagement,
+          pathname: "/blog/post-1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00],
+          engagement_time: 100_000
         ),
         build(:pageview,
           pathname: "/about",
           user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:10:00]
+          timestamp: ~N[2021-01-01 00:15:00]
         ),
-        build(:pageview,
-          pathname: "/",
-          timestamp: ~N[2021-01-01 00:00:00]
+        build(:engagement,
+          pathname: "/about",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:16:00],
+          engagement_time: 20_000
         ),
         build(:pageview,
           pathname: "/articles/post-1",
-          timestamp: ~N[2021-01-01 00:10:00]
+          user_id: 321,
+          timestamp: ~N[2021-01-01 00:16:00]
+        ),
+        build(:engagement,
+          pathname: "/articles/post-1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:17:00],
+          engagement_time: 30_000
+        ),
+        build(:pageview,
+          pathname: "/",
+          user_id: 321,
+          timestamp: ~N[2021-01-01 00:17:00]
+        ),
+        build(:engagement,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:17:30],
+          engagement_time: 3_000
         )
       ])
 
@@ -358,26 +464,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 600, "graph_metric" => "time_on_page"} in res[
+      assert %{"name" => "Time on page", "value" => 23, "graph_metric" => "time_on_page"} in res[
                "top_stats"
              ]
-    end
-
-    test "doesn't calculate time on page with only single page visits", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
-      ])
-
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-
-      assert %{"name" => "Time on page", "value" => 0, "graph_metric" => "time_on_page"} ==
-               conn
-               |> get(path)
-               |> json_response(200)
-               |> Map.fetch!("top_stats")
-               |> Enum.find(&(&1["name"] == "Time on page"))
     end
 
     test "bounce_rate is 0 when the page in filter was never a landing page", %{
@@ -409,66 +498,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       path = "/api/stats/#{site.domain}/top-stats?&filters=#{filters}"
 
       assert %{"name" => "Time on page", "value" => 0, "graph_metric" => "time_on_page"} ==
-               conn
-               |> get(path)
-               |> json_response(200)
-               |> Map.fetch!("top_stats")
-               |> Enum.find(&(&1["name"] == "Time on page"))
-    end
-
-    test "ignores page refresh when calculating time on page", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00], pathname: "/"),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:01:00], pathname: "/"),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:02:00], pathname: "/"),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:03:00], pathname: "/exit")
-      ])
-
-      filters = Jason.encode!([[:is, "event:page", ["/"]]])
-      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-
-      assert %{
-               "name" => "Time on page",
-               "value" => _three_minutes = 180,
-               "graph_metric" => "time_on_page"
-             } ==
-               conn
-               |> get(path)
-               |> json_response(200)
-               |> Map.fetch!("top_stats")
-               |> Enum.find(&(&1["name"] == "Time on page"))
-    end
-
-    test "averages time on page over unique transitions across sessions", %{
-      conn: conn,
-      site: site
-    } do
-      # ┌─p──┬─p2─┬─minus(t2, t)─┬──s─┐
-      # │ /a │ /b │          100 │ s1 │
-      # │ /a │ /d │          100 │ s2 ��� <- these two get treated
-      # │ /a │ /d │            0 │ s2 │ <- as single page transition
-      # └────┴────┴──────────────┴────┘
-      # so that time_on_page(a)=(100+100)/uniq(transition)=200/2=100
-
-      s1 = @user_id
-      s2 = @user_id + 1
-
-      now = ~N[2021-01-01 00:00:00]
-      later = fn seconds -> NaiveDateTime.add(now, seconds) end
-
-      populate_stats(site, [
-        build(:pageview, user_id: s1, timestamp: now, pathname: "/a"),
-        build(:pageview, user_id: s1, timestamp: later.(100), pathname: "/b"),
-        build(:pageview, user_id: s2, timestamp: now, pathname: "/a"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/a"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d")
-      ])
-
-      filters = Jason.encode!([[:is, "event:page", ["/a"]]])
-      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
-
-      assert %{"name" => "Time on page", "value" => 100, "graph_metric" => "time_on_page"} ==
                conn
                |> get(path)
                |> json_response(200)

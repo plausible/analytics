@@ -21,7 +21,7 @@
         disabled
       />
 
-      <.input type="text" field={f[:email]} label="New E-mail" width="w-1/2" />
+      <.input type="email" field={f[:email]} label="New E-mail" width="w-1/2" />
 
       <.input type="password" field={f[:password]} label="Account Password" width="w-1/2" />
 
@@ -205,7 +205,7 @@
           <.input
             type="password"
             id="regenerate_2fa_password"
-            name="regenerate_2fa_password"
+            name="password"
             value=""
             placeholder="Enter password"
             x-ref="regenerate2FAPassword"

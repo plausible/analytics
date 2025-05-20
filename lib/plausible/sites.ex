@@ -352,16 +352,19 @@ defmodule Plausible.Sites do
     |> Repo.update!()
   end
 
+  def update_legacy_time_on_page_cutoff!(site, cutoff) do
+    site
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_change(:legacy_time_on_page_cutoff, cutoff)
+    |> Repo.update!()
+  end
+
   def has_goals?(site) do
     Repo.exists?(
       from(g in Plausible.Goal,
         where: g.site_id == ^site.id
       )
     )
-  end
-
-  def locked?(%Site{locked: locked}) do
-    locked
   end
 
   def get_for_user!(user, domain, roles \\ [:owner, :admin, :editor, :viewer]) do

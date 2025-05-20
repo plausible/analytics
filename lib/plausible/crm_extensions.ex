@@ -47,7 +47,9 @@ defmodule Plausible.CrmExtensions do
       ]
     end
 
-    def javascripts(%{assigns: %{context: "sites", resource: "site", entry: %{domain: domain}}}) do
+    def javascripts(%{
+          assigns: %{context: "sites", resource: "site", entry: %{domain: domain, id: id}}
+        }) do
       base_url = PlausibleWeb.Endpoint.url()
 
       [
@@ -58,7 +60,7 @@ defmodule Plausible.CrmExtensions do
             if (cardBody) {
               const buttonDOM = document.createElement("div")
               buttonDOM.className = "mb-3 w-full text-right"
-              buttonDOM.innerHTML = '<div><a class="btn btn-outline-primary" href="#{base_url <> "/" <> URI.encode_www_form(domain)}" target="_blank">Open Dashboard</a></div>'
+              buttonDOM.innerHTML = '<div><a class="btn btn-outline-primary" href="#{base_url <> "/" <> URI.encode_www_form(domain)}" target="_blank">Open Dashboard</a><a class="mt-1 ml-4" target="_blank" href="/cs/sites/site/#{id}">Open in CS</a></div>'
               cardBody.prepend(buttonDOM)
             }
           })()
@@ -71,6 +73,28 @@ defmodule Plausible.CrmExtensions do
           assigns: %{context: "billing", resource: "enterprise_plan", changeset: %{}}
         }) do
       [
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
+          (() => {
+            const statsFeature = document.querySelector(`input[type=checkbox][value=stats_api]`)
+            const sitesFeature = document.querySelector(`input[type=checkbox][value=sites_api]`)
+
+            statsFeature.addEventListener("change", () => {
+              if (!statsFeature.checked) {
+                sitesFeature.checked = false
+              }
+              return true;
+            })
+
+            sitesFeature.addEventListener("change", () => {
+              if (sitesFeature.checked) {
+                statsFeature.checked = true
+              }
+              return true;
+            })
+          })()
+        </script>
+        """),
         Phoenix.HTML.raw("""
         <script type="text/javascript">
           (async () => {

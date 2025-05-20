@@ -1,8 +1,7 @@
-const { expect } = require("@playwright/test")
-const { expectPlausibleInAction, hideAndShowCurrentTab, focus, blur, blurAndFocusPage } = require('./support/test-utils')
-const { test } = require('@playwright/test')
-const { LOCAL_SERVER_ADDR } = require('./support/server')
-const { tracker_script_version } = require('../package.json')
+import { expect } from "@playwright/test"
+import { expectPlausibleInAction, hideAndShowCurrentTab, focus, blur, blurAndFocusPage, tracker_script_version } from './support/test-utils'
+import { test } from '@playwright/test'
+import { LOCAL_SERVER_ADDR } from './support/server'
 
 test.describe('engagement events', () => {
   test('sends an engagement event with time measurement when navigating to the next page', async ({ page }) => {
@@ -62,6 +61,26 @@ test.describe('engagement events', () => {
     expect(request.e).toBeLessThan(1500)
   })
 
+  test('sends engagements when pageviews are triggered manually on a SPA', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement-hash-manual.html'),
+      expectedRequests: [{n: 'pageview'}],
+    })
+
+    await page.waitForTimeout(1000)
+
+    const [request] = await expectPlausibleInAction(page, {
+      action: () => page.click('#about-us-hash-link'),
+      expectedRequests: [
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/#home`},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/#about-us`}
+      ]
+    })
+
+    expect(request.e).toBeGreaterThan(1000)
+    expect(request.e).toBeLessThan(1500)
+  })
+
   test('sends an event with the manually overridden URL', async ({ page }) => {
     await page.goto('/engagement-manual.html')
 
@@ -85,7 +104,7 @@ test.describe('engagement events', () => {
     })
   })
 
-  test('script.exclusions.hash.pageleave.js sends an event only from URLs where a pageview was sent', async ({ page }) => {
+  test('script.exclusions.hash.js sends an event only from URLs where a pageview was sent', async ({ page }) => {
     const pageBaseURL = `${LOCAL_SERVER_ADDR}/engagement-hash-exclusions.html`
 
     await expectPlausibleInAction(page, {
@@ -94,7 +113,7 @@ test.describe('engagement events', () => {
     })
 
     // After the initial pageview is sent, navigate to ignored page ->
-    // pageleave event is sent from the initial page URL
+    // engagement event is sent from the initial page URL
     await expectPlausibleInAction(page, {
       action: () => page.click('#ignored-hash-link'),
       expectedRequests: [{n: 'engagement', u: pageBaseURL, h: 1}]
@@ -136,12 +155,31 @@ test.describe('engagement events', () => {
   test('sends an event with the same props as pageview (pageview-props extension)', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement-pageview-props.html'),
-      expectedRequests: [{n: 'pageview', p: {author: 'John'}}],
+      expectedRequests: [{n: 'pageview', p: {author: 'John', index: "0"}}],
     })
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#navigate-away'),
-      expectedRequests: [{n: 'engagement', p: {author: 'John'}}]
+      expectedRequests: [{n: 'engagement', p: {author: 'John', index: "0"}}]
+    })
+  })
+
+  test('pageview props with custom events and values changing mid-view (pageview-props extension)', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: () => page.goto('/engagement-pageview-props.html'),
+      expectedRequests: [{n: 'pageview', p: {author: 'John', index: "0"}}],
+    })
+
+    await page.click('#increment-event-index')
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#custom-event-button'),
+      expectedRequests: [{n: 'Custom event', p: {author: 'Karl', index: "1"}}]
+    })
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#navigate-away'),
+      expectedRequests: [{n: 'engagement', p: {author: 'John', index: "0"}}]
     })
   })
 
@@ -185,12 +223,13 @@ test.describe('engagement events', () => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.click('#to-pageleave-pageview-props')
+        await page.waitForTimeout(500)
         await page.click('#back-button-trigger')
       },
       expectedRequests: [
         {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement.html`},
-        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John'}},
-        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John'}},
+        {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John', index: "0"}},
+        {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John', index: "0"}},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html`}
       ],
       responseDelay: 1000

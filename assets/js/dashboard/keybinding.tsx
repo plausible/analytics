@@ -153,32 +153,3 @@ export function KeybindHint({
     </kbd>
   )
 }
-
-/**
- * Rendering this component captures the Escape key on targetRef.current,
- * blurring the element on Escape, and stopping the event from propagating.
- * Needed to prevent other Escape handlers that may exist from running.
- */
-export function BlurMenuButtonOnEscape({
-  targetRef: targetRef
-}: {
-  targetRef: RefObject<HTMLElement>
-}) {
-  return (
-    <Keybind
-      keyboardKey="Escape"
-      type="keyup"
-      handler={(event) => {
-        const t = event.target as HTMLElement | null
-        if (typeof t?.blur === 'function') {
-          if (t === targetRef.current) {
-            t.blur()
-            event.stopPropagation()
-          }
-        }
-      }}
-      targetRef={targetRef}
-      shouldIgnoreWhen={[isModifierPressed, isTyping]}
-    />
-  )
-}

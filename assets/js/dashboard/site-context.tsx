@@ -12,7 +12,6 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
     propsOptedOut: dataset.propsOptedOut === 'true',
-    legacyTimeOnPageCutoff: dataset.legacyTimeOnPageCutoff,
     revenueGoals: JSON.parse(dataset.revenueGoals!),
     funnels: JSON.parse(dataset.funnels!),
     statsBegin: dataset.statsBegin!,
@@ -26,9 +25,8 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
   }
 }
 
-type FeatureFlags = {
-  new_time_on_page?: boolean
-}
+// Update this object when new feature flags are added to the frontend.
+type FeatureFlags = Record<never, boolean>
 
 const siteContextDefaultValue = {
   domain: '',
@@ -53,8 +51,7 @@ const siteContextDefaultValue = {
   isDbip: false,
   flags: {} as FeatureFlags,
   validIntervalsByPeriod: {} as Record<string, Array<string>>,
-  shared: false,
-  legacyTimeOnPageCutoff: undefined as string | undefined
+  shared: false
 }
 
 export type PlausibleSite = typeof siteContextDefaultValue

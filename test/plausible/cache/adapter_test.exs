@@ -34,7 +34,7 @@ defmodule Plausible.Cache.AdapterTest do
         assert ConCache.size(:"#{name}_#{i}") < iterations
       end
 
-      assert {:ok, %{hit_rate: 100.0, count: ^iterations}} = Plausible.Cache.Stats.gather(name)
+      assert ^iterations = Plausible.Cache.Adapter.size(name)
     end
   end
 end

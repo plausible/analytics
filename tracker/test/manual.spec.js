@@ -1,6 +1,6 @@
-const { expectPlausibleInAction } = require('./support/test-utils')
-const { test } = require('@playwright/test')
-const { LOCAL_SERVER_ADDR } = require('./support/server')
+import { expectPlausibleInAction } from './support/test-utils'
+import { test } from '@playwright/test'
+import { LOCAL_SERVER_ADDR } from './support/server'
 
 test.describe('manual extension', () => {
   test('can trigger custom events with and without a custom URL if pageview was sent with the default URL', async ({ page }) => {

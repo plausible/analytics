@@ -51,6 +51,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <.flash_messages flash={@flash} />
     <div
+      x-ref="invitation_data"
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
       class="container pt-6"
@@ -62,17 +63,14 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
         <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
-          <span :if={Teams.enabled?(@current_user)}>
-            {Teams.name(@current_team)}
-            <.unstyled_link
-              :if={Teams.setup?(@current_team)}
-              data-test-id="team-settings-link"
-              href={Routes.settings_path(@socket, :team_general)}
-            >
-              <Heroicons.cog_6_tooth class="hidden group-hover:inline size-4 dark:text-gray-100 text-gray-900" />
-            </.unstyled_link>
-          </span>
-          <span :if={not Teams.enabled?(@current_user)}>My Sites</span>
+          {Teams.name(@current_team)}
+          <.unstyled_link
+            :if={Teams.setup?(@current_team)}
+            data-test-id="team-settings-link"
+            href={Routes.settings_path(@socket, :team_general)}
+          >
+            <Heroicons.cog_6_tooth class="hidden group-hover:inline size-4 dark:text-gray-100 text-gray-900" />
+          </.unstyled_link>
         </h2>
       </div>
 
@@ -542,43 +540,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   def search_form(assigns) do
     ~H"""
-    <form id="filter-form" phx-change="filter" action={@uri} method="GET">
-      <div class="text-gray-800 text-sm inline-flex items-center">
-        <div class="relative rounded-md flex">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
-          </div>
-          <input
-            type="text"
-            name="filter_text"
-            id="filter-text"
-            phx-debounce={200}
-            class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md"
-            placeholder="Press / to search sites"
-            autocomplete="off"
-            value={@filter_text}
-            x-ref="filter_text"
-            x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter?.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
-            x-on:keydown.prevent.slash.window="$refs.filter_text.focus(); $refs.filter_text.select();"
-            x-on:blur="$refs.filter_text.placeholder = 'Press / to search sites';"
-            x-on:focus="$refs.filter_text.placeholder = 'Search sites';"
-          />
-        </div>
-
-        <button
-          :if={String.trim(@filter_text) != ""}
-          class="phx-change-loading:hidden ml-2"
-          phx-click="reset-filter-text"
-          id="reset-filter"
-          x-ref="reset_filter"
-          type="button"
-        >
-          <Heroicons.backspace class="feather hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500" />
-        </button>
-
-        <.spinner class="hidden phx-change-loading:inline ml-2" />
-      </div>
-    </form>
+    <.filter_bar filter_text={@filter_text} placeholder="Search Sites"></.filter_bar>
     """
   end
 
@@ -638,13 +600,13 @@ defmodule PlausibleWeb.Live.Sites do
 
   def handle_event(
         "filter",
-        %{"filter_text" => filter_text},
+        %{"filter-text" => filter_text},
         %{assigns: %{filter_text: filter_text}} = socket
       ) do
     {:noreply, socket}
   end
 
-  def handle_event("filter", %{"filter_text" => filter_text}, socket) do
+  def handle_event("filter", %{"filter-text" => filter_text}, socket) do
     socket =
       socket
       |> reset_pagination()

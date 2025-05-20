@@ -71,12 +71,15 @@ defmodule Plausible.Billing.Feature do
               :ok | {:error, :upgrade_required} | {:error, :not_implemented}
 
   @features [
-    Plausible.Billing.Feature.Goals,
-    Plausible.Billing.Feature.StatsAPI,
     Plausible.Billing.Feature.Props,
+    Plausible.Billing.Feature.Teams,
+    Plausible.Billing.Feature.SharedLinks,
     Plausible.Billing.Feature.Funnels,
+    Plausible.Billing.Feature.Goals,
     Plausible.Billing.Feature.RevenueGoals,
-    Plausible.Billing.Feature.SiteSegments
+    Plausible.Billing.Feature.SiteSegments,
+    Plausible.Billing.Feature.SitesAPI,
+    Plausible.Billing.Feature.StatsAPI
   ]
 
   # Generate a union type for features
@@ -197,6 +200,20 @@ defmodule Plausible.Billing.Feature.Props do
     toggle_field: :props_enabled
 end
 
+defmodule Plausible.Billing.Feature.Teams do
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :teams,
+    display_name: "Team Accounts"
+end
+
+defmodule Plausible.Billing.Feature.SharedLinks do
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :shared_links,
+    display_name: "Shared Links"
+end
+
 defmodule Plausible.Billing.Feature.SiteSegments do
   @moduledoc false
   use Plausible.Billing.Feature,
@@ -211,4 +228,13 @@ defmodule Plausible.Billing.Feature.StatsAPI do
   use Plausible.Billing.Feature,
     name: :stats_api,
     display_name: "Stats API"
+end
+
+defmodule Plausible.Billing.Feature.SitesAPI do
+  use Plausible
+
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    name: :sites_api,
+    display_name: "Sites API"
 end

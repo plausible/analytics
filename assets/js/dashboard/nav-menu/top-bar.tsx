@@ -1,7 +1,6 @@
 import React, { ReactNode, useRef } from 'react'
-import SiteSwitcher from '../site-switcher'
+import { SiteSwitcher } from '../site-switcher'
 import { useSiteContext } from '../site-context'
-import { useUserContext } from '../user-context'
 import CurrentVisitors from '../stats/current-visitors'
 import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
@@ -44,18 +43,12 @@ function TopBarStickyWrapper({ children }: { children: ReactNode }) {
 }
 
 function TopBarInner({ showCurrentVisitors }: TopBarProps) {
-  const site = useSiteContext()
-  const user = useUserContext()
   const leftActionsRef = useRef<HTMLDivElement>(null)
 
   return (
     <div className="flex items-center w-full">
       <div className="flex items-center gap-x-4 shrink-0" ref={leftActionsRef}>
-        <SiteSwitcher
-          site={site}
-          loggedIn={user.loggedIn}
-          currentUserRole={user.role}
-        />
+        <SiteSwitcher />
         {showCurrentVisitors && (
           <CurrentVisitors tooltipBoundaryRef={leftActionsRef} />
         )}

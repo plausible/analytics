@@ -1,0 +1,88 @@
+<.focus_box>
+  <div class="text-lg mb-6 font-bold dark:text-gray-100">
+    [Test Mode] Cancel your subscription
+  </div>
+  <form action={Routes.dev_subscription_path(@conn, :cancel)} method="POST" class="text-sm">
+    <div class="block text-gray-500 dark:text-gray-200 text-sm">
+      In development mode you can choose how exactly you want to "cancel" your subscription.<br /><br />
+    </div>
+
+    <label>
+      <input type="radio" name="action" value="cancel" checked /> Just cancel the subscription
+    </label>
+    <br />
+    <p class="text-xs ml-4 pl-1 italic text-gray-500">
+      Access to stats will still be granted until next_bill_date
+    </p>
+    <br />
+
+    <label>
+      <input type="radio" name="action" value="cancel_and_expire" />
+      Cancel the subscription and make it "expired"
+    </label>
+    <br />
+    <p class="text-xs ml-4 pl-1 italic text-gray-500">
+      Cancel the subscription and set next_bill_date to yesterday
+    </p>
+    <br />
+
+    <label>
+      <input type="radio" name="action" value="delete" /> Delete the subscription
+    </label>
+    <br />
+    <p class="text-xs ml-4 pl-1 italic text-gray-500">Back to "trial" or "expired trial" state</p>
+
+    <%= if @enterprise_plan? do %>
+      <br />
+      <label>
+        <input type="radio" name="action" value="delete_enterprise" />
+        Delete the subscription and enterprise plan
+      </label>
+      <br />
+      <p class="text-xs ml-4 pl-1 italic text-gray-500">
+        Also restores the ability to subscribe to regular plans
+      </p>
+    <% end %>
+
+    <div class="flex items-center justify-between mt-10">
+      <span class="flex rounded-md shadow-sm">
+        <a
+          href={@back_link}
+          type="button"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 dark:active:text-gray-200 active:bg-gray-50 transition ease-in-out duration-150"
+        >
+          Back
+        </a>
+      </span>
+      <button
+        id="submit-button"
+        type="submit"
+        class="font-medium rounded-md px-3.5 py-2.5 text-sm shadow-sm border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-900 hover:text-red-500 dark:hover:text-red-400 dark:text-red-500"
+      >
+        Cancel Subscription
+      </button>
+    </div>
+
+    <script>
+      const cancelButton = document.getElementById('submit-button')
+      const radios = document.querySelectorAll('input[name="action"]')
+
+      const labels = {
+        cancel: 'Cancel Subscription',
+        cancel_and_expire: 'Cancel and Set Expired',
+        delete: 'Delete Subscription',
+        delete_enterprise: 'Delete Subscription'
+      };
+
+      function updateButtonText() {
+        const selected = document.querySelector('input[name="action"]:checked');
+
+        cancelButton.innerText = labels[selected.value];
+      }
+
+      radios.forEach(function(radio) {
+        radio.addEventListener('change', updateButtonText);
+      })
+    </script>
+  </form>
+</.focus_box>

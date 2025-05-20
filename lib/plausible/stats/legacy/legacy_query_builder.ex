@@ -30,6 +30,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_include(site, params)
       |> Query.put_comparison_utc_time_range()
       |> Query.put_imported_opts(site)
+      |> Query.set_time_on_page_data(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, site, params)
@@ -92,7 +93,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp put_period(query, site, %{"period" => period} = params)
-       when period in ["7d", "28d", "30d", "90d"] do
+       when period in ["7d", "28d", "30d", "91d"] do
     {days, "d"} = Integer.parse(period)
 
     end_date = parse_single_date(query, params) |> Date.shift(day: -1)

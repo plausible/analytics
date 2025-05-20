@@ -94,12 +94,14 @@ defmodule PlausibleWeb.AuthController do
   def activate_form(conn, params) do
     user = conn.assigns.current_user
     flow = params["flow"] || PlausibleWeb.Flows.register()
+    team_identifier = params["team_identifier"]
 
     render(conn, "activate.html",
       error: nil,
       has_email_code?: Plausible.Users.has_email_code?(user),
       has_any_memberships?: Plausible.Teams.Users.has_sites?(user),
-      form_submit_url: "/activate?flow=#{flow}"
+      form_submit_url: "/activate?flow=#{flow}",
+      team_identifier: team_identifier
     )
   end
 
@@ -110,15 +112,21 @@ defmodule PlausibleWeb.AuthController do
     has_any_memberships? = Plausible.Teams.Users.has_sites?(user, include_pending?: false)
 
     flow = conn.params["flow"]
+    team_identifier = conn.params["team_identifier"]
 
     case Auth.EmailVerification.verify_code(user, code) do
       :ok ->
         cond do
+          team_identifier not in ["", nil] ->
+            redirect_path = accept_team_invitation(conn, team_identifier, user, flow: flow)
+            redirect(conn, to: redirect_path)
+
           has_any_memberships? ->
             handle_email_updated(conn)
 
           has_any_invitations? ->
-            redirect(conn, to: Routes.site_path(conn, :index, flow: flow))
+            redirect_path = accept_team_invitation(conn, team_identifier, user, flow: flow)
+            redirect(conn, to: redirect_path)
 
           true ->
             redirect(conn, to: Routes.site_path(conn, :new, flow: flow))
@@ -242,10 +250,13 @@ defmodule PlausibleWeb.AuthController do
                 PlausibleWeb.Flows.invitation()
               end
 
-            Routes.auth_path(conn, :activate_form, flow: flow)
+            Routes.auth_path(conn, :activate_form,
+              flow: flow,
+              team_identifier: params["team_identifier"]
+            )
 
           params["register_action"] == "register_from_invitation_form" ->
-            Routes.site_path(conn, :index)
+            accept_team_invitation(conn, params["team_identifier"], user)
 
           params["register_action"] == "register_form" ->
             Routes.site_path(conn, :new)
@@ -283,6 +294,27 @@ defmodule PlausibleWeb.AuthController do
         conn
         |> TwoFactor.Session.set_2fa_user(user)
         |> redirect(to: Routes.auth_path(conn, :verify_2fa, query_params))
+    end
+  end
+
+  defp accept_team_invitation(conn, team_identifier, user, params \\ [])
+
+  defp accept_team_invitation(conn, no_identifier, _user, params)
+       when no_identifier in ["", nil] do
+    Routes.site_path(conn, :index, params)
+  end
+
+  defp accept_team_invitation(conn, team_identifier, user, extra_params) do
+    params = Keyword.merge([__team: team_identifier], extra_params)
+
+    # We try switching to the team no matter the invitation presence or acceptance outcome.
+    case Teams.Invitations.find_by_team_identifier(team_identifier, user) do
+      {:ok, invitation} ->
+        {_, _} = Teams.Invitations.accept_team_invitation(invitation, user)
+        Routes.site_path(conn, :index, params)
+
+      {:error, :invitation_not_found} ->
+        Routes.site_path(conn, :index, params)
     end
   end
 
@@ -521,7 +553,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       message when message in ["server_error", "temporarily_unavailable"] ->
         conn
@@ -529,7 +561,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
 
       _any ->
         Sentry.capture_message("Google OAuth callback failed. Reason: #{inspect(params)}")
@@ -539,7 +571,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
         )
-        |> redirect(external: redirect_route)
+        |> redirect(to: redirect_route)
     end
   end
 
@@ -554,7 +586,7 @@ defmodule PlausibleWeb.AuthController do
     case redirect_to do
       "import" ->
         redirect(conn,
-          external:
+          to:
             Routes.google_analytics_path(conn, :property_form, site.domain,
               access_token: res["access_token"],
               refresh_token: res["refresh_token"],
@@ -579,7 +611,7 @@ defmodule PlausibleWeb.AuthController do
 
         site = Repo.get(Plausible.Site, site_id)
 
-        redirect(conn, external: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
+        redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
     end
   end
 

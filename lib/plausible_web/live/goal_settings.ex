@@ -19,8 +19,12 @@ defmodule PlausibleWeb.Live.GoalSettings do
         |> Plausible.Sites.get_for_user!(domain, [:owner, :admin, :editor, :super_admin])
       end)
       |> assign_new(:site_role, fn %{site: site, current_user: current_user} ->
-        {:ok, role} = Plausible.Teams.Memberships.site_role(site, current_user)
-        role
+        if Plausible.Auth.is_super_admin?(current_user) do
+          :super_admin
+        else
+          {:ok, {_, role}} = Plausible.Teams.Memberships.site_role(site, current_user)
+          role
+        end
       end)
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)

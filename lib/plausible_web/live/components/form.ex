@@ -52,6 +52,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:mt?, :boolean, default: true)
   attr(:max_one_error, :boolean, default: false)
+  slot(:help_content)
   slot(:inner_block)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
@@ -89,19 +90,77 @@ defmodule PlausibleWeb.Live.Components.Form do
   end
 
   def input(%{type: "checkbox"} = assigns) do
+    assigns =
+      assign_new(assigns, :checked, fn ->
+        Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
+      end)
+
     ~H"""
     <div class={[
-      "flex flex-inline items-center sm:justify-start justify-center gap-x-2",
+      @mt? && "mt-2"
+    ]}>
+      <.label
+        for={@id}
+        class="font-normal gap-x-2 flex flex-inline items-center sm:justify-start justify-center "
+      >
+        <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
+        <input
+          type="checkbox"
+          value={assigns[:value] || "true"}
+          checked={@checked}
+          id={@id}
+          name={@name}
+          class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+          {@rest}
+        />
+        {@label}
+      </.label>
+    </div>
+    """
+  end
+
+  def input(%{type: "radio"} = assigns) do
+    ~H"""
+    <div class={[
+      "flex flex-inline items-center justify-start gap-x-3",
       @mt? && "mt-2"
     ]}>
       <input
-        type="checkbox"
-        value={@value || "true"}
+        type="radio"
+        value={@value}
         id={@id}
         name={@name}
-        class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+        checked={assigns[:checked]}
+        class="block dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500"
+        {@rest}
       />
+      <.label :if={@label} class="flex flex-col flex-inline" for={@id}>
+        <span>{@label}</span>
+
+        <span
+          :if={@help_text || @help_content != []}
+          class="text-gray-500 dark:text-gray-400 mb-2 text-sm"
+        >
+          {@help_text}
+          {render_slot(@help_content)}
+        </span>
+      </.label>
+    </div>
+    """
+  end
+
+  def input(%{type: "textarea"} = assigns) do
+    ~H"""
+    <div class="mt-2">
       <.label for={@id}>{@label}</.label>
+      <textarea
+        id={@id}
+        rows="6"
+        name={@name}
+        class="block w-full textarea border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
+        {@rest}
+      >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+      <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end

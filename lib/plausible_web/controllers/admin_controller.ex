@@ -42,6 +42,7 @@ defmodule PlausibleWeb.AdminController do
     teams_list = Plausible.Auth.UserAdmin.teams(user.owned_teams)
 
     html_response = """
+      <a style="margin-bottom: 2em; float: right;" target="_blank" href="/cs/users/user/#{user_id}">Open in CS</a>
       <div style="margin-bottom: 1.1em;">
         <p><b>Owned teams:</b></p>
         #{teams_list}
@@ -99,10 +100,10 @@ defmodule PlausibleWeb.AdminController do
           select:
             fragment(
               """
-              case when ? = false then 
-                string_agg(concat(?, ' (', ?, ')'), ',') 
-              else 
-                concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']') 
+              case when ? = false then
+                string_agg(concat(?, ' (', ?, ')'), ',')
+              else
+                concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']')
               end
               """,
               t.setup_complete,
@@ -155,9 +156,9 @@ defmodule PlausibleWeb.AdminController do
               select: [
                 fragment(
                   """
-                  case when ? = false then 
+                  case when ? = false then
                     concat(string_agg(concat(?, ' (', ?, ')'), ','), ' - ', ?)
-                  else 
+                  else
                     concat(concat(?, ' [', string_agg(concat(?, ' (', ?, ')'), ','), ']'), ' - ', ?)
                   end
                   """,
@@ -186,8 +187,10 @@ defmodule PlausibleWeb.AdminController do
 
   defp usage_and_limits_html(team, usage, limits, embed?) do
     content = """
+    <a style="margin-bottom: 2em; float: right;" target="_blank" href="/cs/teams/team/#{team.id}">Open in CS</a>
       <ul>
-        <li>Team: <b>#{team.name}</b></li>
+        <li>Team: <b>#{html_escape(Teams.name(team))}</b></li>
+        <li>Setup: <b>#{if(team.setup_complete, do: "Yes", else: "No")}</b></li>
         <li>Subscription plan: #{Teams.TeamAdmin.subscription_plan(team)}</li>
         <li>Subscription status: #{Teams.TeamAdmin.subscription_status(team)}</li>
         <li>Grace period: #{Teams.TeamAdmin.grace_period_status(team)}</li>

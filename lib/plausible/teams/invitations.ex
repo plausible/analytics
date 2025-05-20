@@ -5,6 +5,7 @@ defmodule Plausible.Teams.Invitations do
 
   import Ecto.Query
 
+  alias Plausible.Auth
   alias Plausible.Billing
   alias Plausible.Repo
   alias Plausible.Teams
@@ -16,6 +17,29 @@ defmodule Plausible.Teams.Invitations do
       {:ok, invitation}
     else
       {:error, :invitation_not_found}
+    end
+  end
+
+  @spec find_by_team_identifier(String.t() | nil, Plausible.Auth.User.t()) ::
+          {:ok, Teams.Invitation.t()} | {:error, :invitation_not_found}
+  def find_by_team_identifier(nil, _user), do: {:error, :invitation_not_found}
+
+  def find_by_team_identifier(team_identifier, user) do
+    invitation_query =
+      from ti in Teams.Invitation,
+        inner_join: inviter in assoc(ti, :inviter),
+        inner_join: team in assoc(ti, :team),
+        where: ti.email == ^user.email,
+        where: team.identifier == ^team_identifier,
+        where: ti.role != :guest,
+        preload: [inviter: inviter, team: team]
+
+    case Repo.one(invitation_query) do
+      nil ->
+        {:error, :invitation_not_found}
+
+      invitation ->
+        {:ok, invitation}
     end
   end
 
@@ -410,7 +434,8 @@ defmodule Plausible.Teams.Invitations do
     end
 
     on_ee do
-      :unlocked = Billing.SiteLocker.update_sites_for(team, send_email?: false)
+      Billing.SiteLocker.update_for(prior_team, send_email?: false)
+      :unlocked = Billing.SiteLocker.update_for(team, send_email?: false)
     end
 
     :ok
@@ -461,19 +486,16 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def send_transfer_accepted_email(site_transfer, team) do
-    initiator_as_editor? =
-      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) == {:ok, :editor}
-
-    initiator_as_guest? =
-      Teams.Memberships.team_role(team, site_transfer.initiator) == {:ok, :guest}
+    initiator_as_guest_editor? =
+      Teams.Memberships.site_role(site_transfer.site, site_transfer.initiator) ==
+        {:ok, {:guest_member, :editor}}
 
     PlausibleWeb.Email.ownership_transfer_accepted(
       site_transfer.email,
       site_transfer.initiator.email,
       team,
       site_transfer.site,
-      initiator_as_editor?,
-      initiator_as_guest?
+      initiator_as_guest_editor?
     )
     |> Plausible.Mailer.send()
   end
@@ -484,6 +506,18 @@ defmodule Plausible.Teams.Invitations do
     for owner <- owners do
       PlausibleWeb.Email.team_changed(owner.email, user, team, site)
       |> Plausible.Mailer.send()
+    end
+  end
+
+  @spec check_can_transfer_site(Teams.Team.t(), Auth.User.t()) ::
+          :ok | {:error, :permission_denied}
+  def check_can_transfer_site(team, user) do
+    case Teams.Memberships.team_role(team, user) do
+      {:ok, role} when role in [:owner, :admin] ->
+        :ok
+
+      _ ->
+        {:error, :permission_denied}
     end
   end
 
@@ -501,27 +535,23 @@ defmodule Plausible.Teams.Invitations do
           :ok
 
         _ ->
-          {:error, :forbidden}
+          {:error, :permission_denied}
       end
     else
       :ok
     end
   end
 
-  def check_invitation_permissions(%Plausible.Site{} = site, inviter, invitation_role, opts) do
+  def check_invitation_permissions(%Plausible.Site{} = site, inviter, _invitation_role, opts) do
     check_permissions? = Keyword.get(opts, :check_permissions, true)
 
     if check_permissions? do
       case Teams.Memberships.site_role(site, inviter) do
-        {:ok, inviter_role} when inviter_role in [:owner, :admin] and invitation_role == :owner ->
-          :ok
-
-        {:ok, inviter_role}
-        when inviter_role in [:owner, :admin, :editor] and invitation_role != :owner ->
+        {:ok, {:team_member, inviter_role}} when inviter_role in [:owner, :admin] ->
           :ok
 
         _ ->
-          {:error, :forbidden}
+          {:error, :permission_denied}
       end
     else
       :ok

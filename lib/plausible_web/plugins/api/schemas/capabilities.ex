@@ -33,7 +33,10 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Capabilities do
         Props: false,
         RevenueGoals: false,
         StatsAPI: false,
-        SiteSegments: false
+        SitesAPI: false,
+        SiteSegments: false,
+        Teams: false,
+        SharedLinks: false
       }
     }
   })

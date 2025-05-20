@@ -169,7 +169,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     assert actual_comparison_last_date == expected_comparison_last_date
   end
 
-  test "timeseries last 90d period in year_over_year comparison", %{
+  test "timeseries last 91d period in year_over_year comparison", %{
     conn: conn,
     site: site
   } do
@@ -178,19 +178,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
       build(:pageview, timestamp: ~N[2021-04-01 00:00:00]),
       build(:pageview, timestamp: ~N[2021-04-05 00:00:00]),
       build(:pageview, timestamp: ~N[2021-04-05 00:00:00]),
-      build(:pageview, timestamp: ~N[2021-06-29 00:00:00]),
+      build(:pageview, timestamp: ~N[2021-06-30 00:00:00]),
       build(:pageview, timestamp: ~N[2022-04-01 00:00:00]),
       build(:pageview, timestamp: ~N[2022-04-05 00:00:00]),
-      build(:pageview, timestamp: ~N[2022-06-29 00:00:00]),
-      build(:pageview, timestamp: ~N[2022-06-30 00:00:00])
+      build(:pageview, timestamp: ~N[2022-06-30 00:00:00]),
+      build(:pageview, timestamp: ~N[2022-07-01 00:00:00])
     ])
 
     conn =
       post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
-        "date_range" => "90d",
-        "date" => "2022-06-30",
+        "date_range" => "91d",
+        "date" => "2022-07-01",
         "dimensions" => ["time:day"],
         "include" => %{
           "time_labels" => true,
@@ -205,7 +205,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
 
     assert "2022-04-01" = List.first(time_labels)
     assert "2022-04-05" = Enum.at(time_labels, 4)
-    assert "2022-06-29" = List.last(time_labels)
+    assert "2022-06-30" = List.last(time_labels)
 
     assert %{
              "dimensions" => ["2022-04-01"],
@@ -226,13 +226,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
            } = Enum.find(results, &(&1["dimensions"] == ["2022-04-05"]))
 
     assert %{
-             "dimensions" => ["2022-06-29"],
+             "dimensions" => ["2022-06-30"],
              "metrics" => [1],
              "comparison" => %{
-               "dimensions" => ["2021-06-29"],
+               "dimensions" => ["2021-06-30"],
                "metrics" => [1]
              }
-           } = Enum.find(results, &(&1["dimensions"] == ["2022-06-29"]))
+           } = Enum.find(results, &(&1["dimensions"] == ["2022-06-30"]))
   end
 
   test "dimensional comparison with low limit", %{conn: conn, site: site} do

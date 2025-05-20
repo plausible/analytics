@@ -27,6 +27,7 @@ defmodule Plausible.Teams.Team do
     field :trial_expiry_date, :date
     field :accept_traffic_until, :date
     field :allow_next_upgrade_override, :boolean, default: false
+    field :locked, :boolean, default: false
 
     field :setup_complete, :boolean, default: false
     field :setup_at, :naive_datetime

@@ -59,10 +59,7 @@ defmodule Plausible.HelpScoutTest do
         stub_help_scout_requests(email)
         team = team_of(user)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team.id}"
-
-        owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team.identifier)}"
+        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team.id}"
 
         assert {:ok,
                 %{
@@ -70,8 +67,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Trial",
                   plan_link: "#",
                   plan_label: "None",
-                  sites_count: 0,
-                  sites_link: ^owned_sites_url
+                  sites_count: 0
                 }} = HelpScout.get_details_for_customer("500")
       end
 
@@ -264,7 +260,8 @@ defmodule Plausible.HelpScoutTest do
       test "returns for user with locked site" do
         user = %{email: email} = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1))
 
-        new_site(owner: user, locked: true)
+        site = new_site(owner: user)
+        site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
         subscribe_to_plan(user, @v4_business_monthly_plan_id)
 
         stub_help_scout_requests(email)
@@ -407,12 +404,10 @@ defmodule Plausible.HelpScoutTest do
     describe "get_details_for_emails/2" do
       test "returns details for user and persists mapping" do
         %{email: email} = user = new_user(trial_expiry_date: Date.utc_today())
+
         team = team_of(user)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team.id}"
-
-        owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team.identifier)}"
+        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team.id}"
 
         assert {:ok,
                 %{
@@ -420,8 +415,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Trial",
                   plan_link: "#",
                   plan_label: "None",
-                  sites_count: 0,
-                  sites_link: ^owned_sites_url
+                  sites_count: 0
                 }} = HelpScout.get_details_for_emails([email], "123")
 
         assert {:ok, ^email} = HelpScout.lookup_mapping("123")
@@ -448,10 +442,7 @@ defmodule Plausible.HelpScoutTest do
         new_site(owner: user2)
         team2 = team_of(user2)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/teams/team/#{team2.id}"
-
-        owned_sites_url =
-          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?custom_search=#{URI.encode_www_form(team2.identifier)}"
+        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team2.id}"
 
         assert {:ok,
                 %{
@@ -459,8 +450,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Trial",
                   plan_link: "#",
                   plan_label: "None",
-                  sites_count: 2,
-                  sites_link: ^owned_sites_url
+                  sites_count: 2
                 }} = HelpScout.get_details_for_emails([user1.email, user2.email], "123")
 
         user2_email = user2.email

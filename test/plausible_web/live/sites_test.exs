@@ -246,7 +246,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      type_into_input(lv, "filter_text", "firs")
+      type_into_input(lv, "filter-text", "firs")
       html = render(lv)
 
       assert html =~ "first.example.com"
@@ -267,7 +267,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert html =~ "page=2"
       refute html =~ "page=1"
 
-      type_into_input(lv, "filter_text", "anot")
+      type_into_input(lv, "filter-text", "anot")
       html = render(lv)
 
       assert html =~ "first.another.example.com"
@@ -355,7 +355,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
   defp get_invitation_data(html) do
     html
-    |> text_of_attr("div[x-data]", "x-data")
+    |> text_of_attr("div[x-ref=\"invitation_data\"][x-data]", "x-data")
     |> String.trim("dropdown")
     |> String.replace("selectedInvitation:", "\"selectedInvitation\":")
     |> String.replace("invitationOpen:", "\"invitationOpen\":")

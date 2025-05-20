@@ -12,28 +12,15 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Repo
   alias Plausible.Teams
 
-  alias Plausible.Billing.{Plan, Plans, EnterprisePlan, Feature}
-  alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
+  alias Plausible.Billing.{EnterprisePlan, Feature, Plan, Plans, Quota}
+  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI}
 
   require Plausible.Billing.Subscription.Status
 
-  @team_member_limit_for_trials 3
   @limit_sites_since ~D[2021-05-05]
-  @site_limit_for_trials 10
 
-  @type cycles_usage() :: %{cycle() => usage_cycle()}
-
-  @typep cycle :: :current_cycle | :last_cycle | :penultimate_cycle
-
-  @typep usage_cycle :: %{
-           date_range: Date.Range.t(),
-           pageviews: non_neg_integer(),
-           custom_events: non_neg_integer(),
-           total: non_neg_integer()
-         }
-
-  @typep last_30_days_usage() :: %{:last_30_days => usage_cycle()}
-  @typep monthly_pageview_usage() :: cycles_usage() | last_30_days_usage()
+  @typep last_30_days_usage() :: %{:last_30_days => Quota.usage_cycle()}
+  @typep monthly_pageview_usage() :: Quota.cycles_usage() | last_30_days_usage()
 
   def grandfathered_team?(nil), do: false
 
@@ -193,16 +180,33 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-  def site_limit(nil) do
-    @site_limit_for_trials
-  end
+  on_ee do
+    @site_limit_for_trials 10
 
-  def site_limit(team) do
-    if grandfathered_team?(team) do
-      :unlimited
-    else
-      get_site_limit_from_plan(team)
+    def site_limit(nil) do
+      @site_limit_for_trials
     end
+
+    def site_limit(team) do
+      if grandfathered_team?(team) do
+        :unlimited
+      else
+        get_site_limit_from_plan(team)
+      end
+    end
+
+    defp get_site_limit_from_plan(team) do
+      team =
+        Teams.with_subscription(team)
+
+      case Plans.get_subscription_plan(team.subscription) do
+        %{site_limit: site_limit} -> site_limit
+        :free_10k -> 50
+        nil -> @site_limit_for_trials
+      end
+    end
+  else
+    def site_limit(_team), do: :unlimited
   end
 
   @doc """
@@ -212,34 +216,27 @@ defmodule Plausible.Teams.Billing do
   def site_usage(nil), do: 0
 
   def site_usage(team) do
-    team
-    |> Teams.owned_sites()
-    |> length()
+    Teams.owned_sites_count(team)
   end
 
-  defp get_site_limit_from_plan(team) do
-    team =
-      Teams.with_subscription(team)
+  on_ee do
+    @team_member_limit_for_trials 3
 
-    case Plans.get_subscription_plan(team.subscription) do
-      %{site_limit: site_limit} -> site_limit
-      :free_10k -> 50
-      nil -> @site_limit_for_trials
+    def team_member_limit(nil) do
+      @team_member_limit_for_trials
     end
-  end
 
-  def team_member_limit(nil) do
-    @team_member_limit_for_trials
-  end
+    def team_member_limit(team) do
+      team = Teams.with_subscription(team)
 
-  def team_member_limit(team) do
-    team = Teams.with_subscription(team)
-
-    case Plans.get_subscription_plan(team.subscription) do
-      %{team_member_limit: limit} -> limit
-      :free_10k -> :unlimited
-      nil -> @team_member_limit_for_trials
+      case Plans.get_subscription_plan(team.subscription) do
+        %{team_member_limit: limit} -> limit
+        :free_10k -> :unlimited
+        nil -> @team_member_limit_for_trials
+      end
     end
+  else
+    def team_member_limit(_team), do: :unlimited
   end
 
   @doc """
@@ -403,7 +400,7 @@ defmodule Plausible.Teams.Billing do
   def usage_cycle(team, cycle, owned_site_ids \\ nil, today \\ Date.utc_today())
 
   def usage_cycle(team, cycle, nil, today) do
-    owned_site_ids = team |> Teams.owned_sites() |> Enum.map(& &1.id)
+    owned_site_ids = Teams.owned_sites_ids(team)
     usage_cycle(team, cycle, owned_site_ids, today)
   end
 
@@ -476,7 +473,7 @@ defmodule Plausible.Teams.Billing do
   def features_usage(nil, nil), do: []
 
   def features_usage(%Teams.Team{} = team, nil) do
-    owned_site_ids = team |> Teams.owned_sites() |> Enum.map(& &1.id)
+    owned_site_ids = Teams.owned_sites_ids(team)
     features_usage(team, owned_site_ids)
   end
 
@@ -495,8 +492,28 @@ defmodule Plausible.Teams.Billing do
             )
       )
 
-    if stats_api_used? do
-      site_scoped_feature_usage ++ [Feature.StatsAPI]
+    site_scoped_feature_usage =
+      if stats_api_used? do
+        site_scoped_feature_usage ++ [Feature.StatsAPI]
+      else
+        site_scoped_feature_usage
+      end
+
+    sites_api_used? =
+      Repo.exists?(
+        from tm in Plausible.Teams.Membership,
+          as: :team_membership,
+          where: tm.team_id == ^team.id,
+          where:
+            exists(
+              from ak in Plausible.Auth.ApiKey,
+                where: ak.user_id == parent_as(:team_membership).user_id,
+                where: "sites:provision:*" in ak.scopes
+            )
+      )
+
+    if sites_api_used? do
+      site_scoped_feature_usage ++ [SitesAPI]
     else
       site_scoped_feature_usage
     end
@@ -598,7 +615,7 @@ defmodule Plausible.Teams.Billing do
 
       nil ->
         if Teams.on_trial?(team) do
-          Feature.list()
+          Feature.list() -- [SitesAPI]
         else
           [Goals]
         end

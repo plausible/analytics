@@ -66,15 +66,6 @@ export function handleSegmentResponse(
   }
 }
 
-export function getFilterSegmentsByNameInsensitive(
-  search?: string
-): (s: Pick<SavedSegment, 'name'>) => boolean {
-  return (s) =>
-    search?.trim().length
-      ? s.name.toLowerCase().includes(search.trim().toLowerCase())
-      : true
-}
-
 export const getSegmentNamePlaceholder = (
   query: Pick<DashboardQuery, 'labels' | 'filters'>
 ) =>

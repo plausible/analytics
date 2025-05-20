@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.TeamManagement do
       current_role={@current_team_role}
       current_team={@current_team}
       limit={@team_members_limit}
-      resource="team members"
+      resource="members"
       class="mb-4"
     />
     <div>

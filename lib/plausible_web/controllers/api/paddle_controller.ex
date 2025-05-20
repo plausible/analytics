@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Api.PaddleController do
   @paddle_currency_reference_plan_id "857097"
   @paddle_sandbox_currency_reference_plan_id "63842"
   defp get_currency_reference_plan_id() do
-    if Application.get_env(:plausible, :environment) in ["dev", "staging"] do
+    if Application.get_env(:plausible, :environment) == "staging" do
       @paddle_sandbox_currency_reference_plan_id
     else
       @paddle_currency_reference_plan_id
@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Api.PaddleController do
   @paddle_sandbox_key File.read!("priv/paddle_sandbox.pem")
 
   defp get_paddle_key() do
-    if Application.get_env(:plausible, :environment) in ["dev", "staging"] do
+    if Application.get_env(:plausible, :environment) == "staging" do
       @paddle_sandbox_key
     else
       @paddle_prod_key

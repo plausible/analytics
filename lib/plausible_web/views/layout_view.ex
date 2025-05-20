@@ -96,7 +96,6 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def account_settings_sidebar(conn) do
-    current_user = conn.assigns[:current_user]
     current_team = conn.assigns[:current_team]
     current_team_role = conn.assigns[:current_team_role]
 
@@ -119,17 +118,21 @@ defmodule PlausibleWeb.LayoutView do
         |> Enum.reject(&is_nil/1)
     }
 
-    if Teams.enabled?(current_user) and Teams.setup?(current_team) do
+    if Teams.setup?(current_team) do
       Map.put(
         options,
         "Team Settings",
         [
           %{key: "General", value: "team/general", icon: :adjustments_horizontal},
-          %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
-          if(current_team_role in [:owner, :admin, :billing],
+          if(current_team_role in [:owner, :billing],
+            do: %{key: "Subscription", value: "billing/subscription", icon: :circle_stack}
+          ),
+          if(current_team_role in [:owner, :billing],
             do: %{key: "Invoices", value: "billing/invoices", icon: :banknotes}
           ),
-          %{key: "API Keys", value: "api-keys", icon: :key},
+          if(current_team_role in [:owner, :billing, :admin, :editor],
+            do: %{key: "API Keys", value: "api-keys", icon: :key}
+          ),
           if(current_team_role == :owner,
             do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
           )

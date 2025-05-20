@@ -3,7 +3,7 @@ defmodule Plausible.Billing.QuotaTest do
   use Plausible.DataCase, async: true
   use Plausible
   alias Plausible.Billing.{Quota, Plans}
-  alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, Teams, SharedLinks}
 
   use Plausible.Teams.Test
 
@@ -16,7 +16,6 @@ defmodule Plausible.Billing.QuotaTest do
   @v1_plan_id "558018"
   @v2_plan_id "654177"
   @v3_plan_id "749342"
-  @v3_business_plan_id "857481"
   @v4_1m_plan_id "857101"
   @v4_10m_growth_plan_id "857104"
   @v4_10m_business_plan_id "857112"
@@ -24,68 +23,70 @@ defmodule Plausible.Billing.QuotaTest do
   @highest_growth_plan Plausible.Billing.Plans.find(@v4_10m_growth_plan_id)
   @highest_business_plan Plausible.Billing.Plans.find(@v4_10m_business_plan_id)
 
-  describe "site_limit/1" do
-    @describetag :ee_only
+  on_ee do
+    @v3_business_plan_id "857481"
 
-    test "returns 50 when user is on an old plan" do
-      team_on_v1 = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
-      team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
-      team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id) |> team_of()
+    describe "site_limit/1" do
+      test "returns 50 when user is on an old plan" do
+        team_on_v1 = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
+        team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
+        team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id) |> team_of()
 
-      assert 50 == Plausible.Teams.Billing.site_limit(team_on_v1)
-      assert 50 == Plausible.Teams.Billing.site_limit(team_on_v2)
-      assert 50 == Plausible.Teams.Billing.site_limit(team_on_v3)
-    end
+        assert 50 == Plausible.Teams.Billing.site_limit(team_on_v1)
+        assert 50 == Plausible.Teams.Billing.site_limit(team_on_v2)
+        assert 50 == Plausible.Teams.Billing.site_limit(team_on_v3)
+      end
 
-    test "returns 50 when user is on free_10k plan" do
-      team = new_user() |> subscribe_to_plan("free_10k") |> team_of()
-      assert 50 == Plausible.Teams.Billing.site_limit(team)
-    end
+      test "returns 50 when user is on free_10k plan" do
+        team = new_user() |> subscribe_to_plan("free_10k") |> team_of()
+        assert 50 == Plausible.Teams.Billing.site_limit(team)
+      end
 
-    test "returns the configured site limit for enterprise plan" do
-      team = new_user() |> subscribe_to_enterprise_plan(site_limit: 500) |> team_of()
-      assert Plausible.Teams.Billing.site_limit(team) == 500
-    end
+      test "returns the configured site limit for enterprise plan" do
+        team = new_user() |> subscribe_to_enterprise_plan(site_limit: 500) |> team_of()
+        assert Plausible.Teams.Billing.site_limit(team) == 500
+      end
 
-    test "returns 10 when user in on trial" do
-      team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
-      assert Plausible.Teams.Billing.site_limit(team) == 10
-    end
+      test "returns 10 when user in on trial" do
+        team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
+        assert Plausible.Teams.Billing.site_limit(team) == 10
+      end
 
-    test "returns the subscription limit for enterprise users who have not paid yet" do
-      team =
-        new_user()
-        |> subscribe_to_plan(@v1_plan_id)
-        |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", subscription?: false)
-        |> team_of()
+      test "returns the subscription limit for enterprise users who have not paid yet" do
+        team =
+          new_user()
+          |> subscribe_to_plan(@v1_plan_id)
+          |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", subscription?: false)
+          |> team_of()
 
-      assert Plausible.Teams.Billing.site_limit(team) == 50
-    end
+        assert Plausible.Teams.Billing.site_limit(team) == 50
+      end
 
-    test "returns 10 for enterprise users who have not upgraded yet and are on trial" do
-      team =
-        new_user()
-        |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", subscription?: false)
-        |> team_of()
+      test "returns 10 for enterprise users who have not upgraded yet and are on trial" do
+        team =
+          new_user()
+          |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", subscription?: false)
+          |> team_of()
 
-      assert Plausible.Teams.Billing.site_limit(team) == 10
-    end
+        assert Plausible.Teams.Billing.site_limit(team) == 10
+      end
 
-    test "grandfathered site limit should be unlimited when accepting transfer invitations" do
-      # must be before ~D[2021-05-05]
-      owner = new_user(team: [inserted_at: ~N[2021-01-01 00:00:00]])
-      # plan with site_limit: 10
-      subscribe_to_plan(owner, "857097")
-      _site = for _ <- 1..10, do: new_site(owner: owner)
+      test "grandfathered site limit should be unlimited when accepting transfer invitations" do
+        # must be before ~D[2021-05-05]
+        owner = new_user(team: [inserted_at: ~N[2021-01-01 00:00:00]])
+        # plan with site_limit: 10
+        subscribe_to_plan(owner, "857097")
+        _site = for _ <- 1..10, do: new_site(owner: owner)
 
-      other_owner = new_user()
-      other_site = new_site(owner: other_owner)
-      invite_transfer(other_site, owner, inviter: other_owner)
+        other_owner = new_user()
+        other_site = new_site(owner: other_owner)
+        invite_transfer(other_site, owner, inviter: other_owner)
 
-      team = owner |> team_of()
+        team = owner |> team_of()
 
-      assert Plausible.Teams.Billing.site_limit(team) == :unlimited
-      assert Plausible.Teams.Invitations.ensure_can_take_ownership(other_site, team) == :ok
+        assert Plausible.Teams.Billing.site_limit(team) == :unlimited
+        assert Plausible.Teams.Invitations.ensure_can_take_ownership(other_site, team) == :ok
+      end
     end
   end
 
@@ -419,51 +420,52 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  describe "team_member_limit/1" do
-    @describetag :ee_only
-    test "returns unlimited when user is on an old plan" do
-      team_on_v1 = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
-      team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
-      team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id) |> team_of()
+  on_ee do
+    describe "team_member_limit/1" do
+      test "returns unlimited when user is on an old plan" do
+        team_on_v1 = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
+        team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
+        team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id) |> team_of()
 
-      assert :unlimited == Plausible.Teams.Billing.team_member_limit(team_on_v1)
-      assert :unlimited == Plausible.Teams.Billing.team_member_limit(team_on_v2)
-      assert :unlimited == Plausible.Teams.Billing.team_member_limit(team_on_v3)
-    end
+        assert :unlimited == Plausible.Teams.Billing.team_member_limit(team_on_v1)
+        assert :unlimited == Plausible.Teams.Billing.team_member_limit(team_on_v2)
+        assert :unlimited == Plausible.Teams.Billing.team_member_limit(team_on_v3)
+      end
 
-    test "returns unlimited when user is on free_10k plan" do
-      user = new_user()
-      subscribe_to_plan(user, "free_10k")
-      team = team_of(user)
-      assert :unlimited == Plausible.Teams.Billing.team_member_limit(team)
-    end
+      test "returns unlimited when user is on free_10k plan" do
+        user = new_user()
+        subscribe_to_plan(user, "free_10k")
+        team = team_of(user)
+        assert :unlimited == Plausible.Teams.Billing.team_member_limit(team)
+      end
 
-    test "returns 5 when user in on trial" do
-      team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
+      test "returns 5 when user in on trial" do
+        team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
 
-      assert 3 == Plausible.Teams.Billing.team_member_limit(team)
-    end
+        assert 3 == Plausible.Teams.Billing.team_member_limit(team)
+      end
 
-    test "returns the enterprise plan limit" do
-      user = new_user()
-      subscribe_to_enterprise_plan(user, team_member_limit: 27)
-      team = team_of(user)
+      test "returns the enterprise plan limit" do
+        user = new_user()
+        subscribe_to_enterprise_plan(user, team_member_limit: 27)
+        team = team_of(user)
 
-      assert 27 == Plausible.Teams.Billing.team_member_limit(team)
-    end
+        assert 27 == Plausible.Teams.Billing.team_member_limit(team)
+      end
 
-    test "reads from json file when the user is on a v4 plan" do
-      team_on_growth = new_user() |> subscribe_to_growth_plan() |> team_of()
-      team_on_business = new_user() |> subscribe_to_business_plan() |> team_of()
+      test "reads from json file when the user is on a v4 plan" do
+        team_on_growth = new_user() |> subscribe_to_growth_plan() |> team_of()
+        team_on_business = new_user() |> subscribe_to_business_plan() |> team_of()
 
-      assert 3 == Plausible.Teams.Billing.team_member_limit(team_on_growth)
-      assert 10 == Plausible.Teams.Billing.team_member_limit(team_on_business)
-    end
+        assert 3 == Plausible.Teams.Billing.team_member_limit(team_on_growth)
+        assert 10 == Plausible.Teams.Billing.team_member_limit(team_on_business)
+      end
 
-    test "returns unlimited when user is on a v3 business plan" do
-      team = new_user() |> subscribe_to_plan(@v3_business_plan_id) |> team_of()
+      test "returns unlimited when user is on a v3 business plan" do
+        team = new_user() |> subscribe_to_plan(@v3_business_plan_id) |> team_of()
 
-      assert :unlimited == Plausible.Teams.Billing.team_member_limit(team)
+        assert :unlimited == Plausible.Teams.Billing.team_member_limit(team)
+      end
     end
   end
 
@@ -513,6 +515,18 @@ defmodule Plausible.Billing.QuotaTest do
       insert(:api_key, user: user)
 
       assert [StatsAPI] == Plausible.Teams.Billing.features_usage(team)
+    end
+
+    test "returns [SitesAPI] when user has a Sites API enabled api key" do
+      user =
+        new_user()
+        |> subscribe_to_enterprise_plan(features: [StatsAPI, SitesAPI])
+
+      team = team_of(user)
+
+      insert(:api_key, user: user, scopes: ["sites:provision:*"])
+
+      assert [StatsAPI, SitesAPI] == Plausible.Teams.Billing.features_usage(team)
     end
 
     test "returns feature usage based on a user and a custom list of site_ids" do
@@ -567,9 +581,14 @@ defmodule Plausible.Billing.QuotaTest do
       team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
       team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id) |> team_of()
 
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team_on_v1)
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team_on_v2)
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team_on_v3)
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team_on_v1)
+
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team_on_v2)
+
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team_on_v3)
     end
 
     test "returns [Goals, Props, StatsAPI] when user is on free_10k plan" do
@@ -599,7 +618,7 @@ defmodule Plausible.Billing.QuotaTest do
     test "returns all features when user in on trial" do
       team = new_user(trial_expiry_date: Date.shift(Date.utc_today(), day: 7)) |> team_of()
 
-      assert Plausible.Billing.Feature.list() ==
+      assert Plausible.Billing.Feature.list() -- [Plausible.Billing.Feature.SitesAPI] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -611,13 +630,14 @@ defmodule Plausible.Billing.QuotaTest do
 
       team = team_of(user)
 
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team)
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team)
     end
 
     test "returns all features for enterprise users who have not upgraded yet and are on trial" do
       team = new_user() |> subscribe_to_enterprise_plan(subscription?: false) |> team_of()
 
-      assert Plausible.Billing.Feature.list() ==
+      assert Plausible.Billing.Feature.list() -- [Plausible.Billing.Feature.SitesAPI] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -637,6 +657,19 @@ defmodule Plausible.Billing.QuotaTest do
       team = team_of(user)
 
       assert [Plausible.Billing.Feature.StatsAPI] ==
+               Plausible.Teams.Billing.allowed_features_for(team)
+    end
+
+    test "returns SitesAPI feature for enterprise customers with appropriate plan" do
+      user = new_user()
+
+      subscribe_to_enterprise_plan(user,
+        features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI]
+      )
+
+      team = team_of(user)
+
+      assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
   end

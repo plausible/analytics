@@ -552,13 +552,64 @@ defmodule Plausible.Session.CacheStoreTest do
         %{e | pathname: "/exit"}
       ])
 
-      session_q = from s in Plausible.ClickhouseSessionV2, where: s.site_id == ^e.site_id
-      session = Plausible.ClickhouseRepo.one!(session_q, settings: [final: true])
+      session = get_session(e.site_id, final: true)
 
       refute session.is_bounce
       assert session.entry_page == "/"
       assert session.exit_page == "/exit"
       assert session.events == 4
+    end
+  end
+
+  describe "bounce detection" do
+    test "single pageview is bounce" do
+      session = create_session([build(:pageview)])
+      assert session.is_bounce
+    end
+
+    test "two pageviews is not a bounce" do
+      session = create_session([build(:pageview), build(:pageview)])
+      refute session.is_bounce
+    end
+
+    test "(implicitly interactive) custom event is not a bounce" do
+      session = create_session([build(:event, name: "interactive")])
+      refute session.is_bounce
+    end
+
+    test "non-interactive custom event is a bounce" do
+      session = create_session([build(:event, name: "non-interactive", interactive?: false)])
+      assert session.is_bounce
+    end
+
+    test "pageview followed by non-interactive custom event is a bounce" do
+      session =
+        create_session([
+          build(:pageview),
+          build(:event, name: "non-interactive", interactive?: false)
+        ])
+
+      assert session.is_bounce
+    end
+
+    test "non-interactive custom event followed by pageview is a bounce" do
+      session =
+        create_session([
+          build(:event, name: "non-interactive", interactive?: false),
+          build(:pageview)
+        ])
+
+      assert session.is_bounce
+    end
+
+    test "non-interactive custom event followed by interactive custom event is not a bounce" do
+      session =
+        create_session([
+          build(:event, name: "non-interactive", interactive?: false),
+          build(:event, name: "interactive")
+        ])
+
+      refute session.is_bounce
     end
   end
 
@@ -574,13 +625,25 @@ defmodule Plausible.Session.CacheStoreTest do
     Plausible.Session.WriteBuffer.flush()
   end
 
-  defp get_session(site_id) do
+  defp create_session(events) do
+    event_params = %{site_id: new_site_id(), user_id: 1}
+
+    events
+    |> Enum.map(&Map.merge(&1, event_params))
+    |> flush()
+
+    get_session(event_params.site_id, final: true)
+  end
+
+  defp get_session(site_id, opts \\ []) do
     session_q =
       from s in Plausible.ClickhouseSessionV2,
         where: s.site_id == ^site_id,
-        order_by: [desc: :timestamp],
+        order_by: [desc: :events],
         limit: 1
 
-    Plausible.ClickhouseRepo.one!(session_q)
+    settings = [final: Keyword.get(opts, :final, true)]
+
+    Plausible.ClickhouseRepo.one!(session_q, settings: settings)
   end
 end

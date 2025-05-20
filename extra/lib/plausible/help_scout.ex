@@ -105,7 +105,14 @@ defmodule Plausible.HelpScout do
             }
           end)
 
-        user_link = Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id)
+        user_link =
+          Routes.customer_support_resource_url(
+            PlausibleWeb.Endpoint,
+            :details,
+            :users,
+            :user,
+            user.id
+          )
 
         {:ok,
          %{
@@ -129,19 +136,20 @@ defmodule Plausible.HelpScout do
 
         status_link =
           if team do
-            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :teams, :team, team.id)
-          else
-            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id)
-          end
-
-        sites_link =
-          if team do
-            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-              custom_search: team.identifier
+            Routes.customer_support_resource_url(
+              PlausibleWeb.Endpoint,
+              :details,
+              :teams,
+              :team,
+              team.id
             )
           else
-            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
-              custom_search: user.email
+            Routes.customer_support_resource_url(
+              PlausibleWeb.Endpoint,
+              :details,
+              :users,
+              :user,
+              user.id
             )
           end
 
@@ -156,8 +164,7 @@ defmodule Plausible.HelpScout do
            status_link: status_link,
            plan_label: plan_label(subscription, plan),
            plan_link: plan_link(subscription),
-           sites_count: Teams.owned_sites_count(team),
-           sites_link: sites_link
+           sites_count: Teams.owned_sites_count(team)
          }}
       end
     end
@@ -222,7 +229,7 @@ defmodule Plausible.HelpScout do
       subscription.status == Subscription.Status.paused() ->
         "Paused"
 
-      Teams.owned_sites_locked?(team) ->
+      Teams.locked?(team) ->
         "Dashboard locked"
 
       subscription_active? ->

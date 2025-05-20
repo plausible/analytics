@@ -25,15 +25,6 @@ defmodule Plausible.Teams do
   def setup?(nil), do: false
   def setup?(%{setup_complete: setup_complete}), do: setup_complete
 
-  @spec enabled?(nil | Auth.User.t()) :: boolean()
-  def enabled?(nil) do
-    FunWithFlags.enabled?(:teams)
-  end
-
-  def enabled?(user) do
-    FunWithFlags.enabled?(:teams, for: user)
-  end
-
   @spec get(pos_integer() | binary() | nil) :: Teams.Team.t() | nil
   def get(nil), do: nil
 
@@ -75,6 +66,11 @@ defmodule Plausible.Teams do
     def on_trial?(_), do: always(true)
   end
 
+  @spec locked?(Teams.Team.t() | nil) :: boolean()
+  def locked?(nil), do: false
+
+  def locked?(%Teams.Team{locked: locked}), do: locked
+
   @spec trial_days_left(Teams.Team.t()) :: integer()
   def trial_days_left(nil) do
     nil
@@ -88,10 +84,24 @@ defmodule Plausible.Teams do
     Repo.preload(team, subscription: last_subscription_query())
   end
 
-  def owned_sites(team) do
-    Repo.preload(team, :sites).sites
+  @spec owned_sites(Teams.Team.t() | nil, pos_integer() | nil) :: [Plausible.Site.t()]
+  def owned_sites(team, limit \\ nil)
+
+  def owned_sites(nil, _), do: []
+
+  def owned_sites(team, limit) do
+    query = from(s in Plausible.Site, where: s.team_id == ^team.id, order_by: [asc: s.domain])
+
+    if limit do
+      query
+      |> limit(^limit)
+      |> Repo.all()
+    else
+      Repo.all(query)
+    end
   end
 
+  @spec owned_sites_ids(Teams.Team.t() | nil) :: [pos_integer()]
   def owned_sites_ids(nil) do
     []
   end
@@ -106,19 +116,7 @@ defmodule Plausible.Teams do
     )
   end
 
-  def owned_sites_locked?(nil) do
-    false
-  end
-
-  def owned_sites_locked?(team) do
-    Repo.exists?(
-      from(s in Plausible.Site,
-        where: s.team_id == ^team.id,
-        where: s.locked == true
-      )
-    )
-  end
-
+  @spec owned_sites_count(Teams.Team.t() | nil) :: non_neg_integer()
   def owned_sites_count(nil), do: 0
 
   def owned_sites_count(team) do
@@ -363,16 +361,12 @@ defmodule Plausible.Teams do
     team =
       %Teams.Team{}
       |> Teams.Team.changeset(%{name: default_name()})
-      |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
-      |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!()
 
     team_membership =
       team
       |> Teams.Membership.changeset(user, :owner)
       |> Ecto.Changeset.put_change(:is_autocreated, true)
-      |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
-      |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!(
         on_conflict: :nothing,
         conflict_target:

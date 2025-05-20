@@ -109,9 +109,35 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
+    scope alias: PlausibleWeb.Live, assigns: %{connect_live_socket: true} do
+      pipe_through [:browser, :csrf, :app_layout, :flags]
+
+      live "/cs", CustomerSupport, :index, as: :customer_support
+
+      live "/cs/:any/:resource/:id", CustomerSupport, :details, as: :customer_support_resource
+    end
+  end
+
+  on_ee do
     scope path: "/flags" do
       pipe_through :flags
       forward "/", FunWithFlags.UI.Router, namespace: "flags"
+    end
+  end
+
+  on_ee do
+    if Mix.env() in [:dev, :test] do
+      scope "/dev", PlausibleWeb do
+        pipe_through :browser
+
+        get "/billing/create-subscription-form/:plan_id", DevSubscriptionController, :create_form
+        get "/billing/update-subscription-form", DevSubscriptionController, :update_form
+        get "/billing/cancel-subscription-form", DevSubscriptionController, :cancel_form
+
+        post "/billing/create-subscription/:plan_id", DevSubscriptionController, :create
+        post "/billing/update-subscription", DevSubscriptionController, :update
+        post "/billing/cancel-subscription", DevSubscriptionController, :cancel
+      end
     end
   end
 
@@ -527,6 +553,12 @@ defmodule PlausibleWeb.Router do
               dogfood_page_path: "/:website/installation"
             } do
         live "/:domain/installation", Installation, :installation, as: :site
+      end
+
+      scope assigns: %{
+              dogfood_page_path: "/:website/installationv2"
+            } do
+        live "/:domain/installationv2", InstallationV2, :installation_v2, as: :site
       end
 
       scope assigns: %{

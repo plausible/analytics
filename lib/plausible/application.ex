@@ -18,7 +18,6 @@ defmodule Plausible.Application do
         {PartitionSupervisor,
          child_spec: Task.Supervisor, name: Plausible.UserAgentParseTaskSupervisor},
         Plausible.Session.BalancerSupervisor,
-        Plausible.Cache.Stats,
         Plausible.PromEx,
         {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
         Plausible.Repo,
@@ -43,6 +42,8 @@ defmodule Plausible.Application do
           n_lock_partitions: 1,
           ets_options: [read_concurrency: true, write_concurrency: true]
         ),
+        {Plausible.Session.Transfer,
+         base_path: Application.get_env(:plausible, :session_transfer_dir)},
         warmed_cache(Plausible.Site.Cache,
           adapter_opts: [
             n_lock_partitions: 1,

@@ -1,13 +1,4 @@
-import React, {
-  Fragment,
-  useState,
-  useEffect,
-  useCallback,
-  useRef
-} from 'react'
-import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import classNames from 'classnames'
+import React, { useState, useEffect, useCallback } from 'react'
 import * as storage from '../../util/storage'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import GoalConversions, {
@@ -20,7 +11,7 @@ import { hasConversionGoalFilter } from '../../util/filters'
 import { useSiteContext } from '../../site-context'
 import { useQueryContext } from '../../query-context'
 import { useUserContext } from '../../user-context'
-import { BlurMenuButtonOnEscape } from '../../keybinding'
+import { DropdownTabButton, TabButton, TabWrapper } from '../../components/tabs'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -34,10 +25,6 @@ function maybeRequire() {
 }
 
 const Funnel = maybeRequire().default
-
-const ACTIVE_CLASS =
-  'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
-const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
 
 export const CONVERSIONS = 'conversions'
 export const PROPS = 'props'
@@ -53,7 +40,6 @@ export default function Behaviours({ importedDataInView }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
   const user = useUserContext()
-  const buttonRef = useRef()
   const adminAccess = ['owner', 'admin', 'editor', 'super_admin'].includes(
     user.role
   )
@@ -66,9 +52,6 @@ export default function Behaviours({ importedDataInView }) {
   const [mode, setMode] = useState(defaultMode())
   const [loading, setLoading] = useState(true)
 
-  const [funnelNames, _setFunnelNames] = useState(
-    site.funnels.map(({ name }) => name)
-  )
   const [selectedFunnel, setSelectedFunnel] = useState(defaultSelectedFunnel())
 
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] =
@@ -117,12 +100,12 @@ export default function Behaviours({ importedDataInView }) {
     )
   }
 
-  function setFunnel(selectedFunnel) {
+  function setFunnelFactory(selectedFunnelName) {
     return () => {
       storage.setItem(tabKey, FUNNELS)
-      storage.setItem(funnelKey, selectedFunnel)
+      storage.setItem(funnelKey, selectedFunnelName)
       setMode(FUNNELS)
-      setSelectedFunnel(selectedFunnel)
+      setSelectedFunnel(selectedFunnelName)
     }
   }
 
@@ -140,96 +123,11 @@ export default function Behaviours({ importedDataInView }) {
     }
   }
 
-  function hasFunnels() {
-    return site.funnels.length > 0 && site.funnelsAvailable
-  }
-
-  function tabFunnelPicker() {
-    return (
-      <Menu as="div" className="relative inline-block text-left">
-        <BlurMenuButtonOnEscape targetRef={buttonRef} />
-        <div>
-          <Menu.Button
-            ref={buttonRef}
-            className="inline-flex justify-between focus:outline-none"
-          >
-            <span className={mode == FUNNELS ? ACTIVE_CLASS : DEFAULT_CLASS}>
-              Funnels
-            </span>
-            <ChevronDownIcon
-              className="-mr-1 ml-1 h-4 w-4"
-              aria-hidden="true"
-            />
-          </Menu.Button>
-        </div>
-
-        <Transition
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="opacity-0 scale-95"
-          enterTo="opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="opacity-100 scale-100"
-          leaveTo="opacity-0 scale-95"
-        >
-          <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-96 max-h-72 overflow-auto rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-            <div className="py-1">
-              {funnelNames.map((funnelName) => {
-                return (
-                  <Menu.Item key={funnelName}>
-                    {({ active }) => (
-                      <span
-                        onClick={setFunnel(funnelName)}
-                        className={classNames(
-                          active
-                            ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer'
-                            : 'text-gray-700 dark:text-gray-200',
-                          'block px-4 py-2 text-sm',
-                          mode === FUNNELS && selectedFunnel === funnelName
-                            ? 'font-bold text-gray-500'
-                            : ''
-                        )}
-                      >
-                        {funnelName}
-                      </span>
-                    )}
-                  </Menu.Item>
-                )
-              })}
-            </div>
-          </Menu.Items>
-        </Transition>
-      </Menu>
-    )
-  }
-
-  function tabSwitcher(toMode, displayName) {
-    const className = classNames({
-      [ACTIVE_CLASS]: mode == toMode,
-      [DEFAULT_CLASS]: mode !== toMode
-    })
-    const setTab = () => {
-      storage.setItem(tabKey, toMode)
-      setMode(toMode)
+  function setTabFactory(tab) {
+    return () => {
+      storage.setItem(tabKey, tab)
+      setMode(tab)
     }
-
-    return (
-      <div className={className} onClick={setTab}>
-        {displayName}
-      </div>
-    )
-  }
-
-  function tabs() {
-    return (
-      <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS, 'Goals')}
-        {isEnabled(PROPS) && tabSwitcher(PROPS, 'Properties')}
-        {isEnabled(FUNNELS) &&
-          Funnel &&
-          (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
-      </div>
-    )
   }
 
   function afterFetchData(apiResponse) {
@@ -443,24 +341,63 @@ export default function Behaviours({ importedDataInView }) {
     }
   }
 
-  if (mode) {
-    return (
-      <div className="items-start justify-between block w-full mt-6 md:flex">
-        <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
-          <div className="flex justify-between w-full">
-            <div className="flex gap-x-1">
-              <h3 className="font-bold dark:text-gray-100">
-                {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
-              </h3>
-              {renderImportedQueryUnsupportedWarning()}
-            </div>
-            {tabs()}
-          </div>
-          {renderContent()}
-        </div>
-      </div>
-    )
-  } else {
+  if (!mode) {
     return null
   }
+
+  return (
+    <div className="items-start justify-between block w-full mt-6 md:flex relative">
+      <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
+        <div className="flex justify-between w-full">
+          <div className="flex gap-x-1">
+            <h3 className="font-bold dark:text-gray-100">
+              {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
+            </h3>
+            {renderImportedQueryUnsupportedWarning()}
+          </div>
+          <TabWrapper>
+            {isEnabled(CONVERSIONS) && (
+              <TabButton
+                active={mode === CONVERSIONS}
+                onClick={setTabFactory(CONVERSIONS)}
+              >
+                Goals
+              </TabButton>
+            )}
+            {isEnabled(PROPS) && (
+              <TabButton active={mode === PROPS} onClick={setTabFactory(PROPS)}>
+                Properties
+              </TabButton>
+            )}
+            {isEnabled(FUNNELS) &&
+              Funnel &&
+              (site.funnels.length > 0 && site.funnelsAvailable ? (
+                <DropdownTabButton
+                  className="md:relative"
+                  transitionClassName="md:left-auto md:w-96 md:origin-top-right"
+                  active={mode === FUNNELS}
+                  options={site.funnels.map(({ name }) => ({
+                    label: name,
+                    onClick: setFunnelFactory(name),
+                    selected: mode === FUNNELS && selectedFunnel === name
+                  }))}
+                  collectionTitle="Funnels"
+                  searchable={true}
+                >
+                  Funnels
+                </DropdownTabButton>
+              ) : (
+                <TabButton
+                  active={mode === FUNNELS}
+                  onClick={setTabFactory(FUNNELS)}
+                >
+                  Funnels
+                </TabButton>
+              ))}
+          </TabWrapper>
+        </div>
+        {renderContent()}
+      </div>
+    </div>
+  )
 }

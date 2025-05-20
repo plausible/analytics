@@ -207,7 +207,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:href, :string, default: "#")
   attr(:new_tab, :boolean, default: false)
   attr(:class, :string, default: "")
-  attr(:rest, :global)
+  attr(:rest, :global, include: ~w(patch))
   attr(:method, :string, default: "get")
   slot(:inner_block)
 
@@ -592,6 +592,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :truncate, :boolean, default: false
   attr :max_width, :string, default: ""
   attr :height, :string, default: ""
+  attr :class, :string, default: ""
   attr :actions, :boolean, default: nil
   attr :hide_on_mobile, :boolean, default: nil
   attr :rest, :global
@@ -614,7 +615,8 @@ defmodule PlausibleWeb.Components.Generic do
         @truncate && "truncate",
         @max_width,
         @actions && "flex text-right justify-end",
-        @hide_on_mobile && "hidden md:table-cell"
+        @hide_on_mobile && "hidden md:table-cell",
+        @class
       ]}
       {@rest}
     >
@@ -732,10 +734,10 @@ defmodule PlausibleWeb.Components.Generic do
 
   def filter_bar(assigns) do
     ~H"""
-    <div class="mb-6 flex items-center justify-between">
-      <div class="text-gray-800 inline-flex items-center">
-        <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
-          <form id="filter-form" phx-change="filter" class="flex items-center">
+    <div class="mb-6 flex items-center justify-between" x-data>
+      <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
+        <form id="filter-form" phx-change="filter" class="flex items-center">
+          <div class="text-gray-800 inline-flex items-center">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
             </div>
@@ -744,8 +746,15 @@ defmodule PlausibleWeb.Components.Generic do
               name="filter-text"
               id="filter-text"
               class="w-36 sm:w-full pl-8 text-sm shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
-              placeholder={@placeholder}
+              placeholder="Press / to search"
+              x-ref="filter_text"
+              phx-debounce={200}
+              autocomoplete="off"
+              x-on:keydown.prevent.slash.window="$refs.filter_text.focus(); $refs.filter_text.select();"
+              x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter?.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
               value={@filter_text}
+              x-on:focus={"$refs.filter_text.placeholder = '#{@placeholder}';"}
+              x-on:blur="$refs.filter_text.placeholder = 'Press / to search';"
             />
 
             <Heroicons.backspace
@@ -753,9 +762,10 @@ defmodule PlausibleWeb.Components.Generic do
               class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
               phx-click="reset-filter-text"
               id="reset-filter"
+              x-ref="reset_filter"
             />
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
       {render_slot(@inner_block)}
     </div>
@@ -781,6 +791,48 @@ defmodule PlausibleWeb.Components.Generic do
     <.h2 class={["text-lg font-medium text-gray-900 dark:text-gray-100 leading-7", @class]}>
       {render_slot(@inner_block)}
     </.h2>
+    """
+  end
+
+  alias Phoenix.LiveView.JS
+
+  slot :inner_block, required: true
+
+  def disclosure(assigns) do
+    ~H"""
+    <div>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  slot :inner_block, required: true
+  attr :class, :any, default: nil
+
+  def disclosure_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      id="disclosure-button"
+      data-open="false"
+      phx-click={
+        JS.toggle(to: "#disclosure-panel")
+        |> JS.toggle_attribute({"data-open", "true", "false"}, to: "#disclosure-button")
+      }
+      class={@class}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  def disclosure_panel(assigns) do
+    ~H"""
+    <div id="disclosure-panel" style="display: none;">
+      {render_slot(@inner_block)}
+    </div>
     """
   end
 end

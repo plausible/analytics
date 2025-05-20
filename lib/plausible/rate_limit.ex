@@ -10,16 +10,14 @@ defmodule Plausible.RateLimit do
   Starts the process that creates and cleans the ETS table.
 
   Accepts the following options:
-    - `GenServer.options()`
+    - `GenServer.option()`
     - `:table` for the ETS table name, defaults to `#{__MODULE__}`
     - `:clean_period` for how often to perform garbage collection
   """
   @spec start_link([GenServer.option() | {:table, atom} | {:clean_period, pos_integer}]) ::
           GenServer.on_start()
   def start_link(opts) do
-    {gen_opts, opts} =
-      Keyword.split(opts, [:debug, :name, :timeout, :spawn_opt, :hibernate_after])
-
+    {gen_opts, opts} = Keyword.split(opts, [:debug, :name, :spawn_opt, :hibernate_after])
     GenServer.start_link(__MODULE__, opts, gen_opts)
   end
 
@@ -36,7 +34,25 @@ defmodule Plausible.RateLimit do
     bucket = div(now(), scale)
     full_key = {key, bucket}
     expires_at = (bucket + 1) * scale
-    count = :ets.update_counter(table, full_key, increment, {full_key, 0, expires_at})
+
+    count =
+      case :ets.lookup(table, full_key) do
+        [{_, counter, _expires_at}] ->
+          :atomics.add_get(counter, 1, increment)
+
+        [] ->
+          counter = :atomics.new(1, signed: false)
+
+          case :ets.insert_new(table, {full_key, counter, expires_at}) do
+            true ->
+              :atomics.add_get(counter, 1, increment)
+
+            false ->
+              [{_, counter, _expires_at}] = :ets.lookup(table, full_key)
+              :atomics.add_get(counter, 1, increment)
+          end
+      end
+
     if count <= limit, do: {:allow, count}, else: {:deny, limit}
   end
 
@@ -51,7 +67,7 @@ defmodule Plausible.RateLimit do
         :set,
         :public,
         {:read_concurrency, true},
-        {:write_concurrency, true},
+        {:write_concurrency, :auto},
         {:decentralized_counters, true}
       ])
 

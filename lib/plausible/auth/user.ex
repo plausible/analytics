@@ -47,6 +47,11 @@ defmodule Plausible.Auth.User do
     has_many :owner_memberships, Plausible.Teams.Membership, where: [role: :owner]
     has_many :owned_teams, through: [:owner_memberships, :team]
 
+    on_ce do
+      # we only need this for backfill teams migration to work; let's figure out how to safely remove later on
+      field :trial_expiry_date, :date
+    end
+
     timestamps()
   end
 
@@ -180,6 +185,10 @@ defmodule Plausible.Auth.User do
       |> Base.encode16(case: :lower)
 
     Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
+  end
+
+  def profile_img_url(email) when is_binary(email) do
+    profile_img_url(%__MODULE__{email: email})
   end
 
   defp validate_email_changed(changeset) do

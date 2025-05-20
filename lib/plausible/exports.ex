@@ -8,15 +8,14 @@ defmodule Plausible.Exports do
   import Ecto.Query
 
   @doc "Schedules CSV export job to S3 storage"
-  @spec schedule_s3_export(pos_integer, pos_integer | nil, String.t()) ::
+  @spec schedule_s3_export(pos_integer, String.t()) ::
           {:ok, Oban.Job.t()} | {:error, :no_data}
-  def schedule_s3_export(site_id, current_user_id, email_to) do
+  def schedule_s3_export(site_id, email_to) do
     with :ok <- ensure_has_data(site_id) do
       args = %{
         "storage" => "s3",
         "site_id" => site_id,
         "email_to" => email_to,
-        "current_user_id" => current_user_id,
         "s3_bucket" => Plausible.S3.exports_bucket(),
         "s3_path" => s3_export_key(site_id)
       }
@@ -209,13 +208,13 @@ defmodule Plausible.Exports do
   Builds Ecto queries to export data from `events_v2` and `sessions_v2`
   tables into the format of `imported_*` tables for a website.
   """
-  @spec export_queries(pos_integer, pos_integer | nil,
+  @spec export_queries(pos_integer,
           extname: String.t(),
           date_range: Date.Range.t(),
           timezone: String.t()
         ) ::
           %{String.t() => Ecto.Query.t()}
-  def export_queries(site_id, current_user_id, opts \\ []) do
+  def export_queries(site_id, opts \\ []) do
     extname = opts[:extname] || ".csv"
     date_range = opts[:date_range]
     timezone = opts[:timezone] || "UTC"
@@ -234,8 +233,7 @@ defmodule Plausible.Exports do
     %{
       filename.("imported_visitors") => export_visitors_q(site_id, timezone, date_range),
       filename.("imported_sources") => export_sources_q(site_id, timezone, date_range),
-      filename.("imported_pages") =>
-        export_pages_q(site_id, current_user_id, timezone, date_range),
+      filename.("imported_pages") => export_pages_q(site_id, timezone, date_range),
       filename.("imported_entry_pages") => export_entry_pages_q(site_id, timezone, date_range),
       filename.("imported_exit_pages") => export_exit_pages_q(site_id, timezone, date_range),
       filename.("imported_custom_events") =>
@@ -414,9 +412,7 @@ defmodule Plausible.Exports do
       ]
   end
 
-  defp export_pages_q(site_id, current_user_id, timezone, date_range) do
-    _will_be_used_for_time_on_page_flag = current_user_id
-
+  defp export_pages_q(site_id, timezone, date_range) do
     base_q =
       from(e in sampled("events_v2"),
         where: ^export_filter(site_id, date_range),
@@ -452,20 +448,64 @@ defmodule Plausible.Exports do
     from(e in base_q,
       left_join: s in subquery(scroll_depth_q),
       on: s.date == selected_as(:date) and s.page == selected_as(:page),
-      select: [
-        date(e.timestamp, ^timezone),
-        selected_as(fragment("any(?)", e.hostname), :hostname),
-        selected_as(e.pathname, :page),
-        selected_as(
-          scale_sample(fragment("uniq(?)", e.session_id)),
-          :visits
-        ),
-        visitors(e),
-        selected_as(scale_sample(fragment("count()")), :pageviews),
-        selected_as(fragment("any(?)", s.total_scroll_depth), :total_scroll_depth),
-        selected_as(fragment("any(?)", s.total_scroll_depth_visits), :total_scroll_depth_visits)
-      ]
+      select: %{
+        date: date(e.timestamp, ^timezone),
+        hostname: selected_as(fragment("any(?)", e.hostname), :hostname),
+        page: selected_as(e.pathname, :page),
+        visits:
+          selected_as(
+            scale_sample(fragment("uniq(?)", e.session_id)),
+            :visits
+          ),
+        visitors: visitors(e),
+        pageviews: selected_as(scale_sample(fragment("count()")), :pageviews),
+        total_scroll_depth:
+          selected_as(fragment("any(?)", s.total_scroll_depth), :total_scroll_depth),
+        total_scroll_depth_visits:
+          selected_as(fragment("any(?)", s.total_scroll_depth_visits), :total_scroll_depth_visits)
+      }
     )
+    |> add_time_on_page_columns(site_id, timezone, date_range)
+  end
+
+  defp add_time_on_page_columns(q, site_id, timezone, date_range) do
+    site = Plausible.Repo.get(Plausible.Site, site_id)
+
+    if Plausible.Stats.TimeOnPage.new_time_on_page_visible?(site) do
+      cutoff = Plausible.Stats.TimeOnPage.legacy_time_on_page_cutoff(site)
+
+      engagements_q =
+        from(e in sampled("events_v2"),
+          where: ^export_filter(site_id, date_range),
+          where: e.name == "engagement",
+          group_by: [selected_as(:date), selected_as(:page)],
+          order_by: selected_as(:date),
+          select: %{
+            date: date(e.timestamp, ^timezone),
+            page: selected_as(e.pathname, :page),
+            total_time_on_page:
+              fragment(
+                "toUInt64(round(sumIf(?, ? >= ?) / 1000))",
+                e.engagement_time,
+                e.timestamp,
+                ^cutoff
+              ),
+            total_time_on_page_visits:
+              fragment("uniqIf(?, ? >= ?)", e.session_id, e.timestamp, ^cutoff)
+          }
+        )
+
+      q
+      |> join(:left, [], s in subquery(engagements_q),
+        on: s.date == selected_as(:date) and s.page == selected_as(:page)
+      )
+      |> select_merge_as([..., s], %{
+        total_time_on_page: fragment("any(?)", s.total_time_on_page),
+        total_time_on_page_visits: fragment("any(?)", s.total_time_on_page_visits)
+      })
+    else
+      q
+    end
   end
 
   defp export_entry_pages_q(site_id, timezone, date_range) do

@@ -1,6 +1,6 @@
-const { expectPlausibleInAction, hideCurrentTab, hideAndShowCurrentTab } = require('./support/test-utils')
-const { test } = require('@playwright/test')
-const { LOCAL_SERVER_ADDR } = require('./support/server')
+import { expectPlausibleInAction, hideCurrentTab, hideAndShowCurrentTab } from './support/test-utils'
+import { test } from '@playwright/test'
+import { LOCAL_SERVER_ADDR } from './support/server'
 
 test.describe('scroll depth (engagement events)', () => {
   test('sends scroll_depth in the pageleave payload when navigating to the next page', async ({ page }) => {

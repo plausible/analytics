@@ -87,6 +87,10 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     wrap_alias([i], %{bounces: sum(i.bounces), __internal_visits: sum(i.visits)})
   end
 
+  defp select_metric(:exit_rate, "imported_exit_pages", _query) do
+    wrap_alias([i], %{__internal_visits: sum(i.exits)})
+  end
+
   defp select_metric(:visit_duration, "imported_pages", _query) do
     wrap_alias([i], %{visit_duration: 0})
   end
@@ -396,6 +400,12 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         s.__internal_total_time_on_page_visits + i.total_time_on_page_visits
     })
     |> Map.merge(time_on_page_metric(query))
+  end
+
+  defp joined_metric(:exit_rate, _query) do
+    wrap_alias([s, i], %{
+      __internal_visits: s.__internal_visits + i.__internal_visits
+    })
   end
 
   # Ignored as it's calculated separately

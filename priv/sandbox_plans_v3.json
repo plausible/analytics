@@ -1,0 +1,282 @@
+[
+  {
+    "kind": "growth",
+    "generation": 3,
+    "monthly_pageview_limit": 10000,
+    "monthly_product_id": "78073",
+    "yearly_product_id": "78074",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "growth",
+    "generation": 3,
+    "monthly_pageview_limit": 100000,
+    "monthly_product_id": "78075",
+    "yearly_product_id": "78076",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "growth",
+    "generation": 3,
+    "monthly_pageview_limit": 200000,
+    "monthly_product_id": "78077",
+    "yearly_product_id": "78078",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "growth",
+    "generation": 3,
+    "monthly_pageview_limit": 500000,
+    "monthly_product_id": "78079",
+    "yearly_product_id": "78080",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "growth",
+    "generation": 3,
+    "monthly_pageview_limit": 1000000,
+    "monthly_product_id": "78081",
+    "yearly_product_id": "78082",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "growth",
+    "generation": 3,
+    "monthly_pageview_limit": 2000000,
+    "monthly_product_id": "78083",
+    "yearly_product_id": "78084",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "growth",
+    "generation": 3,
+    "monthly_pageview_limit": 5000000,
+    "monthly_product_id": "78085",
+    "yearly_product_id": "78086",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "growth",
+    "generation": 3,
+    "monthly_pageview_limit": 10000000,
+    "monthly_product_id": "78087",
+    "yearly_product_id": "78088",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "stats_api",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "business",
+    "generation": 3,
+    "monthly_pageview_limit": 10000,
+    "monthly_product_id": "78089",
+    "yearly_product_id": "78090",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "revenue_goals",
+      "funnels",
+      "stats_api",
+      "site_segments",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "business",
+    "generation": 3,
+    "monthly_pageview_limit": 100000,
+    "monthly_product_id": "78091",
+    "yearly_product_id": "78092",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "revenue_goals",
+      "funnels",
+      "stats_api",
+      "site_segments",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "business",
+    "generation": 3,
+    "monthly_pageview_limit": 200000,
+    "monthly_product_id": "78093",
+    "yearly_product_id": "78094",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "revenue_goals",
+      "funnels",
+      "stats_api",
+      "site_segments",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "business",
+    "generation": 3,
+    "monthly_pageview_limit": 500000,
+    "monthly_product_id": "78095",
+    "yearly_product_id": "78096",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "revenue_goals",
+      "funnels",
+      "stats_api",
+      "site_segments",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "business",
+    "generation": 3,
+    "monthly_pageview_limit": 1000000,
+    "monthly_product_id": "78097",
+    "yearly_product_id": "78098",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "revenue_goals",
+      "funnels",
+      "stats_api",
+      "site_segments",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "business",
+    "generation": 3,
+    "monthly_pageview_limit": 2000000,
+    "monthly_product_id": "78099",
+    "yearly_product_id": "78100",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "revenue_goals",
+      "funnels",
+      "stats_api",
+      "site_segments",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "business",
+    "generation": 3,
+    "monthly_pageview_limit": 5000000,
+    "monthly_product_id": "78101",
+    "yearly_product_id": "78102",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "revenue_goals",
+      "funnels",
+      "stats_api",
+      "site_segments",
+      "teams",
+      "shared_links"
+    ]
+  },
+  {
+    "kind": "business",
+    "generation": 3,
+    "monthly_pageview_limit": 10000000,
+    "monthly_product_id": "78107",
+    "yearly_product_id": "78109",
+    "site_limit": 50,
+    "team_member_limit": "unlimited",
+    "features": [
+      "goals",
+      "props",
+      "revenue_goals",
+      "funnels",
+      "stats_api",
+      "site_segments",
+      "teams",
+      "shared_links"
+    ]
+  }
+]

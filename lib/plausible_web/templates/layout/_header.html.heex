@@ -37,10 +37,18 @@
               }>
                 <.styled_link
                   class="text-sm mr-6"
-                  href={PlausibleWeb.Endpoint.url() <> "/crm/sites/site/#{@conn.assigns[:site].id}"}
+                  href={PlausibleWeb.Endpoint.url() <> "/crm/sites/site/#{@conn.assigns.site.id}"}
                   new_tab={true}
                 >
                   CRM
+                </.styled_link>
+
+                <.styled_link
+                  class="text-sm mr-6"
+                  href={"/cs/sites/site/#{@conn.assigns.site.id}"}
+                  new_tab={true}
+                >
+                  CS
                 </.styled_link>
               </li>
               <li
@@ -73,7 +81,6 @@
                       </p>
                     </.dropdown_item>
                     <.team_switcher
-                      :if={Plausible.Teams.enabled?(@current_user)}
                       conn={@conn}
                       teams={@teams}
                       my_team={@my_team}
@@ -85,10 +92,7 @@
                       Account Settings
                     </.dropdown_item>
 
-                    <div :if={
-                      @my_team && Plausible.Teams.enabled?(@current_user) &&
-                        @my_team.id == @current_team.id
-                    }>
+                    <div :if={@my_team && @my_team.id == @current_team.id}>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span class="flex-1">
                           Create a Team
@@ -100,10 +104,7 @@
                       <.dropdown_divider />
                     </div>
 
-                    <div :if={
-                      Plausible.Teams.enabled?(@current_user) and
-                        Plausible.Teams.setup?(@current_team)
-                    }>
+                    <div :if={Plausible.Teams.setup?(@current_team)}>
                       <.dropdown_item
                         class="flex"
                         href={Routes.settings_path(@conn, :team_general)}

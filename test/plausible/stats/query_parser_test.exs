@@ -27,12 +27,20 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     first: DateTime.new!(~D[2021-04-28], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
   }
+  @date_range_10d %DateTimeRange{
+    first: DateTime.new!(~D[2021-04-25], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
+  }
   @date_range_30d %DateTimeRange{
     first: DateTime.new!(~D[2021-04-05], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-04], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_month %DateTimeRange{
     first: DateTime.new!(~D[2021-05-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
+  }
+  @date_range_3mo %DateTimeRange{
+    first: DateTime.new!(~D[2021-03-01], ~T[00:00:00], "Etc/UTC"),
     last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_6mo %DateTimeRange{
@@ -134,7 +142,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       %{
         "site_id" => site.domain,
         "metrics" => [
-          "time_on_page",
           "visitors",
           "pageviews",
           "visits",
@@ -148,7 +155,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         site,
         %{
           metrics: [
-            :time_on_page,
             :visitors,
             :pageviews,
             :visits,
@@ -166,15 +172,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         },
         :internal
       )
-    end
-
-    test "time_on_page is not a valid metric in public API", %{site: site} do
-      %{
-        "site_id" => site.domain,
-        "metrics" => ["time_on_page"],
-        "date_range" => "all"
-      }
-      |> check_error(site, "#/metrics/0: Invalid metric \"time_on_page\"")
     end
 
     test "same metric queried multiple times", %{site: site} do
@@ -593,8 +590,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           timezone: site.timezone,
           include: @default_include,
           pagination: %{limit: 10_000, offset: 0}
-        },
-        :internal
+        }
       )
     end
 
@@ -609,8 +605,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters.",
-        :internal
+        "Invalid filters. Behavioral filters (has_done, has_not_done) can only be used with event dimension filters."
       )
     end
 
@@ -625,8 +620,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested.",
-        :internal
+        "Invalid filters. Behavioral filters (has_done, has_not_done) cannot be nested."
       )
     end
 
@@ -1239,8 +1233,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           timezone: site.timezone,
           include: @default_include,
           pagination: %{limit: 10_000, offset: 0}
-        },
-        :internal
+        }
       )
       |> check_goals(
         preloaded_goals: %{all: ["Signup"], matching_toplevel_filters: ["Signup"]},
@@ -1270,8 +1263,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     test "parsing shortcut options", %{site: site} do
       check_date_range(%{"date_range" => "day"}, site, @date_range_day)
       check_date_range(%{"date_range" => "7d"}, site, @date_range_7d)
+      check_date_range(%{"date_range" => "10d"}, site, @date_range_10d)
       check_date_range(%{"date_range" => "30d"}, site, @date_range_30d)
       check_date_range(%{"date_range" => "month"}, site, @date_range_month)
+      check_date_range(%{"date_range" => "3mo"}, site, @date_range_3mo)
       check_date_range(%{"date_range" => "6mo"}, site, @date_range_6mo)
       check_date_range(%{"date_range" => "12mo"}, site, @date_range_12mo)
       check_date_range(%{"date_range" => "year"}, site, @date_range_year)
@@ -1338,11 +1333,17 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "parsing invalid custom date range with invalid dates", %{site: site} do
+      %{"site_id" => site.domain, "date_range" => "-1d", "metrics" => ["visitors"]}
+      |> check_error(site, "#/date_range: Invalid date range \"-1d\"")
+
       %{"site_id" => site.domain, "date_range" => "foo", "metrics" => ["visitors"]}
       |> check_error(site, "#/date_range: Invalid date range \"foo\"")
 
       %{"site_id" => site.domain, "date_range" => ["21415-00", "eee"], "metrics" => ["visitors"]}
       |> check_error(site, "#/date_range: Invalid date range [\"21415-00\", \"eee\"]")
+
+      %{"site_id" => site.domain, "date_range" => "999999999mo", "metrics" => ["visitors"]}
+      |> check_error(site, "Invalid date_range \"999999999mo\"")
     end
 
     test "custom date range is invalid when timestamps do not include timezone info", %{
@@ -1389,8 +1390,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       for {date_range_shortcut, expected_date_range} <- [
             {"day", @date_range_day},
             {"7d", @date_range_7d},
+            {"10d", @date_range_10d},
             {"30d", @date_range_30d},
             {"month", @date_range_month},
+            {"3mo", @date_range_3mo},
             {"6mo", @date_range_6mo},
             {"12mo", @date_range_12mo},
             {"year", @date_range_year}
@@ -1800,6 +1803,73 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "exit_rate metric" do
+    test "fails validation without visit:exit_page dimension", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `exit_rate` requires a `\"visit:exit_page\"` dimension. No other dimensions are allowed.",
+        :internal
+      )
+    end
+
+    test "fails validation with event only filters", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate"],
+        "dimensions" => ["visit:exit_page"],
+        "filters" => [["is", "event:page", ["/"]]],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `exit_rate` cannot be queried when filtering on event dimensions.",
+        :internal
+      )
+    end
+
+    test "fails validation with event metrics", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate", "pageviews"],
+        "dimensions" => ["visit:exit_page"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Event metric(s) `pageviews` cannot be queried along with session dimension(s) `visit:exit_page`",
+        :internal
+      )
+    end
+
+    test "passes validation", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["exit_rate"],
+        "dimensions" => ["visit:exit_page"],
+        "date_range" => "all"
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:exit_rate],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["visit:exit_page"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: @default_include,
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+  end
+
   describe "scroll_depth metric" do
     test "fails validation on its own", %{site: site} do
       %{
@@ -1924,6 +1994,74 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_error(
         site,
         "Metric `views_per_visit` cannot be queried with `dimensions`."
+      )
+    end
+  end
+
+  describe "time_on_page metric" do
+    test "fails validation on its own", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `time_on_page` can only be queried with event:page filters or dimensions."
+      )
+    end
+
+    test "succeeds with event:page dimension", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all",
+        "dimensions" => ["time", "event:page"]
+      }
+      |> check_success(site, %{
+        metrics: [:time_on_page],
+        utc_time_range: @date_range_day,
+        filters: [],
+        dimensions: ["time", "event:page"],
+        order_by: nil,
+        timezone: site.timezone,
+        include: @default_include,
+        pagination: %{limit: 10_000, offset: 0}
+      })
+    end
+
+    test "succeeds with event:page filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:time_on_page],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:page", ["/"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: @default_include,
+        pagination: %{limit: 10_000, offset: 0}
+      })
+    end
+
+    test "fails when using only a behavioral filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all",
+        "filters" => [
+          ["has_done", ["is", "event:page", ["/"]]]
+        ]
+      }
+      |> check_error(
+        site,
+        "Metric `time_on_page` can only be queried with event:page filters or dimensions.",
+        :internal
       )
     end
   end
@@ -2534,6 +2672,19 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           include: @default_include,
           pagination: %{limit: 10_000, offset: 0}
         }
+      )
+    end
+
+    test "validation fails with string segment ids", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "segment", ["123"]]]
+      }
+      |> check_error(
+        site,
+        "Invalid filter '[\"is\", \"segment\", [\"123\"]]'."
       )
     end
   end

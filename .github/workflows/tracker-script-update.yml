@@ -1,0 +1,109 @@
+name: "Tracker script update"
+
+on:
+  pull_request:
+    paths:
+      - 'tracker/src/**'
+      - 'tracker/package.json'
+      - 'tracker/package-lock.json'
+
+jobs:
+  tracker-script-update:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: Checkout master for comparison
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: master-branch
+
+      - name: Install jq and clickhouse-local
+        run: |
+          sudo apt-get install apt-transport-https ca-certificates dirmngr
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8919F6BD2B48D754
+          echo "deb https://packages.clickhouse.com/deb stable main" | sudo tee \
+              /etc/apt/sources.list.d/clickhouse.list
+          sudo apt-get update
+
+          sudo apt-get install jq clickhouse-server -y
+
+      - name: Compare and increment tracker_script_version
+        id: increment
+        run: |
+          cd tracker
+          # Get current version from PR branch
+          PR_VERSION=$(jq '.tracker_script_version' package.json)
+
+          # Get version from master, default to 0 if not present
+          MASTER_VERSION=$(jq '.tracker_script_version // 0' ../master-branch/tracker/package.json)
+
+          echo "PR tracker_script_version: $PR_VERSION"
+          echo "Master tracker_script_version: $MASTER_VERSION"
+
+          # Calculate new version
+          NEW_VERSION=$((PR_VERSION + 1))
+
+          # Check version conditions
+          if [ $PR_VERSION -lt $MASTER_VERSION ]; then
+            echo "::error::PR tracker tracker_script_version ($PR_VERSION) is less than master ($MASTER_VERSION) and cannot be incremented."
+            echo "::error::Rebase or merge master into your PR to fix this."
+            exit 1
+          elif [ $NEW_VERSION -eq $((MASTER_VERSION + 1)) ]; then
+            echo "Incrementing version from $PR_VERSION to $NEW_VERSION"
+            jq ".tracker_script_version = $NEW_VERSION" package.json > package.json.tmp
+            mv package.json.tmp package.json
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Already incremented tracker_script_version in PR, skipping."
+            echo "version=$PR_VERSION" >> $GITHUB_OUTPUT
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5
+        if: steps.increment.outputs.changed == 'true'
+        with:
+          message: 'chore: Bump tracker_script_version to ${{ steps.increment.outputs.version }}'
+          github_token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
+          add: |
+            - tracker/package.json
+
+      - name: Compile tracker code
+        run: |
+          cd master-branch/tracker
+          npm install
+          node compile.js --suffix master
+          cp ../priv/tracker/js/plausible* ../../priv/tracker/js/
+
+          cd ../../tracker
+          npm install
+          node compile.js --suffix pr
+
+      - name: Run script size analyzer and set output
+        id: analyze
+        run: |
+          cd tracker
+          OUT=$(node compiler/analyze-sizes.js --baselineSuffix master --currentSuffix pr)
+          # Set multiline output
+          echo "sizes<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment script size report on PR
+        uses: thollander/actions-comment-pull-request@v3.0.1
+        with:
+          message: |
+            ${{ steps.analyze.outputs.sizes }}
+          comment-tag: size-report

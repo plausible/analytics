@@ -3,6 +3,8 @@ defmodule Plausible.SiteAdmin do
 
   import Ecto.Query
 
+  alias Plausible.Teams
+
   def ordering(_schema) do
     [desc: :inserted_at]
   end
@@ -133,7 +135,7 @@ defmodule Plausible.SiteAdmin do
 
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
          {:ok, _} <-
-           Plausible.Site.Memberships.bulk_create_invitation(
+           Teams.Invitations.InviteToSite.bulk_invite(
              sites,
              inviter,
              new_owner.email,
@@ -157,12 +159,7 @@ defmodule Plausible.SiteAdmin do
   defp transfer_ownership_direct(_conn, sites, %{"email" => email} = params) do
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
          {:ok, team} <- get_team_by_id(params["team_id"]),
-         {:ok, _} <-
-           Plausible.Site.Memberships.bulk_transfer_ownership_direct(
-             sites,
-             new_owner,
-             team
-           ) do
+         {:ok, _} <- Teams.Sites.Transfer.bulk_transfer(sites, new_owner, team) do
       :ok
     else
       {:error, :user_not_found} ->
@@ -191,7 +188,7 @@ defmodule Plausible.SiteAdmin do
   defp get_team_by_id(id) when is_binary(id) and byte_size(id) > 0 do
     case Ecto.UUID.cast(id) do
       {:ok, team_id} ->
-        {:ok, Plausible.Teams.get(team_id)}
+        {:ok, Teams.get(team_id)}
 
       :error ->
         {:error, :invalid_team_id}

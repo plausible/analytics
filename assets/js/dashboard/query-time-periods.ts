@@ -16,6 +16,7 @@ import {
   isThisMonth,
   isThisYear,
   isToday,
+  isTodayOrYesterday,
   lastMonth,
   nowForSite,
   parseNaiveDate,
@@ -31,7 +32,7 @@ export enum QueryPeriod {
   '7d' = '7d',
   '28d' = '28d',
   '30d' = '30d',
-  '90d' = '90d',
+  '91d' = '91d',
   '6mo' = '6mo',
   '12mo' = '12mo',
   'year' = 'year',
@@ -360,15 +361,15 @@ export const getDatePeriodGroups = ({
         }
       ],
       [
-        ['Last 90 Days', 'N'],
+        ['Last 91 Days', 'N'],
         {
           search: (s) => ({
             ...s,
             ...clearedDateSearch,
-            period: QueryPeriod['90d'],
+            period: QueryPeriod['91d'],
             keybindHint: 'N'
           }),
-          isActive: ({ query }) => query.period === QueryPeriod['90d'],
+          isActive: ({ query }) => query.period === QueryPeriod['91d'],
           onEvent
         }
       ]
@@ -473,16 +474,19 @@ export const getDatePeriodGroups = ({
 
 export const getCompareLinkItem = ({
   query,
-  site
+  site,
+  onEvent
 }: {
   query: DashboardQuery
   site: PlausibleSite
+  onEvent: () => void
 }): LinkItem => [
   [
     isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare',
     'X'
   ],
   {
+    onEvent,
     search: getSearchToToggleComparison({ site, query }),
     isActive: () => false
   }
@@ -533,11 +537,13 @@ export function getSavedTimePreferencesFromStorage({
 }
 
 export function getDashboardTimeSettings({
+  site,
   searchValues,
   storedValues,
   defaultValues,
   segmentIsExpanded
 }: {
+  site: PlausibleSite
   searchValues: Record<'period' | 'comparison' | 'match_day_of_week', unknown>
   storedValues: ReturnType<typeof getSavedTimePreferencesFromStorage>
   defaultValues: Pick<
@@ -549,10 +555,12 @@ export function getDashboardTimeSettings({
   let period: QueryPeriod
   if (isValidPeriod(searchValues.period)) {
     period = searchValues.period
+  } else if (isValidPeriod(storedValues.period)) {
+    period = storedValues.period
+  } else if (isTodayOrYesterday(site.nativeStatsBegin)) {
+    period = QueryPeriod.day
   } else {
-    period = isValidPeriod(storedValues.period)
-      ? storedValues.period
-      : defaultValues.period
+    period = defaultValues.period
   }
 
   let comparison: ComparisonMode | null
@@ -606,8 +614,8 @@ export function getCurrentPeriodDisplayName({
   if (query.period === '30d') {
     return 'Last 30 days'
   }
-  if (query.period === '90d') {
-    return 'Last 90 days'
+  if (query.period === '91d') {
+    return 'Last 91 days'
   }
   if (query.period === 'month') {
     if (isThisMonth(site, query.date)) {

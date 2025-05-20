@@ -114,6 +114,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     Enum.flat_map(plan.features, fn feature_mod ->
       case feature_mod.name() do
         :goals -> ["Goals and custom events"]
+        :teams -> []
+        :shared_links -> []
         :stats_api -> ["Stats API (600 requests per hour)", "Looker Studio Connector"]
         :revenue_goals -> ["Ecommerce revenue attribution"]
         _ -> [feature_mod.display_name()]

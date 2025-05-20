@@ -3,7 +3,6 @@ import classNames from 'classnames'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import {
-  BlurMenuButtonOnEscape,
   isModifierPressed,
   isTyping,
   Keybind,
@@ -25,7 +24,7 @@ import {
 import { useMatch } from 'react-router-dom'
 import { rootRoute } from '../../router'
 import { Popover, Transition } from '@headlessui/react'
-import { popover } from '../../components/popover'
+import { popover, BlurMenuButtonOnEscape } from '../../components/popover'
 import {
   datemenuButtonClassName,
   DateMenuChevron,
@@ -121,7 +120,11 @@ const QueryPeriodMenuInner = ({
   const { query, expandedSegment } = useQueryContext()
 
   const groups = useMemo(() => {
-    const compareLink = getCompareLinkItem({ site, query })
+    const compareLink = getCompareLinkItem({
+      site,
+      query,
+      onEvent: closeDropdown
+    })
     return getDatePeriodGroups({
       site,
       onEvent: closeDropdown,
@@ -148,11 +151,11 @@ const QueryPeriodMenuInner = ({
     <>
       <QueryPeriodMenuKeybinds closeDropdown={closeDropdown} groups={groups} />
       <Transition
+        as="div"
         {...popover.transition.props}
         className={classNames(
-          'mt-2',
           popover.transition.classNames.fullwidth,
-          'md:left-auto md:w-56'
+          'mt-2 md:w-56 md:left-auto md:origin-top-right'
         )}
       >
         <Popover.Panel

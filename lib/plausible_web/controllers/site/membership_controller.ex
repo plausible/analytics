@@ -12,7 +12,8 @@ defmodule PlausibleWeb.Site.MembershipController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use Plausible
-  alias Plausible.Site.Memberships
+
+  alias Plausible.Teams
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -24,8 +25,8 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> Plausible.Sites.get_for_user!(conn.assigns.site.domain)
       |> Plausible.Repo.preload(:owners)
 
-    limit = Plausible.Teams.Billing.team_member_limit(site.team)
-    usage = Plausible.Teams.Billing.team_member_usage(site.team)
+    limit = Teams.Billing.team_member_limit(site.team)
+    usage = Teams.Billing.team_member_usage(site.team)
     below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
 
     render(
@@ -45,14 +46,19 @@ defmodule PlausibleWeb.Site.MembershipController do
       Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
       |> Plausible.Repo.preload(:owners)
 
-    case Memberships.create_invitation(site, conn.assigns.current_user, email, role) do
+    case Teams.Invitations.InviteToSite.invite(
+           site,
+           conn.assigns.current_user,
+           email,
+           role
+         ) do
       {:ok, invitation} ->
         conn
         |> put_flash(
           :success,
           "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{invitation.role}")}"
         )
-        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, :already_a_member} ->
         render(conn, "invite_member_form.html",
@@ -83,7 +89,7 @@ defmodule PlausibleWeb.Site.MembershipController do
 
         conn
         |> put_flash(:error, error_msg)
-        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
@@ -107,11 +113,16 @@ defmodule PlausibleWeb.Site.MembershipController do
     site =
       Plausible.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
-    case Memberships.create_invitation(site, conn.assigns.current_user, email, :owner) do
+    case Teams.Invitations.InviteToSite.invite(
+           site,
+           conn.assigns.current_user,
+           email,
+           :owner
+         ) do
       {:ok, _invitation} ->
         conn
         |> put_flash(:success, "Site transfer request has been sent to #{email}")
-        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, changeset} ->
         errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
@@ -126,7 +137,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> put_flash(:ttl, :timer.seconds(5))
         |> put_flash(:error_title, "Transfer error")
         |> put_flash(:error, message)
-        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
@@ -165,11 +176,9 @@ defmodule PlausibleWeb.Site.MembershipController do
       Plausible.Sites.get_for_user!(user, site_domain)
 
     destination_team =
-      Repo.one!(
-        Plausible.Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier)
-      )
+      Repo.one!(Teams.Users.teams_query(user, roles: [:admin, :owner], identifier: identifier))
 
-    case Memberships.AcceptInvitation.change_team(
+    case Teams.Sites.Transfer.change_team(
            site,
            conn.assigns.current_user,
            destination_team
@@ -177,18 +186,22 @@ defmodule PlausibleWeb.Site.MembershipController do
       :ok ->
         conn
         |> put_flash(:success, "Site team was changed")
-        |> redirect(external: Routes.site_path(conn, :index, __team: identifier))
+        |> redirect(to: Routes.site_path(conn, :index, __team: identifier))
 
       {:error, :no_plan} ->
         conn
         |> render_change_team_form(conn.assigns.current_user, site,
-          error: "This team has no subscription"
+          error:
+            "This team doesn't have a subscription. Please start a subscription for " <>
+              "the team first and then try moving the site again"
         )
 
       {:error, {:over_plan_limits, _}} ->
         conn
         |> render_change_team_form(conn.assigns.current_user, site,
-          error: "This team's subscription outgrows site usage"
+          error:
+            "This site's usage is over the limits of the team's subscription. " <>
+              "Please upgrade the team to an appropriate subscription and then try moving the site again"
         )
 
       {:error, _} ->
@@ -209,7 +222,7 @@ defmodule PlausibleWeb.Site.MembershipController do
   def update_role_by_user(conn, %{"id" => user_id, "new_role" => new_role_str}) do
     %{site: site, current_user: current_user, site_role: site_role} = conn.assigns
 
-    case Plausible.Teams.Memberships.update_role(
+    case Teams.Memberships.update_role(
            site,
            user_id,
            new_role_str,
@@ -220,7 +233,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         redirect_target =
           if guest_membership.team_membership.user_id == current_user.id and
                guest_membership.role == :viewer do
-            "/#{URI.encode_www_form(site.domain)}"
+            Routes.stats_path(conn, :stats, site.domain, [])
           else
             Routes.site_path(conn, :settings_people, site.domain)
           end
@@ -230,12 +243,12 @@ defmodule PlausibleWeb.Site.MembershipController do
           :success,
           "#{guest_membership.team_membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(to_string(guest_membership.role))}"
         )
-        |> redirect(external: redirect_target)
+        |> redirect(to: redirect_target)
 
       {:error, _} ->
         conn
         |> put_flash(:error, "You are not allowed to grant the #{new_role_str} role")
-        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
@@ -243,11 +256,11 @@ defmodule PlausibleWeb.Site.MembershipController do
     site = conn.assigns.site
 
     if user = Repo.get(Plausible.Auth.User, user_id) do
-      Plausible.Teams.Memberships.remove(site, user)
+      Teams.Memberships.remove(site, user)
 
       redirect_target =
         if user_id == conn.assigns[:current_user].id do
-          "/#{URI.encode_www_form(site.domain)}"
+          Routes.stats_path(conn, :index, site.domain, [])
         else
           Routes.site_path(conn, :settings_people, site.domain)
         end
@@ -257,14 +270,14 @@ defmodule PlausibleWeb.Site.MembershipController do
         :success,
         "#{user.name} has been removed from #{site.domain}"
       )
-      |> redirect(external: redirect_target)
+      |> redirect(to: redirect_target)
     else
       conn
       |> put_flash(
         :success,
         "User has been removed from #{site.domain}"
       )
-      |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
+      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 end
