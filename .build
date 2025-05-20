@@ -133,7 +133,6 @@ Plausible.License.html
 Plausible.Mailer.html
 Plausible.MigrationUtils.html
 Plausible.OpenTelemetry.Sampler.html
-Plausible.PaddleApi.Mock.html
 Plausible.Pagination.html
 Plausible.Plugins.API.Capabilities.html
 Plausible.Plugins.API.CustomProps.html
@@ -310,6 +309,8 @@ PlausibleWeb.AvatarController.html
 PlausibleWeb.BillingController.html
 PlausibleWeb.BillingView.html
 PlausibleWeb.Captcha.html
+PlausibleWeb.Components.Billing.LegacyPlanBenefits.html
+PlausibleWeb.Components.Billing.LegacyPlanBox.html
 PlausibleWeb.Components.Billing.PlanBenefits.html
 PlausibleWeb.Components.FirstDashboardLaunchBanner.html
 PlausibleWeb.Components.FlowProgress.html
@@ -364,6 +365,7 @@ PlausibleWeb.Live.GoalSettings.html
 PlausibleWeb.Live.ImportsExportsSettings.html
 PlausibleWeb.Live.Installation.html
 PlausibleWeb.Live.InstallationV2.html
+PlausibleWeb.Live.LegacyChoosePlan.html
 PlausibleWeb.Live.Plugins.API.Settings.html
 PlausibleWeb.Live.Plugins.API.TokenForm.html
 PlausibleWeb.Live.PropsSettings.Form.html
@@ -480,8 +482,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-8E89210E.js
-dist/sidebar_items-5123BE3F.js
+dist/search_data-2D80766E.js
+dist/sidebar_items-1ADD3C77.js
 index.html
 readme.html
 search.html

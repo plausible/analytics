@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-5123BE3F.js"></script>
+    <script src="dist/sidebar_items-1ADD3C77.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -169,7 +169,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#business_plans_for/1" data-no-tooltip translate="no">business_plans_for(subscription)</a>
+        <a href="#business_plans_for/2" data-no-tooltip translate="no">business_plans_for(subscription, legacy? \\ false)</a>
 
       </div>
 
@@ -217,7 +217,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#growth_plans_for/1" data-no-tooltip translate="no">growth_plans_for(subscription)</a>
+        <a href="#growth_plans_for/2" data-no-tooltip translate="no">growth_plans_for(subscription, legacy? \\ false)</a>
 
       </div>
 
@@ -235,20 +235,13 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#suggest/2" data-no-tooltip translate="no">suggest(team, usage_during_cycle)</a>
+        <a href="#suggest_volume/2" data-no-tooltip translate="no">suggest_volume(team, usage_during_cycle)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the most appropriate plan for a team based on its usage during a
-given cycle.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#suggest_by_usage/2" data-no-tooltip translate="no">suggest_by_usage(subscription, usage_during_cycle)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Returns the most appropriate monthly pageview volume for a given usage cycle.
+The cycle is either last 30 days (for trials) or last billing cycle for teams
+with an existing subscription.</p></div>
 
     </div>
 
@@ -296,7 +289,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">all()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L230" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L240" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -318,7 +311,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">available_plans_for(subscription, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L68" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L82" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -330,15 +323,17 @@ given plan and returns the new list of plans with completed information.</p></di
 
   </section>
 </section>
-<section class="detail" id="business_plans_for/1">
+<section class="detail" id="business_plans_for/2">
+
+    <span id="business_plans_for/1"></span>
 
   <div class="detail-header">
-    <a href="#business_plans_for/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#business_plans_for/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">business_plans_for(subscription)</h1>
+    <h1 class="signature" translate="no">business_plans_for(subscription, legacy? \\ false)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L57" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L68" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -358,7 +353,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">business_tier?(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L185" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L206" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -378,7 +373,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">find(product_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L100" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L121" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -398,7 +393,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">get_price_for(enterprise_plan, customer_ip)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L171" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L192" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -420,7 +415,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">get_regular_plan(subscription, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L159" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L180" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -440,7 +435,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">get_subscription_plan(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L110" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L131" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -462,15 +457,17 @@ given plan and returns the new list of plans with completed information.</p></di
 
   </section>
 </section>
-<section class="detail" id="growth_plans_for/1">
+<section class="detail" id="growth_plans_for/2">
+
+    <span id="growth_plans_for/1"></span>
 
   <div class="detail-header">
-    <a href="#growth_plans_for/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#growth_plans_for/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">growth_plans_for(subscription)</h1>
+    <h1 class="signature" translate="no">growth_plans_for(subscription, legacy? \\ false)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L42" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L50" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -481,7 +478,7 @@ given plan and returns the new list of plans with completed information.</p></di
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> growth_plans_for(Plausible.Billing.Subscription.t()) :: [
+          <pre translate="no"><span class="attribute">@spec</span> growth_plans_for(Plausible.Billing.Subscription.t(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) :: [
   Plausible.Billing.Plan.t()
 ]</pre>
 
@@ -499,7 +496,7 @@ still choose from old plans.</p>
     </a>
     <h1 class="signature" translate="no">subscription_interval(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L120" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L141" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -511,15 +508,15 @@ still choose from old plans.</p>
 
   </section>
 </section>
-<section class="detail" id="suggest/2">
+<section class="detail" id="suggest_volume/2">
 
   <div class="detail-header">
-    <a href="#suggest/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#suggest_volume/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">suggest(team, usage_during_cycle)</h1>
+    <h1 class="signature" translate="no">suggest_volume(team, usage_during_cycle)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L207" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L229" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -530,36 +527,18 @@ still choose from old plans.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> suggest(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
-  Plausible.Billing.Plan.t()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> suggest_volume(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | :enterprise</pre>
 
       </div>
 
-<p>Returns the most appropriate plan for a team based on its usage during a
-given cycle.</p><p>If the usage during the cycle exceeds the enterprise-level threshold, or if
-the team already has an enterprise plan, it suggests the :enterprise
-plan.</p><p>Otherwise, it recommends the plan where the cycle usage falls just under the
-plan's limit from the available options for the team.</p>
-  </section>
-</section>
-<section class="detail" id="suggest_by_usage/2">
-
-  <div class="detail-header">
-    <a href="#suggest_by_usage/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">suggest_by_usage(subscription, usage_during_cycle)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L221" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>Returns the most appropriate monthly pageview volume for a given usage cycle.
+The cycle is either last 30 days (for trials) or last billing cycle for teams
+with an existing subscription.</p><p>The generation and tier from which we're searching for a suitable volume doesn't
+matter - the monthly pageview volumes for all plans starting from v3 are going from
+10k to 10M. This function uses v4 Growth but it might as well be e.g. v5 Business.</p><p>If the usage during the cycle exceeds the enterprise-level threshold, or if
+the team already has an enterprise plan, it returns <code class="inline">:enterprise</code>. Otherwise,
+a string representing the volume, e.g. &quot;100k&quot; or &quot;5M&quot;.</p>
   </section>
 </section>
 <section class="detail" id="with_prices/2">
@@ -572,7 +551,7 @@ plan's limit from the available options for the team.</p>
     </a>
     <h1 class="signature" translate="no">with_prices(plans, customer_ip \\ &quot;127.0.0.1&quot;)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L143" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L164" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -595,7 +574,7 @@ given plan and returns the new list of plans with completed information.</p>
     </a>
     <h1 class="signature" translate="no">yearly_product_ids()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L94" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L115" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 

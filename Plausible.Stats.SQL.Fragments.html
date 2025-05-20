@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-5123BE3F.js"></script>
+    <script src="dist/sidebar_items-1ADD3C77.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -696,12 +696,12 @@ boundary, <code class="inline">not_before</code> is returned.</p><h2 id="weeksta
 <code class="inline">not_before</code> boundary is set to the past Saturday, which is before the
 weekstart, therefore the cap does not apply.</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">this_wednesday</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2022-11-09]</span><span class="w">
   </span><span class="o">&gt;</span><span class="w"> </span><span class="n">past_saturday</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2022-11-05]</span><span class="w">
-  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">weekstart_not_before</span><span class="p" data-group-id="0963874546-1">(</span><span class="n">this_wednesday</span><span class="p">,</span><span class="w"> </span><span class="n">past_saturday</span><span class="p" data-group-id="0963874546-1">)</span><span class="w">
+  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">weekstart_not_before</span><span class="p" data-group-id="8440283134-1">(</span><span class="n">this_wednesday</span><span class="p">,</span><span class="w"> </span><span class="n">past_saturday</span><span class="p" data-group-id="8440283134-1">)</span><span class="w">
   </span><span class="ld">~D[2022-11-07]</span></code></pre><p>In this other example, the fragment returns Tuesday and not the weekstart.
 The <code class="inline">not_before</code> boundary is set to Tuesday, which is past the weekstart,
 therefore the cap applies.</p><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">this_wednesday</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2022-11-09]</span><span class="w">
   </span><span class="o">&gt;</span><span class="w"> </span><span class="n">this_tuesday</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2022-11-08]</span><span class="w">
-  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">weekstart_not_before</span><span class="p" data-group-id="3533714956-1">(</span><span class="n">this_wednesday</span><span class="p">,</span><span class="w"> </span><span class="n">this_tuesday</span><span class="p" data-group-id="3533714956-1">)</span><span class="w">
+  </span><span class="o">&gt;</span><span class="w"> </span><span class="n">weekstart_not_before</span><span class="p" data-group-id="2848214160-1">(</span><span class="n">this_wednesday</span><span class="p">,</span><span class="w"> </span><span class="n">this_tuesday</span><span class="p" data-group-id="2848214160-1">)</span><span class="w">
   </span><span class="ld">~D[2022-11-08]</span></code></pre>
   </section>
 </section>
