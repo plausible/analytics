@@ -257,7 +257,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     test "does not show invoice section for a user with no subscription", %{conn: conn} do
       conn = get(conn, Routes.settings_path(conn, :invoices))
-      assert html_response(conn, 200) =~ "No invoices issued yet"
+
+      assert html_response(conn, 200) =~
+               "Your invoice will be created once you upgrade to a subscription"
     end
 
     @tag :ee_only
@@ -545,7 +547,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> get(Routes.settings_path(conn, :invoices))
         |> html_response(200)
 
-      assert html =~ "No invoices issued yet"
+      assert html =~ "Your invoice will be created once you upgrade to a subscription"
     end
 
     @tag :ee_only
