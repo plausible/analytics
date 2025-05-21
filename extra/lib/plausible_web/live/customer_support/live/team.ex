@@ -480,6 +480,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
           Team
         </span>
+
+        <span
+          :if={@resource.object.subscription}
+          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
+        >
+          $
+        </span>
       </div>
 
       <hr class="mt-4 mb-4 flex-grow border-t border-gray-200 dark:border-gray-600" />

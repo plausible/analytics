@@ -1,32 +1,59 @@
 defmodule Plausible.CustomerSupport.Resource.Team do
   @moduledoc false
   use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Team
+  alias Plausible.Teams
 
   @impl true
-  def search("", limit) do
+  def search(input, opts \\ [])
+
+  def search("", opts) do
+    limit = Keyword.fetch!(opts, :limit)
+
     q =
       from t in Plausible.Teams.Team,
+        as: :team,
         inner_join: o in assoc(t, :owners),
         limit: ^limit,
         where: not is_nil(t.trial_expiry_date),
+        left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
+        on: true,
         order_by: [desc: :id],
-        preload: [owners: o]
+        preload: [owners: o, subscription: s]
 
     Plausible.Repo.all(q)
   end
 
-  def search(input, limit) do
+  def search(input, opts) do
+    limit = Keyword.fetch!(opts, :limit)
+
     q =
       from t in Plausible.Teams.Team,
+        as: :team,
         inner_join: o in assoc(t, :owners),
-        where: ilike(t.name, ^"%#{input}%") or ilike(o.name, ^"%#{input}%"),
+        where:
+          ilike(t.name, ^"%#{input}%") or ilike(o.name, ^"%#{input}%") or
+            ilike(o.email, ^"%#{input}%"),
         limit: ^limit,
         order_by: [
           desc: fragment("?.name = ?", t, ^input),
           desc: fragment("?.name = ?", o, ^input),
+          desc: fragment("?.email = ?", o, ^input),
           asc: t.name
         ],
         preload: [owners: o]
+
+    q =
+      if opts[:with_subscription_only?] do
+        from t in q,
+          inner_lateral_join: s in subquery(Teams.last_subscription_join_query()),
+          on: true,
+          preload: [subscription: s]
+      else
+        from t in q,
+          left_lateral_join: s in subquery(Teams.last_subscription_join_query()),
+          on: true,
+          preload: [subscription: s]
+      end
 
     Plausible.Repo.all(q)
   end

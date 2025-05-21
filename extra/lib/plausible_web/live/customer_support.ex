@@ -29,54 +29,88 @@ defmodule PlausibleWeb.Live.CustomerSupport do
     ~H"""
     <.flash_messages flash={@flash} />
 
-    <div class="container pt-6">
-      <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
-        <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
-          💬 Customer Support
-        </h2>
-      </div>
-
-      <div class="mb-4 mt-4">
-        <.filter_bar filter_text={@filter_text} placeholder="Search everything"></.filter_bar>
-      </div>
-
-      <ul :if={!@current} class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <li :for={r <- @results} class="group relative">
-          <.link
-            patch={"/cs/#{r.type}s/#{r.type}/#{r.id}"}
-            data-test-type={r.type}
-            data-test-id={r.id}
-          >
-            <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
-              <div class="text-gray-800 dark:text-gray-500 w-full flex items-center justify-between space-x-4">
-                <.render_result resource={r} />
-              </div>
-            </div>
-          </.link>
-        </li>
-      </ul>
-
+    <div x-data="{ openHelp: false }">
       <div
-        id="modal"
-        class={[
-          if(is_nil(@current), do: "hidden")
-        ]}
+        id="help"
+        x-show="openHelp"
+        x-cloak
+        class="p-16 fixed top-0 left-0 w-full h-full bg-gray-800 text-gray-300 bg-opacity-95 z-50 flex items-center justify-center"
       >
-        <div class="overflow-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300 w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg">
-          <div class="flex justify-between text-xs">
-            <.styled_link onclick="window.history.go(-1); return false;">
-              &larr; Previous
-            </.styled_link>
-            <.styled_link :if={@current} class="text-xs" href={kaffy_url(@current, @id)}>
-              open in Kaffy
-            </.styled_link>
+        <div @click.away="openHelp = false" @click="openHelp = false">
+          Prefix your searches with: <br /><br />
+          <div class="font-mono">
+            <strong>site:</strong>input<br />
+            <p class="font-sans pl-2 mb-1">
+              Search for sites exclusively. Input will be checked against site's domain, team's name, owners' names and e-mails.
+            </p>
+            <strong>user:</strong>input<br />
+            <p class="font-sans pl-2 mb-1">
+              Search for users exclusively. Input will be checked against user's name and e-mail.
+            </p>
+            <strong>team:</strong>input<br />
+            <p class="font-sans pl-2 mb-1">
+              Search for teams exclusively. Input will be checked against user's name and e-mail.
+            </p>
+
+            <strong>team:</strong>input <strong>+sub</strong>
+            <br />
+            <p class="font-sans pl-2 mb-1">
+              Like above, but only finds team(s) with subscription (in any status).
+            </p>
           </div>
-          <.live_component
-            :if={@current}
-            module={@current.component()}
-            resource_id={@id}
-            id={"#{@current.type()}-#{@id}"}
-          />
+        </div>
+      </div>
+
+      <div class="container pt-6">
+        <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
+          <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
+            💬 Customer Support
+          </h2>
+        </div>
+
+        <div class="mb-4 mt-4">
+          <.filter_bar filter_text={@filter_text} placeholder="Search everything">
+            <a class="cursor-pointer" @click="openHelp = !openHelp">
+              <Heroicons.question_mark_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
+            </a>
+          </.filter_bar>
+        </div>
+
+        <ul :if={!@current} class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <li :for={r <- @results} class="group relative">
+            <.link
+              patch={"/cs/#{r.type}s/#{r.type}/#{r.id}"}
+              data-test-type={r.type}
+              data-test-id={r.id}
+            >
+              <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
+                <div class="text-gray-800 dark:text-gray-500 w-full flex items-center justify-between space-x-4">
+                  <.render_result resource={r} />
+                </div>
+              </div>
+            </.link>
+          </li>
+        </ul>
+
+        <div class={[
+          if(is_nil(@current), do: "hidden")
+        ]}>
+          <div class="overflow-auto bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300 w-full h-3/4 max-w-7xl max-h-full p-4 rounded-lg shadow-lg">
+            <div class="flex justify-between text-xs">
+              <.styled_link onclick="window.history.go(-1); return false;">
+                &larr; Previous
+              </.styled_link>
+              <.styled_link :if={@current} class="text-xs" href={kaffy_url(@current, @id)}>
+                open in Kaffy
+              </.styled_link>
+            </div>
+            <.live_component
+              :if={@current}
+              module={@current.component()}
+              resource_id={@id}
+              id={"#{@current.type()}-#{@id}"}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -143,13 +177,13 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   defp spawn_searches(input) do
     input = String.trim(input)
 
-    {resources, input, limit} =
+    {resources, input, opts} =
       maybe_focus_search(input)
 
     resources
     |> Task.async_stream(fn resource ->
       input
-      |> resource.search(limit)
+      |> resource.search(opts)
       |> Enum.map(&resource.dump/1)
     end)
     |> Enum.reduce([], fn {:ok, results}, acc ->
@@ -158,23 +192,33 @@ defmodule PlausibleWeb.Live.CustomerSupport do
   end
 
   defp maybe_focus_search(lone_modifier) when lone_modifier in ["site:", "team:", "user:"] do
-    {[], "", 0}
+    {[], "", limit: 0}
   end
 
   defp maybe_focus_search("site:" <> rest) do
-    {[Resource.Site], rest, 90}
+    {[Resource.Site], rest, limit: 90}
   end
 
   defp maybe_focus_search("team:" <> rest) do
-    {[Resource.Team], rest, 90}
+    [input | mods] = String.split(rest, "+", trim: true)
+    input = String.trim(input)
+
+    opts =
+      if "sub" in mods do
+        [limit: 90, with_subscription_only?: true]
+      else
+        [limit: 90]
+      end
+
+    {[Resource.Team], input, opts}
   end
 
   defp maybe_focus_search("user:" <> rest) do
-    {[Resource.User], rest, 90}
+    {[Resource.User], rest, limit: 90}
   end
 
   defp maybe_focus_search(input) do
-    {@resources, input, 30}
+    {@resources, input, limit: 30}
   end
 
   defp set_filter_text(socket, filter_text) do

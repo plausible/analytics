@@ -3,7 +3,11 @@ defmodule Plausible.CustomerSupport.Resource.Site do
   use Plausible.CustomerSupport.Resource, component: PlausibleWeb.CustomerSupport.Live.Site
 
   @impl true
-  def search("", limit) do
+  def search(input, opts \\ [])
+
+  def search("", opts) do
+    limit = Keyword.fetch!(opts, :limit)
+
     q =
       from s in Plausible.Site,
         inner_join: t in assoc(s, :team),
@@ -17,18 +21,21 @@ defmodule Plausible.CustomerSupport.Resource.Site do
     Plausible.Repo.all(q)
   end
 
-  def search(input, limit) do
+  def search(input, opts) do
+    limit = Keyword.fetch!(opts, :limit)
+
     q =
       from s in Plausible.Site,
         inner_join: t in assoc(s, :team),
         inner_join: o in assoc(t, :owners),
         where:
           ilike(s.domain, ^"%#{input}%") or ilike(t.name, ^"%#{input}%") or
-            ilike(o.name, ^"%#{input}%"),
+            ilike(o.name, ^"%#{input}%") or ilike(o.email, ^"%#{input}%"),
         order_by: [
           desc: fragment("?.domain = ?", s, ^input),
           desc: fragment("?.name = ?", t, ^input),
           desc: fragment("?.name = ?", o, ^input),
+          desc: fragment("?.email = ?", o, ^input),
           asc: s.domain
         ],
         limit: ^limit,
