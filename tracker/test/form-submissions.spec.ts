@@ -262,11 +262,11 @@ test.describe("form submissions feature is enabled", () => {
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
       <div>
-        <form onsubmit="event.preventDefault(); console.log('Form submitted')">
+        <form onsubmit="event.preventDefault(); console.log('Form 1 submitted')">
           <h2>Form 1</h2>
           <input type="text" /><input type="submit" value="Submit" />
         </form>
-        <form>
+        <form onsubmit="event.preventDefault(); console.log('Form 2 submitted')">
           <h2>Form 2</h2>
           <input type="email" />
         </form>
