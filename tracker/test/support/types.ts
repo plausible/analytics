@@ -8,7 +8,7 @@ export type Options = {
     outboundLinks: boolean
     fileDownloads: boolean
     taggedEvents: boolean
-    trackFormSubmissions: boolean
+    formSubmissions: boolean
   }
 
 export type ScriptConfig = {
