@@ -126,7 +126,10 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   defp render_price_info(assigns) do
     ~H"""
     <.price_tag kind={@kind} selected_interval={@selected_interval} plan_to_render={@plan_to_render} />
-    <div id={"#{@kind}-vat-notice"} class="absolute top-5 right-0 text-xs text-gray-500">
+    <div
+      id={"#{@kind}-vat-notice"}
+      class="absolute top-[32px] sm:top-[29px] md:top-[32px] lg:top-[29px] xl:top-[32px] right-0 text-xs text-gray-500"
+    >
       + VAT
       <span class="hidden sm:inline lg:hidden xl:inline">
         if applicable
