@@ -40,6 +40,15 @@ defmodule Plausible.Auth.User do
     field :totp_token, :string
     field :totp_last_used_at, :naive_datetime
 
+    on_ee do
+      # Fields for SSO
+      field :type, Ecto.Enum, values: [:standard, :sso]
+      field :sso_identity_id, :string
+      field :last_sso_login, :naive_datetime
+
+      belongs_to :sso_integration, Plausible.Auth.SSO.Integration
+    end
+
     has_many :sessions, Plausible.Auth.UserSession
     has_many :team_memberships, Plausible.Teams.Membership
     has_many :api_keys, Plausible.Auth.ApiKey
