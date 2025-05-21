@@ -3,6 +3,9 @@ defmodule PlausibleWeb.Tracker do
   Helper module for building the dynamic tracker script. Used by PlausibleWeb.TrackerPlug.
   """
 
+  use Plausible.Repo
+  alias Plausible.Site.TrackerScriptConfiguration
+
   path = Application.app_dir(:plausible, "priv/tracker/js/plausible-main.js")
   # On CI, the file might not be present for static checks so we create an empty one
   File.touch!(path)
@@ -44,4 +47,52 @@ defmodule PlausibleWeb.Tracker do
       manual: false
     }
   end
+
+  def update_script_configuration(site, config_update) do
+    installation_meta_update = to_installation_meta(config_update)
+
+    Repo.transaction(fn ->
+      Plausible.Sites.update_installation_meta!(site, installation_meta_update)
+      {:ok, _} = TrackerScriptConfiguration.upsert(config_update)
+
+      update_goals(site, config_update)
+    end)
+  end
+
+  # Sync plausible goals with the updated script config
+  defp update_goals(site, config_update) do
+    config_update
+    |> Enum.map(fn {key, value} -> {to_atom(key), value} end)
+    |> Enum.each(fn
+      {:track_404_pages, true} -> Plausible.Goals.create_404(site)
+      {:track_404_pages, false} -> Plausible.Goals.delete_404(site)
+      {:outbound_links, true} -> Plausible.Goals.create_outbound_links(site)
+      {:outbound_links, false} -> Plausible.Goals.delete_outbound_links(site)
+      {:file_downloads, true} -> Plausible.Goals.create_file_downloads(site)
+      {:file_downloads, false} -> Plausible.Goals.delete_file_downloads(site)
+      _ -> nil
+    end)
+  end
+
+  defp to_installation_meta(config_update) do
+    %{
+      installation_type: remap_installation_type(config_update["installation_type"]),
+      script_config: %{
+        "404" => Map.get(config_update, "track_404_pages", false),
+        "hash" => Map.get(config_update, "hash_based_routing", false),
+        "outbound-links" => Map.get(config_update, "outbound_links", false),
+        "file-downloads" => Map.get(config_update, "file_downloads", false),
+        "revenue" => Map.get(config_update, "revenue_tracking", false),
+        "tagged-events" => Map.get(config_update, "tagged_events", false),
+        "pageview-props" => Map.get(config_update, "pageview_props", false)
+      }
+    }
+  end
+
+  defp remap_installation_type("wordpress"), do: "WordPress"
+  defp remap_installation_type("gtm"), do: "GTM"
+  defp remap_installation_type(value), do: value
+
+  defp to_atom(str) when is_binary(str), do: String.to_existing_atom(str)
+  defp to_atom(atom) when is_atom(atom), do: atom
 end
