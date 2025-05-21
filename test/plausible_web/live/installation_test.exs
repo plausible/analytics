@@ -253,10 +253,12 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       lv |> render()
 
-      assert [clicks, downloads, track_404_pages] = Plausible.Goals.for_site(site)
-      assert clicks.event_name == "Outbound Link: Click"
-      assert downloads.event_name == "File Download"
+      assert [track_404_pages, downloads, clicks] =
+               Plausible.Goals.for_site(site) |> Enum.sort_by(& &1.event_name)
+
       assert track_404_pages.event_name == "404"
+      assert downloads.event_name == "File Download"
+      assert clicks.event_name == "Outbound Link: Click"
     end
 
     test "turning off file-downloads, outbound-links and 404 deletes special goals", %{
