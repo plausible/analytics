@@ -29,6 +29,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         {:ok, _lv, html} = live(conn, open_user(user.id))
         assert text(html) =~ user.name
       end
+
+      test "404", %{conn: conn} do
+        assert_raise Ecto.NoResultsError, fn ->
+          {:ok, _lv, _html} = live(conn, open_user(9999))
+        end
+      end
     end
   end
 end

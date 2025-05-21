@@ -40,7 +40,7 @@ defmodule Plausible.CustomerSupport.Resource.Site do
   @impl true
   def get(id) do
     Plausible.Site
-    |> Plausible.Repo.get(id)
+    |> Plausible.Repo.get!(id)
     |> Plausible.Repo.preload(:team)
   end
 end
