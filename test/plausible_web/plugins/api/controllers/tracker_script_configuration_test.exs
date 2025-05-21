@@ -52,7 +52,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
       assert_matches ^strict_map(%{
                        id: ^any(:string),
                        installation_type: "manual",
-                       track_404_pages: false,
                        hash_based_routing: false,
                        outbound_links: false,
                        file_downloads: false,
@@ -64,7 +63,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
       assert_matches ^strict_map(%{
                        id: ^id,
                        installation_type: "manual",
-                       track_404_pages: false,
                        hash_based_routing: false,
                        outbound_links: false,
                        file_downloads: false,
@@ -81,7 +79,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
         update_tracker_script_configuration(conn, site, token, %{
           tracker_script_configuration: %{
             installation_type: "manual",
-            track_404_pages: true,
             file_downloads: true
           }
         })
@@ -93,7 +90,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
       assert_matches ^strict_map(%{
                        id: ^update_response.tracker_script_configuration.id,
                        installation_type: "manual",
-                       track_404_pages: true,
                        hash_based_routing: false,
                        outbound_links: false,
                        file_downloads: true,
@@ -109,7 +105,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
       update_tracker_script_configuration(conn, site, token, %{
         tracker_script_configuration: %{
           installation_type: "manual",
-          track_404_pages: true,
           hash_based_routing: true,
           outbound_links: true,
           file_downloads: true,
@@ -121,15 +116,14 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
         update_tracker_script_configuration(conn, site, token, %{
           tracker_script_configuration: %{
             installation_type: "wordpress",
-            track_404_pages: false
+            hash_based_routing: false
           }
         })
 
       assert_matches ^strict_map(%{
                        id: ^any(:string),
                        installation_type: "wordpress",
-                       track_404_pages: false,
-                       hash_based_routing: true,
+                       hash_based_routing: false,
                        outbound_links: true,
                        file_downloads: true,
                        form_submissions: true
@@ -149,7 +143,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfigurationTest do
       assert_matches ^strict_map(%{
                        id: ^any(:string),
                        installation_type: "wordpress",
-                       track_404_pages: false,
                        hash_based_routing: true,
                        outbound_links: false,
                        file_downloads: false,
