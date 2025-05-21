@@ -132,7 +132,7 @@ test.describe("form submissions feature is enabled", () => {
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
       <div>
-        <button id="dynamicallyInsertForm" onclick="const form = document.createElement('form'); form.onsubmit = (event) => {event.preventDefault(); console.log('Form submitted')}; const submit = document.createElement('input'); submit.type = 'submit'; submit.value = 'Submit'; form.appendChild(submit); document.body.appendChild(form)">Open form</button>
+        <button id="dynamically-insert-form" onclick="const form = document.createElement('form'); form.onsubmit = (event) => {event.preventDefault(); console.log('Form submitted')}; const submit = document.createElement('input'); submit.type = 'submit'; submit.value = 'Submit'; form.appendChild(submit); document.body.appendChild(form)">Open form</button>
       </div>
       `,
     });
@@ -141,7 +141,7 @@ test.describe("form submissions feature is enabled", () => {
       action: async () => {
         await page.goto(url);
         await ensurePlausibleInitialized(page);
-        await page.click("button#dynamicallyInsertForm");
+        await page.click("button#dynamically-insert-form");
         await page.click('input[type="submit"]');
       },
       shouldIgnoreRequest: isViewOrEngagementEvent,
