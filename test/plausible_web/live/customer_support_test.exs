@@ -60,6 +60,40 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
 
         assert_search_result(html, "site", site2.id)
       end
+
+      test "search teams", %{conn: conn} do
+        team1 = new_user(team: [name: "Team One"]) |> team_of()
+
+        team2 =
+          new_user(team: [name: "Team Two"])
+          |> subscribe_to_growth_plan()
+          |> team_of()
+
+        team3 = new_user(team: [name: "Team Three"]) |> team_of()
+
+        {:ok, lv, _html} = live(conn, @cs_index)
+
+        type_into_input(lv, "filter-text", "team:Team")
+        html = render(lv)
+
+        assert_search_result(html, "team", team1.id)
+        assert_search_result(html, "team", team2.id)
+        assert_search_result(html, "team", team3.id)
+
+        type_into_input(lv, "filter-text", "team:Team T")
+        html = render(lv)
+
+        refute_search_result(html, "team", team1.id)
+        assert_search_result(html, "team", team2.id)
+        assert_search_result(html, "team", team3.id)
+
+        type_into_input(lv, "filter-text", "team:Team T +sub")
+        html = render(lv)
+
+        refute_search_result(html, "team", team1.id)
+        assert_search_result(html, "team", team2.id)
+        refute_search_result(html, "team", team3.id)
+      end
     end
 
     defp assert_search_result(doc, type, id) do

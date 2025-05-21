@@ -9,7 +9,11 @@ defmodule Plausible.CustomerSupport.Resource.User do
   end
 
   @impl true
-  def search("", limit) do
+  def search(input, opts \\ [])
+
+  def search("", opts) do
+    limit = Keyword.fetch!(opts, :limit)
+
     q =
       from u in Plausible.Auth.User,
         order_by: [
@@ -21,7 +25,9 @@ defmodule Plausible.CustomerSupport.Resource.User do
     Plausible.Repo.all(q)
   end
 
-  def search(input, limit) do
+  def search(input, opts) do
+    limit = Keyword.fetch!(opts, :limit)
+
     q =
       from u in Plausible.Auth.User,
         where: ilike(u.email, ^"%#{input}%") or ilike(u.name, ^"%#{input}%"),
