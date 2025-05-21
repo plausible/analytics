@@ -116,6 +116,7 @@ defmodule Plausible.MixProject do
       {:plug, "~> 1.13", override: true},
       {:plug_cowboy, "~> 2.3"},
       {:polymorphic_embed, "~> 5.0"},
+      {:x509, "~> 0.8.10"},
       {:postgrex, "~> 0.19.0"},
       {:prom_ex, "~> 1.8"},
       {:peep, "~> 3.4"},
