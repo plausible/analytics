@@ -41,6 +41,15 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
             </p>
           </div>
         </div>
+
+        <div class="mt-5 flex justify-center sm:mt-0">
+          <.input_with_clipboard
+            id="user-identifier"
+            name="user-identifier"
+            label="User Identifier"
+            value={@user.id}
+          />
+        </div>
       </div>
 
       <div class="mt-8">
