@@ -34,7 +34,7 @@ defmodule Plausible.CustomerSupport.Resource.Team do
   @impl true
   def get(id) do
     Plausible.Teams.Team
-    |> Repo.get(id)
+    |> Repo.get!(id)
     |> Plausible.Teams.with_subscription()
     |> Repo.preload(:owners)
   end

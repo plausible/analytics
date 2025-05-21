@@ -5,8 +5,16 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
 
   def update(assigns, socket) do
     user = socket.assigns[:user] || Resource.User.get(assigns.resource_id)
-    form = user |> Plausible.Auth.User.changeset() |> to_form()
-    {:ok, assign(socket, user: user, form: form)}
+
+    if is_nil(user) do
+      redirect(
+        socket,
+        to: Routes.customer_support_path(socket, :index)
+      )
+    else
+      form = user |> Plausible.Auth.User.changeset() |> to_form()
+      {:ok, assign(socket, user: user, form: form)}
+    end
   end
 
   def render(assigns) do
@@ -32,6 +40,15 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
               <span :if={@user.previous_email}>(previously: {@user.previous_email})</span>
             </p>
           </div>
+        </div>
+
+        <div class="mt-5 flex justify-center sm:mt-0">
+          <.input_with_clipboard
+            id="user-identifier"
+            name="user-identifier"
+            label="User Identifier"
+            value={@user.id}
+          />
         </div>
       </div>
 

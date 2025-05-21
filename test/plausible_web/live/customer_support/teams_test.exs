@@ -30,6 +30,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         {:ok, _lv, html} = live(conn, open_team(team.id))
         assert text(html) =~ team.name
       end
+
+      test "404", %{conn: conn} do
+        assert_raise Ecto.NoResultsError, fn ->
+          {:ok, _lv, _html} = live(conn, open_team(9999))
+        end
+      end
     end
   end
 end

@@ -54,25 +54,29 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text_of_element(html, "#invitation-#{invitation2.invitation_id}") =~
                "G.I. Jane has invited you to join the \"My Personal Sites\" as editor member."
 
-      assert find(
-               html,
-               "#invitation-#{invitation1.invitation_id} a[href=#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}]"
-             )
+      assert [_] =
+               find(
+                 html,
+                 ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation1.invitation_id)}"]|
+               )
 
-      assert find(
-               html,
-               "#invitation-#{invitation1.invitation_id} a[href=#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}]"
-             )
+      assert [_] =
+               find(
+                 html,
+                 ~s|#invitation-#{invitation1.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation1.invitation_id)}"]|
+               )
 
-      assert find(
-               html,
-               "#invitation-#{invitation2.invitation_id} a[href=#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}]"
-             )
+      assert [_] =
+               find(
+                 html,
+                 ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :accept_invitation, invitation2.invitation_id)}"]|
+               )
 
-      assert find(
-               html,
-               "#invitation-#{invitation2.invitation_id} a[href=#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}]"
-             )
+      assert [_] =
+               find(
+                 html,
+                 ~s|#invitation-#{invitation2.invitation_id} a[href="#{Routes.invitation_path(PlausibleWeb.Endpoint, :reject_invitation, invitation2.invitation_id)}"]|
+               )
     end
 
     test "renders metadata for invitation", %{

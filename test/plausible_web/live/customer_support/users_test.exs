@@ -27,7 +27,21 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
 
       test "renders", %{conn: conn, user: user} do
         {:ok, _lv, html} = live(conn, open_user(user.id))
-        assert text(html) =~ user.name
+        text = text(html)
+        assert text =~ user.name
+        assert text =~ user.email
+
+        assert [uid] = find(html, "#user-identifier")
+        assert text_of_attr(uid, "value") == "#{user.id}"
+
+        team = team_of(user)
+        assert [_] = find(html, ~s|a[href="/cs/teams/team/#{team.id}"]|)
+      end
+
+      test "404", %{conn: conn} do
+        assert_raise Ecto.NoResultsError, fn ->
+          {:ok, _lv, _html} = live(conn, open_user(9999))
+        end
       end
     end
   end
