@@ -38,6 +38,11 @@ defmodule Plausible.Teams.Team do
     # Field for purely informational purposes in CRM context
     field :notes, :string
 
+    on_ee do
+      # Embed for storing team-wide policies
+      embeds_one :policy, Plausible.Teams.Policy, on_replace: :update, defaults_to_struct: true
+    end
+
     embeds_one :grace_period, Plausible.Teams.GracePeriod, on_replace: :update
 
     has_many :sites, Plausible.Site

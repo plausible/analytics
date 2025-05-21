@@ -115,6 +115,7 @@ defmodule Plausible.MixProject do
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
       {:plug_cowboy, "~> 2.3"},
+      {:polymorphic_embed, "~> 5.0"},
       {:postgrex, "~> 0.19.0"},
       {:prom_ex, "~> 1.8"},
       {:peep, "~> 3.4"},
