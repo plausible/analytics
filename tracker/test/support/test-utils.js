@@ -72,8 +72,10 @@ export const mockManyRequests = function({ page, path, numberOfRequests, respons
  *  is `expectedRequests.length + refutedRequests.length`.
  * @param {number} [args.expectedRequestCount] - When provided, expects the total amount of
  *  event requests made to match this number.
+ * @param {Function} [args.shouldIgnoreRequest] - When provided, ignores certain requests
  * @param {number} [args.responseDelay] - When provided, delays the response from the Plausible
  *  API by the given number of milliseconds.
+ *  @param {Function} [args.mockRequestTimeout] - How long to wait for the requests to be made
  */
 export const expectPlausibleInAction = async function (page, {
   action,
