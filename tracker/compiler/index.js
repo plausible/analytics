@@ -10,7 +10,7 @@ import { spawn, Worker, Pool } from "threads"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const DEFAULT_GLOBALS = {
+export const DEFAULT_GLOBALS = {
   COMPILE_HASH: false,
   COMPILE_OUTBOUND_LINKS: false,
   COMPILE_COMPAT: false,
