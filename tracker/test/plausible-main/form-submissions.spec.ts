@@ -18,8 +18,7 @@ const DEFAULT_CONFIG: ScriptConfig = {
  */
 function ensurePlausibleInitialized(page: Page) {
   return page.waitForFunction(
-    () =>
-      (window as { trackingFormSubmission?: boolean }).trackingFormSubmission
+    () => (window as { plausible?: { l?: boolean } }).plausible?.l === true
   )
 }
 
