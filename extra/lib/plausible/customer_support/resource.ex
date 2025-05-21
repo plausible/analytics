@@ -13,7 +13,7 @@ defmodule Plausible.CustomerSupport.Resource do
           type: String.t()
         }
 
-  @callback search(String.t(), pos_integer()) :: list(schema())
+  @callback search(String.t(), Keyword.t()) :: list(schema())
   @callback get(pos_integer()) :: schema()
   @callback component() :: module()
   @callback type() :: String.t()
