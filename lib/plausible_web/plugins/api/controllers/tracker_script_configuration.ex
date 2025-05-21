@@ -53,9 +53,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfiguration do
     update_params =
       update_params
       |> Map.take([
-        :id,
         :installation_type,
-        :track_404_pages,
         :hash_based_routing,
         :outbound_links,
         :file_downloads,

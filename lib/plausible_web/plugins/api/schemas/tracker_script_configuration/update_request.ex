@@ -19,7 +19,6 @@ defmodule PlausibleWeb.Plugins.API.Schemas.TrackerScriptConfiguration.UpdateRequ
             description: "Tracker Script Installation Type",
             enum: ["manual", "wordpress", "gtm"]
           },
-          track_404_pages: %Schema{type: :boolean, description: "Track 404 Pages"},
           hash_based_routing: %Schema{type: :boolean, description: "Hash Based Routing"},
           outbound_links: %Schema{type: :boolean, description: "Track Outbound Links"},
           file_downloads: %Schema{type: :boolean, description: "Track File Downloads"},
@@ -28,7 +27,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.TrackerScriptConfiguration.UpdateRequ
       }
     },
     example: %{
-      tracker_script_configuration: %{installation_type: "wordpress", track_404_pages: true}
+      tracker_script_configuration: %{installation_type: "wordpress", hash_based_routing: true}
     }
   })
 end
