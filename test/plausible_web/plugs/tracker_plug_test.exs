@@ -19,7 +19,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
 
   alias PlausibleWeb.Tracker
 
-  describe "plausible-main.js" do
+  describe "plausible-web.js" do
     @example_config %{
       installation_type: :manual,
       track_404_pages: true,

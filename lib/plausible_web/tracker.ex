@@ -6,12 +6,12 @@ defmodule PlausibleWeb.Tracker do
   use Plausible.Repo
   alias Plausible.Site.TrackerScriptConfiguration
 
-  path = Application.app_dir(:plausible, "priv/tracker/js/plausible-main.js")
+  path = Application.app_dir(:plausible, "priv/tracker/js/plausible-web.js")
   # On CI, the file might not be present for static checks so we create an empty one
   File.touch!(path)
 
   @plausible_main_script File.read!(path)
-  @external_resource "priv/tracker/js/plausible-main.js"
+  @external_resource "priv/tracker/js/plausible-web.js"
 
   def plausible_main_script_tag(tracker_script_configuration) do
     config_js_content =

@@ -308,7 +308,7 @@ function init(overrides) {
     return
   }
 
-  // Explicitly set dataDomain before any overrides are applied as `plausible-main` does not support overriding it
+  // Explicitly set dataDomain before any overrides are applied as `plausible-web` does not support overriding it
   dataDomain = COMPILE_CONFIG ? config.domain : scriptEl.getAttribute('data-domain')
 
   if (COMPILE_CONFIG) {

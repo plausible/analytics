@@ -1,5 +1,5 @@
 /*
-Tests for plausible-main.js script variant
+Tests for plausible-web.js script variant
 
 Unlike in production, we're manually interpolating the script config in this file to
 better test the script in isolation of the plausible codebase.
@@ -23,7 +23,7 @@ const DEFAULT_CONFIG = {
 
 async function openPage(page, config, options = {}) {
   const configJson = JSON.stringify({ ...DEFAULT_CONFIG, ...config })
-  let path = `/plausible-main.html?script_config=${configJson}`
+  let path = `/plausible-web.html?script_config=${configJson}`
   if (options.beforeScriptLoaded) {
     path += `&beforeScriptLoaded=${options.beforeScriptLoaded}`
   }
@@ -34,7 +34,7 @@ async function openPage(page, config, options = {}) {
   await page.waitForFunction('window.plausible !== undefined')
 }
 
-test.describe('plausible-main.js', () => {
+test.describe('plausible-web.js', () => {
   test.beforeEach(({ page }) => {
     // Mock file download requests
     mockRequest(page, 'https://awesome.website.com/file.pdf')
@@ -43,12 +43,12 @@ test.describe('plausible-main.js', () => {
   test('triggers pageview and engagement automatically', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => openPage(page, {}),
-      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html')}]
+      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-web.html')}]
     })
 
     await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page, {delay: 2000}),
-      expectedRequests: [{n: 'engagement', d: 'example.com', u: expecting.stringContaining('plausible-main.html')}],
+      expectedRequests: [{n: 'engagement', d: 'example.com', u: expecting.stringContaining('plausible-web.html')}],
     })
   })
 
@@ -82,8 +82,8 @@ test.describe('plausible-main.js', () => {
         await page.click('#outbound-link')
       },
       expectedRequests: [
-        { n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html') },
-        { n: 'Outbound Link: Click', d: 'example.com', u: expecting.stringContaining('plausible-main.html'), p: { url: 'https://example.com/' } },
+        { n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-web.html') },
+        { n: 'Outbound Link: Click', d: 'example.com', u: expecting.stringContaining('plausible-web.html'), p: { url: 'https://example.com/' } },
       ]
     })
   })
@@ -117,7 +117,7 @@ test.describe('plausible-main.js', () => {
           plausible.init({ customProperties: () => ({ "title": document.title }) })
         })
       },
-      expectedRequests: [{ n: 'pageview', p: { "title": "plausible-main.js tests" } }]
+      expectedRequests: [{ n: 'pageview', p: { "title": "plausible-web.js tests" } }]
     })
   })
 
@@ -186,8 +186,8 @@ test.describe('plausible-main.js', () => {
         await hideAndShowCurrentTab(page, { delay: 200 })
       },
       expectedRequests: [
-        { n: 'pageview', u: '/:test-plausible-main', d: 'example.com' },
-        { n: 'engagement', u: '/:test-plausible-main', d: 'example.com' },
+        { n: 'pageview', u: '/:test-plausible-web', d: 'example.com' },
+        { n: 'engagement', u: '/:test-plausible-web', d: 'example.com' },
       ],
     })
   })
@@ -279,7 +279,7 @@ test.describe('plausible-main.js', () => {
           })
         })
       },
-      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html') }]
+      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-web.html') }]
     })
   })
 
@@ -294,7 +294,7 @@ test.describe('plausible-main.js', () => {
           })
         })
       },
-      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-main.html')}]
+      expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining('plausible-web.html')}]
     })
   })
 })
