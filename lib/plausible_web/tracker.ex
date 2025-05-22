@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Tracker do
   Helper module for building the dynamic tracker script. Used by PlausibleWeb.TrackerPlug.
   """
 
+  use Plausible
   use Plausible.Repo
   alias Plausible.Site.TrackerScriptConfiguration
 
@@ -49,6 +50,12 @@ defmodule PlausibleWeb.Tracker do
     updated_config = Repo.update!(changeset)
 
     sync_goals(site, original_config, updated_config)
+
+    on_ee do
+      %{id: updated_config.id}
+      |> Plausible.Workers.PurgeCDNCache.new()
+      |> Oban.insert!()
+    end
 
     updated_config
   end
