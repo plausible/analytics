@@ -35,6 +35,7 @@ interface ApiRequestProps {
 interface SegmentTypeSelectorProps {
   siteSegmentsAvailable: boolean
   userCanSelectSiteSegment: boolean
+  linkUserToUpgrade: boolean
 }
 
 interface SharedSegmentModalProps {
@@ -78,6 +79,7 @@ export const CreateSegmentModal = ({
   onSave,
   siteSegmentsAvailable: siteSegmentsAvailable,
   userCanSelectSiteSegment,
+  linkUserToUpgrade,
   namePlaceholder,
   error,
   reset,
@@ -100,6 +102,7 @@ export const CreateSegmentModal = ({
       : SegmentType.personal
 
   const [type, setType] = useState<SegmentType>(defaultType)
+  const [saveDisabled, setSaveDisabled] = useState<boolean>(false)
 
   return (
     <SegmentActionModal onClose={onClose}>
@@ -112,11 +115,14 @@ export const CreateSegmentModal = ({
       <SegmentTypeSelector
         value={type}
         onChange={setType}
+        setSaveDisabled={setSaveDisabled}
         siteSegmentsAvailable={siteSegmentsAvailable}
         userCanSelectSiteSegment={userCanSelectSiteSegment}
+        linkUserToUpgrade={linkUserToUpgrade}
       />
       <ButtonsRow>
         <button
+          disabled={saveDisabled}
           className={primaryNeutralButtonClassName}
           onClick={
             status !== 'pending'
@@ -254,12 +260,30 @@ const SegmentNameInput = ({
 const SegmentTypeSelector = ({
   value,
   onChange,
+  setSaveDisabled,
   siteSegmentsAvailable,
-  userCanSelectSiteSegment
+  userCanSelectSiteSegment,
+  linkUserToUpgrade
 }: SegmentTypeSelectorProps & {
   value: SegmentType
   onChange: (value: SegmentType) => void
+  setSaveDisabled: (value: boolean) => void
 }) => {
+  const upgradeCTA = () => {
+    return (
+      <>
+        To use this segment type,&#32;
+        {linkUserToUpgrade ? (
+          <a href="/billing/choose-plan" className="underline">
+            please upgrade your subscription
+          </a>
+        ) : (
+          <>please reach out to the team owner to upgrade their subscription.</>
+        )}
+      </>
+    )
+  }
+
   const options = [
     {
       type: SegmentType.personal,
@@ -272,22 +296,14 @@ const SegmentTypeSelector = ({
       name: SEGMENT_TYPE_LABELS[SegmentType.site],
       description: 'Visible to others on the site',
       disabled: !userCanSelectSiteSegment || !siteSegmentsAvailable,
-      disabledReason: !userCanSelectSiteSegment ? (
-        <>
-          {"You don't have enough permissions to change segment to this type."}
-        </>
-      ) : !siteSegmentsAvailable ? (
-        <>
-          {`Your account does not have access to site segments. To use this
-          segment type, `}
-          <a href="/billing/choose-plan" className="underline">
-            please upgrade your subscription
-          </a>
-          .
-        </>
-      ) : null
+      disabledReason: !userCanSelectSiteSegment
+        ? `You don't have enough permissions to change segment to this type`
+        : !siteSegmentsAvailable
+          ? upgradeCTA()
+          : null
     }
   ]
+  console.log(options)
 
   return (
     <div className="mt-4 flex flex-col gap-y-4">
@@ -299,7 +315,10 @@ const SegmentTypeSelector = ({
               id={`segment-type-${type}`}
               type="radio"
               value=""
-              onChange={() => onChange(type)}
+              onChange={() => {
+                setSaveDisabled(disabled)
+                onChange(type)
+              }}
               className="mt-4 w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:border-gray-600"
             />
             <label
@@ -328,6 +347,7 @@ export const UpdateSegmentModal = ({
   segment,
   siteSegmentsAvailable,
   userCanSelectSiteSegment,
+  linkUserToUpgrade,
   namePlaceholder,
   status,
   error,
@@ -340,6 +360,7 @@ export const UpdateSegmentModal = ({
   }) => {
   const [name, setName] = useState(segment.name)
   const [type, setType] = useState<SegmentType>(segment.type)
+  const [saveDisabled, setSaveDisabled] = useState<boolean>(false)
 
   return (
     <SegmentActionModal onClose={onClose}>
@@ -352,13 +373,15 @@ export const UpdateSegmentModal = ({
       <SegmentTypeSelector
         value={type}
         onChange={setType}
+        setSaveDisabled={setSaveDisabled}
         siteSegmentsAvailable={siteSegmentsAvailable}
         userCanSelectSiteSegment={userCanSelectSiteSegment}
+        linkUserToUpgrade={linkUserToUpgrade}
       />
       <ButtonsRow>
         <button
           className={primaryNeutralButtonClassName}
-          disabled={status === 'pending'}
+          disabled={saveDisabled || status === 'pending'}
           onClick={
             status === 'pending'
               ? () => {}

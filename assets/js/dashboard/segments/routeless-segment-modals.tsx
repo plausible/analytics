@@ -154,11 +154,14 @@ export const RoutelessSegmentModals = () => {
     'super_admin'
   ].includes(user.role)
 
+  const linkUserToUpgrade = user.role === Role.owner
+
   return (
     <>
       {modal === 'update' && expandedSegment && (
         <UpdateSegmentModal
           userCanSelectSiteSegment={userCanSelectSiteSegment}
+          linkUserToUpgrade={linkUserToUpgrade}
           siteSegmentsAvailable={site.siteSegmentsAvailable}
           segment={expandedSegment}
           namePlaceholder={getSegmentNamePlaceholder(query)}
@@ -185,6 +188,7 @@ export const RoutelessSegmentModals = () => {
       {modal === 'create' && (
         <CreateSegmentModal
           userCanSelectSiteSegment={userCanSelectSiteSegment}
+          linkUserToUpgrade={linkUserToUpgrade}
           siteSegmentsAvailable={site.siteSegmentsAvailable}
           namePlaceholder={getSegmentNamePlaceholder(query)}
           segment={expandedSegment ?? undefined}
