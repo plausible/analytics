@@ -35,14 +35,10 @@ defmodule PlausibleWeb.Tracker do
     %{
       domain: tracker_script_configuration.site.domain,
       endpoint: "#{PlausibleWeb.Endpoint.url()}/api/event",
-      hash: tracker_script_configuration.hash_based_routing,
+      hashBasedRouting: tracker_script_configuration.hash_based_routing,
       outboundLinks: tracker_script_configuration.outbound_links,
       fileDownloads: tracker_script_configuration.file_downloads,
-      taggedEvents: tracker_script_configuration.tagged_events,
-      revenue: tracker_script_configuration.revenue_tracking,
-      # Options not directly exposed via onboarding
-      local: false,
-      manual: false
+      formSubmissions: tracker_script_configuration.form_submissions
     }
   end
 

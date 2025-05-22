@@ -28,7 +28,8 @@ defmodule PlausibleWeb.TrackerPlugTest do
       outbound_links: false,
       pageview_props: false,
       tagged_events: true,
-      revenue_tracking: false
+      revenue_tracking: false,
+      form_submissions: true
     }
 
     test "returns the script for an existing site", %{conn: conn} do
@@ -45,9 +46,10 @@ defmodule PlausibleWeb.TrackerPlugTest do
 
       assert String.contains?(response, "!function(){var")
       assert String.contains?(response, "domain:\"#{site.domain}\"")
-      assert String.contains?(response, "hash:!0")
-      assert String.contains?(response, "taggedEvents:!0")
+      assert String.contains?(response, "hashBasedRouting:!0")
+      assert String.contains?(response, "formSubmissions:!0")
       refute String.contains?(response, "outboundLinks:!0")
+      refute String.contains?(response, "fileDownloads:!0")
     end
 
     # window.plausible is a substring checked for by the wordpress plugin to avoid 'optimization' by other wordpress plugins
