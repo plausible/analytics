@@ -232,7 +232,8 @@ test.describe('engagement events', () => {
         {n: 'engagement', u: `${LOCAL_SERVER_ADDR}/engagement-pageview-props.html`, p: {author: 'John', index: "0"}},
         {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html`}
       ],
-      responseDelay: 1000
+      responseDelay: 1000,
+      mockRequestTimeout: 5000
     })
   })
 

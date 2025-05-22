@@ -156,6 +156,7 @@ function sendRequest(endpoint, payload, options) {
     }
   } else {
     if (window.fetch) {
+      console.log(`Request attempted: "${payload.n}, ${payload.u}"`)
       fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -165,7 +166,9 @@ function sendRequest(endpoint, payload, options) {
         body: JSON.stringify(payload)
       }).then(function (response) {
         options && options.callback && options.callback({ status: response.status })
-      }).catch(function () { })
+      }).catch(function (_e) {
+        console.warn(`Request maybe failed: "${payload.n}, ${payload.u}"`);
+      })
     }
   }
 }
