@@ -5,7 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Plausible Playwright tests</title>
-    <script>// automatically replaced with compiled Plausible snippet</script>
+    <script>
+      // This must be kept in sync with the actual script snippet that customers should use
+      (window.plausible =
+        window.plausible ||
+        function () {
+          (window.plausible.q = window.plausible.q || []).push(arguments);
+        }),
+        (window.plausible.init = function (i) {
+          window.plausible.o = i || {};
+        });
+      var script = document.createElement("script");
+      (script.type = "text/javascript"),
+        (script.defer = !0),
+        (script.src = "<%= plausible_script_url %>");
+      var r = document.getElementsByTagName("script")[0];
+      r.parentNode.insertBefore(script, r);
+      plausible.init();
+    </script>
   </head>
 
   <body></body>
