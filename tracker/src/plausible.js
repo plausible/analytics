@@ -419,7 +419,7 @@ function init(overrides) {
       var link = getLinkEl(event.target)
       var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
-      if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
+      if (COMPILE_TAGGED_EVENTS) {
         if (isElementOrParentTagged(link, 0)) {
           // Return to prevent sending multiple events with the same action.
           // Clicks on tagged links are handled by another function.
@@ -502,7 +502,7 @@ function init(overrides) {
       document.addEventListener('submit', trackFormSubmission, true);
     }
 
-    if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
+    if (COMPILE_TAGGED_EVENTS) {
       // Finds event attributes by iterating over the given element's (or its
       // parent's) classList. Returns an object with `name` and `props` keys.
       function getTaggedEventAttributes(htmlElement) {
