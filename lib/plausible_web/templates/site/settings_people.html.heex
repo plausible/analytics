@@ -7,7 +7,14 @@
     @site_role != :owner and not Plausible.Teams.setup?(@site.team)
   } />
 
-  <.tile docs="users-roles">
+  <.tile
+    docs="users-roles"
+    feature_mod={Plausible.Billing.Feature.Teams}
+    site={@site}
+    current_role={@site_role}
+    current_team={@site_team}
+    conn={@conn}
+  >
     <:title>People</:title>
     <:subtitle>Invite your friends or coworkers</:subtitle>
 

@@ -1,5 +1,10 @@
 <.settings_tiles>
-  <.tile docs="stats-api">
+  <.tile
+    docs="stats-api"
+    current_role={@current_team_role}
+    current_team={@current_team}
+    feature_mod={Plausible.Billing.Feature.StatsAPI}
+  >
     <:title>
       <a id="api-keys">API Keys</a>
     </:title>
@@ -7,20 +12,15 @@
       Manage your API keys
     </:subtitle>
 
-    <PlausibleWeb.Components.Billing.Notice.premium_feature
-      current_role={@current_team_role}
-      current_team={@current_team}
-      feature_mod={Plausible.Billing.Feature.StatsAPI}
-    />
-
     <.filter_bar filtering_enabled?={false}>
-      <.button_link
-        :if={Plausible.Billing.Feature.StatsAPI.check_availability(@current_team) == :ok}
-        href={Routes.settings_path(@conn, :new_api_key)}
-      >
+      <.button_link mt?={false} href={Routes.settings_path(@conn, :new_api_key)}>
         New API Key
       </.button_link>
     </.filter_bar>
+
+    <p :if={Enum.empty?(@api_keys)} class="mb-8 text-center text-sm">
+      No API keys configured yet.
+    </p>
 
     <.table rows={@api_keys}>
       <:thead>

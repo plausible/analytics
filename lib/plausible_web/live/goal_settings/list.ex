@@ -31,23 +31,26 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       <%= if Enum.count(@goals) > 0 do %>
         <.table rows={@goals}>
           <:tbody :let={goal}>
-            <.td truncate max_width="max-w-40" height="h-16">
-              <div class="flex">
-                <div class="truncate block">
-                  <%= if not @revenue_goals_enabled? && goal.currency do %>
-                    <div class="truncate">
-                      {goal}
-                      <br />
-                      <span class="text-red-600">
-                        Unlock Revenue Goals by upgrading to a business plan
-                      </span>
-                    </div>
-                  <% else %>
-                    <.goal_description goal={goal} />
-                    <span>{goal}</span>
-                  <% end %>
+            <.td max_width="max-w-40" height="h-16">
+              <%= if not @revenue_goals_enabled? && goal.currency do %>
+                <div class="truncate">{goal}</div>
+                <.tooltip>
+                  <:tooltip_content>
+                    <p class="text-xs">
+                      Revenue Goals act like regular custom<br />
+                      events without a Business subscription<br />
+                    </p>
+                  </:tooltip_content>
+                  <span class="w-max flex items-center text-gray-500 italic text-sm">
+                    <Heroicons.lock_closed solid class="size-4 mr-1" /> Upgrade Required
+                  </span>
+                </.tooltip>
+              <% else %>
+                <div class="truncate">
+                  <.goal_description goal={goal} />
                 </div>
-              </div>
+                <div class="truncate">{goal}</div>
+              <% end %>
             </.td>
             <.td hide_on_mobile height="h-16">
               <span :if={goal.page_path && goal.scroll_threshold > -1}>Scroll</span>

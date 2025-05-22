@@ -75,7 +75,10 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         <p class="mt-4 mb-6 max-w-lg text-sm text-gray-500 dark:text-gray-400 leading-5 text-center">
           Set up a few goals first (e.g. <b>"Signup"</b>, <b>"Visit /"</b>, or <b>"Scroll 50% on /blog/*"</b>) and return here to build your first funnel!
         </p>
-        <.button_link class="mb-2" href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}>
+        <.button_link
+          class="mb-2"
+          href={PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)}
+        >
           Set up goals →
         </.button_link>
       </div>

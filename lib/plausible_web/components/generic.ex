@@ -412,6 +412,9 @@ defmodule PlausibleWeb.Components.Generic do
   slot :title, required: true
   slot :subtitle, required: true
   attr :feature_mod, :atom, default: nil
+  attr :feature_toggle?, :boolean, default: false
+  attr :current_role, :atom, default: nil
+  attr :current_team, :any, default: nil
   attr :site, :any
   attr :conn, :any
 
@@ -427,18 +430,30 @@ defmodule PlausibleWeb.Components.Generic do
         <div class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           {render_slot(@subtitle)}
         </div>
-        <%= if @feature_mod do %>
-          <PlausibleWeb.Components.Site.Feature.toggle
-            feature_mod={@feature_mod}
-            site={@site}
-            conn={@conn}
-          />
-        <% end %>
-        <div class="border-b dark:border-gray-700 pb-4"></div>
+        <PlausibleWeb.Components.Site.Feature.toggle
+          :if={@feature_toggle?}
+          feature_mod={@feature_mod}
+          site={@site}
+          conn={@conn}
+        />
       </header>
-
-      <div class="pb-4 px-6">
-        {render_slot(@inner_block)}
+      <div class="border-b dark:border-gray-700 mx-6"></div>
+      <div class="relative">
+        <%= if @feature_mod do %>
+          <PlausibleWeb.Components.Billing.feature_gate
+            feature_mod={@feature_mod}
+            current_role={@current_role}
+            current_team={@current_team}
+          >
+            <div class="py-4 px-6">
+              {render_slot(@inner_block)}
+            </div>
+          </PlausibleWeb.Components.Billing.feature_gate>
+        <% else %>
+          <div class="py-4 px-6">
+            {render_slot(@inner_block)}
+          </div>
+        <% end %>
       </div>
     </div>
     """
