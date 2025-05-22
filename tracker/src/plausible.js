@@ -29,7 +29,7 @@ function trigger(eventName, options) {
     maxScrollDepthPx = getCurrentScrollDepthPx()
   }
 
-  if (!(COMPILE_LOCAL && (!COMPILE_CONFIG || config.local))) {
+  if (!(COMPILE_LOCAL && (!COMPILE_CONFIG || config.captureOnLocalhost))) {
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
       return onIgnoredEvent(eventName, options, 'localhost')
     }
