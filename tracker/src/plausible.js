@@ -15,6 +15,7 @@ if (COMPILE_CONFIG) {
 
 var endpoint
 var dataDomain
+var autoCapturePageviews = !COMPILE_MANUAL
 
 // Exported public function
 function trigger(eventName, options) {
@@ -71,7 +72,7 @@ function trigger(eventName, options) {
   payload.n = eventName
   payload.v = COMPILE_TRACKER_SCRIPT_VERSION
 
-  if (COMPILE_MANUAL && (!COMPILE_CONFIG || config.manual)) {
+  if (COMPILE_MANUAL || !autoCapturePageviews) {
     var customURL = options && options.u
 
     payload.u = customURL ? customURL : location.href
@@ -313,6 +314,7 @@ function init(overrides) {
 
   if (COMPILE_CONFIG) {
     Object.assign(config, overrides)
+    autoCapturePageviews = config.autoCapturePageviews !== false
   }
 
   endpoint = COMPILE_CONFIG ? config.endpoint : (scriptEl.getAttribute('data-api') || defaultEndpoint())
@@ -342,7 +344,7 @@ function init(overrides) {
     }
   })
 
-  if (!(COMPILE_MANUAL && (!COMPILE_CONFIG || config.manual))) {
+  if (!COMPILE_MANUAL || autoCapturePageviews) {
     var lastPage;
 
     function page(isSPANavigation) {
