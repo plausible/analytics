@@ -40,9 +40,7 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   end
 
   defp validate_url(changeset, field) do
-    url = get_change(changeset, field)
-
-    if url do
+    if url = get_change(changeset, field) do
       case URI.new(url) do
         {:ok, uri} when uri.scheme in ["http", "https"] -> changeset
         _ -> add_error(changeset, field, "invalid URL", validation: :url)
@@ -53,9 +51,7 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   end
 
   defp validate_pem(changeset, field) do
-    pem = get_change(changeset, field)
-
-    if pem do
+    if pem = get_change(changeset, field) do
       case X509.Certificate.from_pem(pem) do
         {:ok, _cert} -> changeset
         {:error, _} -> add_error(changeset, field, "invalid certificate", validation: :cert_pem)
