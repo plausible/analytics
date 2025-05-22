@@ -37,6 +37,7 @@ defmodule Plausible.Teams.Invitations.InviteToSite do
     end)
   end
 
+  # XXX: remove with kaffy
   @spec bulk_invite([Site.t()], User.t(), String.t(), atom(), Keyword.t()) ::
           {:ok, [invitation]} | {:error, invite_error()}
   def bulk_invite(sites, inviter, invitee_email, role, opts \\ []) do
