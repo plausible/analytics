@@ -4,6 +4,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
 
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo
+  import Ecto.Query
 
   def update(%{resource_id: resource_id}, socket) do
     site = Resource.Site.get(resource_id)
@@ -299,9 +300,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
   end
 
   defp search_email(input) do
-    alias Plausible.Repo
-    import Ecto.Query
-
     Repo.all(
       from u in Plausible.Auth.User,
         where: ilike(u.name, ^"%#{input}%") or ilike(u.email, ^"%#{input}%"),
