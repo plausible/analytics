@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>plausible-web.js tests</title>
+</head>
+
+<body>
+  <a id="file-download" href="https://awesome.website.com/file.pdf">Download</a>
+  <a id="file-download-iso" href="https://awesome.website.com/file.iso">Download ISO</a>
+
+  <script>
+    window.plausible=window.plausible||function(){(window.plausible.q = window.plausible.q || []).push(arguments)}
+    window.plausible.init = function(overrides) { window.plausible.o = overrides || {} }
+
+    var config = { domain: 'example.com' }
+
+    const script = document.createElement('script')
+    script.src = `/tracker/js/plausible-web.js?script_config=${encodeURIComponent(JSON.stringify(config))}`
+    var r = document.getElementsByTagName("script")[0]
+    r.parentNode.insertBefore(script, r)
+  </script>
+</body>
+</html>

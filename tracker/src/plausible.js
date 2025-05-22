@@ -480,9 +480,23 @@ function init(overrides) {
 
     if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
       var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma', 'dmg']
-      var fileTypesAttr = scriptEl.getAttribute('file-types')
-      var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
-      var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
+      var fileTypesToTrack = defaultFileTypes
+
+      if (COMPILE_CONFIG && Array.isArray(config.fileDownloads)) {
+        if (Array.isArray(config.fileDownloads)) {
+          fileTypesToTrack = config.fileDownloads
+        }
+      } else {
+        var fileTypesAttr = scriptEl.getAttribute('file-types')
+        var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
+
+        if (fileTypesAttr) {
+          fileTypesToTrack = fileTypesAttr.split(",")
+        }
+        if (addFileTypesAttr) {
+          fileTypesToTrack = addFileTypesAttr.split(",").concat(defaultFileTypes)
+        }
+      }
 
       function isDownloadToTrack(url) {
         if (!url) { return false }
@@ -493,7 +507,7 @@ function init(overrides) {
         })
       }
     }
-    
+
     if (COMPILE_CONFIG && config.formSubmissions) {
       function trackFormSubmission(e) {
         if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
