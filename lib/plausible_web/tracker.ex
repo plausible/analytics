@@ -13,9 +13,9 @@ defmodule PlausibleWeb.Tracker do
   @plausible_main_script File.read!(path)
   @external_resource "priv/tracker/js/plausible-main.js"
 
-  def plausible_main_script_tag(site) do
+  def plausible_main_script_tag(tracker_script_configuration) do
     config_js_content =
-      site
+      tracker_script_configuration
       |> plausible_main_config()
       |> Enum.flat_map(fn
         {key, value} when is_binary(value) -> ["#{key}:#{JSON.encode!(value)}"]
@@ -31,17 +31,15 @@ defmodule PlausibleWeb.Tracker do
     |> String.replace("\"<%= @config_js %>\"", "{#{config_js_content}}")
   end
 
-  def plausible_main_config(site) do
-    script_config = site.installation_meta.script_config
-
+  def plausible_main_config(tracker_script_configuration) do
     %{
-      domain: site.domain,
+      domain: tracker_script_configuration.site.domain,
       endpoint: "#{PlausibleWeb.Endpoint.url()}/api/event",
-      hash: Map.get(script_config, "hash", false),
-      outboundLinks: Map.get(script_config, "outbound-links", false),
-      fileDownloads: Map.get(script_config, "file-downloads", false),
-      taggedEvents: Map.get(script_config, "tagged-events", false),
-      revenue: Map.get(script_config, "revenue", false),
+      hash: tracker_script_configuration.hash_based_routing,
+      outboundLinks: tracker_script_configuration.outbound_links,
+      fileDownloads: tracker_script_configuration.file_downloads,
+      taggedEvents: tracker_script_configuration.tagged_events,
+      revenue: tracker_script_configuration.revenue_tracking,
       # Options not directly exposed via onboarding
       local: false,
       manual: false
@@ -49,18 +47,15 @@ defmodule PlausibleWeb.Tracker do
   end
 
   def update_script_configuration(site, config_update) do
-    installation_meta_update = to_installation_meta(config_update)
+    {:ok, updated_config} = TrackerScriptConfiguration.upsert(config_update)
 
-    Repo.transaction(fn ->
-      Plausible.Sites.update_installation_meta!(site, installation_meta_update)
-      {:ok, _} = TrackerScriptConfiguration.upsert(config_update)
+    sync_goals(site, config_update)
 
-      update_goals(site, config_update)
-    end)
+    updated_config
   end
 
   # Sync plausible goals with the updated script config
-  defp update_goals(site, config_update) do
+  defp sync_goals(site, config_update) do
     config_update
     |> Enum.map(fn {key, value} -> {to_atom(key), value} end)
     |> Enum.each(fn
@@ -73,25 +68,6 @@ defmodule PlausibleWeb.Tracker do
       _ -> nil
     end)
   end
-
-  defp to_installation_meta(config_update) do
-    %{
-      installation_type: remap_installation_type(config_update["installation_type"]),
-      script_config: %{
-        "404" => Map.get(config_update, "track_404_pages", false),
-        "hash" => Map.get(config_update, "hash_based_routing", false),
-        "outbound-links" => Map.get(config_update, "outbound_links", false),
-        "file-downloads" => Map.get(config_update, "file_downloads", false),
-        "revenue" => Map.get(config_update, "revenue_tracking", false),
-        "tagged-events" => Map.get(config_update, "tagged_events", false),
-        "pageview-props" => Map.get(config_update, "pageview_props", false)
-      }
-    }
-  end
-
-  defp remap_installation_type("wordpress"), do: "WordPress"
-  defp remap_installation_type("gtm"), do: "GTM"
-  defp remap_installation_type(value), do: value
 
   defp to_atom(str) when is_binary(str), do: String.to_existing_atom(str)
   defp to_atom(atom) when is_atom(atom), do: atom

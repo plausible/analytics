@@ -60,10 +60,13 @@ defmodule PlausibleWeb.TrackerPlug do
   end
 
   defp request_tracker_script(tag, conn) do
-    site = Plausible.Repo.one(from s in Plausible.Site, where: s.installation_meta["id"] == ^tag)
+    tracker_script_configuration =
+      Plausible.Repo.one(
+        from s in Plausible.Site.TrackerScriptConfiguration, where: s.id == ^tag, preload: [:site]
+      )
 
-    if site do
-      script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(site)
+    if tracker_script_configuration do
+      script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(tracker_script_configuration)
 
       conn
       |> put_resp_header("content-type", "application/javascript")
@@ -71,6 +74,9 @@ defmodule PlausibleWeb.TrackerPlug do
       |> put_resp_header("cross-origin-resource-policy", "cross-origin")
       |> put_resp_header("access-control-allow-origin", "*")
       |> put_resp_header("cache-control", "public, max-age=60, no-transform")
+      # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
+      # specific tracker scripts from the CDN cache.
+      |> put_resp_header("cdn-tag", "tracker_script::#{tracker_script_configuration.id}")
       |> send_resp(200, script_tag)
       |> halt()
     else
