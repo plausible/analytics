@@ -13,19 +13,6 @@ const DEFAULT_CONFIG: ScriptConfig = {
   local: true
 }
 
-const isViewOrEngagementEvent = ({ n }) =>
-  ['pageview', 'engagement'].includes(n)
-
-/**
- * This function mitigates test flakiness due to the test runner triggering the submit action
- * before the tracker script has attached the event listener.
- * This flakiness will happen in the real world as well:
- * forms submitted before the tracker script attaches the event listener will not be tracked.
- */
-function ensurePlausibleInitialized(page: Page) {
-  return page.waitForFunction(() => (window as any).plausible?.l === true)
-}
-
 test('does not track form submissions when the feature is disabled', async ({
   page
 }, { testId }) => {
@@ -60,18 +47,16 @@ test.describe('form submissions feature is enabled', () => {
   test('tracks forms that use GET method', async ({ page, browserName }, {
     testId
   }) => {
+    test.skip(
+      browserName === 'firefox',
+      'flaky on Firefox versions less than v133 due to missing fetch keepalive implementation'
+    )
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
       <div>
-        <form method="GET" ${
-          // this conditional is needed because fetch with keepalive is not implemented in the version of Firefox used by Playwright:
-          // can be removed once the Firefox version is >= v133
-          browserName === 'firefox'
-            ? 'onsubmit="event.preventDefault(); setTimeout(() => {this.submit()}, 200)"'
-            : ''
-        }>
+        <form method="GET">
           <input id="name" type="text" placeholder="Name" /><input type="submit" value="Submit" />
         </form>
       </div>
@@ -103,7 +88,7 @@ test.describe('form submissions feature is enabled', () => {
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
       <div>
-        <form onsubmit="event.preventDefault(); console.log('Form submitted')">
+        <form onsubmit="${customSubmitHandlerStub}">
           <input type="text" /><input type="submit" value="Submit" />
         </form>
       </div>
@@ -132,7 +117,18 @@ test.describe('form submissions feature is enabled', () => {
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
       <div>
-        <button id="dynamically-insert-form" onclick="const form = document.createElement('form'); form.onsubmit = (event) => {event.preventDefault(); console.log('Form submitted')}; const submit = document.createElement('input'); submit.type = 'submit'; submit.value = 'Submit'; form.appendChild(submit); document.body.appendChild(form)">Open form</button>
+        <button id="dynamically-insert-form" onclick="createForm()">Open form</button>
+        <script>
+          function createForm() {
+            const form = document.createElement('form');
+            form.setAttribute('onsubmit', "${customSubmitHandlerStub}");
+            const submit = document.createElement('input');
+            submit.type = 'submit';
+            submit.value = 'Submit';
+            form.appendChild(submit);
+            document.body.appendChild(form);
+          }
+        </script>
       </div>
       `
     })
@@ -162,7 +158,7 @@ test.describe('form submissions feature is enabled', () => {
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
       <div>
-        <form novalidate onsubmit="event.preventDefault(); console.log('Form submitted')">
+        <form novalidate onsubmit="${customSubmitHandlerStub}">
           <input type="email" />
           <input type="submit" value="Submit" />
         </form>
@@ -262,11 +258,11 @@ test.describe('form submissions feature is enabled', () => {
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
       bodyContent: `
       <div>
-        <form onsubmit="event.preventDefault(); console.log('Form 1 submitted')">
+        <form onsubmit="${customSubmitHandlerStub}">
           <h2>Form 1</h2>
           <input type="text" /><input type="submit" value="Submit" />
         </form>
-        <form onsubmit="event.preventDefault(); console.log('Form 2 submitted')">
+        <form onsubmit="${customSubmitHandlerStub}">
           <h2>Form 2</h2>
           <input type="email" />
         </form>
@@ -304,3 +300,22 @@ test.describe('form submissions feature is enabled', () => {
     })
   })
 })
+/**
+ * This function mitigates test flakiness due to the test runner triggering the submit action
+ * before the tracker script has attached the event listener.
+ * This flakiness will happen in the real world as well:
+ * forms submitted before the tracker script attaches the event listener will not be tracked.
+ */
+function ensurePlausibleInitialized(page: Page) {
+  return page.waitForFunction(() => (window as any).plausible?.l === true)
+}
+
+const isViewOrEngagementEvent = ({ n }) =>
+  ['pageview', 'engagement'].includes(n)
+
+/**
+ * This is a stub for custom form onsubmit handlers Plausible users may have on their websites.
+ * Overriding onsubmit with a custom handler is common practice in web development for a variety of reasons (mostly UX),
+ * so it's important to track form submissions from forms with such handlers.
+ */
+const customSubmitHandlerStub = "event.preventDefault(); console.log('Form submitted')"
