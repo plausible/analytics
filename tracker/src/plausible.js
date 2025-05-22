@@ -52,7 +52,7 @@ function trigger(eventName, options) {
     function pathMatches(wildcardPath) {
       var actualPath = location.pathname
 
-      if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
+      if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
         actualPath += location.hash
       }
 
@@ -124,7 +124,7 @@ function trigger(eventName, options) {
     }
   }
 
-  if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
+  if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
     payload.h = 1
   }
 
@@ -218,7 +218,7 @@ function triggerEngagement() {
     runningEngagementStart = 0
     currentEngagementTime = 0
 
-    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
+    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
       payload.h = 1
     }
 
@@ -346,7 +346,7 @@ function init(overrides) {
     var lastPage;
 
     function page(isSPANavigation) {
-      if (!(COMPILE_HASH && (!COMPILE_CONFIG || config.hash))) {
+      if (!(COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting))) {
         if (isSPANavigation && lastPage === location.pathname) return;
       }
 
@@ -356,7 +356,7 @@ function init(overrides) {
 
     var onSPANavigation = function () { page(true) }
 
-    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
+    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
       window.addEventListener('hashchange', onSPANavigation)
     } else {
       var his = window.history
