@@ -205,6 +205,9 @@ defmodule PlausibleWeb.Router do
 
       put("/custom_props", CustomProps, :enable)
       delete("/custom_props", CustomProps, :disable)
+
+      get("/tracker_script_configuration", TrackerScriptConfiguration, :get)
+      put("/tracker_script_configuration", TrackerScriptConfiguration, :update)
     end
   end
 
