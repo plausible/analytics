@@ -3,6 +3,7 @@ import { ScriptConfig } from "./types";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { compileWebSnippet } from "../../compiler";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,14 +28,23 @@ export async function initializePageDynamically(
   { testId, scriptConfig, bodyContent }: DynamicPageOptions
 ): Promise<DynamicPageInfo> {
   const url = `/dynamic/${testId}`;
+  const plausibleScriptUrl = `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(
+      JSON.stringify(scriptConfig)
+    )}`
+
+  const plausibleSnippet = compileWebSnippet().replace(
+    "<%= plausible_script_url %>",
+    plausibleScriptUrl
+  );
+
+  const responseBody = TEMPLATE.replace(
+    "<script>// automatically replaced with compiled Plausible snippet</script>",
+    plausibleSnippet
+  ).replace("<body></body>", `<body>${bodyContent}</body>`);
+  
   await page.route(url, async (route) => {
     await route.fulfill({
-      body: TEMPLATE.replace(
-        "<%= plausible_script_url %>",
-        `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(
-          JSON.stringify(scriptConfig)
-        )}`
-      ).replace("<body></body>", `<body>${bodyContent}</body>`),
+      body: responseBody,
       contentType: "text/html",
     });
   });
