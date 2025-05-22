@@ -491,6 +491,16 @@ function init(overrides) {
         })
       }
     }
+    
+    if (COMPILE_CONFIG && config.formSubmissions) {
+      function trackFormSubmission(e) {
+        if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
+          plausible('Form Submission', { props: { path: location.pathname } });
+        }
+      }
+
+      document.addEventListener('submit', trackFormSubmission, true);
+    }
 
     if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
       // Finds event attributes by iterating over the given element's (or its
