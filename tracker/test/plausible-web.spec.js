@@ -18,7 +18,7 @@ import { LOCAL_SERVER_ADDR } from './support/server'
 const DEFAULT_CONFIG = {
   domain: 'example.com',
   endpoint: `${LOCAL_SERVER_ADDR}/api/event`,
-  local: true
+  captureOnLocalhost: true
 }
 
 async function openPage(page, config, options = {}) {
@@ -54,22 +54,21 @@ test.describe('plausible-web.js', () => {
 
   test('does not trigger any events when `local` config is disabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => openPage(page, { local: false }),
+      action: () => openPage(page, { captureOnLocalhost: false }),
       expectedRequests: [],
       refutedRequests: [{ n: 'pageview' }]
     })
   })
 
-  test('does not track pageview props, outbound links, file downloads or tagged events without features being enabled', async ({ page }) => {
+  test('does not track pageview props, outbound links or file downloads without features being enabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await openPage(page, {})
         await page.click('#file-download', { modifiers: [metaKey()] })
-        await page.click('#tagged-event')
         await page.click('#outbound-link')
       },
       expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }],
-      refutedRequests: [{ n: 'File Download' }, { n: 'Purchase' }, { n: 'Outbound Link: Click' }],
+      refutedRequests: [{ n: 'File Download' }, { n: 'Outbound Link: Click' }],
       // Webkit captures engagement events differently, so we ignore them in this test
       shouldIgnoreRequest: (payload) => payload.n === 'engagement'
     })
@@ -167,10 +166,10 @@ test.describe('plausible-web.js', () => {
     })
   })
 
-  test('manual mode does not track pageviews', async ({ page }) => {
+  test('autoCapturePageviews=false mode does not track pageviews', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await openPage(page, { manual: true })
+        await openPage(page, { autoCapturePageviews: false })
         await hideAndShowCurrentTab(page, { delay: 200 })
       },
       expectedRequests: [],
@@ -178,10 +177,10 @@ test.describe('plausible-web.js', () => {
     })
   })
 
-  test('manual mode after manual pageview continues tracking', async ({ page }) => {
+  test('autoCapturePageviews=false mode after manual pageview continues tracking', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await openPage(page, { manual: true })
+        await openPage(page, { autoCapturePageviews: false })
         await page.click('#manual-pageview')
         await hideAndShowCurrentTab(page, { delay: 200 })
       },
@@ -192,7 +191,7 @@ test.describe('plausible-web.js', () => {
     })
   })
 
-  test('does not send `h` parameter when `hash` config is disabled', async ({ page }) => {
+  test('does not send `h` parameter when `hashBasedRouting` config is disabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => openPage(page, {}),
       expectedRequests: [{ n: 'pageview', h: expecting.toBeUndefined() }]
@@ -201,22 +200,13 @@ test.describe('plausible-web.js', () => {
 
   test('sends `h` parameter when `hash` config is enabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
-      action: () => openPage(page, { hash: true }),
+      action: () => openPage(page, { hashBasedRouting: true }),
       expectedRequests: [{ n: 'pageview', h: 1 }]
     })
   })
 
-  test('tracking tagged events (when feature enabled)', async ({ page }) => {
-    await openPage(page, { taggedEvents: true })
-
-    await expectPlausibleInAction(page, {
-      action: () => page.click('#tagged-event'),
-      expectedRequests: [{ n: 'Purchase', p: { foo: 'bar' }, $: expecting.toBeUndefined() }]
-    })
-  })
-
-  test('tracking tagged events with revenue (when enabled)', async ({ page }) => {
-    await openPage(page, { taggedEvents: true, revenue: true })
+  test('tracking tagged events with revenue', async ({ page }) => {
+    await openPage(page, {})
 
     await expectPlausibleInAction(page, {
       action: () => page.click('#tagged-event'),
