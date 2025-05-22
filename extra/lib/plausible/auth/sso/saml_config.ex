@@ -17,6 +17,7 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   @type t() :: %__MODULE__{}
 
   @fields [:idp_signin_url, :idp_entity_id, :idp_cert_pem, :idp_metadata]
+  @required_fields @fields -- [:idp_metadata]
 
   embedded_schema do
     field :idp_signin_url, :string
@@ -28,5 +29,35 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   def changeset(struct, params) do
     struct
     |> cast(params, @fields)
+  end
+
+  def update_changeset(struct, params) do
+    struct
+    |> cast(params, @fields)
+    |> validate_required(@required_fields)
+    |> validate_url(:idp_signin_url)
+    |> validate_pem(:idp_cert_pem)
+  end
+
+  defp validate_url(changeset, field) do
+    if url = get_change(changeset, field) do
+      case URI.new(url) do
+        {:ok, uri} when uri.scheme in ["http", "https"] -> changeset
+        _ -> add_error(changeset, field, "invalid URL", validation: :url)
+      end
+    else
+      changeset
+    end
+  end
+
+  defp validate_pem(changeset, field) do
+    if pem = get_change(changeset, field) do
+      case X509.Certificate.from_pem(pem) do
+        {:ok, _cert} -> changeset
+        {:error, _} -> add_error(changeset, field, "invalid certificate", validation: :cert_pem)
+      end
+    else
+      changeset
+    end
   end
 end
