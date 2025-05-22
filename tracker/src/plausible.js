@@ -90,7 +90,7 @@ function trigger(eventName, options) {
   if (options && options.interactive === false) {
     payload.i = false
   }
-  if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+  if (COMPILE_REVENUE) {
     if (options && options.revenue) {
       payload.$ = options.revenue
     }
@@ -452,7 +452,7 @@ function init(overrides) {
 
       if (shouldFollowLink(event, link)) {
         var attrs = { props: eventAttrs.props, callback: followLink }
-        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+        if (COMPILE_REVENUE) {
           attrs.revenue = eventAttrs.revenue
         }
         plausible(eventAttrs.name, attrs)
@@ -460,7 +460,7 @@ function init(overrides) {
         event.preventDefault()
       } else {
         var attrs = { props: eventAttrs.props }
-        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+        if (COMPILE_REVENUE) {
           attrs.revenue = eventAttrs.revenue
         }
         plausible(eventAttrs.name, attrs)
@@ -508,7 +508,7 @@ function init(overrides) {
       function getTaggedEventAttributes(htmlElement) {
         var taggedElement = isTagged(htmlElement) ? htmlElement : htmlElement && htmlElement.parentNode
         var eventAttrs = { name: null, props: {} }
-        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+        if (COMPILE_REVENUE) {
           eventAttrs.revenue = {}
         }
 
@@ -530,7 +530,7 @@ function init(overrides) {
             }
           }
 
-          if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+          if (COMPILE_REVENUE) {
             var revenueMatchList = className.match(/plausible-revenue-(.+)(=|--)(.+)/)
             if (revenueMatchList) {
               var key = revenueMatchList[1]
@@ -561,7 +561,7 @@ function init(overrides) {
         setTimeout(submitForm, 5000)
 
         var attrs = { props: eventAttrs.props, callback: submitForm }
-        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+        if (COMPILE_REVENUE) {
           attrs.revenue = eventAttrs.revenue
         }
         plausible(eventAttrs.name, attrs)
@@ -603,7 +603,7 @@ function init(overrides) {
           } else {
             var attrs = {}
             attrs.props = eventAttrs.props
-            if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+            if (COMPILE_REVENUE) {
               attrs.revenue = eventAttrs.revenue
             }
             plausible(eventAttrs.name, attrs)
