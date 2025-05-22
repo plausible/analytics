@@ -828,6 +828,10 @@ config :plausible, Plausible.Sentry.Client,
     receive_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_RECEIVE_TIMEOUT", 15000)
   ]
 
+config :plausible, Plausible.Workers.PurgeCDNCache,
+  pullzone_id: get_var_from_path_or_env(config_dir, "BUNNY_PULLZONE_ID"),
+  api_key: get_var_from_path_or_env(config_dir, "BUNNY_API_KEY")
+
 config :ref_inspector,
   init: {Plausible.Release, :configure_ref_inspector}
 
