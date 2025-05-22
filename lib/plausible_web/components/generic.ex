@@ -457,11 +457,16 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
 
     ~H"""
-    <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative z-[1000]">
+    <div
+      x-data={@wrapper_data}
+      x-on:mouseenter="hovered = true"
+      x-on:mouseleave="hovered = false"
+      class={["w-max relative z-[1000]"]}
+    >
       <div
         x-cloak
         x-show={@show_inner}
-        class="tooltip-content z-[1000] bg-gray-900 rounded text-white absolute bottom-24 sm:bottom-7 left-0 sm:w-72 p-4 text-sm font-medium"
+        class={["tooltip-content absolute pb-2 top-0 -translate-y-full z-[1000] sm:w-72"]}
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -469,14 +474,11 @@ defmodule PlausibleWeb.Components.Generic do
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
       >
-        {render_slot(List.first(@tooltip_content))}
+        <div class="bg-gray-900 text-white rounded p-4 text-sm font-medium">
+          {render_slot(@tooltip_content)}
+        </div>
       </div>
-      <div
-        x-on:click="sticky = true; hovered = true"
-        x-on:click.outside="sticky = false; hovered = false"
-        x-on:mouseover="hovered = true"
-        x-on:mouseout="hovered = false"
-      >
+      <div x-on:click="sticky = true; hovered = true" x-on:click.outside="sticky = false">
         {render_slot(@inner_block)}
       </div>
     </div>

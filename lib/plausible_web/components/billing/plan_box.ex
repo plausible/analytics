@@ -291,18 +291,22 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
-    <.tooltip :if={@exceeded_plan_limits != [] && @disabled_message}>
-      <div class="absolute top-0 text-sm w-full flex items-center text-red-700 dark:text-red-500 justify-center">
-        {@disabled_message}
-        <Heroicons.information_circle class="hidden sm:block w-5 h-5 sm:ml-2" />
-      </div>
-      <:tooltip_content>
-        Your usage exceeds the following limit(s):<br /><br />
-        <p :for={limit <- @exceeded_plan_limits}>
-          {Phoenix.Naming.humanize(limit)}<br />
-        </p>
-      </:tooltip_content>
-    </.tooltip>
+    <div :if={@exceeded_plan_limits != [] && @disabled_message} class="flex flex-col items-center">
+      <.tooltip>
+        <div class="h-0 text-sm">
+          <div class="flex items-center text-red-700 dark:text-red-500 justify-center">
+            {@disabled_message}
+            <Heroicons.information_circle class="hidden sm:block w-5 h-5 sm:ml-2" />
+          </div>
+        </div>
+        <:tooltip_content>
+          Your usage exceeds the following limit(s):<br /><br />
+          <p :for={limit <- @exceeded_plan_limits}>
+            {Phoenix.Naming.humanize(limit)}<br />
+          </p>
+        </:tooltip_content>
+      </.tooltip>
+    </div>
     <div
       :if={@disabled_message && @exceeded_plan_limits == []}
       class="pt-2 text-sm w-full text-red-700 dark:text-red-500 text-center"
