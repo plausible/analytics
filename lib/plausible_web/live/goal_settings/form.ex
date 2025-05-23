@@ -387,6 +387,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     """
   end
 
+  def revenue_goal_settings(%{goal: %{currency: nil}} = assigns) do
+    ~H"""
+    <div class="h-2"></div>
+    """
+  end
+
   def revenue_goal_settings(assigns) do
     js_data =
       Jason.encode!(%{
@@ -397,9 +403,20 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     assigns = assign(assigns, selected_currency: currency_option(assigns.goal), js_data: js_data)
 
     ~H"""
-    <div class="mt-6 space-y-3" x-data={@js_data}>
-      <.revenue_toggle {assigns} />
-      <div x-show="active" id={"revenue-input-#{@suffix}"}>
+    <div x-data={@js_data}>
+      <%= if is_nil(@goal) do %>
+        <div class="mt-6 mb-3">
+          <.revenue_toggle {assigns} />
+        </div>
+      <% else %>
+        <label
+          data-test="goal-currency-label"
+          class="mt-4 mb-2 text-sm block font-medium dark:text-gray-100"
+        >
+          Currency
+        </label>
+      <% end %>
+      <div class="mb-2" x-show="active" id={"revenue-input-#{@suffix}"}>
         <.live_component
           id={"currency_input_#{@suffix}"}
           submit_name={@f[:currency].name}
@@ -576,7 +593,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         id="enable-revenue-tracking"
         id_suffix={@suffix}
         js_active_var="active"
-        disabled={not is_nil(@goal)}
       />
       <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-100">
         Enable Revenue Tracking
