@@ -408,7 +408,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <button
       id={"#{@id}-#{@id_suffix}"}
-      class={if(@disabled, do: "cursor-not-allowed", else: "cursor-pointer")}
+      class={["h-6", if(@disabled, do: "cursor-not-allowed", else: "cursor-pointer")]}
       aria-labelledby={@id}
       role="switch"
       type="button"

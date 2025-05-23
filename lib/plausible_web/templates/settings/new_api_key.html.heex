@@ -1,58 +1,58 @@
 <.focus_box>
   <:title>Create new API key</:title>
+  <:subtitle>
+    Any API key includes full
+    <.styled_link class="inline" href="https://plausible.io/docs/stats-api">
+      Stats API
+    </.styled_link>
+    access.
+  </:subtitle>
 
   <.form :let={f} for={@changeset} action={Routes.settings_path(@conn, :api_keys)}>
+    <div :if={ee?()} x-data="{sitesApi: false}" class="mb-8 flex flex-col gap-y-2">
+      <%= if @sites_api_enabled? do %>
+        <input
+          type="hidden"
+          name={f[:type].name}
+          x-bind:value="sitesApi ? 'sites_api' : 'stats_api'"
+        />
+        <div class="flex items-center">
+          <.toggle_switch id="sites-api-toggle" js_active_var="sitesApi" />
+          <span class="ml-3 text-sm">
+            Include
+            <.styled_link href="https://plausible.io/docs/sites-api">
+              Site Provisioning API
+            </.styled_link>
+            access
+          </span>
+        </div>
+      <% else %>
+        <input type="hidden" name={f[:type].name} value="stats_api" />
+        <.tooltip>
+          <:tooltip_content>
+            <div class="text-xs">
+              Your current subscription plan does not support this feature. Please
+              <a href="https://plausible.io/contact" class="underline">contact us</a>
+              if you're interested.
+            </div>
+          </:tooltip_content>
+          <div class="flex items-center text-gray-500 dark:text-gray-400">
+            <.toggle_switch id="sites-api-toggle" js_active_var="sitesApi" disabled={true} />
+            <span class="ml-3 text-sm">
+              Include
+              <.styled_link href="https://plausible.io/docs/sites-api">
+                Site Provisioning API
+              </.styled_link>
+              access
+            </span>
+          </div>
+        </.tooltip>
+      <% end %>
+    </div>
+
     <.input type="text" field={f[:name]} label="Name" placeholder="Development" />
 
     <input :if={ce?()} type="hidden" name={f[:type].name} value={f[:type].value} />
-
-    <div :if={ee?()} x-data="{ showNotice: false }" class="mt-4 flex flex-col gap-y-2">
-      <div>
-        <.label>Type</.label>
-      </div>
-
-      <.input
-        x-on:click="showNotice = false"
-        type="radio"
-        class="block h-5 w-5 dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-        id={f[:type].id <> "_0"}
-        name={f[:type].name}
-        value="stats_api"
-        checked={f[:type].value == "stats_api"}
-        label="Stats API"
-      >
-        <:help_content>
-          Full access to
-          <.styled_link href="https://plausible.io/docs/stats-api">Stats API</.styled_link>
-        </:help_content>
-      </.input>
-
-      <.input
-        x-on:click={"showNotice = " <> if(@sites_api_enabled?, do: "false", else: "true")}
-        type="radio"
-        id={f[:type].id <> "_1"}
-        name={f[:type].name}
-        value="sites_api"
-        checked={f[:type].value == "sites_api"}
-        label="Sites API"
-      >
-        <:help_content>
-          Full access to
-          <.styled_link href="https://plausible.io/docs/stats-api">Stats API</.styled_link>
-          and
-          <.styled_link href="https://plausible.io/docs/sites-api">Sites API</.styled_link>
-        </:help_content>
-      </.input>
-
-      <div x-show="showNotice" class="flex gap-x-2 text-sm">
-        <Heroicons.exclamation_triangle class="mt-1 block w-4 h-4 shrink-0" />
-        <div>
-          Your current subscription plan does not include Sites API access.
-          <a href="https://plausible.io/contact" class="underline">Contact us</a>
-          if interested.
-        </div>
-      </div>
-    </div>
 
     <div class="mt-4">
       <.input_with_clipboard id="key-input" name="api_key[key]" label="Key" value={f[:key].value} />
