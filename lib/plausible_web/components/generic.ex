@@ -399,6 +399,37 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr :id, :string, required: true
+  attr :js_active_var, :string, required: true
+  attr :id_suffix, :string, default: ""
+  attr :disabled, :boolean, default: false
+
+  def toggle_switch(assigns) do
+    ~H"""
+    <button
+      id={"#{@id}-#{@id_suffix}"}
+      class={if(@disabled, do: "cursor-not-allowed", else: "cursor-pointer")}
+      aria-labelledby={@id}
+      role="switch"
+      type="button"
+      x-on:click={"#{@js_active_var} = !#{@js_active_var}"}
+      x-bind:aria-checked={@js_active_var}
+      disabled={@disabled}
+    >
+      <span
+        class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+        x-bind:class={"#{@js_active_var} ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"}
+      >
+        <span
+          aria-hidden="true"
+          class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+          x-bind:class={"#{@js_active_var} ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"}
+        />
+      </span>
+    </button>
+    """
+  end
+
   def settings_tiles(assigns) do
     ~H"""
     <div class="text-gray-900 leading-5 dark:text-gray-100">
