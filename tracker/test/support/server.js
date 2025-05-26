@@ -27,7 +27,7 @@ export function runLocalFileServer() {
       code = code.replace('"<%= @config_js %>"', req.query.script_config)
     }
 
-    res.send(code)
+    res.type('application/javascript').send(code)
   });
 
   // A test utility - serve an image with an artificial delay
