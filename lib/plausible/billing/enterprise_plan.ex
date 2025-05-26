@@ -21,7 +21,7 @@ defmodule Plausible.Billing.EnterprisePlan do
     field :monthly_pageview_limit, :integer
     field :site_limit, :integer
     field :team_member_limit, Plausible.Billing.Ecto.Limit
-    field :features, Plausible.Billing.Ecto.FeatureList, default: []
+    field :features, {:array, Plausible.Billing.Ecto.Feature}, default: []
     field :hourly_api_request_limit, :integer
 
     belongs_to :team, Plausible.Teams.Team
