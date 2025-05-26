@@ -695,6 +695,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute resp =~ "A Better Way of Inviting People to a Team"
       refute resp =~ "Team members automatically have access to this site."
     end
+
+    test "does not render team management notice if Teams feature unavailable", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_starter_plan(user)
+
+      site = new_site(owner: user)
+      resp = conn |> get("/#{site.domain}/settings/people") |> html_response(200)
+
+      refute resp =~ "A Better Way of Inviting People"
+    end
   end
 
   describe "GET /:domain/settings/goals" do

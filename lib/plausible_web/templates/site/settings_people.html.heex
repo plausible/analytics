@@ -1,11 +1,8 @@
 <.settings_tiles>
-  <PlausibleWeb.Team.Notice.owner_cta_banner :if={
-    @site_role == :owner and not Plausible.Teams.setup?(@site.team)
-  } />
-
-  <PlausibleWeb.Team.Notice.guest_cta_banner :if={
-    @site_role != :owner and not Plausible.Teams.setup?(@site.team)
-  } />
+  <%= if not Plausible.Teams.setup?(@site.team) and Plausible.Billing.Feature.Teams.check_availability(@site.team) == :ok do %>
+    <PlausibleWeb.Team.Notice.owner_cta_banner :if={@site_role == :owner} />
+    <PlausibleWeb.Team.Notice.guest_cta_banner :if={@site_role != :owner} />
+  <% end %>
 
   <.tile
     docs="users-roles"

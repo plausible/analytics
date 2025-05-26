@@ -191,6 +191,10 @@ defmodule Plausible.Factory do
     }
   end
 
+  def starter_subscription_factory do
+    build(:subscription, paddle_plan_id: "910413")
+  end
+
   def growth_subscription_factory do
     build(:subscription, paddle_plan_id: "857097")
   end
