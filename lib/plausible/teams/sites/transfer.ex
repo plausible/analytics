@@ -17,23 +17,6 @@ defmodule Plausible.Teams.Sites.Transfer do
           | :multiple_teams
           | :permission_denied
 
-  # XXX: remove with kaffy
-  @spec bulk_transfer([Site.t()], Auth.User.t(), Teams.Team.t() | nil) ::
-          {:ok, [Teams.Membership.t()]} | {:error, transfer_error()}
-  def bulk_transfer(sites, new_owner, team \\ nil) do
-    Repo.transaction(fn ->
-      for site <- sites do
-        case transfer_ownership(site, new_owner, team) do
-          {:ok, membership} ->
-            membership
-
-          {:error, error} ->
-            Repo.rollback(error)
-        end
-      end
-    end)
-  end
-
   @spec change_team(Site.t(), Auth.User.t(), Teams.Team.t()) ::
           :ok | {:error, transfer_error()}
   def change_team(site, user, new_team) do

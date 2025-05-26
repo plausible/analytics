@@ -37,17 +37,6 @@ defmodule Plausible.Teams.Invitations.InviteToSite do
     end)
   end
 
-  # XXX: remove with kaffy
-  @spec bulk_invite([Site.t()], User.t(), String.t(), atom(), Keyword.t()) ::
-          {:ok, [invitation]} | {:error, invite_error()}
-  def bulk_invite(sites, inviter, invitee_email, role, opts \\ []) do
-    Repo.transaction(fn ->
-      for site <- sites do
-        do_invite(site, inviter, invitee_email, role, opts)
-      end
-    end)
-  end
-
   defp do_invite(site, inviter, invitee_email, role, opts \\ []) do
     with site <- Repo.preload(site, [:owners, :team]),
          :ok <- Teams.Invitations.check_invitation_permissions(site, inviter, role, opts),
