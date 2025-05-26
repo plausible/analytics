@@ -17,7 +17,7 @@ defmodule PlausibleWeb.TrackerPlugTest do
   use Plug.Test
   use Plausible.Teams.Test
 
-  alias Plausible.Site.TrackerScriptConfiguration
+  alias PlausibleWeb.Tracker
 
   describe "plausible-main.js" do
     @example_config %{
@@ -34,8 +34,12 @@ defmodule PlausibleWeb.TrackerPlugTest do
     test "returns the script for an existing site", %{conn: conn} do
       site = new_site()
 
-      {:ok, tracker_script_configuration} =
-        TrackerScriptConfiguration.upsert(Map.put(@example_config, :site_id, site.id))
+      tracker_script_configuration =
+        Tracker.update_script_configuration(
+          site,
+          Map.put(@example_config, :site_id, site.id),
+          :installation
+        )
 
       response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
 
@@ -50,8 +54,12 @@ defmodule PlausibleWeb.TrackerPlugTest do
     test "script contains window.plausible", %{conn: conn} do
       site = new_site()
 
-      {:ok, tracker_script_configuration} =
-        TrackerScriptConfiguration.upsert(Map.put(@example_config, :site_id, site.id))
+      tracker_script_configuration =
+        Tracker.update_script_configuration(
+          site,
+          Map.put(@example_config, :site_id, site.id),
+          :installation
+        )
 
       response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
 

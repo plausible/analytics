@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
+  alias Plausible.Site.TrackerScriptConfiguration
+
   setup [:create_user, :log_in, :create_site]
 
   describe "GET /:domain/installation" do
@@ -30,11 +32,10 @@ defmodule PlausibleWeb.Live.InstallationTest do
     end
 
     test "static verification screen renders for flow=domain_change", %{conn: conn, site: site} do
-      {:ok, _} =
-        Plausible.Site.TrackerScriptConfiguration.upsert(%{
-          site_id: site.id,
-          installation_type: :manual
-        })
+      Plausible.Repo.insert!(%TrackerScriptConfiguration{
+        site_id: site.id,
+        installation_type: :manual
+      })
 
       resp =
         conn
@@ -54,11 +55,10 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
     test "static verification screen renders for flow=domain_change using original installation type",
          %{conn: conn, site: site} do
-      {:ok, _} =
-        Plausible.Site.TrackerScriptConfiguration.upsert(%{
-          site_id: site.id,
-          installation_type: :wordpress
-        })
+      Plausible.Repo.insert!(%TrackerScriptConfiguration{
+        site_id: site.id,
+        installation_type: :wordpress
+      })
 
       resp =
         conn

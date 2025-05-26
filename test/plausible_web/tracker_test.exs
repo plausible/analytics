@@ -3,6 +3,7 @@ defmodule PlausibleWeb.TrackerTest do
   use Plausible.Teams.Test
 
   alias Plausible.Site.TrackerScriptConfiguration
+  alias PlausibleWeb.Tracker
 
   describe "plausible-main.js" do
     @example_config %{
@@ -52,7 +53,11 @@ defmodule PlausibleWeb.TrackerTest do
     end
 
     def create_config(site) do
-      {:ok, _} = TrackerScriptConfiguration.upsert(Map.put(@example_config, :site_id, site.id))
+      Tracker.update_script_configuration(
+        site,
+        Map.put(@example_config, :site_id, site.id),
+        :installation
+      )
 
       Plausible.Repo.one(
         from(c in TrackerScriptConfiguration, where: c.site_id == ^site.id, preload: [:site])

@@ -4,8 +4,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfiguration do
   """
   use PlausibleWeb, :plugins_api_controller
 
-  alias Plausible.Site.TrackerScriptConfiguration
-
   operation(:get,
     summary: "Retrieve Tracker Script Configuration",
     parameters: [],
@@ -20,7 +18,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfiguration do
   @spec get(Plug.Conn.t(), %{}) :: Plug.Conn.t()
   def get(conn, _params) do
     site = conn.assigns.authorized_site
-    configuration = TrackerScriptConfiguration.get_or_create!(site.id)
+    configuration = PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site.id)
 
     conn
     |> put_view(Views.TrackerScriptConfiguration)
@@ -40,28 +38,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfiguration do
   )
 
   @spec update(Plug.Conn.t(), map()) :: Plug.Conn.t()
-  def update(
-        %{
-          private: %{
-            open_api_spex: %{body_params: %{tracker_script_configuration: update_params}}
-          }
-        } = conn,
-        _params
-      ) do
+  def update(conn, %{"tracker_script_configuration" => update_params}) do
     site = conn.assigns.authorized_site
 
-    update_params =
-      update_params
-      |> Map.take([
-        :installation_type,
-        :hash_based_routing,
-        :outbound_links,
-        :file_downloads,
-        :form_submissions
-      ])
-      |> Map.put(:site_id, site.id)
+    update_params = Map.put(update_params, "site_id", site.id)
 
-    updated_config = PlausibleWeb.Tracker.update_script_configuration(site, update_params)
+    updated_config =
+      PlausibleWeb.Tracker.update_script_configuration(site, update_params, :plugins_api)
 
     conn
     |> put_view(Views.TrackerScriptConfiguration)
