@@ -12,7 +12,7 @@ defmodule Plausible.Auth.SSO do
     changeset = SSO.Integration.init_changeset(team)
 
     Repo.insert!(changeset,
-      on_conflict: [set: [updated_at: NaiveDateTime.utc_now()]],
+      on_conflict: [set: [updated_at: NaiveDateTime.utc_now(:second)]],
       conflict_target: :team_id,
       returning: true
     )
