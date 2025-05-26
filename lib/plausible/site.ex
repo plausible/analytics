@@ -41,6 +41,8 @@ defmodule Plausible.Site do
       on_replace: :update,
       defaults_to_struct: true
 
+    has_one :tracker_script_configuration, Plausible.Site.TrackerScriptConfiguration
+
     has_many :goals, Plausible.Goal, preload_order: [desc: :id]
     has_many :revenue_goals, Plausible.Goal, where: [currency: {:not, nil}]
     has_one :google_auth, GoogleAuth
