@@ -329,7 +329,10 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html = html_response(conn, 200)
-      assert html =~ "This team is limited to 10 sites"
+
+      assert text_of_element(html, ~s/[data-test="limit-exceeded-notice"]/) =~
+               "This account is limited to 10 sites"
+
       refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end
 

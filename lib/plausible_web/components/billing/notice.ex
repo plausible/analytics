@@ -71,14 +71,22 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   def limit_exceeded(assigns) do
     ~H"""
-    <.notice {@rest} title="Notice">
-      {account_label(@current_team)} is limited to {@limit} {@resource}. To increase this limit,
+    <.notice {@rest} title="Notice" data-test="limit-exceeded-notice">
+      {account_label(@current_team)} is limited to {pretty_print_resource_limit(@limit, @resource)}. To increase this limit,
       <PlausibleWeb.Components.Billing.upgrade_call_to_action
         current_team={@current_team}
         current_role={@current_role}
       />.
     </.notice>
     """
+  end
+
+  defp pretty_print_resource_limit(_limit = 1, resource_plural) do
+    "a single #{String.trim_trailing(resource_plural, "s")}"
+  end
+
+  defp pretty_print_resource_limit(limit, resource_plural) do
+    "#{limit} #{resource_plural}"
   end
 
   attr(:subscription, :map, required: true)
@@ -299,11 +307,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  defp account_label(current_team) do
-    if current_team do
-      "This team"
-    else
-      "This account"
-    end
-  end
+  defp account_label(%Plausible.Teams.Team{setup_complete: true}), do: "This team"
+  defp account_label(_team), do: "This account"
 end
