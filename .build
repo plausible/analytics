@@ -79,6 +79,8 @@ Plausible.DataCase.html
 Plausible.DataMigration.AcquisitionChannel.html
 Plausible.DataMigration.BackfillTeams.html
 Plausible.DataMigration.BackfillTeamsHourlyRequestLimit.html
+Plausible.DataMigration.BackfillTrackerScriptConfiguration.TrackerScriptConfigurationSnapshot.html
+Plausible.DataMigration.BackfillTrackerScriptConfiguration.html
 Plausible.DataMigration.CleanUpDemoSiteReferrerSource.html
 Plausible.DataMigration.ClickhouseRepo.html
 Plausible.DataMigration.LocationsSync.html
@@ -491,8 +493,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-ABB3EAC7.js
-dist/sidebar_items-9BEBE487.js
+dist/search_data-2AE4566A.js
+dist/sidebar_items-159CA225.js
 index.html
 readme.html
 search.html
