@@ -21,7 +21,7 @@ defmodule PlausibleWeb.UserAuth do
     @type login_subject() :: Auth.User.t()
   end
 
-  @spec log_in_user(Plug.Conn.t(), Auth.User.t() | Auth.SSO.Identity.t(), String.t() | nil) ::
+  @spec log_in_user(Plug.Conn.t(), login_subject(), String.t() | nil) ::
           Plug.Conn.t()
   def log_in_user(conn, subject, redirect_path \\ nil)
 
