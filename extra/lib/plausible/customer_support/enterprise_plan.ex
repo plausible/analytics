@@ -66,4 +66,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def features_rate(f) do
     if "sites_api" in f, do: 99, else: 0
   end
+
+  for Plausible.Billing.Plans.available_plans_for(nil, [])
+      |> IO.inspect(label: :huh)
 end

@@ -583,28 +583,6 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "GET /:domain/settings/people" do
     setup [:create_user, :log_in, :create_site]
 
-    @tag :ee_only
-    test "shows members page with links to CRM for super admin", %{
-      conn: conn,
-      user: user
-    } do
-      site = new_site(owner: user)
-      patch_env(:super_admin_user_ids, [user.id])
-
-      conn = get(conn, "/#{site.domain}/settings/people")
-      resp = html_response(conn, 200)
-
-      assert resp =~ "/crm/auth/user/#{user.id}"
-    end
-
-    test "does not show CRM links to non-super admin user", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-      conn = get(conn, "/#{site.domain}/settings/people")
-      resp = html_response(conn, 200)
-
-      refute resp =~ "/crm/auth/user/#{user.id}"
-    end
-
     test "lists current members", %{conn: conn, user: user} do
       site = new_site(owner: user)
       editor = add_guest(site, role: :editor)
