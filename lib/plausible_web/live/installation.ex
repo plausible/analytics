@@ -472,8 +472,13 @@ defmodule PlausibleWeb.Live.Installation do
 
   @domain_change PlausibleWeb.Flows.domain_change()
   defp get_installation_type(@domain_change, tracker_script_configuration, params) do
-    tracker_script_configuration.installation_type || get_installation_type(nil, nil, params) ||
-      "manual"
+    case tracker_script_configuration.installation_type do
+      nil ->
+        get_installation_type(nil, nil, params)
+
+      installation_type ->
+        Atom.to_string(installation_type)
+    end
   end
 
   defp get_installation_type(_type, _tracker_script_configuration, params) do

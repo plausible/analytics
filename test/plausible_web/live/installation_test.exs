@@ -30,6 +30,12 @@ defmodule PlausibleWeb.Live.InstallationTest do
     end
 
     test "static verification screen renders for flow=domain_change", %{conn: conn, site: site} do
+      {:ok, _} =
+        Plausible.Site.TrackerScriptConfiguration.upsert(%{
+          site_id: site.id,
+          installation_type: :manual
+        })
+
       resp =
         conn
         |> get("/#{site.domain}/installation?flow=#{PlausibleWeb.Flows.domain_change()}")
