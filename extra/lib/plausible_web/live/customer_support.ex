@@ -64,7 +64,9 @@ defmodule PlausibleWeb.Live.CustomerSupport do
       <div class="container pt-6">
         <div class="group mt-6 pb-5 border-b border-gray-200 dark:border-gray-500 flex items-center justify-between">
           <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
-            💬 Customer Support
+            <.link replace patch="/cs?filter_text=">
+              💬 Customer Support
+            </.link>
           </h2>
         </div>
 
