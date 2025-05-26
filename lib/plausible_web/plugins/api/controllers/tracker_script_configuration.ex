@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfiguration do
   @moduledoc """
-  Controller for the Shared Link resource under Plugins API
+  Controller for the Tracker Script Configuration resource under Plugins API
   """
   use PlausibleWeb, :plugins_api_controller
 
