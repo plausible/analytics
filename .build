@@ -91,6 +91,7 @@ Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
 Plausible.Ecto.EventName.html
 Plausible.Ecto.Types.CompiledRegex.html
+Plausible.Ecto.Types.Nanoid.html
 Plausible.Exports.html
 Plausible.Factory.html
 Plausible.File.html
@@ -187,6 +188,7 @@ Plausible.Site.InstallationMeta.html
 Plausible.Site.MonthlyReport.html
 Plausible.Site.Removal.html
 Plausible.Site.SharedLink.html
+Plausible.Site.TrackerScriptConfiguration.html
 Plausible.Site.TrafficChangeNotification.html
 Plausible.Site.UserPreference.html
 Plausible.Site.WeeklyReport.html
@@ -489,8 +491,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-373402DB.js
-dist/sidebar_items-BA8F2CEA.js
+dist/search_data-ABB3EAC7.js
+dist/sidebar_items-9BEBE487.js
 index.html
 readme.html
 search.html
