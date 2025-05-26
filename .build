@@ -19,6 +19,7 @@ Plausible.Auth.Password.html
 Plausible.Auth.SSO.Domain.html
 Plausible.Auth.SSO.Integration.html
 Plausible.Auth.SSO.SAMLConfig.html
+Plausible.Auth.SSO.html
 Plausible.Auth.TOTP.EncryptedBinary.html
 Plausible.Auth.TOTP.RecoveryCode.html
 Plausible.Auth.TOTP.Vault.html
@@ -486,8 +487,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-BEC5F5FE.js
-dist/sidebar_items-6FDB9555.js
+dist/search_data-B8E7504B.js
+dist/sidebar_items-C6E0308E.js
 index.html
 readme.html
 search.html
