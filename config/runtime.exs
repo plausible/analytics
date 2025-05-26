@@ -834,41 +834,6 @@ config :ref_inspector,
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
 
-if config_env() in [:dev, :staging, :prod, :test] do
-  config :kaffy,
-    otp_app: :plausible,
-    ecto_repo: Plausible.Repo,
-    router: PlausibleWeb.Router,
-    admin_title: "Plausible Admin",
-    extensions: [Plausible.CrmExtensions],
-    resources: [
-      auth: [
-        resources: [
-          user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin],
-          api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
-        ]
-      ],
-      teams: [
-        resources: [
-          team: [schema: Plausible.Teams.Team, admin: Plausible.Teams.TeamAdmin]
-        ]
-      ],
-      sites: [
-        resources: [
-          site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
-        ]
-      ],
-      billing: [
-        resources: [
-          enterprise_plan: [
-            schema: Plausible.Billing.EnterprisePlan,
-            admin: Plausible.Billing.EnterprisePlanAdmin
-          ]
-        ]
-      ]
-    ]
-end
-
 geo_opts =
   cond do
     maxmind_license_key ->

@@ -88,16 +88,6 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    use Kaffy.Routes,
-      scope: "/crm",
-      pipe_through: [
-        PlausibleWeb.Plugs.NoRobots,
-        PlausibleWeb.AuthPlug,
-        PlausibleWeb.SuperAdminOnlyPlug
-      ]
-  end
-
-  on_ee do
     scope "/crm", PlausibleWeb do
       pipe_through :flags
       get "/teams/team/:team_id/usage", AdminController, :usage
