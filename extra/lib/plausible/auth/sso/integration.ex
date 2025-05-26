@@ -46,10 +46,24 @@ defmodule Plausible.Auth.SSO.Integration do
   end
 
   def update_changeset(integration, config_params) do
-    params = %{config: Map.merge(%{__type__: :saml}, config_params)}
+    params = tag_params(:saml, config_params)
 
     integration
     |> cast(params, [])
-    |> cast_polymorphic_embed(:config)
+    |> cast_polymorphic_embed(:config,
+      with: [
+        saml: &SSO.SAMLConfig.update_changeset/2
+      ]
+    )
+  end
+
+  defp tag_params(type, params) when is_atom(type) and is_map(params) do
+    case Enum.take(params, 1) do
+      [{key, _}] when is_binary(key) ->
+        %{"config" => Map.merge(%{"__type__" => Atom.to_string(type)}, params)}
+
+      _ ->
+        %{config: Map.merge(%{__type__: type}, params)}
+    end
   end
 end
