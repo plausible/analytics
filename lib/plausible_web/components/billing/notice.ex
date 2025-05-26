@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  defp pretty_print_resource_limit(_limit = 1, resource_plural) do
+  defp pretty_print_resource_limit(1 = _limit, resource_plural) do
     "a single #{String.trim_trailing(resource_plural, "s")}"
   end
 
