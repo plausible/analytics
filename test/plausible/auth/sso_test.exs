@@ -162,5 +162,134 @@ defmodule Plausible.Auth.SSOTest do
                  end)
       end
     end
+
+    describe "provision_user/1" do
+      setup do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        {:ok, team: team, integration: integration, domain: domain, sso_domain: sso_domain}
+      end
+
+      test "provisions a new SSO user form identity", %{integration: integration, domain: domain} do
+        identity = new_identity("Jane Sculley", "jane@" <> domain)
+
+        assert {:ok, :identity, user} = SSO.provision_user(identity)
+
+        assert user.id
+        assert user.email == identity.email
+        assert user.type == :sso
+        assert user.name == identity.name
+        assert user.sso_identity_id == identity.id
+        assert user.sso_integration_id == integration.id
+        assert user.email_verified
+        assert user.last_sso_login
+      end
+
+      test "provisions SSO user from existing user", %{
+        integration: integration,
+        team: team,
+        domain: domain
+      } do
+        user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
+        add_member(team, user: user, role: :editor)
+
+        # guest membership on a site on another team should not affect provisioning
+        another_team_site = new_site()
+        add_guest(another_team_site, user: user, role: :editor)
+
+        identity = new_identity(user.name, user.email)
+
+        assert {:ok, :standard, sso_user} = SSO.provision_user(identity)
+
+        assert sso_user.id == user.id
+        assert sso_user.email == identity.email
+        assert sso_user.type == :sso
+        assert sso_user.name == identity.name
+        assert sso_user.sso_identity_id == identity.id
+        assert sso_user.sso_integration_id == integration.id
+        assert sso_user.email_verified
+        assert sso_user.last_sso_login
+      end
+
+      test "provisions existing SSO user", %{integration: integration, team: team, domain: domain} do
+        user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
+        add_member(team, user: user, role: :editor)
+        identity = new_identity(user.name, user.email)
+        {:ok, :standard, user} = SSO.provision_user(identity)
+
+        assert {:ok, :sso, sso_user} = SSO.provision_user(identity)
+
+        assert sso_user.id == user.id
+        assert sso_user.email == identity.email
+        assert sso_user.type == :sso
+        assert sso_user.name == identity.name
+        assert sso_user.sso_identity_id == identity.id
+        assert sso_user.sso_integration_id == integration.id
+        assert sso_user.last_sso_login
+      end
+
+      test "does not provision user without matching setup integration", %{team: team} do
+        # rogue e-mail
+        identity = new_identity("Rodney Williams", "rodney@example.com")
+
+        assert {:error, :integration_not_found} = SSO.provision_user(identity)
+
+        # member without setup domain
+        user = new_user(email: "jane@example.com", name: "Jane Sculley")
+        add_member(team, user: user, role: :editor)
+        identity = new_identity(user.name, user.email)
+
+        assert {:error, :integration_not_found} = SSO.provision_user(identity)
+      end
+
+      test "does not provision non-member even if e-mail matches domain", %{domain: domain} do
+        user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
+        another_team = new_site().team
+        add_member(another_team, user: user, role: :editor)
+        identity = new_identity(user.name, user.email)
+
+        assert {:error, :integration_not_found} = SSO.provision_user(identity)
+      end
+
+      test "does not provision guest member", %{team: team, domain: domain} do
+        user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
+        site = new_site(team: team)
+        add_guest(site, user: user, role: :editor)
+        identity = new_identity(user.name, user.email)
+
+        assert {:error, :integration_not_found} = SSO.provision_user(identity)
+      end
+
+      test "does not provision when user is member of more than one team", %{
+        domain: domain,
+        team: team
+      } do
+        user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
+        add_member(team, user: user, role: :editor)
+        another_team = new_site().team
+        add_member(another_team, user: user, role: :viewer)
+        identity = new_identity(user.name, user.email)
+
+        assert {:error, :multiple_memberships, matched_team, matched_user} =
+                 SSO.provision_user(identity)
+
+        assert matched_team.id == team.id
+        assert matched_user.id == user.id
+      end
+    end
+
+    defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
+      %SSO.Identity{
+        id: id,
+        name: name,
+        email: email,
+        expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
+      }
+    end
   end
 end
