@@ -37,7 +37,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def update(%{tab: "billing"}, %{assigns: %{team: team}} = socket) do
     plans = get_plans(team.id)
-    plan = Plans.get_subscription_plan(team.subscription)
+
+    plan =
+      Plans.get_subscription_plan(team.subscription)
 
     attrs =
       if is_map(plan) do
@@ -66,10 +68,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
     {:ok,
      assign(socket,
+       plan: plan,
        plans: plans,
        plan_form: plan_form,
        show_plan_form?: false,
-       tab: "billing"
+       tab: "billing",
+       cost_estimate: 0,
+       cost_estimate_tier: Map.get(plan || %{}, :kind, :business)
      )}
   end
 
@@ -264,8 +269,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             :let={f}
             :if={@show_plan_form?}
             for={@plan_form}
+            id="save-plan"
             phx-submit="save-plan"
             phx-target={@myself}
+            phx-change="estimate-cost"
           >
             <.input field={f[:paddle_plan_id]} label="Paddle Plan ID" autocomplete="off" />
             <.input
@@ -316,21 +323,41 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               checked={mod in (f.source.changes[:features] || [])}
             />
 
-            <.button type="submit">
-              Save Custom Plan
-            </.button>
+            <div class="mt-8 flex align-center gap-x-4">
+              <.input
+                mt?={false}
+                type="select"
+                id="cost-estimate-tier"
+                name="enterprise_plan[cost-estimate-tier]"
+                options={[{"business", "business"}, {"growth", "growth"}]}
+                label="Tier"
+                value={@cost_estimate_tier}
+              />
+
+              <.input_with_clipboard
+                id="cost-estimate"
+                name="cost-estimate"
+                label={"#{(f[:billing_interval].value || "monthly")} cost estimate"}
+                value={@cost_estimate}
+              />
+
+              <.button theme="bright" phx-click="hide-plan-form" phx-target={@myself}>
+                Cancel
+              </.button>
+
+              <.button type="submit">
+                Save Custom Plan
+              </.button>
+            </div>
           </.form>
 
-          <.button :if={!@show_plan_form?} phx-click="show-plan-form" phx-target={@myself}>
-            New Custom Plan
-          </.button>
           <.button
-            :if={@show_plan_form?}
-            theme="bright"
-            phx-click="hide-plan-form"
+            :if={!@show_plan_form?}
+            id="new-custom-plan"
+            phx-click="show-plan-form"
             phx-target={@myself}
           >
-            Cancel
+            New Custom Plan
           </.button>
         </div>
 
@@ -539,9 +566,45 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     end
   end
 
-  def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
-    params = Map.put(params, "features", Enum.reject(params["features[]"], &(&1 == "false")))
+  def handle_event("estimate-cost", %{"enterprise_plan" => params}, socket) do
+    params = update_features_to_list(params)
+
+    form =
+      to_form(
+        EnterprisePlan.changeset(
+          %EnterprisePlan{},
+          params
+        )
+      )
+
     params = sanitize_params(params)
+
+    kind = String.to_existing_atom(params["cost-estimate-tier"])
+
+    cost_estimate =
+      Plausible.CustomerSupport.EnterprisePlan.estimate(
+        kind,
+        params["billing_interval"],
+        get_int_param(params, "monthly_pageview_limit"),
+        get_int_param(params, "site_limit"),
+        get_int_param(params, "team_member_limit"),
+        get_int_param(params, "hourly_api_request_limit"),
+        params["features"]
+      )
+
+    socket =
+      assign(socket,
+        cost_estimate_tier: params["cost-estimate-tier"],
+        cost_estimate: cost_estimate,
+        plan_form: form
+      )
+
+    {:noreply, socket}
+  end
+
+  def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
+    params = params |> update_features_to_list() |> sanitize_params()
+
     changeset = EnterprisePlan.changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
 
     case Plausible.Repo.insert(changeset) do
@@ -762,5 +825,15 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   defp clear_param(other) do
     other
+  end
+
+  defp get_int_param(params, key) do
+    param = Map.get(params, key)
+    param = if param in ["", nil], do: "0", else: param
+    String.to_integer(param)
+  end
+
+  defp update_features_to_list(params) do
+    Map.put(params, "features", Enum.reject(params["features[]"], &(&1 == "false" or &1 == "")))
   end
 end
