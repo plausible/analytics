@@ -3,10 +3,16 @@ import globals from 'globals'
 import pluginJs from '@eslint/js'
 import pluginPlaywright from 'eslint-plugin-playwright'
 import prettierEslintInteroperabilityConfig from 'eslint-config-prettier/flat'
-import {
-  DEFAULT_BOOLEAN_SETTINGS,
-  NON_BOOLEAN_SCRIPT_GLOBALS
-} from './script-settings.js'
+import { DEFAULT_GLOBALS as COMPILER_GLOBALS } from './compiler/index.js'
+
+export const ALLOWED_COMPILER_GLOBALS = Object.fromEntries(
+  Object.entries(COMPILER_GLOBALS).map(([global]) => [global, 'readonly'])
+)
+
+// Assume that window.plausible is accessible within script
+export const NON_BOOLEAN_SCRIPT_GLOBALS = {
+  plausible: false
+}
 
 export default defineConfig([
   {
@@ -19,7 +25,7 @@ export default defineConfig([
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...DEFAULT_BOOLEAN_SETTINGS,
+        ...ALLOWED_COMPILER_GLOBALS,
         ...NON_BOOLEAN_SCRIPT_GLOBALS
       },
       ecmaVersion: 5,
