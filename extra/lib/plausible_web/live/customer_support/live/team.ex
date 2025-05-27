@@ -329,7 +329,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 id="cost-estimate-tier"
                 name="enterprise_plan[cost-estimate-tier]"
                 options={[{"business", "business"}, {"growth", "growth"}]}
-                label="Tier"
+                label="Plan"
                 value={@cost_estimate_tier}
               />
 
