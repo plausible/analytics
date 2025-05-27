@@ -482,7 +482,7 @@ function init(overrides) {
       var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma', 'dmg']
       var fileTypesToTrack = defaultFileTypes
 
-      if (COMPILE_CONFIG && Array.isArray(config.fileDownloads)) {
+      if (COMPILE_CONFIG) {
         if (Array.isArray(config.fileDownloads)) {
           fileTypesToTrack = config.fileDownloads
         }
