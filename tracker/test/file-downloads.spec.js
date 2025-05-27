@@ -62,7 +62,8 @@ test.describe('file downloads', () => {
   const DEFAULT_CONFIG = {
     domain: 'example.com',
     endpoint: `${LOCAL_SERVER_ADDR}/api/event`,
-    captureOnLocalhost: true
+    captureOnLocalhost: true,
+    autoCapturePageviews: false
   }
 
   async function openPage(page, config) {
