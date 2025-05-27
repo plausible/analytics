@@ -37,11 +37,11 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
 
     cost_per_month =
       Decimal.from_float(
-        pv_rate +
+        (pv_rate +
           sites_rate +
           team_members_rate +
           api_calls_rate +
-          features_rate
+          features_rate) * 1.0
       )
       |> Decimal.round(2)
 
@@ -88,7 +88,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def pv_rate(:business, pvs) when pvs <= 1_000_000_000, do: 14_439
   def pv_rate(:business, _), do: 14_439
 
-  def sites_rate(n) when n <= 10, do: 0
+  def sites_rate(n) when n <= 50, do: 0
   def sites_rate(n), do: n * 0.1
 
   def team_members_rate(n) when n > 10, do: (n - 10) * 5
