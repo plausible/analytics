@@ -15,6 +15,11 @@ const VARIANTS = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
 export const LOCAL_SERVER_ADDR = `http://localhost:${LOCAL_SERVER_PORT}`
 
 export function runLocalFileServer() {
+  // /* uncomment to fix flakiness */
+  // app.post('/api/event', (req, res) => {
+  //   res.status(202).type("text/plain").send("ok");
+  // });
+
   app.use(express.static(FIXTURES_PATH));
 
   app.get('/tracker/js/:name', (req, res) => {
