@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         })
 
         html = render(lv)
-        assert text_of_attr(html, ~s|#cost-estimate|, "value") == "10880.00"
+        assert text_of_attr(html, ~s|#cost-estimate|, "value") == "10380.00"
       end
 
       test "saves custom plan", %{conn: conn, user: user} do
