@@ -6,12 +6,12 @@ defmodule PlausibleWeb.Tracker do
   use Plausible.Repo
   alias Plausible.Site.TrackerScriptConfiguration
 
-  path = Application.app_dir(:plausible, "priv/tracker/js/plausible-main.js")
+  path = Application.app_dir(:plausible, "priv/tracker/js/plausible-web.js")
   # On CI, the file might not be present for static checks so we create an empty one
   File.touch!(path)
 
   @plausible_main_script File.read!(path)
-  @external_resource "priv/tracker/js/plausible-main.js"
+  @external_resource "priv/tracker/js/plausible-web.js"
 
   def plausible_main_script_tag(tracker_script_configuration) do
     config_js_content =
@@ -35,14 +35,10 @@ defmodule PlausibleWeb.Tracker do
     %{
       domain: tracker_script_configuration.site.domain,
       endpoint: "#{PlausibleWeb.Endpoint.url()}/api/event",
-      hash: tracker_script_configuration.hash_based_routing,
+      hashBasedRouting: tracker_script_configuration.hash_based_routing,
       outboundLinks: tracker_script_configuration.outbound_links,
       fileDownloads: tracker_script_configuration.file_downloads,
-      taggedEvents: tracker_script_configuration.tagged_events,
-      revenue: tracker_script_configuration.revenue_tracking,
-      # Options not directly exposed via onboarding
-      local: false,
-      manual: false
+      formSubmissions: tracker_script_configuration.form_submissions
     }
   end
 

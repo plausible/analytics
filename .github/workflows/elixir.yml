@@ -83,9 +83,9 @@ jobs:
           filters: |
             tracker:
               - 'tracker/**'
-      - name: Check if priv/tracker/js/plausible.js exists
+      - name: Check if priv/tracker/js/plausible-web.js exists
         run: |
-          if [ -f priv/tracker/js/plausible.js ]; then
+          if [ -f priv/tracker/js/plausible-web.js ]; then
             echo "HAS_BUILT_TRACKER=true" >> $GITHUB_ENV
           else
             echo "HAS_BUILT_TRACKER=false" >> $GITHUB_ENV
