@@ -34,7 +34,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
             []
           )
 
-        assert result == Decimal.new("194.00")
+        assert result == Decimal.new("94.00")
       end
 
       test "calculates cost for business plan with yearly billing" do
@@ -113,11 +113,14 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
 
     describe "api_calls_rate/1" do
       test "returns correct rate for API calls" do
-        assert EnterprisePlan.api_calls_rate(500) == 100
+        assert EnterprisePlan.api_calls_rate(500) == 0
+        assert EnterprisePlan.api_calls_rate(600) == 0
+        assert EnterprisePlan.api_calls_rate(700) == 100
         assert EnterprisePlan.api_calls_rate(1_500) == 200
         assert EnterprisePlan.api_calls_rate(2_000) == 200
         assert EnterprisePlan.api_calls_rate(3_000) == 300
-        assert EnterprisePlan.api_calls_rate(3_500) == 300
+        assert EnterprisePlan.api_calls_rate(3_400) == 300
+        assert EnterprisePlan.api_calls_rate(3_700) == 400
       end
     end
 

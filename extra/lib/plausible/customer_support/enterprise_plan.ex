@@ -93,9 +93,8 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def team_members_rate(n) when n > 10, do: (n - 10) * 5
   def team_members_rate(_), do: 0
 
-  def api_calls_rate(n) when n <= 1_000, do: 100
-  def api_calls_rate(n) when n <= 2_000, do: 200
-  def api_calls_rate(_), do: 300
+  def api_calls_rate(n) when n <= 600, do: 0
+  def api_calls_rate(n) when n > 600, do: round(n / 1_000) * 100
 
   def features_rate(f) do
     if "sites_api" in f, do: 99, else: 0
