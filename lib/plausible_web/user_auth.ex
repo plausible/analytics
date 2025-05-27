@@ -3,6 +3,8 @@ defmodule PlausibleWeb.UserAuth do
   Functions for user session management.
   """
 
+  use Plausible
+
   import Ecto.Query
 
   alias Plausible.Auth
@@ -13,8 +15,17 @@ defmodule PlausibleWeb.UserAuth do
 
   require Logger
 
-  @spec log_in_user(Plug.Conn.t(), Auth.User.t(), String.t() | nil) :: Plug.Conn.t()
-  def log_in_user(conn, user, redirect_path \\ nil) do
+  on_ee do
+    @type login_subject() :: Auth.User.t() | Auth.SSO.Identity.t()
+  else
+    @type login_subject() :: Auth.User.t()
+  end
+
+  @spec log_in_user(Plug.Conn.t(), login_subject(), String.t() | nil) ::
+          Plug.Conn.t()
+  def log_in_user(conn, subject, redirect_path \\ nil)
+
+  def log_in_user(conn, %Auth.User{} = user, redirect_path) do
     redirect_to =
       if String.starts_with?(redirect_path || "", "/") do
         redirect_path
@@ -26,6 +37,29 @@ defmodule PlausibleWeb.UserAuth do
     |> set_user_session(user)
     |> set_logged_in_cookie()
     |> Phoenix.Controller.redirect(to: redirect_to)
+  end
+
+  on_ee do
+    def log_in_user(conn, %Auth.SSO.Identity{} = identity, redirect_path) do
+      case Auth.SSO.provision_user(identity) do
+        {:ok, provisioning_from, user} ->
+          if provisioning_from == :standard do
+            :ok = revoke_all_user_sessions(user)
+          end
+
+          log_in_user(conn, user, redirect_path)
+
+        {:error, :integration_not_found} ->
+          conn
+          |> log_out_user()
+          |> Phoenix.Controller.redirect(to: "/")
+
+        {:error, :multiple_memberships, team, user} ->
+          redirect_path = Routes.site_path(conn, :index, __team: team.identifier)
+
+          log_in_user(conn, user, redirect_path)
+      end
+    end
   end
 
   @spec log_out_user(Plug.Conn.t()) :: Plug.Conn.t()
