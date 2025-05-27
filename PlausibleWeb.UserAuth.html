@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-43E6885A.js"></script>
+    <script src="dist/sidebar_items-0E244ADF.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -150,6 +150,20 @@ Pages
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:login_subject/0" data-no-tooltip translate="no">login_subject()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -165,7 +179,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#log_in_user/3" data-no-tooltip translate="no">log_in_user(conn, user, redirect_path \\ nil)</a>
+        <a href="#log_in_user/3" data-no-tooltip translate="no">log_in_user(conn, subject, redirect_path \\ nil)</a>
 
       </div>
 
@@ -219,6 +233,44 @@ whether client is authenticated.</p></div>
   </section>
 
 
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:login_subject/0">
+
+  <div class="detail-header">
+    <a href="#t:login_subject/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">login_subject()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L19" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> login_subject() :: <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="Plausible.Auth.SSO.Identity.html#t:t/0">Plausible.Auth.SSO.Identity.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
   <section id="functions" class="details-list">
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
@@ -235,7 +287,7 @@ whether client is authenticated.</p></div>
     </a>
     <h1 class="signature" translate="no">get_user_session(conn_or_session)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L49" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L83" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -263,9 +315,9 @@ whether client is authenticated.</p></div>
     <a href="#log_in_user/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">log_in_user(conn, user, redirect_path \\ nil)</h1>
+    <h1 class="signature" translate="no">log_in_user(conn, subject, redirect_path \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L17" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L26" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -276,8 +328,7 @@ whether client is authenticated.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> log_in_user(<a href="https://hexdocs.pm/plug/1.16.1/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil) ::
-  <a href="https://hexdocs.pm/plug/1.16.1/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> log_in_user(<a href="https://hexdocs.pm/plug/1.16.1/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="#t:login_subject/0">login_subject</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil) :: <a href="https://hexdocs.pm/plug/1.16.1/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -292,7 +343,7 @@ whether client is authenticated.</p></div>
     </a>
     <h1 class="signature" translate="no">log_out_user(conn)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L32" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L66" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -320,7 +371,7 @@ whether client is authenticated.</p></div>
     </a>
     <h1 class="signature" translate="no">revoke_all_user_sessions(user, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L93" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L127" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -346,7 +397,7 @@ whether client is authenticated.</p></div>
     </a>
     <h1 class="signature" translate="no">revoke_user_session(user, session_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L73" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L107" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -372,7 +423,7 @@ whether client is authenticated.</p></div>
     </a>
     <h1 class="signature" translate="no">set_logged_in_cookie(conn)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L120" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L154" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -402,7 +453,7 @@ with session cookie state due to manual deletion or premature expiration.</p>
     </a>
     <h1 class="signature" translate="no">touch_user_session(user_session, now \\ NaiveDateTime.utc_now(:second))</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L60" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/user_auth.ex#L94" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
