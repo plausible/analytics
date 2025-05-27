@@ -71,13 +71,16 @@ test.describe('plausible-web.js', () => {
     })
   })
 
-    test('does not track outbound links without the feature being enabled', async ({ page }) => {
+    test('does not track outbound links without the feature being enabled', async ({ page, browserName }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await openPage(page, {})
         await page.click('#outbound-link')
       },
-      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }, {n: 'engagement'}],
+      expectedRequests: [
+        { n: 'pageview', p: expecting.toBeUndefined() },
+        ...(browserName === 'webkit' ? [] : [{ n: 'engagement' }]) // WebKit does not send engagement events for outbound links
+      ],
       refutedRequests: [{ n: 'Outbound Link: Click' }],
     })
   })
