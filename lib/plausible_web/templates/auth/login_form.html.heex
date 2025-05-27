@@ -49,6 +49,15 @@
         </.styled_link>
         instead.
       </:item>
+      <:item :if={ee?()}>
+        Have a Single Sign-on account?
+        <.styled_link href={
+          Routes.sso_path(@conn, :login_form, return_to: @conn.params["return_to"])
+        }>
+          Sign in here
+        </.styled_link>
+        instead.
+      </:item>
       <:item>
         Forgot password?
         <.styled_link href="/password/request-reset">

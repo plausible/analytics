@@ -11,6 +11,22 @@ defmodule Plausible.Auth.SSO do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  @spec get_integration(String.t()) :: {:ok, SSO.Integration.t()} | {:error, :not_found}
+  def get_integration(identifier) when is_binary(identifier) do
+    query =
+      from(i in SSO.Integration,
+        inner_join: t in assoc(i, :team),
+        where: i.identifier == ^identifier,
+        preload: [team: t]
+      )
+
+    if integration = Repo.one(query) do
+      {:ok, integration}
+    else
+      {:error, :not_found}
+    end
+  end
+
   @spec initiate_saml_integration(Teams.Team.t()) :: SSO.Integration.t()
   def initiate_saml_integration(team) do
     changeset = SSO.Integration.init_changeset(team)
