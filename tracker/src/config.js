@@ -1,3 +1,5 @@
+var location = window.location
+var document = window.document
 
 if (COMPILE_COMPAT) {
   var scriptEl = document.getElementById('plausible')
@@ -30,4 +32,4 @@ export function init(overrides) {
   }
 }
 
-export { config, scriptEl }
+export { config, scriptEl, location, document }

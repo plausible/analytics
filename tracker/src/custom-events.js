@@ -1,8 +1,6 @@
 // Code for tracking tagged events, form submissions, file downloads and outbound links
-import { config, scriptEl } from './config'
+import { config, scriptEl, location, document } from './config'
 
-var location = window.location
-var document = window.document
 var MIDDLE_MOUSE_BUTTON = 1
 var PARENTS_TO_SEARCH_LIMIT = 3
 var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma', 'dmg']
