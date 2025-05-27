@@ -34,7 +34,7 @@ export async function compileAll(options = {}) {
   }
 
   const variants = getVariantsToCompile(options)
-  const baseCode = await getCode()
+  const bundledCode = await bundleCode()
 
   const startTime = Date.now();
   console.log(`Starting compilation of ${variants.length} variants...`)
@@ -45,7 +45,7 @@ export async function compileAll(options = {}) {
   const workerPool = Pool(() => spawn(new Worker('./worker-thread.js')))
   variants.forEach(variant => {
     workerPool.queue(async (worker) => {
-      await worker.compileFile(variant, { ...options, baseCode })
+      await worker.compileFile(variant, { ...options, bundledCode })
       bar.increment()
     })
   })
@@ -58,7 +58,7 @@ export async function compileAll(options = {}) {
 }
 
 export async function compileFile(variant, options) {
-  const wrappedCode = wrapCode(options.baseCode || await getCode())
+  const wrappedCode = wrapInstantlyEvaluatingFunction(options.bundledCode || await bundleCode())
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
 
   const code = minify(wrappedCode, globals)
@@ -70,7 +70,7 @@ export async function compileFile(variant, options) {
   }
 }
 
-function wrapCode(baseCode) {
+function wrapInstantlyEvaluatingFunction(baseCode) {
   return `(function(){${baseCode}})()`
 }
 
@@ -100,7 +100,7 @@ function getVariantsToCompile(options) {
   return targetVariants
 }
 
-async function getCode() {
+async function bundleCode() {
   const bundle = await rollup({
     input: 'src/plausible.js',
   })
