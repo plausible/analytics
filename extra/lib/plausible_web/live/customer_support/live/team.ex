@@ -55,7 +55,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           Enum.map(features, &to_string(&1.name()))
         end)
       else
-        %{site_limit: "10,000"}
+        %{site_limit: "10,000", hourly_api_request_limit: "600"}
       end
 
     plan_form =
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
        show_plan_form?: false,
        tab: "billing",
        cost_estimate: 0,
-       cost_estimate_tier: Map.get(plan || %{}, :kind, :business)
+       cost_estimate_tier: :business
      )}
   end
 
@@ -296,9 +296,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               autocomplete="off"
             />
             <.input
-              x-on:input="numberFormatCallback(event)"
               field={f[:team_member_limit]}
-              label="Team Member Limit"
+              label="Team Member Limit (-1/unlimited for unlimited)"
               autocomplete="off"
             />
             <.input
@@ -603,7 +602,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
-    params = params |> update_features_to_list() |> sanitize_params()
+    params =
+      params
+      |> update_features_to_list()
+      |> sanitize_params()
 
     changeset = EnterprisePlan.changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
 
@@ -787,6 +789,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     )
   end
 
+  defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
+    "unlimited"
+  end
+
   defp number_format(number) when is_integer(number) do
     Cldr.Number.to_string!(number)
   end
@@ -810,13 +816,17 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   defp clear_param({key, value}) when key in @numeric_fields do
-    value =
-      value
-      |> to_string()
-      |> String.replace(~r/[^0-9-]/, "")
-      |> String.trim()
+    if value in ["unlimited", "-1"] do
+      {key, value}
+    else
+      value =
+        value
+        |> to_string()
+        |> String.replace(~r/[^0-9-]/, "")
+        |> String.trim()
 
-    {key, value}
+      {key, value}
+    end
   end
 
   defp clear_param({key, value}) when is_binary(value) do
@@ -830,7 +840,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   defp get_int_param(params, key) do
     param = Map.get(params, key)
     param = if param in ["", nil], do: "0", else: param
-    String.to_integer(param)
+
+    case Integer.parse(param) do
+      {integer, ""} -> integer
+      _ -> 0
+    end
   end
 
   defp update_features_to_list(params) do
