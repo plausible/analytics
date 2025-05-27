@@ -87,7 +87,43 @@ defmodule PlausibleWeb.UserAuthTest do
           |> UserAuth.log_in_user(identity)
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
-        assert redirected_to(conn, 302) == "/"
+
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: "")
+
+        assert conn.private[:plug_session_info] == :renew
+        refute get_session(conn, :user_token)
+      end
+
+      test "tries to log out and redirects if SSO identity exceeds team members limit", %{
+        conn: conn,
+        user: user
+      } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        add_member(team, role: :viewer)
+        add_member(team, role: :viewer)
+        add_member(team, role: :viewer)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity("Jane Doe", "jane@" <> domain)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
+
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :login_form,
+                   error: "Team can't accept more members. Please contact the owner.",
+                   return_to: ""
+                 )
+
         assert conn.private[:plug_session_info] == :renew
         refute get_session(conn, :user_token)
       end

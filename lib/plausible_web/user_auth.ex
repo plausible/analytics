@@ -54,7 +54,19 @@ defmodule PlausibleWeb.UserAuth do
         {:error, :integration_not_found} ->
           conn
           |> log_out_user()
-          |> Phoenix.Controller.redirect(to: "/")
+          |> Phoenix.Controller.redirect(
+            to:
+              Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: redirect_path)
+          )
+
+        {:error, :over_limit} ->
+          error = "Team can't accept more members. Please contact the owner."
+
+          conn
+          |> log_out_user()
+          |> Phoenix.Controller.redirect(
+            to: Routes.sso_path(conn, :login_form, error: error, return_to: redirect_path)
+          )
 
         {:error, :multiple_memberships, team, user} ->
           redirect_path = Routes.site_path(conn, :index, __team: team.identifier)
