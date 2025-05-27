@@ -46,29 +46,48 @@ defmodule PlausibleWeb.Tracker do
     }
   end
 
-  def update_script_configuration(site, config_update) do
-    {:ok, updated_config} = TrackerScriptConfiguration.upsert(config_update)
+  def update_script_configuration(site, config_update, changeset_type) do
+    original_config = get_or_create_tracker_script_configuration!(site.id)
 
-    sync_goals(site, config_update)
+    changeset = changeset(original_config, config_update, changeset_type)
+    updated_config = Repo.update!(changeset)
+
+    sync_goals(site, original_config, updated_config)
 
     updated_config
   end
 
+  def get_or_create_tracker_script_configuration!(site_id) do
+    configuration = Repo.get_by(TrackerScriptConfiguration, site_id: site_id)
+
+    if configuration do
+      configuration
+    else
+      %TrackerScriptConfiguration{site_id: site_id}
+      |> Repo.insert!()
+    end
+  end
+
   # Sync plausible goals with the updated script config
-  defp sync_goals(site, config_update) do
-    config_update
-    |> Enum.map(fn {key, value} -> {to_atom(key), value} end)
+  defp sync_goals(site, original_config, updated_config) do
+    [:track_404_pages, :outbound_links, :file_downloads]
+    |> Enum.map(fn key -> {key, Map.get(original_config, key), Map.get(updated_config, key)} end)
     |> Enum.each(fn
-      {:track_404_pages, true} -> Plausible.Goals.create_404(site)
-      {:track_404_pages, false} -> Plausible.Goals.delete_404(site)
-      {:outbound_links, true} -> Plausible.Goals.create_outbound_links(site)
-      {:outbound_links, false} -> Plausible.Goals.delete_outbound_links(site)
-      {:file_downloads, true} -> Plausible.Goals.create_file_downloads(site)
-      {:file_downloads, false} -> Plausible.Goals.delete_file_downloads(site)
+      {:track_404_pages, false, true} -> Plausible.Goals.create_404(site)
+      {:track_404_pages, true, false} -> Plausible.Goals.delete_404(site)
+      {:outbound_links, false, true} -> Plausible.Goals.create_outbound_links(site)
+      {:outbound_links, true, false} -> Plausible.Goals.delete_outbound_links(site)
+      {:file_downloads, false, true} -> Plausible.Goals.create_file_downloads(site)
+      {:file_downloads, true, false} -> Plausible.Goals.delete_file_downloads(site)
       _ -> nil
     end)
   end
 
-  defp to_atom(str) when is_binary(str), do: String.to_existing_atom(str)
-  defp to_atom(atom) when is_atom(atom), do: atom
+  defp changeset(tracker_script_configuration, config_update, :installation) do
+    TrackerScriptConfiguration.installation_changeset(tracker_script_configuration, config_update)
+  end
+
+  defp changeset(tracker_script_configuration, config_update, :plugins_api) do
+    TrackerScriptConfiguration.plugins_api_changeset(tracker_script_configuration, config_update)
+  end
 end
