@@ -56,8 +56,7 @@ defmodule Plausible.Auth.UserSession do
     on_ee do
       case get_field(changeset, :user) do
         %{type: :sso} ->
-          changeset
-          |> put_change(:last_used_at, now)
+          put_change(changeset, :last_used_at, now)
 
         _ ->
           changeset
