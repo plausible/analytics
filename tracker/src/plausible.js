@@ -55,7 +55,7 @@ function trigger(eventName, options) {
   payload.n = eventName
   payload.v = COMPILE_TRACKER_SCRIPT_VERSION
 
-  if (!COMPILE_MANUAL || (COMPILE_CONFIG && config.autoCapturePageviews)) {
+  if (COMPILE_MANUAL) {
     var customURL = options && options.u
 
     payload.u = customURL ? customURL : location.href
