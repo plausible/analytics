@@ -10,7 +10,7 @@ import { ScriptConfig } from './support/types'
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
   endpoint: `${LOCAL_SERVER_ADDR}/api/event`,
-  local: true
+  captureOnLocalhost: true
 }
 
 test('does not track form submissions when the feature is disabled', async ({
