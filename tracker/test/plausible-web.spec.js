@@ -10,7 +10,8 @@ import {
   hideAndShowCurrentTab,
   metaKey,
   mockRequest,
-  e as expecting
+  e as expecting,
+  ignoreEngagementRequests
 } from './support/test-utils'
 import { test, expect } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
@@ -52,7 +53,7 @@ test.describe('plausible-web.js', () => {
     })
   })
 
-  test('does not trigger any events when `local` config is disabled', async ({ page }) => {
+  test('does not trigger any events with localhost domain when `local` config is disabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => openPage(page, { captureOnLocalhost: false }),
       expectedRequests: [],
@@ -60,17 +61,36 @@ test.describe('plausible-web.js', () => {
     })
   })
 
-  test('does not track pageview props, outbound links or file downloads without features being enabled', async ({ page }) => {
+  test('does not track pageview props without the feature being enabled', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {})
+      },
+      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }],
+      shouldIgnoreRequest: ignoreEngagementRequests
+    })
+  })
+
+    test('does not track outbound links without the feature being enabled', async ({ page }) => {
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await openPage(page, {})
+        await page.click('#outbound-link')
+      },
+      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }, {n: 'engagement'}],
+      refutedRequests: [{ n: 'Outbound Link: Click' }],
+    })
+  })
+
+    test('does not track file downloads without feature being enabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
         await openPage(page, {})
         await page.click('#file-download', { modifiers: [metaKey()] })
-        await page.click('#outbound-link')
       },
-      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }],
-      refutedRequests: [{ n: 'File Download' }, { n: 'Outbound Link: Click' }],
-      // Webkit captures engagement events differently, so we ignore them in this test
-      shouldIgnoreRequest: (payload) => payload.n === 'engagement'
+      expectedRequests: [{ n: 'pageview' } ],
+      refutedRequests: [{ n: 'File Download' }],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 
@@ -93,6 +113,7 @@ test.describe('plausible-web.js', () => {
     await expectPlausibleInAction(page, {
       action: () => page.click('#file-download'),
       expectedRequests: [{ n: 'File Download', p: { url: 'https://awesome.website.com/file.pdf' } }],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 

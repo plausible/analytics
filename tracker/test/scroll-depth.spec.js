@@ -129,6 +129,7 @@ test.describe('scroll depth (engagement events)', () => {
     await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page),
       expectedRequests: [],
+      refutedRequests: [{n: 'engagement'}]
     })
 
     await page.evaluate(() => window.scrollBy(0, 300))
