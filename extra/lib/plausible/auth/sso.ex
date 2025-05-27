@@ -35,7 +35,7 @@ defmodule Plausible.Auth.SSO do
 
   @spec provision_user(SSO.Identity.t()) ::
           {:ok, :standard | :sso | :integration, Auth.User.t()}
-          | {:error, :integration_not_found}
+          | {:error, :integration_not_found | :over_limit}
           | {:error, :multiple_memberships, Teams.Team.t(), Auth.User.t()}
   def provision_user(identity) do
     case find_user(identity) do
@@ -162,13 +162,37 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
       |> put_assoc(:sso_integration, integration)
 
-    case Repo.insert(changeset) do
-      {:ok, user} ->
-        {:ok, :identity, user}
+    team = integration.team
+    role = integration.team.policy.sso_default_role
+    now = NaiveDateTime.utc_now(:second)
 
-      {:error, %{errors: [email: {_, attrs}]}} ->
-        true = {:constraint, :unique} in attrs
-        {:error, :integration_not_found}
+    result =
+      Repo.transaction(fn ->
+        with {:ok, user} <- Repo.insert(changeset),
+             :ok <- Teams.Invitations.check_team_member_limit(team, role, user.email),
+             {:ok, team_membership} <-
+               Teams.Invitations.create_team_membership(team, role, user, now) do
+          if team_membership.role != :guest do
+            {:identity, user}
+          else
+            Repo.rollback(:integration_not_found)
+          end
+        else
+          {:error, %{errors: [email: {_, attrs}]}} ->
+            true = {:constraint, :unique} in attrs
+            Repo.rollback(:integration_not_found)
+
+          {:error, {:over_limit, _}} ->
+            Repo.rollback(:over_limit)
+        end
+      end)
+
+    case result do
+      {:ok, {type, user}} ->
+        {:ok, type, user}
+
+      {:error, _} = error ->
+        error
     end
   end
 

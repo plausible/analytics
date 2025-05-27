@@ -175,7 +175,11 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, team: team, integration: integration, domain: domain, sso_domain: sso_domain}
       end
 
-      test "provisions a new SSO user form identity", %{integration: integration, domain: domain} do
+      test "provisions a new SSO user form identity", %{
+        integration: integration,
+        domain: domain,
+        team: team
+      } do
         identity = new_identity("Jane Sculley", "jane@" <> domain)
 
         assert {:ok, :identity, user} = SSO.provision_user(identity)
@@ -188,6 +192,7 @@ defmodule Plausible.Auth.SSOTest do
         assert user.sso_integration_id == integration.id
         assert user.email_verified
         assert user.last_sso_login
+        assert_team_membership(user, team, :viewer)
       end
 
       test "provisions SSO user from existing user", %{
@@ -280,6 +285,19 @@ defmodule Plausible.Auth.SSOTest do
 
         assert matched_team.id == team.id
         assert matched_user.id == user.id
+      end
+
+      test "does not provision new SSO user from identity when team is over members limit", %{
+        domain: domain,
+        team: team
+      } do
+        add_member(team, role: :viewer)
+        add_member(team, role: :viewer)
+        add_member(team, role: :viewer)
+
+        identity = new_identity("Jane Sculley", "jane@" <> domain)
+
+        assert {:error, :over_limit} = SSO.provision_user(identity)
       end
     end
 
