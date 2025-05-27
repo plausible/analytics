@@ -4,6 +4,7 @@ defmodule Plausible.Auth.UserSession do
   """
 
   use Ecto.Schema
+  use Plausible
 
   import Ecto.Changeset
 
@@ -37,12 +38,37 @@ defmodule Plausible.Auth.UserSession do
     |> touch_session(now)
   end
 
+  @spec new_sso_session(Auth.User.t(), String.t(), NaiveDateTime.t(), NaiveDateTime.t()) ::
+          Ecto.Changeset.t()
+  def new_sso_session(user, device, timeout_at, now \\ NaiveDateTime.utc_now(:second)) do
+    %__MODULE__{}
+    |> cast(%{device: device}, [:device])
+    |> generate_token()
+    |> put_assoc(:user, user)
+    |> put_change(:timeout_at, timeout_at)
+    |> touch_session(now)
+  end
+
   @spec touch_session(t() | Ecto.Changeset.t(), NaiveDateTime.t()) :: Ecto.Changeset.t()
   def touch_session(session, now \\ NaiveDateTime.utc_now(:second)) do
-    session
-    |> change()
-    |> put_change(:last_used_at, now)
-    |> put_change(:timeout_at, NaiveDateTime.shift(now, @timeout))
+    changeset = change(session)
+
+    on_ee do
+      case get_field(changeset, :user) do
+        %{type: :sso} ->
+          changeset
+          |> put_change(:last_used_at, now)
+
+        _ ->
+          changeset
+          |> put_change(:last_used_at, now)
+          |> put_change(:timeout_at, NaiveDateTime.shift(now, @timeout))
+      end
+    else
+      changeset
+      |> put_change(:last_used_at, now)
+      |> put_change(:timeout_at, NaiveDateTime.shift(now, @timeout))
+    end
   end
 
   defp generate_token(changeset) do
