@@ -56,7 +56,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         end)
       else
         %{
-          monthly_pageview_limit: 10000,
+          monthly_pageview_limit: 10_000,
           hourly_api_request_limit: 600,
           site_limit: 50,
           team_member_limit: 10,
