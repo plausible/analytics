@@ -1,10 +1,8 @@
 import { init as initEngagementTracking, prePageviewTrigger, postPageviewTrigger, onPageviewIgnored } from './engagement'
 import { sendRequest } from './networking'
-import { init as initConfig, config, scriptEl } from './config'
+import { init as initConfig, config, scriptEl, location, document } from './config'
 import { init as initCustomEvents } from './custom-events'
-
-var location = window.location
-var document = window.document
+import { init as initAutocapture } from './autocapture'
 
 // Exported public function
 function trigger(eventName, options) {
@@ -140,51 +138,7 @@ function init(overrides) {
   initEngagementTracking()
 
   if (!COMPILE_MANUAL || (COMPILE_CONFIG && config.autoCapturePageviews)) {
-    var lastPage;
-
-    function page(isSPANavigation) {
-      if (!(COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting))) {
-        if (isSPANavigation && lastPage === location.pathname) return;
-      }
-
-      lastPage = location.pathname
-      trigger('pageview')
-    }
-
-    var onSPANavigation = function () { page(true) }
-
-    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
-      window.addEventListener('hashchange', onSPANavigation)
-    } else {
-      var his = window.history
-      if (his.pushState) {
-        var originalPushState = his['pushState']
-        his.pushState = function () {
-          originalPushState.apply(this, arguments)
-          onSPANavigation();
-        }
-        window.addEventListener('popstate', onSPANavigation)
-      }
-    }
-
-    function handleVisibilityChange() {
-      if (!lastPage && document.visibilityState === 'visible') {
-        page()
-      }
-    }
-
-    if (document.visibilityState === 'hidden' || document.visibilityState === 'prerender') {
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-    } else {
-      page()
-    }
-
-    window.addEventListener('pageshow', function (event) {
-      if (event.persisted) {
-        // Page was restored from bfcache - trigger a pageview
-        page();
-      }
-    })
+    initAutocapture(trigger)
   }
 
   if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS || COMPILE_CONFIG) {
