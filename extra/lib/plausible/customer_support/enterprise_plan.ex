@@ -38,10 +38,10 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
     cost_per_month =
       Decimal.from_float(
         (pv_rate +
-          sites_rate +
-          team_members_rate +
-          api_calls_rate +
-          features_rate) * 1.0
+           sites_rate +
+           team_members_rate +
+           api_calls_rate +
+           features_rate) * 1.0
       )
       |> Decimal.round(2)
 
