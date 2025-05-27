@@ -20,11 +20,28 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
         api_calls_limit,
         features
       ) do
+    pv_rate =
+      pv_rate(kind, pageviews_per_month)
+
+    sites_rate =
+      sites_rate(sites_limit)
+
+    team_members_rate =
+      team_members_rate(team_members_limit)
+
+    api_calls_rate =
+      api_calls_rate(api_calls_limit)
+
+    features_rate =
+      features_rate(features)
+
     cost_per_month =
       Decimal.from_float(
-        pv_rate(kind, pageviews_per_month) + sites_rate(sites_limit) +
-          team_members_rate(team_members_limit) + api_calls_rate(api_calls_limit) +
-          features_rate(features)
+        pv_rate +
+          sites_rate +
+          team_members_rate +
+          api_calls_rate +
+          features_rate
       )
       |> Decimal.round(2)
 
@@ -35,6 +52,14 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
     end
   end
 
+  def pv_rate(:growth, pvs) when pvs <= 10_000, do: 9
+  def pv_rate(:growth, pvs) when pvs <= 100_000, do: 19
+  def pv_rate(:growth, pvs) when pvs <= 200_000, do: 29
+  def pv_rate(:growth, pvs) when pvs <= 500_000, do: 49
+  def pv_rate(:growth, pvs) when pvs <= 1_000_000, do: 69
+  def pv_rate(:growth, pvs) when pvs <= 2_000_000, do: 89
+  def pv_rate(:growth, pvs) when pvs <= 5_000_000, do: 129
+  def pv_rate(:growth, pvs) when pvs <= 10_000_000, do: 169
   def pv_rate(:growth, pvs) when pvs <= 20_000_000, do: 319
   def pv_rate(:growth, pvs) when pvs <= 50_000_000, do: 689
   def pv_rate(:growth, pvs) when pvs <= 100_000_000, do: 1029
@@ -45,6 +70,14 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def pv_rate(:growth, pvs) when pvs <= 1_000_000_000, do: 7219
   def pv_rate(:growth, _), do: 7219
 
+  def pv_rate(:business, pvs) when pvs <= 10_000, do: 19
+  def pv_rate(:business, pvs) when pvs <= 100_000, do: 39
+  def pv_rate(:business, pvs) when pvs <= 200_000, do: 59
+  def pv_rate(:business, pvs) when pvs <= 500_000, do: 99
+  def pv_rate(:business, pvs) when pvs <= 1_000_000, do: 139
+  def pv_rate(:business, pvs) when pvs <= 2_000_000, do: 179
+  def pv_rate(:business, pvs) when pvs <= 5_000_000, do: 259
+  def pv_rate(:business, pvs) when pvs <= 10_000_000, do: 339
   def pv_rate(:business, pvs) when pvs <= 20_000_000, do: 639
   def pv_rate(:business, pvs) when pvs <= 50_000_000, do: 1379
   def pv_rate(:business, pvs) when pvs <= 100_000_000, do: 2059
@@ -55,13 +88,14 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def pv_rate(:business, pvs) when pvs <= 1_000_000_000, do: 14_439
   def pv_rate(:business, _), do: 14_439
 
+  def sites_rate(n) when n <= 10, do: 0
   def sites_rate(n), do: n * 0.1
 
-  def team_members_rate(n), do: n * 5
+  def team_members_rate(n) when n > 10, do: (n - 10) * 5
+  def team_members_rate(_), do: 0
 
-  def api_calls_rate(n) when n <= 1_000, do: 100
-  def api_calls_rate(n) when n <= 2_000, do: 200
-  def api_calls_rate(_), do: 300
+  def api_calls_rate(n) when n <= 600, do: 0
+  def api_calls_rate(n) when n > 600, do: round(n / 1_000) * 100
 
   def features_rate(f) do
     if "sites_api" in f, do: 99, else: 0

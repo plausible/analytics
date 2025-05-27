@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         })
 
         html = render(lv)
-        assert text_of_attr(html, ~s|#cost-estimate|, "value") == "10880.00"
+        assert text_of_attr(html, ~s|#cost-estimate|, "value") == "10380.00"
       end
 
       test "saves custom plan", %{conn: conn, user: user} do
@@ -139,6 +139,33 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
                    team_member_limit: 30
                  }
                ] = Plausible.Repo.all(Plausible.Billing.EnterprisePlan)
+      end
+
+      test "handles unlimited team members", %{conn: conn, user: user} do
+        user |> subscribe_to_enterprise_plan(team_member_limit: :unlimited)
+        lv = open_custom_plan(conn, team_of(user))
+
+        html = render(lv)
+
+        assert text_of_attr(html, ~s|input[name="enterprise_plan[team_member_limit]"]|, "value") ==
+                 "unlimited"
+
+        lv
+        |> element(~s|form#save-plan|)
+        |> render_change(%{
+          "enterprise_plan" => %{
+            "paddle_plan_id" => "1111",
+            "billing_interval" => "yearly",
+            "monthly_pageview_limit" => "20,000,000",
+            "site_limit" => "1,000",
+            "team_member_limit" => "unlimited",
+            "hourly_api_request_limit" => "1,000"
+          }
+        })
+
+        lv |> element("form#save-plan") |> render_submit()
+        html = render(lv)
+        assert text(html) =~ "Plan saved"
       end
 
       defp open_custom_plan(conn, team) do
