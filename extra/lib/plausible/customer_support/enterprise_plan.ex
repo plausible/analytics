@@ -88,6 +88,7 @@ defmodule Plausible.CustomerSupport.EnterprisePlan do
   def pv_rate(:business, pvs) when pvs <= 1_000_000_000, do: 14_439
   def pv_rate(:business, _), do: 14_439
 
+  def sites_rate(n) when n <= 10, do: 0
   def sites_rate(n), do: n * 0.1
 
   def team_members_rate(n) when n > 10, do: (n - 10) * 5

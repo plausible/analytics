@@ -97,7 +97,8 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
 
     describe "sites_rate/1" do
       test "calculates rate based on number of sites" do
-        assert EnterprisePlan.sites_rate(10) == 1.0
+        assert EnterprisePlan.sites_rate(10) == 0
+        assert EnterprisePlan.sites_rate(15) == 1.5
         assert EnterprisePlan.sites_rate(20) == 2.0
       end
     end

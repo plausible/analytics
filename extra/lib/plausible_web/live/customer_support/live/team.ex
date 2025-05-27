@@ -55,7 +55,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           Enum.map(features, &to_string(&1.name()))
         end)
       else
-        %{monthly_pageview_limit: "10,000", hourly_api_request_limit: "600", site_limit: "50"}
+        %{
+          monthly_pageview_limit: "10,000",
+          hourly_api_request_limit: "600",
+          site_limit: "50",
+          team_member_limit: "10",
+          features: Plausible.Billing.Feature.list()
+        }
       end
 
     plan_form =
