@@ -405,6 +405,7 @@ PlausibleWeb.Plugins.API.Controllers.CustomProps.html
 PlausibleWeb.Plugins.API.Controllers.Funnels.html
 PlausibleWeb.Plugins.API.Controllers.Goals.html
 PlausibleWeb.Plugins.API.Controllers.SharedLinks.html
+PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfiguration.html
 PlausibleWeb.Plugins.API.Errors.html
 PlausibleWeb.Plugins.API.Schemas.Capabilities.html
 PlausibleWeb.Plugins.API.Schemas.CustomProp.DisableRequest.html
@@ -433,6 +434,8 @@ PlausibleWeb.Plugins.API.Schemas.PaymentRequired.html
 PlausibleWeb.Plugins.API.Schemas.SharedLink.CreateRequest.html
 PlausibleWeb.Plugins.API.Schemas.SharedLink.ListResponse.html
 PlausibleWeb.Plugins.API.Schemas.SharedLink.html
+PlausibleWeb.Plugins.API.Schemas.TrackerScriptConfiguration.UpdateRequest.html
+PlausibleWeb.Plugins.API.Schemas.TrackerScriptConfiguration.html
 PlausibleWeb.Plugins.API.Schemas.Unauthorized.html
 PlausibleWeb.Plugins.API.Schemas.UnprocessableEntity.html
 PlausibleWeb.Plugins.API.Spec.html
@@ -443,6 +446,7 @@ PlausibleWeb.Plugins.API.Views.Funnel.html
 PlausibleWeb.Plugins.API.Views.Goal.html
 PlausibleWeb.Plugins.API.Views.Pagination.html
 PlausibleWeb.Plugins.API.Views.SharedLink.html
+PlausibleWeb.Plugins.API.Views.TrackerScriptConfiguration.html
 PlausibleWeb.PluginsAPICase.html
 PlausibleWeb.Plugs.AuthorizePluginsAPI.html
 PlausibleWeb.Plugs.AuthorizePublicAPI.html
@@ -493,8 +497,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-F72C22C7.js
-dist/sidebar_items-E4CA1D25.js
+dist/search_data-4EA578D8.js
+dist/sidebar_items-43E6885A.js
 index.html
 readme.html
 search.html
