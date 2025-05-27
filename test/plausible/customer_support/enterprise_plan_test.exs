@@ -22,6 +22,21 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
         assert result == Decimal.new("1038.00")
       end
 
+      test "bugfix - from float" do
+        result =
+          EnterprisePlan.estimate(
+            :business,
+            "monthly",
+            20_000_000,
+            0,
+            0,
+            0,
+            ["sites_api"]
+          )
+
+        assert result == Decimal.new("738.00")
+      end
+
       test "Bogdan's example (https://3.basecamp.com/5308029/buckets/26383192/card_tables/cards/8506177450#__recording_8689686259)" do
         result =
           EnterprisePlan.estimate(
@@ -98,8 +113,9 @@ defmodule Plausible.CustomerSupport.EnterprisePlanTest do
     describe "sites_rate/1" do
       test "calculates rate based on number of sites" do
         assert EnterprisePlan.sites_rate(10) == 0
-        assert EnterprisePlan.sites_rate(15) == 1.5
-        assert EnterprisePlan.sites_rate(20) == 2.0
+        assert EnterprisePlan.sites_rate(45) == 0
+        assert EnterprisePlan.sites_rate(50) == 0
+        assert EnterprisePlan.sites_rate(60) == 6.0
       end
     end
 
