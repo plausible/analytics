@@ -18,7 +18,10 @@ export default defineConfig([
   {
     files: ['**/*.{js,ts,jsx,tsx}'],
     plugins: { js: pluginJs },
-    extends: ['js/recommended']
+    extends: ['js/recommended'],
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }]
+    }
   },
   {
     files: ['src/**/*.js'],
@@ -30,6 +33,12 @@ export default defineConfig([
       },
       ecmaVersion: 5,
       sourceType: 'script'
+    },
+    rules: {
+      'no-redeclare': 'off',
+      'no-unused-vars': 'off',
+      'no-useless-escape': 'off',
+      'no-empty': 'off',
     }
   },
   {
