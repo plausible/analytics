@@ -24,8 +24,12 @@ export function init(overrides) {
   if (COMPILE_CONFIG) {
     // This will be dynamically replaced by a config json object in the script serving endpoint
     config = "<%= @config_js %>"
-    // Explicitly set domain before any overrides are applied as `plausible-web` does not support overriding it
-    Object.assign(config, overrides, { domain: config.domain, autoCapturePageviews: overrides.autoCapturePageviews !== false })
+    Object.assign(config, overrides, {
+      // Explicitly set domain before any overrides are applied as `plausible-web` does not support overriding it
+      domain: config.domain,
+      // autoCapturePageviews defaults to `true`
+      autoCapturePageviews: overrides.autoCapturePageviews !== false
+    })
   } else {
     config.endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint()
     config.domain = scriptEl.getAttribute('data-domain')
