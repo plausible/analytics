@@ -56,10 +56,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         end)
       else
         %{
-          monthly_pageview_limit: "10,000",
-          hourly_api_request_limit: "600",
-          site_limit: "50",
-          team_member_limit: "10",
+          monthly_pageview_limit: 10_000,
+          hourly_api_request_limit: 600,
+          site_limit: 50,
+          team_member_limit: 10,
           features: Plausible.Billing.Feature.list()
         }
       end
@@ -290,12 +290,14 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             />
 
             <.input
+              x-init="numberFormatCallback({target: $el})"
               x-on:input="numberFormatCallback(event)"
               field={f[:monthly_pageview_limit]}
               label="Monthly Pageview Limit"
               autocomplete="off"
             />
             <.input
+              x-init="numberFormatCallback({target: $el})"
               x-on:input="numberFormatCallback(event)"
               field={f[:site_limit]}
               label="Site Limit"
@@ -307,6 +309,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               autocomplete="off"
             />
             <.input
+              x-init="numberFormatCallback({target: $el})"
               x-on:input="numberFormatCallback(event)"
               field={f[:hourly_api_request_limit]}
               label="Hourly API Request Limit"
