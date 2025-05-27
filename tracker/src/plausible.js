@@ -139,7 +139,7 @@ function init(overrides) {
   initConfig(overrides)
   initEngagementTracking()
 
-  if (!COMPILE_MANUAL || (COMPILE_CONFIG && config.autoCapturePageviews)) {
+  if (!COMPILE_MANUAL && (!COMPILE_CONFIG || config.autoCapturePageviews)) {
     var lastPage;
 
     function page(isSPANavigation) {
