@@ -20,7 +20,6 @@ export async function mockManyRequests({
     const postData = request.postDataJSON()
     if (!shouldIgnoreRequest || !shouldIgnoreRequest(postData)) {
       requestList.push(postData)
-      console.log(`Request stored: "${postData.n}, ${postData.u}"`)
     }
     if (responseDelay) {
       await delay(responseDelay)
@@ -31,7 +30,6 @@ export async function mockManyRequests({
       body: 'ok'
     })
   })
-  console.log(`Finished setting up route at ${path}`)
 
   const getWaitForRequests = () =>
     new Promise((resolve) => {
@@ -40,13 +38,9 @@ export async function mockManyRequests({
       const interval = setInterval(() => {
         if (i > mockRequestTimeout / POLL_INTERVAL_MS) {
           clearInterval(interval)
-          console.log('Max iterations. Resolving requestList')
           resolve(requestList)
         } else if (requestList.length === numberOfRequests) {
           clearInterval(interval)
-          console.log(
-            `Expected request length ${numberOfRequests} reached. Resolving requestList`
-          )
           resolve(requestList)
         } else {
           i++
