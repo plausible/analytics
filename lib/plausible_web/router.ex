@@ -163,48 +163,46 @@ defmodule PlausibleWeb.Router do
 
   # SSO routes
   on_ee do
-    if Mix.env() in [:dev, :test] do
-      pipeline :sso_saml do
-        @sso_csp """
-                 default-src 'none';
-                 script-src 'self' 'report-sample';
-                 img-src 'self' 'report-sample';
-                 report-uri /sso/saml/csp-report;
-                 report-to csp-report-endpoint
-                 """
-                 |> String.replace("\n", " ")
+    pipeline :sso_saml do
+      @sso_csp """
+               default-src 'none';
+               script-src 'self' 'report-sample';
+               img-src 'self' 'report-sample';
+               report-uri /sso/saml/csp-report;
+               report-to csp-report-endpoint
+               """
+               |> String.replace("\n", " ")
 
-        plug :accepts, ["html"]
+      plug :accepts, ["html"]
 
-        plug :put_secure_browser_headers, %{
-          {"cache-control", "no-cache, no-store, must-revalidate"},
-          {"pragma", "no-cache"},
-          {"reporting-endpoints", "csp-report-endpoint=\"/sso/saml/csp-report\""},
-          {"content-security-policy", @sso_csp},
-          {"x-xss-protection", "1; mode=block"}
-        }
+      plug :put_secure_browser_headers, %{
+        {"cache-control", "no-cache, no-store, must-revalidate"},
+        {"pragma", "no-cache"},
+        {"reporting-endpoints", "csp-report-endpoint=\"/sso/saml/csp-report\""},
+        {"content-security-policy", @sso_csp},
+        {"x-xss-protection", "1; mode=block"}
+      }
 
-        plug PlausibleWeb.Plugs.NoRobots
+      plug PlausibleWeb.Plugs.NoRobots
 
-        plug :fetch_session
-        plug :fetch_live_flash
-        plug :protect_from_forgery, with: :clear_session
-      end
+      plug :fetch_session
+      plug :fetch_live_flash
+      plug :protect_from_forgery, with: :clear_session
+    end
 
-      scope "/sso", PlausibleWeb do
-        pipe_through [:browser, :csrf]
+    scope "/sso", PlausibleWeb do
+      pipe_through [PlausibleWeb.Plugs.GateSSO, :browser, :csrf]
 
-        get "/login", SSOController, :login_form
-        post "/login", SSOController, :login
-      end
+      get "/login", SSOController, :login_form
+      post "/login", SSOController, :login
+    end
 
-      scope "/sso/saml", PlausibleWeb do
-        pipe_through [:sso_saml]
+    scope "/sso/saml", PlausibleWeb do
+      pipe_through [PlausibleWeb.Plugs.GateSSO, :sso_saml]
 
-        get "/signin/:integration_id", SSOController, :saml_signin
-        post "/consume/:integration_id", SSOController, :saml_consume
-        post "/csp-report", SSOController, :csp_report
-      end
+      get "/signin/:integration_id", SSOController, :saml_signin
+      post "/consume/:integration_id", SSOController, :saml_consume
+      post "/csp-report", SSOController, :csp_report
     end
   end
 
