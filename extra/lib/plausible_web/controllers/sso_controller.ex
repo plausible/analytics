@@ -42,7 +42,8 @@ defmodule PlausibleWeb.SSOController do
     |> render("saml_signin.html",
       integration_id: integration_id,
       email: email,
-      return_to: return_to
+      return_to: return_to,
+      nonce: conn.private[:sso_nonce]
     )
   end
 

@@ -164,24 +164,9 @@ defmodule PlausibleWeb.Router do
   # SSO routes
   on_ee do
     pipeline :sso_saml do
-      @sso_csp """
-               default-src 'none';
-               script-src 'self' 'report-sample';
-               img-src 'self' 'report-sample';
-               report-uri /sso/saml/csp-report;
-               report-to csp-report-endpoint
-               """
-               |> String.replace("\n", " ")
-
       plug :accepts, ["html"]
 
-      plug :put_secure_browser_headers, %{
-        {"cache-control", "no-cache, no-store, must-revalidate"},
-        {"pragma", "no-cache"},
-        {"reporting-endpoints", "csp-report-endpoint=\"/sso/saml/csp-report\""},
-        {"content-security-policy", @sso_csp},
-        {"x-xss-protection", "1; mode=block"}
-      }
+      plug PlausibleWeb.Plugs.SecureSSO
 
       plug PlausibleWeb.Plugs.NoRobots
 
