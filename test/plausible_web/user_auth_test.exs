@@ -10,6 +10,10 @@ defmodule PlausibleWeb.UserAuthTest do
   alias Plausible.Repo
   alias PlausibleWeb.UserAuth
 
+  on_ee do
+    alias Plausible.Auth.SSO
+  end
+
   alias PlausibleWeb.Router.Helpers, as: Routes
 
   describe "log_in_user/2,3" do
@@ -44,8 +48,6 @@ defmodule PlausibleWeb.UserAuthTest do
     end
 
     on_ee do
-      alias Plausible.Auth.SSO
-
       test "sets up user session from SSO identity", %{conn: conn, user: user} do
         team = new_site().team
         integration = SSO.initiate_saml_integration(team)
@@ -65,6 +67,7 @@ defmodule PlausibleWeb.UserAuthTest do
 
         assert %{sessions: [session]} = user |> Repo.reload!() |> Repo.preload(:sessions)
         assert session.user_id == user.id
+        assert NaiveDateTime.compare(session.timeout_at, identity.expires_at) == :eq
 
         assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
         assert conn.private[:plug_session_info] == :renew
@@ -281,6 +284,29 @@ defmodule PlausibleWeb.UserAuthTest do
       assert refreshed_session.id == user_session.id
 
       refute Repo.reload(user_session)
+    end
+
+    on_ee do
+      test "only records last usage but does not refresh for SSO user", %{user: user} do
+        sixty_five_minutes_later =
+          NaiveDateTime.utc_now(:second)
+          |> NaiveDateTime.shift(minute: 65)
+
+        user = user |> Ecto.Changeset.change(type: :sso) |> Repo.update!()
+
+        %{sessions: [session]} = Repo.preload(user, :sessions)
+
+        assert refreshed_session =
+                 %Auth.UserSession{} =
+                 UserAuth.touch_user_session(session, sixty_five_minutes_later)
+
+        assert refreshed_session.id == session.id
+
+        assert NaiveDateTime.compare(refreshed_session.last_used_at, sixty_five_minutes_later) ==
+                 :eq
+
+        assert NaiveDateTime.compare(refreshed_session.timeout_at, session.timeout_at) == :eq
+      end
     end
   end
 
