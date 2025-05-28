@@ -295,6 +295,7 @@ Plausible.Workers.LocalImportAnalyticsCleaner.html
 Plausible.Workers.LockSites.html
 Plausible.Workers.NotifyAnnualRenewal.html
 Plausible.Workers.NotifyExportedAnalytics.html
+Plausible.Workers.PurgeCDNCache.html
 Plausible.Workers.RotateSalts.html
 Plausible.Workers.ScheduleEmailReports.html
 Plausible.Workers.SendCheckStatsEmails.html
@@ -498,8 +499,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-4320D0E0.js
-dist/sidebar_items-A27D53AB.js
+dist/search_data-A287507C.js
+dist/sidebar_items-00F1B402.js
 index.html
 readme.html
 search.html
