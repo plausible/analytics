@@ -52,8 +52,12 @@ defmodule PlausibleWeb.Tracker do
     sync_goals(site, original_config, updated_config)
 
     on_ee do
-      %{id: updated_config.id}
-      |> Plausible.Workers.PurgeCDNCache.new()
+      Plausible.Workers.PurgeCDNCache.new(
+        %{id: updated_config.id},
+        # See PurgeCDNCache.ex for more details
+        schedule_in: 10,
+        replace: [scheduled: [:scheduled_at]]
+      )
       |> Oban.insert!()
     end
 

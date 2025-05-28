@@ -10,7 +10,14 @@ defmodule Plausible.Workers.PurgeCDNCache do
 
   use Oban.Worker,
     queue: :purge_cdn_cache,
-    max_attempts: 5
+    max_attempts: 5,
+    # To avoid running into API rate limits, we:
+    # - Schedule jobs with a delay
+    # - Bump the scheduled time every time a new one is scheduled with the same args
+    unique: [
+      states: [:scheduled],
+      fields: [:args]
+    ]
 
   require Logger
 
