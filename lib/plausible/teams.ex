@@ -69,7 +69,8 @@ defmodule Plausible.Teams do
   @spec locked?(Teams.Team.t() | nil) :: boolean()
   def locked?(nil), do: false
 
-  def locked?(%Teams.Team{locked: locked}), do: locked
+  def locked?(%Teams.Team{locked: locked, locked_by_admin: locked_by_admin}),
+    do: locked or locked_by_admin
 
   @spec trial_days_left(Teams.Team.t()) :: integer()
   def trial_days_left(nil) do
