@@ -11,6 +11,11 @@ defmodule Plausible.Auth.SSO do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  @spec enabled?() :: boolean()
+  def enabled?() do
+    Application.fetch_env!(:plausible, :sso_enabled)
+  end
+
   @spec get_integration(String.t()) :: {:ok, SSO.Integration.t()} | {:error, :not_found}
   def get_integration(identifier) when is_binary(identifier) do
     query =
