@@ -288,6 +288,47 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
       assert_no_emails_delivered()
     end
 
+    test "does not check site if it is admin-locked" do
+      site = new_site()
+
+      Plausible.Teams.admin_lock!(site.team)
+
+      insert(:spike_notification,
+        site: site,
+        threshold: 1,
+        recipients: ["uku@example.com"]
+      )
+
+      populate_stats(site, [
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
+
+      TrafficChangeNotifier.perform(nil)
+
+      assert_no_emails_delivered()
+    end
+
+    test "does not check site if it is admin-locked" do
+      site = new_site()
+      Plausible.Teams.admin_lock!(site.team)
+
+      insert(:spike_notification,
+        site: site,
+        threshold: 1,
+        recipients: ["uku@example.com"]
+      )
+
+      populate_stats(site, [
+        build(:pageview, timestamp: minutes_ago(1)),
+        build(:pageview, timestamp: minutes_ago(1))
+      ])
+
+      TrafficChangeNotifier.perform(nil)
+
+      assert_no_emails_delivered()
+    end
+
     test "does not send notifications more than once every 12 hours" do
       site = new_site()
       insert(:spike_notification, site: site, threshold: 1, recipients: ["uku@example.com"])
