@@ -38,7 +38,7 @@ defmodule PlausibleWeb.UserAuth do
   on_ee do
     def log_in_user(conn, %Auth.SSO.Identity{} = identity, redirect_path) do
       case Auth.SSO.provision_user(identity) do
-        {:ok, provisioning_from, user} ->
+        {:ok, provisioning_from, team, user} ->
           if provisioning_from == :standard do
             :ok = revoke_all_user_sessions(user)
           end
@@ -48,6 +48,7 @@ defmodule PlausibleWeb.UserAuth do
 
           conn
           |> set_user_token(token)
+          |> Plug.Conn.put_session("current_team_id", team.identifier)
           |> set_logged_in_cookie()
           |> Phoenix.Controller.redirect(to: redirect_to)
 

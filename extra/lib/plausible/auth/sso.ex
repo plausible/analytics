@@ -50,7 +50,7 @@ defmodule Plausible.Auth.SSO do
   end
 
   @spec provision_user(SSO.Identity.t()) ::
-          {:ok, :standard | :sso | :integration, Auth.User.t()}
+          {:ok, :standard | :sso | :integration, Teams.Team.t(), Auth.User.t()}
           | {:error, :integration_not_found | :over_limit}
           | {:error, :multiple_memberships, Teams.Team.t(), Auth.User.t()}
   def provision_user(identity) do
@@ -58,8 +58,8 @@ defmodule Plausible.Auth.SSO do
       {:ok, :standard, user, integration} ->
         provision_standard_user(user, identity, integration)
 
-      {:ok, :sso, user, _integration} ->
-        provision_sso_user(user, identity)
+      {:ok, :sso, user, integration} ->
+        provision_sso_user(user, identity, integration)
 
       {:ok, :integration, integration} ->
         provision_identity(identity, integration)
@@ -87,7 +87,7 @@ defmodule Plausible.Auth.SSO do
 
   defp find_by_identity(id) do
     if user = Repo.get_by(Auth.User, sso_identity_id: id) do
-      user = Repo.preload(user, :sso_integration)
+      user = Repo.preload(user, sso_integration: :team)
 
       {:ok, user.type, user, user.sso_integration}
     else
@@ -126,7 +126,7 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp provision_sso_user(user, identity) do
+  defp provision_sso_user(user, identity, integration) do
     changeset =
       user
       |> change()
@@ -136,7 +136,7 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
 
     with {:ok, user} <- Repo.update(changeset) do
-      {:ok, :sso, user}
+      {:ok, :sso, integration.team, user}
     end
   end
 
@@ -153,7 +153,7 @@ defmodule Plausible.Auth.SSO do
     with :ok <- ensure_team_member(integration.team, user),
          :ok <- ensure_one_membership(user, integration.team),
          {:ok, user} <- Repo.update(changeset) do
-      {:ok, :standard, user}
+      {:ok, :standard, integration.team, user}
     end
   end
 
@@ -189,7 +189,7 @@ defmodule Plausible.Auth.SSO do
              {:ok, team_membership} <-
                Teams.Invitations.create_team_membership(team, role, user, now) do
           if team_membership.role != :guest do
-            {:identity, user}
+            {:identity, team, user}
           else
             Repo.rollback(:integration_not_found)
           end
@@ -204,8 +204,8 @@ defmodule Plausible.Auth.SSO do
       end)
 
     case result do
-      {:ok, {type, user}} ->
-        {:ok, type, user}
+      {:ok, {type, team, user}} ->
+        {:ok, type, team, user}
 
       {:error, _} = error ->
         error

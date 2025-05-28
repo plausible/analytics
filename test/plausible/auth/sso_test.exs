@@ -182,8 +182,9 @@ defmodule Plausible.Auth.SSOTest do
       } do
         identity = new_identity("Jane Sculley", "jane@" <> domain)
 
-        assert {:ok, :identity, user} = SSO.provision_user(identity)
+        assert {:ok, :identity, matched_team, user} = SSO.provision_user(identity)
 
+        assert matched_team.id == team.id
         assert user.id
         assert user.email == identity.email
         assert user.type == :sso
@@ -209,8 +210,9 @@ defmodule Plausible.Auth.SSOTest do
 
         identity = new_identity(user.name, user.email)
 
-        assert {:ok, :standard, sso_user} = SSO.provision_user(identity)
+        assert {:ok, :standard, matched_team, sso_user} = SSO.provision_user(identity)
 
+        assert matched_team.id == team.id
         assert sso_user.id == user.id
         assert sso_user.email == identity.email
         assert sso_user.type == :sso
@@ -225,10 +227,11 @@ defmodule Plausible.Auth.SSOTest do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         add_member(team, user: user, role: :editor)
         identity = new_identity(user.name, user.email)
-        {:ok, :standard, user} = SSO.provision_user(identity)
+        {:ok, :standard, _team, user} = SSO.provision_user(identity)
 
-        assert {:ok, :sso, sso_user} = SSO.provision_user(identity)
+        assert {:ok, :sso, matched_team, sso_user} = SSO.provision_user(identity)
 
+        assert matched_team.id == team.id
         assert sso_user.id == user.id
         assert sso_user.email == identity.email
         assert sso_user.type == :sso
