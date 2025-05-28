@@ -76,6 +76,34 @@ defmodule PlausibleWeb.UserAuthTest do
         assert get_session(conn, :user_token) == session.token
       end
 
+      test "logs in existing SSO owner using standard login correctly", %{
+        conn: conn,
+        user: user
+      } do
+        team = new_site(owner: user).team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+        {:ok, :standard, _, user} = SSO.provision_user(identity)
+
+        assert user.type == :sso
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(user)
+
+        assert %{sessions: [session]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+        assert session.user_id == user.id
+        assert session.token == get_session(conn, :user_token)
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      end
+
       test "invalidates any existing sessions of user logging in when converting", %{
         conn: conn,
         user: user
