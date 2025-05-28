@@ -586,24 +586,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     defp currency_option(_), do: nil
   end
 
-  defp revenue_toggle(%{has_access_to_revenue_goals?: true} = assigns) do
+  defp revenue_toggle(assigns) do
     ~H"""
-    <div class="flex itemx-center mb-3">
-      <PlausibleWeb.Components.Generic.toggle_switch
-        id="enable-revenue-tracking"
-        id_suffix={@suffix}
-        js_active_var="active"
-      />
-      <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-        Enable Revenue Tracking
-      </span>
-    </div>
-    """
-  end
-
-  defp revenue_toggle(%{has_access_to_revenue_goals?: false} = assigns) do
-    ~H"""
-    <.tooltip>
+    <.tooltip enabled?={not @has_access_to_revenue_goals?}>
       <:tooltip_content>
         <div class="text-xs">
           To get access to this feature
@@ -618,9 +603,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           id="enable-revenue-tracking"
           id_suffix={@suffix}
           js_active_var="active"
-          disabled={true}
+          disabled={not @has_access_to_revenue_goals?}
         />
-        <span class="ml-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+        <span class={[
+          "ml-3 text-sm font-medium",
+          if(@has_access_to_revenue_goals?,
+            do: "text-gray-900 dark:text-gray-100",
+            else: "text-gray-500 dark:text-gray-400"
+          )
+        ]}>
           Enable Revenue Tracking
         </span>
       </div>

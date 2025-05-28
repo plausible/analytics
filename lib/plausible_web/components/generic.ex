@@ -491,6 +491,7 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr(:sticky?, :boolean, default: true)
+  attr(:enabled?, :boolean, default: true)
   slot(:inner_block, required: true)
   slot(:tooltip_content, required: true)
 
@@ -502,33 +503,37 @@ defmodule PlausibleWeb.Components.Generic do
 
     assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
 
-    ~H"""
-    <div
-      x-data={@wrapper_data}
-      x-on:mouseenter="hovered = true"
-      x-on:mouseleave="hovered = false"
-      class={["w-max relative z-[1000]"]}
-    >
+    if assigns.enabled? do
+      ~H"""
       <div
-        x-cloak
-        x-show={@show_inner}
-        class={["tooltip-content absolute pb-2 top-0 -translate-y-full z-[1000] sm:w-72"]}
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
+        x-data={@wrapper_data}
+        x-on:mouseenter="hovered = true"
+        x-on:mouseleave="hovered = false"
+        class={["w-max relative z-[1000]"]}
       >
-        <div class="bg-gray-900 text-white rounded p-4 text-sm font-medium">
-          {render_slot(@tooltip_content)}
+        <div
+          x-cloak
+          x-show={@show_inner}
+          class={["tooltip-content absolute pb-2 top-0 -translate-y-full z-[1000] sm:w-72"]}
+          x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0"
+          x-transition:enter-end="opacity-100"
+          x-transition:leave="transition ease-in duration-150"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+        >
+          <div class="bg-gray-900 text-white rounded p-4 text-sm font-medium">
+            {render_slot(@tooltip_content)}
+          </div>
+        </div>
+        <div x-on:click="sticky = true; hovered = true" x-on:click.outside="sticky = false">
+          {render_slot(@inner_block)}
         </div>
       </div>
-      <div x-on:click="sticky = true; hovered = true" x-on:click.outside="sticky = false">
-        {render_slot(@inner_block)}
-      </div>
-    </div>
-    """
+      """
+    else
+      ~H"{render_slot(@inner_block)}"
+    end
   end
 
   slot :inner_block, required: true
