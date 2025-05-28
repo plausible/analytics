@@ -17,7 +17,7 @@ import { useSiteContext } from '../site-context'
 import { cleanLabels, remapToApiFilters } from '../util/filters'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import { useQueryContext } from '../query-context'
-import { Role, useUserContext } from '../user-context'
+import { useUserContext } from '../user-context'
 import { mutation } from '../api'
 import { useRoutelessModalsContext } from '../navigation/routeless-modals-context'
 import { useSegmentsContext } from '../filtering/segments-context'
@@ -147,21 +147,11 @@ export const RoutelessSegmentModals = () => {
     return null
   }
 
-  const userCanSelectSiteSegment = [
-    Role.admin,
-    Role.owner,
-    Role.editor,
-    'super_admin'
-  ].includes(user.role)
-
-  const linkUserToUpgrade = user.role === Role.owner
-
   return (
     <>
       {modal === 'update' && expandedSegment && (
         <UpdateSegmentModal
-          userCanSelectSiteSegment={userCanSelectSiteSegment}
-          linkUserToUpgrade={linkUserToUpgrade}
+          user={user}
           siteSegmentsAvailable={site.siteSegmentsAvailable}
           segment={expandedSegment}
           namePlaceholder={getSegmentNamePlaceholder(query)}
@@ -187,8 +177,7 @@ export const RoutelessSegmentModals = () => {
       )}
       {modal === 'create' && (
         <CreateSegmentModal
-          userCanSelectSiteSegment={userCanSelectSiteSegment}
-          linkUserToUpgrade={linkUserToUpgrade}
+          user={user}
           siteSegmentsAvailable={site.siteSegmentsAvailable}
           namePlaceholder={getSegmentNamePlaceholder(query)}
           segment={expandedSegment ?? undefined}
