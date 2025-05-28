@@ -5,7 +5,7 @@ defmodule Plausible.Workers.PurgeCDNCache do
   Uses Bunny CDN's API to purge cache by tag.
   Docs ref: https://docs.bunny.net/reference/pullzonepublic_purgecachepostbytag
 
-  Note that purging by id "*" is equivelent to purging ALL cache.
+  Note that purging by id "*" is equivalent to purging ALL cache.
   """
 
   use Oban.Worker,
