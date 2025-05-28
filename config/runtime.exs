@@ -812,8 +812,7 @@ if config_env() in [:prod, :ce, :load] do
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
-    queues: queues,
-    plugins: false
+    queues: queues
 end
 
 config :plausible, :hcaptcha,
