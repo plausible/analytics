@@ -35,6 +35,7 @@ defmodule Plausible.Auth.UserSession do
     |> cast(%{device: device}, [:device])
     |> generate_token()
     |> put_assoc(:user, user)
+    |> put_change(:timeout_at, NaiveDateTime.shift(now, @timeout))
     |> touch_session(now)
   end
 
