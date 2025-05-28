@@ -59,6 +59,8 @@ defmodule PlausibleWeb.TrackerPlug do
     end
   end
 
+  def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
+
   defp request_tracker_script(tag, conn) do
     tracker_script_configuration =
       Plausible.Repo.one(
@@ -67,6 +69,12 @@ defmodule PlausibleWeb.TrackerPlug do
 
     if tracker_script_configuration do
       script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(tracker_script_configuration)
+
+      :telemetry.execute(
+        telemetry_event(:v2),
+        %{},
+        %{status: 200}
+      )
 
       conn
       |> put_resp_header("content-type", "application/javascript")
@@ -80,6 +88,12 @@ defmodule PlausibleWeb.TrackerPlug do
       |> send_resp(200, script_tag)
       |> halt()
     else
+      :telemetry.execute(
+        telemetry_event(:v2),
+        %{},
+        %{status: 404}
+      )
+
       conn
       |> send_resp(404, "Not found")
       |> halt()
@@ -89,6 +103,12 @@ defmodule PlausibleWeb.TrackerPlug do
   defp legacy_request_file(filename, files_available, conn) do
     if filename && MapSet.member?(files_available, filename) do
       location = Application.app_dir(:plausible, "priv/tracker/js/" <> filename)
+
+      :telemetry.execute(
+        telemetry_event(:legacy),
+        %{},
+        %{status: 200}
+      )
 
       conn
       |> put_resp_header("content-type", "application/javascript")
