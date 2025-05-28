@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Components.BillingTest do
       assert class_of_element(html, "#feature-gate-inner-block-container") =~
                "pointer-events-none"
 
-      assert class_of_element(html, "#feature-gate-overlay") =~ "blur-overlay"
+      assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur"
     end
 
     test "renders a blur overlay for a teamless account" do
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Components.BillingTest do
       assert class_of_element(html, "#feature-gate-inner-block-container") =~
                "pointer-events-none"
 
-      assert class_of_element(html, "#feature-gate-overlay") =~ "blur-overlay"
+      assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur"
     end
 
     test "does not render a blur overlay if feature access is granted", %{user: user} do
@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Components.BillingTest do
       refute class_of_element(html, "#feature-gate-inner-block-container") =~
                "pointer-events-none"
 
-      refute class_of_element(html, "#feature-gate-overlay") =~ "blur-overlay"
+      refute class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur"
     end
 
     test "renders upgrade cta linking to the upgrade page if user role is :owner", %{user: user} do

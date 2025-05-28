@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Components.Billing do
     <div
       :if={@locked?}
       id="feature-gate-overlay"
-      class="absolute blur-overlay bg-white/50 inset-0 flex justify-center items-center rounded-md"
+      class="absolute backdrop-blur-[6px] bg-white/50 inset-0 flex justify-center items-center rounded-md"
     >
       <div class="px-6 flex flex-col items-center text-gray-500">
         <Heroicons.lock_closed solid class="size-8 mb-2" />
