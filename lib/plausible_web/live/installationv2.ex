@@ -57,9 +57,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
         <.manual_instructions
           :if={@installation_type == "manual"}
-          installation_type={@installation_type}
-          flow={@flow}
-          site={@site}
+          tracker_script_configuration={@tracker_script_configuration}
         />
 
         <.wordpress_instructions :if={@installation_type == "wordpress"} />
@@ -82,9 +80,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
     """
   end
 
-  attr :installation_type, :string, required: true
-  attr :flow, :string, required: true
-  attr :site, :map, required: true
+  attr :tracker_script_configuration, :map, required: true
 
   defp manual_instructions(assigns) do
     ~H"""
@@ -102,7 +98,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
     </div>
 
     <div class="mt-8">
-      <.snippet_form flow={@flow} site={@site} />
+      <.snippet_form tracker_script_configuration={@tracker_script_configuration} />
     </div>
     """
   end
@@ -191,7 +187,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 "
           rows="8"
           readonly
-        ><%= render_snippet(@site) %></textarea>
+        ><%= render_snippet(@tracker_script_configuration) %></textarea>
 
         <a
           onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
@@ -208,7 +204,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
     """
   end
 
-  def handle_event("submit", params, socket) do
+  def handle_event("submit", _params, socket) do
     PlausibleWeb.Tracker.update_script_configuration(
       socket.assigns.site,
       %{installation_type: socket.assigns.installation_type},
@@ -224,17 +220,17 @@ defmodule PlausibleWeb.Live.InstallationV2 do
      )}
   end
 
-  defp render_snippet(site) do
+  defp render_snippet(tracker_script_configuration) do
     """
     <script>
-    window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)},window.plausible.init=function(i){window.plausible.o=i||{}};var script=document.createElement("script");script.type="text/javascript",script.defer=!0,script.src="#{tracker_url(site)}";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(script,r);
+    window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)},window.plausible.init=function(i){window.plausible.o=i||{}};var script=document.createElement("script");script.type="text/javascript",script.defer=!0,script.src="#{tracker_url(tracker_script_configuration)}";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(script,r);
     plausible.init()
     </script>
     """
   end
 
-  defp tracker_url(site) do
-    "https://plausible.io/js/script-#{site.domain}.js"
+  defp tracker_url(tracker_script_configuration) do
+    "https://plausible.io/js/s-#{tracker_script_configuration.id}.js"
   end
 
   defp script_icon(assigns) do
