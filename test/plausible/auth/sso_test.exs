@@ -5,6 +5,7 @@ defmodule Plausible.Auth.SSOTest do
   on_ee do
     use Plausible.Teams.Test
 
+    alias Plausible.Auth
     alias Plausible.Auth.SSO
 
     describe "initiate_saml_integration/1" do
@@ -301,6 +302,63 @@ defmodule Plausible.Auth.SSOTest do
         identity = new_identity("Jane Sculley", "jane@" <> domain)
 
         assert {:error, :over_limit} = SSO.provision_user(identity)
+      end
+    end
+
+    describe "deprovision_user/1" do
+      test "deprovisions SSO user" do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity("Clarence Fortridge", "clarence@" <> domain)
+        {:ok, _, _, user} = SSO.provision_user(identity)
+
+        user = Repo.reload!(user)
+        session = Auth.UserSessions.create(user, "Unknown")
+
+        updated_user = SSO.deprovision_user(user)
+
+        refute Repo.reload(session)
+        assert updated_user.id == user.id
+        assert updated_user.type == :standard
+        refute updated_user.sso_identity_id
+        refute updated_user.sso_integration_id
+      end
+
+      test "handles standard user gracefully without revoking existing sessions" do
+        user = new_user()
+        session = Auth.UserSessions.create(user, "Unknown")
+
+        assert updated_user = SSO.deprovision_user(user)
+
+        assert Repo.reload(session)
+        assert updated_user.id == user.id
+        assert updated_user.type == :standard
+        refute updated_user.sso_identity_id
+        refute updated_user.sso_integration_id
+      end
+    end
+
+    describe "update_policy/2" do
+      test "updates team policy attributes" do
+        team = new_site().team
+
+        assert team.policy.sso_default_role == :viewer
+        assert team.policy.sso_session_timeout_minutes == 360
+
+        assert {:ok, team} =
+                 SSO.update_policy(
+                   team,
+                   sso_default_role: "editor",
+                   sso_session_timeout_minutes: 600
+                 )
+
+        assert team.policy.sso_default_role == :editor
+        assert team.policy.sso_session_timeout_minutes == 600
       end
     end
 
