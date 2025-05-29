@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert growth_box =~ "Up to 3 team members"
       assert growth_box =~ "Up to 3 sites"
-      assert growth_box =~ "Team Accounts"
+      assert growth_box =~ "Team Management"
       assert growth_box =~ "Shared Links"
       assert growth_box =~ "Shared Segments"
 
@@ -497,7 +497,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert growth_box =~ "Up to 3 team members"
       assert growth_box =~ "Up to 3 sites"
-      assert growth_box =~ "Team Accounts"
+      assert growth_box =~ "Team Management"
       assert growth_box =~ "Shared Links"
       assert growth_box =~ "Shared Segments"
 
@@ -914,7 +914,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert growth_box =~ "Up to 3 team members"
       assert growth_box =~ "Up to 3 sites"
-      assert growth_box =~ "Team Accounts"
+      assert growth_box =~ "Team Management"
       assert growth_box =~ "Shared Links"
       assert growth_box =~ "Shared Segments"
 

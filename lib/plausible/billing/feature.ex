@@ -204,7 +204,7 @@ defmodule Plausible.Billing.Feature.Teams do
   @moduledoc false
   use Plausible.Billing.Feature,
     name: :teams,
-    display_name: "Team Accounts"
+    display_name: "Team Management"
 end
 
 defmodule Plausible.Billing.Feature.SharedLinks do
