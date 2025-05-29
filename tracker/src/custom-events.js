@@ -1,5 +1,6 @@
 // Code for tracking tagged events, form submissions, file downloads and outbound links
 import { config, scriptEl, location, document } from './config'
+import { track } from './track'
 
 var MIDDLE_MOUSE_BUTTON = 1
 var PARENTS_TO_SEARCH_LIMIT = 3
@@ -68,7 +69,7 @@ function sendLinkClickEvent(event, link, eventAttrs) {
     if (COMPILE_REVENUE) {
       attrs.revenue = eventAttrs.revenue
     }
-    plausible(eventAttrs.name, attrs)
+    track(eventAttrs.name, attrs)
     setTimeout(followLink, 5000)
     event.preventDefault()
   } else {
@@ -76,7 +77,7 @@ function sendLinkClickEvent(event, link, eventAttrs) {
     if (COMPILE_REVENUE) {
       attrs.revenue = eventAttrs.revenue
     }
-    plausible(eventAttrs.name, attrs)
+    track(eventAttrs.name, attrs)
   }
 }
 
@@ -175,7 +176,7 @@ export function init() {
   if (COMPILE_CONFIG && config.formSubmissions) {
     function trackFormSubmission(e) {
       if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
-        plausible('Form Submission', { props: { path: location.pathname } });
+        track('Form Submission', { props: { path: location.pathname } });
       }
     }
 
@@ -204,7 +205,7 @@ export function init() {
       if (COMPILE_REVENUE) {
         attrs.revenue = eventAttrs.revenue
       }
-      plausible(eventAttrs.name, attrs)
+      track(eventAttrs.name, attrs)
     }
 
     function isForm(element) {
@@ -244,7 +245,7 @@ export function init() {
           if (COMPILE_REVENUE) {
             attrs.revenue = eventAttrs.revenue
           }
-          plausible(eventAttrs.name, attrs)
+          track(eventAttrs.name, attrs)
         }
       }
     }
