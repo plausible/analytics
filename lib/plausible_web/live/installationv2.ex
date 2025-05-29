@@ -18,10 +18,13 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         :viewer
       ])
 
+    tracker_script_configuration =
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site.id)
+
     {:ok,
      assign(socket,
        site: site,
-       installation_form: to_form(site.installation_meta.script_config),
+       tracker_script_configuration: tracker_script_configuration,
        flow: "provisioning",
        installation_type: params["type"] || "manual"
      )}
@@ -54,7 +57,6 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
         <.manual_instructions
           :if={@installation_type == "manual"}
-          installation_form={@installation_form}
           installation_type={@installation_type}
           flow={@flow}
           site={@site}
@@ -63,12 +65,23 @@ defmodule PlausibleWeb.Live.InstallationV2 do
         <.wordpress_instructions :if={@installation_type == "wordpress"} />
         <.gtm_instructions :if={@installation_type == "gtm"} />
         <.npm_instructions :if={@installation_type == "npm"} />
+
+        <.button phx-click="submit" class="w-full mt-8">
+          <%= if @flow == PlausibleWeb.Flows.domain_change() do %>
+            I understand, I'll update my website
+          <% else %>
+            <%= if @flow == PlausibleWeb.Flows.review() do %>
+              Verify your installation
+            <% else %>
+              Start collecting data
+            <% end %>
+          <% end %>
+        </.button>
       </.focus_box>
     </div>
     """
   end
 
-  attr :installation_form, :map, required: true
   attr :installation_type, :string, required: true
   attr :flow, :string, required: true
   attr :site, :map, required: true
@@ -89,12 +102,7 @@ defmodule PlausibleWeb.Live.InstallationV2 do
     </div>
 
     <div class="mt-8">
-      <.snippet_form
-        installation_form={@installation_form}
-        installation_type={@installation_type}
-        flow={@flow}
-        site={@site}
-      />
+      <.snippet_form flow={@flow} site={@site} />
     </div>
     """
   end
@@ -176,12 +184,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
 
   defp snippet_form(assigns) do
     ~H"""
-    <form id="snippet-form">
+    <form>
       <div class="relative">
         <textarea
           id="snippet"
-          class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
-          rows="5"
+          class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 "
+          rows="8"
           readonly
         ><%= render_snippet(@site) %></textarea>
 
@@ -196,31 +204,32 @@ defmodule PlausibleWeb.Live.InstallationV2 do
           </span>
         </a>
       </div>
-
-      <.button_link
-        :if={not is_nil(@installation_type)}
-        href={"/#{URI.encode_www_form(@site.domain)}/verification"}
-        type="submit"
-        class="w-full mt-8"
-      >
-        <%= if @flow == PlausibleWeb.Flows.domain_change() do %>
-          I understand, I'll update my website
-        <% else %>
-          <%= if @flow == PlausibleWeb.Flows.review() do %>
-            Verify your installation
-          <% else %>
-            Start collecting data
-          <% end %>
-        <% end %>
-      </.button_link>
     </form>
     """
   end
 
+  def handle_event("submit", params, socket) do
+    PlausibleWeb.Tracker.update_script_configuration(
+      socket.assigns.site,
+      %{installation_type: socket.assigns.installation_type},
+      :installation
+    )
+
+    {:noreply,
+     push_navigate(socket,
+       to:
+         Routes.site_path(socket, :verification, socket.assigns.site.domain,
+           flow: socket.assigns.flow
+         )
+     )}
+  end
+
   defp render_snippet(site) do
     """
-    <script defer src="#{tracker_url(site)}"></script>
-    <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+    <script>
+    window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)},window.plausible.init=function(i){window.plausible.o=i||{}};var script=document.createElement("script");script.type="text/javascript",script.defer=!0,script.src="#{tracker_url(site)}";var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(script,r);
+    plausible.init()
+    </script>
     """
   end
 
