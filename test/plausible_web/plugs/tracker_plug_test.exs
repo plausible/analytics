@@ -17,38 +17,53 @@ defmodule PlausibleWeb.TrackerPlugTest do
   use Plug.Test
   use Plausible.Teams.Test
 
-  describe "plausible-main.js" do
+  alias PlausibleWeb.Tracker
+
+  describe "plausible-web.js" do
     @example_config %{
-      "404" => true,
-      "hash" => true,
-      "file-downloads" => false,
-      "outbound-links" => false,
-      "pageview-props" => false,
-      "tagged-events" => true,
-      "revenue" => false
+      installation_type: :manual,
+      track_404_pages: true,
+      hash_based_routing: true,
+      file_downloads: false,
+      outbound_links: false,
+      pageview_props: false,
+      tagged_events: true,
+      revenue_tracking: false,
+      form_submissions: true
     }
 
     test "returns the script for an existing site", %{conn: conn} do
-      site =
-        new_site()
-        |> Plausible.Sites.update_installation_meta!(%{script_config: @example_config})
+      site = new_site()
 
-      response = get(conn, "/js/s-#{site.installation_meta.id}.js") |> response(200)
+      tracker_script_configuration =
+        Tracker.update_script_configuration(
+          site,
+          Map.put(@example_config, :site_id, site.id),
+          :installation
+        )
+
+      response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
 
       assert String.contains?(response, "!function(){var")
       assert String.contains?(response, "domain:\"#{site.domain}\"")
-      assert String.contains?(response, "hash:!0")
-      assert String.contains?(response, "taggedEvents:!0")
+      assert String.contains?(response, "hashBasedRouting:!0")
+      assert String.contains?(response, "formSubmissions:!0")
       refute String.contains?(response, "outboundLinks:!0")
+      refute String.contains?(response, "fileDownloads:!0")
     end
 
     # window.plausible is a substring checked for by the wordpress plugin to avoid 'optimization' by other wordpress plugins
     test "script contains window.plausible", %{conn: conn} do
-      site =
-        new_site()
-        |> Plausible.Sites.update_installation_meta!(%{script_config: @example_config})
+      site = new_site()
 
-      response = get(conn, "/js/s-#{site.installation_meta.id}.js") |> response(200)
+      tracker_script_configuration =
+        Tracker.update_script_configuration(
+          site,
+          Map.put(@example_config, :site_id, site.id),
+          :installation
+        )
+
+      response = get(conn, "/js/s-#{tracker_script_configuration.id}.js") |> response(200)
 
       assert String.contains?(response, "window.plausible")
     end

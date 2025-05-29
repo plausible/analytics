@@ -2,7 +2,7 @@ import { mockRequest, mockManyRequests, metaKey, expectPlausibleInAction } from 
 import { expect, test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 
-test.describe('file-downloads extension', () => {
+test.describe('legacy file-downloads extension', () => {
   test('sends event and does not start download when link opens in new tab', async ({ page }) => {
     await page.goto('/file-download.html')
     const downloadURL = await page.locator('#link').getAttribute('href')
@@ -49,5 +49,73 @@ test.describe('file-downloads extension', () => {
     await page.click('#local-download')
 
     expect((await downloadRequestMockList).length).toBe(1)
+  })
+})
+
+
+test.describe('file downloads', () => {
+  test.beforeEach(({ page }) => {
+    // Mock file download requests
+    mockRequest(page, 'https://awesome.website.com/file.iso')
+  })
+
+  const DEFAULT_CONFIG = {
+    domain: 'example.com',
+    endpoint: `${LOCAL_SERVER_ADDR}/api/event`,
+    captureOnLocalhost: true,
+    autoCapturePageviews: false
+  }
+
+  async function openPage(page, config) {
+    await page.goto(`/file-download-plausible-web.html`)
+    await page.waitForFunction('window.plausible !== undefined')
+
+    await page.evaluate((config) => {
+      window.plausible.init(config)
+    }, { ...DEFAULT_CONFIG, ...config })
+  }
+
+  test('does not track iso files by default', async ({ page }) => {
+    await openPage(page, { fileDownloads: true })
+
+    await expectPlausibleInAction(page, {
+      action: () => page.click('#file-download-iso', { modifiers: [metaKey()] }),
+      expectedRequests: [],
+      rejectRequests: [{ n: 'File Download' }],
+    })
+  })
+
+  test('tracks iso but not pdf files when config.fileDownloads includes "iso"', async ({ page }) => {
+    await openPage(page, { fileDownloads: ['iso'] })
+
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await page.click('#file-download-iso', { modifiers: [metaKey()] })
+        await page.click('#file-download', { modifiers: [metaKey()] })
+      },
+      expectedRequests: [
+        { n: 'File Download', p: { url: 'https://awesome.website.com/file.iso' } },
+      ],
+      rejectRequests: [
+        { n: 'File Download', p: { url: 'https://awesome.website.com/file.pdf' } },
+      ]
+    })
+  })
+
+  test('ignores malformed value but enables the feature', async ({ page }) => {
+    await openPage(page, { fileDownloads: 'iso' })
+
+    await expectPlausibleInAction(page, {
+      action: async () => {
+        await page.click('#file-download-iso', { modifiers: [metaKey()] })
+        await page.click('#file-download', { modifiers: [metaKey()] })
+      },
+      expectedRequests: [
+        { n: 'File Download', p: { url: 'https://awesome.website.com/file.pdf' } },
+      ],
+      rejectRequests: [
+        { n: 'File Download', p: { url: 'https://awesome.website.com/file.iso' } },
+      ]
+    })
   })
 })

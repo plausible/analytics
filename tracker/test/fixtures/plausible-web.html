@@ -5,15 +5,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>plausible-main.js tests</title>
+  <title>plausible-web.js tests</title>
 </head>
 
 <body>
   <a id="file-download" href="https://awesome.website.com/file.pdf">Download</a>
+  <a id="file-download-iso" href="https://awesome.website.com/file.iso">Download ISO</a>
 
   <a id="outbound-link" href="https://example.com">Outbound link</a>
 
-  <a id="manual-pageview" onclick="plausible('pageview', { u: '/:test-plausible-main' })">Manual pageview</a>
+  <a id="manual-pageview" onclick="plausible('pageview', { u: '/:test-plausible-web' })">Manual pageview</a>
 
   <a id="custom-event" onclick="plausible('Custom event', { props: { author: 'Karl' } })">Custom event</a>
 
@@ -44,7 +45,7 @@
       // Load the script with the passed config
       const config = params.get('script_config')
       const script = document.createElement('script')
-      script.src = `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(config)}`
+      script.src = `/tracker/js/plausible-web.js?script_config=${encodeURIComponent(config)}`
 
       var r = document.getElementsByTagName("script")[0]
       r.parentNode.insertBefore(script, r);

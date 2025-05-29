@@ -1,5 +1,7 @@
 defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible
+  use Plausible.Teams.Test
 
   import Ecto.Query, only: [from: 2]
   import Phoenix.ChannelTest
@@ -7,6 +9,10 @@ defmodule PlausibleWeb.UserAuthTest do
   alias Plausible.Auth
   alias Plausible.Repo
   alias PlausibleWeb.UserAuth
+
+  on_ee do
+    alias Plausible.Auth.SSO
+  end
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
@@ -39,6 +45,87 @@ defmodule PlausibleWeb.UserAuthTest do
         |> UserAuth.log_in_user(user, "/next")
 
       assert redirected_to(conn, 302) == "/next"
+    end
+
+    on_ee do
+      test "sets up user session from SSO identity", %{conn: conn, user: user} do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert %{sessions: [session]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+        assert session.user_id == user.id
+        assert NaiveDateTime.compare(session.timeout_at, identity.expires_at) == :eq
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert conn.private[:plug_session_info] == :renew
+        assert conn.resp_cookies["logged_in"].max_age > 0
+        assert get_session(conn, :user_token) == session.token
+      end
+
+      test "tries to log out and redirects if SSO identity is not matched", %{
+        conn: conn,
+        user: user
+      } do
+        identity = new_identity("Willy Wonka", "wonka@example.com")
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
+        assert redirected_to(conn, 302) == "/"
+        assert conn.private[:plug_session_info] == :renew
+        refute get_session(conn, :user_token)
+      end
+
+      test "passes through for user matching SSO identity, redirecting to team", %{
+        conn: conn,
+        user: user
+      } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+        another_team = new_site().team
+        add_member(another_team, user: user, role: :viewer)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
+        assert get_session(conn, :user_token)
+      end
+
+      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
+        %SSO.Identity{
+          id: id,
+          name: name,
+          email: email,
+          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
+        }
+      end
     end
   end
 
@@ -197,6 +284,29 @@ defmodule PlausibleWeb.UserAuthTest do
       assert refreshed_session.id == user_session.id
 
       refute Repo.reload(user_session)
+    end
+
+    on_ee do
+      test "only records last usage but does not refresh for SSO user", %{user: user} do
+        sixty_five_minutes_later =
+          NaiveDateTime.utc_now(:second)
+          |> NaiveDateTime.shift(minute: 65)
+
+        user = user |> Ecto.Changeset.change(type: :sso) |> Repo.update!()
+
+        %{sessions: [session]} = Repo.preload(user, :sessions)
+
+        assert refreshed_session =
+                 %Auth.UserSession{} =
+                 UserAuth.touch_user_session(session, sixty_five_minutes_later)
+
+        assert refreshed_session.id == session.id
+
+        assert NaiveDateTime.compare(refreshed_session.last_used_at, sixty_five_minutes_later) ==
+                 :eq
+
+        assert NaiveDateTime.compare(refreshed_session.timeout_at, session.timeout_at) == :eq
+      end
     end
   end
 

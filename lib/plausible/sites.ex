@@ -345,13 +345,6 @@ defmodule Plausible.Sites do
     base <> domain <> "?auth=" <> link.slug
   end
 
-  def update_installation_meta!(site, meta) do
-    site
-    |> Ecto.Changeset.change()
-    |> Ecto.Changeset.put_change(:installation_meta, meta)
-    |> Repo.update!()
-  end
-
   def update_legacy_time_on_page_cutoff!(site, cutoff) do
     site
     |> Ecto.Changeset.change()

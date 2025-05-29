@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.Installation do
   """
   use PlausibleWeb, :live_view
   alias Plausible.Verification.{Checks, State}
-  alias Plausible.Site.InstallationMeta
 
   @script_extension_params %{
     "outbound_links" => "outbound-links",
@@ -50,7 +49,9 @@ defmodule PlausibleWeb.Live.Installation do
 
     flow = params["flow"]
 
-    tracker_script_configuration = InstallationMeta.to_tracker_script_configuration(site)
+    tracker_script_configuration =
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site.id)
+
     installation_type = get_installation_type(flow, tracker_script_configuration, params)
 
     config =
@@ -472,7 +473,13 @@ defmodule PlausibleWeb.Live.Installation do
 
   @domain_change PlausibleWeb.Flows.domain_change()
   defp get_installation_type(@domain_change, tracker_script_configuration, params) do
-    tracker_script_configuration.installation_type || get_installation_type(nil, nil, params)
+    case tracker_script_configuration.installation_type do
+      nil ->
+        get_installation_type(nil, nil, params)
+
+      installation_type ->
+        Atom.to_string(installation_type)
+    end
   end
 
   defp get_installation_type(_type, _tracker_script_configuration, params) do
@@ -492,7 +499,7 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   defp persist_tracker_script_configuration(socket) do
-    updated_tracker_script_configuration =
+    tracker_script_config_update =
       Map.merge(socket.assigns.config, %{
         "site_id" => socket.assigns.site.id,
         "installation_type" => socket.assigns.installation_type
@@ -500,7 +507,8 @@ defmodule PlausibleWeb.Live.Installation do
 
     PlausibleWeb.Tracker.update_script_configuration(
       socket.assigns.site,
-      updated_tracker_script_configuration
+      tracker_script_config_update,
+      :installation
     )
 
     socket

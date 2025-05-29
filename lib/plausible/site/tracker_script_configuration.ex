@@ -25,7 +25,7 @@ defmodule Plausible.Site.TrackerScriptConfiguration do
     timestamps()
   end
 
-  def changeset(struct, params) do
+  def installation_changeset(struct, params) do
     struct
     |> cast(params, [
       :installation_type,
@@ -42,27 +42,16 @@ defmodule Plausible.Site.TrackerScriptConfiguration do
     |> validate_required([:site_id])
   end
 
-  def upsert(configuration_map) do
-    changeset = changeset(%__MODULE__{}, configuration_map)
-
-    Plausible.Repo.insert(
-      changeset,
-      on_conflict: {:replace, fields_to_update(configuration_map)},
-      conflict_target: [:site_id],
-      returning: true
-    )
-  end
-
-  defp fields_to_update(configuration_map) do
-    fields = __MODULE__.__schema__(:fields)
-
-    configuration_map
-    |> Map.keys()
-    |> Enum.map(fn
-      key when is_atom(key) -> key
-      key when is_binary(key) -> String.to_existing_atom(key)
-    end)
-    |> Enum.filter(&(&1 in fields))
-    |> Enum.concat([:updated_at])
+  def plugins_api_changeset(struct, params) do
+    struct
+    |> cast(params, [
+      :installation_type,
+      :hash_based_routing,
+      :outbound_links,
+      :file_downloads,
+      :form_submissions,
+      :site_id
+    ])
+    |> validate_required([:site_id])
   end
 end

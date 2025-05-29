@@ -27,11 +27,11 @@ defmodule Plausible.Session.Salts do
     state =
       case salts do
         [current, prev] ->
-          Logger.notice("[salts] current salt hash: #{:erlang.phash2(current)}")
+          Logger.warning("[salts] current salt hash: #{:erlang.phash2(current)}")
           %{previous: prev, current: current}
 
         [current] ->
-          Logger.notice("[salts] current salt hash: #{:erlang.phash2(current)}")
+          Logger.warning("[salts] current salt hash: #{:erlang.phash2(current)}")
           %{previous: nil, current: current}
 
         [] ->
@@ -70,7 +70,7 @@ defmodule Plausible.Session.Salts do
 
   defp generate_and_persist_new_salt(now) do
     salt = :crypto.strong_rand_bytes(16)
-    Logger.notice("[salts] generated salt hash: #{:erlang.phash2(salt)}")
+    Logger.warning("[salts] generated salt hash: #{:erlang.phash2(salt)}")
     Repo.insert_all("salts", [%{salt: salt, inserted_at: now}])
     salt
   end

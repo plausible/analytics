@@ -1,5 +1,5 @@
 {
-  "tracker_script_version": 11,
+  "tracker_script_version": 12,
   "type": "module",
   "scripts": {
     "deploy": "node compile.js",

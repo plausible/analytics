@@ -15,6 +15,7 @@ if (COMPILE_CONFIG) {
 
 var endpoint
 var dataDomain
+var autoCapturePageviews = !COMPILE_MANUAL
 
 // Exported public function
 function trigger(eventName, options) {
@@ -29,7 +30,7 @@ function trigger(eventName, options) {
     maxScrollDepthPx = getCurrentScrollDepthPx()
   }
 
-  if (!(COMPILE_LOCAL && (!COMPILE_CONFIG || config.local))) {
+  if (!(COMPILE_LOCAL && (!COMPILE_CONFIG || config.captureOnLocalhost))) {
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
       return onIgnoredEvent(eventName, options, 'localhost')
     }
@@ -52,7 +53,7 @@ function trigger(eventName, options) {
     function pathMatches(wildcardPath) {
       var actualPath = location.pathname
 
-      if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
+      if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
         actualPath += location.hash
       }
 
@@ -71,7 +72,7 @@ function trigger(eventName, options) {
   payload.n = eventName
   payload.v = COMPILE_TRACKER_SCRIPT_VERSION
 
-  if (COMPILE_MANUAL && (!COMPILE_CONFIG || config.manual)) {
+  if (COMPILE_MANUAL || !autoCapturePageviews) {
     var customURL = options && options.u
 
     payload.u = customURL ? customURL : location.href
@@ -90,7 +91,7 @@ function trigger(eventName, options) {
   if (options && options.interactive === false) {
     payload.i = false
   }
-  if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+  if (COMPILE_REVENUE) {
     if (options && options.revenue) {
       payload.$ = options.revenue
     }
@@ -124,7 +125,7 @@ function trigger(eventName, options) {
     }
   }
 
-  if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
+  if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
     payload.h = 1
   }
 
@@ -218,7 +219,7 @@ function triggerEngagement() {
     runningEngagementStart = 0
     currentEngagementTime = 0
 
-    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
+    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
       payload.h = 1
     }
 
@@ -308,11 +309,12 @@ function init(overrides) {
     return
   }
 
-  // Explicitly set dataDomain before any overrides are applied as `plausible-main` does not support overriding it
+  // Explicitly set dataDomain before any overrides are applied as `plausible-web` does not support overriding it
   dataDomain = COMPILE_CONFIG ? config.domain : scriptEl.getAttribute('data-domain')
 
   if (COMPILE_CONFIG) {
     Object.assign(config, overrides)
+    autoCapturePageviews = config.autoCapturePageviews !== false
   }
 
   endpoint = COMPILE_CONFIG ? config.endpoint : (scriptEl.getAttribute('data-api') || defaultEndpoint())
@@ -342,11 +344,11 @@ function init(overrides) {
     }
   })
 
-  if (!(COMPILE_MANUAL && (!COMPILE_CONFIG || config.manual))) {
+  if (!COMPILE_MANUAL || autoCapturePageviews) {
     var lastPage;
 
     function page(isSPANavigation) {
-      if (!(COMPILE_HASH && (!COMPILE_CONFIG || config.hash))) {
+      if (!(COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting))) {
         if (isSPANavigation && lastPage === location.pathname) return;
       }
 
@@ -356,7 +358,7 @@ function init(overrides) {
 
     var onSPANavigation = function () { page(true) }
 
-    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hash)) {
+    if (COMPILE_HASH && (!COMPILE_CONFIG || config.hashBasedRouting)) {
       window.addEventListener('hashchange', onSPANavigation)
     } else {
       var his = window.history
@@ -419,7 +421,7 @@ function init(overrides) {
       var link = getLinkEl(event.target)
       var hrefWithoutQuery = link && link.href && link.href.split('?')[0]
 
-      if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
+      if (COMPILE_TAGGED_EVENTS) {
         if (isElementOrParentTagged(link, 0)) {
           // Return to prevent sending multiple events with the same action.
           // Clicks on tagged links are handled by another function.
@@ -452,7 +454,7 @@ function init(overrides) {
 
       if (shouldFollowLink(event, link)) {
         var attrs = { props: eventAttrs.props, callback: followLink }
-        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+        if (COMPILE_REVENUE) {
           attrs.revenue = eventAttrs.revenue
         }
         plausible(eventAttrs.name, attrs)
@@ -460,7 +462,7 @@ function init(overrides) {
         event.preventDefault()
       } else {
         var attrs = { props: eventAttrs.props }
-        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+        if (COMPILE_REVENUE) {
           attrs.revenue = eventAttrs.revenue
         }
         plausible(eventAttrs.name, attrs)
@@ -478,9 +480,23 @@ function init(overrides) {
 
     if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
       var defaultFileTypes = ['pdf', 'xlsx', 'docx', 'txt', 'rtf', 'csv', 'exe', 'key', 'pps', 'ppt', 'pptx', '7z', 'pkg', 'rar', 'gz', 'zip', 'avi', 'mov', 'mp4', 'mpeg', 'wmv', 'midi', 'mp3', 'wav', 'wma', 'dmg']
-      var fileTypesAttr = scriptEl.getAttribute('file-types')
-      var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
-      var fileTypesToTrack = (fileTypesAttr && fileTypesAttr.split(",")) || (addFileTypesAttr && addFileTypesAttr.split(",").concat(defaultFileTypes)) || defaultFileTypes;
+      var fileTypesToTrack = defaultFileTypes
+
+      if (COMPILE_CONFIG) {
+        if (Array.isArray(config.fileDownloads)) {
+          fileTypesToTrack = config.fileDownloads
+        }
+      } else {
+        var fileTypesAttr = scriptEl.getAttribute('file-types')
+        var addFileTypesAttr = scriptEl.getAttribute('add-file-types')
+
+        if (fileTypesAttr) {
+          fileTypesToTrack = fileTypesAttr.split(",")
+        }
+        if (addFileTypesAttr) {
+          fileTypesToTrack = addFileTypesAttr.split(",").concat(defaultFileTypes)
+        }
+      }
 
       function isDownloadToTrack(url) {
         if (!url) { return false }
@@ -491,7 +507,7 @@ function init(overrides) {
         })
       }
     }
-    
+
     if (COMPILE_CONFIG && config.formSubmissions) {
       function trackFormSubmission(e) {
         if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
@@ -502,13 +518,13 @@ function init(overrides) {
       document.addEventListener('submit', trackFormSubmission, true);
     }
 
-    if (COMPILE_TAGGED_EVENTS && (!COMPILE_CONFIG || config.taggedEvents)) {
+    if (COMPILE_TAGGED_EVENTS) {
       // Finds event attributes by iterating over the given element's (or its
       // parent's) classList. Returns an object with `name` and `props` keys.
       function getTaggedEventAttributes(htmlElement) {
         var taggedElement = isTagged(htmlElement) ? htmlElement : htmlElement && htmlElement.parentNode
         var eventAttrs = { name: null, props: {} }
-        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+        if (COMPILE_REVENUE) {
           eventAttrs.revenue = {}
         }
 
@@ -530,7 +546,7 @@ function init(overrides) {
             }
           }
 
-          if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+          if (COMPILE_REVENUE) {
             var revenueMatchList = className.match(/plausible-revenue-(.+)(=|--)(.+)/)
             if (revenueMatchList) {
               var key = revenueMatchList[1]
@@ -561,7 +577,7 @@ function init(overrides) {
         setTimeout(submitForm, 5000)
 
         var attrs = { props: eventAttrs.props, callback: submitForm }
-        if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+        if (COMPILE_REVENUE) {
           attrs.revenue = eventAttrs.revenue
         }
         plausible(eventAttrs.name, attrs)
@@ -603,7 +619,7 @@ function init(overrides) {
           } else {
             var attrs = {}
             attrs.props = eventAttrs.props
-            if (COMPILE_REVENUE && (!COMPILE_CONFIG || config.revenue)) {
+            if (COMPILE_REVENUE) {
               attrs.revenue = eventAttrs.revenue
             }
             plausible(eventAttrs.name, attrs)

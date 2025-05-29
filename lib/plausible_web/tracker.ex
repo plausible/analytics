@@ -3,19 +3,20 @@ defmodule PlausibleWeb.Tracker do
   Helper module for building the dynamic tracker script. Used by PlausibleWeb.TrackerPlug.
   """
 
+  use Plausible
   use Plausible.Repo
   alias Plausible.Site.TrackerScriptConfiguration
 
-  path = Application.app_dir(:plausible, "priv/tracker/js/plausible-main.js")
+  path = Application.app_dir(:plausible, "priv/tracker/js/plausible-web.js")
   # On CI, the file might not be present for static checks so we create an empty one
   File.touch!(path)
 
   @plausible_main_script File.read!(path)
-  @external_resource "priv/tracker/js/plausible-main.js"
+  @external_resource "priv/tracker/js/plausible-web.js"
 
-  def plausible_main_script_tag(site) do
+  def plausible_main_script_tag(tracker_script_configuration) do
     config_js_content =
-      site
+      tracker_script_configuration
       |> plausible_main_config()
       |> Enum.flat_map(fn
         {key, value} when is_binary(value) -> ["#{key}:#{JSON.encode!(value)}"]
@@ -31,68 +32,69 @@ defmodule PlausibleWeb.Tracker do
     |> String.replace("\"<%= @config_js %>\"", "{#{config_js_content}}")
   end
 
-  def plausible_main_config(site) do
-    script_config = site.installation_meta.script_config
-
+  def plausible_main_config(tracker_script_configuration) do
     %{
-      domain: site.domain,
+      domain: tracker_script_configuration.site.domain,
       endpoint: "#{PlausibleWeb.Endpoint.url()}/api/event",
-      hash: Map.get(script_config, "hash", false),
-      outboundLinks: Map.get(script_config, "outbound-links", false),
-      fileDownloads: Map.get(script_config, "file-downloads", false),
-      taggedEvents: Map.get(script_config, "tagged-events", false),
-      revenue: Map.get(script_config, "revenue", false),
-      # Options not directly exposed via onboarding
-      local: false,
-      manual: false
+      hashBasedRouting: tracker_script_configuration.hash_based_routing,
+      outboundLinks: tracker_script_configuration.outbound_links,
+      fileDownloads: tracker_script_configuration.file_downloads,
+      formSubmissions: tracker_script_configuration.form_submissions
     }
   end
 
-  def update_script_configuration(site, config_update) do
-    installation_meta_update = to_installation_meta(config_update)
+  def update_script_configuration(site, config_update, changeset_type) do
+    original_config = get_or_create_tracker_script_configuration!(site.id)
 
-    Repo.transaction(fn ->
-      Plausible.Sites.update_installation_meta!(site, installation_meta_update)
-      {:ok, _} = TrackerScriptConfiguration.upsert(config_update)
+    changeset = changeset(original_config, config_update, changeset_type)
+    updated_config = Repo.update!(changeset)
 
-      update_goals(site, config_update)
-    end)
+    sync_goals(site, original_config, updated_config)
+
+    on_ee do
+      Plausible.Workers.PurgeCDNCache.new(
+        %{id: updated_config.id},
+        # See PurgeCDNCache.ex for more details
+        schedule_in: 10,
+        replace: [scheduled: [:scheduled_at]]
+      )
+      |> Oban.insert!()
+    end
+
+    updated_config
+  end
+
+  def get_or_create_tracker_script_configuration!(site_id) do
+    configuration = Repo.get_by(TrackerScriptConfiguration, site_id: site_id)
+
+    if configuration do
+      configuration
+    else
+      %TrackerScriptConfiguration{site_id: site_id}
+      |> Repo.insert!()
+    end
   end
 
   # Sync plausible goals with the updated script config
-  defp update_goals(site, config_update) do
-    config_update
-    |> Enum.map(fn {key, value} -> {to_atom(key), value} end)
+  defp sync_goals(site, original_config, updated_config) do
+    [:track_404_pages, :outbound_links, :file_downloads]
+    |> Enum.map(fn key -> {key, Map.get(original_config, key), Map.get(updated_config, key)} end)
     |> Enum.each(fn
-      {:track_404_pages, true} -> Plausible.Goals.create_404(site)
-      {:track_404_pages, false} -> Plausible.Goals.delete_404(site)
-      {:outbound_links, true} -> Plausible.Goals.create_outbound_links(site)
-      {:outbound_links, false} -> Plausible.Goals.delete_outbound_links(site)
-      {:file_downloads, true} -> Plausible.Goals.create_file_downloads(site)
-      {:file_downloads, false} -> Plausible.Goals.delete_file_downloads(site)
+      {:track_404_pages, false, true} -> Plausible.Goals.create_404(site)
+      {:track_404_pages, true, false} -> Plausible.Goals.delete_404(site)
+      {:outbound_links, false, true} -> Plausible.Goals.create_outbound_links(site)
+      {:outbound_links, true, false} -> Plausible.Goals.delete_outbound_links(site)
+      {:file_downloads, false, true} -> Plausible.Goals.create_file_downloads(site)
+      {:file_downloads, true, false} -> Plausible.Goals.delete_file_downloads(site)
       _ -> nil
     end)
   end
 
-  defp to_installation_meta(config_update) do
-    %{
-      installation_type: remap_installation_type(config_update["installation_type"]),
-      script_config: %{
-        "404" => Map.get(config_update, "track_404_pages", false),
-        "hash" => Map.get(config_update, "hash_based_routing", false),
-        "outbound-links" => Map.get(config_update, "outbound_links", false),
-        "file-downloads" => Map.get(config_update, "file_downloads", false),
-        "revenue" => Map.get(config_update, "revenue_tracking", false),
-        "tagged-events" => Map.get(config_update, "tagged_events", false),
-        "pageview-props" => Map.get(config_update, "pageview_props", false)
-      }
-    }
+  defp changeset(tracker_script_configuration, config_update, :installation) do
+    TrackerScriptConfiguration.installation_changeset(tracker_script_configuration, config_update)
   end
 
-  defp remap_installation_type("wordpress"), do: "WordPress"
-  defp remap_installation_type("gtm"), do: "GTM"
-  defp remap_installation_type(value), do: value
-
-  defp to_atom(str) when is_binary(str), do: String.to_existing_atom(str)
-  defp to_atom(atom) when is_atom(atom), do: atom
+  defp changeset(tracker_script_configuration, config_update, :plugins_api) do
+    TrackerScriptConfiguration.plugins_api_changeset(tracker_script_configuration, config_update)
+  end
 end
