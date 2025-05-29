@@ -45,7 +45,15 @@
 
                 <.styled_link
                   class="text-sm mr-6"
-                  href={"/cs/sites/site/#{@conn.assigns.site.id}"}
+                  href={
+                    InternalRoutes.customer_support_resource_url(
+                      PlausibleWeb.InternalEndpoint,
+                      :details,
+                      :sites,
+                      :site,
+                      @site.id
+                    )
+                  }
                   new_tab={true}
                 >
                   CS
