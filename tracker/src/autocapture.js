@@ -1,6 +1,6 @@
 import { config, location, document } from './config'
 
-export function init(trigger) {
+export function init(track) {
   var lastPage;
 
   function page(isSPANavigation) {
@@ -9,7 +9,7 @@ export function init(trigger) {
     }
 
     lastPage = location.pathname
-    trigger('pageview')
+    track('pageview')
   }
 
   var onSPANavigation = function () { page(true) }
@@ -42,7 +42,7 @@ export function init(trigger) {
 
   window.addEventListener('pageshow', function (event) {
     if (event.persisted) {
-      // Page was restored from bfcache - trigger a pageview
+      // Page was restored from bfcache - track a pageview
       page();
     }
   })
