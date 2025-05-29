@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.TrackerTest do
   use Plausible.DataCase, async: true
   use Oban.Testing, repo: Plausible.Repo
+  use Plausible
   use Plausible.Teams.Test
 
   alias Plausible.Site.TrackerScriptConfiguration
@@ -51,32 +52,38 @@ defmodule PlausibleWeb.TrackerTest do
       assert tracker_script_configuration.outbound_links == true
     end
 
-    test "CDN purge is scheduled when config is updated" do
-      site = new_site()
-      tracker_script_configuration = Tracker.get_or_create_tracker_script_configuration!(site.id)
+    on_ee do
+      test "CDN purge is scheduled when config is updated" do
+        site = new_site()
 
-      Tracker.update_script_configuration(
-        site,
-        %{installation_type: :wordpress, outbound_links: true},
-        :installation
-      )
+        tracker_script_configuration =
+          Tracker.get_or_create_tracker_script_configuration!(site.id)
 
-      assert_enqueued(
-        worker: Plausible.Workers.PurgeCDNCache,
-        args: %{id: tracker_script_configuration.id}
-      )
-    end
+        Tracker.update_script_configuration(
+          site,
+          %{installation_type: :wordpress, outbound_links: true},
+          :installation
+        )
 
-    test "CDN purge is not scheduled when only installation type is updated" do
-      site = new_site()
-      tracker_script_configuration = Tracker.get_or_create_tracker_script_configuration!(site.id)
+        assert_enqueued(
+          worker: Plausible.Workers.PurgeCDNCache,
+          args: %{id: tracker_script_configuration.id}
+        )
+      end
 
-      Tracker.update_script_configuration(site, %{installation_type: :wordpress}, :installation)
+      test "CDN purge is not scheduled when only installation type is updated" do
+        site = new_site()
 
-      refute_enqueued(
-        worker: Plausible.Workers.PurgeCDNCache,
-        args: %{id: tracker_script_configuration.id}
-      )
+        tracker_script_configuration =
+          Tracker.get_or_create_tracker_script_configuration!(site.id)
+
+        Tracker.update_script_configuration(site, %{installation_type: :wordpress}, :installation)
+
+        refute_enqueued(
+          worker: Plausible.Workers.PurgeCDNCache,
+          args: %{id: tracker_script_configuration.id}
+        )
+      end
     end
 
     test "can turn config into a script tag" do
