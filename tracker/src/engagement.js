@@ -20,7 +20,7 @@ var runningEngagementStart = 0
 // When page is hidden, this 'engaged' time is saved to this variable
 var currentEngagementTime = 0
 
-export function prePageviewTrigger() {
+export function prePageviewTrack() {
   if (listeningOnEngagement) {
     // If we're listening on engagement already, at least one pageview
     // has been sent by the current script (i.e. it's most likely a SPA).
@@ -31,7 +31,7 @@ export function prePageviewTrigger() {
   }
 }
 
-export function postPageviewTrigger(payload) {
+export function postPageviewTrack(payload) {
   currentEngagementIgnored = false
   currentEngagementURL = payload.u
   currentEngagementProps = payload.p
