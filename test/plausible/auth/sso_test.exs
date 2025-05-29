@@ -5,6 +5,7 @@ defmodule Plausible.Auth.SSOTest do
   on_ee do
     use Plausible.Teams.Test
 
+    alias Plausible.Auth
     alias Plausible.Auth.SSO
 
     describe "initiate_saml_integration/1" do
@@ -301,6 +302,381 @@ defmodule Plausible.Auth.SSOTest do
         identity = new_identity("Jane Sculley", "jane@" <> domain)
 
         assert {:error, :over_limit} = SSO.provision_user(identity)
+      end
+    end
+
+    describe "deprovision_user/1" do
+      test "deprovisions SSO user" do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity("Clarence Fortridge", "clarence@" <> domain)
+        {:ok, _, _, user} = SSO.provision_user(identity)
+
+        user = Repo.reload!(user)
+        session = Auth.UserSessions.create(user, "Unknown")
+
+        updated_user = SSO.deprovision_user(user)
+
+        refute Repo.reload(session)
+        assert updated_user.id == user.id
+        assert updated_user.type == :standard
+        refute updated_user.sso_identity_id
+        refute updated_user.sso_integration_id
+      end
+
+      test "handles standard user gracefully without revoking existing sessions" do
+        user = new_user()
+        session = Auth.UserSessions.create(user, "Unknown")
+
+        assert updated_user = SSO.deprovision_user(user)
+
+        assert Repo.reload(session)
+        assert updated_user.id == user.id
+        assert updated_user.type == :standard
+        refute updated_user.sso_identity_id
+        refute updated_user.sso_integration_id
+      end
+    end
+
+    describe "update_policy/2" do
+      test "updates team policy attributes" do
+        team = new_site().team
+
+        assert team.policy.sso_default_role == :viewer
+        assert team.policy.sso_session_timeout_minutes == 360
+
+        assert {:ok, team} =
+                 SSO.update_policy(
+                   team,
+                   sso_default_role: "editor",
+                   sso_session_timeout_minutes: 600
+                 )
+
+        assert team.policy.sso_default_role == :editor
+        assert team.policy.sso_session_timeout_minutes == 600
+      end
+
+      test "accepts single attributes leaving others as they are" do
+        team = new_site().team
+
+        assert team.policy.sso_default_role == :viewer
+        assert team.policy.sso_session_timeout_minutes == 360
+
+        assert {:ok, team} = SSO.update_policy(team, sso_default_role: "editor")
+
+        assert team.policy.sso_default_role == :editor
+        assert team.policy.sso_session_timeout_minutes == 360
+      end
+    end
+
+    describe "check_force_sso/2" do
+      test "returns ok when conditions are met for setting all_but_owners" do
+        # Owner with MFA enabled
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        assert :ok = SSO.check_force_sso(team, :all_but_owners)
+      end
+
+      test "returns error when one owner does not have MFA configured" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Owner without MFA
+        another_owner = new_user()
+        add_member(team, user: another_owner, role: :owner)
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Carrie Mower", "lance@" <> domain)
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        assert {:error, :owner_mfa_disabled} = SSO.check_force_sso(team, :all_but_owners)
+      end
+
+      test "returns error when there's no provisioned SSO user present" do
+        # Owner with MFA enabled
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        assert {:error, :no_sso_user} = SSO.check_force_sso(team, :all_but_owners)
+      end
+
+      test "returns error when there's no verified SSO domain present" do
+        # Owner with MFA enabled
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        # Unverified domain
+        {:ok, _sso_domain} = SSO.Domains.add(integration, domain)
+
+        assert {:error, :no_verified_domain} = SSO.check_force_sso(team, :all_but_owners)
+      end
+
+      test "returns error when there's no SSO domain present" do
+        # Owner with MFA enabled
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        _integration = SSO.initiate_saml_integration(team)
+
+        assert {:error, :no_domain} = SSO.check_force_sso(team, :all_but_owners)
+      end
+
+      test "returns error when there's no SSO integration present" do
+        # Owner with MFA enabled
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        assert {:error, :no_integration} = SSO.check_force_sso(team, :all_but_owners)
+      end
+
+      test "returns ok when setting to none" do
+        team = new_site().team
+
+        assert :ok = SSO.check_force_sso(team, :none)
+      end
+    end
+
+    describe "set_enforce_sso/2" do
+      test "sets enforce mode to all_but_owners when conditions met" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        assert {:ok, updated_team} = SSO.set_force_sso(team, :all_but_owners)
+
+        assert updated_team.id == team.id
+        assert updated_team.policy.force_sso == :all_but_owners
+      end
+
+      test "returns error when conditions not met" do
+        team = new_site().team
+
+        assert {:error, :no_integration} = SSO.set_force_sso(team, :all_but_owners)
+      end
+
+      test "sets enforce mode to none" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        {:ok, team} = SSO.set_force_sso(team, :all_but_owners)
+
+        assert {:ok, updated_team} = SSO.set_force_sso(team, :none)
+
+        assert updated_team.id == team.id
+        assert updated_team.policy.force_sso == :none
+      end
+    end
+
+    describe "check_can_remove_integration/1" do
+      test "returns ok if conditions to remove integration met" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, sso_user} = SSO.provision_user(identity)
+
+        # SSO user deprovisioned
+        _user = SSO.deprovision_user(sso_user)
+
+        integration = Repo.reload!(integration)
+        assert :ok = SSO.check_can_remove_integration(integration)
+      end
+
+      test "returns error if force SSO enabled" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, sso_user} = SSO.provision_user(identity)
+
+        # Force SSO enabled
+        {:ok, _} = SSO.set_force_sso(team, :all_but_owners)
+
+        # SSO user deprovisioned
+        _user = SSO.deprovision_user(sso_user)
+
+        integration = Repo.reload!(integration)
+        assert {:error, :force_sso_enabled} = SSO.check_can_remove_integration(integration)
+      end
+
+      test "returns error if SSO user present" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        integration = Repo.reload!(integration)
+        assert {:error, :sso_users_present} = SSO.check_can_remove_integration(integration)
+      end
+    end
+
+    describe "remove_integration/1,2" do
+      test "removes integration when conditions met" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, sso_user} = SSO.provision_user(identity)
+
+        # SSO user deprovisioned
+        _user = SSO.deprovision_user(sso_user)
+
+        integration = Repo.reload!(integration)
+
+        assert :ok = SSO.remove_integration(integration)
+        refute Repo.reload(integration)
+        refute Repo.reload(sso_domain)
+      end
+
+      test "returns error when conditions not met" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        integration = Repo.reload!(integration)
+
+        assert {:error, :sso_users_present} = SSO.remove_integration(integration)
+        assert Repo.reload(integration)
+        assert Repo.reload(sso_domain)
+      end
+
+      test "succeeds when SSO user present and force flag set" do
+        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        team = new_site(owner: owner).team
+
+        # Setup integration
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        # Provisioned SSO identity
+        #
+        identity = new_identity("Carrie Mower", "carrie@" <> domain)
+        {:ok, _, _, sso_user} = SSO.provision_user(identity)
+
+        integration = Repo.reload!(integration)
+
+        assert :ok = SSO.remove_integration(integration, force_deprovision?: true)
+        refute Repo.reload(integration)
+        refute Repo.reload(sso_domain)
+
+        # SSO user is deprovisioned
+        sso_user = Repo.reload(sso_user)
+
+        assert sso_user.type == :standard
+        refute sso_user.sso_identity_id
+        refute sso_user.sso_integration_id
       end
     end
 
