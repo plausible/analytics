@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
         </div>
       </:title>
       <:subtitle>
-        Add your team members and assign their roles
+        Name your team, add team members and assign roles. When ready, click "Create Team" to send invitations
       </:subtitle>
 
       <.form
