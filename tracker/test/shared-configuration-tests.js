@@ -18,17 +18,16 @@ import { test } from '@playwright/test'
 // Wrapper around calling `plausible.init` in the page context for users of `testPlausibleConfiguration`
 export async function callInit(page, config, parent) {
   // Stringify the customProperties function to work around evaluate not being able to serialize functions
-  if (typeof config.customProperties === 'function') {
+  if (config && typeof config.customProperties === 'function') {
     config.customProperties = { "_wrapFunction": config.customProperties.toString() }
   }
 
   await page.evaluate(({ config, parent }) => {
-    config = JSON.parse(config)
-    if (config.customProperties && config.customProperties._wrapFunction) {
+    if (config && config.customProperties && config.customProperties._wrapFunction) {
       config.customProperties = new Function(`return (${config.customProperties._wrapFunction})`)();
     }
     eval(parent).init(config)
-  }, { config: JSON.stringify(config), parent })
+  }, { config, parent })
 }
 
 export function testPlausibleConfiguration({ openPage, initPlausible, fixtureName, fixtureTitle }) {
