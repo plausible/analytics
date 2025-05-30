@@ -1,4 +1,4 @@
-import { mockRequest, mockManyRequests, metaKey, expectPlausibleInAction } from './support/test-utils'
+import { mockRequest, metaKey, expectPlausibleInAction } from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 
@@ -44,11 +44,19 @@ test.describe('legacy file-downloads extension', () => {
   test('starts download only once', async ({ page }) => {
     await page.goto('/file-download.html')
     const downloadURL = LOCAL_SERVER_ADDR + '/' + await page.locator('#local-download').getAttribute('href')
-
-    const downloadRequestMockList = mockManyRequests({ page, path: downloadURL, numberOfRequests: 2 })
+    const timeToWaitMs = 3000
+    let requestCount = 0
+    await page.route(downloadURL, async (route) => {
+      requestCount++
+      await route.fulfill({
+        status: 202,
+        contentType: 'text/plain',
+        body: 'ok'
+      })
+    })
     await page.click('#local-download')
-
-    expect((await downloadRequestMockList).length).toBe(1)
+    await new Promise(resolve => setTimeout(resolve, timeToWaitMs))
+    expect(requestCount).toBe(1)
   })
 })
 
