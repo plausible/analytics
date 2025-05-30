@@ -80,6 +80,7 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
         expectedRequests: [
           { n: 'pageview', d: 'example.com', u: expecting.stringContaining(fixtureName) },
           { n: 'Outbound Link: Click', d: 'example.com', u: expecting.stringContaining(fixtureName), p: { url: 'https://example.com/' } },
+          { n: 'engagement', d: 'example.com', u: expecting.stringContaining(fixtureName) },
         ]
       })
     })
