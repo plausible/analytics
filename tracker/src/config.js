@@ -21,7 +21,7 @@ function defaultEndpoint() {
 }
 
 export function init(overrides) {
-  if (COMPILE_CONFIG) {
+  if (COMPILE_PLAUSIBLE_WEB) {
     // This will be dynamically replaced by a config json object in the script serving endpoint
     config = "<%= @config_js %>"
     Object.assign(config, overrides, {
@@ -30,6 +30,20 @@ export function init(overrides) {
       // autoCapturePageviews defaults to `true`
       autoCapturePageviews: overrides.autoCapturePageviews !== false
     })
+  } else if (COMPILE_PLAUSIBLE_NPM) {
+    if (config.isInitialized) {
+      throw new Error('plausible.init() can only be called once')
+    }
+    if (!overrides || !overrides.domain) {
+      throw new Error('plausible.init(): domain argument is required')
+    }
+    if (!overrides.endpoint) {
+      overrides.endpoint = 'https://plausible.io/api/event'
+    }
+    Object.assign(config, overrides, {
+      autoCapturePageviews: overrides.autoCapturePageviews !== false
+    })
+    config.isInitialized = true
   } else {
     config.endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint()
     config.domain = scriptEl.getAttribute('data-domain')

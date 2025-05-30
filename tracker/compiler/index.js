@@ -1,4 +1,4 @@
-import { minifySync as swcMinify } from '@swc/core'
+import { minifySync } from '@swc/core'
 import { rollup } from 'rollup'
 import fs from 'fs'
 import path from 'path'
@@ -12,6 +12,10 @@ import { spawn, Worker, Pool } from "threads"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const DEFAULT_GLOBALS = {
+  COMPILE_PLAUSIBLE_WEB: false,
+  COMPILE_PLAUSIBLE_NPM: false,
+  COMPILE_PLAUSIBLE_LEGACY_VARIANT: false,
+  COMPILE_CONFIG: false,
   COMPILE_HASH: false,
   COMPILE_OUTBOUND_LINKS: false,
   COMPILE_COMPAT: false,
@@ -24,7 +28,6 @@ const DEFAULT_GLOBALS = {
   COMPILE_REVENUE: false,
   COMPILE_EXCLUSIONS: false,
   COMPILE_TRACKER_SCRIPT_VERSION: packageJson.tracker_script_version,
-  COMPILE_CONFIG: false
 }
 
 export async function compileAll(options = {}) {
@@ -58,20 +61,28 @@ export async function compileAll(options = {}) {
 }
 
 export async function compileFile(variant, options) {
-  const wrappedCode = wrapInstantlyEvaluatingFunction(options.bundledCode || await bundleCode())
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
-
-  const code = minify(wrappedCode, globals)
+  const bundledCode = options.bundledCode || await bundleCode()
+  const minifiedCode = minify(bundledCode, globals, variant)
+  const code = wrapCode(minifiedCode, variant)
 
   if (options.returnCode) {
     return code
   } else {
-    fs.writeFileSync(relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`), code)
+    fs.writeFileSync(outputPath(variant, options), code)
   }
 }
 
-function wrapInstantlyEvaluatingFunction(baseCode) {
-  return `(function(){${baseCode}})()`
+function wrapCode(bundledCode, variant) {
+  switch (variant.npm_module) {
+    case 'esm':
+      return `${bundledCode}\nexport { init, track }`
+    case 'commonjs':
+      return `$p{bundledCode}\nmodule.exports = { init, track }`
+    default:
+      // Legacy variants wrap in an immediately-evaluating function
+      return `(function(){${bundledCode}})()`
+  }
 }
 
 export function compileWebSnippet() {
@@ -100,26 +111,43 @@ function getVariantsToCompile(options) {
   return targetVariants
 }
 
-async function bundleCode() {
+async function bundleCode(format = 'esm') {
   const bundle = await rollup({
     input: 'src/plausible.js',
   })
 
-  const { output } = await bundle.generate({
-    format: 'esm',
-  })
+  const { output } = await bundle.generate({ format })
 
   return output[0].code
 }
 
-function minify(baseCode, globals) {
-  const result = swcMinify(baseCode, {
-    compress: {
-      global_defs: globals,
-      passes: 4
-    }
-  })
+function outputPath(variant, options) {
+  if (variant.npm_module) {
+    return relPath(`../npm_package/${variant.name}${options.suffix || ""}`)
+  } else {
+    return relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`)
+  }
+}
 
+function minify(code, globals, variant = {}) {
+  const minifyOptions = {
+    compress: {
+      global_defs: globals
+    }
+  }
+
+  if (variant.npm_module) {
+    minifyOptions.mangle = false
+  } else {
+    minifyOptions.compress.passes = 4
+  }
+
+  const result = minifySync(code, minifyOptions)
+
+  return readOutput(result)
+}
+
+function readOutput(result) {
   if (result.code) {
     return result.code
   } else {
