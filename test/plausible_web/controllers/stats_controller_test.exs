@@ -219,7 +219,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "does not show CRM link to the site", %{conn: conn, site: site} do
       conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
-      refute html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
+      refute html_response(conn, 200) =~ "/cs/sites/site/#{site.id}"
     end
 
     test "all segments (personal or site) are stuffed into dataset, with their associated owner_id and owner_name",
@@ -314,7 +314,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "shows CRM link to the site", %{conn: conn} do
       site = new_site()
       conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
-      assert html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
+      assert html_response(conn, 200) =~ "/cs/sites/site/#{site.id}"
     end
   end
 

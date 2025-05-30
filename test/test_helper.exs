@@ -17,7 +17,7 @@ if :minio in Keyword.fetch!(ExUnit.configuration(), :include) do
   Plausible.TestUtils.ensure_minio()
 end
 
-default_exclude = [:slow, :minio, :migrations, :kaffy_quirks]
+default_exclude = [:slow, :minio, :migrations]
 
 # avoid slowdowns contacting the code server https://github.com/sasa1977/con_cache/pull/79
 :code.ensure_loaded(ConCache.Lock.Resource)

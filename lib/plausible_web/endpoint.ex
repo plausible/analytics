@@ -60,15 +60,6 @@ defmodule PlausibleWeb.Endpoint do
     [at: "/", from: :plausible, only: static_paths] ++ static_compression
   )
 
-  on_ee do
-    plug(Plug.Static,
-      at: "/kaffy",
-      from: :kaffy,
-      gzip: false,
-      only: ~w(assets)
-    )
-  end
-
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

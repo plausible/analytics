@@ -192,7 +192,13 @@ defmodule Plausible.Release do
 
         monthly_cost = plan.monthly_cost && Money.to_decimal(plan.monthly_cost)
         yearly_cost = plan.yearly_cost && Money.to_decimal(plan.yearly_cost)
-        {:ok, features} = Plausible.Billing.Ecto.FeatureList.dump(plan.features)
+
+        features =
+          Enum.map(plan.features, fn f ->
+            {:ok, feat} = Plausible.Billing.Ecto.Feature.dump(f)
+            feat
+          end)
+
         {:ok, team_member_limit} = Plausible.Billing.Ecto.Limit.dump(plan.team_member_limit)
 
         plan
