@@ -574,7 +574,9 @@ defmodule Plausible.Billing.QuotaTest do
     on_ee do
       test "users with expired trials have no access to subscription features" do
         team = new_user(trial_expiry_date: ~D[2023-01-01]) |> team_of()
-        assert [Goals] == Plausible.Teams.Billing.allowed_features_for(team)
+
+        assert [Goals, Plausible.Billing.Feature.Teams, Plausible.Billing.Feature.SharedLinks] ==
+                 Plausible.Teams.Billing.allowed_features_for(team)
       end
     end
 
@@ -593,11 +595,13 @@ defmodule Plausible.Billing.QuotaTest do
                Plausible.Teams.Billing.allowed_features_for(team_on_v3)
     end
 
-    test "returns [Goals, Props, StatsAPI] when user is on free_10k plan" do
+    test "returns features for a free_10k plan" do
       user = new_user()
       subscribe_to_plan(user, "free_10k")
       team = team_of(user)
-      assert [Goals, Props, StatsAPI] == Plausible.Teams.Billing.allowed_features_for(team)
+
+      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+               Plausible.Teams.Billing.allowed_features_for(team)
     end
 
     on_ee do
@@ -612,7 +616,12 @@ defmodule Plausible.Billing.QuotaTest do
 
         team = team_of(user)
 
-        assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels] ==
+        assert [
+                 Plausible.Billing.Feature.StatsAPI,
+                 Plausible.Billing.Feature.Funnels,
+                 Plausible.Billing.Feature.Teams,
+                 Plausible.Billing.Feature.SharedLinks
+               ] ==
                  Plausible.Teams.Billing.allowed_features_for(team)
       end
     end
@@ -658,7 +667,11 @@ defmodule Plausible.Billing.QuotaTest do
 
       team = team_of(user)
 
-      assert [Plausible.Billing.Feature.StatsAPI] ==
+      assert [
+               Plausible.Billing.Feature.StatsAPI,
+               Plausible.Billing.Feature.Teams,
+               Plausible.Billing.Feature.SharedLinks
+             ] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -671,7 +684,12 @@ defmodule Plausible.Billing.QuotaTest do
 
       team = team_of(user)
 
-      assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.SitesAPI] ==
+      assert [
+               Plausible.Billing.Feature.StatsAPI,
+               Plausible.Billing.Feature.SitesAPI,
+               Plausible.Billing.Feature.Teams,
+               Plausible.Billing.Feature.SharedLinks
+             ] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
   end
