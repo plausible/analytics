@@ -30,6 +30,16 @@ defmodule Plausible.Billing.FeatureTest do
     end
   end
 
+  test "Plausible.Billing.Feature.Teams.check_availability/2 returns :ok when user is on an enterprise plan" do
+    team = new_user() |> subscribe_to_enterprise_plan() |> team_of()
+    assert :ok == Plausible.Billing.Feature.Teams.check_availability(team)
+  end
+
+  test "Plausible.Billing.Feature.SharedLinks.check_availability/2 returns :ok when user is on an enterprise plan" do
+    team = new_user() |> subscribe_to_enterprise_plan() |> team_of()
+    assert :ok == Plausible.Billing.Feature.SharedLinks.check_availability(team)
+  end
+
   test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on a business plan" do
     team = new_user() |> subscribe_to_business_plan() |> team_of()
     assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(team)

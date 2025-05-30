@@ -13,7 +13,7 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Teams
 
   alias Plausible.Billing.{EnterprisePlan, Feature, Plan, Plans, Quota}
-  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, SharedLinks}
 
   require Plausible.Billing.Subscription.Status
 
@@ -605,19 +605,19 @@ defmodule Plausible.Teams.Billing do
 
     case Plans.get_subscription_plan(team.subscription) do
       %EnterprisePlan{features: features} ->
-        features
+        features ++ [Feature.Teams, SharedLinks]
 
       %Plan{features: features} ->
         features
 
       :free_10k ->
-        [Goals, Props, StatsAPI]
+        [Goals, Props, StatsAPI, Feature.Teams, SharedLinks]
 
       nil ->
         if Teams.on_trial?(team) do
           Feature.list() -- [SitesAPI]
         else
-          [Goals]
+          [Goals, Feature.Teams, SharedLinks]
         end
     end
   end
