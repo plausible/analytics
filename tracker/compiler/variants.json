@@ -20,6 +20,7 @@
     },
     {
       "name": "plausible.js",
+      "testName": "plausible-npm.js",
       "features": [
         "plausible-npm"
       ],

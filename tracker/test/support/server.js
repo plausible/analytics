@@ -19,7 +19,7 @@ export function runLocalFileServer() {
 
   app.get('/tracker/js/:name', async (req, res) => {
     const name = req.params.name
-    const variant = VARIANTS.find((variant) => variant.name === name)
+    const variant = VARIANTS.find((variant) => variant.testName === name || variant.name === name)
 
     let code = await compileFile(variant, { returnCode: true })
 
