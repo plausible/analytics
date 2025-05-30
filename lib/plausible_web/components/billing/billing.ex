@@ -5,7 +5,41 @@ defmodule PlausibleWeb.Components.Billing do
   use Plausible
 
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.{Subscription, Subscriptions}
+  alias Plausible.Billing.{Subscription, Subscriptions, Feature, Plan, Plans, EnterprisePlan}
+
+  attr :current_role, :atom, required: true
+  attr :current_team, :any, required: true
+  attr :feature_mod, :atom, required: true, values: Feature.list()
+  slot :inner_block, required: true
+
+  def feature_gate(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :locked?,
+        assigns.feature_mod.check_availability(assigns.current_team) != :ok
+      )
+
+    ~H"""
+    <div id="feature-gate-inner-block-container" class={if(@locked?, do: "pointer-events-none")}>
+      {render_slot(@inner_block)}
+    </div>
+    <div
+      :if={@locked?}
+      id="feature-gate-overlay"
+      class="absolute backdrop-blur-[6px] bg-white/50 dark:bg-gray-800/50 inset-0 flex justify-center items-center rounded-md"
+    >
+      <div class="px-6 flex flex-col items-center text-gray-500 dark:text-gray-400">
+        <Heroicons.lock_closed solid class="size-8 mb-2" />
+
+        <span id="lock-notice" class="text-center max-w-sm sm:max-w-md">
+          To gain access to this feature,
+          <.upgrade_call_to_action current_role={@current_role} current_team={@current_team} />.
+        </span>
+      </div>
+    </div>
+    """
+  end
 
   def render_monthly_pageview_usage(%{usage: usage} = assigns)
       when is_map_key(usage, :last_30_days) do
@@ -182,7 +216,7 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <div
       id="monthly-quota-box"
-      class="w-full md:w-1/3 h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900 w-max-md"
+      class="w-full flex-1 h-32 px-2 py-4 text-center bg-gray-100 rounded dark:bg-gray-900 w-max-md"
     >
       <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
       <div class="py-2 text-xl font-medium dark:text-gray-100">
@@ -315,4 +349,37 @@ defmodule PlausibleWeb.Components.Billing do
     do: "Upgrade"
 
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
+
+  def upgrade_call_to_action(assigns) do
+    team = Plausible.Teams.with_subscription(assigns.current_team)
+
+    upgrade_assistance_required? =
+      case Plans.get_subscription_plan(team && team.subscription) do
+        %Plan{kind: :business} -> true
+        %EnterprisePlan{} -> true
+        _ -> false
+      end
+
+    cond do
+      not is_nil(assigns.current_role) and assigns.current_role not in [:owner, :billing] ->
+        ~H"please reach out to the team owner to upgrade their subscription"
+
+      upgrade_assistance_required? ->
+        ~H"""
+        please contact <a href="mailto:hello@plausible.io" class="underline">hello@plausible.io</a>
+        to upgrade your subscription
+        """
+
+      true ->
+        ~H"""
+        please
+        <.link
+          class="underline inline-block"
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+        >
+          upgrade your subscription
+        </.link>
+        """
+    end
+  end
 end

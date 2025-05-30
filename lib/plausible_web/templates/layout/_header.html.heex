@@ -92,9 +92,12 @@
                       Account Settings
                     </.dropdown_item>
 
-                    <div :if={@my_team && @my_team.id == @current_team.id}>
+                    <div :if={
+                      @my_team && @my_team.id == @current_team.id &&
+                        Plausible.Billing.Feature.Teams.check_availability(@current_team) == :ok
+                    }>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
-                        <span class="flex-1">
+                        <span data-test="create-a-team-cta" class="flex-1">
                           Create a Team
                         </span>
                         <span class="ml-1 bg-indigo-700 text-gray-100 text-xs p-1 rounded">

@@ -126,7 +126,12 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     end
   end
 
-  defp site_limit_benefit(%Plan{} = plan), do: "Up to #{plan.site_limit} sites"
+  defp site_limit_benefit(%Plan{} = plan) do
+    case plan.site_limit do
+      1 -> "One site"
+      site_limit -> "Up to #{site_limit} sites"
+    end
+  end
 
   defp feature_benefits(%Plan{} = plan) do
     Enum.flat_map(plan.features, fn feature_mod ->

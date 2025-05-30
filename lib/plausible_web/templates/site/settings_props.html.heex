@@ -2,7 +2,10 @@
   <.tile
     docs="custom-props/introduction"
     feature_mod={Plausible.Billing.Feature.Props}
+    feature_toggle?={true}
     site={@site}
+    current_role={@site_role}
+    current_team={@site_team}
     conn={@conn}
   >
     <:title>
@@ -13,18 +16,9 @@
       create custom metrics.
     </:subtitle>
 
-    <PlausibleWeb.Components.Billing.Notice.premium_feature
-      current_role={@site_role}
-      current_team={@site_team}
-      feature_mod={Plausible.Billing.Feature.Props}
-      grandfathered?
-    />
-
-    <div :if={Plausible.Billing.Feature.Props.enabled?(@site)}>
-      {live_render(@conn, PlausibleWeb.Live.PropsSettings,
-        id: "props-form",
-        session: %{"site_id" => @site.id, "domain" => @site.domain}
-      )}
-    </div>
+    {live_render(@conn, PlausibleWeb.Live.PropsSettings,
+      id: "props-form",
+      session: %{"site_id" => @site.id, "domain" => @site.domain}
+    )}
   </.tile>
 </.settings_tiles>

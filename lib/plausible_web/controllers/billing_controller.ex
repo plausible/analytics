@@ -78,7 +78,7 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade_success(conn, _params) do
-    render(conn, "upgrade_success.html")
+    render(conn, "upgrade_success.html", disable_global_notices?: true)
   end
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do

@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   use PlausibleWeb, :component
 
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.{Subscription, Plans, Subscriptions, Feature}
+  alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
   def active_grace_period(assigns) do
     if assigns.enterprise? do
@@ -63,26 +63,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  attr(:current_role, :atom, required: true)
-  attr(:current_team, :any, required: true)
-  attr(:feature_mod, :atom, required: true, values: Feature.list())
-  attr(:grandfathered?, :boolean, default: false)
-  attr(:rest, :global)
-
-  def premium_feature(assigns) do
-    ~H"""
-    <.notice
-      :if={@feature_mod.check_availability(@current_team) !== :ok}
-      class="rounded-t-md rounded-b-none"
-      title="Notice"
-      {@rest}
-    >
-      {account_label(@current_team)} does not have access to {@feature_mod.display_name()}. To gain access to this feature,
-      <.upgrade_call_to_action current_role={@current_role} current_team={@current_team} />.
-    </.notice>
-    """
-  end
-
   attr(:current_team, :any, required: true)
   attr(:current_role, :atom, required: true)
   attr(:limit, :integer, required: true)
@@ -91,11 +71,22 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   def limit_exceeded(assigns) do
     ~H"""
-    <.notice {@rest} title="Notice">
-      {account_label(@current_team)} is limited to {@limit} {@resource}. To increase this limit,
-      <.upgrade_call_to_action current_team={@current_team} current_role={@current_role} />.
+    <.notice {@rest} title="Notice" data-test="limit-exceeded-notice">
+      {account_label(@current_team)} is limited to {pretty_print_resource_limit(@limit, @resource)}. To increase this limit,
+      <PlausibleWeb.Components.Billing.upgrade_call_to_action
+        current_team={@current_team}
+        current_role={@current_role}
+      />.
     </.notice>
     """
+  end
+
+  defp pretty_print_resource_limit(1 = _limit, resource_plural) do
+    "a single #{String.trim_trailing(resource_plural, "s")}"
+  end
+
+  defp pretty_print_resource_limit(limit, resource_plural) do
+    "#{limit} #{resource_plural}"
   end
 
   attr(:subscription, :map, required: true)
@@ -316,47 +307,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  attr(:current_role, :atom)
-  attr(:current_team, :any)
-
-  defp upgrade_call_to_action(assigns) do
-    team = Plausible.Teams.with_subscription(assigns.current_team)
-
-    upgrade_assistance_required? =
-      case Plans.get_subscription_plan(team && team.subscription) do
-        %Plausible.Billing.Plan{kind: :business} -> true
-        %Plausible.Billing.EnterprisePlan{} -> true
-        _ -> false
-      end
-
-    cond do
-      not is_nil(assigns.current_role) and assigns.current_role not in [:owner, :billing] ->
-        ~H"please reach out to the team owner to upgrade their subscription"
-
-      upgrade_assistance_required? ->
-        ~H"""
-        please contact <a href="mailto:hello@plausible.io" class="underline">hello@plausible.io</a>
-        to upgrade your subscription
-        """
-
-      true ->
-        ~H"""
-        please
-        <.link
-          class="underline inline-block"
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-        >
-          upgrade your subscription
-        </.link>
-        """
-    end
-  end
-
-  defp account_label(current_team) do
-    if current_team do
-      "This team"
-    else
-      "This account"
-    end
-  end
+  defp account_label(%Plausible.Teams.Team{setup_complete: true}), do: "This team"
+  defp account_label(_team), do: "This account"
 end

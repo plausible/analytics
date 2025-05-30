@@ -184,11 +184,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       refute element_exists?(html, "#pageviews-form")
       assert element_exists?(html, "#custom-events-form")
-
-      assert element_exists?(
-               html,
-               ~s/button[role=switch][aria-labelledby=enable-revenue-tracking][disabled="disabled"]/
-             )
+      refute String.downcase(text_of_element(html, "#custom-events-form")) =~ "currency"
 
       # revenue goals
       lv |> element(~s/button#edit-goal-#{revenue_goal.id}/) |> render_click()
@@ -196,11 +192,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       refute element_exists?(html, "#pageviews-form")
       assert element_exists?(html, "#custom-events-form")
-
-      assert element_exists?(
-               html,
-               ~s/button[role=switch][aria-labelledby=enable-revenue-tracking][disabled="disabled"]/
-             )
+      assert element_exists?(html, ~s/[data-test=goal-currency-label]/)
     end
 
     test "updates a custom event", %{conn: conn, site: site} do

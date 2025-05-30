@@ -5,8 +5,8 @@
     "monthly_pageview_limit": 10000,
     "monthly_product_id": "910413",
     "yearly_product_id": "910414",
-    "site_limit": 3,
-    "team_member_limit": 1,
+    "site_limit": 1,
+    "team_member_limit": 0,
     "features": [
       "goals"
     ],
@@ -18,8 +18,8 @@
     "monthly_pageview_limit": 100000,
     "monthly_product_id": "910415",
     "yearly_product_id": "910416",
-    "site_limit": 3,
-    "team_member_limit": 1,
+    "site_limit": 1,
+    "team_member_limit": 0,
     "features": [
       "goals"
     ],
@@ -31,8 +31,8 @@
     "monthly_pageview_limit": 200000,
     "monthly_product_id": "910417",
     "yearly_product_id": "910418",
-    "site_limit": 3,
-    "team_member_limit": 1,
+    "site_limit": 1,
+    "team_member_limit": 0,
     "features": [
       "goals"
     ],
@@ -44,8 +44,8 @@
     "monthly_pageview_limit": 500000,
     "monthly_product_id": "910419",
     "yearly_product_id": "910420",
-    "site_limit": 3,
-    "team_member_limit": 1,
+    "site_limit": 1,
+    "team_member_limit": 0,
     "features": [
       "goals"
     ],
@@ -57,8 +57,8 @@
     "monthly_pageview_limit": 1000000,
     "monthly_product_id": "910421",
     "yearly_product_id": "910422",
-    "site_limit": 3,
-    "team_member_limit": 1,
+    "site_limit": 1,
+    "team_member_limit": 0,
     "features": [
       "goals"
     ],
@@ -70,8 +70,8 @@
     "monthly_pageview_limit": 2000000,
     "monthly_product_id": "910423",
     "yearly_product_id": "910424",
-    "site_limit": 3,
-    "team_member_limit": 1,
+    "site_limit": 1,
+    "team_member_limit": 0,
     "features": [
       "goals"
     ],
@@ -83,8 +83,8 @@
     "monthly_pageview_limit": 5000000,
     "monthly_product_id": "910425",
     "yearly_product_id": "910426",
-    "site_limit": 3,
-    "team_member_limit": 1,
+    "site_limit": 1,
+    "team_member_limit": 0,
     "features": [
       "goals"
     ],
@@ -96,8 +96,8 @@
     "monthly_pageview_limit": 10000000,
     "monthly_product_id": "910427",
     "yearly_product_id": "910428",
-    "site_limit": 3,
-    "team_member_limit": 1,
+    "site_limit": 1,
+    "team_member_limit": 0,
     "features": [
       "goals"
     ],
@@ -109,7 +109,7 @@
     "monthly_pageview_limit": 10000,
     "monthly_product_id": "910429",
     "yearly_product_id": "910430",
-    "site_limit": 10,
+    "site_limit": 3,
     "team_member_limit": 3,
     "features": [
       "goals",
@@ -125,7 +125,7 @@
     "monthly_pageview_limit": 100000,
     "monthly_product_id": "910431",
     "yearly_product_id": "910432",
-    "site_limit": 10,
+    "site_limit": 3,
     "team_member_limit": 3,
     "features": [
       "goals",
@@ -141,7 +141,7 @@
     "monthly_pageview_limit": 200000,
     "monthly_product_id": "910433",
     "yearly_product_id": "910434",
-    "site_limit": 10,
+    "site_limit": 3,
     "team_member_limit": 3,
     "features": [
       "goals",
@@ -157,7 +157,7 @@
     "monthly_pageview_limit": 500000,
     "monthly_product_id": "910435",
     "yearly_product_id": "910436",
-    "site_limit": 10,
+    "site_limit": 3,
     "team_member_limit": 3,
     "features": [
       "goals",
@@ -173,7 +173,7 @@
     "monthly_pageview_limit": 1000000,
     "monthly_product_id": "910437",
     "yearly_product_id": "910438",
-    "site_limit": 10,
+    "site_limit": 3,
     "team_member_limit": 3,
     "features": [
       "goals",
@@ -189,7 +189,7 @@
     "monthly_pageview_limit": 2000000,
     "monthly_product_id": "910439",
     "yearly_product_id": "910440",
-    "site_limit": 10,
+    "site_limit": 3,
     "team_member_limit": 3,
     "features": [
       "goals",
@@ -205,7 +205,7 @@
     "monthly_pageview_limit": 5000000,
     "monthly_product_id": "910441",
     "yearly_product_id": "910442",
-    "site_limit": 10,
+    "site_limit": 3,
     "team_member_limit": 3,
     "features": [
       "goals",
@@ -221,7 +221,7 @@
     "monthly_pageview_limit": 10000000,
     "monthly_product_id": "910443",
     "yearly_product_id": "910444",
-    "site_limit": 10,
+    "site_limit": 3,
     "team_member_limit": 3,
     "features": [
       "goals",
@@ -237,7 +237,7 @@
     "monthly_pageview_limit": 10000,
     "monthly_product_id": "910445",
     "yearly_product_id": "910446",
-    "site_limit": 50,
+    "site_limit": 10,
     "team_member_limit": 10,
     "features": [
       "goals",
@@ -257,7 +257,7 @@
     "monthly_pageview_limit": 100000,
     "monthly_product_id": "910447",
     "yearly_product_id": "910448",
-    "site_limit": 50,
+    "site_limit": 10,
     "team_member_limit": 10,
     "features": [
       "goals",
@@ -277,7 +277,7 @@
     "monthly_pageview_limit": 200000,
     "monthly_product_id": "910449",
     "yearly_product_id": "910450",
-    "site_limit": 50,
+    "site_limit": 10,
     "team_member_limit": 10,
     "features": [
       "goals",
@@ -297,7 +297,7 @@
     "monthly_pageview_limit": 500000,
     "monthly_product_id": "910451",
     "yearly_product_id": "910452",
-    "site_limit": 50,
+    "site_limit": 10,
     "team_member_limit": 10,
     "features": [
       "goals",
@@ -317,7 +317,7 @@
     "monthly_pageview_limit": 1000000,
     "monthly_product_id": "910453",
     "yearly_product_id": "910454",
-    "site_limit": 50,
+    "site_limit": 10,
     "team_member_limit": 10,
     "features": [
       "goals",
@@ -337,7 +337,7 @@
     "monthly_pageview_limit": 2000000,
     "monthly_product_id": "910455",
     "yearly_product_id": "910456",
-    "site_limit": 50,
+    "site_limit": 10,
     "team_member_limit": 10,
     "features": [
       "goals",
@@ -357,7 +357,7 @@
     "monthly_pageview_limit": 5000000,
     "monthly_product_id": "910457",
     "yearly_product_id": "910458",
-    "site_limit": 50,
+    "site_limit": 10,
     "team_member_limit": 10,
     "features": [
       "goals",
@@ -377,7 +377,7 @@
     "monthly_pageview_limit": 10000000,
     "monthly_product_id": "910459",
     "yearly_product_id": "910460",
-    "site_limit": 50,
+    "site_limit": 10,
     "team_member_limit": 10,
     "features": [
       "goals",

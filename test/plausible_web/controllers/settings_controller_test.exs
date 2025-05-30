@@ -1411,6 +1411,38 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  describe "account dropdown menu (_header.html)" do
+    setup [:create_user, :log_in]
+
+    test "renders the 'Create a Team' option", %{conn: conn, user: user} do
+      subscribe_to_growth_plan(user)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a Team"
+    end
+
+    test "does not render the 'Create a Team' option if Teams feature is unavailable", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_starter_plan(user)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
+    end
+
+    test "does not render the 'Create a Team' option if a team is already set up", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      Plausible.Teams.complete_setup(team)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
+    end
+  end
+
   defp configure_enterprise_plan(user, attrs \\ []) do
     subscribe_to_enterprise_plan(
       user,

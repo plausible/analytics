@@ -991,7 +991,7 @@ defmodule Plausible.Billing.QuotaTest do
       suggested_tier =
         team
         |> Plausible.Teams.Billing.quota_usage(with_features: true)
-        |> Map.put(:sites, 2)
+        |> Map.put(:sites, 1)
         |> Quota.suggest_tier(
           @highest_starter_plan,
           @highest_growth_plan,
@@ -1007,7 +1007,7 @@ defmodule Plausible.Billing.QuotaTest do
       suggested_tier =
         team
         |> Plausible.Teams.Billing.quota_usage(with_features: true)
-        |> Map.put(:sites, 8)
+        |> Map.put(:sites, 2)
         |> Quota.suggest_tier(
           @highest_starter_plan,
           @highest_growth_plan,

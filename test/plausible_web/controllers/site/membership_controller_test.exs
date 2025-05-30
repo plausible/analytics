@@ -39,7 +39,8 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         |> get("/sites/#{site.domain}/memberships/invite")
         |> html_response(200)
 
-      assert html =~ "This team is limited to 3 members"
+      assert text_of_element(html, ~s/[data-test="limit-exceeded-notice"]/) =~
+               "This account is limited to 3 members"
     end
   end
 

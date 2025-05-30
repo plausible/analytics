@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
 
         doc = conn |> html_response(200)
-        assert Floki.text(doc) =~ "You need to define at least two goals to create a funnel."
+        assert Floki.text(doc) =~ "Set up a few goals first"
 
         add_goals_path = Routes.site_path(conn, :settings_goals, site.domain)
         assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)

@@ -387,6 +387,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     """
   end
 
+  def revenue_goal_settings(%{goal: %{currency: nil}} = assigns) do
+    ~H"""
+    <div class="h-2"></div>
+    """
+  end
+
   def revenue_goal_settings(assigns) do
     js_data =
       Jason.encode!(%{
@@ -397,57 +403,20 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     assigns = assign(assigns, selected_currency: currency_option(assigns.goal), js_data: js_data)
 
     ~H"""
-    <div class="mt-6 space-y-3" x-data={@js_data}>
-      <PlausibleWeb.Components.Billing.Notice.premium_feature
-        current_role={@site_role}
-        current_team={@site_team}
-        feature_mod={Plausible.Billing.Feature.RevenueGoals}
-        class="rounded-b-md"
-      />
-      <button
-        id={"currency-toggle-#{@suffix}"}
-        class={[
-          "flex items-center w-max mb-3",
-          if @has_access_to_revenue_goals? and is_nil(@goal) do
-            "cursor-pointer"
-          else
-            "cursor-not-allowed"
-          end
-        ]}
-        aria-labelledby="enable-revenue-tracking"
-        role="switch"
-        type="button"
-        x-on:click="active = !active; currency = ''"
-        x-bind:aria-checked="active"
-        disabled={not @has_access_to_revenue_goals? or not is_nil(@goal)}
-      >
-        <span
-          id={"currency-container1-#{@suffix}"}
-          class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
-          x-bind:class="active ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"
+    <div x-data={@js_data}>
+      <%= if is_nil(@goal) do %>
+        <div class="mt-6 mb-3">
+          <.revenue_toggle {assigns} />
+        </div>
+      <% else %>
+        <label
+          data-test="goal-currency-label"
+          class="mt-4 mb-2 text-sm block font-medium dark:text-gray-100"
         >
-          <span
-            id={"currency-container2-#{@suffix}"}
-            aria-hidden="true"
-            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-            x-bind:class="active ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"
-          />
-        </span>
-        <span
-          class={[
-            "ml-3 text-sm font-medium",
-            if(@has_access_to_revenue_goals?,
-              do: "text-gray-900  dark:text-gray-100",
-              else: "text-gray-500 dark:text-gray-400"
-            )
-          ]}
-          id="enable-revenue-tracking"
-        >
-          Enable Revenue Tracking
-        </span>
-      </button>
-
-      <div x-show="active" id={"revenue-input-#{@suffix}"}>
+          Currency
+        </label>
+      <% end %>
+      <div class="mb-2" x-show="active" id={"revenue-input-#{@suffix}"}>
         <.live_component
           id={"currency_input_#{@suffix}"}
           submit_name={@f[:currency].name}
@@ -615,5 +584,38 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     end
   else
     defp currency_option(_), do: nil
+  end
+
+  defp revenue_toggle(assigns) do
+    ~H"""
+    <.tooltip enabled?={not @has_access_to_revenue_goals?}>
+      <:tooltip_content>
+        <div class="text-xs">
+          To get access to this feature
+          <PlausibleWeb.Components.Billing.upgrade_call_to_action
+            current_role={@site_role}
+            current_team={@site_team}
+          />.
+        </div>
+      </:tooltip_content>
+      <div class="flex itemx-center mb-3">
+        <PlausibleWeb.Components.Generic.toggle_switch
+          id="enable-revenue-tracking"
+          id_suffix={@suffix}
+          js_active_var="active"
+          disabled={not @has_access_to_revenue_goals?}
+        />
+        <span class={[
+          "ml-3 text-sm font-medium",
+          if(@has_access_to_revenue_goals?,
+            do: "text-gray-900 dark:text-gray-100",
+            else: "text-gray-500 dark:text-gray-400"
+          )
+        ]}>
+          Enable Revenue Tracking
+        </span>
+      </div>
+    </.tooltip>
+    """
   end
 end
