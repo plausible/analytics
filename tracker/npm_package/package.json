@@ -15,17 +15,6 @@
   "license": "AGPLv3",
   "homepage": "https://plausible.io",
   "type": "module",
-  "main": "./plausible.cjs",
   "module": "./plausible.js",
-  "types": "./plausible.d.ts",
-  "exports": {
-    "import": {
-      "import": "./plausible.js",
-      "types": "./plausible.d.ts"
-    },
-    "require": {
-      "require": "./plausible.cjs",
-      "types": "./plausible.d.cts"
-    }
-  }
+  "types": "./plausible.d.ts"
 }

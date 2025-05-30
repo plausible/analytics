@@ -36,25 +36,6 @@
         "COMPILE_REVENUE": true
       },
       "npm_module": "esm"
-    },
-    {
-      "name": "plausible.cjs",
-      "features": [
-        "plausible-npm"
-      ],
-      "globals": {
-        "COMPILE_PLAUSIBLE_NPM": true,
-        "COMPILE_CONFIG": true,
-        "COMPILE_HASH": true,
-        "COMPILE_OUTBOUND_LINKS": true,
-        "COMPILE_LOCAL": true,
-        "COMPILE_MANUAL": true,
-        "COMPILE_FILE_DOWNLOADS": true,
-        "COMPILE_CUSTOM_PROPERTIES": true,
-        "COMPILE_TAGGED_EVENTS": true,
-        "COMPILE_REVENUE": true
-      },
-      "npm_module": "commonjs"
     }
   ],
   "legacyVariants": [

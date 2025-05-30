@@ -77,8 +77,6 @@ function wrapCode(bundledCode, variant) {
   switch (variant.npm_module) {
     case 'esm':
       return `${bundledCode}\nexport { init, track }`
-    case 'commonjs':
-      return `$p{bundledCode}\nmodule.exports = { init, track }`
     default:
       // Legacy variants wrap in an immediately-evaluating function
       return `(function(){${bundledCode}})()`
