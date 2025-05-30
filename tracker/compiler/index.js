@@ -121,7 +121,7 @@ async function bundleCode(format = 'esm') {
 
 function outputPath(variant, options) {
   if (variant.npm_module) {
-    return relPath(`../npm_package/${variant.name}${options.suffix || ""}`)
+    return relPath(`../${variant.name}${options.suffix || ""}`)
   } else {
     return relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`)
   }

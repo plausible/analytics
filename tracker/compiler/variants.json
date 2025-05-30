@@ -19,8 +19,7 @@
       }
     },
     {
-      "name": "plausible.js",
-      "testName": "plausible-npm.js",
+      "name": "npm_module/plausible.js",
       "features": [
         "plausible-npm"
       ],

@@ -17,9 +17,9 @@ export const LOCAL_SERVER_ADDR = `http://localhost:${LOCAL_SERVER_PORT}`
 export function runLocalFileServer() {
   app.use(express.static(FIXTURES_PATH));
 
-  app.get('/tracker/js/:name', async (req, res) => {
-    const name = req.params.name
-    const variant = VARIANTS.find((variant) => variant.testName === name || variant.name === name)
+  app.get('/tracker/js/*', async (req, res) => {
+    const name = req.params[0]
+    const variant = VARIANTS.find((variant) => variant.name === name)
 
     let code = await compileFile(variant, { returnCode: true })
 
