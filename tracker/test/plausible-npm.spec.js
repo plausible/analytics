@@ -33,12 +33,42 @@ async function openPage(page, config, options = {}) {
   }
 }
 
-
 test.describe('NPM package', () => {
   testPlausibleConfiguration({
     openPage,
     initPlausible: (page, config) => callInit(page, { ...DEFAULT_CONFIG, ...config }, 'window'),
     fixtureName: 'plausible-npm.html',
     fixtureTitle: 'Plausible NPM package tests'
+  })
+
+  test('does not support calling `init` without `domain`', async ({ page }) => {
+    await openPage(page, {}, { skipPlausibleInit: true })
+    await expect(async () => {
+      await callInit(page, { hashBasedRouting: true }, 'window')
+    }).rejects.toThrow("plausible.init(): domain argument is required")
+  })
+
+  test('does not support calling `init` with no configuration', async ({ page }) => {
+    await openPage(page, {}, { skipPlausibleInit: true })
+    await expect(async () => {
+      await callInit(page, undefined, 'window')
+    }).rejects.toThrow("plausible.init(): domain argument is required")
+  })
+
+  test('track throws if called before init', async ({ page }) => {
+    await openPage(page, {}, { skipPlausibleInit: true })
+    await expect(async () => {
+      await page.evaluate(() => {
+        window.track('pageview')
+      })
+    }).rejects.toThrow("plausible.track() can only be called after plausible.init()")
+  })
+
+  test('does not support calling `init` twice', async ({ page }) => {
+    await openPage(page, {}, { skipPlausibleInit: true })
+    await callInit(page, DEFAULT_CONFIG, 'window')
+    await expect(async () => {
+      await callInit(page, DEFAULT_CONFIG, 'window')
+    }).rejects.toThrow("plausible.init() can only be called once")
   })
 })
