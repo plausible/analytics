@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
   @moduletag :ee_only
 
   on_ee do
-    @cs_index Routes.customer_support_path(PlausibleWeb.Endpoint, :index)
+    @cs_index Routes.customer_support_path(PlausibleWeb.InternalEndpoint, :index)
 
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
 
       assert text_of_attr(link, "href") ==
                Routes.customer_support_resource_path(
-                 PlausibleWeb.Endpoint,
+                 PlausibleWeb.InternalEndpoint,
                  :details,
                  "#{type}s",
                  type,
