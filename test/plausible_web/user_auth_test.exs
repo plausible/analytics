@@ -72,7 +72,67 @@ defmodule PlausibleWeb.UserAuthTest do
         assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
         assert conn.private[:plug_session_info] == :renew
         assert conn.resp_cookies["logged_in"].max_age > 0
+        assert get_session(conn, :current_team_id) == team.identifier
         assert get_session(conn, :user_token) == session.token
+      end
+
+      test "logs in existing SSO owner using standard login correctly", %{
+        conn: conn,
+        user: user
+      } do
+        team = new_site(owner: user).team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+        {:ok, :standard, _, user} = SSO.provision_user(identity)
+
+        assert user.type == :sso
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(user)
+
+        assert %{sessions: [session]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+        assert session.user_id == user.id
+        assert session.token == get_session(conn, :user_token)
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      end
+
+      test "invalidates any existing sessions of user logging in when converting", %{
+        conn: conn,
+        user: user
+      } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn |> init_session() |> UserAuth.log_in_user(user)
+
+        assert [standard_session] = Repo.preload(user, :sessions).sessions
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert [sso_session] = Repo.preload(user, :sessions).sessions
+
+        assert standard_session.id != sso_session.id
+        assert standard_session.token != sso_session.token
+        assert get_session(conn, :user_token) == sso_session.token
       end
 
       test "tries to log out and redirects if SSO identity is not matched", %{
@@ -87,15 +147,52 @@ defmodule PlausibleWeb.UserAuthTest do
           |> UserAuth.log_in_user(identity)
 
         assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
-        assert redirected_to(conn, 302) == "/"
+
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: "")
+
         assert conn.private[:plug_session_info] == :renew
         refute get_session(conn, :user_token)
       end
 
-      test "passes through for user matching SSO identity, redirecting to team", %{
+      test "tries to log out and redirects if SSO identity exceeds team members limit", %{
         conn: conn,
         user: user
       } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        add_member(team, role: :viewer)
+        add_member(team, role: :viewer)
+        add_member(team, role: :viewer)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity("Jane Doe", "jane@" <> domain)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
+
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :login_form,
+                   error: "Team can't accept more members. Please contact the owner.",
+                   return_to: ""
+                 )
+
+        assert conn.private[:plug_session_info] == :renew
+        refute get_session(conn, :user_token)
+      end
+
+      test "passes through for user matching SSO identity on multiple teams, redirecting to team",
+           %{
+             conn: conn,
+             user: user
+           } do
         team = new_site().team
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"

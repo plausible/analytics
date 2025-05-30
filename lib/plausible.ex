@@ -12,6 +12,11 @@ defmodule Plausible do
     end
   end
 
+  @spec sso_enabled?() :: boolean()
+  def sso_enabled?() do
+    Application.fetch_env!(:plausible, :sso_enabled)
+  end
+
   defmacro on_ee(clauses) do
     do_on_ee(clauses)
   end

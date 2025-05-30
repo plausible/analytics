@@ -38,7 +38,7 @@ defmodule PlausibleWeb.UserAuth do
   on_ee do
     def log_in_user(conn, %Auth.SSO.Identity{} = identity, redirect_path) do
       case Auth.SSO.provision_user(identity) do
-        {:ok, provisioning_from, user} ->
+        {:ok, provisioning_from, team, user} ->
           if provisioning_from == :standard do
             :ok = revoke_all_user_sessions(user)
           end
@@ -48,13 +48,26 @@ defmodule PlausibleWeb.UserAuth do
 
           conn
           |> set_user_token(token)
+          |> Plug.Conn.put_session("current_team_id", team.identifier)
           |> set_logged_in_cookie()
           |> Phoenix.Controller.redirect(to: redirect_to)
 
         {:error, :integration_not_found} ->
           conn
           |> log_out_user()
-          |> Phoenix.Controller.redirect(to: "/")
+          |> Phoenix.Controller.redirect(
+            to:
+              Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: redirect_path)
+          )
+
+        {:error, :over_limit} ->
+          error = "Team can't accept more members. Please contact the owner."
+
+          conn
+          |> log_out_user()
+          |> Phoenix.Controller.redirect(
+            to: Routes.sso_path(conn, :login_form, error: error, return_to: redirect_path)
+          )
 
         {:error, :multiple_memberships, team, user} ->
           redirect_path = Routes.site_path(conn, :index, __team: team.identifier)
