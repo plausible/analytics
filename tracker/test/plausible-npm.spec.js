@@ -27,9 +27,7 @@ async function openPage(page, config, options = {}) {
   await page.waitForFunction('window.init !== undefined')
 
   if (!options.skipPlausibleInit) {
-    await page.evaluate((c) => {
-      window.init(c)
-    }, { ...DEFAULT_CONFIG, ...config })
+    callInit(page, { ...DEFAULT_CONFIG, ...config }, 'window')
   }
 }
 
