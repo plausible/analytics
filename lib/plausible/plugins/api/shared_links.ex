@@ -31,8 +31,14 @@ defmodule Plausible.Plugins.API.SharedLinks do
           {:ok, Plausible.Site.SharedLink.t()}
   def get_or_create(site, name, password \\ nil) do
     case get_by_name(site, name) do
-      nil -> Plausible.Sites.create_shared_link(site, name, password)
-      shared_link -> {:ok, shared_link}
+      nil ->
+        Plausible.Sites.create_shared_link(site, name,
+          password: password,
+          skip_feature_check?: true
+        )
+
+      shared_link ->
+        {:ok, shared_link}
     end
   end
 

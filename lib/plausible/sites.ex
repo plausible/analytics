@@ -338,17 +338,27 @@ defmodule Plausible.Sites do
     !!stats_start_date(site)
   end
 
-  def create_shared_link(site, name, password \\ nil) do
-    changes =
-      SharedLink.changeset(
-        %SharedLink{
-          site_id: site.id,
-          slug: Nanoid.generate()
-        },
-        %{name: name, password: password}
-      )
+  def create_shared_link(site, name, opts \\ []) do
+    password = Keyword.get(opts, :password, nil)
 
-    Repo.insert(changes)
+    site = Plausible.Repo.preload(site, :team)
+    skip_feature_check? = Keyword.get(opts, :skip_feature_check?, false)
+    feature_access? = Plausible.Billing.Feature.SharedLinks.check_availability(site.team) == :ok
+
+    if skip_feature_check? or feature_access? do
+      changes =
+        SharedLink.changeset(
+          %SharedLink{
+            site_id: site.id,
+            slug: Nanoid.generate()
+          },
+          %{name: name, password: password}
+        )
+
+      Repo.insert(changes)
+    else
+      {:error, :upgrade_required}
+    end
   end
 
   def shared_link_url(site, link) do

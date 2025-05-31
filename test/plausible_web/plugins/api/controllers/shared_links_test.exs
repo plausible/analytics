@@ -177,6 +177,32 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
 
       assert %{errors: [%{detail: "Missing field: shared_link"}]} = resp
     end
+
+    test "skips shared links feature access check", %{
+      conn: conn,
+      site: site,
+      token: token
+    } do
+      insert(:starter_subscription, team: site.team)
+
+      url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :create)
+
+      resp =
+        authenticate(conn, site.domain, token)
+        |> put_req_header("content-type", "application/json")
+        |> put(url, %{
+          shared_link: %{
+            name: "My Shared Link"
+          }
+        })
+        |> json_response(201)
+        |> assert_schema("SharedLink", spec())
+
+      assert resp.shared_link.name == "My Shared Link"
+
+      assert resp.shared_link.href =~
+               "http://localhost:8000/share/#{URI.encode_www_form(site.domain)}?auth="
+    end
   end
 
   describe "get /shared_links" do

@@ -1636,6 +1636,26 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute is_nil(link.password_hash)
       assert link.name == "New name"
     end
+
+    test "fails to create when subscription plan doesn't support the shared links feature", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      subscribe_to_starter_plan(user)
+
+      conn =
+        post(conn, "/sites/#{site.domain}/shared-links", %{
+          "shared_link" => %{"name" => "Something"}
+        })
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :settings_visibility, site.domain)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Your current subscription plan does not include Shared Links"
+
+      refute Repo.exists?(Plausible.Site.SharedLink)
+    end
   end
 
   describe "GET /sites/:domain/shared-links/edit" do

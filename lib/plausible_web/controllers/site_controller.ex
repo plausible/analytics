@@ -576,9 +576,14 @@ defmodule PlausibleWeb.SiteController do
   def create_shared_link(conn, %{"shared_link" => link}) do
     site = conn.assigns[:site]
 
-    case Sites.create_shared_link(site, link["name"], link["password"]) do
+    case Sites.create_shared_link(site, link["name"], password: link["password"]) do
       {:ok, _created} ->
         redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
+
+      {:error, :upgrade_required} ->
+        conn
+        |> put_flash(:error, "Your current subscription plan does not include Shared Links")
+        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
 
       {:error, changeset} ->
         conn
