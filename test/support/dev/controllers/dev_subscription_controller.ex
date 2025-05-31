@@ -5,6 +5,9 @@ defmodule PlausibleWeb.DevSubscriptionController do
     use PlausibleWeb, :controller
 
     alias Plausible.Billing.DevSubscriptions
+    alias Plausible.Auth.User
+    alias Plausible.Teams.Team
+    alias Plausible.Teams
 
     plug PlausibleWeb.RequireAccountPlug
 
@@ -18,7 +21,7 @@ defmodule PlausibleWeb.DevSubscriptionController do
     end
 
     def update_form(conn, _params) do
-      team = conn.assigns.current_team |> Plausible.Teams.with_subscription()
+      team = conn.assigns.current_team |> Teams.with_subscription()
 
       if is_nil(team.subscription),
         do: raise("Can't render subscription update form without subscription")
@@ -30,20 +33,25 @@ defmodule PlausibleWeb.DevSubscriptionController do
     end
 
     def cancel_form(conn, _params) do
-      team = conn.assigns.current_team |> Plausible.Teams.with_subscription()
+      team = conn.assigns.current_team |> Teams.with_subscription()
 
       if is_nil(team.subscription),
         do: raise("Can't render subscription cancel form without subscription")
 
       render(conn, "cancel_dev_subscription.html",
         back_link: Routes.settings_path(conn, :subscription),
-        enterprise_plan?: Plausible.Teams.Billing.enterprise_configured?(team)
+        enterprise_plan?: Teams.Billing.enterprise_configured?(team)
       )
     end
 
     def create(conn, %{"plan_id" => plan_id}) do
-      team = conn.assigns.current_team
-      DevSubscriptions.create_after_1s(team.id, plan_id)
+      for_team =
+        case conn.assigns do
+          %{current_team: %Team{} = team} -> team
+          %{current_user: %User{} = user} -> Teams.force_create_my_team(user)
+        end
+
+      DevSubscriptions.create_after_1s(for_team.id, plan_id)
       redirect(conn, to: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success))
     end
 
