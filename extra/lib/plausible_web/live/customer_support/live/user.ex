@@ -12,7 +12,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
     if is_nil(user) do
       redirect(
         socket,
-        to: Routes.customer_support_path(socket, :index)
+        to: InternalRoutes.customer_support_path(socket, :index)
       )
     else
       form = user |> Plausible.Auth.User.changeset() |> to_form()

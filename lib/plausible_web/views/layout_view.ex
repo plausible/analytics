@@ -36,9 +36,9 @@ defmodule PlausibleWeb.LayoutView do
 
   def home_dest(conn) do
     if conn.assigns[:current_user] do
-      "/sites"
+      Routes.site_url(PlausibleWeb.Endpoint, :index)
     else
-      "/"
+      Routes.page_url(PlausibleWeb.Endpoint, :index)
     end
   end
 
