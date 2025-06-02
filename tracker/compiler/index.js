@@ -74,7 +74,7 @@ export async function compileFile(variant, options) {
 }
 
 function wrapCode(bundledCode, variant) {
-  switch (variant.npm_module) {
+  switch (variant.npm_package) {
     case 'esm':
       return `${bundledCode}\nexport { init, track }`
     default:
@@ -120,7 +120,7 @@ async function bundleCode(format = 'esm') {
 }
 
 function outputPath(variant, options) {
-  if (variant.npm_module) {
+  if (variant.npm_package) {
     return relPath(`../${variant.name}${options.suffix || ""}`)
   } else {
     return relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`)
@@ -134,7 +134,7 @@ function minify(code, globals, variant = {}) {
     }
   }
 
-  if (variant.npm_module) {
+  if (variant.npm_package) {
     minifyOptions.mangle = false
   } else {
     minifyOptions.compress.passes = 4

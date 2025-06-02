@@ -19,7 +19,7 @@
       }
     },
     {
-      "name": "npm_module/plausible.js",
+      "name": "npm_package/plausible.js",
       "features": [
         "plausible-npm"
       ],
@@ -35,7 +35,7 @@
         "COMPILE_TAGGED_EVENTS": true,
         "COMPILE_REVENUE": true
       },
-      "npm_module": "esm"
+      "npm_package": "esm"
     }
   ],
   "legacyVariants": [
