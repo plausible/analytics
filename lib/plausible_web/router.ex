@@ -88,13 +88,6 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    scope path: "/flags" do
-      pipe_through :flags
-      forward "/", FunWithFlags.UI.Router, namespace: "flags"
-    end
-  end
-
-  on_ee do
     if Mix.env() in [:dev, :test] do
       scope "/dev", PlausibleWeb do
         pipe_through :browser
