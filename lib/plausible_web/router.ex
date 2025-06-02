@@ -109,7 +109,8 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    scope alias: PlausibleWeb.Live, assigns: %{connect_live_socket: true} do
+    scope alias: PlausibleWeb.Live,
+          assigns: %{connect_live_socket: true, skip_plausible_tracking: true} do
       pipe_through [:browser, :csrf, :app_layout, :flags]
 
       live "/cs", CustomerSupport, :index, as: :customer_support
