@@ -19,12 +19,12 @@ defmodule Plausible.Billing.SiteLocker do
 
     team = Teams.with_subscription(team)
 
-    case Plausible.Teams.Billing.check_needs_to_upgrade(team, usage_mod) do
+    case Teams.Billing.check_needs_to_upgrade(team, usage_mod) do
       {:needs_to_upgrade, :grace_period_ended} ->
         set_lock_status_for(team, true)
 
         if team.grace_period.is_over != true do
-          Plausible.Teams.end_grace_period(team)
+          Teams.end_grace_period(team)
 
           send_grace_period_end_email(team, send_email?)
 
@@ -34,8 +34,13 @@ defmodule Plausible.Billing.SiteLocker do
         end
 
       {:needs_to_upgrade, reason} ->
-        set_lock_status_for(team, true)
-        {:locked, reason}
+        if Teams.owned_sites_count(team) > 0 do
+          set_lock_status_for(team, true)
+          {:locked, reason}
+        else
+          set_lock_status_for(team, false)
+          :unlocked
+        end
 
       :no_upgrade_needed ->
         set_lock_status_for(team, false)
