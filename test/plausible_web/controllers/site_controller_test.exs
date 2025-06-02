@@ -699,6 +699,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute resp =~ "Team members automatically have access to this site."
     end
 
+    @tag :ee_only
     test "does not render team management notice if Teams feature unavailable", %{
       conn: conn,
       user: user

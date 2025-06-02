@@ -84,6 +84,7 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       assert Repo.reload!(team).name == "Team Name 1"
     end
 
+    @tag :ee_only
     test "blurs UI with an upgrade CTA if the subscription team member limit is 0", %{
       conn: conn,
       user: user
