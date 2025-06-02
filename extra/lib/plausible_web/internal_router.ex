@@ -25,7 +25,8 @@ defmodule PlausibleWeb.InternalRouter do
     forward "/", FunWithFlags.UI.Router, namespace: "flags"
   end
 
-  scope alias: PlausibleWeb.Live, assigns: %{connect_live_socket: true} do
+  scope alias: PlausibleWeb.Live,
+        assigns: %{connect_live_socket: true, skip_plausible_tracking: true} do
     pipe_through :superadmin_area
 
     live "/cs", CustomerSupport, :index, as: :customer_support
