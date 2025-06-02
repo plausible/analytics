@@ -10,9 +10,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
 
     alias Plausible.Teams
 
+    @endpoint PlausibleWeb.InternalEndpoint
+    alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
+
     defp open_team(id, qs \\ []) do
-      Routes.customer_support_resource_path(
-        PlausibleWeb.Endpoint,
+      InternalRoutes.customer_support_resource_path(
+        PlausibleWeb.InternalEndpoint,
         :details,
         :teams,
         :team,

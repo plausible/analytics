@@ -8,9 +8,12 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
+    @endpoint PlausibleWeb.InternalEndpoint
+    alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
+
     defp open_user(id) do
-      Routes.customer_support_resource_path(
-        PlausibleWeb.Endpoint,
+      InternalRoutes.customer_support_resource_path(
+        PlausibleWeb.InternalEndpoint,
         :details,
         :users,
         :user,

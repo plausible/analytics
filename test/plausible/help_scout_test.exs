@@ -59,7 +59,7 @@ defmodule Plausible.HelpScoutTest do
         stub_help_scout_requests(email)
         team = team_of(user)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team.id}"
+        crm_url = "#{PlausibleWeb.InternalEndpoint.url()}/cs/teams/team/#{team.id}"
 
         assert {:ok,
                 %{
@@ -407,7 +407,7 @@ defmodule Plausible.HelpScoutTest do
 
         team = team_of(user)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team.id}"
+        crm_url = "#{PlausibleWeb.InternalEndpoint.url()}/cs/teams/team/#{team.id}"
 
         assert {:ok,
                 %{
@@ -442,7 +442,7 @@ defmodule Plausible.HelpScoutTest do
         new_site(owner: user2)
         team2 = team_of(user2)
 
-        crm_url = "#{PlausibleWeb.Endpoint.url()}/cs/teams/team/#{team2.id}"
+        crm_url = "#{PlausibleWeb.InternalEndpoint.url()}/cs/teams/team/#{team2.id}"
 
         assert {:ok,
                 %{
