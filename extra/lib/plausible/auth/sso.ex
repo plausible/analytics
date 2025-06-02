@@ -73,10 +73,10 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  @spec deprovision_user(Auth.User.t()) :: Auth.User.t()
-  def deprovision_user(%{type: :standard} = user), do: user
+  @spec deprovision_user!(Auth.User.t()) :: Auth.User.t()
+  def deprovision_user!(%{type: :standard} = user), do: user
 
-  def deprovision_user(user) do
+  def deprovision_user!(user) do
     user = Repo.preload(user, :sso_integration)
 
     :ok = Auth.UserSessions.revoke_all(user)
@@ -170,7 +170,7 @@ defmodule Plausible.Auth.SSO do
 
         {:ok, :ok} =
           Repo.transaction(fn ->
-            Enum.each(users, &deprovision_user/1)
+            Enum.each(users, &deprovision_user!/1)
             Repo.delete!(integration)
             :ok
           end)

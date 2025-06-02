@@ -305,7 +305,7 @@ defmodule Plausible.Auth.SSOTest do
       end
     end
 
-    describe "deprovision_user/1" do
+    describe "deprovision_user!/1" do
       test "deprovisions SSO user" do
         team = new_site().team
         integration = SSO.initiate_saml_integration(team)
@@ -320,7 +320,7 @@ defmodule Plausible.Auth.SSOTest do
         user = Repo.reload!(user)
         session = Auth.UserSessions.create(user, "Unknown")
 
-        updated_user = SSO.deprovision_user(user)
+        updated_user = SSO.deprovision_user!(user)
 
         refute Repo.reload(session)
         assert updated_user.id == user.id
@@ -333,7 +333,7 @@ defmodule Plausible.Auth.SSOTest do
         user = new_user()
         session = Auth.UserSessions.create(user, "Unknown")
 
-        assert updated_user = SSO.deprovision_user(user)
+        assert updated_user = SSO.deprovision_user!(user)
 
         assert Repo.reload(session)
         assert updated_user.id == user.id
@@ -546,7 +546,7 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         # SSO user deprovisioned
-        _user = SSO.deprovision_user(sso_user)
+        _user = SSO.deprovision_user!(sso_user)
 
         integration = Repo.reload!(integration)
         assert :ok = SSO.check_can_remove_integration(integration)
@@ -572,7 +572,7 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, _} = SSO.set_force_sso(team, :all_but_owners)
 
         # SSO user deprovisioned
-        _user = SSO.deprovision_user(sso_user)
+        _user = SSO.deprovision_user!(sso_user)
 
         integration = Repo.reload!(integration)
         assert {:error, :force_sso_enabled} = SSO.check_can_remove_integration(integration)
@@ -617,7 +617,7 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         # SSO user deprovisioned
-        _user = SSO.deprovision_user(sso_user)
+        _user = SSO.deprovision_user!(sso_user)
 
         integration = Repo.reload!(integration)
 
