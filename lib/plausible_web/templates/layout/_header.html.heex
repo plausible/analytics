@@ -70,7 +70,7 @@
               >
                 <.styled_link
                   class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
-                  href={Routes.settings_path(@conn, :subscription)}
+                  href={Routes.settings_url(PlausibleWeb.Endpoint, :subscription)}
                 >
                   {trial_notification(@conn.assigns[:current_team])}
                 </.styled_link>
@@ -101,7 +101,7 @@
                       more_teams?={@more_teams?}
                     />
                     <.dropdown_divider />
-                    <.dropdown_item href={Routes.settings_path(@conn, :index)}>
+                    <.dropdown_item href={Routes.settings_url(PlausibleWeb.Endpoint, :index)}>
                       Account Settings
                     </.dropdown_item>
 
@@ -109,7 +109,10 @@
                       @my_team && @my_team.id == @current_team.id &&
                         Plausible.Billing.Feature.Teams.check_availability(@current_team) == :ok
                     }>
-                      <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
+                      <.dropdown_item
+                        class="flex"
+                        href={Routes.team_setup_url(PlausibleWeb.Endpoint, :setup)}
+                      >
                         <span data-test="create-a-team-cta" class="flex-1">
                           Create a Team
                         </span>
@@ -123,7 +126,7 @@
                     <div :if={Plausible.Teams.setup?(@current_team)}>
                       <.dropdown_item
                         class="flex"
-                        href={Routes.settings_path(@conn, :team_general)}
+                        href={Routes.settings_url(PlausibleWeb.Endpoint, :team_general)}
                       >
                         <span class="flex-1">
                           Team Settings
