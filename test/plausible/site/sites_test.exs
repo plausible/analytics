@@ -23,6 +23,22 @@ defmodule Plausible.SitesTest do
                Sites.create(user, params)
     end
 
+    @tag :ee_only
+    test "updates team's locked state" do
+      user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1), team: [locked: false])
+
+      team = new_site(owner: user).team
+
+      refute team.locked
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+               Sites.create(user, params, team)
+
+      assert Repo.reload(team).locked
+    end
+
     test "does not start a trial for pre-teams guest users without trial expiry date" do
       user = new_user() |> subscribe_to_growth_plan()
       new_site(owner: user)

@@ -44,22 +44,29 @@ defmodule PlausibleWeb.Tracker do
   end
 
   def update_script_configuration(site, config_update, changeset_type) do
-    original_config = get_or_create_tracker_script_configuration!(site.id)
+    {:ok, updated_config} =
+      Repo.transaction(fn ->
+        original_config = get_or_create_tracker_script_configuration!(site.id)
+        changeset = changeset(original_config, config_update, changeset_type)
 
-    changeset = changeset(original_config, config_update, changeset_type)
-    updated_config = Repo.update!(changeset)
+        updated_config = Repo.update!(changeset)
 
-    sync_goals(site, original_config, updated_config)
+        sync_goals(site, original_config, updated_config)
 
-    on_ee do
-      Plausible.Workers.PurgeCDNCache.new(
-        %{id: updated_config.id},
-        # See PurgeCDNCache.ex for more details
-        schedule_in: 10,
-        replace: [scheduled: [:scheduled_at]]
-      )
-      |> Oban.insert!()
-    end
+        on_ee do
+          if Map.keys(changeset.changes) != [:installation_type] do
+            Plausible.Workers.PurgeCDNCache.new(
+              %{id: updated_config.id},
+              # See PurgeCDNCache.ex for more details
+              schedule_in: 10,
+              replace: [scheduled: [:scheduled_at]]
+            )
+            |> Oban.insert!()
+          end
+        end
+
+        updated_config
+      end)
 
     updated_config
   end

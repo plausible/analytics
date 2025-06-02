@@ -2,14 +2,16 @@ defmodule Plausible.Sites do
   @moduledoc """
   Sites context functions.
   """
+  use Plausible
 
   import Ecto.Query
 
   alias Plausible.Auth
+  alias Plausible.Billing
   alias Plausible.Repo
   alias Plausible.Site
-  alias Plausible.Teams
   alias Plausible.Site.SharedLink
+  alias Plausible.Teams
 
   require Plausible.Site.UserPreference
 
@@ -272,6 +274,16 @@ defmodule Plausible.Sites do
       else
         {:ok, :trial_already_started}
       end
+    end)
+    |> Ecto.Multi.run(:updated_lock, fn _repo, %{create_team: team} ->
+      lock_state =
+        if ee?() do
+          Billing.SiteLocker.update_for(team, send_email?: false)
+        else
+          :unlocked
+        end
+
+      {:ok, lock_state}
     end)
     |> Repo.transaction()
   end
