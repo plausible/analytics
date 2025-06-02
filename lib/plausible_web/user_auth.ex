@@ -25,7 +25,7 @@ defmodule PlausibleWeb.UserAuth do
   def log_in_user(conn, %Auth.User{} = user, redirect_path) do
     redirect_to = login_redirect_path(conn, redirect_path)
     device_name = get_device_name(conn)
-    session = Auth.UserSessions.create(user, device_name)
+    session = Auth.UserSessions.create!(user, device_name)
 
     conn
     |> set_user_token(session.token)
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.UserAuth do
         {:ok, _provisioning_from, team, user} ->
           redirect_to = login_redirect_path(conn, redirect_path)
           device_name = get_device_name(conn)
-          session = Auth.UserSessions.create(user, device_name, timeout_at: identity.expires_at)
+          session = Auth.UserSessions.create!(user, device_name, timeout_at: identity.expires_at)
 
           conn
           |> set_user_token(session.token)

@@ -64,8 +64,8 @@ defmodule Plausible.Auth.UserSessions do
     end
   end
 
-  @spec create(Auth.User.t(), String.t(), Keyword.t()) :: Auth.UserSession.t()
-  def create(user, device_name, opts \\ []) do
+  @spec create!(Auth.User.t(), String.t(), Keyword.t()) :: Auth.UserSession.t()
+  def create!(user, device_name, opts \\ []) do
     user
     |> Auth.UserSession.new_session(device_name, opts)
     |> Repo.insert!()

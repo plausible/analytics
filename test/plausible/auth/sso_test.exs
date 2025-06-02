@@ -318,7 +318,7 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, _, _, user} = SSO.provision_user(identity)
 
         user = Repo.reload!(user)
-        session = Auth.UserSessions.create(user, "Unknown")
+        session = Auth.UserSessions.create!(user, "Unknown")
 
         updated_user = SSO.deprovision_user!(user)
 
@@ -331,7 +331,7 @@ defmodule Plausible.Auth.SSOTest do
 
       test "handles standard user gracefully without revoking existing sessions" do
         user = new_user()
-        session = Auth.UserSessions.create(user, "Unknown")
+        session = Auth.UserSessions.create!(user, "Unknown")
 
         assert updated_user = SSO.deprovision_user!(user)
 
