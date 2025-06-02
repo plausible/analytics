@@ -60,9 +60,13 @@ http_port =
   get_int_from_path_or_env(config_dir, "HTTP_PORT") ||
     get_int_from_path_or_env(config_dir, "PORT", 8000)
 
+internal_http_port =
+  get_int_from_path_or_env(config_dir, "INTERNAL_HTTP_PORT", 8009)
+
 https_port = get_int_from_path_or_env(config_dir, "HTTPS_PORT")
 
 base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
+internal_base_url = URI.parse(get_var_from_path_or_env(config_dir, "INTERNAL_BASE_URL", ""))
 
 if !base_url do
   raise "BASE_URL configuration option is required. See https://github.com/plausible/community-edition/wiki/configuration#base_url"
@@ -327,6 +331,18 @@ default_http_opts = [
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
   http: [port: http_port, ip: listen_ip] ++ default_http_opts,
+  secret_key_base: secret_key_base,
+  websocket_url: websocket_url,
+  secure_cookie: secure_cookie
+
+config :plausible, PlausibleWeb.InternalEndpoint,
+  url: [
+    scheme: internal_base_url.scheme,
+    host: internal_base_url.host,
+    path: internal_base_url.path,
+    port: internal_base_url.port
+  ],
+  http: [port: internal_http_port, ip: listen_ip] ++ default_http_opts,
   secret_key_base: secret_key_base,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
