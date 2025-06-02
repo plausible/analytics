@@ -53,7 +53,7 @@ test.describe('plausible-web.js', () => {
     })
   })
 
-  test('does not trigger any events with localhost domain when `local` config is disabled', async ({ page }) => {
+  test('does not trigger any events when `local` config is disabled', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: () => openPage(page, { captureOnLocalhost: false }),
       expectedRequests: [],
