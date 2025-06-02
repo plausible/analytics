@@ -219,6 +219,20 @@ defmodule Plausible.Billing.SiteLockerTest do
       assert Repo.reload!(site.team).locked
     end
 
+    test "does not lock if team has no sites" do
+      user = new_user(trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
+      site = new_site(owner: user)
+      team = team_of(user)
+
+      Plausible.Site.Removal.run(site)
+
+      team = Repo.reload!(team)
+
+      assert SiteLocker.update_for(team) == :unlocked
+
+      refute Repo.reload!(site.team).locked
+    end
+
     test "locks sites for user with empty trial - shouldn't happen under normal circumstances" do
       user = new_user()
       site = new_site(owner: user)
