@@ -11,6 +11,22 @@ defmodule Plausible.Auth.SSO do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  @spec get_integration(String.t()) :: {:ok, SSO.Integration.t()} | {:error, :not_found}
+  def get_integration(identifier) when is_binary(identifier) do
+    query =
+      from(i in SSO.Integration,
+        inner_join: t in assoc(i, :team),
+        where: i.identifier == ^identifier,
+        preload: [team: t]
+      )
+
+    if integration = Repo.one(query) do
+      {:ok, integration}
+    else
+      {:error, :not_found}
+    end
+  end
+
   @spec initiate_saml_integration(Teams.Team.t()) :: SSO.Integration.t()
   def initiate_saml_integration(team) do
     changeset = SSO.Integration.init_changeset(team)
@@ -34,16 +50,16 @@ defmodule Plausible.Auth.SSO do
   end
 
   @spec provision_user(SSO.Identity.t()) ::
-          {:ok, :standard | :sso | :integration, Auth.User.t()}
-          | {:error, :integration_not_found}
+          {:ok, :standard | :sso | :integration, Teams.Team.t(), Auth.User.t()}
+          | {:error, :integration_not_found | :over_limit}
           | {:error, :multiple_memberships, Teams.Team.t(), Auth.User.t()}
   def provision_user(identity) do
     case find_user(identity) do
       {:ok, :standard, user, integration} ->
         provision_standard_user(user, identity, integration)
 
-      {:ok, :sso, user, _integration} ->
-        provision_sso_user(user, identity)
+      {:ok, :sso, user, integration} ->
+        provision_sso_user(user, identity, integration)
 
       {:ok, :integration, integration} ->
         provision_identity(identity, integration)
@@ -71,7 +87,7 @@ defmodule Plausible.Auth.SSO do
 
   defp find_by_identity(id) do
     if user = Repo.get_by(Auth.User, sso_identity_id: id) do
-      user = Repo.preload(user, :sso_integration)
+      user = Repo.preload(user, sso_integration: :team)
 
       {:ok, user.type, user, user.sso_integration}
     else
@@ -110,7 +126,7 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp provision_sso_user(user, identity) do
+  defp provision_sso_user(user, identity, integration) do
     changeset =
       user
       |> change()
@@ -120,7 +136,7 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
 
     with {:ok, user} <- Repo.update(changeset) do
-      {:ok, :sso, user}
+      {:ok, :sso, integration.team, user}
     end
   end
 
@@ -137,7 +153,7 @@ defmodule Plausible.Auth.SSO do
     with :ok <- ensure_team_member(integration.team, user),
          :ok <- ensure_one_membership(user, integration.team),
          {:ok, user} <- Repo.update(changeset) do
-      {:ok, :standard, user}
+      {:ok, :standard, integration.team, user}
     end
   end
 
@@ -162,13 +178,37 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
       |> put_assoc(:sso_integration, integration)
 
-    case Repo.insert(changeset) do
-      {:ok, user} ->
-        {:ok, :identity, user}
+    team = integration.team
+    role = integration.team.policy.sso_default_role
+    now = NaiveDateTime.utc_now(:second)
 
-      {:error, %{errors: [email: {_, attrs}]}} ->
-        true = {:constraint, :unique} in attrs
-        {:error, :integration_not_found}
+    result =
+      Repo.transaction(fn ->
+        with {:ok, user} <- Repo.insert(changeset),
+             :ok <- Teams.Invitations.check_team_member_limit(team, role, user.email),
+             {:ok, team_membership} <-
+               Teams.Invitations.create_team_membership(team, role, user, now) do
+          if team_membership.role != :guest do
+            {:identity, team, user}
+          else
+            Repo.rollback(:integration_not_found)
+          end
+        else
+          {:error, %{errors: [email: {_, attrs}]}} ->
+            true = {:constraint, :unique} in attrs
+            Repo.rollback(:integration_not_found)
+
+          {:error, {:over_limit, _}} ->
+            Repo.rollback(:over_limit)
+        end
+      end)
+
+    case result do
+      {:ok, {type, team, user}} ->
+        {:ok, type, team, user}
+
+      {:error, _} = error ->
+        error
     end
   end
 
