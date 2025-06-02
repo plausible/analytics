@@ -25,6 +25,8 @@ defmodule PlausibleWeb.InternalEndpoint do
 
   plug(CORSPlug)
 
+  plug(PlausibleWeb.Favicon)
+
   plug(
     Plug.Static,
     at: "/",
