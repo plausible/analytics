@@ -207,7 +207,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       conn = get(build_conn(), "/" <> locked_site.domain)
       resp = html_response(conn, 200)
-      assert resp =~ "Dashboard locked"
+      assert resp =~ "Dashboard Locked"
       assert resp =~ "You can check back later or contact the site owner"
     end
 
@@ -1331,7 +1331,21 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
 
-      assert html_response(conn, 200) =~ "Dashboard locked"
+      assert html_response(conn, 200) =~ "Dashboard Locked"
+      refute String.contains?(html_response(conn, 200), "Back to my sites")
+    end
+
+    test "shows locked page if shared link is locked due to insufficient team subscription", %{
+      conn: conn
+    } do
+      site = new_site(domain: "test-site.com")
+      link = insert(:shared_link, site: site)
+
+      insert(:starter_subscription, team: site.team)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
+
+      assert html_response(conn, 200) =~ "Shared Link Unavailable"
       refute String.contains?(html_response(conn, 200), "Back to my sites")
     end
 
