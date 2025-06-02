@@ -846,7 +846,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <div class="mb-6 flex items-center justify-between" x-data>
       <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
-        <form id="filter-form" phx-change="filter" class="flex items-center">
+        <form id="filter-form" phx-change="filter" phx-submit="filter" class="flex items-center">
           <div class="text-gray-800 inline-flex items-center">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
