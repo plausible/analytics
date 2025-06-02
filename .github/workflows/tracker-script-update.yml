@@ -107,3 +107,24 @@ jobs:
           message: |
             ${{ steps.analyze.outputs.sizes }}
           comment-tag: size-report
+
+  check-release-labels-and-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check PR has tracker release label set
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'tracker release:' }}
+        run: |
+          echo "::error::PR changes tracker script but does not have a `tracker release:` label."
+          exit 1
+
+      - name: Get changed files
+        id: changelog_changed
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c
+
+      - name: Check PR has a tracker NPM package CHANGELOG.md update
+        if: ${{ steps.changelog_changed.outputs.any_changed == 'false' }}
+        run: |
+          echo "::error::PR changes tracker script but does not have a tracker NPM package CHANGELOG.md update."
+          exit 1
