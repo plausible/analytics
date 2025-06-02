@@ -1,6 +1,4 @@
 defmodule PlausibleWeb do
-  use Plausible
-
   def live_view(opts \\ []) do
     quote do
       use Plausible
@@ -65,25 +63,6 @@ defmodule PlausibleWeb do
       import PlausibleWeb.Components.Generic
       import PlausibleWeb.Live.Components.Form
       alias PlausibleWeb.Router.Helpers, as: Routes
-    end
-  end
-
-  on_ee do
-    def extra_view do
-      quote do
-        use Phoenix.View,
-          root: "extra/lib/plausible_web/templates",
-          namespace: PlausibleWeb
-
-        # Import convenience functions from controllers
-        import Phoenix.Controller, only: [view_module: 1]
-
-        use Phoenix.Component
-
-        import PlausibleWeb.Components.Generic
-        import PlausibleWeb.Live.Components.Form
-        alias PlausibleWeb.Router.Helpers, as: Routes
-      end
     end
   end
 

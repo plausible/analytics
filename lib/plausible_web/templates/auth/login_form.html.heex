@@ -49,17 +49,6 @@
         </.styled_link>
         instead.
       </:item>
-      <:item :if={ee?() and Plausible.sso_enabled?()}>
-        <%= on_ee do %>
-          Have a Single Sign-on account?
-          <.styled_link href={
-            Routes.sso_path(@conn, :login_form, return_to: @conn.params["return_to"])
-          }>
-            Sign in here
-          </.styled_link>
-          instead.
-        <% end %>
-      </:item>
       <:item>
         Forgot password?
         <.styled_link href="/password/request-reset">

@@ -304,8 +304,6 @@ secure_cookie =
 
 license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
 
-sso_enabled = get_bool_from_path_or_env(config_dir, "SSO_ENABLED", false)
-
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -315,8 +313,7 @@ config :plausible,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
   data_dir: data_dir,
-  session_transfer_dir: session_transfer_dir,
-  sso_enabled: sso_enabled
+  session_transfer_dir: session_transfer_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
