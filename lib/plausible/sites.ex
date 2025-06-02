@@ -2,6 +2,7 @@ defmodule Plausible.Sites do
   @moduledoc """
   Sites context functions.
   """
+  use Plausible
 
   import Ecto.Query
 
@@ -275,7 +276,12 @@ defmodule Plausible.Sites do
       end
     end)
     |> Ecto.Multi.run(:updated_lock, fn _repo, %{create_team: team} ->
-      lock_state = Billing.SiteLocker.update_for(team, send_email?: false)
+      lock_state =
+        if ee?() do
+          Billing.SiteLocker.update_for(team, send_email?: false)
+        else
+          :unlocked
+        end
 
       {:ok, lock_state}
     end)

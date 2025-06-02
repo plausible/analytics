@@ -2,6 +2,8 @@ defmodule Plausible.Site.Removal do
   @moduledoc """
   A site deletion service stub.
   """
+  use Plausible
+
   alias Plausible.Billing
   alias Plausible.Repo
   alias Plausible.Teams
@@ -18,7 +20,9 @@ defmodule Plausible.Site.Removal do
       Teams.Memberships.prune_guests(site.team)
       Teams.Invitations.prune_guest_invitations(site.team)
 
-      Billing.SiteLocker.update_for(site.team, send_email?: false)
+      on_ee do
+        Billing.SiteLocker.update_for(site.team, send_email?: false)
+      end
 
       %{delete_all: result}
     end)

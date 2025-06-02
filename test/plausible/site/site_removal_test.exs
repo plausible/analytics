@@ -39,6 +39,7 @@ defmodule Plausible.Site.SiteRemovalTest do
     refute Repo.reload(team_invitation)
   end
 
+  @tag :ee_only
   test "site deletion updates team dashboard lock state" do
     owner = new_user(team: [locked: true])
     site = new_site(owner: owner)

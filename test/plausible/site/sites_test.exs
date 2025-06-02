@@ -23,6 +23,7 @@ defmodule Plausible.SitesTest do
                Sites.create(user, params)
     end
 
+    @tag :ee_only
     test "updates team's locked state" do
       user = new_user(trial_expiry_date: Date.add(Date.utc_today(), -1), team: [locked: false])
 
