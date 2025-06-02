@@ -200,10 +200,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.User do
   end
 
   defp keys_query(user) do
-    team_ids = user |> Plausible.Teams.Users.teams() |> Enum.map(& &1.id)
-
     from api_key in Plausible.Auth.ApiKey,
-      where: api_key.user_id == ^user.id or api_key.team_id in ^team_ids,
+      where: api_key.user_id == ^user.id,
       left_join: t in Plausible.Teams.Team,
       on: t.id == api_key.team_id,
       distinct: true,
