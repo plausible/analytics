@@ -12,15 +12,11 @@ defmodule PlausibleWeb.InternalRouter do
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_secure_browser_headers
-    plug PlausibleWeb.Plugs.NoRobots
-    plug PlausibleWeb.AuthPlug
-    plug PlausibleWeb.Plugs.UserSessionTouch
     plug :protect_from_forgery
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
-    plug :put_secure_browser_headers
-    plug PlausibleWeb.Plugs.NoRobots
-    plug :fetch_session
     plug PlausibleWeb.AuthPlug
+    plug PlausibleWeb.Plugs.UserSessionTouch
+    plug PlausibleWeb.Plugs.NoRobots
     plug PlausibleWeb.SuperAdminOnlyPlug
   end
 
