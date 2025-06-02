@@ -1421,16 +1421,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a Team"
     end
 
-    test "does not render the 'Create a Team' option if Teams feature is unavailable", %{
-      conn: conn,
-      user: user
-    } do
-      subscribe_to_starter_plan(user)
-      conn = get(conn, Routes.settings_path(conn, :preferences))
-      html = html_response(conn, 200)
-      refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
-    end
-
     test "does not render the 'Create a Team' option if a team is already set up", %{
       conn: conn,
       user: user

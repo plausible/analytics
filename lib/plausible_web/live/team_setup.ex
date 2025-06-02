@@ -56,9 +56,9 @@ defmodule PlausibleWeb.Live.TeamSetup do
 
   def render(assigns) do
     ~H"""
-    <.focus_box>
+    <.focus_box padding?={false}>
       <:title>
-        <div class="flex justify-between">
+        <div class="pt-8 px-8 flex justify-between">
           <div>Create a new team</div>
           <div class="ml-auto">
             <.docs_info slug="users-roles" />
@@ -66,39 +66,49 @@ defmodule PlausibleWeb.Live.TeamSetup do
         </div>
       </:title>
       <:subtitle>
-        Name your team, add team members and assign roles. When ready, click "Create Team" to send invitations
+        <p class="px-8">
+          Name your team, add team members and assign roles. When ready, click "Create Team" to send invitations
+        </p>
       </:subtitle>
 
-      <.form
-        :let={f}
-        for={@team_name_form}
-        method="post"
-        phx-change="update-team"
-        phx-blur="update-team"
-        id="update-team-form"
-        class="mt-4 mb-8"
-      >
-        <.input
-          type="text"
-          placeholder={"#{@current_user.name}'s Team"}
-          autofocus
-          field={f[:name]}
-          label="Name"
-          width="w-full"
-          phx-debounce="500"
-        />
-      </.form>
+      <div class="relative pb-8 px-8">
+        <PlausibleWeb.Components.Billing.feature_gate
+          current_role={@current_team_role}
+          current_team={@current_team}
+          locked?={Plausible.Teams.Billing.solo?(@current_team)}
+        >
+          <.form
+            :let={f}
+            for={@team_name_form}
+            method="post"
+            phx-change="update-team"
+            phx-blur="update-team"
+            id="update-team-form"
+            class="mt-4 mb-8"
+          >
+            <.input
+              type="text"
+              placeholder={"#{@current_user.name}'s Team"}
+              autofocus
+              field={f[:name]}
+              label="Name"
+              width="w-full"
+              phx-debounce="500"
+            />
+          </.form>
 
-      <.label class="mb-2">
-        Team Members
-      </.label>
-      {live_render(@socket, PlausibleWeb.Live.TeamManagement,
-        id: "team-management-setup",
-        container: {:div, id: "team-setup"},
-        session: %{
-          "mode" => "team-setup"
-        }
-      )}
+          <.label class="mb-2">
+            Team Members
+          </.label>
+          {live_render(@socket, PlausibleWeb.Live.TeamManagement,
+            id: "team-management-setup",
+            container: {:div, id: "team-setup"},
+            session: %{
+              "mode" => "team-setup"
+            }
+          )}
+        </PlausibleWeb.Components.Billing.feature_gate>
+      </div>
     </.focus_box>
     """
   end
