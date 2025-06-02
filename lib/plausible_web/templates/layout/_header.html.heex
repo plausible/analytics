@@ -94,7 +94,7 @@
 
                     <div :if={
                       @my_team && @my_team.id == @current_team.id &&
-                        Plausible.Billing.Feature.Teams.check_availability(@current_team) == :ok
+                        not Plausible.Teams.Billing.solo?(@current_team)
                     }>
                       <.dropdown_item class="flex" href={Routes.team_setup_path(@conn, :setup)}>
                         <span data-test="create-a-team-cta" class="flex-1">

@@ -113,7 +113,6 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments"
     ],
@@ -129,7 +128,6 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments"
     ],
@@ -145,7 +143,6 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments"
     ],
@@ -161,7 +158,6 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments"
     ],
@@ -177,7 +173,6 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments"
     ],
@@ -193,7 +188,6 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments"
     ],
@@ -209,7 +203,6 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments"
     ],
@@ -225,7 +218,6 @@
     "team_member_limit": 3,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments"
     ],
@@ -241,7 +233,6 @@
     "team_member_limit": 10,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments",
       "props",
@@ -261,7 +252,6 @@
     "team_member_limit": 10,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments",
       "props",
@@ -281,7 +271,6 @@
     "team_member_limit": 10,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments",
       "props",
@@ -301,7 +290,6 @@
     "team_member_limit": 10,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments",
       "props",
@@ -321,7 +309,6 @@
     "team_member_limit": 10,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments",
       "props",
@@ -341,7 +328,6 @@
     "team_member_limit": 10,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments",
       "props",
@@ -361,7 +347,6 @@
     "team_member_limit": 10,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments",
       "props",
@@ -381,7 +366,6 @@
     "team_member_limit": 10,
     "features": [
       "goals",
-      "teams",
       "shared_links",
       "site_segments",
       "props",

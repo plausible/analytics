@@ -472,7 +472,7 @@ defmodule PlausibleWeb.Components.Generic do
       <div class="relative">
         <%= if @feature_mod do %>
           <PlausibleWeb.Components.Billing.feature_gate
-            feature_mod={@feature_mod}
+            locked?={@feature_mod.check_availability(@current_team) != :ok}
             current_role={@current_role}
             current_team={@current_team}
           >

@@ -3,7 +3,7 @@ defmodule Plausible.Billing.QuotaTest do
   use Plausible.DataCase, async: true
   use Plausible
   alias Plausible.Billing.{Quota, Plans}
-  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, Teams, SharedLinks}
+  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, SharedLinks}
 
   use Plausible.Teams.Test
 
@@ -575,24 +575,18 @@ defmodule Plausible.Billing.QuotaTest do
       test "users with expired trials have no access to subscription features" do
         team = new_user(trial_expiry_date: ~D[2023-01-01]) |> team_of()
 
-        assert [Goals, Plausible.Billing.Feature.Teams, Plausible.Billing.Feature.SharedLinks] ==
+        assert [Goals, Plausible.Billing.Feature.SharedLinks] ==
                  Plausible.Teams.Billing.allowed_features_for(team)
       end
     end
 
-    test "returns all grandfathered features when user is on an old plan" do
-      team_on_v1 = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
-      team_on_v2 = new_user() |> subscribe_to_plan(@v2_plan_id) |> team_of()
-      team_on_v3 = new_user() |> subscribe_to_plan(@v3_plan_id) |> team_of()
+    for {generation, plan_id} <- [{"v1", @v1_plan_id}, {"v2", @v2_plan_id}, {"v3", @v3_plan_id}] do
+      test "returns all grandfathered features when user is on a #{generation} plan" do
+        team = new_user() |> subscribe_to_plan(unquote(plan_id)) |> team_of()
 
-      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
-               Plausible.Teams.Billing.allowed_features_for(team_on_v1)
-
-      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
-               Plausible.Teams.Billing.allowed_features_for(team_on_v2)
-
-      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
-               Plausible.Teams.Billing.allowed_features_for(team_on_v3)
+        assert [Goals, Props, StatsAPI, SharedLinks] ==
+                 Plausible.Teams.Billing.allowed_features_for(team)
+      end
     end
 
     test "returns features for a free_10k plan" do
@@ -600,7 +594,7 @@ defmodule Plausible.Billing.QuotaTest do
       subscribe_to_plan(user, "free_10k")
       team = team_of(user)
 
-      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+      assert [Goals, Props, StatsAPI, SharedLinks] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -619,7 +613,6 @@ defmodule Plausible.Billing.QuotaTest do
         assert [
                  Plausible.Billing.Feature.StatsAPI,
                  Plausible.Billing.Feature.Funnels,
-                 Plausible.Billing.Feature.Teams,
                  Plausible.Billing.Feature.SharedLinks
                ] ==
                  Plausible.Teams.Billing.allowed_features_for(team)
@@ -641,7 +634,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       team = team_of(user)
 
-      assert [Goals, Props, StatsAPI, Teams, SharedLinks] ==
+      assert [Goals, Props, StatsAPI, SharedLinks] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -669,7 +662,6 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert [
                Plausible.Billing.Feature.StatsAPI,
-               Plausible.Billing.Feature.Teams,
                Plausible.Billing.Feature.SharedLinks
              ] ==
                Plausible.Teams.Billing.allowed_features_for(team)
@@ -687,7 +679,6 @@ defmodule Plausible.Billing.QuotaTest do
       assert [
                Plausible.Billing.Feature.StatsAPI,
                Plausible.Billing.Feature.SitesAPI,
-               Plausible.Billing.Feature.Teams,
                Plausible.Billing.Feature.SharedLinks
              ] ==
                Plausible.Teams.Billing.allowed_features_for(team)

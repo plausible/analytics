@@ -219,6 +219,15 @@ defmodule Plausible.Teams.Billing do
     Teams.owned_sites_count(team)
   end
 
+  def solo?(nil), do: true
+
+  def solo?(team) do
+    case team_member_limit(team) do
+      0 -> true
+      _limit_or_unlimited -> false
+    end
+  end
+
   on_ee do
     @team_member_limit_for_trials 3
 
@@ -605,19 +614,19 @@ defmodule Plausible.Teams.Billing do
 
     case Plans.get_subscription_plan(team.subscription) do
       %EnterprisePlan{features: features} ->
-        features ++ [Feature.Teams, SharedLinks]
+        features ++ [SharedLinks]
 
       %Plan{features: features} ->
         features
 
       :free_10k ->
-        [Goals, Props, StatsAPI, Feature.Teams, SharedLinks]
+        [Goals, Props, StatsAPI, SharedLinks]
 
       nil ->
         if Teams.on_trial?(team) do
           Feature.list() -- [SitesAPI]
         else
-          [Goals, Feature.Teams, SharedLinks]
+          [Goals, SharedLinks]
         end
     end
   end
