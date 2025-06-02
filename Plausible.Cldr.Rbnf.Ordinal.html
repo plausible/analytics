@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-7488F908.js"></script>
+    <script src="dist/sidebar_items-939D6774.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -140,20 +140,20 @@ Pages
     <section id="moduledoc">
 <p>Functions to implement the ordinal rule-based-number-format rules of CLDR.</p><p>As CLDR notes, the data is incomplete or non-existent for many languages.  It
 is considered complete for English however.</p><p>The standard public API for RBNF is via the <a href="https://hexdocs.pm/ex_cldr_numbers/2.35.0/Cldr.Number.html#to_string/2"><code class="inline">Cldr.Number.to_string/2</code></a> function.</p><p>The functions on this module are defined at compile time based upon the RBNF rules
-defined in the Unicode CLDR data repository.  Available rules are identified by:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="7418881699-1">(</span><span class="ss">:en</span><span class="p" data-group-id="7418881699-1">)</span><span class="w">
-</span><span class="p" data-group-id="7418881699-2">[</span><span class="ss">:digits_ordinal</span><span class="p" data-group-id="7418881699-2">]</span><span class="w">
+defined in the Unicode CLDR data repository.  Available rules are identified by:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="1764219266-1">(</span><span class="ss">:en</span><span class="p" data-group-id="1764219266-1">)</span><span class="w">
+</span><span class="p" data-group-id="1764219266-2">[</span><span class="ss">:digits_ordinal</span><span class="p" data-group-id="1764219266-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="7418881699-3">(</span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="7418881699-3">)</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sort</span><span class="p" data-group-id="7418881699-4">(</span><span class="p" data-group-id="7418881699-4">)</span><span class="w">
-</span><span class="p" data-group-id="7418881699-5">[</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="1764219266-3">(</span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="1764219266-3">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sort</span><span class="p" data-group-id="1764219266-4">(</span><span class="p" data-group-id="1764219266-4">)</span><span class="w">
+</span><span class="p" data-group-id="1764219266-5">[</span><span class="w">
   </span><span class="ss">:digits_ordinal</span><span class="p">,</span><span class="w">
   </span><span class="ss">:digits_ordinal_feminine</span><span class="p">,</span><span class="w">
   </span><span class="ss">:digits_ordinal_feminine_plural</span><span class="p">,</span><span class="w">
   </span><span class="ss">:digits_ordinal_masculine</span><span class="p">,</span><span class="w">
   </span><span class="ss">:digits_ordinal_masculine_plural</span><span class="w">
-</span><span class="p" data-group-id="7418881699-5">]</span></code></pre><p>A rule can then be invoked on an available rule_set.  For example</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">digits_ordinal</span><span class="p" data-group-id="6900970321-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p" data-group-id="6900970321-1">)</span><span class="w">
-</span><span class="s">&quot;123rd&quot;</span></code></pre><p>This call is equivalent to the call through the public API of:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="8061229382-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:ordinal</span><span class="p" data-group-id="8061229382-1">)</span><span class="w">
-</span><span class="p" data-group-id="8061229382-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;123rd&quot;</span><span class="p" data-group-id="8061229382-2">}</span></code></pre>
+</span><span class="p" data-group-id="1764219266-5">]</span></code></pre><p>A rule can then be invoked on an available rule_set.  For example</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">digits_ordinal</span><span class="p" data-group-id="6482879410-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p" data-group-id="6482879410-1">)</span><span class="w">
+</span><span class="s">&quot;123rd&quot;</span></code></pre><p>This call is equivalent to the call through the public API of:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="2787591162-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:ordinal</span><span class="p" data-group-id="2787591162-1">)</span><span class="w">
+</span><span class="p" data-group-id="2787591162-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;123rd&quot;</span><span class="p" data-group-id="2787591162-2">}</span></code></pre>
     </section>
 
 </div>
