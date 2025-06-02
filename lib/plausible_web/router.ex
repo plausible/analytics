@@ -109,26 +109,6 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-<<<<<<< HEAD
-||||||| adfcd0f584
-    scope alias: PlausibleWeb.Live, assigns: %{connect_live_socket: true} do
-      pipe_through [:browser, :csrf, :app_layout, :flags]
-
-      live "/cs", CustomerSupport, :index, as: :customer_support
-
-      live "/cs/:any/:resource/:id", CustomerSupport, :details, as: :customer_support_resource
-    end
-  end
-
-  on_ee do
->>>>>>> origin/master
-    scope path: "/flags" do
-      pipe_through :flags
-      forward "/", FunWithFlags.UI.Router, namespace: "flags"
-    end
-  end
-
-  on_ee do
     if Mix.env() in [:dev, :test] do
       scope "/dev", PlausibleWeb do
         pipe_through :browser
