@@ -54,7 +54,7 @@ defmodule Plasusible.Test.Support.DNSServer do
       txt_data::binary
     >>
 
-    header <> question <> answer
+    [header, question, answer]
   end
 
   defp encode_txt_data(txt_value) do
