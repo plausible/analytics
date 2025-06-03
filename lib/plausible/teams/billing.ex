@@ -239,10 +239,7 @@ defmodule Plausible.Teams.Billing do
     def solo?(nil), do: true
 
     def solo?(team) do
-      case team_member_limit(team) do
-        0 -> true
-        _limit_or_unlimited -> false
-      end
+      team_member_limit(team) == 0
     end
   else
     def team_member_limit(_team), do: :unlimited
