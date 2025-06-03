@@ -1,6 +1,21 @@
 defmodule Plausible.Auth.SSO.Domain.Validation do
   @moduledoc """
   SSO domain validation chain
+
+  1. DNS TXT `{domain}` record lookup. 
+     Successful expectation contains `plausible-sso-verification={domain-identifier}` record.
+
+  2. HTTP GET lookup at `https://{domain}/plausible-sso-verification` 
+     Successful expectation contains `{domain-identifier}` in the body.
+
+  3. META tag lookup at `https://{domain}`
+     Successful expectation contains:
+
+       ```html
+       <meta name="plausible-sso-verification" content="{domain-identifier}"> 
+       ```
+
+     in the body of `text/html` type.
   """
 
   alias Plausible.Auth.SSO.Domain
