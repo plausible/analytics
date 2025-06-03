@@ -77,11 +77,9 @@ test.describe('plausible-web.js', () => {
         await openPage(page, {})
         await page.click('#outbound-link')
       },
-      expectedRequests: [
-        { n: 'pageview', p: expecting.toBeUndefined() },
-        ...(browserName === 'webkit' ? [] : [{ n: 'engagement' }]) // WebKit does not send engagement events for outbound links
-      ],
+      expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }],
       refutedRequests: [{ n: 'Outbound Link: Click' }],
+      shouldIgnoreRequest: ignoreEngagementRequests
     })
   })
 
