@@ -61,7 +61,7 @@ defmodule Plausible.Auth.SSO.Domain.Validation do
            run_request(url_override || "https://#{sso_domain}"),
          true <- html?(response),
          {:ok, html} <- Floki.parse_document(body),
-         [_] <- Floki.find(html, ~s|meta[name="#{@prefix}"][content="#{domain_identifier}"]|) do
+         [_ | _] <- Floki.find(html, ~s|meta[name="#{@prefix}"][content="#{domain_identifier}"]|) do
       true
     else
       _ ->
