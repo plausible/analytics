@@ -64,7 +64,7 @@ function trigger(eventName, options) {
       var isIncluded = !dataIncludeAttr || (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
       var isExcluded = dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
 
-      if (!isIncluded || isExcluded) return onIgnoredEvent(eventName, 'exclusion rule', options)
+      if (!isIncluded || isExcluded) return onIgnoredEvent(eventName, options, 'exclusion rule')
     }
   }
 
