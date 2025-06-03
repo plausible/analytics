@@ -98,7 +98,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
 
         Bypass.stub(bypass, "GET", "/", fn _conn -> raise "should never be called" end)
 
-        Validation.run("example.com", "ex4mpl3",
+        assert {:ok, :dns_txt} = Validation.run("example.com", "ex4mpl3",
           url_override: "http://localhost:#{bypass.port}/",
           nameservers: [{{0, 0, 0, 0}, dns_port}]
         )
