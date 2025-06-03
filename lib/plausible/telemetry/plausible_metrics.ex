@@ -109,6 +109,18 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           ],
           unit: {:native, :microsecond},
           measurement: :duration
+        ),
+        counter(
+          metric_prefix ++ [:tracker_script, :request, :v2],
+          event_name: PlausibleWeb.TrackerPlug.telemetry_event(:v2),
+          tags: [:status],
+          tag_values: &%{status: &1.status}
+        ),
+        counter(
+          metric_prefix ++ [:tracker_script, :request, :legacy],
+          event_name: PlausibleWeb.TrackerPlug.telemetry_event(:legacy),
+          tags: [:status],
+          tag_values: &%{status: &1.status}
         )
       ]
     )
