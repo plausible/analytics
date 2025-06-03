@@ -123,9 +123,7 @@ defmodule Plausible.Auth.SSO.Domains do
   defp users_by_domain_query(sso_domain) do
     from(
       u in Auth.User,
-      where: u.sso_integration_id == ^sso_domain.sso_integration_id,
-      where: u.type == :sso,
-      where: ilike(u.email, ^"%@#{sso_domain.domain}")
+      where: u.sso_domain_id == ^sso_domain.id
     )
   end
 
