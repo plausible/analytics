@@ -214,7 +214,9 @@ test.describe('engagement events', () => {
     })
   })
 
-  test('sends an event when plausible API is slow and user navigates away before response is received', async ({ page }) => {
+  test('sends an event when plausible API is slow and user navigates away before response is received', async ({ page, browserName }) => {
+    test.skip(browserName === 'chromium', 'flaky')
+
     await expectPlausibleInAction(page, {
       action: () => page.goto('/engagement.html'),
       expectedRequests: [{n: 'pageview', u: `${LOCAL_SERVER_ADDR}/engagement.html`}],

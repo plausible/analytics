@@ -1,5 +1,5 @@
 {
-  "tracker_script_version": 12,
+  "tracker_script_version": 13,
   "type": "module",
   "scripts": {
     "deploy": "node compile.js",
@@ -16,7 +16,7 @@
     "threads": "^1.7.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.1",
+    "@playwright/test": "^1.52.0",
     "@types/node": "^22.13.4",
     "eslint": "^9.20.1",
     "eslint-plugin-playwright": "^2.2.0",
