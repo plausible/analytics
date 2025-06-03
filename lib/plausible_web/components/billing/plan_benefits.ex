@@ -62,7 +62,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     [
       "Everything in Starter",
       site_limit_benefit(growth_plan),
-      team_member_limit_benefit(growth_plan)
+      team_member_limit_benefit(growth_plan),
+      "Team Management"
     ]
     |> Kernel.++(feature_benefits(growth_plan))
     |> Kernel.--(starter_benefits)

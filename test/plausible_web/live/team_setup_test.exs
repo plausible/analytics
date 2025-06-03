@@ -83,6 +83,21 @@ defmodule PlausibleWeb.Live.TeamSetupTest do
       _ = render(lv)
       assert Repo.reload!(team).name == "Team Name 1"
     end
+
+    @tag :ee_only
+    test "blurs UI with an upgrade CTA if the subscription team member limit is 0", %{
+      conn: conn,
+      user: user
+    } do
+      subscribe_to_starter_plan(user)
+
+      {:ok, _lv, html} = live(conn, @url)
+
+      assert class_of_element(html, "#feature-gate-inner-block-container") =~
+               "pointer-events-none"
+
+      assert class_of_element(html, "#feature-gate-overlay") =~ "backdrop-blur-[6px]"
+    end
   end
 
   describe "/team/setup - full integration" do

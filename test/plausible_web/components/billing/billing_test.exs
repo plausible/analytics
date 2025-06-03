@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         %{
           current_role: :owner,
           current_team: user |> subscribe_to_growth_plan() |> team_of(),
-          feature_mod: Plausible.Billing.Feature.Props
+          locked?: true
         }
         |> render_feature_gate()
 
@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         %{
           current_role: nil,
           current_team: nil,
-          feature_mod: Plausible.Billing.Feature.Props
+          locked?: true
         }
         |> render_feature_gate()
 
@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         %{
           current_role: :owner,
           current_team: user |> subscribe_to_business_plan() |> team_of(),
-          feature_mod: Plausible.Billing.Feature.Funnels
+          locked?: false
         }
         |> render_feature_gate()
 
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         %{
           current_role: :owner,
           current_team: user |> subscribe_to_growth_plan() |> team_of(),
-          feature_mod: Plausible.Billing.Feature.Props
+          locked?: true
         }
         |> render_feature_gate()
 
@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         %{
           current_role: :billing,
           current_team: user |> subscribe_to_growth_plan() |> team_of(),
-          feature_mod: Plausible.Billing.Feature.Props
+          locked?: true
         }
         |> render_feature_gate()
 
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Components.BillingTest do
         %{
           current_role: :editor,
           current_team: user |> subscribe_to_growth_plan() |> team_of(),
-          feature_mod: Plausible.Billing.Feature.Props
+          locked?: true
         }
         |> render_feature_gate()
 
@@ -94,10 +94,11 @@ defmodule PlausibleWeb.Components.BillingTest do
   end
 
   defp render_feature_gate(assigns) do
-    rendered_to_string(~H"""
+    ~H"""
     <PlausibleWeb.Components.Billing.feature_gate {assigns}>
       <div>content...</div>
     </PlausibleWeb.Components.Billing.feature_gate>
-    """)
+    """
+    |> rendered_to_string()
   end
 end

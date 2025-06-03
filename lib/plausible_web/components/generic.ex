@@ -472,7 +472,7 @@ defmodule PlausibleWeb.Components.Generic do
       <div class="relative">
         <%= if @feature_mod do %>
           <PlausibleWeb.Components.Billing.feature_gate
-            feature_mod={@feature_mod}
+            locked?={@feature_mod.check_availability(@current_team) != :ok}
             current_role={@current_role}
             current_team={@current_team}
           >
@@ -634,6 +634,7 @@ defmodule PlausibleWeb.Components.Generic do
   slot :subtitle
   slot :inner_block, required: true
   slot :footer
+  attr :padding?, :boolean, default: true
   attr :rest, :global
 
   def focus_box(assigns) do
@@ -642,7 +643,7 @@ defmodule PlausibleWeb.Components.Generic do
       class="bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-md rounded-md mt-12"
       {@rest}
     >
-      <div class="p-8">
+      <div class={if(@padding?, do: "p-8")}>
         <.title :if={@title != []}>
           {render_slot(@title)}
         </.title>
