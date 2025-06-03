@@ -404,15 +404,6 @@ function init(overrides) {
       return element && element.tagName && element.tagName.toLowerCase() === 'a'
     }
 
-    function shouldFollowLink(event, link) {
-      // If default has been prevented by an external script, Plausible should not intercept navigation.
-      if (event.defaultPrevented) { return false }
-
-      var targetsCurrentWindow = !link.target || link.target.match(/^_(self|parent|top)$/i)
-      var isRegularClick = !(event.ctrlKey || event.metaKey || event.shiftKey) && event.type === 'click'
-      return targetsCurrentWindow && isRegularClick
-    }
-
     var MIDDLE_MOUSE_BUTTON = 1
 
     function handleLinkClickEvent(event) {
@@ -431,41 +422,16 @@ function init(overrides) {
 
       if (COMPILE_OUTBOUND_LINKS && (!COMPILE_CONFIG || config.outboundLinks)) {
         if (isOutboundLink(link)) {
-          return sendLinkClickEvent(event, link, { name: 'Outbound Link: Click', props: { url: link.href } })
+          plausible('Outbound Link: Click', { props: { url: link.href } })
+          return
         }
       }
 
       if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
         if (isDownloadToTrack(hrefWithoutQuery)) {
-          return sendLinkClickEvent(event, link, { name: 'File Download', props: { url: hrefWithoutQuery } })
+          plausible('File Download', { props: { url: hrefWithoutQuery } })
+          return
         }
-      }
-    }
-
-    function sendLinkClickEvent(event, link, eventAttrs) {
-      var followedLink = false
-
-      function followLink() {
-        if (!followedLink) {
-          followedLink = true
-          window.location = link.href
-        }
-      }
-
-      if (shouldFollowLink(event, link)) {
-        var attrs = { props: eventAttrs.props, callback: followLink }
-        if (COMPILE_REVENUE) {
-          attrs.revenue = eventAttrs.revenue
-        }
-        plausible(eventAttrs.name, attrs)
-        setTimeout(followLink, 5000)
-        event.preventDefault()
-      } else {
-        var attrs = { props: eventAttrs.props }
-        if (COMPILE_REVENUE) {
-          attrs.revenue = eventAttrs.revenue
-        }
-        plausible(eventAttrs.name, attrs)
       }
     }
 
@@ -564,19 +530,7 @@ function init(overrides) {
         var eventAttrs = getTaggedEventAttributes(form)
         if (!eventAttrs.name) { return }
 
-        event.preventDefault()
-        var formSubmitted = false
-
-        function submitForm() {
-          if (!formSubmitted) {
-            formSubmitted = true
-            form.submit()
-          }
-        }
-
-        setTimeout(submitForm, 5000)
-
-        var attrs = { props: eventAttrs.props, callback: submitForm }
+        var attrs = { props: eventAttrs.props }
         if (COMPILE_REVENUE) {
           attrs.revenue = eventAttrs.revenue
         }
@@ -611,19 +565,19 @@ function init(overrides) {
         if (taggedElement) {
           var eventAttrs = getTaggedEventAttributes(taggedElement)
 
+          var attrs = {}
+          attrs.props = eventAttrs.props
+
+          if (COMPILE_REVENUE) {
+            attrs.revenue = eventAttrs.revenue
+          }
+
           if (clickedLink) {
             // if the clicked tagged element is a link, we attach the `url` property
             // automatically for user convenience
             eventAttrs.props.url = clickedLink.href
-            sendLinkClickEvent(event, clickedLink, eventAttrs)
-          } else {
-            var attrs = {}
-            attrs.props = eventAttrs.props
-            if (COMPILE_REVENUE) {
-              attrs.revenue = eventAttrs.revenue
-            }
-            plausible(eventAttrs.name, attrs)
           }
+          plausible(eventAttrs.name, attrs)
         }
       }
 
