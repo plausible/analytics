@@ -55,6 +55,8 @@ defmodule PlausibleWeb.Live.TeamSetup do
   end
 
   def render(assigns) do
+    assigns = assign(assigns, :locked?, Plausible.Teams.Billing.solo?(assigns.current_team))
+
     ~H"""
     <.focus_box padding?={false}>
       <:title>
@@ -71,11 +73,11 @@ defmodule PlausibleWeb.Live.TeamSetup do
         </p>
       </:subtitle>
 
-      <div class="relative pb-8 px-8">
+      <div class="relative -mt-8 pt-4 pb-8 px-8">
         <PlausibleWeb.Components.Billing.feature_gate
           current_role={@current_team_role}
           current_team={@current_team}
-          locked?={Plausible.Teams.Billing.solo?(@current_team)}
+          locked?={@locked?}
         >
           <.form
             :let={f}
@@ -89,7 +91,7 @@ defmodule PlausibleWeb.Live.TeamSetup do
             <.input
               type="text"
               placeholder={"#{@current_user.name}'s Team"}
-              autofocus
+              autofocus={not @locked?}
               field={f[:name]}
               label="Name"
               width="w-full"
