@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-939D6774.js"></script>
+    <script src="dist/sidebar_items-CF7A54CC.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -150,10 +150,48 @@ Pages
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:policy_attr/0" data-no-tooltip translate="no">policy_attr()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
   </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#check_can_remove_integration/1" data-no-tooltip translate="no">check_can_remove_integration(integration)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#check_force_sso/2" data-no-tooltip translate="no">check_force_sso(team, atom)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#deprovision_user!/1" data-no-tooltip translate="no">deprovision_user!(user)</a>
+
+      </div>
+
+    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -181,7 +219,31 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#remove_integration/2" data-no-tooltip translate="no">remove_integration(integration, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#set_force_sso/2" data-no-tooltip translate="no">set_force_sso(team, mode)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#update_integration/2" data-no-tooltip translate="no">update_integration(integration, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_policy/2" data-no-tooltip translate="no">update_policy(team, attrs \\ [])</a>
 
       </div>
 
@@ -192,6 +254,46 @@ Pages
   </section>
 
 
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:policy_attr/0">
+
+  <div class="detail-header">
+    <a href="#t:policy_attr/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">policy_attr()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L14" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> policy_attr() ::
+  {:sso_default_role, <a href="Plausible.Teams.Policy.html#t:sso_member_role/0">Plausible.Teams.Policy.sso_member_role</a>()}
+  | {:sso_session_timeout_minutes, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
   <section id="functions" class="details-list">
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
@@ -200,6 +302,95 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="check_can_remove_integration/1">
+
+  <div class="detail-header">
+    <a href="#check_can_remove_integration/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">check_can_remove_integration(integration)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L142" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> check_can_remove_integration(<a href="Plausible.Auth.SSO.Integration.html#t:t/0">Plausible.Auth.SSO.Integration.t</a>()) ::
+  :ok | {:error, :force_sso_enabled | :sso_users_present}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="check_force_sso/2">
+
+  <div class="detail-header">
+    <a href="#check_force_sso/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">check_force_sso(team, atom)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L131" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> check_force_sso(
+  <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(),
+  <a href="Plausible.Teams.Policy.html#t:force_sso_mode/0">Plausible.Teams.Policy.force_sso_mode</a>()
+) ::
+  :ok
+  | {:error,
+     :no_integration
+     | :no_domain
+     | :no_verified_domain
+     | :owner_mfa_disabled
+     | :no_sso_user}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="deprovision_user!/1">
+
+  <div class="detail-header">
+    <a href="#deprovision_user!/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">deprovision_user!(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L77" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> deprovision_user!(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="get_integration/1">
 
   <div class="detail-header">
@@ -208,7 +399,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">get_integration(identifier)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L15" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L19" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -235,7 +426,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">initiate_saml_integration(team)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L31" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L35" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -262,7 +453,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">provision_user(identity)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L56" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L60" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -285,6 +476,68 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="remove_integration/2">
+
+    <span id="remove_integration/1"></span>
+
+  <div class="detail-header">
+    <a href="#remove_integration/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">remove_integration(integration, opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L159" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_integration(<a href="Plausible.Auth.SSO.Integration.html#t:t/0">Plausible.Auth.SSO.Integration.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  :ok | {:error, :force_sso_enabled | :sso_users_present}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="set_force_sso/2">
+
+  <div class="detail-header">
+    <a href="#set_force_sso/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">set_force_sso(team, mode)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L112" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> set_force_sso(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(), <a href="Plausible.Teams.Policy.html#t:force_sso_mode/0">Plausible.Teams.Policy.force_sso_mode</a>()) ::
+  {:ok, <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()}
+  | {:error,
+     :no_integration
+     | :no_domain
+     | :no_verified_domain
+     | :owner_mfa_disabled
+     | :no_sso_user}</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="update_integration/2">
 
   <div class="detail-header">
@@ -293,7 +546,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">update_integration(integration, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L43" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L47" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -306,6 +559,35 @@ Pages
 
           <pre translate="no"><span class="attribute">@spec</span> update_integration(<a href="Plausible.Auth.SSO.Integration.html#t:t/0">Plausible.Auth.SSO.Integration.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
   {:ok, <a href="Plausible.Auth.SSO.Integration.html#t:t/0">Plausible.Auth.SSO.Integration.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="update_policy/2">
+
+    <span id="update_policy/1"></span>
+
+  <div class="detail-header">
+    <a href="#update_policy/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">update_policy(team, attrs \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso.ex#L94" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> update_policy(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>(), [<a href="#t:policy_attr/0">policy_attr</a>()]) ::
+  {:ok, <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
