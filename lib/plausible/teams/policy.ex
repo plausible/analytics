@@ -8,18 +8,8 @@ defmodule Plausible.Teams.Policy do
   import Ecto.Changeset
 
   @sso_member_roles Plausible.Teams.Membership.roles() -- [:guest]
-  @force_sso_modes [:none, :all_but_owners]
 
   @update_fields [:sso_default_role, :sso_session_timeout_minutes]
-
-  @default_timeout_minutes 6 * 60
-  @max_timeout_minutes 12 * 60
-
-  @type t() :: %__MODULE__{}
-
-  @type sso_member_role() :: unquote(Enum.reduce(@sso_member_roles, &{:|, [], [&1, &2]}))
-
-  @type force_sso_mode() :: unquote(Enum.reduce(@force_sso_modes, &{:|, [], [&1, &2]}))
 
   embedded_schema do
     # SSO options apply to all team's integrations, should there
@@ -38,21 +28,15 @@ defmodule Plausible.Teams.Policy do
 
     # Default session timeout for SSO-enabled accounts. We might also
     # consider accepting session timeout from assertion, if present.
-    field :sso_session_timeout_minutes, :integer, default: @default_timeout_minutes
+    field :sso_session_timeout_minutes, :integer, default: 360
   end
 
-  @spec update_changeset(t(), map()) :: Ecto.Changeset.t()
   def update_changeset(policy, params) do
     policy
     |> cast(params, @update_fields)
     |> validate_required(@update_fields)
-    |> validate_number(:sso_session_timeout_minutes,
-      greater_than: 0,
-      less_than: @max_timeout_minutes
-    )
   end
 
-  @spec force_sso_changeset(t(), force_sso_mode()) :: Ecto.Changeset.t()
   def force_sso_changeset(policy, mode) do
     policy
     |> cast(%{force_sso: mode}, [:force_sso])

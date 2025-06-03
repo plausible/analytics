@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Plugs.UserSessionTouch do
 
   import Plug.Conn
 
-  alias Plausible.Auth
+  alias PlausibleWeb.UserAuth
 
   def init(opts \\ []) do
     opts
@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Plugs.UserSessionTouch do
       assign(
         conn,
         :current_user_session,
-        Auth.UserSessions.touch(user_session)
+        UserAuth.touch_user_session(user_session)
       )
     else
       conn

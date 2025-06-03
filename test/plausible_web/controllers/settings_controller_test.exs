@@ -603,7 +603,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       another_session =
         user
-        |> Auth.UserSession.new_session("Some Device", now: seventy_minutes_ago)
+        |> Auth.UserSession.new_session("Some Device", seventy_minutes_ago)
         |> Repo.insert!()
 
       conn = get(conn, Routes.settings_path(conn, :security))

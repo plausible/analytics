@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
 
   alias Plausible.Auth
   alias Plausible.Repo
+  alias PlausibleWeb.UserAuth
 
   def mount(_params, %{"email" => email}, socket) do
     socket =
@@ -93,7 +94,7 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
 
     case result do
       {:ok, user} ->
-        Auth.UserSessions.revoke_all(user)
+        UserAuth.revoke_all_user_sessions(user)
         {:noreply, assign(socket, trigger_submit: true)}
 
       {:error, changeset} ->

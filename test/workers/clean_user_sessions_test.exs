@@ -28,7 +28,7 @@ defmodule Plausible.Workers.CleanUserSessionsTest do
     user = insert(:user)
 
     user
-    |> UserSession.new_session("Unknown", now: now)
+    |> UserSession.new_session("Unknown", now)
     |> Repo.insert!()
   end
 end

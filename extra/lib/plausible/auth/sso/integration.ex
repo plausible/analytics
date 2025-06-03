@@ -31,7 +31,6 @@ defmodule Plausible.Auth.SSO.Integration do
 
     belongs_to :team, Plausible.Teams.Team
     has_many :users, Plausible.Auth.User, foreign_key: :sso_integration_id
-    has_many :sso_domains, SSO.Domain, foreign_key: :sso_integration_id
 
     timestamps()
   end

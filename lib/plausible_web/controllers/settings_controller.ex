@@ -3,6 +3,7 @@ defmodule PlausibleWeb.SettingsController do
   use Plausible.Repo
 
   alias Plausible.Auth
+  alias PlausibleWeb.UserAuth
   alias Plausible.Teams
 
   require Logger
@@ -292,7 +293,7 @@ defmodule PlausibleWeb.SettingsController do
 
     with :ok <- Auth.rate_limit(:password_change_user, user),
          {:ok, user} <- do_update_password(user, params) do
-      Auth.UserSessions.revoke_all(user, except: user_session)
+      UserAuth.revoke_all_user_sessions(user, except: user_session)
 
       conn
       |> put_flash(:success, "Your password is now changed")
@@ -341,7 +342,7 @@ defmodule PlausibleWeb.SettingsController do
   def delete_session(conn, %{"id" => session_id}) do
     current_user = conn.assigns.current_user
 
-    :ok = Auth.UserSessions.revoke_by_id(current_user, session_id)
+    :ok = UserAuth.revoke_user_session(current_user, session_id)
 
     conn
     |> put_flash(:success, "Session logged out successfully")
