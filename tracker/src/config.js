@@ -3,7 +3,7 @@ var document = window.document
 
 if (COMPILE_COMPAT) {
   var scriptEl = document.getElementById('plausible')
-} else {
+} else if (COMPILE_PLAUSIBLE_LEGACY_VARIANT) {
   var scriptEl = document.currentScript
 }
 
@@ -45,6 +45,7 @@ export function init(overrides) {
     })
     config.isInitialized = true
   } else {
+    // Legacy variant
     config.endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint()
     config.domain = scriptEl.getAttribute('data-domain')
   }
