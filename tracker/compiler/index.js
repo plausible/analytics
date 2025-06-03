@@ -1,5 +1,3 @@
-import { minifySync as swcMinify } from '@swc/core'
-import { rollup } from 'rollup'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -8,6 +6,7 @@ import { canSkipCompile } from './can-skip-compile.js'
 import packageJson from '../package.json' with { type: 'json' }
 import progress from 'cli-progress'
 import { spawn, Worker, Pool } from "threads"
+import * as esbuild from 'esbuild'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -34,7 +33,7 @@ export async function compileAll(options = {}) {
   }
 
   const variants = getVariantsToCompile(options)
-  const bundledCode = await bundleCode()
+  // const bundledCode = await bundleCode()
 
   const startTime = Date.now();
   console.log(`Starting compilation of ${variants.length} variants...`)
@@ -45,7 +44,7 @@ export async function compileAll(options = {}) {
   const workerPool = Pool(() => spawn(new Worker('./worker-thread.js')))
   variants.forEach(variant => {
     workerPool.queue(async (worker) => {
-      await worker.compileFile(variant, { ...options, bundledCode })
+      await worker.compileFile(variant, { ...options })
       bar.increment()
     })
   })
@@ -58,20 +57,14 @@ export async function compileAll(options = {}) {
 }
 
 export async function compileFile(variant, options) {
-  const wrappedCode = wrapInstantlyEvaluatingFunction(options.bundledCode || await bundleCode())
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
-
-  const code = minify(wrappedCode, globals)
+  const code = await bundleCode({globals})
 
   if (options.returnCode) {
     return code
   } else {
     fs.writeFileSync(relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`), code)
   }
-}
-
-function wrapInstantlyEvaluatingFunction(baseCode) {
-  return `(function(){${baseCode}})()`
 }
 
 export function compileWebSnippet() {
@@ -100,31 +93,20 @@ function getVariantsToCompile(options) {
   return targetVariants
 }
 
-async function bundleCode() {
-  const bundle = await rollup({
-    input: 'src/plausible.js',
-  })
+async function bundleCode({globals} = {}) {
+  let result = await esbuild.build({
+  entryPoints: ['src/plausible.js'],
+  format: 'iife',
+  bundle: true,
+  minify: true,
+  sourcemap: 'external',
+  write: false,
+  outdir: 'out',
+  define: Object.fromEntries(Object.entries(globals).map(([key, value]) => [key, JSON.stringify(value)])),
+})
 
-  const { output } = await bundle.generate({
-    format: 'esm',
-  })
-
-  return output[0].code
-}
-
-function minify(baseCode, globals) {
-  const result = swcMinify(baseCode, {
-    compress: {
-      global_defs: globals,
-      passes: 4
-    }
-  })
-
-  if (result.code) {
-    return result.code
-  } else {
-    throw result.error
-  }
+  const output = result.outputFiles[1].text
+  return output
 }
 
 function equalLists(a, b) {
