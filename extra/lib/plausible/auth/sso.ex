@@ -59,14 +59,14 @@ defmodule Plausible.Auth.SSO do
           | {:error, :multiple_memberships, Teams.Team.t(), Auth.User.t()}
   def provision_user(identity) do
     case find_user(identity) do
-      {:ok, :standard, user, integration} ->
-        provision_standard_user(user, identity, integration)
+      {:ok, :standard, user, integration, domain} ->
+        provision_standard_user(user, identity, integration, domain)
 
-      {:ok, :sso, user, integration} ->
-        provision_sso_user(user, identity, integration)
+      {:ok, :sso, user, integration, domain} ->
+        provision_sso_user(user, identity, integration, domain)
 
-      {:ok, :integration, integration} ->
-        provision_identity(identity, integration)
+      {:ok, :integration, _, integration, domain} ->
+        provision_identity(identity, integration, domain)
 
       {:error, :not_found} ->
         {:error, :integration_not_found}
@@ -77,7 +77,7 @@ defmodule Plausible.Auth.SSO do
   def deprovision_user!(%{type: :standard} = user), do: user
 
   def deprovision_user!(user) do
-    user = Repo.preload(user, :sso_integration)
+    user = Repo.preload(user, [:sso_integration, :sso_domain])
 
     :ok = Auth.UserSessions.revoke_all(user)
 
@@ -86,6 +86,7 @@ defmodule Plausible.Auth.SSO do
     |> Ecto.Changeset.put_change(:type, :standard)
     |> Ecto.Changeset.put_change(:sso_identity_id, nil)
     |> Ecto.Changeset.put_assoc(:sso_integration, nil)
+    |> Ecto.Changeset.put_assoc(:sso_domain, nil)
     |> Repo.update!()
   end
 
@@ -268,25 +269,28 @@ defmodule Plausible.Auth.SSO do
 
   defp find_user(identity) do
     case find_user_with_fallback(identity) do
-      {:ok, type, user, integration} ->
-        {:ok, type, Repo.preload(user, :sso_integration), integration}
+      {:ok, type, user, integration, domain} ->
+        {:ok, type, Repo.preload(user, [:sso_integration, :sso_domain]), integration, domain}
 
-      error ->
+      {:error, _} = error ->
         error
     end
   end
 
   defp find_user_with_fallback(identity) do
-    with {:error, :not_found} <- find_by_identity(identity.id) do
+    with {:error, :not_found} <- find_by_identity(identity) do
       find_by_email(identity.email)
     end
   end
 
-  defp find_by_identity(id) do
-    if user = Repo.get_by(Auth.User, sso_identity_id: id) do
-      user = Repo.preload(user, sso_integration: :team)
+  defp find_by_identity(identity) do
+    if user = Repo.get_by(Auth.User, sso_identity_id: identity.id, type: :sso) do
+      with {:ok, sso_domain} <- SSO.Domains.lookup(identity.email),
+           :ok <- check_domain_integration_match(sso_domain, user) do
+        user = Repo.preload(user, sso_integration: :team)
 
-      {:ok, user.type, user, user.sso_integration}
+        {:ok, user.type, user, user.sso_integration, sso_domain}
+      end
     else
       {:error, :not_found}
     end
@@ -296,10 +300,10 @@ defmodule Plausible.Auth.SSO do
     with {:ok, sso_domain} <- SSO.Domains.lookup(email) do
       case find_by_email(sso_domain.sso_integration.team, email) do
         {:ok, user} ->
-          {:ok, user.type, user, sso_domain.sso_integration}
+          {:ok, user.type, user, sso_domain.sso_integration, sso_domain}
 
         {:error, :not_found} ->
-          {:ok, :integration, sso_domain.sso_integration}
+          {:ok, :integration, nil, sso_domain.sso_integration, sso_domain}
       end
     end
   end
@@ -323,7 +327,15 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp provision_sso_user(user, identity, integration) do
+  defp check_domain_integration_match(sso_domain, user) do
+    if sso_domain.sso_integration_id == user.sso_integration_id do
+      :ok
+    else
+      {:error, :not_found}
+    end
+  end
+
+  defp provision_sso_user(user, identity, integration, domain) do
     changeset =
       user
       |> change()
@@ -331,13 +343,14 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:name, identity.name)
       |> put_change(:sso_identity_id, identity.id)
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
+      |> put_assoc(:sso_domain, domain)
 
     with {:ok, user} <- Repo.update(changeset) do
       {:ok, :sso, integration.team, user}
     end
   end
 
-  defp provision_standard_user(user, identity, integration) do
+  defp provision_standard_user(user, identity, integration, domain) do
     changeset =
       user
       |> change()
@@ -346,6 +359,7 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:sso_identity_id, identity.id)
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
       |> put_assoc(:sso_integration, integration)
+      |> put_assoc(:sso_domain, domain)
 
     with :ok <- ensure_team_member(integration.team, user),
          :ok <- ensure_one_membership(user, integration.team),
@@ -355,7 +369,7 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
-  defp provision_identity(identity, integration) do
+  defp provision_identity(identity, integration, domain) do
     random_password =
       64
       |> :crypto.strong_rand_bytes()
@@ -375,6 +389,7 @@ defmodule Plausible.Auth.SSO do
       |> put_change(:sso_identity_id, identity.id)
       |> put_change(:last_sso_login, NaiveDateTime.utc_now(:second))
       |> put_assoc(:sso_integration, integration)
+      |> put_assoc(:sso_domain, domain)
 
     team = integration.team
     role = integration.team.policy.sso_default_role
