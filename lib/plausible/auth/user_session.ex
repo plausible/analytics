@@ -29,19 +29,11 @@ defmodule Plausible.Auth.UserSession do
   @spec timeout_duration() :: Duration.t()
   def timeout_duration(), do: @timeout
 
-  @spec new_session(Auth.User.t(), String.t(), NaiveDateTime.t()) :: Ecto.Changeset.t()
-  def new_session(user, device, now \\ NaiveDateTime.utc_now(:second)) do
-    %__MODULE__{}
-    |> cast(%{device: device}, [:device])
-    |> generate_token()
-    |> put_assoc(:user, user)
-    |> put_change(:timeout_at, NaiveDateTime.shift(now, @timeout))
-    |> touch_session(now)
-  end
+  @spec new_session(Auth.User.t(), String.t(), Keyword.t()) :: Ecto.Changeset.t()
+  def new_session(user, device, opts \\ []) do
+    now = Keyword.get(opts, :now, NaiveDateTime.utc_now(:second))
+    timeout_at = Keyword.get(opts, :timeout_at, NaiveDateTime.shift(now, @timeout))
 
-  @spec new_sso_session(Auth.User.t(), String.t(), NaiveDateTime.t(), NaiveDateTime.t()) ::
-          Ecto.Changeset.t()
-  def new_sso_session(user, device, timeout_at, now \\ NaiveDateTime.utc_now(:second)) do
     %__MODULE__{}
     |> cast(%{device: device}, [:device])
     |> generate_token()
