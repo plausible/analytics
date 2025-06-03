@@ -63,8 +63,10 @@ export async function compileAll(options = {}) {
 export async function compileFile(variant, options) {
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
   const bundledCode = options.bundledCode || await bundleCode()
-  const minifiedCode = minify(bundledCode, globals, variant)
-  const code = wrapCode(minifiedCode, variant)
+
+  const preCode = wrapCode('pre', bundledCode, variant)
+  const minifiedCode = minify(preCode, globals, variant)
+  const code = wrapCode('post', minifiedCode, variant)
 
   if (options.returnCode) {
     return code
@@ -73,14 +75,17 @@ export async function compileFile(variant, options) {
   }
 }
 
-function wrapCode(bundledCode, variant) {
-  switch (variant.npm_package) {
-    case 'esm':
-      return `${bundledCode}\nexport { init, track }`
-    default:
-      // Legacy variants wrap in an immediately-evaluating function
-      return `(function(){${bundledCode}})()`
+// Wraps code. NPM package variants need to export init and track functions after minification,
+// while legacy variants need to wrap in an immediately-evaluating function before minification.
+function wrapCode(type, code, variant) {
+  if (type === 'pre' && !variant.npm_package) {
+    return `(function(){${code}})()`
   }
+  if (type === 'post' && variant.npm_package) {
+    return `${code}\nexport { init, track }`
+  }
+
+  return code
 }
 
 export function compileWebSnippet() {
