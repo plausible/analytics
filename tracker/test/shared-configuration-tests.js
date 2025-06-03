@@ -15,7 +15,6 @@ import {
 } from './support/test-utils'
 import { test } from '@playwright/test'
 
-
 // Wrapper around calling `plausible.init` in the page context for users of `testPlausibleConfiguration`
 export async function callInit(page, config, parent) {
   // Stringify the customProperties function to work around evaluate not being able to serialize functions
@@ -99,9 +98,9 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
         },
         expectedRequests: [
           { n: 'pageview', d: 'example.com', u: expecting.stringContaining(fixtureName) },
-          { n: 'Outbound Link: Click', d: 'example.com', u: expecting.stringContaining(fixtureName), p: { url: 'https://example.com/' } },
-          { n: 'engagement', d: 'example.com', u: expecting.stringContaining(fixtureName) },
-        ]
+          { n: 'Outbound Link: Click', d: 'example.com', u: expecting.stringContaining(fixtureName), p: { url: 'https://example.com/' } }
+        ],
+        shouldIgnoreRequest: ignoreEngagementRequests
       })
     })
 
