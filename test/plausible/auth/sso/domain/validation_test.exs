@@ -6,7 +6,10 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
 
   on_ee do
     use Plausible.Teams.Test
+
+    alias Plasusible.Test.Support.DNSServer
     alias Plausible.Auth.SSO.Domain.Validation
+    alias Plug.Conn
 
     setup do
       team = new_site().team
@@ -17,8 +20,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
 
     describe "individual checks" do
       test "dns_txt" do
-        {:ok, port} =
-          Plasusible.Test.Support.DNSServer.start("plausible-sso-verification=ex4mpl3")
+        {:ok, port} = DNSServer.start("plausible-sso-verification=ex4mpl3")
 
         refute Validation.dns_txt("example.com", "failing-identifier",
                  nameservers: [{{0, 0, 0, 0}, port}]
@@ -29,7 +31,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
 
       test "url", %{bypass: bypass} do
         Bypass.expect(bypass, "GET", "/test", fn conn ->
-          Plug.Conn.resp(conn, 200, "ex4mpl3")
+          Conn.resp(conn, 200, "ex4mpl3")
         end)
 
         refute Validation.url("example.com", "failing-identifier",
@@ -44,8 +46,8 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
       test "meta_tag", %{bypass: bypass} do
         Bypass.expect(bypass, "GET", "/test", fn conn ->
           conn
-          |> Plug.Conn.put_resp_header("content-type", "text/html")
-          |> Plug.Conn.resp(200, """
+          |> Conn.put_resp_header("content-type", "text/html")
+          |> Conn.resp(200, """
             <html>
             <meta name="plausible-sso-verification" content="ex4mpl3"/>
             </html>
@@ -63,8 +65,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
 
       test "meta-tag fails on non-html", %{bypass: bypass} do
         Bypass.expect_once(bypass, "GET", "/test", fn conn ->
-          conn
-          |> Plug.Conn.resp(200, """
+          Conn.resp(conn, 200, """
           <html>
           <meta name="plausible-sso-verification" content="ex4mpl3"/>
           </html>
@@ -79,8 +80,8 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
       test "meta-tag fails on parse failure", %{bypass: bypass} do
         Bypass.expect_once(bypass, "GET", "/test", fn conn ->
           conn
-          |> Plug.Conn.put_resp_header("content-type", "text/html")
-          |> Plug.Conn.resp(200, """
+          |> Conn.put_resp_header("content-type", "text/html")
+          |> Conn.resp(200, """
           meta name="plausible-sso-verification" content="ex4mpl3
           """)
         end)
@@ -93,8 +94,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
 
     describe "all methods" do
       test "DNS matches, no HTTP endpoint is ever called", %{bypass: bypass} do
-        {:ok, dns_port} =
-          Plasusible.Test.Support.DNSServer.start("plausible-sso-verification=ex4mpl3")
+        {:ok, dns_port} = DNSServer.start("plausible-sso-verification=ex4mpl3")
 
         Bypass.stub(bypass, "GET", "/", fn _conn -> raise "should never be called" end)
 
@@ -106,7 +106,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
 
       test "DNS fails to match, url check succeeds", %{bypass: bypass} do
         Bypass.expect_once(bypass, "GET", "/", fn conn ->
-          Plug.Conn.resp(conn, 200, "ex4mpl3")
+          Conn.resp(conn, 200, "ex4mpl3")
         end)
 
         Validation.run("example.com", "ex4mpl3", url_override: "http://localhost:#{bypass.port}/")
@@ -115,12 +115,11 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
       test "DNS and url checks fail to match, meta tag check succeeds", %{bypass: bypass} do
         Bypass.expect(bypass, "GET", "/", fn conn ->
           conn
-          |> Plug.Conn.put_resp_header("content-type", "text/html")
-          |> Plug.Conn.resp(200, """
-                      <html>
-                      <meta name="plausible-sso-verification" content="ex4mpl3"/>
-                      </html>
-          """)
+          |> Conn.put_resp_header("content-type", "text/html")
+          |> Conn.resp(
+            200,
+            "<html><meta name=\"plausible-sso-verification\" content=\"ex4mpl3\"/></html>"
+          )
         end)
 
         Validation.run("example.com", "ex4mpl3", url_override: "http://localhost:#{bypass.port}/")
