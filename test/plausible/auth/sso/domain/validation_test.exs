@@ -109,7 +109,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
           Conn.resp(conn, 200, "ex4mpl3")
         end)
 
-        Validation.run("example.com", "ex4mpl3", url_override: "http://localhost:#{bypass.port}/")
+        assert {:ok, :url} = Validation.run("example.com", "ex4mpl3", url_override: "http://localhost:#{bypass.port}/")
       end
 
       test "DNS and url checks fail to match, meta tag check succeeds", %{bypass: bypass} do
