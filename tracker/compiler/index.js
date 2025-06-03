@@ -1,4 +1,3 @@
-import { minifySync as swcMinify } from '@swc/core'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -7,6 +6,7 @@ import { canSkipCompile } from './can-skip-compile.js'
 import packageJson from '../package.json' with { type: 'json' }
 import progress from 'cli-progress'
 import { spawn, Worker, Pool } from "threads"
+import * as esbuild from 'esbuild'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -33,7 +33,7 @@ export async function compileAll(options = {}) {
   }
 
   const variants = getVariantsToCompile(options)
-  const baseCode = getCode()
+  // const bundledCode = await bundleCode()
 
   const startTime = Date.now();
   console.log(`Starting compilation of ${variants.length} variants...`)
@@ -44,7 +44,7 @@ export async function compileAll(options = {}) {
   const workerPool = Pool(() => spawn(new Worker('./worker-thread.js')))
   variants.forEach(variant => {
     workerPool.queue(async (worker) => {
-      await worker.compileFile(variant, { ...options, baseCode })
+      await worker.compileFile(variant, { ...options })
       bar.increment()
     })
   })
@@ -56,11 +56,9 @@ export async function compileAll(options = {}) {
   console.log(`Completed compilation of ${variants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
 }
 
-export function compileFile(variant, options) {
-  const baseCode = options.baseCode || getCode()
+export async function compileFile(variant, options) {
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
-
-  const code = minify(baseCode, globals)
+  const code = await bundleCode({globals})
 
   if (options.returnCode) {
     return code
@@ -95,24 +93,20 @@ function getVariantsToCompile(options) {
   return targetVariants
 }
 
-function getCode() {
-  // Wrap the code in an instantly evaluating function
-  return `(function(){${fs.readFileSync(relPath('../src/plausible.js')).toString()}})()`
-}
+async function bundleCode({globals} = {}) {
+  let result = await esbuild.build({
+  entryPoints: ['src/plausible.js'],
+  format: 'iife',
+  bundle: true,
+  minify: true,
+  sourcemap: 'external',
+  write: false,
+  outdir: 'out',
+  define: Object.fromEntries(Object.entries(globals).map(([key, value]) => [key, JSON.stringify(value)])),
+})
 
-function minify(baseCode, globals) {
-  const result = swcMinify(baseCode, {
-    compress: {
-      global_defs: globals,
-      passes: 4
-    }
-  })
-
-  if (result.code) {
-    return result.code
-  } else {
-    throw result.error
-  }
+  const output = result.outputFiles[1].text
+  return output
 }
 
 function equalLists(a, b) {
