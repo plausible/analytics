@@ -9,6 +9,7 @@ Mix.Tasks.GenerateReferrerFavicons.html
 Mix.Tasks.PullSandboxSubscription.html
 Mix.Tasks.SendPageview.html
 ObanErrorReporter.html
+Plasusible.Test.Support.DNSServer.html
 Plausible.AssertMatches.html
 Plausible.AsyncInsertRepo.html
 Plausible.Auth.ApiKey.html
@@ -16,6 +17,7 @@ Plausible.Auth.ApiKeyAdmin.html
 Plausible.Auth.EmailActivationCode.html
 Plausible.Auth.EmailVerification.html
 Plausible.Auth.Password.html
+Plausible.Auth.SSO.Domain.Validation.html
 Plausible.Auth.SSO.Domain.html
 Plausible.Auth.SSO.Domains.html
 Plausible.Auth.SSO.Identity.html
@@ -504,8 +506,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-E5881098.js
-dist/sidebar_items-4A97629E.js
+dist/search_data-979635B3.js
+dist/sidebar_items-9B63916F.js
 index.html
 readme.html
 search.html
