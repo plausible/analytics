@@ -12,6 +12,8 @@ defmodule Plausible.Repo.Migrations.AdjustUsersSsoConstraints do
           from: references(:sso_integrations, on_delete: :nilify_all),
           null: true
       end
+
+      create index(:users, [:sso_domain_id])
     end
   end
 end
