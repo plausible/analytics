@@ -122,7 +122,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
           )
         end)
 
-        Validation.run("example.com", "ex4mpl3", url_override: "http://localhost:#{bypass.port}/")
+        assert {:ok, :meta_tag} = Validation.run("example.com", "ex4mpl3", url_override: "http://localhost:#{bypass.port}/")
       end
     end
   end
