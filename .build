@@ -39,6 +39,7 @@ Plausible.Billing.Ecto.FeatureList.html
 Plausible.Billing.Ecto.Limit.html
 Plausible.Billing.EnterprisePlan.html
 Plausible.Billing.EnterprisePlanAdmin.html
+Plausible.Billing.Feature.Teams.html
 Plausible.Billing.Feature.html
 Plausible.Billing.PaddleApi.html
 Plausible.Billing.Plans.html
@@ -503,8 +504,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-CD27FF6C.js
-dist/sidebar_items-F2E98F02.js
+dist/search_data-B6D4AA21.js
+dist/sidebar_items-4A97629E.js
 index.html
 readme.html
 search.html
