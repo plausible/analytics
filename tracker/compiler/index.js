@@ -135,10 +135,6 @@ function minify(code, globals, variant = {}) {
 
   const result = minifySync(code, minifyOptions)
 
-  return readOutput(result)
-}
-
-function readOutput(result) {
   if (result.code) {
     return result.code
   } else {
