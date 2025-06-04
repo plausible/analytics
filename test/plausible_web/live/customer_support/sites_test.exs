@@ -31,6 +31,14 @@ defmodule PlausibleWeb.Live.CustomerSupport.SitesTest do
       test "renders", %{conn: conn, site: site} do
         {:ok, _lv, html} = live(conn, open_site(site.id))
         assert text(html) =~ site.domain
+        assert element_exists?(html, ~s|a[href^="https://plausible.grafana.net"]|)
+
+        assert element_exists?(
+                 html,
+                 ~s|a[href$="#{URI.encode_www_form(site.domain)}/settings/general"]|
+               )
+
+        assert element_exists?(html, ~s|a[href$="#{URI.encode_www_form(site.domain)}/"]|)
       end
 
       test "404", %{conn: conn} do

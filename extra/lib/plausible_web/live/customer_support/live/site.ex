@@ -118,6 +118,31 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
         phx-submit="save-site"
         class="mt-8"
       >
+        <div class="flex justify-center items-center gap-x-8 pb-8 mb-8 border-b border-gray-200 dark:border-gray-700 w-full text-sm text-center">
+          <span>Quick links:</span>
+
+          <.styled_link
+            new_tab={true}
+            href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
+          >
+            Dashboard
+          </.styled_link>
+
+          <.styled_link
+            new_tab={true}
+            href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain, [])}
+          >
+            Settings
+          </.styled_link>
+
+          <.styled_link
+            new_tab={true}
+            href={"https://plausible.grafana.net/d/BClBG5b4k/ingest-counters-per-domain?orgId=1&from=now-24h&to=now&timezone=browser&var-domain=#{@site.domain}&refresh=10s"}
+          >
+            Ingest Overview
+          </.styled_link>
+        </div>
+
         <.input
           type="select"
           field={f[:timezone]}
