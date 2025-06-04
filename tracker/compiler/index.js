@@ -62,11 +62,17 @@ export async function compileAll(options = {}) {
 
 export async function compileFile(variant, options) {
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
-  const bundledCode = options.bundledCode || await bundleCode()
+  let code = options.bundledCode || await bundleCode()
 
-  const preCode = wrapCode('pre', bundledCode, variant)
-  const minifiedCode = minify(preCode, globals, variant)
-  const code = wrapCode('post', minifiedCode, variant)
+  if (!variant.npm_package) {
+    code = wrapInstantlyEvaluatingFunction(code)
+  }
+
+  code = minify(code, globals, variant)
+
+  if (variant.npm_package) {
+    code = addExports(code)
+  }
 
   if (options.returnCode) {
     return code
@@ -75,17 +81,13 @@ export async function compileFile(variant, options) {
   }
 }
 
-// Wraps code. NPM package variants need to export init and track functions after minification,
-// while legacy variants need to wrap in an immediately-evaluating function before minification.
-function wrapCode(type, code, variant) {
-  if (type === 'pre' && !variant.npm_package) {
-    return `(function(){${code}})()`
-  }
-  if (type === 'post' && variant.npm_package) {
-    return `${code}\nexport { init, track }`
-  }
+function wrapInstantlyEvaluatingFunction(baseCode) {
+  return `(function(){${baseCode}})()`
+}
 
-  return code
+// Works around minification limitation of swc not allowing exports
+function addExports(code) {
+  return `${code}\nexport { init, track }`
 }
 
 export function compileWebSnippet() {
