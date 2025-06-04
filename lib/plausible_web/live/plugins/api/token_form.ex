@@ -84,10 +84,10 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
           </div>
 
           <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
-            Once created, we will not be able to show the Plugin Token again.
-            Please copy the Plugin Token now and store it in a secure place.
+            Please copy the token and store it in a secure place as it won’t be shown again. 
+            Then click the "**Add Plugin Token**" button to confirm.
             <span :if={@token_description == "WordPress"}>
-              You'll need to paste it in the settings area of the Plausible WordPress plugin.
+              You'll need to paste the token in the settings area of the Plausible WordPress plugin.
             </span>
           </p>
           <.button type="submit" class="w-full">
