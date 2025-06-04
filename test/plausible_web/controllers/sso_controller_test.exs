@@ -122,7 +122,7 @@ defmodule PlausibleWeb.SSOControllerTest do
         domain: domain,
         integration: integration
       } do
-        email = "dana@" <> domain
+        email = "dana.lake@" <> domain
 
         conn =
           post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), %{
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.SSOControllerTest do
 
         assert user.type == :sso
         assert user.email == email
-        assert user.name == "Some SSO Person"
+        assert user.name == "Dana Lake"
         assert get_session(conn, :user_token) == sso_session.token
       end
 
