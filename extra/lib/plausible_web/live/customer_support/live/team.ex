@@ -147,7 +147,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               </.styled_link>
             </span>
 
-            <span :if={not Teams.locked?(@team)} class="flex items-center">
+            <span :if={not Teams.locked?(@team)} class="flex items-center font-xs">
               <Heroicons.lock_open class="inline stroke-2 w-4 h-4 text-gray-800 mr-2" />
               <.styled_link id="lock-dashboards" phx-click="lock" phx-target={@myself}>
                 Lock Dashboards
