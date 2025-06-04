@@ -277,6 +277,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         assert sso_user.type == :standard
         refute sso_user.sso_identity_id
         refute sso_user.sso_integration_id
+        refute sso_user.sso_domain_id
       end
 
       test "fails to remove when force SSO enabled with SSO users only on that domain", %{
