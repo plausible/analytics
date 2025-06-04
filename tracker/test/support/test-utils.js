@@ -105,7 +105,8 @@ export const expectPlausibleInAction = async function (page, {
   const refutedBodySubsetsErrorMessage = `The following requests were made, but were not expected:\n\n${JSON.stringify(refutedButFoundRequestBodies, null, 4)}`
   expect(refutedButFoundRequestBodies, refutedBodySubsetsErrorMessage).toHaveLength(0)
 
-  expect(requestBodies.length).toBe(requestsToExpect)
+  const unexpectedRequestBodiesErrorMessage = `Expected ${requestsToExpect} requests, but received ${requestBodies.length}:\n\n${JSON.stringify(requestBodies, null, 4)}`
+  expect(requestBodies.length, unexpectedRequestBodiesErrorMessage).toBe(requestsToExpect)
 
   return requestBodies
 }
