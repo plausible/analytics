@@ -191,7 +191,10 @@ test.describe('plausible-web.js', () => {
   test('autoCapturePageviews=false mode does not track pageviews', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await openPage(page, { autoCapturePageviews: false })
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ autoCapturePageviews: false })
+        })
         await hideAndShowCurrentTab(page, { delay: 200 })
       },
       expectedRequests: [],
@@ -202,7 +205,10 @@ test.describe('plausible-web.js', () => {
   test('autoCapturePageviews=false mode after manual pageview continues tracking', async ({ page }) => {
     await expectPlausibleInAction(page, {
       action: async () => {
-        await openPage(page, { autoCapturePageviews: false })
+        await openPage(page, {}, { skipPlausibleInit: true })
+        await page.evaluate(() => {
+          plausible.init({ autoCapturePageviews: false })
+        })
         await page.click('#manual-pageview')
         await hideAndShowCurrentTab(page, { delay: 200 })
       },

@@ -1,4 +1,5 @@
 import { minifySync as swcMinify } from '@swc/core'
+import { rollup } from 'rollup'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -33,7 +34,7 @@ export async function compileAll(options = {}) {
   }
 
   const variants = getVariantsToCompile(options)
-  const baseCode = getCode()
+  const bundledCode = await bundleCode()
 
   const startTime = Date.now();
   console.log(`Starting compilation of ${variants.length} variants...`)
@@ -44,7 +45,7 @@ export async function compileAll(options = {}) {
   const workerPool = Pool(() => spawn(new Worker('./worker-thread.js')))
   variants.forEach(variant => {
     workerPool.queue(async (worker) => {
-      await worker.compileFile(variant, { ...options, baseCode })
+      await worker.compileFile(variant, { ...options, bundledCode })
       bar.increment()
     })
   })
@@ -56,17 +57,21 @@ export async function compileAll(options = {}) {
   console.log(`Completed compilation of ${variants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
 }
 
-export function compileFile(variant, options) {
-  const baseCode = options.baseCode || getCode()
+export async function compileFile(variant, options) {
+  const wrappedCode = wrapInstantlyEvaluatingFunction(options.bundledCode || await bundleCode())
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
 
-  const code = minify(baseCode, globals)
+  const code = minify(wrappedCode, globals)
 
   if (options.returnCode) {
     return code
   } else {
     fs.writeFileSync(relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`), code)
   }
+}
+
+function wrapInstantlyEvaluatingFunction(baseCode) {
+  return `(function(){${baseCode}})()`
 }
 
 export function compileWebSnippet() {
@@ -95,9 +100,16 @@ function getVariantsToCompile(options) {
   return targetVariants
 }
 
-function getCode() {
-  // Wrap the code in an instantly evaluating function
-  return `(function(){${fs.readFileSync(relPath('../src/plausible.js')).toString()}})()`
+async function bundleCode() {
+  const bundle = await rollup({
+    input: 'src/plausible.js',
+  })
+
+  const { output } = await bundle.generate({
+    format: 'esm',
+  })
+
+  return output[0].code
 }
 
 function minify(baseCode, globals) {
