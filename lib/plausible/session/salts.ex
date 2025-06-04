@@ -59,7 +59,7 @@ defmodule Plausible.Session.Salts do
         previous: current
       }
 
-    log_state("rotate", state)
+    log_state("after rotate", state)
     true = :ets.insert(name, {:state, state})
     {:reply, :ok, name}
   end
@@ -72,6 +72,7 @@ defmodule Plausible.Session.Salts do
 
   defp generate_and_persist_new_salt(now) do
     salt = :crypto.strong_rand_bytes(16)
+    Logger.warning("[salts] generated #{:erlang.phash2(salt)}")
     Repo.insert_all("salts", [%{salt: salt, inserted_at: now}])
     salt
   end
