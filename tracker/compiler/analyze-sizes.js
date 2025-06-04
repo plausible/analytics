@@ -44,6 +44,7 @@ const { values } = parseArgs({
 const { currentSuffix, baselineSuffix } = values
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const TRACKER_FILES_DIR = path.join(__dirname, "../../priv/tracker/js/")
+const NPM_PACKAGE_FILES_DIR = path.join(__dirname, "../npm_package")
 
 const HEADER = ['', 'Brotli', 'Gzip', 'Uncompressed']
 
@@ -229,21 +230,34 @@ function addSign(value) {
 }
 
 function readPlausibleScriptSizes() {
-  const files = fs.readdirSync(TRACKER_FILES_DIR).filter((filename) =>
-    !['.gitkeep', 'p.js'].includes(filename) && (filename.includes(currentSuffix) || filename.includes(baselineSuffix))
-  )
+  const trackerFileSizes = fs.readdirSync(TRACKER_FILES_DIR)
+    .filter(isRelevantFile)
+    .map((filename) => readFileSize(filename, TRACKER_FILES_DIR))
 
-  return files.map((filename) => {
-    const filePath = path.join(TRACKER_FILES_DIR, filename)
-    const [_, variant, suffix] = /(.*)[.]js(.*)/.exec(filename)
-    return {
-      variant: `${variant}.js`,
-      suffix,
-      uncompressed: fs.statSync(filePath).size,
-      gzip: execSync(`gzip -c -9 "${filePath}"`).length,
-      brotli: execSync(`brotli -c -q 11 "${filePath}"`).length
-    }
-  })
+  const npmPackageFileSizes = fs.readdirSync(NPM_PACKAGE_FILES_DIR)
+    .filter(isRelevantFile)
+    .map((filename) => readFileSize(filename, NPM_PACKAGE_FILES_DIR))
+
+  return trackerFileSizes.concat(npmPackageFileSizes)
+}
+
+function readFileSize(filename, basepath) {
+  const filePath = path.join(basepath, filename)
+  const [_, variant, suffix] = /(.*)[.]js(.*)/.exec(filename)
+
+  return {
+    variant: (basepath === TRACKER_FILES_DIR ? `${variant}.js` : 'npm_package/plausible.js'),
+    suffix,
+    uncompressed: fs.statSync(filePath).size,
+    gzip: execSync(`gzip -c -9 "${filePath}"`).length,
+    brotli: execSync(`brotli -c -q 11 "${filePath}"`).length
+  }
+}
+
+function isRelevantFile(filename) {
+  return !['.gitkeep', 'p.js'].includes(filename) &&
+    filename.includes('.js') &&
+    (filename.includes(currentSuffix) || filename.includes(baselineSuffix))
 }
 
 function clickhouseLocal(sql, inputLines = null) {

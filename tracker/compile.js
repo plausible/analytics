@@ -2,11 +2,8 @@ import { parseArgs } from 'node:util'
 import { compileAll, compileWebSnippet } from './compiler/index.js'
 import chokidar from 'chokidar'
 
-const { values, positionals } = parseArgs({
+const { values } = parseArgs({
   options: {
-    'target': {
-      type: 'string',
-    },
     'watch': {
       type: 'boolean',
       short: 'w'
@@ -21,14 +18,12 @@ const { values, positionals } = parseArgs({
     'web-snippet': {
       type: 'boolean',
     }
-  },
-  allowPositionals: true
+  }
 })
 
 if (values.help) {
-  console.log('Usage: node compile.js [...compile-ids] [flags]')
+  console.log('Usage: node compile.js [flags]')
   console.log('Options:')
-  console.log('  --target hash,outbound-links,exclusions   Only compile variants that contain all specified compile-ids')
   console.log('  --watch, -w                               Watch src/ directory for changes and recompile')
   console.log('  --suffix, -s                              Suffix to add to the output file name. Used for testing script size changes')
   console.log('  --help                                    Show this help message')
@@ -36,26 +31,13 @@ if (values.help) {
   process.exit(0);
 }
 
-function parse(value) {
-  if (value == null) {
-    return null
-  }
-
-  return value
-    .split(/[.,]/)
-    .filter(feature => !['js', 'plausible'].includes(feature))
-    .sort()
-}
-
-const compileOptions = {
-  targets: parse(values.target),
-  only: positionals && positionals.length > 0 ? positionals.map(parse) : null,
-  suffix: values.suffix
-}
-
 if (values['web-snippet']) {
   console.log(compileWebSnippet())
   process.exit(0)
+}
+
+const compileOptions = {
+  suffix: values.suffix
 }
 
 await compileAll(compileOptions)
@@ -63,7 +45,7 @@ await compileAll(compileOptions)
 if (values.watch) {
   console.log('Watching src/ directory for changes...')
 
-  chokidar.watch('./src').on('change', async (event, path) => {
+  chokidar.watch('./src').on('change', async (_event, path) => {
     if (path) {
       console.log(`\nFile changed: ${path}`)
       console.log('Recompiling...')
