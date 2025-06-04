@@ -613,7 +613,7 @@ defmodule Plausible.Teams.Billing do
 
     case Plans.get_subscription_plan(team.subscription) do
       %EnterprisePlan{features: features} ->
-        features ++ [SharedLinks]
+        features
 
       %Plan{features: features} ->
         features
@@ -625,7 +625,7 @@ defmodule Plausible.Teams.Billing do
         if Teams.on_trial?(team) do
           Feature.list() -- [SitesAPI]
         else
-          [Goals, SharedLinks]
+          [Goals]
         end
     end
   end

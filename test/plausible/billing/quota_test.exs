@@ -575,8 +575,7 @@ defmodule Plausible.Billing.QuotaTest do
       test "users with expired trials have no access to subscription features" do
         team = new_user(trial_expiry_date: ~D[2023-01-01]) |> team_of()
 
-        assert [Goals, Plausible.Billing.Feature.SharedLinks] ==
-                 Plausible.Teams.Billing.allowed_features_for(team)
+        assert [Goals] == Plausible.Teams.Billing.allowed_features_for(team)
       end
     end
 
@@ -605,7 +604,11 @@ defmodule Plausible.Billing.QuotaTest do
         subscribe_to_enterprise_plan(user,
           monthly_pageview_limit: 100_000,
           site_limit: 500,
-          features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels]
+          features: [
+            Plausible.Billing.Feature.StatsAPI,
+            Plausible.Billing.Feature.Funnels,
+            Plausible.Billing.Feature.SharedLinks
+          ]
         )
 
         team = team_of(user)
@@ -660,10 +663,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       team = team_of(user)
 
-      assert [
-               Plausible.Billing.Feature.StatsAPI,
-               Plausible.Billing.Feature.SharedLinks
-             ] ==
+      assert [Plausible.Billing.Feature.StatsAPI] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
 
@@ -678,8 +678,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert [
                Plausible.Billing.Feature.StatsAPI,
-               Plausible.Billing.Feature.SitesAPI,
-               Plausible.Billing.Feature.SharedLinks
+               Plausible.Billing.Feature.SitesAPI
              ] ==
                Plausible.Teams.Billing.allowed_features_for(team)
     end
