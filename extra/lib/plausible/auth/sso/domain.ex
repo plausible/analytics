@@ -17,11 +17,13 @@ defmodule Plausible.Auth.SSO.Domain do
 
   alias Plausible.Auth.SSO
 
-  @validation_methods [:dns_txt, :url, :meta_tag]
-
   @type t() :: %__MODULE__{}
 
+  @validation_methods [:dns_txt, :url, :meta_tag]
   @type validation_method() :: unquote(Enum.reduce(@validation_methods, &{:|, [], [&1, &2]}))
+
+  @spec validation_methods() :: list(validation_method())
+  def validation_methods(), do: @validation_methods
 
   schema "sso_domains" do
     field :identifier, Ecto.UUID

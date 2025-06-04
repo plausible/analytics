@@ -19,11 +19,20 @@ defmodule Plausible.Auth.SSO.Domains do
   @spec verify(SSO.Domain.t(), Keyword.t()) :: SSO.Domain.t()
   def verify(sso_domain, opts \\ []) do
     skip_checks? = Keyword.get(opts, :skip_checks?, false)
+    verification_opts = Keyword.get(opts, :verification_opts, [])
     now = Keyword.get(opts, :now, NaiveDateTime.utc_now(:second))
 
     if skip_checks? do
       mark_valid(sso_domain, :dns_txt, now)
     else
+      case SSO.Domain.Validation.run(sso_domain.domain, sso_domain.identifier, verification_opts) do
+        {:ok, step} ->
+          mark_valid(sso_domain, step, now)
+
+        {:error, :invalid} ->
+          mark_invalid(sso_domain, now)
+      end
+
       mark_invalid(sso_domain, now)
     end
   end

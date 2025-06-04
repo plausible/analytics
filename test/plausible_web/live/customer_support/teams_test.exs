@@ -131,7 +131,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
               "false",
               "false",
               "false",
-              "teams",
               "false",
               "shared_links",
               "false",
@@ -153,7 +152,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
                  %Plausible.Billing.EnterprisePlan{
                    billing_interval: :yearly,
                    features: [
-                     Plausible.Billing.Feature.Teams,
                      Plausible.Billing.Feature.SharedLinks,
                      Plausible.Billing.Feature.SitesAPI
                    ],

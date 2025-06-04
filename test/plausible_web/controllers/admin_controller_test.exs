@@ -263,7 +263,7 @@ defmodule PlausibleWeb.AdminControllerTest do
       conn = get(conn, "/crm/billing/team/#{team.id}/current_plan")
 
       assert json_response(conn, 200) == %{
-               "features" => ["goals", "teams", "shared_links"],
+               "features" => ["goals", "shared_links"],
                "monthly_pageview_limit" => 10_000_000,
                "site_limit" => 10,
                "team_member_limit" => 3

@@ -2,6 +2,8 @@ defmodule Plausible.Auth.SSO.DomainsTest do
   use Plausible.DataCase, async: true
   use Plausible
 
+  @moduletag :ee_only
+
   on_ee do
     use Plausible.Teams.Test
 
@@ -117,7 +119,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         domain = generate_domain()
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
 
-        invalid_domain = SSO.Domains.verify(sso_domain)
+        invalid_domain = SSO.Domains.verify(sso_domain, verification_opts: [methods: []])
 
         assert invalid_domain.id == sso_domain.id
         refute invalid_domain.validated_via

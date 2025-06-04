@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test"
 import packageJson from '../../package.json' with { type: 'json' }
+import { mockManyRequests } from "./mock-many-requests"
 
 export const tracker_script_version = packageJson.tracker_script_version
 
@@ -23,30 +24,6 @@ export const metaKey = function() {
   } else {
     return 'Control'
   }
-}
-
-// Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
-// list of requests as soon as the specified number of requests is made, or 3 seconds has passed.
-export const mockManyRequests = function({ page, path, numberOfRequests, responseDelay, shouldIgnoreRequest, mockRequestTimeout = 3000 }) {
-  return new Promise((resolve, _reject) => {
-    let requestList = []
-    const requestTimeoutTimer = setTimeout(() => resolve(requestList), mockRequestTimeout)
-
-    page.route(path, async (route, request) => {
-      const postData = request.postDataJSON()
-      if (!shouldIgnoreRequest || !shouldIgnoreRequest(postData)) {
-        requestList.push(postData)
-      }
-      if (responseDelay) {
-        await delay(responseDelay)
-      }
-      if (requestList.length === numberOfRequests) {
-        clearTimeout(requestTimeoutTimer)
-        resolve(requestList)
-      }
-      return route.fulfill({ status: 202, contentType: 'text/plain', body: 'ok' })
-    })
-  })
 }
 
 /**
@@ -91,7 +68,7 @@ export const expectPlausibleInAction = async function (page, {
   const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
   const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
 
-  const plausibleRequestMockList = mockManyRequests({
+  const getRequestList = await mockManyRequests({
     page,
     path: pathToMock,
     responseDelay,
@@ -100,7 +77,7 @@ export const expectPlausibleInAction = async function (page, {
     mockRequestTimeout: mockRequestTimeout
   })
   await action()
-  const requestBodies = await plausibleRequestMockList
+  const requestBodies = await getRequestList()
 
   const expectedButNotFoundBodySubsets = []
 

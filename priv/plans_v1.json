@@ -11,7 +11,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -27,7 +26,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -43,7 +41,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -59,7 +56,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -75,7 +71,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -91,7 +86,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -107,7 +101,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -123,7 +116,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -139,7 +131,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   },
@@ -155,7 +146,6 @@
       "goals",
       "props",
       "stats_api",
-      "teams",
       "shared_links"
     ]
   }

@@ -44,13 +44,9 @@ test('does not track form submissions when the feature is disabled', async ({
 })
 
 test.describe('form submissions feature is enabled', () => {
-  test('tracks forms that use GET method', async ({ page, browserName }, {
+  test('tracks forms that use GET method', async ({ page }, {
     testId
   }) => {
-    test.skip(
-      browserName === 'firefox',
-      'flaky on Firefox versions less than v133 due to missing fetch keepalive implementation'
-    )
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },

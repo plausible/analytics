@@ -13,6 +13,8 @@ use Plausible
 
 import Plausible.Teams.Test
 
+FunWithFlags.enable(:starter_tier)
+
 words =
   for i <- 0..(:erlang.system_info(:atom_count) - 1),
       do: :erlang.binary_to_term(<<131, 75, i::24>>)
@@ -65,6 +67,11 @@ add_guest(site, user: new_user(name: "Lois Lane", password: "plausible"), role: 
 user2 = new_user(name: "Mary Jane", email: "user2@plausible.test", password: "plausible")
 site2 = new_site(domain: "computer.example.com", owner: user2)
 invite_guest(site2, user, inviter: user2, role: :viewer)
+
+solo_user = new_user(name: "Solo User", email: "solo@plausible.test", password: "plausible")
+new_site(domain: "mysolosite.com", owner: solo_user)
+{:ok, solo_team} = Plausible.Teams.get_or_create(solo_user)
+Plausible.Billing.DevSubscriptions.create(solo_team.id, "910413")
 
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
 Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")

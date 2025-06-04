@@ -717,7 +717,7 @@ defmodule Plausible.Teams.Invitations do
 
   @team_role_type Plausible.Teams.Membership.__schema__(:type, :role)
 
-  defp create_team_membership(team, role, user, now) do
+  def create_team_membership(team, role, user, now) do
     conflict_query =
       from(tm in Teams.Membership,
         update: [

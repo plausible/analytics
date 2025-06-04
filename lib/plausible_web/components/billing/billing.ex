@@ -5,21 +5,14 @@ defmodule PlausibleWeb.Components.Billing do
   use Plausible
 
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.{Subscription, Subscriptions, Feature, Plan, Plans, EnterprisePlan}
+  alias Plausible.Billing.{Subscription, Subscriptions, Plan, Plans, EnterprisePlan}
 
   attr :current_role, :atom, required: true
   attr :current_team, :any, required: true
-  attr :feature_mod, :atom, required: true, values: Feature.list()
+  attr :locked?, :boolean, required: true
   slot :inner_block, required: true
 
   def feature_gate(assigns) do
-    assigns =
-      assign(
-        assigns,
-        :locked?,
-        assigns.feature_mod.check_availability(assigns.current_team) != :ok
-      )
-
     ~H"""
     <div id="feature-gate-inner-block-container" class={if(@locked?, do: "pointer-events-none")}>
       {render_slot(@inner_block)}
