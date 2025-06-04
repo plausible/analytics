@@ -59,7 +59,7 @@ defmodule Plausible.Session.Salts do
         previous: current
       }
 
-    log_state("after rotate", state)
+    log_state("rotated", state)
     true = :ets.insert(name, {:state, state})
     {:reply, :ok, name}
   end
@@ -86,7 +86,7 @@ defmodule Plausible.Session.Salts do
 
   @impl true
   def terminate(_reason, name) do
-    log_state("terminate", fetch(name))
+    log_state("terminating", fetch(name))
   end
 
   defp log_state(stage, state) do
