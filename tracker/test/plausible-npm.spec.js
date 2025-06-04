@@ -1,8 +1,7 @@
 /*
-Tests for plausible-web.js script variant
+Tests for plausible-npm.js variant
 
-Unlike in production, we're manually interpolating the script config in this file to
-better test the script in isolation of the plausible codebase.
+Config is set at init(), as we expect consumers to do in production.
 */
 
 import {
