@@ -8,7 +8,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
-
     @endpoint PlausibleWeb.InternalEndpoint
     alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
 
