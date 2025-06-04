@@ -115,10 +115,6 @@ export const ignoreEngagementRequests = function(requestPostData) {
   return requestPostData.n === 'engagement'
 }
 
-export const ignorePageleaveRequests = function(requestPostData) {
-  return requestPostData.n === 'pageleave'
-}
-
 async function toggleTabVisibility(page, hide) {
   await page.evaluate((hide) => {
     Object.defineProperty(document, 'visibilityState', { value: hide ? 'hidden' : 'visible', writable: true })
