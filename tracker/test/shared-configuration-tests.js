@@ -11,7 +11,8 @@ import {
   metaKey,
   mockRequest,
   e as expecting,
-  ignoreEngagementRequests
+  isPageviewEvent,
+  isEngagementEvent
 } from './support/test-utils'
 import { test } from '@playwright/test'
 
@@ -62,7 +63,7 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
           await openPage(page, {})
         },
         expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }],
-        shouldIgnoreRequest: ignoreEngagementRequests
+        shouldIgnoreRequest: isEngagementEvent
       })
     })
 
@@ -74,7 +75,7 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
         },
         expectedRequests: [{ n: 'pageview', p: expecting.toBeUndefined() }],
         refutedRequests: [{ n: 'Outbound Link: Click' }],
-        shouldIgnoreRequest: ignoreEngagementRequests
+        shouldIgnoreRequest: isEngagementEvent
       })
     })
 
@@ -86,7 +87,7 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
         },
         expectedRequests: [{ n: 'pageview' } ],
         refutedRequests: [{ n: 'File Download' }],
-        shouldIgnoreRequest: ignoreEngagementRequests
+        shouldIgnoreRequest: isEngagementEvent
       })
     })
 
@@ -100,17 +101,18 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
           { n: 'pageview', d: 'example.com', u: expecting.stringContaining(fixtureName) },
           { n: 'Outbound Link: Click', d: 'example.com', u: expecting.stringContaining(fixtureName), p: { url: 'https://example.com/' } }
         ],
-        shouldIgnoreRequest: ignoreEngagementRequests
+        shouldIgnoreRequest: isEngagementEvent
       })
     })
 
     test('tracks file downloads (when feature enabled)', async ({ page }) => {
-      await openPage(page, { fileDownloads: true })
-
       await expectPlausibleInAction(page, {
-        action: () => page.click('#file-download'),
+        action: async () => {
+          await openPage(page, { fileDownloads: true })
+          await page.click('#file-download')
+        },
         expectedRequests: [{ n: 'File Download', p: { url: 'https://awesome.website.com/file.pdf' } }],
-        shouldIgnoreRequest: ignoreEngagementRequests
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
     })
 
@@ -217,11 +219,13 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
     })
 
     test('tracking tagged events with revenue', async ({ page }) => {
-      await openPage(page, {})
-
       await expectPlausibleInAction(page, {
-        action: () => page.click('#tagged-event'),
-        expectedRequests: [{ n: 'Purchase', p: { foo: 'bar' }, $: { currency: 'EUR', amount: '13.32' } }]
+        action: async () => {
+          await openPage(page, {})
+          await page.click('#tagged-event')
+        },
+        expectedRequests: [{ n: 'Purchase', p: { foo: 'bar' }, $: { currency: 'EUR', amount: '13.32' } }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
       })
     })
 
