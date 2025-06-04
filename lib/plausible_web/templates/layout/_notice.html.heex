@@ -9,7 +9,7 @@
     grace_period_end={grace_period_end(@current_team)}
   />
 
-  <Notice.dashboard_locked :if={Plausible.Teams.GracePeriod.expired?(@current_team)} />
+  <Notice.dashboard_locked :if={Plausible.Teams.locked?(@current_team)} />
 
   <Notice.subscription_cancelled subscription={@current_team.subscription} />
 

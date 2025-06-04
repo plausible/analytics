@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Team.Notice do
         class="shadow-md dark:shadow-none mt-4"
       >
         <p>
-          You can now create a team and assign different roles to team members, such as admin,
+          You can also create a team and assign different roles to team members, such as admin,
           editor, viewer or billing. Team members will gain access to all your sites.
           <.styled_link href={Routes.team_setup_path(PlausibleWeb.Endpoint, :setup)}>
             Create your team here
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Team.Notice do
         class="shadow-md dark:shadow-none mt-4"
       >
         <p>
-          It is now possible to create a team and assign different roles to team members, such as
+          It is also possible to create a team and assign different roles to team members, such as
           admin, editor, viewer or billing. Team members can gain access to all the sites. Please
           contact the site owner to create your team.
         </p>

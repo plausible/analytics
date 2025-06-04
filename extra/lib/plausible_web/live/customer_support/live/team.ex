@@ -55,7 +55,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           Enum.map(features, &to_string(&1.name()))
         end)
       else
-        %{site_limit: "10,000"}
+        %{
+          monthly_pageview_limit: 10_000,
+          hourly_api_request_limit: 600,
+          site_limit: 50,
+          team_member_limit: 10,
+          features: Plausible.Billing.Feature.list()
+        }
       end
 
     plan_form =
@@ -74,7 +80,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
        show_plan_form?: false,
        tab: "billing",
        cost_estimate: 0,
-       cost_estimate_tier: Map.get(plan || %{}, :kind, :business)
+       cost_estimate_tier: :business
      )}
   end
 
@@ -133,17 +139,20 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </p>
               </div>
             </div>
-            <div :if={@team.grace_period}>
-              <span :if={@team.locked} class="flex items-center">
-                <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
-                <.styled_link phx-click="unlock" phx-target={@myself}>Unlock Team</.styled_link>
-              </span>
 
-              <span :if={!@team.locked} class="flex items-center">
-                <Heroicons.lock_open class="inline stroke-2 w-4 h-4 text-gray-800 mr-2" />
-                <.styled_link phx-click="lock" phx-target={@myself}>Lock Team</.styled_link>
-              </span>
-            </div>
+            <span :if={Teams.locked?(@team)} class="flex items-center">
+              <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
+              <.styled_link id="unlock-dashboards" phx-click="unlock" phx-target={@myself}>
+                Unlock Dashboards
+              </.styled_link>
+            </span>
+
+            <span :if={not Teams.locked?(@team)} class="flex items-center">
+              <Heroicons.lock_open class="inline stroke-2 w-4 h-4 text-gray-800 mr-2" />
+              <.styled_link id="lock-dashboards" phx-click="lock" phx-target={@myself}>
+                Lock Dashboards
+              </.styled_link>
+            </span>
             <div class="mt-5 flex justify-center sm:mt-0">
               <.input_with_clipboard
                 id="team-identifier"
@@ -284,24 +293,26 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             />
 
             <.input
+              x-init="numberFormatCallback({target: $el})"
               x-on:input="numberFormatCallback(event)"
               field={f[:monthly_pageview_limit]}
               label="Monthly Pageview Limit"
               autocomplete="off"
             />
             <.input
+              x-init="numberFormatCallback({target: $el})"
               x-on:input="numberFormatCallback(event)"
               field={f[:site_limit]}
               label="Site Limit"
               autocomplete="off"
             />
             <.input
-              x-on:input="numberFormatCallback(event)"
               field={f[:team_member_limit]}
-              label="Team Member Limit"
+              label="Team Member Limit (-1/unlimited for unlimited)"
               autocomplete="off"
             />
             <.input
+              x-init="numberFormatCallback({target: $el})"
               x-on:input="numberFormatCallback(event)"
               field={f[:hourly_api_request_limit]}
               label="Hourly API Request Limit"
@@ -330,7 +341,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 id="cost-estimate-tier"
                 name="enterprise_plan[cost-estimate-tier]"
                 options={[{"business", "business"}, {"growth", "growth"}]}
-                label="Tier"
+                label="Plan"
                 value={@cost_estimate_tier}
               />
 
@@ -490,10 +501,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   def render_result(assigns) do
     ~H"""
     <div class="flex-1 -mt-px w-full">
-      <div class="w-full flex items-center justify-between space-x-4">
+      <div class="w-full flex items-center justify-between space-x-2">
         <div class={[
           team_bg(@resource.object.identifier),
-          "rounded-full p-1 flex items-center justify-center"
+          "rounded-full p-1 flex items-center justify-center mr-2"
         ]}>
           <Heroicons.user_group class="h-4 w-4 text-white" />
         </div>
@@ -513,6 +524,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
         >
           $
+        </span>
+
+        <span :if={Teams.locked?(@resource.object)} class="inline-flex items-center">
+          <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
         </span>
       </div>
 
@@ -603,7 +618,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   def handle_event("save-plan", %{"enterprise_plan" => params}, socket) do
-    params = params |> update_features_to_list() |> sanitize_params()
+    params =
+      params
+      |> update_features_to_list()
+      |> sanitize_params()
 
     changeset = EnterprisePlan.changeset(%EnterprisePlan{team_id: socket.assigns.team.id}, params)
 
@@ -744,31 +762,15 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   defp lock_team(socket) do
-    if socket.assigns.team.grace_period do
-      team = socket.assigns.team
-      Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
-      Plausible.Teams.end_grace_period(team)
-
-      success(socket, "Team locked. Grace period ended.")
-      assign(socket, team: team)
-    else
-      failure(socket, "No grace period")
-      socket
-    end
+    team = Teams.admin_lock!(socket.assigns.team)
+    success(socket, "Team locked")
+    assign(socket, team: team)
   end
 
   defp unlock_team(socket) do
-    if socket.assigns.team.grace_period do
-      team =
-        socket.assigns.team
-        |> Plausible.Teams.remove_grace_period()
-        |> Plausible.Billing.SiteLocker.set_lock_status_for(false)
-
-      success(socket, "Team unlocked. Grace period removed.")
-      assign(socket, team: team)
-    else
-      socket
-    end
+    team = Teams.admin_unlock!(socket.assigns.team)
+    success(socket, "Team unlocked")
+    assign(socket, team: team)
   end
 
   defp monthly_pageviews_usage(usage, limit) do
@@ -785,6 +787,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         where: ep.team_id == ^team_id,
         order_by: [desc: :id]
     )
+  end
+
+  defp number_format(unlimited) when unlimited in [-1, "unlimited", :unlimited] do
+    "unlimited"
   end
 
   defp number_format(number) when is_integer(number) do
@@ -810,13 +816,17 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   defp clear_param({key, value}) when key in @numeric_fields do
-    value =
-      value
-      |> to_string()
-      |> String.replace(~r/[^0-9-]/, "")
-      |> String.trim()
+    if value in ["unlimited", "-1"] do
+      {key, value}
+    else
+      value =
+        value
+        |> to_string()
+        |> String.replace(~r/[^0-9-]/, "")
+        |> String.trim()
 
-    {key, value}
+      {key, value}
+    end
   end
 
   defp clear_param({key, value}) when is_binary(value) do
@@ -830,7 +840,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   defp get_int_param(params, key) do
     param = Map.get(params, key)
     param = if param in ["", nil], do: "0", else: param
-    String.to_integer(param)
+
+    case Integer.parse(param) do
+      {integer, ""} -> integer
+      _ -> 0
+    end
   end
 
   defp update_features_to_list(params) do

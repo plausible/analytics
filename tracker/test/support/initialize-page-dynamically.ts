@@ -31,7 +31,7 @@ export async function initializePageDynamically(
     await route.fulfill({
       body: TEMPLATE.replace(
         "<%= plausible_script_url %>",
-        `/tracker/js/plausible-main.js?script_config=${encodeURIComponent(
+        `/tracker/js/plausible-web.js?script_config=${encodeURIComponent(
           JSON.stringify(scriptConfig)
         )}`
       ).replace("<body></body>", `<body>${bodyContent}</body>`),

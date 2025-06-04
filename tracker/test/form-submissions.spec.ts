@@ -10,7 +10,7 @@ import { ScriptConfig } from './support/types'
 const DEFAULT_CONFIG: ScriptConfig = {
   domain: 'example.com',
   endpoint: `${LOCAL_SERVER_ADDR}/api/event`,
-  local: true
+  captureOnLocalhost: true
 }
 
 test('does not track form submissions when the feature is disabled', async ({
@@ -44,13 +44,9 @@ test('does not track form submissions when the feature is disabled', async ({
 })
 
 test.describe('form submissions feature is enabled', () => {
-  test('tracks forms that use GET method', async ({ page, browserName }, {
+  test('tracks forms that use GET method', async ({ page }, {
     testId
   }) => {
-    test.skip(
-      browserName === 'firefox',
-      'flaky on Firefox versions less than v133 due to missing fetch keepalive implementation'
-    )
     const { url } = await initializePageDynamically(page, {
       testId,
       scriptConfig: { ...DEFAULT_CONFIG, formSubmissions: true },
@@ -70,7 +66,7 @@ test.describe('form submissions feature is enabled', () => {
         await page.fill('input[type="text"]', 'Any Name')
         await page.click('input[type="submit"]')
       },
-      shouldIgnoreRequest: isViewOrEngagementEvent,
+      shouldIgnoreRequest: pageviewOrEngagementEvent,
       expectedRequests: [
         {
           n: 'Form Submission',
@@ -101,7 +97,7 @@ test.describe('form submissions feature is enabled', () => {
         await ensurePlausibleInitialized(page)
         await page.click('input[type="submit"]')
       },
-      shouldIgnoreRequest: isViewOrEngagementEvent,
+      shouldIgnoreRequest: pageviewOrEngagementEvent,
       expectedRequests: [
         {
           n: 'Form Submission',
@@ -140,7 +136,7 @@ test.describe('form submissions feature is enabled', () => {
         await page.click('button#dynamically-insert-form')
         await page.click('input[type="submit"]')
       },
-      shouldIgnoreRequest: isViewOrEngagementEvent,
+      shouldIgnoreRequest: pageviewOrEngagementEvent,
       expectedRequests: [
         {
           n: 'Form Submission',
@@ -174,7 +170,7 @@ test.describe('form submissions feature is enabled', () => {
         await page.fill('input[type="email"]', 'invalid email')
         await page.click('input[type="submit"]')
       },
-      shouldIgnoreRequest: isViewOrEngagementEvent,
+      shouldIgnoreRequest: pageviewOrEngagementEvent,
       expectedRequests: [
         {
           n: 'Form Submission',
@@ -276,7 +272,7 @@ test.describe('form submissions feature is enabled', () => {
         await ensurePlausibleInitialized(page)
         await page.click('input[type="submit"]')
       },
-      shouldIgnoreRequest: isViewOrEngagementEvent,
+      shouldIgnoreRequest: pageviewOrEngagementEvent,
       expectedRequests: [
         {
           n: 'Form Submission',
@@ -290,7 +286,7 @@ test.describe('form submissions feature is enabled', () => {
         await page.fill('input[type="email"]', 'customer@example.com')
         await page.keyboard.press('Enter')
       },
-      shouldIgnoreRequest: isViewOrEngagementEvent,
+      shouldIgnoreRequest: pageviewOrEngagementEvent,
       expectedRequests: [
         {
           n: 'Form Submission',
@@ -301,16 +297,15 @@ test.describe('form submissions feature is enabled', () => {
   })
 })
 /**
- * This function mitigates test flakiness due to the test runner triggering the submit action
- * before the tracker script has attached the event listener.
- * This flakiness will happen in the real world as well:
- * forms submitted before the tracker script attaches the event listener will not be tracked.
+ * This function ensures that the tracker script has attached the event listener before test is run.
+ * Note that this race condition happens in the real world as well:
+ * forms submitted before the tracker script is initialized will not be tracked.
  */
 function ensurePlausibleInitialized(page: Page) {
   return page.waitForFunction(() => (window as any).plausible?.l === true)
 }
 
-const isViewOrEngagementEvent = ({ n }) =>
+const pageviewOrEngagementEvent = ({ n }) =>
   ['pageview', 'engagement'].includes(n)
 
 /**

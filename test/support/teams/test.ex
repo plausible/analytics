@@ -2,6 +2,8 @@ defmodule Plausible.Teams.Test do
   @moduledoc """
   Convenience assertions for teams schema transition
   """
+  use Plausible
+
   alias Plausible.Repo
   alias Plausible.Teams
 
@@ -56,6 +58,11 @@ defmodule Plausible.Teams.Test do
   def new_user(args \\ []) do
     {team_args, args} = Keyword.pop(args, :team, [])
     {trial_expiry_date, args} = Keyword.pop(args, :trial_expiry_date)
+
+    on_ee do
+      args = Keyword.merge([type: :standard], args)
+    end
+
     user = insert(:user, args)
 
     trial_expiry_date =
@@ -222,6 +229,14 @@ defmodule Plausible.Teams.Test do
     )
 
     user |> Repo.preload(:team_memberships)
+  end
+
+  def subscribe_to_starter_plan(user, attrs \\ []) do
+    {:ok, team} = Teams.get_or_create(user)
+    attrs = Keyword.merge([team: team], attrs)
+
+    insert(:starter_subscription, attrs)
+    user
   end
 
   def subscribe_to_growth_plan(user, attrs \\ []) do

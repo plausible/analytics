@@ -13,7 +13,7 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Teams
 
   alias Plausible.Billing.{EnterprisePlan, Feature, Plan, Plans, Quota}
-  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, Props, SitesAPI, StatsAPI, SharedLinks}
 
   require Plausible.Billing.Subscription.Status
 
@@ -235,8 +235,16 @@ defmodule Plausible.Teams.Billing do
         nil -> @team_member_limit_for_trials
       end
     end
+
+    def solo?(nil), do: true
+
+    def solo?(team) do
+      team_member_limit(team) == 0
+    end
   else
     def team_member_limit(_team), do: :unlimited
+
+    def solo?(_team), do: false
   end
 
   @doc """
@@ -605,19 +613,19 @@ defmodule Plausible.Teams.Billing do
 
     case Plans.get_subscription_plan(team.subscription) do
       %EnterprisePlan{features: features} ->
-        features
+        features ++ [SharedLinks]
 
       %Plan{features: features} ->
         features
 
       :free_10k ->
-        [Goals, Props, StatsAPI]
+        [Goals, Props, StatsAPI, SharedLinks]
 
       nil ->
         if Teams.on_trial?(team) do
           Feature.list() -- [SitesAPI]
         else
-          [Goals]
+          [Goals, SharedLinks]
         end
     end
   end

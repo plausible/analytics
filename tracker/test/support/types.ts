@@ -1,14 +1,10 @@
 export type Options = {
-  hash: boolean;
-  local: boolean;
-  exclusions: boolean;
-  manual: boolean;
-  revenue: boolean;
-  pageviewProps: boolean;
+  hashBasedRouting: boolean;
   outboundLinks: boolean;
   fileDownloads: boolean;
-  taggedEvents: boolean;
   formSubmissions: boolean;
+  captureOnLocalhost: boolean;
+  autoCapturePageviews: boolean;
 };
 
 export type ScriptConfig = {

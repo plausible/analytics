@@ -304,6 +304,8 @@ secure_cookie =
 
 license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
 
+sso_enabled = get_bool_from_path_or_env(config_dir, "SSO_ENABLED", false)
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -313,7 +315,8 @@ config :plausible,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
   data_dir: data_dir,
-  session_transfer_dir: session_transfer_dir
+  session_transfer_dir: session_transfer_dir,
+  sso_enabled: sso_enabled
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -786,7 +789,8 @@ cloud_queues = [
   check_usage: 1,
   notify_annual_renewal: 1,
   lock_sites: 1,
-  legacy_time_on_page_cutoff: 1
+  legacy_time_on_page_cutoff: 1,
+  purge_cdn_cache: 1
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
@@ -811,8 +815,7 @@ if config_env() in [:prod, :ce, :load] do
 else
   config :plausible, Oban,
     repo: Plausible.Repo,
-    queues: queues,
-    plugins: false
+    queues: queues
 end
 
 config :plausible, :hcaptcha,
@@ -827,6 +830,10 @@ config :plausible, Plausible.Sentry.Client,
     pool_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_POOL_TIMEOUT", 5000),
     receive_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_RECEIVE_TIMEOUT", 15000)
   ]
+
+config :plausible, Plausible.Workers.PurgeCDNCache,
+  pullzone_id: get_var_from_path_or_env(config_dir, "BUNNY_PULLZONE_ID"),
+  api_key: get_var_from_path_or_env(config_dir, "BUNNY_API_KEY")
 
 config :ref_inspector,
   init: {Plausible.Release, :configure_ref_inspector}

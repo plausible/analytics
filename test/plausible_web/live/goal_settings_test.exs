@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       assert g3.currency
       assert resp =~ to_string(g3)
-      assert resp =~ "Unlock Revenue Goals by upgrading to a business plan"
+      assert resp =~ "Upgrade Required"
 
       refute element_exists?(
                resp,

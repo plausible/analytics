@@ -8,16 +8,37 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
     setup [:create_user, :log_in, :create_site]
 
     @tag :ee_only
-    test "premium feature notice renders", %{conn: conn, site: site, user: user} do
-      user
-      |> team_of()
-      |> Plausible.Teams.Team.end_trial()
-      |> Plausible.Repo.update!()
+    test "renders with locked content when subscription is insufficient", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      subscribe_to_growth_plan(user)
 
-      conn = get(conn, "/#{site.domain}/settings/properties")
-      resp = conn |> html_response(200) |> text()
+      lock_notice =
+        conn
+        |> get("/#{site.domain}/settings/properties")
+        |> html_response(200)
+        |> text_of_element("#lock-notice")
 
-      assert resp =~ "please upgrade your subscription"
+      assert lock_notice =~ "please upgrade your subscription"
+    end
+
+    @tag :ee_only
+    test "does not lock content when subscription is sufficient", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      subscribe_to_business_plan(user)
+
+      lock_notice =
+        conn
+        |> get("/#{site.domain}/settings/properties")
+        |> html_response(200)
+        |> text_of_element("#lock-notice")
+
+      refute lock_notice =~ "please upgrade your subscription"
     end
 
     test "lists props for the site and renders links", %{conn: conn, site: site} do

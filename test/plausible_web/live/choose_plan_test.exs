@@ -94,18 +94,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert starter_box =~ "Email/Slack reports"
       assert starter_box =~ "Google Analytics import"
       assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "Up to 3 sites"
+      assert starter_box =~ "One site"
       assert starter_box =~ "3 years of data retention"
 
       assert growth_box =~ "Up to 3 team members"
-      assert growth_box =~ "Up to 10 sites"
-      assert growth_box =~ "Team Accounts"
+      assert growth_box =~ "Up to 3 sites"
+      assert growth_box =~ "Team Management"
       assert growth_box =~ "Shared Links"
       assert growth_box =~ "Shared Segments"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Up to 10 team members"
-      assert business_box =~ "Up to 50 sites"
+      assert business_box =~ "Up to 10 sites"
       assert business_box =~ "Stats API (600 requests per hour)"
       assert business_box =~ "Looker Studio Connector"
       assert business_box =~ "Custom Properties"
@@ -368,8 +368,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      for _ <- 1..9, do: new_site(owner: user)
-      assert user |> team_of() |> Plausible.Teams.Billing.site_usage() == 10
+      for _ <- 1..2, do: new_site(owner: user)
+      assert user |> team_of() |> Plausible.Teams.Billing.site_usage() == 3
 
       another_user = new_user()
       pending_ownership_site = new_site(owner: another_user)
@@ -492,18 +492,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert starter_box =~ "Email/Slack reports"
       assert starter_box =~ "Google Analytics import"
       assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "Up to 3 sites"
+      assert starter_box =~ "One site"
       assert starter_box =~ "3 years of data retention"
 
       assert growth_box =~ "Up to 3 team members"
-      assert growth_box =~ "Up to 10 sites"
-      assert growth_box =~ "Team Accounts"
+      assert growth_box =~ "Up to 3 sites"
+      assert growth_box =~ "Team Management"
       assert growth_box =~ "Shared Links"
       assert growth_box =~ "Shared Segments"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Up to 10 team members"
-      assert business_box =~ "Up to 50 sites"
+      assert business_box =~ "Up to 10 sites"
       assert business_box =~ "Stats API (600 requests per hour)"
       assert business_box =~ "Looker Studio Connector"
       assert business_box =~ "Custom Properties"
@@ -569,8 +569,14 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       check_notice_titles(doc, [Billing.pending_site_ownerships_notice_title()])
       assert doc =~ "Your account has been invited to become the owner of a site"
 
-      assert text_of_element(doc, @starter_plan_tooltip) ==
-               "Your usage exceeds the following limit(s): Team member limit"
+      assert text_of_element(doc, @starter_plan_tooltip) =~
+               "Your usage exceeds the following limit(s):"
+
+      assert text_of_element(doc, @starter_plan_tooltip) =~
+               "Team member limit"
+
+      assert text_of_element(doc, @starter_plan_tooltip) =~
+               "Site limit"
 
       assert text_of_element(doc, @growth_plan_tooltip) ==
                "Your usage exceeds the following limit(s): Team member limit"
@@ -784,9 +790,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "checkout is disabled when team member usage exceeds rendered plan limit", %{
       conn: conn,
-      user: user
+      site: site
     } do
-      site = new_site(owner: user)
       for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       {:ok, _lv, doc} = get_liveview(conn)
@@ -904,12 +909,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert starter_box =~ "Email/Slack reports"
       assert starter_box =~ "Google Analytics import"
       assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "Up to 3 sites"
+      assert starter_box =~ "One site"
       assert starter_box =~ "3 years of data retention"
 
       assert growth_box =~ "Up to 3 team members"
-      assert growth_box =~ "Up to 10 sites"
-      assert growth_box =~ "Team Accounts"
+      assert growth_box =~ "Up to 3 sites"
+      assert growth_box =~ "Team Management"
       assert growth_box =~ "Shared Links"
       assert growth_box =~ "Shared Segments"
 
@@ -1173,7 +1178,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert starter_box =~ "Email/Slack reports"
       assert starter_box =~ "Google Analytics import"
       assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "Up to 3 sites"
+      assert starter_box =~ "One site"
       assert starter_box =~ "3 years of data retention"
 
       assert business_box =~ "Everything in Growth"

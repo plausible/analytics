@@ -1,12 +1,14 @@
 defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible
+  use Plausible.Teams.Test
 
-  import Ecto.Query, only: [from: 2]
-  import Phoenix.ChannelTest
-
-  alias Plausible.Auth
   alias Plausible.Repo
   alias PlausibleWeb.UserAuth
+
+  on_ee do
+    alias Plausible.Auth.SSO
+  end
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
@@ -39,6 +41,184 @@ defmodule PlausibleWeb.UserAuthTest do
         |> UserAuth.log_in_user(user, "/next")
 
       assert redirected_to(conn, 302) == "/next"
+    end
+
+    on_ee do
+      test "sets up user session from SSO identity", %{conn: conn, user: user} do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert %{sessions: [session]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+        assert session.user_id == user.id
+        assert NaiveDateTime.compare(session.timeout_at, identity.expires_at) == :eq
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+        assert conn.private[:plug_session_info] == :renew
+        assert conn.resp_cookies["logged_in"].max_age > 0
+        assert get_session(conn, :current_team_id) == team.identifier
+        assert get_session(conn, :user_token) == session.token
+      end
+
+      test "logs in existing SSO owner using standard login correctly", %{
+        conn: conn,
+        user: user
+      } do
+        team = new_site(owner: user).team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+        {:ok, :standard, _, user} = SSO.provision_user(identity)
+
+        assert user.type == :sso
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(user)
+
+        assert %{sessions: [session]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+        assert session.user_id == user.id
+        assert session.token == get_session(conn, :user_token)
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+      end
+
+      test "invalidates any existing sessions of user logging in when converting", %{
+        conn: conn,
+        user: user
+      } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn |> init_session() |> UserAuth.log_in_user(user)
+
+        assert [standard_session] = Repo.preload(user, :sessions).sessions
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert [sso_session] = Repo.preload(user, :sessions).sessions
+
+        assert standard_session.id != sso_session.id
+        assert standard_session.token != sso_session.token
+        assert get_session(conn, :user_token) == sso_session.token
+      end
+
+      test "tries to log out and redirects if SSO identity is not matched", %{
+        conn: conn,
+        user: user
+      } do
+        identity = new_identity("Willy Wonka", "wonka@example.com")
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
+
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :login_form, error: "Wrong email.", return_to: "")
+
+        assert conn.private[:plug_session_info] == :renew
+        refute get_session(conn, :user_token)
+      end
+
+      test "tries to log out and redirects if SSO identity exceeds team members limit", %{
+        conn: conn,
+        user: user
+      } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        add_member(team, role: :viewer)
+        add_member(team, role: :viewer)
+        add_member(team, role: :viewer)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity("Jane Doe", "jane@" <> domain)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert %{sessions: []} = user |> Repo.reload!() |> Repo.preload(:sessions)
+
+        assert redirected_to(conn, 302) ==
+                 Routes.sso_path(conn, :login_form,
+                   error: "Team can't accept more members. Please contact the owner.",
+                   return_to: ""
+                 )
+
+        assert conn.private[:plug_session_info] == :renew
+        refute get_session(conn, :user_token)
+      end
+
+      test "passes through for user matching SSO identity on multiple teams, redirecting to team",
+           %{
+             conn: conn,
+             user: user
+           } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+        another_team = new_site().team
+        add_member(another_team, user: user, role: :viewer)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
+        assert get_session(conn, :user_token)
+      end
+
+      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
+        %SSO.Identity{
+          id: id,
+          name: name,
+          email: email,
+          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
+        }
+      end
     end
   end
 
@@ -110,168 +290,6 @@ defmodule PlausibleWeb.UserAuthTest do
       assert cookie = conn.resp_cookies["logged_in"]
       assert cookie.max_age > 0
       assert cookie.value == "true"
-    end
-  end
-
-  describe "touch_user_session/1" do
-    setup [:create_user, :log_in]
-
-    test "refreshes user session timestamps", %{user: user} do
-      %{sessions: [user_session]} = Repo.preload(user, :sessions)
-
-      two_days_later =
-        NaiveDateTime.utc_now(:second)
-        |> NaiveDateTime.shift(day: 2)
-
-      assert refreshed_session =
-               %Auth.UserSession{} = UserAuth.touch_user_session(user_session, two_days_later)
-
-      assert refreshed_session.id == user_session.id
-      assert NaiveDateTime.compare(refreshed_session.last_used_at, two_days_later) == :eq
-      assert NaiveDateTime.compare(Repo.reload(user).last_seen, two_days_later) == :eq
-      assert NaiveDateTime.compare(refreshed_session.timeout_at, user_session.timeout_at) == :gt
-    end
-
-    test "does not refresh if timestamps were updated less than hour before", %{user: user} do
-      %{sessions: [user_session]} = Repo.preload(user, :sessions)
-      user_session = Repo.reload(user_session)
-      last_seen = Repo.reload(user).last_seen
-
-      fifty_minutes_later =
-        NaiveDateTime.utc_now(:second)
-        |> NaiveDateTime.shift(minute: 50)
-
-      assert refreshed_session1 =
-               %Auth.UserSession{} =
-               UserAuth.touch_user_session(user_session, fifty_minutes_later)
-
-      assert NaiveDateTime.compare(
-               refreshed_session1.last_used_at,
-               user_session.last_used_at
-             ) == :eq
-
-      assert NaiveDateTime.compare(Repo.reload(user).last_seen, last_seen) == :eq
-
-      sixty_five_minutes_later =
-        NaiveDateTime.utc_now(:second)
-        |> NaiveDateTime.shift(minute: 65)
-
-      assert refreshed_session2 =
-               %Auth.UserSession{} =
-               UserAuth.touch_user_session(user_session, sixty_five_minutes_later)
-
-      assert NaiveDateTime.compare(
-               refreshed_session2.last_used_at,
-               sixty_five_minutes_later
-             ) == :eq
-
-      assert NaiveDateTime.compare(Repo.reload(user).last_seen, sixty_five_minutes_later) == :eq
-    end
-
-    test "handles concurrent refresh gracefully", %{user: user} do
-      %{sessions: [user_session]} = Repo.preload(user, :sessions)
-
-      # concurrent update
-      now = NaiveDateTime.utc_now(:second)
-      two_days_later = NaiveDateTime.shift(now, day: 2)
-
-      Repo.update_all(
-        from(us in Auth.UserSession, where: us.token == ^user_session.token),
-        set: [timeout_at: two_days_later, last_used_at: now]
-      )
-
-      assert refreshed_session =
-               %Auth.UserSession{} = UserAuth.touch_user_session(user_session)
-
-      assert refreshed_session.id == user_session.id
-      assert Repo.reload(user_session)
-    end
-
-    test "handles deleted session case gracefully", %{user: user} do
-      %{sessions: [user_session]} = Repo.preload(user, :sessions)
-      Repo.delete!(user_session)
-
-      assert refreshed_session =
-               %Auth.UserSession{} = UserAuth.touch_user_session(user_session)
-
-      assert refreshed_session.id == user_session.id
-
-      refute Repo.reload(user_session)
-    end
-  end
-
-  describe "revoke_user_session/2" do
-    setup [:create_user, :log_in]
-
-    test "deletes and disconnects user session", %{user: user} do
-      assert [active_session] = Repo.preload(user, :sessions).sessions
-      live_socket_id = "user_sessions:" <> Base.url_encode64(active_session.token)
-      Phoenix.PubSub.subscribe(Plausible.PubSub, live_socket_id)
-
-      another_session =
-        user
-        |> Auth.UserSession.new_session("Some Device")
-        |> Repo.insert!()
-
-      assert :ok = UserAuth.revoke_user_session(user, active_session.id)
-      assert [remaining_session] = Repo.preload(user, :sessions).sessions
-      assert_broadcast "disconnect", %{}
-      assert remaining_session.id == another_session.id
-      refute Repo.reload(active_session)
-      assert Repo.reload(another_session)
-    end
-
-    test "does not delete session of another user", %{user: user} do
-      assert [active_session] = Repo.preload(user, :sessions).sessions
-
-      other_session =
-        insert(:user)
-        |> Auth.UserSession.new_session("Some Device")
-        |> Repo.insert!()
-
-      assert :ok = UserAuth.revoke_user_session(user, other_session.id)
-
-      assert Repo.reload(active_session)
-      assert Repo.reload(other_session)
-    end
-
-    test "executes gracefully when session does not exist", %{user: user} do
-      assert [active_session] = Repo.preload(user, :sessions).sessions
-      Repo.delete!(active_session)
-
-      assert :ok = UserAuth.revoke_user_session(user, active_session.id)
-    end
-  end
-
-  describe "revoke_all_user_sessions/1" do
-    setup [:create_user, :log_in]
-
-    test "deletes and disconnects all user's sessions", %{user: user} do
-      assert [active_session] = Repo.preload(user, :sessions).sessions
-      live_socket_id = "user_sessions:" <> Base.url_encode64(active_session.token)
-      Phoenix.PubSub.subscribe(Plausible.PubSub, live_socket_id)
-
-      another_session =
-        user
-        |> Auth.UserSession.new_session("Some Device")
-        |> Repo.insert!()
-
-      unrelated_session =
-        insert(:user)
-        |> Auth.UserSession.new_session("Some Device")
-        |> Repo.insert!()
-
-      assert :ok = UserAuth.revoke_all_user_sessions(user)
-      assert [] = Repo.preload(user, :sessions).sessions
-      assert_broadcast "disconnect", %{}
-      refute Repo.reload(another_session)
-      assert Repo.reload(unrelated_session)
-    end
-
-    test "executes gracefully when user has no sessions" do
-      user = insert(:user)
-
-      assert :ok = UserAuth.revoke_all_user_sessions(user)
     end
   end
 

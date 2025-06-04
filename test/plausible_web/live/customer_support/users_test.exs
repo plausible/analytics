@@ -8,13 +8,14 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
-    defp open_user(id) do
+    defp open_user(id, qs \\ []) do
       Routes.customer_support_resource_path(
         PlausibleWeb.Endpoint,
         :details,
         :users,
         :user,
-        id
+        id,
+        qs
       )
     end
 
@@ -42,6 +43,30 @@ defmodule PlausibleWeb.Live.CustomerSupport.UsersTest do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_user(9999))
         end
+      end
+    end
+
+    describe "keys" do
+      setup [:create_user, :log_in, :create_site]
+
+      setup %{user: user} do
+        patch_env(:super_admin_user_ids, [user.id])
+      end
+
+      test "renders", %{conn: conn, user: user} do
+        k1 = insert(:api_key, user: user)
+        k2 = insert(:api_key, user: user, team: team_of(user))
+        k3 = insert(:api_key, user: new_user())
+
+        {:ok, lv, html} = live(conn, open_user(user.id, tab: :keys))
+
+        assert text(html) =~ "API Keys (2)"
+
+        html = lv |> render() |> text()
+
+        assert html =~ k1.key_prefix
+        assert html =~ k2.key_prefix
+        refute html =~ k3.key_prefix
       end
     end
   end

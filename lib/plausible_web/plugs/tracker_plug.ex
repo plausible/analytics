@@ -59,11 +59,22 @@ defmodule PlausibleWeb.TrackerPlug do
     end
   end
 
-  defp request_tracker_script(tag, conn) do
-    site = Plausible.Repo.one(from s in Plausible.Site, where: s.installation_meta["id"] == ^tag)
+  def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
-    if site do
-      script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(site)
+  defp request_tracker_script(tag, conn) do
+    tracker_script_configuration =
+      Plausible.Repo.one(
+        from s in Plausible.Site.TrackerScriptConfiguration, where: s.id == ^tag, preload: [:site]
+      )
+
+    if tracker_script_configuration do
+      script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(tracker_script_configuration)
+
+      :telemetry.execute(
+        telemetry_event(:v2),
+        %{},
+        %{status: 200}
+      )
 
       conn
       |> put_resp_header("content-type", "application/javascript")
@@ -71,9 +82,18 @@ defmodule PlausibleWeb.TrackerPlug do
       |> put_resp_header("cross-origin-resource-policy", "cross-origin")
       |> put_resp_header("access-control-allow-origin", "*")
       |> put_resp_header("cache-control", "public, max-age=60, no-transform")
+      # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
+      # specific tracker scripts from the CDN cache.
+      |> put_resp_header("cdn-tag", "tracker_script::#{tracker_script_configuration.id}")
       |> send_resp(200, script_tag)
       |> halt()
     else
+      :telemetry.execute(
+        telemetry_event(:v2),
+        %{},
+        %{status: 404}
+      )
+
       conn
       |> send_resp(404, "Not found")
       |> halt()
@@ -83,6 +103,12 @@ defmodule PlausibleWeb.TrackerPlug do
   defp legacy_request_file(filename, files_available, conn) do
     if filename && MapSet.member?(files_available, filename) do
       location = Application.app_dir(:plausible, "priv/tracker/js/" <> filename)
+
+      :telemetry.execute(
+        telemetry_event(:legacy),
+        %{},
+        %{status: 200}
+      )
 
       conn
       |> put_resp_header("content-type", "application/javascript")

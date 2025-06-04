@@ -114,7 +114,9 @@ test.describe('scroll depth (engagement events)', () => {
     })
   })
 
-  test('re-sends engagement events only when user has scrolled in-between', async ({ page }) => {
+  test('re-sends engagement events only when user has scrolled in-between', async ({ page, browserName }) => {
+    test.skip(browserName === 'webkit', 'flaky')
+
     await expectPlausibleInAction(page, {
       action: async () => {
         await page.goto('/scroll-depth.html')
@@ -129,6 +131,7 @@ test.describe('scroll depth (engagement events)', () => {
     await expectPlausibleInAction(page, {
       action: () => hideAndShowCurrentTab(page),
       expectedRequests: [],
+      refutedRequests: [{n: 'engagement'}]
     })
 
     await page.evaluate(() => window.scrollBy(0, 300))

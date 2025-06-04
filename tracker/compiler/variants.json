@@ -1,9 +1,9 @@
 {
   "manualVariants": [
     {
-      "name": "plausible-main.js",
+      "name": "plausible-web.js",
       "features": [
-        "plausible-main"
+        "plausible-web"
       ],
       "globals": {
         "COMPILE_CONFIG": true,

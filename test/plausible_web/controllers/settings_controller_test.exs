@@ -603,7 +603,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       another_session =
         user
-        |> Auth.UserSession.new_session("Some Device", seventy_minutes_ago)
+        |> Auth.UserSession.new_session("Some Device", now: seventy_minutes_ago)
         |> Repo.insert!()
 
       conn = get(conn, Routes.settings_path(conn, :security))
@@ -1408,6 +1408,28 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn = delete(conn, Routes.settings_path(conn, :delete_team))
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+    end
+  end
+
+  describe "account dropdown menu (_header.html)" do
+    setup [:create_user, :log_in]
+
+    test "renders the 'Create a Team' option", %{conn: conn, user: user} do
+      subscribe_to_growth_plan(user)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      assert text_of_element(html, ~s/[data-test="create-a-team-cta"]/) == "Create a Team"
+    end
+
+    test "does not render the 'Create a Team' option if a team is already set up", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      Plausible.Teams.complete_setup(team)
+      conn = get(conn, Routes.settings_path(conn, :preferences))
+      html = html_response(conn, 200)
+      refute element_exists?(html, ~s/[data-test="create-a-team-cta"]/)
     end
   end
 

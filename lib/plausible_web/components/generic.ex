@@ -399,6 +399,37 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr :id, :string, required: true
+  attr :js_active_var, :string, required: true
+  attr :id_suffix, :string, default: ""
+  attr :disabled, :boolean, default: false
+
+  def toggle_switch(assigns) do
+    ~H"""
+    <button
+      id={"#{@id}-#{@id_suffix}"}
+      class={["h-6", if(@disabled, do: "cursor-not-allowed", else: "cursor-pointer")]}
+      aria-labelledby={@id}
+      role="switch"
+      type="button"
+      x-on:click={"#{@js_active_var} = !#{@js_active_var}"}
+      x-bind:aria-checked={@js_active_var}
+      disabled={@disabled}
+    >
+      <span
+        class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+        x-bind:class={"#{@js_active_var} ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"}
+      >
+        <span
+          aria-hidden="true"
+          class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+          x-bind:class={"#{@js_active_var} ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"}
+        />
+      </span>
+    </button>
+    """
+  end
+
   def settings_tiles(assigns) do
     ~H"""
     <div class="text-gray-900 leading-5 dark:text-gray-100">
@@ -412,6 +443,9 @@ defmodule PlausibleWeb.Components.Generic do
   slot :title, required: true
   slot :subtitle, required: true
   attr :feature_mod, :atom, default: nil
+  attr :feature_toggle?, :boolean, default: false
+  attr :current_role, :atom, default: nil
+  attr :current_team, :any, default: nil
   attr :site, :any
   attr :conn, :any
 
@@ -427,24 +461,37 @@ defmodule PlausibleWeb.Components.Generic do
         <div class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           {render_slot(@subtitle)}
         </div>
-        <%= if @feature_mod do %>
-          <PlausibleWeb.Components.Site.Feature.toggle
-            feature_mod={@feature_mod}
-            site={@site}
-            conn={@conn}
-          />
-        <% end %>
-        <div class="border-b dark:border-gray-700 pb-4"></div>
+        <PlausibleWeb.Components.Site.Feature.toggle
+          :if={@feature_toggle?}
+          feature_mod={@feature_mod}
+          site={@site}
+          conn={@conn}
+        />
       </header>
-
-      <div class="pb-4 px-6">
-        {render_slot(@inner_block)}
+      <div class="border-b dark:border-gray-700 mx-6"></div>
+      <div class="relative">
+        <%= if @feature_mod do %>
+          <PlausibleWeb.Components.Billing.feature_gate
+            locked?={@feature_mod.check_availability(@current_team) != :ok}
+            current_role={@current_role}
+            current_team={@current_team}
+          >
+            <div class="py-4 px-6">
+              {render_slot(@inner_block)}
+            </div>
+          </PlausibleWeb.Components.Billing.feature_gate>
+        <% else %>
+          <div class="py-4 px-6">
+            {render_slot(@inner_block)}
+          </div>
+        <% end %>
       </div>
     </div>
     """
   end
 
   attr(:sticky?, :boolean, default: true)
+  attr(:enabled?, :boolean, default: true)
   slot(:inner_block, required: true)
   slot(:tooltip_content, required: true)
 
@@ -456,31 +503,37 @@ defmodule PlausibleWeb.Components.Generic do
 
     assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
 
-    ~H"""
-    <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative z-[1000]">
+    if assigns.enabled? do
+      ~H"""
       <div
-        x-cloak
-        x-show={@show_inner}
-        class="tooltip-content z-[1000] bg-gray-900 rounded text-white absolute bottom-24 sm:bottom-7 left-0 sm:w-72 p-4 text-sm font-medium"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
+        x-data={@wrapper_data}
+        x-on:mouseenter="hovered = true"
+        x-on:mouseleave="hovered = false"
+        class={["w-max relative z-[1000]"]}
       >
-        {render_slot(List.first(@tooltip_content))}
+        <div
+          x-cloak
+          x-show={@show_inner}
+          class={["tooltip-content absolute pb-2 top-0 -translate-y-full z-[1000] sm:w-72"]}
+          x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0"
+          x-transition:enter-end="opacity-100"
+          x-transition:leave="transition ease-in duration-150"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+        >
+          <div class="bg-gray-900 text-white rounded p-4 text-sm font-medium">
+            {render_slot(@tooltip_content)}
+          </div>
+        </div>
+        <div x-on:click="sticky = true; hovered = true" x-on:click.outside="sticky = false">
+          {render_slot(@inner_block)}
+        </div>
       </div>
-      <div
-        x-on:click="sticky = true; hovered = true"
-        x-on:click.outside="sticky = false; hovered = false"
-        x-on:mouseover="hovered = true"
-        x-on:mouseout="hovered = false"
-      >
-        {render_slot(@inner_block)}
-      </div>
-    </div>
-    """
+      """
+    else
+      ~H"{render_slot(@inner_block)}"
+    end
   end
 
   slot :inner_block, required: true
@@ -581,6 +634,7 @@ defmodule PlausibleWeb.Components.Generic do
   slot :subtitle
   slot :inner_block, required: true
   slot :footer
+  attr :padding?, :boolean, default: true
   attr :rest, :global
 
   def focus_box(assigns) do
@@ -589,7 +643,7 @@ defmodule PlausibleWeb.Components.Generic do
       class="bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-md rounded-md mt-12"
       {@rest}
     >
-      <div class="p-8">
+      <div class={if(@padding?, do: "p-8")}>
         <.title :if={@title != []}>
           {render_slot(@title)}
         </.title>
@@ -793,7 +847,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <div class="mb-6 flex items-center justify-between" x-data>
       <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
-        <form id="filter-form" phx-change="filter" class="flex items-center">
+        <form id="filter-form" phx-change="filter" phx-submit="filter" class="flex items-center">
           <div class="text-gray-800 inline-flex items-center">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />

@@ -62,7 +62,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     [
       "Everything in Starter",
       site_limit_benefit(growth_plan),
-      team_member_limit_benefit(growth_plan)
+      team_member_limit_benefit(growth_plan),
+      "Team Management"
     ]
     |> Kernel.++(feature_benefits(growth_plan))
     |> Kernel.--(starter_benefits)
@@ -126,7 +127,12 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     end
   end
 
-  defp site_limit_benefit(%Plan{} = plan), do: "Up to #{plan.site_limit} sites"
+  defp site_limit_benefit(%Plan{} = plan) do
+    case plan.site_limit do
+      1 -> "One site"
+      site_limit -> "Up to #{site_limit} sites"
+    end
+  end
 
   defp feature_benefits(%Plan{} = plan) do
     Enum.flat_map(plan.features, fn feature_mod ->

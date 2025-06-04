@@ -72,7 +72,6 @@ defmodule Plausible.Billing.Feature do
 
   @features [
     Plausible.Billing.Feature.Props,
-    Plausible.Billing.Feature.Teams,
     Plausible.Billing.Feature.SharedLinks,
     Plausible.Billing.Feature.Funnels,
     Plausible.Billing.Feature.Goals,
@@ -200,13 +199,6 @@ defmodule Plausible.Billing.Feature.Props do
     toggle_field: :props_enabled
 end
 
-defmodule Plausible.Billing.Feature.Teams do
-  @moduledoc false
-  use Plausible.Billing.Feature,
-    name: :teams,
-    display_name: "Team Accounts"
-end
-
 defmodule Plausible.Billing.Feature.SharedLinks do
   @moduledoc false
   use Plausible.Billing.Feature,
@@ -237,4 +229,20 @@ defmodule Plausible.Billing.Feature.SitesAPI do
   use Plausible.Billing.Feature,
     name: :sites_api,
     display_name: "Sites API"
+end
+
+defmodule Plausible.Billing.Feature.Teams do
+  @moduledoc """
+  Unlike other feature modules, this one only exists to make feature gating
+  settings views more convenient. Other than that, it's not even considered
+  a feature on its own. The real access to "Teams" is controlled by the
+  team member limit.
+  """
+  def check_availability(team) do
+    if Plausible.Teams.Billing.solo?(team) do
+      {:error, :upgrade_required}
+    else
+      :ok
+    end
+  end
 end
