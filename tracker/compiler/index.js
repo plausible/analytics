@@ -135,14 +135,15 @@ function outputPath(variant, options) {
 function minify(code, globals, variant = {}) {
   const minifyOptions = {
     compress: {
-      global_defs: globals
-    }
+      global_defs: globals,
+      passes: 4
+    },
+    mangle: {}
   }
 
   if (variant.npm_package) {
-    minifyOptions.mangle = false
-  } else {
-    minifyOptions.compress.passes = 4
+    minifyOptions.mangle.reserved = ['init', 'track']
+    minifyOptions.mangle.toplevel = true
   }
 
   const result = minifySync(code, minifyOptions)
