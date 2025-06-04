@@ -1,10 +1,3 @@
-/*
-Tests for plausible-web.js script variant
-
-Unlike in production, we're manually interpolating the script config in this file to
-better test the script in isolation of the plausible codebase.
-*/
-
 import {
   expectPlausibleInAction,
   hideAndShowCurrentTab,
