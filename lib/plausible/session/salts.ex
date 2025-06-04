@@ -1,7 +1,6 @@
 defmodule Plausible.Session.Salts do
   use GenServer
   use Plausible.Repo
-  require Logger
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: opts[:name] || __MODULE__)
@@ -27,11 +26,9 @@ defmodule Plausible.Session.Salts do
     state =
       case salts do
         [current, prev] ->
-          Logger.warning("[salts] current salt hash: #{:erlang.phash2(current)}")
           %{previous: prev, current: current}
 
         [current] ->
-          Logger.warning("[salts] current salt hash: #{:erlang.phash2(current)}")
           %{previous: nil, current: current}
 
         [] ->
@@ -70,7 +67,6 @@ defmodule Plausible.Session.Salts do
 
   defp generate_and_persist_new_salt(now) do
     salt = :crypto.strong_rand_bytes(16)
-    Logger.warning("[salts] generated salt hash: #{:erlang.phash2(salt)}")
     Repo.insert_all("salts", [%{salt: salt, inserted_at: now}])
     salt
   end
