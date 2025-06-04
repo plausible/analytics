@@ -5,7 +5,7 @@ import { init as initAutocapture } from './autocapture'
 import { track } from './track'
 
 function init(overrides) {
-  if (COMPILE_CONFIG && window.plausible && window.plausible.l) {
+  if (COMPILE_PLAUSIBLE_WEB && window.plausible && window.plausible.l) {
     console.warn('Plausible analytics script was already initialized, skipping init')
     return
   }
@@ -17,22 +17,25 @@ function init(overrides) {
     initAutocapture(track)
   }
 
-  if (COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS || COMPILE_CONFIG) {
+  if (COMPILE_PLAUSIBLE_WEB || COMPILE_PLAUSIBLE_NPM || COMPILE_OUTBOUND_LINKS || COMPILE_FILE_DOWNLOADS || COMPILE_TAGGED_EVENTS) {
     initCustomEvents()
   }
 
-  // Call `track` for any events that were queued via plausible('event') before `init` was called
-  var queue = (window.plausible && window.plausible.q) || []
-  for (var i = 0; i < queue.length; i++) {
-    track.apply(this, queue[i])
-  }
 
-  window.plausible = track
-  window.plausible.init = init
-  window.plausible.l = true
+  if (COMPILE_PLAUSIBLE_WEB || COMPILE_PLAUSIBLE_LEGACY_VARIANT) {
+    // Call `track` for any events that were queued via plausible('event') before `init` was called
+    var queue = (window.plausible && window.plausible.q) || []
+    for (var i = 0; i < queue.length; i++) {
+      track.apply(this, queue[i])
+    }
+
+    window.plausible = track
+    window.plausible.init = init
+    window.plausible.l = true
+  }
 }
 
-if (COMPILE_CONFIG) {
+if (COMPILE_PLAUSIBLE_WEB) {
   window.plausible = (window.plausible || {})
 
   if (plausible.o) {
@@ -40,6 +43,10 @@ if (COMPILE_CONFIG) {
   }
 
   plausible.init = init
-} else {
+} else if (COMPILE_PLAUSIBLE_LEGACY_VARIANT) {
+  // Legacy variants automatically initialize based compile variables
   init()
 }
+
+// In npm module, we export the init and track functions
+// export { init, track }

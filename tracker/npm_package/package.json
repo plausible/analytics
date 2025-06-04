@@ -1,0 +1,20 @@
+{
+  "name": "macobo-test-tracker",
+  "version": "0.0.1",
+  "description": "Plausible Analytics official frontend tracking library",
+  "scripts": {
+    "test": "echo \"Error: Testing done in the tracker folder\" && exit 1"
+  },
+  "repository": "https://github.com/plausible/plausible",
+  "keywords": [
+    "web-analytics",
+    "website-analytics",
+    "analytics"
+  ],
+  "author": "Plausible Analytics",
+  "license": "AGPLv3",
+  "homepage": "https://plausible.io",
+  "type": "module",
+  "module": "./plausible.js",
+  "types": "./plausible.d.ts"
+}

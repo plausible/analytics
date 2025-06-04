@@ -1,5 +1,8 @@
 import { Page } from '@playwright/test'
 
+type RequestData = Record<string, unknown>
+type ShouldIgnoreRequest = (requestData?: RequestData) => boolean
+
 export async function mockManyRequests({
   page,
   path,
@@ -12,13 +15,13 @@ export async function mockManyRequests({
   path: string
   numberOfRequests: number
   responseDelay?: number
-  shouldIgnoreRequest?: (requestData?: Record<string, unknown>) => boolean
+  shouldIgnoreRequest?: ShouldIgnoreRequest | ShouldIgnoreRequest[]
   mockRequestTimeout?: number
 }) {
   const requestList: any[] = []
   await page.route(path, async (route, request) => {
     const postData = request.postDataJSON()
-    if (!shouldIgnoreRequest || !shouldIgnoreRequest(postData)) {
+    if (shouldAllow(postData, shouldIgnoreRequest)) {
       requestList.push(postData)
     }
     if (responseDelay) {
@@ -49,6 +52,16 @@ export async function mockManyRequests({
     })
 
   return getWaitForRequests
+}
+
+function shouldAllow(requestData: RequestData, ignores: ShouldIgnoreRequest | ShouldIgnoreRequest[] | undefined) {
+  if (Array.isArray(ignores)) {
+    return !ignores.some((shouldIgnore) => shouldIgnore(requestData))
+  } else if (ignores) {
+    return !ignores(requestData)
+  } else {
+    return true
+  }
 }
 
 function delay(ms) {
