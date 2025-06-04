@@ -7,7 +7,7 @@ defmodule PlausibleWeb.TrackerPlug do
   import Ecto.Query
   use Agent
 
-  base_variants = [
+  @base_variants [
     "hash",
     "outbound-links",
     "exclusions",
@@ -21,11 +21,14 @@ defmodule PlausibleWeb.TrackerPlug do
     "pageleave"
   ]
 
+  # Variants that have no effect on the output script
+  @ignore_base_variants ["pageleave"]
+
   # Generates Power Set of all variants
   legacy_variants =
-    1..Enum.count(base_variants)
+    1..Enum.count(@base_variants)
     |> Enum.map(fn x ->
-      Combination.combine(base_variants, x)
+      Combination.combine(@base_variants, x)
       |> Enum.map(fn y -> Enum.sort(y) |> Enum.join(".") end)
     end)
     |> List.flatten()
@@ -49,15 +52,35 @@ defmodule PlausibleWeb.TrackerPlug do
         end
 
       "/js/p.js" ->
-        legacy_request_file("p.js", files_available, conn)
+        legacy_request_file("p.js", [], files_available, conn)
 
       "/js/" <> requested_filename ->
-        sorted_script_variant(requested_filename) |> legacy_request_file(files_available, conn)
+        case get_requested_variant_names(requested_filename) do
+          {:ok, requested_variant_names} ->
+            legacy_request_file(
+              normalize_variant_filename(requested_variant_names),
+              requested_variant_names,
+              files_available,
+              conn
+            )
+
+          _ ->
+            conn
+        end
 
       _ ->
         conn
     end
   end
+
+  defp format_variant_metrics_label(base_variant_name) do
+    base_variant_name
+    |> String.replace("-", "_")
+    |> String.to_atom()
+  end
+
+  def telemetry_legacy_variant_labels(),
+    do: (@base_variants -- @ignore_base_variants) |> Enum.map(&format_variant_metrics_label/1)
 
   def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
@@ -100,14 +123,20 @@ defmodule PlausibleWeb.TrackerPlug do
     end
   end
 
-  defp legacy_request_file(filename, files_available, conn) do
-    if filename && MapSet.member?(files_available, filename) do
+  defp legacy_request_file(filename, requested_variant_names, files_available, conn) do
+    if MapSet.member?(files_available, filename) do
       location = Application.app_dir(:plausible, "priv/tracker/js/" <> filename)
 
       :telemetry.execute(
         telemetry_event(:legacy),
         %{},
-        %{status: 200}
+        Map.merge(
+          %{status: 200},
+          Enum.into(@base_variants -- @ignore_base_variants, %{}, fn base_variant_name ->
+            {format_variant_metrics_label(base_variant_name),
+             base_variant_name in requested_variant_names}
+          end)
+        )
       )
 
       conn
@@ -123,21 +152,23 @@ defmodule PlausibleWeb.TrackerPlug do
     end
   end
 
-  # Variants which do not factor into output
-  @ignore_variants ["js", "pageleave"]
+  defp normalize_variant_filename(requested_variant_names) do
+    sorted_impactful_variants =
+      requested_variant_names
+      |> Enum.reject(&(&1 in @ignore_base_variants))
+      |> Enum.sort()
 
-  defp sorted_script_variant(requested_filename) do
+    Enum.join(["plausible"] ++ sorted_impactful_variants ++ ["js"], ".")
+  end
+
+  defp get_requested_variant_names(requested_filename) do
     case String.split(requested_filename, ".") do
       [base_filename | rest] when base_filename in @base_legacy_filenames ->
-        sorted_variants =
-          rest
-          |> Enum.reject(&(&1 in @ignore_variants))
-          |> Enum.sort()
-
-        Enum.join(["plausible"] ++ sorted_variants ++ ["js"], ".")
+        variant_names = rest |> Enum.reject(&(&1 in ["js"]))
+        {:ok, variant_names}
 
       _ ->
-        nil
+        {:error, :invalid_filename}
     end
   end
 end

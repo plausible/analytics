@@ -119,8 +119,16 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
         counter(
           metric_prefix ++ [:tracker_script, :request, :legacy],
           event_name: PlausibleWeb.TrackerPlug.telemetry_event(:legacy),
-          tags: [:status],
-          tag_values: &%{status: &1.status}
+          tags: [:status] ++ PlausibleWeb.TrackerPlug.telemetry_legacy_variant_labels(),
+          tag_values: fn payload ->
+            Map.merge(
+              Map.new(
+                PlausibleWeb.TrackerPlug.telemetry_legacy_variant_labels(),
+                fn label -> {label, Map.get(payload, label, false)} end
+              ),
+              %{status: payload.status}
+            )
+          end
         )
       ]
     )
