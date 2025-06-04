@@ -322,7 +322,11 @@ defmodule Plausible.Auth.SSOTest do
         assert {:ok, _, _, sso_user} = SSO.provision_user(identity)
 
         identity =
-          new_identity("Jane Sculley on New Email", "jane@new.example.com", sso_user.sso_identity_id)
+          new_identity(
+            "Jane Sculley on New Email",
+            "jane@new.example.com",
+            sso_user.sso_identity_id
+          )
 
         assert {:error, :integration_not_found} = SSO.provision_user(identity)
       end
