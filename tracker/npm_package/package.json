@@ -12,7 +12,7 @@
     "analytics"
   ],
   "author": "Plausible Analytics",
-  "license": "AGPLv3",
+  "license": "MIT",
   "homepage": "https://plausible.io",
   "type": "module",
   "module": "./plausible.js",
