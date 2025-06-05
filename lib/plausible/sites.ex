@@ -6,14 +6,14 @@ defmodule Plausible.Sites do
 
   import Ecto.Query
 
-  alias Plausible.Auth
-  alias Plausible.Billing
-  alias Plausible.Repo
-  alias Plausible.Site
+  alias Plausible.{Auth, Repo, Site, Teams, Billing}
+  alias Plausible.Billing.Feature.SharedLinks
   alias Plausible.Site.SharedLink
-  alias Plausible.Teams
 
   require Plausible.Site.UserPreference
+
+  @shared_link_special_names ["WordPress - Shared Dashboard"]
+  def shared_link_special_names(), do: @shared_link_special_names
 
   def get_by_domain(domain) do
     Repo.get_by(Site, domain: domain)
@@ -342,22 +342,34 @@ defmodule Plausible.Sites do
     password = Keyword.get(opts, :password, nil)
 
     site = Plausible.Repo.preload(site, :team)
+
     skip_feature_check? = Keyword.get(opts, :skip_feature_check?, false)
-    feature_access? = Plausible.Billing.Feature.SharedLinks.check_availability(site.team) == :ok
+    skip_special_name_check? = Keyword.get(opts, :skip_special_name_check?, false)
 
-    if skip_feature_check? or feature_access? do
-      changes =
-        SharedLink.changeset(
-          %SharedLink{
-            site_id: site.id,
-            slug: Nanoid.generate()
-          },
-          %{name: name, password: password}
-        )
+    missing_feature_access? =
+      not skip_feature_check? and SharedLinks.check_availability(site.team) != :ok
 
-      Repo.insert(changes)
-    else
-      {:error, :upgrade_required}
+    special_name_not_allowed? =
+      not skip_special_name_check? and name in @shared_link_special_names
+
+    cond do
+      missing_feature_access? ->
+        {:error, :upgrade_required}
+
+      special_name_not_allowed? ->
+        {:error, :reserved_name}
+
+      true ->
+        changes =
+          SharedLink.changeset(
+            %SharedLink{
+              site_id: site.id,
+              slug: Nanoid.generate()
+            },
+            %{name: name, password: password}
+          )
+
+        Repo.insert(changes)
     end
   end
 

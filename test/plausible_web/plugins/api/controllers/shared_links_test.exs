@@ -203,6 +203,32 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       assert resp.shared_link.href =~
                "http://localhost:8000/share/#{URI.encode_www_form(site.domain)}?auth="
     end
+
+    for special_name <- Plausible.Sites.shared_link_special_names() do
+      test "can create shared link with the reserved '#{special_name}' name", %{
+        conn: conn,
+        site: site,
+        token: token
+      } do
+        url = Routes.plugins_api_shared_links_url(PlausibleWeb.Endpoint, :create)
+
+        resp =
+          authenticate(conn, site.domain, token)
+          |> put_req_header("content-type", "application/json")
+          |> put(url, %{
+            shared_link: %{
+              name: unquote(special_name)
+            }
+          })
+          |> json_response(201)
+          |> assert_schema("SharedLink", spec())
+
+        assert resp.shared_link.name == unquote(special_name)
+
+        assert resp.shared_link.href =~
+                 "http://localhost:8000/share/#{URI.encode_www_form(site.domain)}?auth="
+      end
+    end
   end
 
   describe "get /shared_links" do

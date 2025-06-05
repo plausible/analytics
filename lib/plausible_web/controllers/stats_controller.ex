@@ -341,9 +341,11 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  @wp_shared_link_special_name "WordPress - Shared Dashboard"
-
   defp render_shared_link(conn, shared_link) do
+    shared_links_feature_access? =
+      SharedLinks.check_availability(shared_link.site.team) == :ok or
+        shared_link.name in Plausible.Sites.shared_link_special_names()
+
     cond do
       Teams.locked?(shared_link.site.team) ->
         owners = Plausible.Repo.preload(shared_link.site, :owners)
@@ -354,8 +356,7 @@ defmodule PlausibleWeb.StatsController do
           dogfood_page_path: "/share/:dashboard"
         )
 
-      SharedLinks.check_availability(shared_link.site.team) != :ok and
-          shared_link.name != @wp_shared_link_special_name ->
+      not shared_links_feature_access? ->
         owners = Plausible.Repo.preload(shared_link.site, :owners)
 
         render(conn, "site_locked.html",

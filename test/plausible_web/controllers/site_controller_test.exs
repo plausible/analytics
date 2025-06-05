@@ -1656,6 +1656,24 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute Repo.exists?(Plausible.Site.SharedLink)
     end
+
+    for special_name <- Plausible.Sites.shared_link_special_names() do
+      test "fails to create with the special '#{special_name}' name intended for Plugins API",
+           %{conn: conn, site: site} do
+        conn =
+          post(conn, "/sites/#{site.domain}/shared-links", %{
+            "shared_link" => %{"name" => unquote(special_name)}
+          })
+
+        assert redirected_to(conn, 302) ==
+                 Routes.site_path(conn, :new_shared_link, site.domain)
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "This name is reserved. Please choose another one"
+
+        refute Repo.exists?(Plausible.Site.SharedLink)
+      end
+    end
   end
 
   describe "GET /sites/:domain/shared-links/edit" do

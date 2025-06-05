@@ -585,6 +585,11 @@ defmodule PlausibleWeb.SiteController do
         |> put_flash(:error, "Your current subscription plan does not include Shared Links")
         |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
 
+      {:error, :reserved_name} ->
+        conn
+        |> put_flash(:error, "This name is reserved. Please choose another one")
+        |> redirect(to: Routes.site_path(conn, :new_shared_link, site.domain))
+
       {:error, changeset} ->
         conn
         |> assign(:skip_plausible_tracking, true)

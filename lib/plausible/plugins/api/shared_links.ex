@@ -34,7 +34,8 @@ defmodule Plausible.Plugins.API.SharedLinks do
       nil ->
         Plausible.Sites.create_shared_link(site, name,
           password: password,
-          skip_feature_check?: true
+          skip_feature_check?: true,
+          skip_special_name_check?: true
         )
 
       shared_link ->

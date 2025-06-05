@@ -301,6 +301,9 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
             url: Sites.shared_link_url(site, link)
           })
 
+        {:error, :reserved_name} ->
+          H.bad_request(conn, "This name is reserved. Please choose another one")
+
         {:error, :upgrade_required} ->
           H.payment_required(conn, "Your current subscription plan does not include Shared Links")
       end
