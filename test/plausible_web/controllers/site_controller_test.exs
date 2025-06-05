@@ -713,6 +713,23 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /:domain/settings/visibility" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "does not render shared links with special names", %{conn: conn, site: site} do
+      for special_name <- Plausible.Sites.shared_link_special_names() do
+        insert(:shared_link, name: special_name, site: site)
+
+        html =
+          conn
+          |> get("/#{site.domain}/settings/visibility")
+          |> html_response(200)
+
+        refute text_of_element(html, "#shared-links-table") =~ special_name
+      end
+    end
+  end
+
   describe "GET /:domain/settings/goals" do
     setup [:create_user, :log_in, :create_site]
 

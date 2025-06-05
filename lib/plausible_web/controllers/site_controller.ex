@@ -162,7 +162,14 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_visibility(conn, _params) do
     site = conn.assigns[:site]
-    shared_links = Repo.all(from(l in Plausible.Site.SharedLink, where: l.site_id == ^site.id))
+
+    shared_links =
+      Repo.all(
+        from(l in Plausible.Site.SharedLink,
+          where:
+            l.site_id == ^site.id and l.name not in ^Plausible.Sites.shared_link_special_names()
+        )
+      )
 
     conn
     |> render("settings_visibility.html",
