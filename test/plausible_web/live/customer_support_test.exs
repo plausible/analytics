@@ -5,7 +5,9 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
   @moduletag :ee_only
 
   on_ee do
-    @cs_index Routes.customer_support_path(PlausibleWeb.Endpoint, :index)
+    alias PlausibleWeb.InternalRouter.Helpers, as: InternalRoutes
+    @endpoint PlausibleWeb.InternalEndpoint
+    @cs_index InternalRoutes.customer_support_path(PlausibleWeb.InternalEndpoint, :index)
 
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
@@ -100,8 +102,8 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
       assert [link] = find(doc, ~s|a[data-test-type="#{type}"][data-test-id="#{id}"]|)
 
       assert text_of_attr(link, "href") ==
-               Routes.customer_support_resource_path(
-                 PlausibleWeb.Endpoint,
+               InternalRoutes.customer_support_resource_path(
+                 PlausibleWeb.InternalEndpoint,
                  :details,
                  "#{type}s",
                  type,

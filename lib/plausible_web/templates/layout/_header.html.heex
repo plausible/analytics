@@ -44,8 +44,21 @@
                 </.styled_link>
 
                 <.styled_link
+                  :if={ee?()}
                   class="text-sm mr-6"
-                  href={"/cs/sites/site/#{@conn.assigns.site.id}"}
+                  href={
+                    apply(
+                      InternalRoutes,
+                      :customer_support_resource_url,
+                      [
+                        PlausibleWeb.InternalEndpoint,
+                        :details,
+                        :sites,
+                        :site,
+                        @site.id
+                      ]
+                    )
+                  }
                   new_tab={true}
                 >
                   CS
@@ -57,7 +70,7 @@
               >
                 <.styled_link
                   class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
-                  href={Routes.settings_path(@conn, :subscription)}
+                  href={Routes.settings_url(PlausibleWeb.Endpoint, :subscription)}
                 >
                   {trial_notification(@conn.assigns[:current_team])}
                 </.styled_link>
@@ -88,7 +101,7 @@
                       more_teams?={@more_teams?}
                     />
                     <.dropdown_divider />
-                    <.dropdown_item href={Routes.settings_path(@conn, :index)}>
+                    <.dropdown_item href={Routes.settings_url(PlausibleWeb.Endpoint, :index)}>
                       Account Settings
                     </.dropdown_item>
 
@@ -104,7 +117,7 @@
                     <div :if={Plausible.Teams.setup?(@current_team)}>
                       <.dropdown_item
                         class="flex"
-                        href={Routes.settings_path(@conn, :team_general)}
+                        href={Routes.settings_url(PlausibleWeb.Endpoint, :team_general)}
                       >
                         <span class="flex-1">
                           Team Settings
