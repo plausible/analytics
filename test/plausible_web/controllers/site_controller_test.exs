@@ -1718,6 +1718,23 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert link.name == "Updated link name"
     end
+
+    for special_name <- Plausible.Sites.shared_link_special_names() do
+      test "fails to change link name to #{special_name}", %{conn: conn, site: site} do
+        link = insert(:shared_link, site: site)
+
+        conn =
+          put(conn, "/sites/#{site.domain}/shared-links/#{link.slug}", %{
+            "shared_link" => %{"name" => unquote(special_name)}
+          })
+
+        assert redirected_to(conn, 302) ==
+                 Routes.site_path(conn, :edit_shared_link, site.domain, link.slug)
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "This name is reserved. Please choose another one"
+      end
+    end
   end
 
   describe "DELETE /sites/:domain/shared-links/:slug" do
