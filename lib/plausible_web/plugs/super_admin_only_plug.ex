@@ -5,6 +5,8 @@ defmodule PlausibleWeb.SuperAdminOnlyPlug do
 
   import Plug.Conn
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
+
   def init(options) do
     options
   end
@@ -17,7 +19,7 @@ defmodule PlausibleWeb.SuperAdminOnlyPlug do
     else
       conn
       |> PlausibleWeb.UserAuth.log_out_user()
-      |> send_resp(403, "Not allowed")
+      |> Phoenix.Controller.redirect(to: Routes.auth_path(conn, :login_form))
       |> halt()
     end
   end
