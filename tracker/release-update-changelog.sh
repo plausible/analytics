@@ -1,11 +1,10 @@
 #!/bin/bash
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <version>"
-    exit 1
-fi
+# Ensure we're in the correct directory for relative paths to work
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$script_dir"
 
-version=$1
+version=$(jq -r .version npm_package/package.json)
 release_date=$(date +%Y-%m-%d)
 
 temp_file=$(mktemp)
@@ -22,4 +21,4 @@ EOF
 sed "s/## Unreleased/## [$version] - $release_date/" CHANGELOG.md | \
     tail -n +8 >> "$temp_file"
 
-mv "$temp_file" CHANGELOG.md
+mv "$temp_file" npm_package/CHANGELOG.md
