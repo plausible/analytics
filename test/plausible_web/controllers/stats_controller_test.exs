@@ -1349,20 +1349,22 @@ defmodule PlausibleWeb.StatsControllerTest do
       refute String.contains?(html_response(conn, 200), "Back to my sites")
     end
 
-    test "shows dashboard if team subscription insufficient but shared link is WordPress specific",
-         %{conn: conn} do
-      site = new_site(domain: "test-site.com")
-      link = insert(:shared_link, site: site, name: "WordPress - Shared Dashboard")
+    for special_name <- Plausible.Sites.shared_link_special_names() do
+      test "shows dashboard if team subscription insufficient but shared link name is '#{special_name}'",
+           %{conn: conn} do
+        site = new_site(domain: "test-site.com")
+        link = insert(:shared_link, site: site, name: unquote(special_name))
 
-      insert(:starter_subscription, team: site.team)
+        insert(:starter_subscription, team: site.team)
 
-      html =
-        conn
-        |> get("/share/test-site.com/?auth=#{link.slug}")
-        |> html_response(200)
+        html =
+          conn
+          |> get("/share/test-site.com/?auth=#{link.slug}")
+          |> html_response(200)
 
-      assert element_exists?(html, @react_container)
-      refute html =~ "Shared Link Unavailable"
+        assert element_exists?(html, @react_container)
+        refute html =~ "Shared Link Unavailable"
+      end
     end
 
     test "renders 404 not found when no auth parameter supplied", %{conn: conn} do
