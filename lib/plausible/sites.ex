@@ -13,6 +13,22 @@ defmodule Plausible.Sites do
   require Plausible.Site.UserPreference
 
   @shared_link_special_names ["WordPress - Shared Dashboard"]
+  @doc """
+  Special shared link names are used to distinguish between those
+  created by the Plugins API, and those created in any other way
+  (i.e. via Sites API or in the Dashboard Site Settings UI).
+
+  The intent is to give our WP plugin the ability to display an
+  embedded dashboard even when the user's subscription does not
+  support the shared links feature.
+
+  A shared link with a special name can only be created via the
+  plugins API, and it will not show up under the list of shared
+  links in Site Settings > Visibility.
+
+  Once created with the special name, the link will be accessible
+  even when the team does not have access to SharedLinks feature.
+  """
   def shared_link_special_names(), do: @shared_link_special_names
 
   def get_by_domain(domain) do
