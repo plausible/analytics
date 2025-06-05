@@ -134,6 +134,9 @@ defmodule PlausibleWeb.LayoutView do
             do: %{key: "API Keys", value: "api-keys", icon: :key}
           ),
           if(current_team_role == :owner,
+            do: %{key: "Single Sign-On", value: "sso/general", icon: :key}
+          ),
+          if(current_team_role == :owner,
             do: %{key: "Danger Zone", value: "team/delete", icon: :exclamation_triangle}
           )
         ]
