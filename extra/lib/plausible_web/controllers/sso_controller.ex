@@ -9,6 +9,9 @@ defmodule PlausibleWeb.SSOController do
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
+  plug Plausible.Plugs.AuthorizeTeamAccess,
+       [:owner] when action in [:sso_settings]
+
   def login_form(conn, params) do
     render(conn, "login_form.html", error: params["error"])
   end
@@ -89,6 +92,18 @@ defmodule PlausibleWeb.SSOController do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
     Logger.error(body)
     conn |> send_resp(200, "OK")
+  end
+
+  def sso_settings(conn, _params) do
+    if Plausible.Teams.setup?(conn.assigns.current_team) do
+      render(conn, :sso_settings,
+        layout: {PlausibleWeb.LayoutView, :settings},
+        connect_live_socket: true
+      )
+    else
+      conn
+      |> redirect(to: Routes.site_path(conn, :index))
+    end
   end
 
   defp name_from_email(email) do
