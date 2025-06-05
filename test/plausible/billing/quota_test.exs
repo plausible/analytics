@@ -1058,4 +1058,30 @@ defmodule Plausible.Billing.QuotaTest do
       assert suggested_tier == :business
     end
   end
+
+  describe "feature usage and ensuring access" do
+    setup [:create_user, :create_site]
+
+    test "subscribing to Starter plan when using shared links", %{user: user, site: site} do
+      insert(:shared_link, site: site)
+
+      usage = team_of(user) |> Plausible.Teams.Billing.quota_usage(with_features: true)
+      plan = Plausible.Billing.Plans.find(@v5_10m_starter_plan_id)
+
+      assert {:error, {:unavailable_features, [SharedLinks]}} =
+               Quota.ensure_feature_access(usage, plan)
+    end
+
+    for special_name <- Plausible.Sites.shared_link_special_names() do
+      test "having a shared link with the name '#{special_name}' does not count as using shared links",
+           %{user: user, site: site} do
+        insert(:shared_link, site: site, name: unquote(special_name))
+
+        usage = team_of(user) |> Plausible.Teams.Billing.quota_usage(with_features: true)
+        plan = Plausible.Billing.Plans.find(@v5_10m_starter_plan_id)
+
+        assert :ok = Quota.ensure_feature_access(usage, plan)
+      end
+    end
+  end
 end

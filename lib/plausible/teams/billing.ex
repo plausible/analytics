@@ -528,6 +528,11 @@ defmodule Plausible.Teams.Billing do
   end
 
   def features_usage(nil, site_ids) when is_list(site_ids) do
+    shared_links_usage_q =
+      from l in Plausible.Site.SharedLink,
+        where:
+          l.site_id in ^site_ids and l.name not in ^Plausible.Sites.shared_link_special_names()
+
     props_usage_q =
       from s in Plausible.Site,
         where: s.id in ^site_ids and fragment("cardinality(?) > 0", s.allowed_event_props)
@@ -541,6 +546,7 @@ defmodule Plausible.Teams.Billing do
         funnels_usage_q = from f in "funnels", where: f.site_id in ^site_ids
 
         [
+          {Feature.SharedLinks, shared_links_usage_q},
           {Feature.Props, props_usage_q},
           {Feature.Funnels, funnels_usage_q},
           {Feature.RevenueGoals, revenue_goals_usage_q},
