@@ -41,6 +41,9 @@ defmodule Plausible.Teams.Policy do
     field :sso_session_timeout_minutes, :integer, default: @default_timeout_minutes
   end
 
+  @spec sso_member_roles() :: [sso_member_role()]
+  def sso_member_roles(), do: @sso_member_roles
+
   @spec update_changeset(t(), map()) :: Ecto.Changeset.t()
   def update_changeset(policy, params) do
     policy
