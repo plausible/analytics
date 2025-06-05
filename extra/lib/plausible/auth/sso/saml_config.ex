@@ -26,11 +26,18 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
     field :idp_metadata, :string
   end
 
+  @spec configured?(t()) :: boolean()
+  def configured?(config) do
+    !!(config.idp_signin_url && config.idp_entity_id && config.idp_cert_pem)
+  end
+
+  @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(struct, params) do
     struct
     |> cast(params, @fields)
   end
 
+  @spec update_changeset(t(), map()) :: Ecto.Changeset.t()
   def update_changeset(struct, params) do
     struct
     |> cast(params, @fields)

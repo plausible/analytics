@@ -15,6 +15,15 @@ defmodule Plausible.Auth.SSO do
           {:sso_default_role, Teams.Policy.sso_member_role()}
           | {:sso_session_timeout_minutes, non_neg_integer()}
 
+  @spec get_integration_for(Teams.Team.t()) :: {:ok, SSO.Integration.t()} | {:error, :not_found}
+  def get_integration_for(%Teams.Team{} = team) do
+    if integration = Repo.get_by(SSO.Integration, team_id: team.id) do
+      {:ok, integration}
+    else
+      {:error, :not_found}
+    end
+  end
+
   @spec get_integration(String.t()) :: {:ok, SSO.Integration.t()} | {:error, :not_found}
   def get_integration(identifier) when is_binary(identifier) do
     query =
