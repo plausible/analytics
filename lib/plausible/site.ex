@@ -37,10 +37,6 @@ defmodule Plausible.Site do
     has_many :guest_memberships, Plausible.Teams.GuestMembership
     has_many :guest_invitations, Plausible.Teams.GuestInvitation
 
-    embeds_one :installation_meta, Plausible.Site.InstallationMeta,
-      on_replace: :update,
-      defaults_to_struct: true
-
     has_one :tracker_script_configuration, Plausible.Site.TrackerScriptConfiguration
 
     has_many :goals, Plausible.Goal, preload_order: [desc: :id]
