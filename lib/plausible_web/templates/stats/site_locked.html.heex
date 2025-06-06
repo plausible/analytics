@@ -17,11 +17,19 @@
         </svg>
       </div>
       <h3 class="mt-6 text-center text-2xl leading-6 font-medium text-gray-900 dark:text-gray-200">
-        Dashboard locked
+        <%= if @conn.assigns[:only_shared_link_access_missing?] do %>
+          Shared Link Unavailable
+        <% else %>
+          Dashboard Locked
+        <% end %>
       </h3>
 
-      <%= case @conn.assigns[:site_role] do %>
-        <% role when role in [:owner, :billing] -> %>
+      <%= case @conn.assigns do %>
+        <% %{only_shared_link_access_missing?: true} -> %>
+          <p class="mt-6 text-gray-600 dark:text-gray-300 text-center">
+            This shared link is locked because the owner of the site does not have access to the Shared Links feature. To restore it, the owner must upgrade to a suitable plan.
+          </p>
+        <% %{site_role: role} when role in [:owner, :billing] -> %>
           <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
             <p>
               This dashboard is locked because you don't have a valid subscription.
@@ -40,7 +48,7 @@
               Manage my subscription
             </.button_link>
           </div>
-        <% role when role in [:admin, :viewer, :editor] -> %>
+        <% %{site_role: role} when role in [:admin, :viewer, :editor] -> %>
           <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
             <p>
               Owner of this site must upgrade their subscription plan in order to unlock the stats.

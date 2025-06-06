@@ -436,6 +436,39 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         res = json_response(conn, 404)
         assert res["error"] == "Site could not be found"
       end
+
+      test "fails to create without access to SharedLinks feature", %{
+        conn: conn,
+        site: site,
+        user: user
+      } do
+        subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.SitesAPI])
+
+        conn =
+          put(conn, "/api/v1/sites/shared-links", %{
+            site_id: site.domain,
+            name: "My Link"
+          })
+
+        res = json_response(conn, 402)
+
+        assert res["error"] == "Your current subscription plan does not include Shared Links"
+      end
+
+      for special_name <- Plausible.Sites.shared_link_special_names() do
+        test "fails to create with the special '#{special_name}' name intended for Plugins API",
+             %{conn: conn, site: site} do
+          conn =
+            put(conn, "/api/v1/sites/shared-links", %{
+              site_id: site.domain,
+              name: unquote(special_name)
+            })
+
+          res = json_response(conn, 400)
+
+          assert res["error"] == "This name is reserved. Please choose another one"
+        end
+      end
     end
 
     describe "PUT /api/v1/sites/goals" do
