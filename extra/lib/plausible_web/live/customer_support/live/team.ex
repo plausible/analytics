@@ -190,7 +190,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               <div :if={@team.grace_period}>
                 <span class="flex items-center gap-x-8 justify-center mt-1">
                   <div>
-                    <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-1" />
+                    <Heroicons.lock_open solid class="inline stroke-2 w-4 h-4 text-red-400 mr-1" />
                     <.styled_link phx-click="unlock" phx-target={@myself}>Unlock</.styled_link>
                   </div>
 
