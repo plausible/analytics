@@ -8,8 +8,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
-    alias Plausible.Teams
-
     defp open_team(id, qs \\ []) do
       Routes.customer_support_resource_path(
         PlausibleWeb.Endpoint,
@@ -38,27 +36,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_team(9999))
         end
-      end
-
-      test "lock/unlock a team", %{user: user, conn: conn} do
-        team = team_of(user)
-        {:ok, lv, html} = live(conn, open_team(team.id))
-        refute element_exists?(html, "#unlock-dashboards")
-
-        lv |> element("#lock-dashboards") |> render_click()
-        html = render(lv)
-
-        assert text(html) =~ "Team locked"
-        assert Teams.locked?(Plausible.Repo.reload!(team))
-
-        refute element_exists?(html, "#lock-dashboards")
-        assert element_exists?(html, "#unlock-dashboards")
-
-        lv |> element("#unlock-dashboards") |> render_click()
-        html = render(lv)
-
-        assert text(html) =~ "Team unlocked"
-        refute Teams.locked?(Plausible.Repo.reload!(team))
       end
     end
 

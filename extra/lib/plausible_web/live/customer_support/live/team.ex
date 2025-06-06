@@ -139,7 +139,13 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </p>
               </div>
             </div>
+            <div :if={@team.grace_period}>
+              <span :if={@team.locked} class="flex items-center">
+                <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
+                <.styled_link phx-click="unlock" phx-target={@myself}>Unlock Team</.styled_link>
+              </span>
 
+<<<<<<< HEAD
             <span :if={Teams.locked?(@team)} class="flex items-center">
               <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
               <.styled_link id="unlock-dashboards" phx-click="unlock" phx-target={@myself}>
@@ -148,6 +154,20 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
             </span>
 
             <span :if={not Teams.locked?(@team)} class="flex items-center font-xs">
+              <Heroicons.lock_open class="inline stroke-2 w-4 h-4 text-gray-800 mr-2" />
+              <.styled_link id="lock-dashboards" phx-click="lock" phx-target={@myself}>
+                Lock Dashboards
+              </.styled_link>
+            </span>
+||||||| bb63c0d0e4 (CRM: team (un)lock regardless of grace period (#5440))
+            <span :if={Teams.locked?(@team)} class="flex items-center">
+              <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
+              <.styled_link id="unlock-dashboards" phx-click="unlock" phx-target={@myself}>
+                Unlock Dashboards
+              </.styled_link>
+            </span>
+
+            <span :if={not Teams.locked?(@team)} class="flex items-center">
               <Heroicons.lock_open class="inline stroke-2 w-4 h-4 text-gray-800 mr-2" />
               <.styled_link id="lock-dashboards" phx-click="lock" phx-target={@myself}>
                 Lock Dashboards
@@ -501,10 +521,10 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   def render_result(assigns) do
     ~H"""
     <div class="flex-1 -mt-px w-full">
-      <div class="w-full flex items-center justify-between space-x-2">
+      <div class="w-full flex items-center justify-between space-x-4">
         <div class={[
           team_bg(@resource.object.identifier),
-          "rounded-full p-1 flex items-center justify-center mr-2"
+          "rounded-full p-1 flex items-center justify-center"
         ]}>
           <Heroicons.user_group class="h-4 w-4 text-white" />
         </div>
@@ -524,10 +544,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
         >
           $
-        </span>
-
-        <span :if={Teams.locked?(@resource.object)} class="inline-flex items-center">
-          <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
         </span>
       </div>
 
@@ -762,15 +778,31 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   defp lock_team(socket) do
-    team = Teams.admin_lock!(socket.assigns.team)
-    success(socket, "Team locked")
-    assign(socket, team: team)
+    if socket.assigns.team.grace_period do
+      team = socket.assigns.team
+      Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
+      Plausible.Teams.end_grace_period(team)
+
+      success(socket, "Team locked. Grace period ended.")
+      assign(socket, team: team)
+    else
+      failure(socket, "No grace period")
+      socket
+    end
   end
 
   defp unlock_team(socket) do
-    team = Teams.admin_unlock!(socket.assigns.team)
-    success(socket, "Team unlocked")
-    assign(socket, team: team)
+    if socket.assigns.team.grace_period do
+      team =
+        socket.assigns.team
+        |> Plausible.Teams.remove_grace_period()
+        |> Plausible.Billing.SiteLocker.set_lock_status_for(false)
+
+      success(socket, "Team unlocked. Grace period removed.")
+      assign(socket, team: team)
+    else
+      socket
+    end
   end
 
   defp monthly_pageviews_usage(usage, limit) do

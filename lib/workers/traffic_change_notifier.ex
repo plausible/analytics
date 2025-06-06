@@ -23,7 +23,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
               sn.last_sent < ^NaiveDateTime.add(now, -@min_interval_hours, :hour),
           inner_join: s in assoc(sn, :site),
           inner_join: t in assoc(s, :team),
-          where: not t.locked and not t.locked_by_admin,
+          where: not t.locked,
           where: is_nil(t.accept_traffic_until) or t.accept_traffic_until > ^today,
           preload: [site: {s, team: t}]
       )
