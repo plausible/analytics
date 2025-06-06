@@ -39,11 +39,6 @@ defmodule Plausible.Auth.ApiKey do
     |> unique_constraint([:team_id, :user_id], error_key: :team)
   end
 
-  # NOTE: needed only because of lacking introspection in Kaffy
-  def changeset(struct, attrs) do
-    changeset(struct, nil, attrs)
-  end
-
   def update(struct, attrs \\ %{}) do
     struct
     |> cast(attrs, [:name, :user_id, :scopes])

@@ -73,7 +73,6 @@
   "jason": {:hex, :jason, "1.4.4", "b9226785a9aa77b6857ca22832cffa5d5011a667207eb2a0ad56adb5db443b8a", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "c5eb0cab91f094599f94d55bc63409236a8ec69a21a67814529e8d5f6cc90b3b"},
   "joken": {:hex, :joken, "2.6.0", "b9dd9b6d52e3e6fcb6c65e151ad38bf4bc286382b5b6f97079c47ade6b1bcc6a", [:mix], [{:jose, "~> 1.11.5", [hex: :jose, repo: "hexpm", optional: false]}], "hexpm", "5a95b05a71cd0b54abd35378aeb1d487a23a52c324fa7efdffc512b655b5aaa7"},
   "jose": {:hex, :jose, "1.11.6", "613fda82552128aa6fb804682e3a616f4bc15565a048dabd05b1ebd5827ed965", [:mix, :rebar3], [], "hexpm", "6275cb75504f9c1e60eeacb771adfeee4905a9e182103aa59b53fed651ff9738"},
-  "kaffy": {:git, "https://github.com/aesmail/kaffy.git", "87e2d5ec95e1628fe23dc02f4acf3a1d572d77e4", []},
   "location": {:git, "https://github.com/plausible/location.git", "a89bf79985c3c3d0830477ae587001156a646ce8", []},
   "locus": {:hex, :locus, "2.3.11", "ddfab230e3fb8b45f47416ed0fb8776c6d6d00f38687f6d37647ed7502c33d8e", [:rebar3], [{:tls_certificate_check, "~> 1.9", [hex: :tls_certificate_check, repo: "hexpm", optional: false]}], "hexpm", "ad855e9b998adc6ec5c57b9d0e5130b0e40a927be7b50d8e104df245c60ede1a"},
   "mail": {:hex, :mail, "0.3.1", "cb0a14e4ed8904e4e5a08214e686ccf6f9099346885db17d8c309381f865cc5c", [:mix], [], "hexpm", "1db701e89865c1d5fa296b2b57b1cd587587cca8d8a1a22892b35ef5a8e352a6"},

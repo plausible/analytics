@@ -18,7 +18,7 @@ defmodule Plausible.Billing.Plan do
     field :generation, :integer
     field :kind, Ecto.Enum, values: [:starter, :growth, :business]
 
-    field :features, Plausible.Billing.Ecto.FeatureList
+    field :features, {:array, Plausible.Billing.Ecto.Feature}
     field :monthly_pageview_limit, :integer
     field :site_limit, :integer
     field :team_member_limit, Plausible.Billing.Ecto.Limit

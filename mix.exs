@@ -91,8 +91,6 @@ defmodule Plausible.MixProject do
       {:gen_cycle, "~> 1.0.4"},
       {:hackney, "~> 1.8"},
       {:jason, "~> 1.3"},
-      {:kaffy,
-       git: "https://github.com/aesmail/kaffy.git", only: [:dev, :test, :staging, :prod, :load]},
       {:location, git: "https://github.com/plausible/location.git"},
       {:mox, "~> 1.0", only: [:test, :ce_test]},
       {:nanoid, "~> 2.1.0"},
