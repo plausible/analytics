@@ -38,16 +38,6 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       assert Enum.empty?(all_enqueued(worker: SendEmailReport))
     end
 
-    test "does not schedule a weekly report for admin-locked site" do
-      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
-      Plausible.Teams.admin_lock!(site.team)
-      insert(:weekly_report, site: site, recipients: ["user@email.com"])
-
-      perform_job(ScheduleEmailReports, %{})
-
-      assert Enum.empty?(all_enqueued(worker: SendEmailReport))
-    end
-
     test "schedules a new report as soon as a previous one is completed" do
       site = new_site(domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
@@ -87,16 +77,6 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
     test "does not schedule a monthly report for locked site" do
       site = new_site(domain: "test-site.com", timezone: "US/Eastern")
       site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
-      insert(:monthly_report, site: site, recipients: ["user@email.com"])
-
-      perform_job(ScheduleEmailReports, %{})
-
-      assert Enum.empty?(all_enqueued(worker: SendEmailReport))
-    end
-
-    test "does not schedule a monthly report for admin-locked site" do
-      site = new_site(domain: "test-site.com", timezone: "US/Eastern")
-      Plausible.Teams.admin_lock!(site.team)
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
 
       perform_job(ScheduleEmailReports, %{})

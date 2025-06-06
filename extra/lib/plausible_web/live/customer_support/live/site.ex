@@ -79,13 +79,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
             <.styled_link patch={"/cs/teams/team/#{@site.team.id}"}>
               {@site.team.name}
             </.styled_link>
-
-            <span
-              :if={Plausible.Teams.locked?(@site.team)}
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
-            >
-              Locked
-            </span>
           </p>
           <p class="text-sm font-medium">
             <span :if={@site.domain_changed_from}>(previously: {@site.domain_changed_from})</span>
@@ -268,10 +261,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
 
         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
           Site
-        </span>
-
-        <span :if={Plausible.Teams.locked?(@resource.object.team)} class="inline-flex items-center">
-          <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
         </span>
       </div>
 

@@ -8,8 +8,6 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
-    alias Plausible.Teams
-
     defp open_team(id, qs \\ []) do
       Routes.customer_support_resource_path(
         PlausibleWeb.Endpoint,
@@ -34,31 +32,38 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         assert text(html) =~ team.name
       end
 
+      test "grace period handling", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, _, html} = live(conn, open_team(team.id))
+        refute text(html) =~ "Lock"
+        refute text(html) =~ "Unlock"
+
+        Plausible.Teams.start_grace_period(team)
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert element_exists?(html, ~s|a[phx-click="lock"]|)
+        assert element_exists?(html, ~s|a[phx-click="unlock"]|)
+
+        refute Plausible.Repo.reload!(team).locked
+
+        lv |> element(~s|a[phx-click="lock"]|) |> render_click()
+
+        team = Plausible.Repo.reload!(team)
+        assert team.locked
+        assert team.grace_period.is_over
+
+        lv |> element(~s|a[phx-click="unlock"]|) |> render_click()
+
+        team = Plausible.Repo.reload!(team)
+        refute team.locked
+        refute team.grace_period
+      end
+
       test "404", %{conn: conn} do
         assert_raise Ecto.NoResultsError, fn ->
           {:ok, _lv, _html} = live(conn, open_team(9999))
         end
-      end
-
-      test "lock/unlock a team", %{user: user, conn: conn} do
-        team = team_of(user)
-        {:ok, lv, html} = live(conn, open_team(team.id))
-        refute element_exists?(html, "#unlock-dashboards")
-
-        lv |> element("#lock-dashboards") |> render_click()
-        html = render(lv)
-
-        assert text(html) =~ "Team locked"
-        assert Teams.locked?(Plausible.Repo.reload!(team))
-
-        refute element_exists?(html, "#lock-dashboards")
-        assert element_exists?(html, "#unlock-dashboards")
-
-        lv |> element("#unlock-dashboards") |> render_click()
-        html = render(lv)
-
-        assert text(html) =~ "Team unlocked"
-        refute Teams.locked?(Plausible.Repo.reload!(team))
       end
     end
 

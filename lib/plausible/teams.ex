@@ -69,40 +69,7 @@ defmodule Plausible.Teams do
   @spec locked?(Teams.Team.t() | nil) :: boolean()
   def locked?(nil), do: false
 
-  def locked?(%Teams.Team{locked: locked, locked_by_admin: locked_by_admin}),
-    do: locked or locked_by_admin
-
-  def admin_lock!(%Teams.Team{} = team) do
-    {:ok, team} =
-      Repo.transaction(fn ->
-        if team.grace_period do
-          Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
-          Plausible.Teams.end_grace_period(team)
-        else
-          team
-        end
-        |> Ecto.Changeset.change(locked_by_admin: true)
-        |> Repo.update!()
-      end)
-
-    team
-  end
-
-  def admin_unlock!(%Teams.Team{} = team) do
-    {:ok, team} =
-      Repo.transaction(fn ->
-        if team.grace_period do
-          Plausible.Billing.SiteLocker.set_lock_status_for(team, false)
-          Plausible.Teams.remove_grace_period(team)
-        else
-          team
-        end
-        |> Ecto.Changeset.change(locked_by_admin: false)
-        |> Repo.update!()
-      end)
-
-    team
-  end
+  def locked?(%Teams.Team{locked: locked}), do: locked
 
   @spec trial_days_left(Teams.Team.t()) :: integer()
   def trial_days_left(nil) do
