@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.SettingsController do
   use PlausibleWeb, :controller
+  use Plausible
   use Plausible.Repo
 
   alias Plausible.Auth
