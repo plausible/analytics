@@ -139,40 +139,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 </p>
               </div>
             </div>
-            <div :if={@team.grace_period}>
-              <span :if={@team.locked} class="flex items-center">
-                <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
-                <.styled_link phx-click="unlock" phx-target={@myself}>Unlock Team</.styled_link>
-              </span>
 
-<<<<<<< HEAD
-            <span :if={Teams.locked?(@team)} class="flex items-center">
-              <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
-              <.styled_link id="unlock-dashboards" phx-click="unlock" phx-target={@myself}>
-                Unlock Dashboards
-              </.styled_link>
-            </span>
-
-            <span :if={not Teams.locked?(@team)} class="flex items-center font-xs">
-              <Heroicons.lock_open class="inline stroke-2 w-4 h-4 text-gray-800 mr-2" />
-              <.styled_link id="lock-dashboards" phx-click="lock" phx-target={@myself}>
-                Lock Dashboards
-              </.styled_link>
-            </span>
-||||||| bb63c0d0e4 (CRM: team (un)lock regardless of grace period (#5440))
-            <span :if={Teams.locked?(@team)} class="flex items-center">
-              <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
-              <.styled_link id="unlock-dashboards" phx-click="unlock" phx-target={@myself}>
-                Unlock Dashboards
-              </.styled_link>
-            </span>
-
-            <span :if={not Teams.locked?(@team)} class="flex items-center">
-              <Heroicons.lock_open class="inline stroke-2 w-4 h-4 text-gray-800 mr-2" />
-              <.styled_link id="lock-dashboards" phx-click="lock" phx-target={@myself}>
-                Lock Dashboards
-              </.styled_link>
-            </span>
             <div class="mt-5 flex justify-center sm:mt-0">
               <.input_with_clipboard
                 id="team-identifier"
@@ -219,6 +186,20 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           <div class="px-6 py-5 text-center text-sm font-medium">
             <span>
               <strong>Grace Period</strong> <br />{grace_period_status(@team)}
+
+              <div :if={@team.grace_period}>
+                <span class="flex items-center gap-x-8 justify-center mt-1">
+                  <div>
+                    <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-1" />
+                    <.styled_link phx-click="unlock" phx-target={@myself}>Unlock</.styled_link>
+                  </div>
+
+                  <div>
+                    <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-1" />
+                    <.styled_link phx-click="lock" phx-target={@myself}>Lock</.styled_link>
+                  </div>
+                </span>
+              </div>
             </span>
           </div>
         </div>
@@ -779,9 +760,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   defp lock_team(socket) do
     if socket.assigns.team.grace_period do
-      team = socket.assigns.team
+      team = Plausible.Teams.end_grace_period(socket.assigns.team)
       Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
-      Plausible.Teams.end_grace_period(team)
 
       success(socket, "Team locked. Grace period ended.")
       assign(socket, team: team)
@@ -793,10 +773,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   defp unlock_team(socket) do
     if socket.assigns.team.grace_period do
-      team =
-        socket.assigns.team
-        |> Plausible.Teams.remove_grace_period()
-        |> Plausible.Billing.SiteLocker.set_lock_status_for(false)
+      team = Plausible.Teams.remove_grace_period(socket.assigns.team)
+      Plausible.Billing.SiteLocker.set_lock_status_for(team, false)
 
       success(socket, "Team unlocked. Grace period removed.")
       assign(socket, team: team)
