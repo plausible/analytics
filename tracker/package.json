@@ -1,11 +1,16 @@
 {
-  "tracker_script_version": 15,
+  "tracker_script_version": 16,
   "type": "module",
   "scripts": {
     "deploy": "node compile.js",
     "test": "npx playwright test",
     "test:local": "npx playwright test",
-    "start": "node test/support/server.js"
+    "start": "node test/support/server.js",
+    "npm:prepare_release:patch": "npm run npm:bump_version patch && npm run npm:update_code_and_changelog",
+    "npm:prepare_release:minor": "npm run npm:bump_version minor && npm run npm:update_code_and_changelog",
+    "npm:prepare_release:major": "npm run npm:bump_version major && npm run npm:update_code_and_changelog",
+    "npm:bump_version": "npm --prefix npm_package version --no-git-tag-version --",
+    "npm:update_code_and_changelog": "node compile.js && ./release-update-changelog.sh"
   },
   "license": "MIT",
   "dependencies": {

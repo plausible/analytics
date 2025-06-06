@@ -5,7 +5,7 @@ export function init(config: PlausibleConfig): void
 export function track(eventName: string, options: PlausibleEventOptions): void
 
 export interface PlausibleConfig {
-  // Domain of the site to track. Should be registered with Plausible.
+  // Your site's domain, as declared by you in Plausible's settings.
   domain: string,
 
   // The URL of the Plausible API endpoint. Defaults to https://plausible.io/api/event
