@@ -37,7 +37,7 @@ defmodule PlausibleWeb.InternalEndpoint do
   plug(PlausibleWeb.InternalRouter)
 
   @session_options [
-    key: "_plausible_key",
+    key: "_plausible_key_internal",
     store: :cookie,
     signing_salt: "I45i0SKHEku2f3tJh6y4v8gztrb/eG5KGCOe/o/AwFb7VHeuvDOn7AAq6KsdmOFM",
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
@@ -68,7 +68,10 @@ defmodule PlausibleWeb.InternalEndpoint do
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
     session_options =
       Keyword.put(@session_options, :domain, host())
-      |> Keyword.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
+      |> Keyword.put(
+        :key,
+        "_plausible_internal_#{Application.fetch_env!(:plausible, :environment)}"
+      )
 
     session_options
     |> Keyword.put(:secure, secure_cookie?())
