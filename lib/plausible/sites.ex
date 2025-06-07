@@ -355,7 +355,7 @@ defmodule Plausible.Sites do
   end
 
   def create_shared_link(site, name, opts \\ []) do
-    password = Keyword.get(opts, :password, nil)
+    password = Keyword.get(opts, :password)
 
     site = Plausible.Repo.preload(site, :team)
 
