@@ -356,36 +356,18 @@ defmodule Plausible.Sites do
 
   def create_shared_link(site, name, opts \\ []) do
     password = Keyword.get(opts, :password)
-
     site = Plausible.Repo.preload(site, :team)
-
     skip_feature_check? = Keyword.get(opts, :skip_feature_check?, false)
-    skip_special_name_check? = Keyword.get(opts, :skip_special_name_check?, false)
 
-    missing_feature_access? =
-      not skip_feature_check? and SharedLinks.check_availability(site.team) != :ok
-
-    special_name_not_allowed? =
-      not skip_special_name_check? and name in @shared_link_special_names
-
-    cond do
-      missing_feature_access? ->
-        {:error, :upgrade_required}
-
-      special_name_not_allowed? ->
-        {:error, :reserved_name}
-
-      true ->
-        changes =
-          SharedLink.changeset(
-            %SharedLink{
-              site_id: site.id,
-              slug: Nanoid.generate()
-            },
-            %{name: name, password: password}
-          )
-
-        Repo.insert(changes)
+    if not skip_feature_check? and SharedLinks.check_availability(site.team) != :ok do
+      {:error, :upgrade_required}
+    else
+      %SharedLink{site_id: site.id, slug: Nanoid.generate()}
+      |> SharedLink.changeset(
+        %{name: name, password: password},
+        Keyword.take(opts, [:skip_special_name_check?])
+      )
+      |> Repo.insert()
     end
   end
 

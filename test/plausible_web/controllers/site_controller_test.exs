@@ -1682,12 +1682,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             "shared_link" => %{"name" => unquote(special_name)}
           })
 
-        assert redirected_to(conn, 302) ==
-                 Routes.site_path(conn, :new_shared_link, site.domain)
-
-        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-                 "This name is reserved. Please choose another one"
-
+        assert html_response(conn, 200) =~ "This name is reserved. Please choose another one"
         refute Repo.exists?(Plausible.Site.SharedLink)
       end
     end
@@ -1728,11 +1723,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             "shared_link" => %{"name" => unquote(special_name)}
           })
 
-        assert redirected_to(conn, 302) ==
-                 Routes.site_path(conn, :edit_shared_link, site.domain, link.slug)
-
-        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-                 "This name is reserved. Please choose another one"
+        assert html_response(conn, 200) =~ "This name is reserved. Please choose another one"
       end
     end
   end

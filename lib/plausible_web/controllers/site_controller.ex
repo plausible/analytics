@@ -592,11 +592,6 @@ defmodule PlausibleWeb.SiteController do
         |> put_flash(:error, "Your current subscription plan does not include Shared Links")
         |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
 
-      {:error, :reserved_name} ->
-        conn
-        |> put_flash(:error, "This name is reserved. Please choose another one")
-        |> redirect(to: Routes.site_path(conn, :new_shared_link, site.domain))
-
       {:error, changeset} ->
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -625,23 +620,17 @@ defmodule PlausibleWeb.SiteController do
     shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug)
     changeset = Plausible.Site.SharedLink.changeset(shared_link, params)
 
-    if params["name"] in Plausible.Sites.shared_link_special_names() do
-      conn
-      |> put_flash(:error, "This name is reserved. Please choose another one")
-      |> redirect(to: Routes.site_path(conn, :edit_shared_link, site.domain, slug))
-    else
-      case Repo.update(changeset) do
-        {:ok, _created} ->
-          redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
+    case Repo.update(changeset) do
+      {:ok, _updated} ->
+        redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
 
-        {:error, changeset} ->
-          conn
-          |> assign(:skip_plausible_tracking, true)
-          |> render("edit_shared_link.html",
-            site: site,
-            changeset: changeset
-          )
-      end
+      {:error, changeset} ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("edit_shared_link.html",
+          site: site,
+          changeset: changeset
+        )
     end
   end
 
