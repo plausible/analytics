@@ -68,13 +68,13 @@ export const expectPlausibleInAction = async function (page, {
   const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
   const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
 
-  const getRequestList = await mockManyRequests({
+  const {getRequestList} = await mockManyRequests({
     page,
     path: pathToMock,
     responseDelay,
     shouldIgnoreRequest,
-    numberOfRequests: requestsToAwait,
-    mockRequestTimeout: mockRequestTimeout
+    countOfRequestsToAwait: requestsToAwait,
+    mockRequestTimeoutMs: mockRequestTimeout
   })
   await action()
   const requestBodies = await getRequestList()
