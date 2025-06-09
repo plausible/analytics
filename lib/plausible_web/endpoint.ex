@@ -94,6 +94,13 @@ defmodule PlausibleWeb.Endpoint do
     config!(:websocket_url)
   end
 
+  def ingestion_url() do
+    # :KLUDGE: Normally, we would use Phoenix.Endpoint.url() here, but that requires the endpoint to be started.
+    # However we start TrackerScriptCache before the endpoint is started, so we need to use the base_url directly.
+    base_url = config!(:base_url)
+    "#{base_url}/api/event"
+  end
+
   def runtime_session(conn, _opts) do
     Plug.run(conn, [{Plug.Session, runtime_session_opts()}])
   end

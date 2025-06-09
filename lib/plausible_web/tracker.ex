@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Tracker do
   def plausible_main_config(tracker_script_configuration) do
     %{
       domain: tracker_script_configuration.site.domain,
-      endpoint: "#{PlausibleWeb.Endpoint.url()}/api/event",
+      endpoint: PlausibleWeb.Endpoint.ingestion_url(),
       hashBasedRouting: tracker_script_configuration.hash_based_routing,
       outboundLinks: tracker_script_configuration.outbound_links,
       fileDownloads: tracker_script_configuration.file_downloads,
