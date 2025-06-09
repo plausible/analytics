@@ -185,7 +185,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
                 <span class="flex items-center gap-x-8 justify-center mt-1">
                   <div :if={not Teams.locked?(@team)}>
                     <Heroicons.lock_open solid class="inline stroke-2 w-4 h-4 text-red-400 mr-1" />
-                    <.styled_link phx-click="refund-lock" phx-target={@myself}>
+                    <.styled_link
+                      phx-click="refund-lock"
+                      phx-target={@myself}
+                      data-confirm="Are you sure you want to lock? The only way to unlock, is for the user to resubscribe."
+                    >
                       Refund Lock
                     </.styled_link>
                   </div>
