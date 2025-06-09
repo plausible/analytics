@@ -128,6 +128,22 @@ defmodule Plausible.Application do
             ]
           )
         end,
+        on_ce do
+          warmed_cache(PlausibleWeb.TrackerScriptCache,
+            adapter_opts: [
+              n_lock_partitions: 1,
+              ttl_check_interval: false,
+              ets_options: [:bag, read_concurrency: true]
+            ],
+            warmers: [
+              refresh_all:
+                {PlausibleWeb.TrackerScriptCache.All,
+                 interval: :timer.minutes(60) + Enum.random(1..:timer.seconds(10))},
+              refresh_updated_recently:
+                {PlausibleWeb.TrackerScriptCache.RecentlyUpdated, interval: :timer.seconds(60)}
+            ]
+          )
+        end,
         Plausible.Ingestion.Counters,
         Plausible.Session.Salts,
         Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),

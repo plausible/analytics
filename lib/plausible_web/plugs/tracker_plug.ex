@@ -4,8 +4,8 @@ defmodule PlausibleWeb.TrackerPlug do
   """
 
   import Plug.Conn
-  import Ecto.Query
   use Agent
+  use Plausible
 
   base_variants = [
     "hash",
@@ -62,14 +62,9 @@ defmodule PlausibleWeb.TrackerPlug do
   def telemetry_event(name), do: [:plausible, :tracker_script, :request, name]
 
   defp request_tracker_script(tag, conn) do
-    tracker_script_configuration =
-      Plausible.Repo.one(
-        from s in Plausible.Site.TrackerScriptConfiguration, where: s.id == ^tag, preload: [:site]
-      )
+    script_tag = get_plausible_web_script_tag(tag)
 
-    if tracker_script_configuration do
-      script_tag = PlausibleWeb.Tracker.plausible_main_script_tag(tracker_script_configuration)
-
+    if script_tag do
       :telemetry.execute(
         telemetry_event(:v2),
         %{},
@@ -84,7 +79,7 @@ defmodule PlausibleWeb.TrackerPlug do
       |> put_resp_header("cache-control", "public, max-age=60, no-transform")
       # CDN-Tag is used by BunnyCDN to tag cached resources. This allows us to purge
       # specific tracker scripts from the CDN cache.
-      |> put_resp_header("cdn-tag", "tracker_script::#{tracker_script_configuration.id}")
+      |> put_resp_header("cdn-tag", "tracker_script::#{tag}")
       |> send_resp(200, script_tag)
       |> halt()
     else
@@ -97,6 +92,16 @@ defmodule PlausibleWeb.TrackerPlug do
       conn
       |> send_resp(404, "Not found")
       |> halt()
+    end
+  end
+
+  defp get_plausible_web_script_tag(tag) do
+    on_ee do
+      # On cloud, we generate the script always on the fly relying on CDN caching
+      PlausibleWeb.TrackerScriptCache.get_from_source(tag)
+    else
+      # On self-hosted, we have a pre-warmed cache for the script
+      PlausibleWeb.TrackerScriptCache.get(tag)
     end
   end
 
