@@ -173,7 +173,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
       conn = get(conn, "/" <> locked_site.domain)
       resp = html_response(conn, 200)
-      assert resp =~ "Dashboard locked"
+      assert resp =~ "Dashboard Locked"
       assert resp =~ "Please subscribe to the appropriate tier with the link below"
     end
 
@@ -185,7 +185,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/" <> locked_site.domain)
       resp = html_response(conn, 200)
-      assert resp =~ "Dashboard locked"
+      assert resp =~ "Dashboard Locked"
       assert resp =~ "Please subscribe to the appropriate tier with the link below"
     end
 
@@ -197,7 +197,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/" <> locked_site.domain)
       resp = html_response(conn, 200)
-      assert resp =~ "Dashboard locked"
+      assert resp =~ "Dashboard Locked"
       refute resp =~ "Please subscribe to the appropriate tier with the link below"
       assert resp =~ "Owner of this site must upgrade their subscription plan"
     end
