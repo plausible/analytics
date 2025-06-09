@@ -12,6 +12,8 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
 
   use Ecto.Schema
 
+  alias Plausible.Auth.SSO
+
   import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
@@ -29,6 +31,11 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
   @spec configured?(t()) :: boolean()
   def configured?(config) do
     !!(config.idp_signin_url && config.idp_entity_id && config.idp_cert_pem)
+  end
+
+  @spec entity_id(SSO.Integration.t()) :: String.t()
+  def entity_id(integration) do
+    PlausibleWeb.Endpoint.url() <> "/sso/" <> integration.identifier
   end
 
   @spec changeset(t(), map()) :: Ecto.Changeset.t()
