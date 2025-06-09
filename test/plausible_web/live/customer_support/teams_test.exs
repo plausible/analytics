@@ -92,10 +92,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         |> render_change(%{
           "enterprise_plan" => %{
             "billing_interval" => "yearly",
-            "monthly_pageview_limit" => "20,000,000",
-            "site_limit" => "1,000",
+            "monthly_pageview_limit" => "20000000",
+            "site_limit" => "1000",
             "team_member_limit" => "30",
-            "hourly_api_request_limit" => "1,000",
+            "hourly_api_request_limit" => "1000",
             "features[]" => [
               "false",
               "false",
@@ -125,10 +125,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
           "enterprise_plan" => %{
             "paddle_plan_id" => "1111",
             "billing_interval" => "yearly",
-            "monthly_pageview_limit" => "20,000,000",
-            "site_limit" => "1,000",
+            "monthly_pageview_limit" => "20000000",
+            "site_limit" => "1000",
             "team_member_limit" => "30",
-            "hourly_api_request_limit" => "1,000",
+            "hourly_api_request_limit" => "1000",
             "features[]" => [
               "false",
               "false",
@@ -182,10 +182,10 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
           "enterprise_plan" => %{
             "paddle_plan_id" => "1111",
             "billing_interval" => "yearly",
-            "monthly_pageview_limit" => "20,000,000",
-            "site_limit" => "1,000",
+            "monthly_pageview_limit" => "20000000",
+            "site_limit" => "1000",
             "team_member_limit" => "unlimited",
-            "hourly_api_request_limit" => "1,000"
+            "hourly_api_request_limit" => "1000"
           }
         })
 
