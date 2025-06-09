@@ -125,17 +125,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         theme={:red}
         class="shadow-md dark:shadow-none"
       >
-        <p>
-          You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
-          <.link
-            class="underline inline-block"
-            href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-          >
-            Upgrade your subscription
-          </.link>
-          to make sure you don't lose access.
-        </p>
-        <.lose_grandfathering_warning subscription={@subscription} />
+        <.subscription_cancelled_notice_body subscription={@subscription} />
       </.notice>
     </aside>
     """
@@ -156,17 +146,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         theme={:red}
         class="shadow-md dark:shadow-none"
       >
-        <p>
-          You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
-          <.link
-            class="underline inline-block"
-            href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-          >
-            Upgrade your subscription
-          </.link>
-          to make sure you don't lose access.
-        </p>
-        <.lose_grandfathering_warning subscription={@subscription} />
+        <.subscription_cancelled_notice_body subscription={@subscription} />
       </.notice>
     </aside>
     <script
@@ -282,6 +262,22 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     <div class="mt-8 space-y-3 text-sm leading-6 text-gray-600 text-justify dark:text-gray-100">
       Your subscription has been grandfathered in at the same rate and terms as when you first joined. If you don't need the "Business" features, you're welcome to stay on this plan. You can adjust the pageview limit or change the billing frequency of this grandfathered plan. If you're interested in business features, you can upgrade to a "Business" plan.
     </div>
+    """
+  end
+
+  defp subscription_cancelled_notice_body(assigns) do
+    ~H"""
+    <p>
+      You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
+      <.link
+        class="underline inline-block"
+        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+      >
+        Upgrade your subscription
+      </.link>
+      to make sure you don't lose access.
+    </p>
+    <.lose_grandfathering_warning subscription={@subscription} />
     """
   end
 
