@@ -849,7 +849,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
         number_format(n) <> " (#{PlausibleWeb.StatsView.large_number_format(n)})"
 
       _ ->
-        "❓🙈❓"
+        "0"
     end
   end
 
