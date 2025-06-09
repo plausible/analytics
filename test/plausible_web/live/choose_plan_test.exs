@@ -122,16 +122,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Custom Properties"
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
-      assert business_box =~ "Priority support"
 
       refute business_box =~ "Goals and custom events"
 
       assert enterprise_box =~ "Everything in Business"
       assert enterprise_box =~ "10+ team members"
-      assert enterprise_box =~ "50+ sites"
+      assert enterprise_box =~ "10+ sites"
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "Priority support"
 
       assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
                "https://plausible.io/white-label-web-analytics"
@@ -533,17 +533,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Custom Properties"
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
-      assert business_box =~ "Priority support"
       assert business_box =~ "5 years of data retention"
 
       refute business_box =~ "Goals and custom events"
 
       assert enterprise_box =~ "Everything in Business"
       assert enterprise_box =~ "10+ team members"
-      assert enterprise_box =~ "50+ sites"
+      assert enterprise_box =~ "10+ sites"
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "Priority support"
       assert enterprise_box =~ "5+ years of data retention"
 
       assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
@@ -950,15 +950,15 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Custom Properties"
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
-      assert business_box =~ "Priority support"
 
       refute business_box =~ "Goals and custom events"
 
       assert enterprise_box =~ "Everything in Business"
-      assert enterprise_box =~ "50+ sites"
+      assert enterprise_box =~ "10+ sites"
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "Priority support"
 
       refute enterprise_box =~ "team members"
 
@@ -1208,7 +1208,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
-      assert business_box =~ "Priority support"
 
       refute business_box =~ "Goals and custom events"
       refute business_box =~ "Unlimited team members"
@@ -1218,10 +1217,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute business_box =~ "Custom Properties"
 
       assert enterprise_box =~ "Everything in Business"
-      assert enterprise_box =~ "50+ sites"
+      assert enterprise_box =~ "10+ sites"
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "Priority support"
 
       assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
                "https://plausible.io/white-label-web-analytics"

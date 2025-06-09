@@ -87,7 +87,6 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
     |> Kernel.++(feature_benefits(plan))
     |> Kernel.--(growth_benefits)
     |> Kernel.--(starter_benefits)
-    |> Kernel.++(["Priority support"])
     |> Enum.filter(& &1)
   end
 
@@ -106,12 +105,13 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
 
     [
       "Everything in Business",
+      "10+ sites",
       team_members,
-      "50+ sites",
       "600+ Stats API requests per hour",
       &sites_api_benefit/1,
       data_retention,
-      "Technical onboarding"
+      "Technical onboarding",
+      "Priority support"
     ]
     |> Enum.filter(& &1)
   end
