@@ -9,6 +9,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
+  require Plausible.Billing.Subscription.Status
+
   alias Plausible.Repo
   import Ecto.Query
 
@@ -176,6 +178,24 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
           <div class="px-6 py-5 text-center text-sm font-medium">
             <span>
               <strong>Subscription status</strong> <br />{subscription_status(@team)}
+              <div :if={
+                @team.subscription && @team.subscription.status == Subscription.Status.deleted() &&
+                  !@team.grace_period
+              }>
+                <span class="flex items-center gap-x-8 justify-center mt-1">
+                  <div :if={not Teams.locked?(@team)}>
+                    <Heroicons.lock_open solid class="inline stroke-2 w-4 h-4 text-red-400 mr-1" />
+                    <.styled_link phx-click="refund-lock" phx-target={@myself}>
+                      Refund Lock
+                    </.styled_link>
+                  </div>
+
+                  <div :if={Teams.locked?(@team)}>
+                    <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-1" />
+                    Locked
+                  </div>
+                </span>
+              </div>
             </span>
           </div>
           <div class="px-6 py-5 text-center text-sm font-medium">
@@ -642,6 +662,20 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   def handle_event("lock", _, socket) do
     {:noreply, lock_team(socket)}
+  end
+
+  def handle_event("refund-lock", _, socket) do
+    team = socket.assigns.team
+
+    {:ok, team} =
+      Repo.transaction(fn ->
+        yesterday = Date.shift(Date.utc_today(), day: -1)
+        Plausible.Billing.SiteLocker.set_lock_status_for(team, true)
+        Repo.update!(Subscription.changeset(team.subscription, %{next_bill_date: yesterday}))
+        Resource.Team.get(team.id)
+      end)
+
+    {:noreply, assign(socket, team: team)}
   end
 
   def team_bg(term) do

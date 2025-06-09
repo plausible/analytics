@@ -8,6 +8,8 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
+    require Plausible.Billing.Subscription.Status
+
     defp open_team(id, qs \\ []) do
       Routes.customer_support_resource_path(
         PlausibleWeb.Endpoint,
@@ -58,6 +60,38 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
         team = Plausible.Repo.reload!(team)
         refute team.locked
         refute team.grace_period
+      end
+
+      test "refund lock handling", %{conn: conn, user: user} do
+        team = team_of(user)
+        {:ok, _lv, html} = live(conn, open_team(team.id))
+        refute text(html) =~ "Refund Lock"
+        refute text(html) =~ "Locked"
+
+        subscribe_to_growth_plan(user,
+          status: Plausible.Billing.Subscription.Status.deleted()
+        )
+
+        {:ok, lv, html} = live(conn, open_team(team.id))
+
+        assert text(html) =~ "Refund Lock"
+        lv |> element(~s|a[phx-click="refund-lock"]|) |> render_click()
+
+        assert text(render(lv)) =~ "Locked"
+
+        team = Plausible.Repo.reload!(team)
+        assert team.locked
+        refute team.grace_period
+
+        assert Date.diff(
+                 Plausible.Teams.with_subscription(team).subscription.next_bill_date,
+                 Date.utc_today()
+               ) == -1
+
+        # make sure this team doesn't unlock automatically
+        Plausible.Workers.LockSites.perform(nil)
+        team = Plausible.Repo.reload!(team)
+        assert team.locked
       end
 
       test "404", %{conn: conn} do
