@@ -9,6 +9,9 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
 
   @deflate "urn:oasis:names:tc:SAML:2.0:bindings:URL-Encoding:DEFLATE"
 
+  @cookie_name "session_saml"
+  @cookie_seconds 10 * 60
+
   def signin(conn, params) do
     integration_id = params["integration_id"]
     email = params["email"]
@@ -41,9 +44,11 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
 
         conn
         |> Plug.Conn.configure_session(renew: true)
-        |> Plug.Conn.put_session("return_to", return_to)
-        |> Plug.Conn.put_session("relay_state", relay_state)
-        |> Plug.Conn.put_session("integration_id", integration.identifier)
+        |> set_cookie(
+          integration_id: integration.identifier,
+          relay_state: relay_state,
+          return_to: return_to
+        )
         |> Phoenix.Controller.redirect(external: url)
 
       {:error, :not_found} ->
@@ -60,11 +65,23 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
   def consume(conn, _params) do
     saml_response = conn.body_params["SAMLResponse"]
     relay_state = conn.body_params["RelayState"] |> safe_decode_www_form()
-    return_to = Plug.Conn.get_session(conn, "return_to")
-    integration_id = Plug.Conn.get_session(conn, "integration_id")
 
-    with {:ok, integration} <- SSO.get_integration(integration_id),
-         :ok <- validate_authresp(conn, integration, relay_state),
+    case get_cookie(conn) do
+      {:ok, cookie} ->
+        conn
+        |> clear_cookie()
+        |> consume(cookie, saml_response, relay_state)
+
+      {:error, :session_expired} ->
+        Phoenix.Controller.redirect(conn,
+          to: Routes.sso_path(conn, :login_form, error: "Session expired.")
+        )
+    end
+  end
+
+  defp consume(conn, cookie, saml_response, relay_state) do
+    with {:ok, integration} <- SSO.get_integration(cookie.integration_id),
+         :ok <- validate_authresp(cookie, integration, relay_state),
          {:ok, {root, assertion}} = SimpleSaml.parse_response(saml_response),
          {:ok, cert} = X509.Certificate.from_pem(integration.config.idp_cert_pem),
          public_key = X509.Certificate.public_key(cert),
@@ -83,14 +100,14 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
           expires_at: expires_at
         }
 
-      PlausibleWeb.UserAuth.log_in_user(conn, identity, return_to)
+      PlausibleWeb.UserAuth.log_in_user(conn, identity, cookie.return_to)
     else
       {:error, reason} ->
         Phoenix.Controller.redirect(conn,
           to:
             Routes.sso_path(conn, :login_form,
               error: error_by_reason(reason),
-              return_to: return_to
+              return_to: cookie.return_to
             )
         )
     end
@@ -160,19 +177,15 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
     )
   end
 
-  defp validate_authresp(conn, integration, relay_state) do
-    rs_in_session = Plug.Conn.get_session(conn, "relay_state")
-    idp_id_in_session = Plug.Conn.get_session(conn, "integration_id")
-    url_in_session = Plug.Conn.get_session(conn, "return_to")
-
+  defp validate_authresp(cookie, integration, relay_state) do
     cond do
-      rs_in_session == nil || rs_in_session != relay_state ->
+      cookie.relay_state == nil || cookie.relay_state != relay_state ->
         {:error, :invalid_relay_state}
 
-      idp_id_in_session == nil || idp_id_in_session != integration.identifier ->
+      cookie.integration_id == nil || cookie.integration_id != integration.identifier ->
         {:error, :invalid_integration_id}
 
-      url_in_session == nil ->
+      cookie.return_to == nil ->
         {:error, :invalid_return_to}
 
       true ->
@@ -182,5 +195,41 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
 
   defp gen_id() do
     24 |> :crypto.strong_rand_bytes() |> Base.url_encode64()
+  end
+
+  defp set_cookie(conn, attrs) do
+    attrs = %{
+      integration_id: Keyword.fetch!(attrs, :integration_id),
+      relay_state: Keyword.fetch!(attrs, :relay_state),
+      return_to: Keyword.fetch!(attrs, :return_to)
+    }
+
+    Plug.Conn.put_resp_cookie(conn, @cookie_name, attrs,
+      domain: conn.private.phoenix_endpoint.host(),
+      secure: true,
+      encrypt: true,
+      max_age: @cookie_seconds,
+      same_site: "None"
+    )
+  end
+
+  defp get_cookie(conn) do
+    conn = Plug.Conn.fetch_cookies(conn, encrypted: [@cookie_name])
+
+    if cookie = conn.cookies[@cookie_name] do
+      {:ok, cookie}
+    else
+      {:error, :session_expired}
+    end
+  end
+
+  defp clear_cookie(conn) do
+    Plug.Conn.delete_resp_cookie(conn, @cookie_name,
+      domain: conn.private.phoenix_endpoint.host(),
+      secure: true,
+      encrypt: true,
+      max_age: @cookie_seconds,
+      same_site: "None"
+    )
   end
 end
