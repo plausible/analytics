@@ -205,8 +205,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
         |> html_response(200)
         |> text_of_element("#global-subscription-cancelled-notice")
 
-      assert notice_text =~ "Subscription cancelled"
-      assert notice_text =~ "Upgrade your subscription to get access to your stats again"
+      refute notice_text =~ Plausible.Billing.subscription_cancelled_notice_title()
     end
 
     @tag :ee_only

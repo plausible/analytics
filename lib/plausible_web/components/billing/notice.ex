@@ -114,14 +114,28 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         } = assigns
       ) do
     ~H"""
-    <aside id="global-subscription-cancelled-notice" class="container">
+    <aside
+      :if={not Subscriptions.expired?(@subscription)}
+      id="global-subscription-cancelled-notice"
+      class="container"
+    >
       <.notice
         dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@subscription.id)}
         title={Plausible.Billing.subscription_cancelled_notice_title()}
         theme={:red}
         class="shadow-md dark:shadow-none"
       >
-        <.subscription_cancelled_notice_body subscription={@subscription} />
+        <p>
+          You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
+          <.link
+            class="underline inline-block"
+            href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          >
+            Upgrade your subscription
+          </.link>
+          to make sure you don't lose access.
+        </p>
+        <.lose_grandfathering_warning subscription={@subscription} />
       </.notice>
     </aside>
     """
@@ -136,13 +150,23 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     assigns = assign(assigns, :container_id, "local-subscription-cancelled-notice")
 
     ~H"""
-    <aside id={@container_id} class="hidden">
+    <aside :if={not Subscriptions.expired?(@subscription)} id={@container_id} class="hidden">
       <.notice
         title={Plausible.Billing.subscription_cancelled_notice_title()}
         theme={:red}
         class="shadow-md dark:shadow-none"
       >
-        <.subscription_cancelled_notice_body subscription={@subscription} />
+        <p>
+          You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
+          <.link
+            class="underline inline-block"
+            href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+          >
+            Upgrade your subscription
+          </.link>
+          to make sure you don't lose access.
+        </p>
+        <.lose_grandfathering_warning subscription={@subscription} />
       </.notice>
     </aside>
     <script
@@ -259,34 +283,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       Your subscription has been grandfathered in at the same rate and terms as when you first joined. If you don't need the "Business" features, you're welcome to stay on this plan. You can adjust the pageview limit or change the billing frequency of this grandfathered plan. If you're interested in business features, you can upgrade to a "Business" plan.
     </div>
     """
-  end
-
-  defp subscription_cancelled_notice_body(assigns) do
-    if Subscriptions.expired?(assigns.subscription) do
-      ~H"""
-      <.link
-        class="underline inline-block"
-        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-      >
-        Upgrade your subscription
-      </.link>
-      to get access to your stats again.
-      """
-    else
-      ~H"""
-      <p>
-        You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
-        <.link
-          class="underline inline-block"
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-        >
-          Upgrade your subscription
-        </.link>
-        to make sure you don't lose access.
-      </p>
-      <.lose_grandfathering_warning subscription={@subscription} />
-      """
-    end
   end
 
   defp lose_grandfathering_warning(%{subscription: subscription} = assigns) do
