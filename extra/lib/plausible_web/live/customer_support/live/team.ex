@@ -99,12 +99,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     ~H"""
     <div>
       <script type="text/javascript">
-        const numberFormatCallback = function(e) {
-          const numeric = Number(e.target.value.replace(/[^0-9]/g, ''))
-          const value = numeric > 0 ? new Intl.NumberFormat("en-GB").format(numeric) : ''
-          e.target.value = value
-        }
-
         const featureChangeCallback = function(e) {
           const value = e.target.value
           const checked = e.target.checked
@@ -293,32 +287,43 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               autocomplete="off"
             />
 
-            <.input
-              x-init="numberFormatCallback({target: $el})"
-              x-on:input="numberFormatCallback(event)"
-              field={f[:monthly_pageview_limit]}
-              label="Monthly Pageview Limit"
-              autocomplete="off"
-            />
-            <.input
-              x-init="numberFormatCallback({target: $el})"
-              x-on:input="numberFormatCallback(event)"
-              field={f[:site_limit]}
-              label="Site Limit"
-              autocomplete="off"
-            />
-            <.input
-              field={f[:team_member_limit]}
-              label="Team Member Limit (-1/unlimited for unlimited)"
-              autocomplete="off"
-            />
-            <.input
-              x-init="numberFormatCallback({target: $el})"
-              x-on:input="numberFormatCallback(event)"
-              field={f[:hourly_api_request_limit]}
-              label="Hourly API Request Limit"
-              autocomplete="off"
-            />
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:monthly_pageview_limit]}
+                label="Monthly Pageview Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+
+              <.preview for={f[:monthly_pageview_limit]} />
+            </div>
+            <div class="flex items-center gap-x-4">
+              <.input width="w-[500]" field={f[:site_limit]} label="Site Limit" autocomplete="off" />
+
+              <.preview for={f[:site_limit]} />
+            </div>
+
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:team_member_limit]}
+                label="Team Member Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+
+              <.preview for={f[:team_member_limit]} />
+            </div>
+
+            <div class="flex items-center gap-x-4">
+              <.input
+                field={f[:hourly_api_request_limit]}
+                label="Hourly API Request Limit"
+                autocomplete="off"
+                width="w-[500]"
+              />
+
+              <.preview for={f[:hourly_api_request_limit]} />
+            </div>
 
             <.input
               :for={
@@ -375,8 +380,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
         <div :if={@tab == "overview"} class="mt-8">
           <.form :let={f} for={@form} phx-submit="save-team" phx-target={@myself}>
-            <.input field={f[:trial_expiry_date]} label="Trial Expiry Date" />
-            <.input field={f[:accept_traffic_until]} label="Accept  traffic Until" />
+            <.input field={f[:trial_expiry_date]} type="date" label="Trial Expiry Date" />
+            <.input field={f[:accept_traffic_until]} type="date" label="Accept  traffic Until" />
             <.input
               type="checkbox"
               field={f[:allow_next_upgrade_override]}
@@ -809,34 +814,11 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   defp number_format(other), do: other
 
-  @numeric_fields [
-    "team_id",
-    "paddle_plan_id",
-    "monthly_pageview_limit",
-    "site_limit",
-    "team_member_limit",
-    "hourly_api_request_limit"
-  ]
-
   defp sanitize_params(params) do
     params
     |> Enum.map(&clear_param/1)
     |> Enum.reject(&(&1 == ""))
     |> Map.new()
-  end
-
-  defp clear_param({key, value}) when key in @numeric_fields do
-    if value in ["unlimited", "-1"] do
-      {key, value}
-    else
-      value =
-        value
-        |> to_string()
-        |> String.replace(~r/[^0-9-]/, "")
-        |> String.trim()
-
-      {key, value}
-    end
   end
 
   defp clear_param({key, value}) when is_binary(value) do
@@ -859,5 +841,31 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
   defp update_features_to_list(params) do
     Map.put(params, "features", Enum.reject(params["features[]"], &(&1 == "false" or &1 == "")))
+  end
+
+  defp preview_number(n) do
+    case Integer.parse("#{n}") do
+      {n, ""} ->
+        number_format(n) <> " (#{PlausibleWeb.StatsView.large_number_format(n)})"
+
+      _ ->
+        "0"
+    end
+  end
+
+  attr :for, :any, required: true
+
+  defp preview(assigns) do
+    ~H"""
+    <.input
+      name={"#{@for.name}-preview"}
+      label="Preview (read-only)"
+      autocomplete="off"
+      width="w-[500]"
+      readonly
+      value={preview_number(@for.value)}
+      class="bg-transparent border-0 p-0 m-0 text-sm w-full"
+    />
+    """
   end
 end
