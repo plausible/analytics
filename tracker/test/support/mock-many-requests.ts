@@ -6,19 +6,37 @@ type ShouldIgnoreRequest = (requestData?: RequestData) => boolean
 export async function mockManyRequests({
   page,
   path,
-  numberOfRequests,
+  fulfill = {
+      status: 202,
+      contentType: 'text/plain',
+      body: 'ok'
+    },
+  countOfRequestsToAwait,
   responseDelay,
   shouldIgnoreRequest,
-  mockRequestTimeout = 3000
+  mockRequestTimeoutMs = 3000
 }: {
   page: Page
   path: string
-  numberOfRequests: number
+  /** Response to fulfill the request with */
+  fulfill?: {
+    status: number
+    contentType: string
+    body: string
+  }
+  /** 
+   * When there's at least `countOfRequestsToAwait` requests on this route, 
+   * getRequestList resolves without waiting for `mockRequestTimeoutMs`.
+   * If there's less than `countOfRequestsToAwait` requests on this route, it
+   * takes `mockRequestTimeoutMs` to resolve getRequestList. 
+   * This is so as not miss requests that are yet to be sent.
+   */
+  countOfRequestsToAwait: number
   responseDelay?: number
   shouldIgnoreRequest?: ShouldIgnoreRequest | ShouldIgnoreRequest[]
-  mockRequestTimeout?: number
+  mockRequestTimeoutMs?: number
 }) {
-  const requestList: any[] = []
+  const requestList: unknown[] = []
   await page.route(path, async (route, request) => {
     const postData = request.postDataJSON()
     if (shouldAllow(postData, shouldIgnoreRequest)) {
@@ -27,22 +45,18 @@ export async function mockManyRequests({
     if (responseDelay) {
       await delay(responseDelay)
     }
-    await route.fulfill({
-      status: 202,
-      contentType: 'text/plain',
-      body: 'ok'
-    })
+    await route.fulfill(fulfill)
   })
 
-  const getWaitForRequests = () =>
+  const getRequestList = (): Promise<unknown[]> =>
     new Promise((resolve) => {
       let i = 0
       const POLL_INTERVAL_MS = 10
       const interval = setInterval(() => {
-        if (i > mockRequestTimeout / POLL_INTERVAL_MS) {
+        if (i > mockRequestTimeoutMs / POLL_INTERVAL_MS) {
           clearInterval(interval)
           resolve(requestList)
-        } else if (requestList.length === numberOfRequests) {
+        } else if (requestList.length === countOfRequestsToAwait) {
           clearInterval(interval)
           resolve(requestList)
         } else {
@@ -51,7 +65,7 @@ export async function mockManyRequests({
       }, POLL_INTERVAL_MS)
     })
 
-  return getWaitForRequests
+  return {getRequestList}
 }
 
 function shouldAllow(requestData: RequestData, ignores: ShouldIgnoreRequest | ShouldIgnoreRequest[] | undefined) {
