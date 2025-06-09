@@ -864,7 +864,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
       width="w-[500]"
       readonly
       value={preview_number(@for.value)}
-      class="border-0 p-0 m-0 text-sm w-full"
+      class="bg-transparent border-0 p-0 m-0 text-sm w-full"
     />
     """
   end
