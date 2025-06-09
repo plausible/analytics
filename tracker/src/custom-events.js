@@ -55,6 +55,9 @@ function handleLinkClickEvent(event) {
 }
 
 function sendLinkClickEvent(event, link, eventAttrs) {
+  // in some legacy variants, this block delays opening the link up to 5 seconds,
+  // or until the callback is called
+  if (COMPILE_COMPAT) {
   var followedLink = false
 
   function followLink() {
@@ -79,6 +82,14 @@ function sendLinkClickEvent(event, link, eventAttrs) {
     }
     track(eventAttrs.name, attrs)
   }
+  return
+  }
+
+  var attrs = { props: eventAttrs.props }
+  if (COMPILE_REVENUE) {
+    attrs.revenue = eventAttrs.revenue
+  }
+  track(eventAttrs.name, attrs)
 }
 
 function isOutboundLink(link) {
@@ -189,6 +200,9 @@ export function init() {
       var eventAttrs = getTaggedEventAttributes(form)
       if (!eventAttrs.name) { return }
 
+    // in some legacy variants, this block delays submitting form for up to 5 seconds,
+    // or until the callback is called
+      if (COMPILE_COMPAT) {
       event.preventDefault()
       var formSubmitted = false
 
@@ -202,6 +216,14 @@ export function init() {
       setTimeout(submitForm, 5000)
 
       var attrs = { props: eventAttrs.props, callback: submitForm }
+      if (COMPILE_REVENUE) {
+        attrs.revenue = eventAttrs.revenue
+      }
+      track(eventAttrs.name, attrs)
+      return
+      }
+
+      var attrs = { props: eventAttrs.props }
       if (COMPILE_REVENUE) {
         attrs.revenue = eventAttrs.revenue
       }
