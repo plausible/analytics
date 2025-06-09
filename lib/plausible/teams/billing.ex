@@ -6,7 +6,6 @@ defmodule Plausible.Teams.Billing do
   import Ecto.Query
 
   alias Plausible.Billing.EnterprisePlan
-  alias Plausible.Billing.Plans
   alias Plausible.Billing.Subscription
   alias Plausible.Billing.Subscriptions
   alias Plausible.Repo
@@ -21,6 +20,42 @@ defmodule Plausible.Teams.Billing do
 
   @typep last_30_days_usage() :: %{:last_30_days => Quota.usage_cycle()}
   @typep monthly_pageview_usage() :: Quota.cycles_usage() | last_30_days_usage()
+
+  @starter_tier_launch ~D[2025-06-09]
+  def starter_tier_launch(), do: @starter_tier_launch
+
+  def show_new_upgrade_page?(_team = nil) do
+    FunWithFlags.enabled?(:starter_tier)
+  end
+
+  def show_new_upgrade_page?(%Teams.Team{} = team) do
+    team = Teams.with_subscription(team)
+    feature_flag_enabled? = FunWithFlags.enabled?(:starter_tier, for: team)
+
+    subscription_plan = Plans.get_subscription_plan(team.subscription)
+
+    case {subscription_plan, team.trial_expiry_date} do
+      {%Plan{generation: 5}, _} ->
+        true
+
+      {nil, nil} ->
+        feature_flag_enabled?
+
+      {nil, trial_expiry_date} ->
+        diff = Date.diff(@starter_tier_launch, trial_expiry_date)
+        # Active or recently (less than 10 days ago) ended trials
+        # should be able to subscribe to the plans they saw when
+        # they signed up.
+        if diff <= 10 and diff >= -30 do
+          false
+        else
+          feature_flag_enabled?
+        end
+
+      {_, _} ->
+        feature_flag_enabled?
+    end
+  end
 
   def grandfathered_team?(nil), do: false
 

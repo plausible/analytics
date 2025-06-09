@@ -63,6 +63,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   describe "for a user with no subscription" do
     setup [:create_user, :create_site, :log_in]
 
+    setup %{user: user} do
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      trial_expiry_date = Plausible.Teams.Billing.starter_tier_launch() |> Date.shift(day: -30)
+
+      Ecto.Changeset.change(team, %{trial_expiry_date: trial_expiry_date})
+      |> Repo.update()
+
+      :ok
+    end
+
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -410,17 +421,24 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "allows upgrade to a 10k plan with a pageview allowance margin of 0.3 when trial ended 10 days ago",
          %{conn: conn, site: site, user: user} do
-      user
-      |> team_of()
-      |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
-      |> Repo.update!()
+      team =
+        user
+        |> team_of()
+        |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -10))
+        |> Repo.update!()
 
       generate_usage_for(site, 13_000)
 
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "10k")
 
-      refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
+      # NOTE: drop the else clause once Starter tier is live for a trial that ended recently
+      if Plausible.Teams.Billing.show_new_upgrade_page?(team) do
+        refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
+      else
+        refute element_exists?(doc, @starter_plan_box)
+      end
+
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
 
@@ -429,7 +447,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
       doc = set_slider(lv, "10k")
 
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
+      # NOTE: drop the else clause once Starter tier is live for a trial that ended recently
+      if Plausible.Teams.Billing.show_new_upgrade_page?(team) do
+        refute class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none"
+      else
+        refute element_exists?(doc, @starter_plan_box)
+      end
+
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
     end
@@ -441,7 +465,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     } do
       user
       |> team_of()
-      |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -11))
+      |> Ecto.Changeset.change(trial_expiry_date: Date.shift(Date.utc_today(), day: -30))
       |> Repo.update!()
 
       generate_usage_for(site, 11_000)
