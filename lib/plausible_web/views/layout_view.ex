@@ -133,7 +133,7 @@ defmodule PlausibleWeb.LayoutView do
           if(current_team_role in [:owner, :billing, :admin, :editor],
             do: %{key: "API Keys", value: "api-keys", icon: :key}
           ),
-          if(current_team_role == :owner,
+          if(Plausible.sso_enabled?() and current_team_role == :owner,
             do: %{key: "Single Sign-On", value: "sso/general", icon: :key}
           ),
           if(current_team_role == :owner,
