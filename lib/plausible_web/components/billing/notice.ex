@@ -114,7 +114,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         } = assigns
       ) do
     ~H"""
-    <aside id="global-subscription-cancelled-notice" class="container">
+    <aside
+      :if={not Subscriptions.expired?(@subscription)}
+      id="global-subscription-cancelled-notice"
+      class="container"
+    >
       <.notice
         dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@subscription.id)}
         title={Plausible.Billing.subscription_cancelled_notice_title()}
@@ -136,7 +140,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     assigns = assign(assigns, :container_id, "local-subscription-cancelled-notice")
 
     ~H"""
-    <aside id={@container_id} class="hidden">
+    <aside :if={not Subscriptions.expired?(@subscription)} id={@container_id} class="hidden">
       <.notice
         title={Plausible.Billing.subscription_cancelled_notice_title()}
         theme={:red}
@@ -262,31 +266,19 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   defp subscription_cancelled_notice_body(assigns) do
-    if Subscriptions.expired?(assigns.subscription) do
-      ~H"""
+    ~H"""
+    <p>
+      You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
       <.link
         class="underline inline-block"
         href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
       >
         Upgrade your subscription
       </.link>
-      to get access to your stats again.
-      """
-    else
-      ~H"""
-      <p>
-        You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
-        <.link
-          class="underline inline-block"
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-        >
-          Upgrade your subscription
-        </.link>
-        to make sure you don't lose access.
-      </p>
-      <.lose_grandfathering_warning subscription={@subscription} />
-      """
-    end
+      to make sure you don't lose access.
+    </p>
+    <.lose_grandfathering_warning subscription={@subscription} />
+    """
   end
 
   defp lose_grandfathering_warning(%{subscription: subscription} = assigns) do

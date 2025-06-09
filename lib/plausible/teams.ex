@@ -59,8 +59,7 @@ defmodule Plausible.Teams do
     def on_trial?(team) do
       team = with_subscription(team)
 
-      not Plausible.Billing.Subscriptions.active?(team.subscription) &&
-        trial_days_left(team) >= 0
+      is_nil(team.subscription) and trial_days_left(team) >= 0
     end
   else
     def on_trial?(_), do: always(true)
