@@ -375,8 +375,8 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
 
         <div :if={@tab == "overview"} class="mt-8">
           <.form :let={f} for={@form} phx-submit="save-team" phx-target={@myself}>
-            <.input field={f[:trial_expiry_date]} label="Trial Expiry Date" />
-            <.input field={f[:accept_traffic_until]} label="Accept  traffic Until" />
+            <.input field={f[:trial_expiry_date]} type="date" label="Trial Expiry Date" />
+            <.input field={f[:accept_traffic_until]} type="date" label="Accept  traffic Until" />
             <.input
               type="checkbox"
               field={f[:allow_next_upgrade_override]}
