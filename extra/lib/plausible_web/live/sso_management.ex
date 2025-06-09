@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           id="sp-enity-id"
           name="sp-entity-id"
           label="Entity ID"
-          value={saml_entity_id(@integration)}
+          value={SSO.SAMLConfig.entity_id(@integration)}
         />
 
         <.input_with_clipboard
@@ -203,7 +203,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           id="sp-enity-id"
           name="sp-entity-id"
           label="Entity ID"
-          value={saml_entity_id(@integration)}
+          value={SSO.SAMLConfig.entity_id(@integration)}
         />
 
         <.input_with_clipboard
@@ -615,10 +615,6 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
   defp load(socket, _) do
     socket
-  end
-
-  defp saml_entity_id(integration) do
-    PlausibleWeb.Endpoint.url() <> "/sso/" <> integration.identifier
   end
 
   defp saml_acs_url(integration) do
