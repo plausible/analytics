@@ -73,7 +73,7 @@ jobs:
         if: ${{ success() && github.ref == 'refs/heads/master' }}
         id: commitmsg
         run: | 
-          echo "first_line=$(echo "${{ github.event.head_commit.message }}" | head -n1)" >> $GITHUB_OUTPUT
+          echo "first_line=$(echo '${{ github.event.head_commit.message }}' | head -n1)" >> $GITHUB_OUTPUT
 
       - name: Notify team on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
