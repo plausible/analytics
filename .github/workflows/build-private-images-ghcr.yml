@@ -69,6 +69,11 @@ jobs:
           customHeaders: '{"Content-Type": "application/json"}'
           data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-private-images.yml\">Build failed</a>"}'
 
+      - name: Get first line of commit message
+        if: ${{ success() && github.ref == 'refs/heads/master' }}
+        id: commitmsg
+        run: echo "first_line=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
+
       - name: Notify team on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
         uses: fjogeleit/http-request-action@v1
@@ -77,7 +82,10 @@ jobs:
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
           escapeData: 'true'
-          data: '{"content": "<h1>🚀 New changes are about to be deployed to production!</h1><br/><h3>👷 Author: ${{ github.actor }}</h3><br/><p>📝 Commit message: ${{ github.event.head_commit.message }}</p><br/>"}'
+          data: |
+            {
+              "content": "<h1>🚀 Deploying ${{ steps.commitmsg.outputs.first_line }}</h1><p>Author: ${{ github.event.head_commit.author.name }}</p><p>Commit: <a href=\"${{ github.event.head_commit.url }}\">${{ github.sha }}</a></p>"
+            }
 
       - name: Set Honeycomb marker on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
