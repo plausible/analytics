@@ -1,6 +1,6 @@
 {
   "name": "macobo-test-tracker",
-  "version": "0.0.1",
+  "version": "0.1.6",
   "description": "Plausible Analytics official frontend tracking library",
   "scripts": {
     "test": "echo \"Error: Testing done in the tracker folder\" && exit 1"
@@ -12,7 +12,7 @@
     "analytics"
   ],
   "author": "Plausible Analytics",
-  "license": "AGPLv3",
+  "license": "MIT",
   "homepage": "https://plausible.io",
   "type": "module",
   "module": "./plausible.js",

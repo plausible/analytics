@@ -1,0 +1,79 @@
+name: "Tracker: publish NPM release"
+
+on:
+  pull_request:
+    branches: [master]
+    types: [closed]
+
+jobs:
+  tracker-release-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    if: >-
+      ${{ github.event.pull_request.merged == true && (
+      contains(github.event.pull_request.labels.*.name, 'tracker-release: patch') ||
+      contains(github.event.pull_request.labels.*.name, 'tracker-release: minor') ||
+      contains(github.event.pull_request.labels.*.name, 'tracker-release: major') ) }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PLAUSIBLE_BOT_GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 23.2.0
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm install --prefix tracker
+
+      - name: Bump the patch version and update changelog
+        if: "${{ contains(github.event.pull_request.labels.*.name, 'tracker-release: patch') }}"
+        run: npm run npm:prepare_release:patch --prefix tracker
+
+      - name: Bump the minor version and update changelog
+        if: "${{ contains(github.event.pull_request.labels.*.name, 'tracker-release: minor') }}"
+        run: npm run npm:prepare_release:minor --prefix tracker
+
+      - name: Bump the major version and update changelog
+        if: "${{ contains(github.event.pull_request.labels.*.name, 'tracker-release: major') }}"
+        run: npm run npm:prepare_release:major --prefix tracker
+
+      - name: Get the package version from package.json
+        id: package
+        run: |
+          echo "version=$(jq -r .version tracker/npm_package/package.json)" >> $GITHUB_OUTPUT
+
+      - name: Publish tracker script to NPM
+        run: npm publish
+        working-directory: tracker/npm_package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.TRACKER_RELEASE_NPM_TOKEN }}
+
+      - name: Commit and Push changes
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5
+        with:
+          message: "Released tracker script version ${{ steps.package.outputs.version }}"
+          add: "tracker/npm_package"
+
+      - name: Notify team on success
+        if: ${{ success() }}
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.BUILD_NOTIFICATION_URL }}
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json"}'
+          data: '{"content": "<h1>🚀 New tracker script version has been released to NPM!</h1>"}'
+
+      - name: Notify team on failure
+        if: ${{ failure() }}
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.BUILD_NOTIFICATION_URL }}
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json"}'
+          data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/tracker-script-npm-release.yml\">NPM release failed</a>"}'

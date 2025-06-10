@@ -107,3 +107,27 @@ jobs:
           message: |
             ${{ steps.analyze.outputs.sizes }}
           comment-tag: size-report
+
+      - name: Check PR has tracker release label set
+        if: >-
+          ${{ !(
+          contains(github.event.pull_request.labels.*.name, 'tracker-release: patch') ||
+          contains(github.event.pull_request.labels.*.name, 'tracker-release: minor') ||
+          contains(github.event.pull_request.labels.*.name, 'tracker-release: major') ) }}
+
+        run: |
+          echo "::error::PR changes tracker script but does not have a 'tracker release:' label. Please add one."
+          exit 1
+
+      - name: Get changed files
+        id: changelog_changed
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c
+        with:
+          files: |
+            tracker/npm_package/CHANGELOG.md
+
+      - name: Error if PR no tracker CHANGELOG.md updates
+        if: ${{ steps.changelog_changed.outputs.any_changed == 'false' }}
+        run: |
+          echo "::error::PR changes tracker script but does not have a tracker NPM package CHANGELOG.md update."
+          exit 1
