@@ -47,6 +47,7 @@ defmodule Plausible.Auth.User do
       field :last_sso_login, :naive_datetime
 
       belongs_to :sso_integration, Plausible.Auth.SSO.Integration, on_replace: :nilify
+      belongs_to :sso_domain, Plausible.Auth.SSO.Domain, on_replace: :nilify
     end
 
     has_many :sessions, Plausible.Auth.UserSession

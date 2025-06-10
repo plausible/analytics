@@ -1,4 +1,5 @@
-import { minifySync as swcMinify } from '@swc/core'
+import { minifySync } from '@swc/core'
+import { rollup } from 'rollup'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -11,6 +12,10 @@ import { spawn, Worker, Pool } from "threads"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const DEFAULT_GLOBALS = {
+  COMPILE_PLAUSIBLE_WEB: false,
+  COMPILE_PLAUSIBLE_NPM: false,
+  COMPILE_PLAUSIBLE_LEGACY_VARIANT: false,
+  COMPILE_CONFIG: false,
   COMPILE_HASH: false,
   COMPILE_OUTBOUND_LINKS: false,
   COMPILE_COMPAT: false,
@@ -23,8 +28,9 @@ const DEFAULT_GLOBALS = {
   COMPILE_REVENUE: false,
   COMPILE_EXCLUSIONS: false,
   COMPILE_TRACKER_SCRIPT_VERSION: packageJson.tracker_script_version,
-  COMPILE_CONFIG: false
 }
+
+const ALL_VARIANTS = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
 
 export async function compileAll(options = {}) {
   if (process.env.NODE_ENV === 'dev' && canSkipCompile()) {
@@ -32,19 +38,18 @@ export async function compileAll(options = {}) {
     return
   }
 
-  const variants = getVariantsToCompile(options)
-  const baseCode = getCode()
+  const bundledCode = await bundleCode()
 
   const startTime = Date.now();
-  console.log(`Starting compilation of ${variants.length} variants...`)
+  console.log(`Starting compilation of ${ALL_VARIANTS.length} variants...`)
 
   const bar = new progress.SingleBar({ clearOnComplete: true }, progress.Presets.shades_classic)
-  bar.start(variants.length, 0)
+  bar.start(ALL_VARIANTS.length, 0)
 
   const workerPool = Pool(() => spawn(new Worker('./worker-thread.js')))
-  variants.forEach(variant => {
+  ALL_VARIANTS.forEach(variant => {
     workerPool.queue(async (worker) => {
-      await worker.compileFile(variant, { ...options, baseCode })
+      await worker.compileFile(variant, { ...options, bundledCode })
       bar.increment()
     })
   })
@@ -53,20 +58,37 @@ export async function compileAll(options = {}) {
   await workerPool.terminate()
   bar.stop()
 
-  console.log(`Completed compilation of ${variants.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
+  console.log(`Completed compilation of ${ALL_VARIANTS.length} variants in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
 }
 
-export function compileFile(variant, options) {
-  const baseCode = options.baseCode || getCode()
+export async function compileFile(variant, options) {
   const globals = { ...DEFAULT_GLOBALS, ...variant.globals }
+  let code = options.bundledCode || await bundleCode()
 
-  const code = minify(baseCode, globals)
+  if (!variant.npm_package) {
+    code = wrapInstantlyEvaluatingFunction(code)
+  }
+
+  code = minify(code, globals, variant)
+
+  if (variant.npm_package) {
+    code = addExports(code)
+  }
 
   if (options.returnCode) {
     return code
   } else {
-    fs.writeFileSync(relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`), code)
+    fs.writeFileSync(outputPath(variant, options), code)
   }
+}
+
+function wrapInstantlyEvaluatingFunction(baseCode) {
+  return `(function(){${baseCode}})()`
+}
+
+// Works around minification limitation of swc not allowing exports
+function addExports(code) {
+  return `${code}\nexport { init, track }`
 }
 
 export function compileWebSnippet() {
@@ -79,52 +101,45 @@ export function compileWebSnippet() {
   `
 }
 
-function getVariantsToCompile(options) {
-  let targetVariants = variantsFile.legacyVariants.concat(variantsFile.manualVariants)
-  if (options.targets !== null) {
-    targetVariants = targetVariants.filter(variant =>
-      options.targets.every(target => variant.compileIds.includes(target))
-    )
-  }
-  if (options.only !== null) {
-    targetVariants = targetVariants.filter(variant =>
-      options.only.some(targetCompileIds => equalLists(variant.compileIds, targetCompileIds))
-    )
-  }
+async function bundleCode(format = 'esm') {
+  const bundle = await rollup({
+    input: 'src/plausible.js',
+  })
 
-  return targetVariants
+  const { output } = await bundle.generate({ format })
+
+  return output[0].code
 }
 
-function getCode() {
-  // Wrap the code in an instantly evaluating function
-  return `(function(){${fs.readFileSync(relPath('../src/plausible.js')).toString()}})()`
+function outputPath(variant, options) {
+  if (variant.npm_package) {
+    return relPath(`../${variant.name}${options.suffix || ""}`)
+  } else {
+    return relPath(`../../priv/tracker/js/${variant.name}${options.suffix || ""}`)
+  }
 }
 
-function minify(baseCode, globals) {
-  const result = swcMinify(baseCode, {
+function minify(code, globals, variant = {}) {
+  const minifyOptions = {
     compress: {
       global_defs: globals,
       passes: 4
-    }
-  })
+    },
+    mangle: {}
+  }
+
+  if (variant.npm_package) {
+    minifyOptions.mangle.reserved = ['init', 'track']
+    minifyOptions.mangle.toplevel = true
+  }
+
+  const result = minifySync(code, minifyOptions)
 
   if (result.code) {
     return result.code
   } else {
     throw result.error
   }
-}
-
-function equalLists(a, b) {
-  if (a.length != b.length) {
-    return false
-  }
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) {
-      return false
-    }
-  }
-  return true
 }
 
 function relPath(segment) {

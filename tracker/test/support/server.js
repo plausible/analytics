@@ -17,11 +17,11 @@ export const LOCAL_SERVER_ADDR = `http://localhost:${LOCAL_SERVER_PORT}`
 export function runLocalFileServer() {
   app.use(express.static(FIXTURES_PATH));
 
-  app.get('/tracker/js/:name', (req, res) => {
-    const name = req.params.name
+  app.get('/tracker/js/*', async (req, res) => {
+    const name = req.params[0]
     const variant = VARIANTS.find((variant) => variant.name === name)
 
-    let code = compileFile(variant, { returnCode: true })
+    let code = await compileFile(variant, { returnCode: true })
 
     if (name === 'plausible-web.js') {
       code = code.replace('"<%= @config_js %>"', req.query.script_config)

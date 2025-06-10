@@ -1,5 +1,5 @@
 {
-  "tracker_script_version": 13,
+  "tracker_script_version": 15,
   "type": "module",
   "scripts": {
     "deploy": "node compile.js",
@@ -13,6 +13,7 @@
     "chokidar": "^4.0.3",
     "cli-progress": "^3.12.0",
     "generatorics": "^1.1.0",
+    "rollup": "^4.41.1",
     "threads": "^1.7.0"
   },
   "devDependencies": {

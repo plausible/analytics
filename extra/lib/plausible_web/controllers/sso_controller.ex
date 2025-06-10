@@ -70,7 +70,7 @@ defmodule PlausibleWeb.SSOController do
           else
             %SSO.Identity{
               id: Ecto.UUID.generate(),
-              name: "Some SSO Person",
+              name: name_from_email(email),
               email: email,
               expires_at: expires_at
             }
@@ -89,5 +89,14 @@ defmodule PlausibleWeb.SSOController do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
     Logger.error(body)
     conn |> send_resp(200, "OK")
+  end
+
+  defp name_from_email(email) do
+    email
+    |> String.split("@", parts: 2)
+    |> List.first()
+    |> String.split(".")
+    |> Enum.take(2)
+    |> Enum.map_join(" ", &String.capitalize/1)
   end
 end

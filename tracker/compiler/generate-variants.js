@@ -14,8 +14,10 @@ let legacyVariants = [...g.clone.powerSet(LEGACY_VARIANT_NAMES)]
   .map(a => a.sort())
   .map((variant) => ({
     name: variant.length > 0 ? `plausible.${variant.join('.')}.js` : 'plausible.js',
-    compileIds: variant,
-    globals: Object.fromEntries(variant.map(id => [idToGlobal(id), true]))
+    globals: {
+      ...Object.fromEntries(variant.map(id => [idToGlobal(id), true])),
+      COMPILE_PLAUSIBLE_LEGACY_VARIANT: true
+    }
   }))
 
 const variantsFile = path.join(__dirname, 'variants.json')

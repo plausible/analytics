@@ -79,13 +79,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
             <.styled_link patch={"/cs/teams/team/#{@site.team.id}"}>
               {@site.team.name}
             </.styled_link>
-
-            <span
-              :if={Plausible.Teams.locked?(@site.team)}
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
-            >
-              Locked
-            </span>
           </p>
           <p class="text-sm font-medium">
             <span :if={@site.domain_changed_from}>(previously: {@site.domain_changed_from})</span>
@@ -118,6 +111,31 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
         phx-submit="save-site"
         class="mt-8"
       >
+        <div class="flex justify-center items-center gap-x-8 pb-8 mb-8 border-b border-gray-200 dark:border-gray-700 w-full text-sm text-center">
+          <span>Quick links:</span>
+
+          <.styled_link
+            new_tab={true}
+            href={Routes.stats_path(PlausibleWeb.Endpoint, :stats, @site.domain, [])}
+          >
+            Dashboard
+          </.styled_link>
+
+          <.styled_link
+            new_tab={true}
+            href={Routes.site_path(PlausibleWeb.Endpoint, :settings_general, @site.domain, [])}
+          >
+            Settings
+          </.styled_link>
+
+          <.styled_link
+            new_tab={true}
+            href={"https://plausible.grafana.net/d/BClBG5b4k/ingest-counters-per-domain?orgId=1&from=now-24h&to=now&timezone=browser&var-domain=#{@site.domain}&refresh=10s"}
+          >
+            Ingest Overview
+          </.styled_link>
+        </div>
+
         <.input
           type="select"
           field={f[:timezone]}
@@ -243,10 +261,6 @@ defmodule PlausibleWeb.CustomerSupport.Live.Site do
 
         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
           Site
-        </span>
-
-        <span :if={Plausible.Teams.locked?(@resource.object.team)} class="inline-flex items-center">
-          <Heroicons.lock_closed solid class="inline stroke-2 w-4 h-4 text-red-400 mr-2" />
         </span>
       </div>
 
