@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
     ~H"""
     <div class="flex-col space-y-6">
       <p class="text-sm">
-        In order for Single Sign-On to work, you have allow at least one email address domain:
+        In order for Single Sign-On to work, you have to allow at least one email address domain:
       </p>
 
       <.form
@@ -168,7 +168,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
       <ol>
         <li>
-          Add a <pre>TXT</pre> record to {@domain.domain} with a following value: <pre>
+          Add a <code>TXT</code>
+          record to {@domain.domain} with a following value: <pre>
             plausible-sso-verification={@domain.identifier}
           </pre>
         </li>
@@ -179,7 +180,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
         </li>
         <li>
           Add a following META tag to the web page at https://{@domain.identifier}: <pre>
-            <meta name="plausible-sso-verification" content="{@domain.identifier}">
+            {~s|<meta name="plausible-sso-verification" content="{@domain.identifier}">|}
           </pre>
         </li>
       </ol>
