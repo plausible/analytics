@@ -1,16 +1,15 @@
 import { Page } from '@playwright/test'
+import { delay } from './test-utils'
 
 type RequestData = Record<string, unknown>
 type ShouldIgnoreRequest = (requestData?: RequestData) => boolean
 
+const DEFAULT_RESPONSE = { status: 200, contentType: 'text/plain', body: 'ok' }
+
 export async function mockManyRequests({
   page,
   path,
-  fulfill = {
-      status: 202,
-      contentType: 'text/plain',
-      body: 'ok'
-    },
+  fulfill,
   countOfRequestsToAwait,
   responseDelay,
   shouldIgnoreRequest,
@@ -18,17 +17,21 @@ export async function mockManyRequests({
 }: {
   page: Page
   path: string
-  /** Response to fulfill the request with */
+  /**
+   * Response to fulfill the request with.
+   * Defaults to DEFAULT_RESPONSE. Allows overriding properties from the default one by one.
+   * @see DEFAULT_RESPONSE
+   */
   fulfill?: {
-    status: number
-    contentType: string
-    body: string
+    status?: number
+    contentType?: string
+    body?: string
   }
-  /** 
-   * When there's at least `countOfRequestsToAwait` requests on this route, 
+  /**
+   * When there's at least `countOfRequestsToAwait` requests on this route,
    * getRequestList resolves without waiting for `mockRequestTimeoutMs`.
    * If there's less than `countOfRequestsToAwait` requests on this route, it
-   * takes `mockRequestTimeoutMs` to resolve getRequestList. 
+   * takes `mockRequestTimeoutMs` to resolve getRequestList.
    * This is so as not miss requests that are yet to be sent.
    */
   countOfRequestsToAwait: number
@@ -37,7 +40,7 @@ export async function mockManyRequests({
   mockRequestTimeoutMs?: number
 }) {
   const requestList: unknown[] = []
-  await page.route(path, async (route, request) => {
+  await page.context().route(path, async (route, request) => {
     const postData = request.postDataJSON()
     if (shouldAllow(postData, shouldIgnoreRequest)) {
       requestList.push(postData)
@@ -45,7 +48,10 @@ export async function mockManyRequests({
     if (responseDelay) {
       await delay(responseDelay)
     }
-    await route.fulfill(fulfill)
+    await route.fulfill({
+      ...DEFAULT_RESPONSE,
+      ...fulfill
+    })
   })
 
   const getRequestList = (): Promise<unknown[]> =>
@@ -65,10 +71,13 @@ export async function mockManyRequests({
       }, POLL_INTERVAL_MS)
     })
 
-  return {getRequestList}
+  return { getRequestList }
 }
 
-function shouldAllow(requestData: RequestData, ignores: ShouldIgnoreRequest | ShouldIgnoreRequest[] | undefined) {
+function shouldAllow(
+  requestData: RequestData,
+  ignores: ShouldIgnoreRequest | ShouldIgnoreRequest[] | undefined
+) {
   if (Array.isArray(ignores)) {
     return !ignores.some((shouldIgnore) => shouldIgnore(requestData))
   } else if (ignores) {
@@ -76,8 +85,4 @@ function shouldAllow(requestData: RequestData, ignores: ShouldIgnoreRequest | Sh
   } else {
     return true
   }
-}
-
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }

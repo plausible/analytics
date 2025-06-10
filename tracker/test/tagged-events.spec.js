@@ -1,4 +1,4 @@
-import { mockRequest, metaKey, expectPlausibleInAction } from './support/test-utils'
+import { mockRequest, expectPlausibleInAction } from './support/test-utils'
 import { expect, test } from '@playwright/test'
 
 test.describe('tagged-events extension', () => {
@@ -55,7 +55,7 @@ test.describe('tagged-events extension', () => {
         })
 
         await expectPlausibleInAction(page, {
-            action: () => page.click('#div', { modifiers: [metaKey()] }),
+            action: () => page.click('#div', { modifiers: ['ControlOrMeta'] }),
             expectedRequests
         })
     })
@@ -85,7 +85,7 @@ test.describe('tagged-events extension', () => {
         ]
 
         await expectPlausibleInAction(page, {
-            action: () => page.click('#h2-with-link-parent', { modifiers: [metaKey()] }),
+            action: () => page.click('#h2-with-link-parent', { modifiers: ['ControlOrMeta'] }),
             expectedRequests
         })
 

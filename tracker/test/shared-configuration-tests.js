@@ -1,7 +1,6 @@
 import {
   expectPlausibleInAction,
   hideAndShowCurrentTab,
-  metaKey,
   mockRequest,
   e as expecting,
   isPageviewEvent,
@@ -82,7 +81,7 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
       await expectPlausibleInAction(page, {
         action: async () => {
           await openPage(page, {})
-          await page.click('#file-download', { modifiers: [metaKey()] })
+          await page.click('#file-download', { modifiers: ['ControlOrMeta'] })
         },
         expectedRequests: [{ n: 'pageview' } ],
         refutedRequests: [{ n: 'File Download' }],

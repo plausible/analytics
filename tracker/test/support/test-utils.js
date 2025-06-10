@@ -18,14 +18,6 @@ export const mockRequest = function (page, path) {
   })
 }
 
-export const metaKey = function() {
-  if (process.platform === 'darwin') {
-    return 'Meta'
-  } else {
-    return 'Control'
-  }
-}
-
 /**
  * A powerful utility function that makes it easy to assert on the event
  * requests that should or should not have been made after doing a page
@@ -68,9 +60,10 @@ export const expectPlausibleInAction = async function (page, {
   const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
   const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
 
-  const {getRequestList} = await mockManyRequests({
+  const { getRequestList } = await mockManyRequests({
     page,
     path: pathToMock,
+    fulfill: { status: 202, contentType: 'text/plain', body: 'ok' },
     responseDelay,
     shouldIgnoreRequest,
     countOfRequestsToAwait: requestsToAwait,
@@ -208,6 +201,6 @@ function checkEqual(a, b) {
   return a === b
 }
 
-function delay(ms) {
+export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
