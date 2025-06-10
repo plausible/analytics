@@ -44,6 +44,6 @@ Handled via PRs. When making tracker changes, it's required to:
 - Update `tracker/CHANGELOG.md`
 
 After merge github actions automatically:
-- include the updated tracker scripts in the next cloud deploy
+- includes the updated tracker scripts in the next cloud deploy
 - updates npm package package.json and CHANGELOG.md with the new version
 - releases the new package version on NPM.
