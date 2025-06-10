@@ -32,7 +32,7 @@ defmodule Plausible.Billing.EnterprisePlanTest do
              |> EnterprisePlan.changeset(attrs)
              |> Plausible.Repo.insert()
 
-    assert {"is invalid", [type: Plausible.Billing.Ecto.FeatureList, validation: :cast]} ==
+    assert {"is invalid", [type: {:array, Plausible.Billing.Ecto.Feature}, validation: :cast]} ==
              changeset.errors[:features]
   end
 

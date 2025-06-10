@@ -88,27 +88,6 @@ defmodule PlausibleWeb.Router do
   end
 
   on_ee do
-    use Kaffy.Routes,
-      scope: "/crm",
-      pipe_through: [
-        PlausibleWeb.Plugs.NoRobots,
-        PlausibleWeb.AuthPlug,
-        PlausibleWeb.SuperAdminOnlyPlug
-      ]
-  end
-
-  on_ee do
-    scope "/crm", PlausibleWeb do
-      pipe_through :flags
-      get "/teams/team/:team_id/usage", AdminController, :usage
-      get "/auth/user/:user_id/info", AdminController, :user_info
-      get "/billing/team/:team_id/current_plan", AdminController, :current_plan
-      get "/billing/search/team-by-id/:team_id", AdminController, :team_by_id
-      post "/billing/search/team", AdminController, :team_search
-    end
-  end
-
-  on_ee do
     scope alias: PlausibleWeb.Live,
           assigns: %{connect_live_socket: true, skip_plausible_tracking: true} do
       pipe_through [:browser, :csrf, :app_layout, :flags]
