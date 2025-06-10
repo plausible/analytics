@@ -303,7 +303,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           </:thead>
           <:tbody :let={domain}>
             <.td>{domain.domain}</.td>
-            <.td>{domain.inserted_at}</.td>
+            <.td>{Calendar.strftime(domain.inserted_at, "%b %-d, %Y at %H:%m UTC")}</.td>
             <.td>{domain.status}</.td>
             <.td actions>
               <.styled_link
@@ -393,7 +393,11 @@ defmodule PlausibleWeb.Live.SSOManagement do
             options={@role_options}
           />
 
-          <.input field={f[:sso_session_timeout_minutes]} label="Session timeout (minutes)" />
+          <.input
+            field={f[:sso_session_timeout_minutes]}
+            label="Session timeout (minutes)"
+            type="number"
+          />
 
           <.button type="submit">Update</.button>
         </.form>
@@ -649,7 +653,12 @@ defmodule PlausibleWeb.Live.SSOManagement do
       end
 
     policy_changeset = Teams.Policy.update_changeset(team.policy, %{})
-    role_options = Teams.Policy.sso_member_roles()
+
+    role_options =
+      Enum.map(Teams.Policy.sso_member_roles(), fn role ->
+        {String.capitalize(to_string(role)), role}
+      end)
+      |> Enum.sort()
 
     domain_delete_checks =
       Enum.into(socket.assigns.integration.sso_domains, %{}, fn domain ->
