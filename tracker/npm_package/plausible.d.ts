@@ -60,7 +60,7 @@ export interface PlausibleEventOptions {
 
   // Overrides the URL of the page that the event is being tracked on.
   // If not provided, `location.href` will be used.
-  u?: string
+  url?: string
 }
 
 export type CustomProperties = Record<string, string>

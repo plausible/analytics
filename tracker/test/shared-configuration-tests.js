@@ -193,12 +193,15 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
         action: async () => {
           await openPage(page, {}, { skipPlausibleInit: true })
           await initPlausible(page, { autoCapturePageviews: false })
-          await page.click('#manual-pageview')
+          await page.click('#manual-pageview-1')
+          await page.click('#manual-pageview-2')
           await hideAndShowCurrentTab(page, { delay: 200 })
         },
         expectedRequests: [
           { n: 'pageview', u: '/:test-plausible', d: 'example.com' },
           { n: 'engagement', u: '/:test-plausible', d: 'example.com' },
+          { n: 'pageview', u: '/:test-plausible-2', d: 'example.com' },
+          { n: 'engagement', u: '/:test-plausible-2', d: 'example.com' },
         ],
       })
     })

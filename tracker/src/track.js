@@ -55,7 +55,7 @@ export function track(eventName, options) {
   payload.v = COMPILE_TRACKER_SCRIPT_VERSION
 
   if (COMPILE_MANUAL) {
-    var customURL = options && options.u
+    var customURL = options && (options.u || options.url)
 
     payload.u = customURL ? customURL : location.href
   } else {
