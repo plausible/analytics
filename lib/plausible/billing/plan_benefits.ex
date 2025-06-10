@@ -66,14 +66,32 @@ defmodule Plausible.Billing.PlanBenefits do
   """
   def for_enterprise(business_benefits) do
     team_members =
-      if "Up to 10 team members" in business_benefits, do: "10+ team members"
+      cond do
+        "Unlimited team members" in business_benefits -> nil
+        "Up to 10 team members" in business_benefits -> "10+ team members"
+        "Up to 50 team members" in business_benefits -> "50+ team members"
+        # if there's nothing about team members in Business benefits, then
+        # Growth has unlimited team members already. In that case, we don't
+        # mention team members at all.
+        true -> nil
+      end
+
+    sites =
+      cond do
+        "Up to 10 sites" in business_benefits -> "10+ sites"
+        "Up to 50 sites" in business_benefits -> "50+ sites"
+        # Before v4, every plan (both Growth and Business) had 50 sites.
+        # Therefore, if Business benefits do not mention site limit, then
+        # it's 50. Newer Business plans always define a higher site limit.
+        true -> "50+ sites"
+      end
 
     data_retention =
       if "5 years of data retention" in business_benefits, do: "5+ years of data retention"
 
     [
       "Everything in Business",
-      "10+ sites",
+      sites,
       team_members,
       "600+ Stats API requests per hour",
       "Sites API",

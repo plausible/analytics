@@ -72,8 +72,8 @@ defmodule Plausible.Billing.Plans do
 
     cond do
       subscription && Subscriptions.expired?(subscription) -> default_plans
-      owned_plan && owned_plan.generation < 4 -> plans_v3()
-      owned_plan && owned_plan.generation < 5 -> plans_v4()
+      owned_plan && owned_plan.generation <= 3 -> plans_v3()
+      owned_plan && owned_plan.generation <= 4 -> plans_v4()
       true -> default_plans
     end
     |> Enum.filter(&(&1.kind == :business))
