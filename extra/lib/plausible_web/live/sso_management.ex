@@ -94,10 +94,9 @@ defmodule PlausibleWeb.Live.SSOManagement do
       <div class="flex-col space-y-3">
         <p class="text-sm">Following attribute mappings must be setup at Identity Provider:</p>
 
-        <ul role="list" class="space-y-3 leading-6 text-sm">
-          <li :for={param <- ["email", "first_name", "last_name"]} class="flex gap-x-3">
-            <Heroicons.arrow_right_circle class="h-6 w-5" />
-            <pre>{param}</pre>
+        <ul role="list" class="list-disc leading-6 text-sm ml-8">
+          <li :for={param <- ["email", "first_name", "last_name"]}>
+            <code>{param}</code>
           </li>
         </ul>
       </div>
@@ -166,24 +165,32 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
       <p class="text-sm">You can verify the domain using one of 3 methods:</p>
 
-      <ol>
+      <ul class="list-disc ml-4 space-y-6">
         <li>
-          Add a <code>TXT</code>
-          record to {@domain.domain} with a following value: <pre>
-            plausible-sso-verification={@domain.identifier}
-          </pre>
+          <.input_with_clipboard
+            name="verification-dns-txt"
+            label={"Add a TXT record to #{@domain.domain} domain with the following value"}
+            id="verification-dns-txt"
+            value={"plausible-sso-verification=#{@domain.identifier}"}
+          />
         </li>
         <li>
-          Publish a file or route at https://{@domain.domain}/plausible-sso-verification with the following contents: <pre>
-            {@domain.identifier}
-          </pre>
+          <.input_with_clipboard
+            name="verification-url"
+            label={"Publish a file or route at https://#{@domain.domain}/plausible-sso-verification rendering the following contents"}
+            id="verification-url"
+            value={@domain.identifier}
+          />
         </li>
         <li>
-          Add a following META tag to the web page at https://{@domain.identifier}: <pre>
-            {~s|<meta name="plausible-sso-verification" content="{@domain.identifier}">|}
-          </pre>
+          <.input_with_clipboard
+            name="verification-meta-tag"
+            label={"Add a following META tag to the web page at https://#{@domain.domain}"}
+            id="verification-meta-tag"
+            value={~s|<meta name="plausible-sso-verification" content="#{@domain.identifier}">|}
+          />
         </li>
-      </ol>
+      </ul>
 
       <form id="show-manage-form" for={} phx-submit="show-manage">
         <.button type="submit">Continue</.button>
