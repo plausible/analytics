@@ -77,7 +77,10 @@ jobs:
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
           escapeData: 'true'
-          data: '{"content": "<h1>🚀 New changes are about to be deployed to production!</h1><br/><h3>👷 Author: ${{ github.actor }}</h3><br/><p>📝 Commit message: ${{ github.event.head_commit.message }}</p><br/>"}'
+          data: |
+            {
+              "content": "<h1>🚀 Deploying ${{ github.event.pull_request.title }}</h1><p>Author: ${{ github.event.pull_request.user.login }}</p><p>Commit: <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a></p>"
+            }
 
       - name: Set Honeycomb marker on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
