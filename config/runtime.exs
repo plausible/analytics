@@ -62,13 +62,13 @@ http_port =
 
 https_port = get_int_from_path_or_env(config_dir, "HTTPS_PORT")
 
-base_url_str = get_var_from_path_or_env(config_dir, "BASE_URL")
+base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
-if !base_url_str do
+if !base_url do
   raise "BASE_URL configuration option is required. See https://github.com/plausible/community-edition/wiki/configuration#base_url"
 end
 
-base_url = URI.parse(base_url_str)
+base_url = URI.parse(base_url)
 
 if base_url.scheme not in ["http", "https"] do
   raise "BASE_URL must start with `http` or `https`. Currently configured as `#{System.get_env("BASE_URL")}`"
@@ -340,7 +340,7 @@ config :plausible, PlausibleWeb.Endpoint,
   secret_key_base: secret_key_base,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie,
-  base_url: base_url_str
+  base_url: base_url
 
 # maybe enable HTTPS in CE
 if config_env() in [:ce, :ce_dev, :ce_test] do
