@@ -24,6 +24,7 @@ defmodule Plausible.Ingestion.Request do
 
   use Ecto.Schema
   use Plausible
+  require Logger
   alias Ecto.Changeset
 
   @max_url_size 2_000
@@ -229,6 +230,13 @@ defmodule Plausible.Ingestion.Request do
       |> Enum.reduce([], &filter_bad_props/2)
       |> Enum.take(@max_props)
       |> Map.new()
+
+    # Temporary instrumentation to see if `m`/`meta` field was used.
+    if request_body["m"] || request_body["meta"] do
+      Logger.warning(
+        "Ingestion: request body contains meta field. domain=#{request_body["d"] || request_body["domain"]}"
+      )
+    end
 
     changeset
     |> Changeset.put_change(:props, props)
