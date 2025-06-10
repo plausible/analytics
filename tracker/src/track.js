@@ -111,6 +111,14 @@ export function track(eventName, options) {
     payload.h = 1
   }
 
+  if ((COMPILE_PLAUSIBLE_WEB || COMPILE_PLAUSIBLE_NPM) && typeof config.transformRequest === 'function') {
+    payload = config.transformRequest(payload)
+
+    if (!payload) {
+      return onIgnoredEvent(eventName, options, 'transformRequest')
+    }
+  }
+
   if (isPageview) {
     postPageviewTrack(payload)
   }

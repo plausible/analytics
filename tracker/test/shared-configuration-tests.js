@@ -11,14 +11,20 @@ import { test } from '@playwright/test'
 
 // Wrapper around calling `plausible.init` in the page context for users of `testPlausibleConfiguration`
 export async function callInit(page, config, parent) {
-  // Stringify the customProperties function to work around evaluate not being able to serialize functions
+  // Stringify the customProperties and transformRequest functions to work around evaluate not being able to serialize functions
   if (config && typeof config.customProperties === 'function') {
     config.customProperties = { "_wrapFunction": config.customProperties.toString() }
+  }
+  if (config && typeof config.transformRequest === 'function') {
+    config.transformRequest = { "_wrapFunction": config.transformRequest.toString() }
   }
 
   await page.evaluate(({ config, parent }) => {
     if (config && config.customProperties && config.customProperties._wrapFunction) {
       config.customProperties = new Function(`return (${config.customProperties._wrapFunction})`)();
+    }
+    if (config && config.transformRequest && config.transformRequest._wrapFunction) {
+      config.transformRequest = new Function(`return (${config.transformRequest._wrapFunction})`)();
     }
     eval(parent).init(config)
   }, { config, parent })
@@ -230,6 +236,40 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
           await initPlausible(page, { endpoint: 'http://proxy.io/endpoint' })
         },
         expectedRequests: [{ n: 'pageview', d: 'example.com', u: expecting.stringContaining(fixtureName)}]
+      })
+    })
+
+    test('supports ignoring requests with `transformRequest`', async ({ page }) => {
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await openPage(page, {}, { skipPlausibleInit: true })
+          await initPlausible(page, { transformRequest: () => null })
+          await page.click('#custom-event')
+        },
+        expectedRequests: [],
+        refutedRequests: [{ n: 'Custom event' }, { n: 'pageview' }]
+      })
+    })
+
+    test('supports modifying the request payload with `transformRequest`', async ({ page }) => {
+      const transformRequest = (payload) => {
+        payload.p = payload.p || {}
+        payload.p.eventName = payload.n
+        payload.i = false
+
+        return payload
+      }
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await openPage(page, {}, { skipPlausibleInit: true })
+          await initPlausible(page, { transformRequest })
+          await page.click('#custom-event')
+        },
+        expectedRequests: [
+          { n: 'pageview', p: { eventName: 'pageview' }, i: false },
+          { n: 'Custom event', p: { eventName: 'Custom event', author: 'Karl' }, i: false }
+        ]
       })
     })
   })

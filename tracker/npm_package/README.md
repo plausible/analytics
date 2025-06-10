@@ -50,6 +50,7 @@ See also [plausible.d.ts](https://github.com/plausible/analytics/blob/master/tra
 | `formSubmissions` | Whether to track form submissions. | `false` |
 | `captureOnLocalhost` | Whether to capture events on localhost. | `false` |
 | `customProperties` | Object or function that returns custom properties for a given event. | `{}` |
+| `transformRequest` | Function that allows transforming or ignoring requests | `null` |
 
 #### Using `customProperties`
 
