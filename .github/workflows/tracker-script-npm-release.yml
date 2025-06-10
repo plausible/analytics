@@ -31,15 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix tracker
 
-      - name: Bump the patch version
+      - name: Bump the patch version and update changelog
         if: "${{ contains(github.event.pull_request.labels.*.name, 'tracker-release: patch') }}"
         run: npm run npm:prepare_release:patch --prefix tracker
 
-      - name: Bump the minor version
+      - name: Bump the minor version and update changelog
         if: "${{ contains(github.event.pull_request.labels.*.name, 'tracker-release: minor') }}"
         run: npm run npm:prepare_release:minor --prefix tracker
 
-      - name: Bump the major version
+      - name: Bump the major version and update changelog
         if: "${{ contains(github.event.pull_request.labels.*.name, 'tracker-release: major') }}"
         run: npm run npm:prepare_release:major --prefix tracker
 
