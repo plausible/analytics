@@ -998,15 +998,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, "#{@growth_checkout_button} + div") =~
                "Please update your billing details first"
-
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none bg-gray-400"
-
-      assert text_of_element(doc, "#{@starter_checkout_button} + div") =~
-               "Please update your billing details first"
     end
   end
 
-  describe "for a user with a paused subscription" do
+  describe "for a user with a paused v4 subscription" do
     setup [:create_user, :create_site, :log_in, :create_paused_subscription]
 
     test "renders subscription paused notice and link to update billing details", %{conn: conn} do
@@ -1037,15 +1032,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, "#{@growth_checkout_button} + div") =~
                "Please update your billing details first"
-
-      assert class_of_element(doc, @starter_checkout_button) =~ "pointer-events-none bg-gray-400"
-
-      assert text_of_element(doc, "#{@starter_checkout_button} + div") =~
-               "Please update your billing details first"
     end
   end
 
-  describe "for a user with a cancelled, but still active subscription" do
+  describe "for a user with a cancelled, but still active v4 subscription" do
     setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
 
     test "does not render any global notices", %{conn: conn} do
@@ -1055,9 +1045,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "checkout buttons are paddle buttons", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-
-      assert text_of_attr(find(doc, @starter_checkout_button), "onclick") =~
-               "Paddle.Checkout.open"
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~ "Paddle.Checkout.open"
 
@@ -1098,8 +1085,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "highlights recommended tier", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert text_of_element(doc, @starter_highlight_pill) == "Recommended"
-      refute text_of_element(doc, @growth_highlight_pill) == "Recommended"
-      refute text_of_element(doc, @business_highlight_pill) == "Recommended"
+      refute element_exists?(doc, @growth_highlight_pill)
+      refute element_exists?(doc, @business_highlight_pill)
     end
   end
 
@@ -1112,35 +1099,33 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       check_notice_titles(doc, [])
     end
 
-    test "on a 50M v1 plan, Growth plans are available at 20M, 50M, 50M+, but Starter and Business plans are not",
+    test "on a 50M v1 plan, Starter plans are not rendered, Growth plans are available at 20M, 50M, 50M+, and Business plans are up to 10M",
          %{conn: conn, user: user} do
       create_subscription_for(user, paddle_plan_id: @v1_50m_yearly_plan_id)
 
-      {:ok, lv, _doc} = get_liveview(conn)
+      {:ok, lv, doc} = get_liveview(conn)
+
+      refute element_exists?(doc, @starter_plan_box)
 
       doc = set_slider(lv, 8)
       assert text_of_element(doc, @slider_value) == "20M"
-      assert text_of_element(doc, @starter_plan_box) =~ "Contact us"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€1,800"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
       doc = set_slider(lv, 9)
       assert text_of_element(doc, @slider_value) == "50M"
-      assert text_of_element(doc, @starter_plan_box) =~ "Contact us"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€2,640"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
       doc = set_slider(lv, 10)
       assert text_of_element(doc, @slider_value) == "50M+"
-      assert text_of_element(doc, @starter_plan_box) =~ "Contact us"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
 
       doc = set_slider(lv, 7)
       assert text_of_element(doc, @slider_value) == "10M"
-      refute text_of_element(doc, @starter_plan_box) =~ "Contact us"
       refute text_of_element(doc, @business_plan_box) =~ "Contact us"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
     end
@@ -1184,26 +1169,24 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
     end
 
-    test "displays grandfathering notice in the Growth box instead of benefits", %{conn: conn} do
+    test "displays plan benefits", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
+
+      refute element_exists?(doc, @starter_plan_box)
       growth_box = text_of_element(doc, @growth_plan_box)
-      assert growth_box =~ "Your subscription has been grandfathered"
-      refute growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
-    end
-
-    test "displays Starter, Business and Enterprise benefits", %{conn: conn} do
-      {:ok, _lv, doc} = get_liveview(conn)
-
-      starter_box = text_of_element(doc, @starter_plan_box)
       business_box = text_of_element(doc, @business_plan_box)
       enterprise_box = text_of_element(doc, @enterprise_plan_box)
 
-      assert starter_box =~ "Intuitive, fast and privacy-friendly dashboard"
-      assert starter_box =~ "Email/Slack reports"
-      assert starter_box =~ "Google Analytics import"
-      assert starter_box =~ "Goals and custom events"
-      assert starter_box =~ "One site"
-      assert starter_box =~ "3 years of data retention"
+      assert growth_box =~ "Up to 50 sites"
+      assert growth_box =~ "Unlimited team members"
+      assert growth_box =~ "Team Management"
+      assert growth_box =~ "Saved Segments"
+      assert growth_box =~ "Goals and custom events"
+      assert growth_box =~ "Custom Properties"
+      assert growth_box =~ "Stats API (600 requests per hour)"
+      assert growth_box =~ "Looker Studio Connector"
+      assert growth_box =~ "Shared Links"
+      assert growth_box =~ "Embedded Dashboards"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Funnels"

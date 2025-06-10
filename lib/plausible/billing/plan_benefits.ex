@@ -28,10 +28,11 @@ defmodule Plausible.Billing.PlanBenefits do
   """
   def for_growth(growth_plan, starter_benefits) do
     [
-      "Everything in Starter",
+      if(Enum.empty?(starter_benefits), do: nil, else: "Everything in Starter"),
       site_limit_benefit(growth_plan),
       team_member_limit_benefit(growth_plan),
-      "Team Management"
+      "Team Management",
+      if(Enum.empty?(starter_benefits), do: "Saved Segments", else: nil)
     ]
     |> Kernel.++(feature_benefits(growth_plan))
     |> Kernel.--(starter_benefits)

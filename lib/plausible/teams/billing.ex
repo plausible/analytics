@@ -24,7 +24,7 @@ defmodule Plausible.Teams.Billing do
   @starter_tier_launch ~D[2025-06-09]
   def starter_tier_launch(), do: @starter_tier_launch
 
-  def show_new_upgrade_page?(_team = nil) do
+  def show_new_upgrade_page?(nil = _team) do
     FunWithFlags.enabled?(:starter_tier)
   end
 

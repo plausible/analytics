@@ -95,17 +95,21 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   def render(assigns) do
-    starter_plan_to_render =
-      assigns.selected_starter_plan || List.last(assigns.available_plans.starter)
-
     growth_plan_to_render =
       assigns.selected_growth_plan || List.last(assigns.available_plans.growth)
 
     business_plan_to_render =
       assigns.selected_business_plan || List.last(assigns.available_plans.business)
 
+    starter_plan_to_render =
+      assigns.selected_starter_plan || List.last(assigns.available_plans.starter)
+
     starter_benefits =
-      PlanBenefits.for_starter(starter_plan_to_render)
+      if starter_plan_to_render do
+        PlanBenefits.for_starter(starter_plan_to_render)
+      else
+        []
+      end
 
     growth_benefits =
       PlanBenefits.for_growth(growth_plan_to_render, starter_benefits)
@@ -127,7 +131,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
     ~H"""
     <div class="pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
-      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class={[
+        "mx-auto px-6 lg:px-8",
+        if(is_nil(@starter_plan_to_render), do: "max-w-5xl", else: "max-w-7xl")
+      ]}>
         <Notice.pending_site_ownerships_notice
           class="pb-6"
           pending_ownership_count={length(@pending_ownership_site_ids)}
@@ -170,8 +177,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             available_volumes={@available_volumes}
           />
         </div>
-        <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-4 lg:mx-0 lg:max-w-none lg:grid-cols-4">
+        <div class={[
+          "mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-4 lg:max-w-none lg:mx-0",
+          if(is_nil(@starter_plan_to_render), do: "lg:grid-cols-3", else: "lg:grid-cols-4")
+        ]}>
           <PlanBox.standard
+            :if={@growth_plan_to_render.generation == 5}
             kind={:starter}
             owned={@owned_tier == :starter}
             recommended={@recommended_tier == :starter}

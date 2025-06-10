@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   use PlausibleWeb, :component
 
   require Plausible.Billing.Subscription.Status
-  alias PlausibleWeb.Components.Billing.{PlanBenefits, Notice}
+  alias PlausibleWeb.Components.Billing.{PlanBenefits}
   alias Plausible.Billing.{Plan, Quota, Subscription}
 
   @plan_box_price_container_class "relative h-20 pt-4 max-h-20 whitespace-nowrap overflow-hidden"
@@ -51,11 +51,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
           <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
         <% end %>
       </div>
-      <%= if @owned && @kind == :growth && @plan_to_render.generation < 5 do %>
-        <Notice.growth_grandfathered />
-      <% else %>
-        <PlanBenefits.render benefits={@benefits} class="text-gray-600 dark:text-gray-100" />
-      <% end %>
+      <PlanBenefits.render benefits={@benefits} class="text-gray-600 dark:text-gray-100" />
     </div>
     """
   end

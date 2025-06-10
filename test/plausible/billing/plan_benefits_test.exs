@@ -46,15 +46,15 @@ defmodule Plausible.Billing.PlanBenefitsTest do
     end
 
     for generation <- [1, 2, 3] do
-      test "returns v#{generation} Growth plan benefits" do
+      test "returns v#{generation} Growth plan benefits (with empty Starter benefits)" do
         growth_plan = get_10k_plan(unquote(generation), :growth)
-        starter_benefits = PlanBenefits.for_starter(get_10k_plan(5, :starter))
 
-        assert PlanBenefits.for_growth(growth_plan, starter_benefits) == [
-                 "Everything in Starter",
+        assert PlanBenefits.for_growth(growth_plan, []) == [
                  "Up to 50 sites",
                  "Unlimited team members",
                  "Team Management",
+                 "Saved Segments",
+                 "Goals and custom events",
                  "Custom Properties",
                  "Stats API (600 requests per hour)",
                  "Looker Studio Connector",
