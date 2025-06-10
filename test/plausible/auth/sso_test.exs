@@ -79,7 +79,35 @@ defmodule Plausible.Auth.SSOTest do
 
         assert integration.config.idp_signin_url == "https://example.com"
         assert integration.config.idp_entity_id == "some-entity"
-        assert integration.config.idp_cert_pem == @cert_pem
+
+        assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
+                 X509.Certificate.from_pem(@cert_pem)
+      end
+
+      test "updates integration with whitespace around PEM" do
+        malformed_pem =
+          @cert_pem
+          |> String.split("\n")
+          |> Enum.map(&("   " <> &1 <> "   "))
+          |> Enum.join("\n\n")
+
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+
+        assert {:ok, integration} =
+                 SSO.update_integration(integration, %{
+                   idp_signin_url: "https://example.com",
+                   idp_entity_id: "some-entity",
+                   idp_cert_pem: malformed_pem
+                 })
+
+        assert integration.config.idp_signin_url == "https://example.com"
+        assert integration.config.idp_entity_id == "some-entity"
+
+        assert integration.config.idp_cert_pem == String.trim(@cert_pem)
+
+        assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
+                 X509.Certificate.from_pem(@cert_pem)
       end
 
       test "optionally accepts metadata" do

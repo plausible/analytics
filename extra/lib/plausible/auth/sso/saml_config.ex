@@ -66,12 +66,23 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
 
   defp validate_pem(changeset, field) do
     if pem = get_change(changeset, field) do
+      pem = clean_pem(pem)
+
       case X509.Certificate.from_pem(pem) do
-        {:ok, _cert} -> changeset
+        {:ok, _cert} -> put_change(changeset, field, pem)
         {:error, _} -> add_error(changeset, field, "invalid certificate", validation: :cert_pem)
       end
     else
       changeset
     end
+  end
+
+  defp clean_pem(pem) do
+    pem
+    |> String.split("\n")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.join("\n")
+    |> String.trim()
   end
 end
