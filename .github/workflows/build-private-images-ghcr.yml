@@ -84,7 +84,7 @@ jobs:
           escapeData: 'true'
           data: |
             {
-              "content": "<h1>🚀 Deploying ${{ steps.commitmsg.outputs.first_line }}</h1><p>Author: ${{ github.event.head_commit.author.name }}</p><p>Commit: <a href=\"https://github.com/${{ github.repository }}/commit/${{ github.sha }}\">${{ github.sha }}</a></p>"
+              "content": "<h1>🚀 Deploying ${{ steps.commitmsg.outputs.first_line }}</h1><p>Author: ${{ github.event.head_commit.author.name }}</p><p>Commit: <a href=\"${{ github.event.head_commit.url }}\">${{ github.sha }}</a></p>"
             }
 
       - name: Set Honeycomb marker on success
