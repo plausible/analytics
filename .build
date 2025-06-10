@@ -13,7 +13,6 @@ Plasusible.Test.Support.DNSServer.html
 Plausible.AssertMatches.html
 Plausible.AsyncInsertRepo.html
 Plausible.Auth.ApiKey.html
-Plausible.Auth.ApiKeyAdmin.html
 Plausible.Auth.EmailActivationCode.html
 Plausible.Auth.EmailVerification.html
 Plausible.Auth.Password.html
@@ -30,17 +29,14 @@ Plausible.Auth.TOTP.Vault.html
 Plausible.Auth.TOTP.html
 Plausible.Auth.Token.html
 Plausible.Auth.User.html
-Plausible.Auth.UserAdmin.html
 Plausible.Auth.UserSession.html
 Plausible.Auth.UserSessions.html
 Plausible.Auth.html
 Plausible.Billing.DevPaddleApiMock.html
 Plausible.Billing.DevSubscriptions.html
 Plausible.Billing.Ecto.Feature.html
-Plausible.Billing.Ecto.FeatureList.html
 Plausible.Billing.Ecto.Limit.html
 Plausible.Billing.EnterprisePlan.html
-Plausible.Billing.EnterprisePlanAdmin.html
 Plausible.Billing.Feature.Teams.html
 Plausible.Billing.Feature.html
 Plausible.Billing.PaddleApi.html
@@ -76,7 +72,6 @@ Plausible.ClickhouseRepo.html
 Plausible.ClickhouseSessionV2.BoolUInt8.html
 Plausible.ClickhouseSessionV2.html
 Plausible.ConfigHelpers.html
-Plausible.CrmExtensions.html
 Plausible.CustomerSupport.EnterprisePlan.html
 Plausible.CustomerSupport.Resource.html
 Plausible.DataCase.html
@@ -198,7 +193,6 @@ Plausible.Site.TrafficChangeNotification.html
 Plausible.Site.UserPreference.html
 Plausible.Site.WeeklyReport.html
 Plausible.Site.html
-Plausible.SiteAdmin.html
 Plausible.Sites.html
 Plausible.Stats.Aggregate.html
 Plausible.Stats.Base.html
@@ -261,7 +255,6 @@ Plausible.Teams.Policy.html
 Plausible.Teams.SiteTransfer.html
 Plausible.Teams.Sites.Transfer.html
 Plausible.Teams.Team.html
-Plausible.Teams.TeamAdmin.html
 Plausible.Teams.Test.html
 Plausible.Teams.Users.html
 Plausible.Teams.html
@@ -307,7 +300,6 @@ Plausible.Workers.SendTrialNotifications.html
 Plausible.Workers.SetLegacyTimeOnPageCutoff.html
 Plausible.Workers.TrafficChangeNotifier.html
 Plausible.html
-PlausibleWeb.AdminController.html
 PlausibleWeb.Api.ExternalController.html
 PlausibleWeb.Api.ExternalSitesController.html
 PlausibleWeb.Api.ExternalStatsController.html
@@ -505,8 +497,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-B435AF94.js
-dist/sidebar_items-E2D72F57.js
+dist/search_data-F90BCCCC.js
+dist/sidebar_items-FFAD5307.js
 index.html
 readme.html
 search.html
