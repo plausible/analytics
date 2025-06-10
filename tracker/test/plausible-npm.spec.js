@@ -3,14 +3,6 @@ Tests for plausible-npm.js variant
 
 Config is set at init(), as we expect consumers to do in production.
 */
-
-import {
-  expectPlausibleInAction,
-  hideAndShowCurrentTab,
-  metaKey,
-  mockRequest,
-  e as expecting
-} from './support/test-utils'
 import { test, expect } from '@playwright/test'
 import { LOCAL_SERVER_ADDR } from './support/server'
 import { testPlausibleConfiguration, callInit } from './shared-configuration-tests'

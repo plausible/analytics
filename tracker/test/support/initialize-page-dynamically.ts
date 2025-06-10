@@ -47,7 +47,7 @@ export async function initializePageDynamically(
   { testId, scriptConfig, bodyContent, path = '' }: DynamicPageOptions
 ): Promise<DynamicPageInfo> {
   const url = `/dynamic/${testId}${path}`
-  await page.route(url, async (route) => {
+  await page.context().route(url, async (route) => {
     const responseBody = RESPONSE_BODY_TEMPLATE.replace(
       '<script>// Plausible script</script>',
       typeof scriptConfig === 'string'
