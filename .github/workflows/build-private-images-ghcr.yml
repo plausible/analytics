@@ -72,7 +72,8 @@ jobs:
       - name: Get first line of commit message
         if: ${{ success() && github.ref == 'refs/heads/master' }}
         id: commitmsg
-        run: echo "first_line=$(git log -1 --pretty=%s)" >> $GITHUB_OUTPUT
+        run: | 
+          echo "first_line=$(echo "${{ github.event.head_commit.message }}" | head -n1)" >> $GITHUB_OUTPUT
 
       - name: Notify team on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
