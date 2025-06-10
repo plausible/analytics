@@ -6,8 +6,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   require Plausible.Billing.Subscription.Status
 
-  alias PlausibleWeb.Components.Billing.{PlanBox, PlanBenefits, Notice, PageviewSlider}
-  alias Plausible.Billing.{Plans, Quota}
+  alias PlausibleWeb.Components.Billing.{PlanBox, Notice, PageviewSlider}
+  alias Plausible.Billing.{Plans, Quota, PlanBenefits}
   alias PlausibleWeb.Router.Helpers, as: Routes
 
   @contact_link "https://plausible.io/contact"
