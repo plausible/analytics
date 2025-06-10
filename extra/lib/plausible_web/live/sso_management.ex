@@ -504,9 +504,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, socket}
   end
 
-  def handle_info(:fake_domain_verify, socket) do
-    integration = socket.assigns.integration
-
+  def handle_info(:fake_domain_verify, %{assigns: %{integration: integration}} = socket)
+      when not is_nil(integration) do
     sso_domains =
       integration.sso_domains
       |> Enum.map(fn domain ->
@@ -517,11 +516,15 @@ defmodule PlausibleWeb.Live.SSOManagement do
         end
       end)
 
-    integration = %{integration | sso_domains: sso_domains}
-
     Process.send_after(self(), :fake_domain_verify, @fake_verify_interval)
 
+    integration = %{integration | sso_domains: sso_domains}
+
     {:noreply, assign(socket, :integration, integration)}
+  end
+
+  def handle_info(:fake_domain_verify, socket) do
+    {:noreply, socket}
   end
 
   defp load_integration(socket, team) do
