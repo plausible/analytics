@@ -58,6 +58,7 @@ jobs:
         uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5
         with:
           message: "Released tracker script version ${{ steps.package.outputs.version }}"
+          add: "tracker/npm_package"
 
       - name: Notify team on success
         if: ${{ success() }}
