@@ -1,103 +1,162 @@
 defmodule Plausible.Billing.FeatureTest do
+  alias Plausible.Billing.Feature.SiteSegments
   use Plausible.DataCase
   use Plausible.Teams.Test
 
-  @v1_plan_id "558018"
+  alias Plausible.Billing.Feature.{
+    Goals,
+    SiteSegments,
+    SharedLinks,
+    Funnels,
+    RevenueGoals,
+    StatsAPI,
+    Props
+  }
 
-  for mod <- [Plausible.Billing.Feature.Funnels, Plausible.Billing.Feature.RevenueGoals] do
-    test "#{mod}.check_availability/1 returns :ok when site owner is on a enterprise plan" do
-      team =
-        new_user()
-        |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [unquote(mod)])
-        |> team_of()
+  @v1_growth_plan_id "558018"
+  @v5_growth_plan_id "910429"
 
-      assert :ok == unquote(mod).check_availability(team)
+  describe "business features (for everyone)" do
+    for mod <- [Funnels, RevenueGoals] do
+      test "#{mod}.check_availability/1 returns :ok when site owner is on a enterprise plan that supports #{mod}" do
+        team =
+          new_user()
+          |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [unquote(mod)])
+          |> team_of()
+
+        assert :ok == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns error when site owner is on a enterprise plan does not support #{mod}" do
+        team =
+          new_user()
+          |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [Goals])
+          |> team_of()
+
+        assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns :ok when site owner is on a business plan" do
+        team = new_user() |> subscribe_to_business_plan() |> team_of()
+        assert :ok == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns error when site owner is on a growth plan" do
+        team = new_user() |> subscribe_to_growth_plan() |> team_of()
+        assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns error when site owner is on an old v1 plan" do
+        team = new_user() |> subscribe_to_plan(@v1_growth_plan_id) |> team_of()
+        assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns :ok when user is on trial" do
+        team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+        assert :ok == unquote(mod).check_availability(team)
+      end
     end
+  end
 
-    test "#{mod}.check_availability/1 returns :ok when site owner is on a business plan" do
-      team = new_user() |> subscribe_to_business_plan() |> team_of()
-      assert :ok == unquote(mod).check_availability(team)
+  describe "business features (grandfathered Growth access before v4)" do
+    for mod <- [Props, StatsAPI] do
+      test "#{mod}.check_availability/1 returns :ok when site owner is on a enterprise plan that supports #{mod}" do
+        team =
+          new_user()
+          |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [unquote(mod)])
+          |> team_of()
+
+        assert :ok == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns error when site owner is on a enterprise plan does not support #{mod}" do
+        team =
+          new_user()
+          |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [Goals])
+          |> team_of()
+
+        assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns :ok when site owner is on a business plan" do
+        team = new_user() |> subscribe_to_business_plan() |> team_of()
+        assert :ok == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns error when site owner is on a new growth plan" do
+        team = new_user() |> subscribe_to_growth_plan() |> team_of()
+        assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns :ok when site owner is on an old plan" do
+        team = new_user() |> subscribe_to_plan(@v1_growth_plan_id) |> team_of()
+        assert :ok == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns :ok when user is on trial" do
+        team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+        assert :ok == unquote(mod).check_availability(team)
+      end
     end
+  end
 
-    test "#{mod}.check_availability/1 returns error when site owner is on a growth plan" do
-      team = new_user() |> subscribe_to_growth_plan() |> team_of()
-      assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
+  describe "growth features" do
+    for mod <- [SharedLinks, SiteSegments] do
+      test "#{mod}.check_availability/1 returns :ok when site owner is on a enterprise plan that supports #{mod}" do
+        team =
+          new_user()
+          |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [unquote(mod)])
+          |> team_of()
+
+        assert :ok == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns error when site owner is on a enterprise plan does not support #{mod}" do
+        team =
+          new_user()
+          |> subscribe_to_enterprise_plan(paddle_plan_id: "123321", features: [Goals])
+          |> team_of()
+
+        assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns :ok when site owner is on a business plan" do
+        team = new_user() |> subscribe_to_business_plan() |> team_of()
+        assert :ok == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns :ok when site owner is on a growth plan" do
+        team = new_user() |> subscribe_to_plan(@v5_growth_plan_id) |> team_of()
+        assert :ok == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns error when site owner is on a starter plan" do
+        team = new_user() |> subscribe_to_starter_plan() |> team_of()
+        assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
+      end
+
+      test "#{mod}.check_availability/1 returns :ok when user is on trial" do
+        team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
+        assert :ok == unquote(mod).check_availability(team)
+      end
     end
-
-    test "#{mod}.check_availability/1 returns error when site owner is on an old plan" do
-      team = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
-      assert {:error, :upgrade_required} == unquote(mod).check_availability(team)
-    end
   end
 
-  test "Plausible.Billing.Feature.SharedLinks.check_availability/2 returns :ok when user is on an enterprise plan" do
-    team = new_user() |> subscribe_to_enterprise_plan() |> team_of()
-    assert :ok == Plausible.Billing.Feature.SharedLinks.check_availability(team)
-  end
-
-  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on a business plan" do
-    team = new_user() |> subscribe_to_business_plan() |> team_of()
-    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(team)
-  end
-
-  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on an old plan" do
-    team = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
-    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(team)
-  end
-
-  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on trial" do
-    team = new_user(trial_expiry_date: Date.utc_today()) |> team_of()
-    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(team)
-  end
-
-  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on an enterprise plan" do
-    team =
-      new_user()
-      |> subscribe_to_enterprise_plan(
-        paddle_plan_id: "123321",
-        features: [Plausible.Billing.Feature.StatsAPI]
-      )
-      |> team_of()
-
-    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(team)
-  end
-
-  @tag :ee_only
-  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user is on a growth plan" do
-    team = new_user() |> subscribe_to_growth_plan() |> team_of()
-
-    assert {:error, :upgrade_required} ==
-             Plausible.Billing.Feature.StatsAPI.check_availability(team)
-  end
-
-  @tag :ee_only
-  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user trial hasn't started and was created after the business tier launch" do
-    _user = new_user(trial_expiry_date: nil)
-
-    assert {:error, :upgrade_required} ==
-             Plausible.Billing.Feature.StatsAPI.check_availability(nil)
-  end
-
-  test "Plausible.Billing.Feature.Props.check_availability/1 applies grandfathering to old plans" do
-    team = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
-    assert :ok == Plausible.Billing.Feature.Props.check_availability(team)
-  end
-
-  test "Plausible.Billing.Feature.Goals.check_availability/2 always returns :ok" do
-    t1 = new_user() |> subscribe_to_plan(@v1_plan_id) |> team_of()
+  test "Goals.check_availability/2 always returns :ok" do
+    t1 = new_user() |> subscribe_to_plan(@v1_growth_plan_id) |> team_of()
     t2 = new_user() |> subscribe_to_growth_plan() |> team_of()
     t3 = new_user() |> subscribe_to_business_plan() |> team_of()
     t4 = new_user() |> subscribe_to_enterprise_plan(paddle_plan_id: "123321") |> team_of()
 
-    assert :ok == Plausible.Billing.Feature.Goals.check_availability(t1)
-    assert :ok == Plausible.Billing.Feature.Goals.check_availability(t2)
-    assert :ok == Plausible.Billing.Feature.Goals.check_availability(t3)
-    assert :ok == Plausible.Billing.Feature.Goals.check_availability(t4)
+    assert :ok == Goals.check_availability(t1)
+    assert :ok == Goals.check_availability(t2)
+    assert :ok == Goals.check_availability(t3)
+    assert :ok == Goals.check_availability(t4)
   end
 
   for {mod, property} <- [
-        {Plausible.Billing.Feature.Funnels, :funnels_enabled},
-        {Plausible.Billing.Feature.Props, :props_enabled}
+        {Funnels, :funnels_enabled},
+        {Props, :props_enabled}
       ] do
     test "#{mod}.toggle/2 toggles #{property} on and off" do
       user = new_user()

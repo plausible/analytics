@@ -153,7 +153,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
                    "StatsAPI" => true,
                    "SitesAPI" => true,
                    "SiteSegments" => false,
-                   "SharedLinks" => true
+                   "SharedLinks" => false
                  }
                }
 

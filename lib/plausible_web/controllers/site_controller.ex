@@ -162,7 +162,14 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_visibility(conn, _params) do
     site = conn.assigns[:site]
-    shared_links = Repo.all(from(l in Plausible.Site.SharedLink, where: l.site_id == ^site.id))
+
+    shared_links =
+      Repo.all(
+        from(l in Plausible.Site.SharedLink,
+          where:
+            l.site_id == ^site.id and l.name not in ^Plausible.Sites.shared_link_special_names()
+        )
+      )
 
     conn
     |> render("settings_visibility.html",
@@ -576,9 +583,14 @@ defmodule PlausibleWeb.SiteController do
   def create_shared_link(conn, %{"shared_link" => link}) do
     site = conn.assigns[:site]
 
-    case Sites.create_shared_link(site, link["name"], link["password"]) do
+    case Sites.create_shared_link(site, link["name"], password: link["password"]) do
       {:ok, _created} ->
         redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
+
+      {:error, :upgrade_required} ->
+        conn
+        |> put_flash(:error, "Your current subscription plan does not include Shared Links")
+        |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
 
       {:error, changeset} ->
         conn
@@ -609,7 +621,7 @@ defmodule PlausibleWeb.SiteController do
     changeset = Plausible.Site.SharedLink.changeset(shared_link, params)
 
     case Repo.update(changeset) do
-      {:ok, _created} ->
+      {:ok, _updated} ->
         redirect(conn, to: Routes.site_path(conn, :settings_visibility, site.domain))
 
       {:error, changeset} ->

@@ -691,6 +691,23 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /:domain/settings/visibility" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "does not render shared links with special names", %{conn: conn, site: site} do
+      for special_name <- Plausible.Sites.shared_link_special_names() do
+        insert(:shared_link, name: special_name, site: site)
+
+        html =
+          conn
+          |> get("/#{site.domain}/settings/visibility")
+          |> html_response(200)
+
+        refute text_of_element(html, "#shared-links-table") =~ special_name
+      end
+    end
+  end
+
   describe "GET /:domain/settings/goals" do
     setup [:create_user, :log_in, :create_site]
 
@@ -1614,6 +1631,39 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute is_nil(link.password_hash)
       assert link.name == "New name"
     end
+
+    test "fails to create when subscription plan doesn't support the shared links feature", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      subscribe_to_starter_plan(user)
+
+      conn =
+        post(conn, "/sites/#{site.domain}/shared-links", %{
+          "shared_link" => %{"name" => "Something"}
+        })
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :settings_visibility, site.domain)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Your current subscription plan does not include Shared Links"
+
+      refute Repo.exists?(Plausible.Site.SharedLink)
+    end
+
+    for special_name <- Plausible.Sites.shared_link_special_names() do
+      test "fails to create with the special '#{special_name}' name intended for Plugins API",
+           %{conn: conn, site: site} do
+        conn =
+          post(conn, "/sites/#{site.domain}/shared-links", %{
+            "shared_link" => %{"name" => unquote(special_name)}
+          })
+
+        assert html_response(conn, 200) =~ "This name is reserved. Please choose another one"
+        refute Repo.exists?(Plausible.Site.SharedLink)
+      end
+    end
   end
 
   describe "GET /sites/:domain/shared-links/edit" do
@@ -1640,6 +1690,19 @@ defmodule PlausibleWeb.SiteControllerTest do
       link = Repo.one(Plausible.Site.SharedLink)
 
       assert link.name == "Updated link name"
+    end
+
+    for special_name <- Plausible.Sites.shared_link_special_names() do
+      test "fails to change link name to #{special_name}", %{conn: conn, site: site} do
+        link = insert(:shared_link, site: site)
+
+        conn =
+          put(conn, "/sites/#{site.domain}/shared-links/#{link.slug}", %{
+            "shared_link" => %{"name" => unquote(special_name)}
+          })
+
+        assert html_response(conn, 200) =~ "This name is reserved. Please choose another one"
+      end
     end
   end
 

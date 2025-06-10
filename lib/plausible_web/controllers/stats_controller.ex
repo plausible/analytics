@@ -48,6 +48,7 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.{Filters, Query}
   alias Plausible.Teams
   alias PlausibleWeb.Api
+  alias Plausible.Billing.Feature.SharedLinks
 
   plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
 
@@ -341,7 +342,30 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp render_shared_link(conn, shared_link) do
+    shared_links_feature_access? =
+      SharedLinks.check_availability(shared_link.site.team) == :ok or
+        shared_link.name in Plausible.Sites.shared_link_special_names()
+
     cond do
+      Teams.locked?(shared_link.site.team) ->
+        owners = Plausible.Repo.preload(shared_link.site, :owners)
+
+        render(conn, "site_locked.html",
+          owners: owners,
+          site: shared_link.site,
+          dogfood_page_path: "/share/:dashboard"
+        )
+
+      not shared_links_feature_access? ->
+        owners = Plausible.Repo.preload(shared_link.site, :owners)
+
+        render(conn, "site_locked.html",
+          only_shared_link_access_missing?: true,
+          owners: owners,
+          site: shared_link.site,
+          dogfood_page_path: "/share/:dashboard"
+        )
+
       not Teams.locked?(shared_link.site.team) ->
         current_user = conn.assigns[:current_user]
         site_role = get_fallback_site_role(conn)
@@ -378,15 +402,6 @@ defmodule PlausibleWeb.StatsController do
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?(), do: embedded?, else: embedded? || site_role != :public)
-        )
-
-      Teams.locked?(shared_link.site.team) ->
-        owners = Plausible.Repo.preload(shared_link.site, :owners)
-
-        render(conn, "site_locked.html",
-          owners: owners,
-          site: shared_link.site,
-          dogfood_page_path: "/share/:dashboard"
         )
     end
   end

@@ -369,13 +369,4 @@ defmodule Plausible.Segments do
 
     "#{field} #{formatted_message}"
   end
-
-  @spec get_site_segments_usage_query(list(pos_integer())) :: Ecto.Query.t()
-  def get_site_segments_usage_query(site_ids) do
-    from(segment in Segment,
-      as: :segment,
-      where: segment.type == :site,
-      where: segment.site_id in ^site_ids
-    )
-  end
 end

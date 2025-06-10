@@ -6,14 +6,30 @@ defmodule Plausible.Sites do
 
   import Ecto.Query
 
-  alias Plausible.Auth
-  alias Plausible.Billing
-  alias Plausible.Repo
-  alias Plausible.Site
+  alias Plausible.{Auth, Repo, Site, Teams, Billing}
+  alias Plausible.Billing.Feature.SharedLinks
   alias Plausible.Site.SharedLink
-  alias Plausible.Teams
 
   require Plausible.Site.UserPreference
+
+  @shared_link_special_names ["WordPress - Shared Dashboard"]
+  @doc """
+  Special shared link names are used to distinguish between those
+  created by the Plugins API, and those created in any other way
+  (i.e. via Sites API or in the Dashboard Site Settings UI).
+
+  The intent is to give our WP plugin the ability to display an
+  embedded dashboard even when the user's subscription does not
+  support the shared links feature.
+
+  A shared link with a special name can only be created via the
+  plugins API, and it will not show up under the list of shared
+  links in Site Settings > Visibility.
+
+  Once created with the special name, the link will be accessible
+  even when the team does not have access to SharedLinks feature.
+  """
+  def shared_link_special_names(), do: @shared_link_special_names
 
   def get_by_domain(domain) do
     Repo.get_by(Site, domain: domain)
@@ -338,17 +354,21 @@ defmodule Plausible.Sites do
     !!stats_start_date(site)
   end
 
-  def create_shared_link(site, name, password \\ nil) do
-    changes =
-      SharedLink.changeset(
-        %SharedLink{
-          site_id: site.id,
-          slug: Nanoid.generate()
-        },
-        %{name: name, password: password}
-      )
+  def create_shared_link(site, name, opts \\ []) do
+    password = Keyword.get(opts, :password)
+    site = Plausible.Repo.preload(site, :team)
+    skip_feature_check? = Keyword.get(opts, :skip_feature_check?, false)
 
-    Repo.insert(changes)
+    if not skip_feature_check? and SharedLinks.check_availability(site.team) != :ok do
+      {:error, :upgrade_required}
+    else
+      %SharedLink{site_id: site.id, slug: Nanoid.generate()}
+      |> SharedLink.changeset(
+        %{name: name, password: password},
+        Keyword.take(opts, [:skip_special_name_check?])
+      )
+      |> Repo.insert()
+    end
   end
 
   def shared_link_url(site, link) do
