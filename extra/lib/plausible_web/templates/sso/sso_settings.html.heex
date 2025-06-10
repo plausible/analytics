@@ -1,11 +1,3 @@
 <.settings_tiles>
-  <.tile docs="sso" current_role={@current_team_role} current_team={@current_team}>
-    <:title>
-      <a id="team-members">Single Sign-On</a>
-    </:title>
-    <:subtitle>
-      Configure and manage Single Sign-On for your team
-    </:subtitle>
-    {live_render(@conn, PlausibleWeb.Live.SSOManagement, id: "sso-management")}
-  </.tile>
+  {live_render(@conn, PlausibleWeb.Live.SSOManagement, id: "sso-management")}
 </.settings_tiles>

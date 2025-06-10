@@ -24,27 +24,36 @@ defmodule PlausibleWeb.Live.SSOManagement do
     ~H"""
     <.flash_messages flash={@flash} />
 
-    <.init_view :if={@mode == :init} current_team={@current_team} />
+    <.tile :if={@mode != :manage} docs="sso">
+      <:title>
+        <a id="sso-config">Single Sign-On</a>
+      </:title>
+      <:subtitle>
+        Configure and manage Single Sign-On for your team
+      </:subtitle>
 
-    <.init_setup_view
-      :if={@mode == :init_setup}
-      integration={@integration}
-      current_team={@current_team}
-    />
+      <.init_view :if={@mode == :init} current_team={@current_team} />
 
-    <.saml_form_view
-      :if={@mode == :saml_form}
-      integration={@integration}
-      config_changeset={@config_changeset}
-    />
+      <.init_setup_view
+        :if={@mode == :init_setup}
+        integration={@integration}
+        current_team={@current_team}
+      />
 
-    <.domain_setup_view
-      :if={@mode == :domain_setup}
-      integration={@integration}
-      domain_changeset={@domain_changeset}
-    />
+      <.saml_form_view
+        :if={@mode == :saml_form}
+        integration={@integration}
+        config_changeset={@config_changeset}
+      />
 
-    <.domain_verify_view :if={@mode == :domain_verify} domain={@domain} />
+      <.domain_setup_view
+        :if={@mode == :domain_setup}
+        integration={@integration}
+        domain_changeset={@domain_changeset}
+      />
+
+      <.domain_verify_view :if={@mode == :domain_verify} domain={@domain} />
+    </.tile>
 
     <.manage_view
       :if={@mode == :manage}
@@ -54,6 +63,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       force_sso_warning={@force_sso_warning}
       policy_changeset={@policy_changeset}
       role_options={@role_options}
+      domain_delete_checks={@domain_delete_checks}
     />
     """
   end
@@ -201,77 +211,89 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
   def manage_view(assigns) do
     ~H"""
-    <div class="flex-col space-y-6">
-      <p class="text-sm">
-        Use the following parameters when configuring your Identity Provider of choice:
-      </p>
+    <.tile docs="sso">
+      <:title>
+        <a id="sso-manage-config">Single Sign-On</a>
+      </:title>
+      <:subtitle>
+        Configure and manage Single Sign-On for your team
+      </:subtitle>
 
-      <form id="sso-sp-config" for={} class="flex-col space-y-4">
-        <.input_with_clipboard
-          id="sp-enity-id"
-          name="sp-entity-id"
-          label="Entity ID"
-          value={SSO.SAMLConfig.entity_id(@integration)}
-        />
-
-        <.input_with_clipboard
-          id="sp-acs-url"
-          name="sp-acs-url"
-          label="ACS URL"
-          value={saml_acs_url(@integration)}
-        />
-      </form>
-
-      <div class="flex-col space-y-3">
-        <p class="text-sm">Following attribute mappings must be setup at Identity Provider:</p>
-
-        <ul role="list" class="space-y-3 leading-6 text-sm">
-          <li :for={param <- ["email", "first_name", "last_name"]} class="flex gap-x-3">
-            <Heroicons.arrow_right_circle class="h-6 w-5" />
-            <pre>{param}</pre>
-          </li>
-        </ul>
-      </div>
-
-      <div class="flex-col space-y-3">
+      <div class="flex-col space-y-6">
         <p class="text-sm">
-          Current Identity Provider configuration:
+          Use the following parameters when configuring your Identity Provider of choice:
         </p>
 
-        <.form :let={f} id="sso-sp-config-form" for={} class="flex-col space-y-4">
-          <.input
-            name="idp_signin_url"
-            value={@integration.config.idp_signin_url}
-            label="Sign-in URL"
-            readonly={true}
-          />
-
-          <.input
-            name="idp_entity_id"
-            value={@integration.config.idp_entity_id}
+        <form id="sso-sp-config" for={} class="flex-col space-y-4">
+          <.input_with_clipboard
+            id="sp-enity-id"
+            name="sp-entity-id"
             label="Entity ID"
-            readonly={true}
+            value={SSO.SAMLConfig.entity_id(@integration)}
           />
 
-          <.input
-            field={f[:idp_cert_pem]}
-            type="textarea"
-            label="Certificate in PEM format"
-            value={@integration.config.idp_cert_pem}
-            readonly={true}
+          <.input_with_clipboard
+            id="sp-acs-url"
+            name="sp-acs-url"
+            label="ACS URL"
+            value={saml_acs_url(@integration)}
           />
-        </.form>
-
-        <form id="show-saml-form" for={} phx-submit="show-saml-form">
-          <.button type="submit">Edit</.button>
         </form>
+
+        <div class="flex-col space-y-3">
+          <p class="text-sm">Following attribute mappings must be setup at Identity Provider:</p>
+
+          <ul role="list" class="list-disc leading-6 text-sm ml-8">
+            <li :for={param <- ["email", "first_name", "last_name"]}>
+              <code>{param}</code>
+            </li>
+          </ul>
+        </div>
+
+        <div class="flex-col space-y-3">
+          <p class="text-sm">
+            Current Identity Provider configuration:
+          </p>
+
+          <.form :let={f} id="sso-sp-config-form" for={} class="flex-col space-y-4">
+            <.input
+              name="idp_signin_url"
+              value={@integration.config.idp_signin_url}
+              label="Sign-in URL"
+              readonly={true}
+            />
+
+            <.input
+              name="idp_entity_id"
+              value={@integration.config.idp_entity_id}
+              label="Entity ID"
+              readonly={true}
+            />
+
+            <.input
+              field={f[:idp_cert_pem]}
+              type="textarea"
+              label="Certificate in PEM format"
+              value={@integration.config.idp_cert_pem}
+              readonly={true}
+            />
+          </.form>
+
+          <form id="show-saml-form" for={} phx-submit="show-saml-form">
+            <.button type="submit">Edit</.button>
+          </form>
+        </div>
       </div>
+    </.tile>
 
+    <.tile docs="sso">
+      <:title>
+        <a id="sso-domains-config">SSO Domains</a>
+      </:title>
+      <:subtitle>
+        Email domains accepted from Identity Provider
+      </:subtitle>
       <div class="flex-col space-y-3">
-        <p class="text-sm">
-          Email domains accepted from Identity Provider:
-        </p>
-
         <.table rows={@integration.sso_domains}>
           <:thead>
             <.th>Domain</.th>
@@ -292,13 +314,21 @@ defmodule PlausibleWeb.Live.SSOManagement do
                 Verify
               </.styled_link>
 
-              <.styled_link
-                id="remove-domain-#{domain.identifier}"
+              <.delete_button
+                :if={is_nil(@domain_delete_checks[domain.identifier])}
+                id={"remove-domain-#{domain.identifier}"}
                 phx-click="remove-domain"
                 phx-value-identifier={domain.identifier}
-              >
-                Remove
-              </.styled_link>
+                class="text-sm text-red-600"
+                data-confirm={"Are you sure you want to remove domain '#{domain.domain}'?"}
+              />
+
+              <.delete_button
+                :if={@domain_delete_checks[domain.identifier]}
+                id={"disabled-remove-domain-#{domain.identifier}"}
+                class="text-sm text-red-600"
+                data-confirm={"You cannot delete this domain. #{@domain_delete_checks[domain.identifier]}"}
+              />
             </.td>
           </:tbody>
         </.table>
@@ -307,7 +337,15 @@ defmodule PlausibleWeb.Live.SSOManagement do
           <.button type="submit">Add Domain</.button>
         </form>
       </div>
+    </.tile>
 
+    <.tile docs="sso">
+      <:title>
+        <a id="sso-policy-config">SSO Policy</a>
+      </:title>
+      <:subtitle>
+        Adjust your SSO policy configuration
+      </:subtitle>
       <div
         x-data={Jason.encode!(%{active: @current_team.policy.force_sso == :all_but_owners})}
         class="flex-col space-y-3"
@@ -341,10 +379,6 @@ defmodule PlausibleWeb.Live.SSOManagement do
       </div>
 
       <div class="flex-col space-y-3">
-        <p class="text-sm">
-          Adjust Single Sign-On policy:
-        </p>
-
         <.form
           :let={f}
           id="sso-policy-form"
@@ -364,7 +398,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           <.button type="submit">Update</.button>
         </.form>
       </div>
-    </div>
+    </.tile>
     """
   end
 
@@ -617,7 +651,20 @@ defmodule PlausibleWeb.Live.SSOManagement do
     policy_changeset = Teams.Policy.update_changeset(team.policy, %{})
     role_options = Teams.Policy.sso_member_roles()
 
+    domain_delete_checks =
+      Enum.into(socket.assigns.integration.sso_domains, %{}, fn domain ->
+        prevent_delete_reason =
+          case Plausible.Auth.SSO.Domains.check_can_remove(domain) do
+            :ok -> nil
+            {:error, :force_sso_enabled} -> "You must disable 'Force SSO' first."
+            {:error, :sso_users_present} -> "There are existing SSO accounts on this domain."
+          end
+
+        {domain.identifier, prevent_delete_reason}
+      end)
+
     socket
+    |> assign(:domain_delete_checks, domain_delete_checks)
     |> assign(:can_toggle_force_sso?, can_toggle_force_sso?)
     |> assign(:force_sso_warning, toggle_disabled_reason)
     |> assign(:policy_changeset, policy_changeset)
