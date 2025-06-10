@@ -233,7 +233,9 @@ defmodule Plausible.Ingestion.Request do
 
     # Temporary instrumentation to see if `m`/`meta` field was used.
     if request_body["m"] || request_body["meta"] do
-      Logger.warning("Ingestion: request body contains meta field. #{inspect(request_body)}")
+      Logger.warning(
+        "Ingestion: request body contains meta field. domain=#{request_body["d"] || request_body["domain"]}"
+      )
     end
 
     changeset
