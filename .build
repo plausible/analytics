@@ -380,6 +380,7 @@ PlausibleWeb.Live.PropsSettings.List.html
 PlausibleWeb.Live.PropsSettings.html
 PlausibleWeb.Live.RegisterForm.html
 PlausibleWeb.Live.ResetPasswordForm.html
+PlausibleWeb.Live.SSOManagement.html
 PlausibleWeb.Live.SentryContext.html
 PlausibleWeb.Live.Shields.Countries.html
 PlausibleWeb.Live.Shields.CountryRules.html
@@ -457,6 +458,7 @@ PlausibleWeb.RemoteIP.html
 PlausibleWeb.RequireAccountPlug.html
 PlausibleWeb.RequireLoggedOutPlug.html
 PlausibleWeb.Router.html
+PlausibleWeb.SSO.FakeSAMLAdapter.html
 PlausibleWeb.SSOController.html
 PlausibleWeb.SSOView.html
 PlausibleWeb.SettingsController.html
@@ -497,8 +499,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-066EA4CE.js
-dist/sidebar_items-81D650A0.js
+dist/search_data-02484A41.js
+dist/sidebar_items-6E0CA295.js
 index.html
 readme.html
 search.html
