@@ -569,6 +569,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
   end
 
   def handle_info(:fake_domain_verify, socket) do
+    Process.send_after(self(), :fake_domain_verify, @fake_verify_interval)
+
     {:noreply, socket}
   end
 
