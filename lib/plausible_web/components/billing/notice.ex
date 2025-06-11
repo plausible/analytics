@@ -283,12 +283,13 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   defp lose_grandfathering_warning(%{subscription: subscription} = assigns) do
     plan = Plans.get_regular_plan(subscription, only_non_expired: true)
-    loses_grandfathering = plan && plan.generation < 4
+    latest_generation = if FunWithFlags.enabled?(:starter_tier), do: 5, else: 4
+    loses_grandfathering? = plan && plan.generation < latest_generation
 
-    assigns = assign(assigns, :loses_grandfathering, loses_grandfathering)
+    assigns = assign(assigns, :loses_grandfathering?, loses_grandfathering?)
 
     ~H"""
-    <p :if={@loses_grandfathering} class="mt-2">
+    <p :if={@loses_grandfathering?} class="mt-2">
       Please also note that by letting your subscription expire, you lose access to our grandfathered terms. If you want to subscribe again after that, your account will be offered the <.link
         href="https://plausible.io/#pricing"
         target="_blank"

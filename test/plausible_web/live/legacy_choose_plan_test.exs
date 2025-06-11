@@ -1253,7 +1253,8 @@ defmodule PlausibleWeb.Live.LegacyChoosePlanTest do
   end
 
   defp disable_starter_tier(%{user: user}) do
-    FunWithFlags.disable(:starter_tier, for_actor: user)
+    {:ok, team} = Plausible.Teams.get_or_create(user)
+    FunWithFlags.disable(:starter_tier, for_actor: team)
     :ok
   end
 end

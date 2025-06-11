@@ -51,7 +51,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   @doc """
-  Suggests a suitable tier (Growth or Business) for the given usage map.
+  Suggests a suitable tier (Starter, Growth or Business) for the given usage map.
 
   If even the highest Business plan does not accommodate the usage, then
   `:custom` is returned. This means that this kind of usage should get on
@@ -67,7 +67,8 @@ defmodule Plausible.Billing.Quota do
       not eligible_for_upgrade?(usage) ->
         nil
 
-      usage_fits_plan?(usage, highest_starter) and owned_tier not in [:business, :growth] ->
+      not is_nil(highest_starter) and usage_fits_plan?(usage, highest_starter) and
+          owned_tier not in [:business, :growth] ->
         :starter
 
       usage_fits_plan?(usage, highest_growth) and owned_tier != :business ->

@@ -32,11 +32,13 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp starter_plans_for(legacy?) do
-    if legacy? do
-      []
-    else
-      Enum.filter(plans_v5(), &(&1.kind == :starter))
+  defp starter_plans_for(subscription, legacy?) do
+    active_plan = get_regular_plan(subscription, only_non_expired: true)
+
+    case {legacy?, active_plan} do
+      {true, _} -> []
+      {_, %Plan{kind: :growth, generation: g}} when g <= 4 -> []
+      {_, _} -> Enum.filter(plans_v5(), &(&1.kind == :starter))
     end
   end
 
@@ -72,8 +74,8 @@ defmodule Plausible.Billing.Plans do
 
     cond do
       subscription && Subscriptions.expired?(subscription) -> default_plans
-      owned_plan && owned_plan.generation < 4 -> plans_v3()
-      owned_plan && owned_plan.generation < 5 -> plans_v4()
+      owned_plan && owned_plan.generation <= 3 -> plans_v3()
+      owned_plan && owned_plan.generation <= 4 -> plans_v4()
       true -> default_plans
     end
     |> Enum.filter(&(&1.kind == :business))
@@ -82,22 +84,22 @@ defmodule Plausible.Billing.Plans do
   def available_plans_for(subscription, opts \\ []) do
     legacy? = Keyword.get(opts, :legacy?, false)
 
-    plans =
-      Enum.concat([
-        starter_plans_for(legacy?),
-        growth_plans_for(subscription, legacy?),
-        business_plans_for(subscription, legacy?)
-      ])
+    %{
+      starter: starter_plans_for(subscription, legacy?) |> maybe_add_prices(opts),
+      growth: growth_plans_for(subscription, legacy?) |> maybe_add_prices(opts),
+      business: business_plans_for(subscription, legacy?) |> maybe_add_prices(opts)
+    }
+  end
 
-    plans =
-      if Keyword.get(opts, :with_prices) do
-        customer_ip = Keyword.fetch!(opts, :customer_ip)
-        with_prices(plans, customer_ip)
-      else
-        plans
-      end
+  defp maybe_add_prices([] = _plans, _opts), do: []
 
-    Enum.group_by(plans, & &1.kind)
+  defp maybe_add_prices(plans, opts) do
+    if Keyword.get(opts, :with_prices) do
+      customer_ip = Keyword.fetch!(opts, :customer_ip)
+      with_prices(plans, customer_ip)
+    else
+      plans
+    end
   end
 
   @high_legacy_volumes [20_000_000, 50_000_000]

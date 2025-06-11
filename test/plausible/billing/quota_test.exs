@@ -1007,6 +1007,17 @@ defmodule Plausible.Billing.QuotaTest do
       assert suggested_tier == :starter
     end
 
+    test "returns :growth if usage within starter limits but starter plan not available",
+         %{team: team} do
+      suggested_tier =
+        team
+        |> Plausible.Teams.Billing.quota_usage(with_features: true)
+        |> Map.put(:sites, 1)
+        |> Quota.suggest_tier(nil, @highest_growth_plan, @highest_business_plan, nil)
+
+      assert suggested_tier == :growth
+    end
+
     test "returns :growth if usage within growth limits",
          %{team: team} do
       suggested_tier =

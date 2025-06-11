@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Components.Billing.LegacyPlanBox do
   use PlausibleWeb, :component
 
   require Plausible.Billing.Subscription.Status
-  alias PlausibleWeb.Components.Billing.{PlanBenefits, Notice}
+  alias PlausibleWeb.Components.Billing.{LegacyPlanBenefits, Notice}
   alias Plausible.Billing.{Plan, Quota, Subscription}
 
   def standard(assigns) do
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Components.Billing.LegacyPlanBox do
       <%= if @owned && @kind == :growth && @plan_to_render.generation < 4 do %>
         <Notice.growth_grandfathered />
       <% else %>
-        <PlanBenefits.render benefits={@benefits} class="text-gray-600 dark:text-gray-100" />
+        <LegacyPlanBenefits.render benefits={@benefits} class="text-gray-600 dark:text-gray-100" />
       <% end %>
     </div>
     """
@@ -91,7 +91,7 @@ defmodule PlausibleWeb.Components.Billing.LegacyPlanBox do
       </p>
       <p class="h-4 mt-1"></p>
       <.contact_button class="" />
-      <PlanBenefits.render benefits={@benefits} class="text-gray-300 dark:text-gray-100" />
+      <LegacyPlanBenefits.render benefits={@benefits} class="text-gray-300 dark:text-gray-100" />
     </div>
     """
   end
