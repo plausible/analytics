@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Tracker do
   def update_script_configuration(site, config_update, changeset_type) do
     {:ok, updated_config} =
       Repo.transaction(fn ->
-        original_config = get_or_create_tracker_script_configuration!(site.id)
+        original_config = get_or_create_tracker_script_configuration!(site)
         changeset = changeset(original_config, config_update, changeset_type)
 
         updated_config = Repo.update!(changeset)
@@ -71,21 +71,36 @@ defmodule PlausibleWeb.Tracker do
     updated_config
   end
 
-  def get_or_create_tracker_script_configuration!(site_id) do
-    configuration = Repo.get_by(TrackerScriptConfiguration, site_id: site_id)
+  def get_or_create_tracker_script_configuration!(site, params \\ %{}) do
+    configuration = Repo.get_by(TrackerScriptConfiguration, site_id: site.id)
 
     if configuration do
       configuration
     else
-      %TrackerScriptConfiguration{site_id: site_id}
-      |> Repo.insert!()
+      {:ok, created_config} =
+        Repo.transaction(fn ->
+          created_config =
+            TrackerScriptConfiguration.installation_changeset(
+              %TrackerScriptConfiguration{site_id: site.id},
+              params
+            )
+            |> Repo.insert!()
+
+          sync_goals(site, %{}, created_config)
+
+          created_config
+        end)
+
+      created_config
     end
   end
 
   # Sync plausible goals with the updated script config
   defp sync_goals(site, original_config, updated_config) do
     [:track_404_pages, :outbound_links, :file_downloads]
-    |> Enum.map(fn key -> {key, Map.get(original_config, key), Map.get(updated_config, key)} end)
+    |> Enum.map(fn key ->
+      {key, Map.get(original_config, key, false), Map.get(updated_config, key, false)}
+    end)
     |> Enum.each(fn
       {:track_404_pages, false, true} -> Plausible.Goals.create_404(site)
       {:track_404_pages, true, false} -> Plausible.Goals.delete_404(site)
