@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-6E0CA295.js"></script>
+    <script src="dist/sidebar_items-22EACA1C.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -158,50 +158,6 @@ benefits for Growth, Business, and Enterprise plans.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#for_business/3" data-no-tooltip translate="no">for_business(plan, growth_benefits, starter_benefits)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Returns Business benefits for the given Business plan.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#for_enterprise/1" data-no-tooltip translate="no">for_enterprise(business_benefits)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>This function only takes a list of business benefits. Since all
-limits and features of enterprise plans are configurable, we can
-say on the upgrade page that enterprise plans include everything
-in Business.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#for_growth/2" data-no-tooltip translate="no">for_growth(growth_plan, starter_benefits)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Returns Growth benefits for the given Growth plan.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#for_starter/1" data-no-tooltip translate="no">for_starter(starter_plan)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>This function takes a starter plan and returns a list representing
-the different benefits a user gets when subscribing to this plan.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#render/1" data-no-tooltip translate="no">render(assigns)</a>
 
       </div>
@@ -223,94 +179,6 @@ the different benefits a user gets when subscribing to this plan.</p></div>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="for_business/3">
-
-  <div class="detail-header">
-    <a href="#for_business/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">for_business(plan, growth_benefits, starter_benefits)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L80" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Returns Business benefits for the given Business plan.</p><p>A second argument is also required - list of Growth benefits. This
-is because we don't want to list the same benefits in both Growth
-and Business. Everything in Growth is also included in Business.</p>
-  </section>
-</section>
-<section class="detail" id="for_enterprise/1">
-
-  <div class="detail-header">
-    <a href="#for_enterprise/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">for_enterprise(business_benefits)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L100" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>This function only takes a list of business benefits. Since all
-limits and features of enterprise plans are configurable, we can
-say on the upgrade page that enterprise plans include everything
-in Business.</p>
-  </section>
-</section>
-<section class="detail" id="for_growth/2">
-
-  <div class="detail-header">
-    <a href="#for_growth/2" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">for_growth(growth_plan, starter_benefits)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L61" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Returns Growth benefits for the given Growth plan.</p><p>A second argument is also required - list of Starter benefits. This
-is because we don't want to list the same benefits in both Starter
-and Growth. Everything in Starter is also included in Growth.</p>
-  </section>
-</section>
-<section class="detail" id="for_starter/1">
-
-  <div class="detail-header">
-    <a href="#for_starter/1" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">for_starter(starter_plan)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L42" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>This function takes a starter plan and returns a list representing
-the different benefits a user gets when subscribing to this plan.</p>
-  </section>
-</section>
 <section class="detail" id="render/1">
 
   <div class="detail-header">
@@ -319,7 +187,7 @@ the different benefits a user gets when subscribing to this plan.</p>
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L27" class="icon-action" rel="help" aria-label="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L26" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
      </a>
 
@@ -328,7 +196,7 @@ the different benefits a user gets when subscribing to this plan.</p>
 
   <section class="docstring">
 
-<p>This function takes a list of benefits returned by either one of:</p><ul><li><a href="#for_starter/1"><code class="inline">for_starter/1</code></a></li><li><a href="#for_growth/2"><code class="inline">for_growth/2</code></a></li><li><code class="inline">for_business/2</code></li><li><a href="#for_enterprise/1"><code class="inline">for_enterprise/1</code></a>.</li></ul><p>and renders them as HTML.</p><p>The benefits in the given list can be either strings or functions
+<p>This function takes a list of benefits returned by either one of:</p><ul><li><code class="inline">Plausible.Billing.PlanBenefits.for_starter/1</code></li><li><code class="inline">Plausible.Billing.PlanBenefits.for_growth/2</code></li><li><code class="inline">Plausible.Billing.PlanBenefits.for_business/3</code></li><li><code class="inline">Plausible.Billing.PlanBenefits.for_enterprise/1</code>.</li></ul><p>and renders them as HTML.</p><p>The benefits in the given list can be either strings or functions
 returning a Phoenix component. This allows, for example, to render
 links within the plan benefit text.</p><h2 id="render/1-attributes" class="section-heading">
   <a href="#render/1-attributes" class="hover-link">
