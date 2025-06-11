@@ -396,7 +396,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       @tag :slow
       test "allows upgrade to a 100k plan with a pageview allowance margin of 0.15 when trial is active",
-           %{conn: conn, site: site} do
+           %{conn: conn, site: site, user: user} do
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+
+        new_trial_expiry_date =
+          Plausible.Teams.Billing.starter_tier_launch() |> Date.shift(day: 31)
+
+        # NOTE: This is temporary, making sure that the trial is treated as active,
+        # but at the same time, ineligible for seeing the old upgrade page.
+        Ecto.Changeset.change(team, %{trial_expiry_date: new_trial_expiry_date})
+        |> Repo.update!()
+
         generate_usage_for(site, 115_000)
 
         {:ok, lv, _doc} = get_liveview(conn)
