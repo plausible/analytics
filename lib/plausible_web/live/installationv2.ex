@@ -19,7 +19,12 @@ defmodule PlausibleWeb.Live.InstallationV2 do
       ])
 
     tracker_script_configuration =
-      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site.id)
+      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site, %{
+        outbound_links: true,
+        form_submissions: true,
+        file_downloads: true,
+        installation_type: :manual
+      })
 
     {:ok,
      assign(socket,

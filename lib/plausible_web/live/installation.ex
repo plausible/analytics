@@ -40,50 +40,47 @@ defmodule PlausibleWeb.Live.Installation do
         :viewer
       ])
 
-    socket =
-      if FunWithFlags.enabled?(:scriptv2, for: site) do
-        redirect(socket, to: "/#{domain}/installationv2?flow=#{params["flow"]}")
-      else
-        socket
+    if FunWithFlags.enabled?(:scriptv2, for: site) do
+      {:ok, redirect(socket, to: "/#{domain}/installationv2?flow=#{params["flow"]}")}
+    else
+      flow = params["flow"]
+
+      tracker_script_configuration =
+        PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site)
+
+      installation_type = get_installation_type(flow, tracker_script_configuration, params)
+
+      config =
+        Map.new(@script_config_params, fn key ->
+          string_key = String.to_existing_atom(key)
+          {key, Map.get(tracker_script_configuration, string_key)}
+        end)
+
+      if connected?(socket) and is_nil(installation_type) do
+        Checks.run("https://#{domain}", domain,
+          checks: [
+            Checks.FetchBody,
+            Checks.ScanBody
+          ],
+          report_to: self(),
+          async?: true,
+          slowdown: 0
+        )
       end
 
-    flow = params["flow"]
-
-    tracker_script_configuration =
-      PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site.id)
-
-    installation_type = get_installation_type(flow, tracker_script_configuration, params)
-
-    config =
-      Map.new(@script_config_params, fn key ->
-        string_key = String.to_existing_atom(key)
-        {key, Map.get(tracker_script_configuration, string_key)}
-      end)
-
-    if connected?(socket) and is_nil(installation_type) do
-      Checks.run("https://#{domain}", domain,
-        checks: [
-          Checks.FetchBody,
-          Checks.ScanBody
-        ],
-        report_to: self(),
-        async?: true,
-        slowdown: 0
-      )
+      {:ok,
+       assign(socket,
+         uri_params: Map.take(params, @valid_qs_params),
+         connected?: connected?(socket),
+         site: site,
+         site_created?: params["site_created"] == "true",
+         flow: flow,
+         installation_type: installation_type,
+         initial_installation_type: installation_type,
+         domain: domain,
+         config: config
+       )}
     end
-
-    {:ok,
-     assign(socket,
-       uri_params: Map.take(params, @valid_qs_params),
-       connected?: connected?(socket),
-       site: site,
-       site_created?: params["site_created"] == "true",
-       flow: flow,
-       installation_type: installation_type,
-       initial_installation_type: installation_type,
-       domain: domain,
-       config: config
-     )}
   end
 
   def handle_info({:verification_end, %State{} = state}, socket) do
