@@ -28,11 +28,11 @@ export async function mockManyRequests({
     body?: string
   }
   /**
-   * When there's at least `countOfRequestsToAwait` requests on this route,
+   * When there's at least `countOfRequestsToAwait` unignored requests on this route,
    * getRequestList resolves without waiting for `mockRequestTimeoutMs`.
-   * If there's less than `countOfRequestsToAwait` requests on this route, it
-   * takes `mockRequestTimeoutMs` to resolve getRequestList.
-   * This is so as not miss requests that are yet to be sent.
+   * If there's less than `countOfRequestsToAwait` unignored requests on this route, it
+   * takes `mockRequestTimeoutMs` to resolve `getRequestList`.
+   * This is so as not miss unexpected requests that are sent slowly.
    */
   countOfRequestsToAwait: number
   responseDelay?: number
@@ -41,12 +41,12 @@ export async function mockManyRequests({
 }) {
   const requestList: unknown[] = []
   await page.context().route(path, async (route, request) => {
+    if (responseDelay) {
+      await delay(responseDelay)
+    }
     const postData = request.postDataJSON()
     if (shouldAllow(postData, shouldIgnoreRequest)) {
       requestList.push(postData)
-    }
-    if (responseDelay) {
-      await delay(responseDelay)
     }
     await route.fulfill({
       ...DEFAULT_RESPONSE,
