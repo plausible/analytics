@@ -64,7 +64,7 @@ export function track(eventName, options) {
 
   payload.d = config.domain
   payload.r = document.referrer || null
-  if (options && options.meta) {
+  if (COMPILE_PLAUSIBLE_LEGACY_VARIANT && options && options.meta) {
     payload.m = JSON.stringify(options.meta)
   }
   if (options && options.props) {

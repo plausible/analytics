@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Plausible Playwright tests</title>
+  <script defer src="/tracker/js/plausible.local.pageview-props.js"></script>
+</head>
+
+<body>
+  <button id="custom-props-button" onclick="plausible('Props event', { props: { type: 'props' } })">Custom props</button>
+  <button id="custom-meta-button" onclick="plausible('Meta event', { meta: { type: 'meta' } })">Custom meta</button>
+</body>
+</html>
