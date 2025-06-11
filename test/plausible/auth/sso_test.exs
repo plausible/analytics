@@ -73,7 +73,7 @@ defmodule Plausible.Auth.SSOTest do
         assert {:ok, integration} =
                  SSO.update_integration(integration, %{
                    idp_signin_url: "https://example.com",
-                   idp_entity_id: "some-entity",
+                   idp_entity_id: "  some-entity  ",
                    idp_cert_pem: @cert_pem
                  })
 

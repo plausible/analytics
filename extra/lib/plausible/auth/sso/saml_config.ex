@@ -51,6 +51,7 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
     |> validate_required(@required_fields)
     |> validate_url(:idp_signin_url)
     |> validate_pem(:idp_cert_pem)
+    |> update_change(:idp_entity_id, &String.trim/1)
   end
 
   defp validate_url(changeset, field) do
