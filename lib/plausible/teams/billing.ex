@@ -21,7 +21,7 @@ defmodule Plausible.Teams.Billing do
   @typep last_30_days_usage() :: %{:last_30_days => Quota.usage_cycle()}
   @typep monthly_pageview_usage() :: Quota.cycles_usage() | last_30_days_usage()
 
-  @starter_tier_launch ~D[2025-06-09]
+  @starter_tier_launch ~D[2025-06-11]
   def starter_tier_launch(), do: @starter_tier_launch
 
   def show_new_upgrade_page?(nil = _team) do
