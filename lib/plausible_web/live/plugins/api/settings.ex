@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
     {:ok,
      assign(socket,
        domain: domain,
-       add_token?: not is_nil(session["new_token"]),
+       create_token?: not is_nil(session["new_token"]),
        token_description: session["new_token"] || ""
      )}
   end
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
     <div>
       <.flash_messages flash={@flash} />
 
-      <%= if @add_token? do %>
+      <%= if @create_token? do %>
         {live_render(
           @socket,
           PlausibleWeb.Live.Plugins.API.TokenForm,
@@ -50,8 +50,8 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
 
       <div>
         <.filter_bar filtering_enabled?={false}>
-          <.button phx-click="add-token" mt?={false}>
-            Add Plugin Token
+          <.button phx-click="create-token" mt?={false}>
+            Create Plugin Token
           </.button>
         </.filter_bar>
 
@@ -89,21 +89,21 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
     """
   end
 
-  def handle_event("add-token", _params, socket) do
-    {:noreply, assign(socket, :add_token?, true)}
+  def handle_event("create-token", _params, socket) do
+    {:noreply, assign(socket, :create_token?, true)}
   end
 
   def handle_event("revoke-token", %{"token-id" => token_id}, socket) do
     :ok = Tokens.delete(socket.assigns.site, token_id)
     displayed_tokens = Enum.reject(socket.assigns.displayed_tokens, &(&1.id == token_id))
-    {:noreply, assign(socket, add_token?: false, displayed_tokens: displayed_tokens)}
+    {:noreply, assign(socket, create_token?: false, displayed_tokens: displayed_tokens)}
   end
 
-  def handle_info(:cancel_add_token, socket) do
-    {:noreply, assign(socket, add_token?: false)}
+  def handle_info(:close_token_modal, socket) do
+    {:noreply, assign(socket, create_token?: false)}
   end
 
-  def handle_info({:token_added, token}, socket) do
+  def handle_info({:token_created, token}, socket) do
     displayed_tokens = [token | socket.assigns.displayed_tokens]
 
     socket = put_live_flash(socket, :success, "Plugins Token created successfully")
@@ -111,7 +111,6 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
     {:noreply,
      assign(socket,
        displayed_tokens: displayed_tokens,
-       add_token?: false,
        token_description: ""
      )}
   end

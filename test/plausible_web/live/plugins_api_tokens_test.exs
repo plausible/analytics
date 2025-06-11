@@ -65,34 +65,44 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
              )
     end
 
-    test "add token button is rendered", %{conn: conn, site: site} do
+    test "create token button is rendered", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/integrations?new_token=WordPress")
       resp = html_response(conn, 200)
 
-      assert element_exists?(resp, ~s/button[phx-click="add-token"]/)
+      assert element_exists?(resp, ~s/button[phx-click="create-token"]/)
     end
   end
 
   describe "Plugins.API.Settings live view" do
     setup [:create_user, :log_in, :create_site]
 
-    test "create token form shows up invoked via URL", %{conn: conn, site: site} do
-      {_lv, html} =
+    test "create token when invoked via URL", %{conn: conn, site: site} do
+      {lv, html} =
         get_liveview(conn, site, with_html?: true, query_params: "?new_token=WordPress")
 
       assert element_exists?(html, "#token-form")
       assert text_of_element(html, "label[for=token_description]") == "Description"
       assert element_exists?(html, "input[value=WordPress]#token_description")
-      assert text_of_element(html, "label[for=token-clipboard]") == "Plugin Token"
-      assert element_exists?(html, "input#token-clipboard")
 
       assert element_exists?(
                html,
-               ~s/div#token-form form[phx-submit="save-token"][phx-click-away="cancel-add-token"]/
+               ~s/div#token-form form[phx-submit="generate-token"]/
              )
+
+      html =
+        lv
+        |> find_live_child("token-form")
+        |> element("form")
+        |> render_submit()
+
+      assert text_of_element(html, "label[for=token-clipboard]") == "Plugin Token"
+      assert element_exists?(html, "input#token-clipboard")
+      assert element_exists?(html, ~s/button[phx-click="close-token-modal"]/)
+
+      assert Tokens.any?(site)
     end
 
-    test "adds token", %{conn: conn, site: site} do
+    test "adds token and shows it", %{conn: conn, site: site} do
       refute Tokens.any?(site)
 
       lv = get_liveview(conn, site, query_params: "?new_token=WordPress")
@@ -105,6 +115,8 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       assert Tokens.any?(site)
 
       html = render(lv)
+      assert text_of_element(html, "label[for=token-clipboard]") == "Plugin Token"
+      assert element_exists?(html, "input#token-clipboard")
       assert text_of_element(html, "span.token-description") == "WordPress"
     end
 
@@ -113,7 +125,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
 
       lv = get_liveview(conn, site)
 
-      lv |> render_click("add-token")
+      lv |> render_click("create-token")
 
       lv
       |> find_live_child("token-form")
