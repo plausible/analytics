@@ -52,14 +52,10 @@ defmodule Plausible.Billing.PlanBenefitsTest do
         assert PlanBenefits.for_growth(growth_plan, []) == [
                  "Up to 50 sites",
                  "Unlimited team members",
-                 "Team Management",
-                 "Saved Segments",
                  "Goals and custom events",
                  "Custom Properties",
                  "Stats API (600 requests per hour)",
-                 "Looker Studio Connector",
-                 "Shared Links",
-                 "Embedded Dashboards"
+                 "Looker Studio Connector"
                ]
       end
     end
