@@ -5,7 +5,6 @@ defmodule PlausibleWeb.Live.SSOManagement do
   use PlausibleWeb, :live_view
 
   alias Plausible.Auth.SSO
-  alias Plausible.Repo
   alias Plausible.Teams
 
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -87,7 +86,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
       <.form id="sso-sp-config" for={} class="flex-col space-y-4">
         <.input_with_clipboard
-          id="sp-enity-id"
+          id="sp-entity-id"
           name="sp-entity-id"
           label="Entity ID"
           value={SSO.SAMLConfig.entity_id(@integration)}
@@ -226,7 +225,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
         <form id="sso-sp-config" for={} class="flex-col space-y-4">
           <.input_with_clipboard
-            id="sp-enity-id"
+            id="sp-entity-id"
             name="sp-entity-id"
             label="Entity ID"
             value={SSO.SAMLConfig.entity_id(@integration)}
@@ -575,16 +574,9 @@ defmodule PlausibleWeb.Live.SSOManagement do
   end
 
   defp load_integration(socket, team) do
-    result =
-      if integration = socket.assigns[:integration] do
-        {:ok, Repo.reload(integration)}
-      else
-        SSO.get_integration_for(team)
-      end
-
     integration =
-      case result do
-        {:ok, integration} -> Repo.preload(integration, :sso_domains)
+      case SSO.get_integration_for(team) do
+        {:ok, integration} -> integration
         {:error, :not_found} -> nil
       end
 

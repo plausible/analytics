@@ -108,10 +108,19 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         lv |> element("form#show-manage-form") |> render_submit()
 
-        text = render(lv) |> text()
+        html = render(lv)
+        text = text(html)
 
         assert text =~ "example.com"
         assert text =~ "-BEGIN CERTIFICATE-"
+
+        sp_entity_id = text_of_attr(html, "#sp-entity-id", "value")
+        integration_identifier = sp_entity_id |> Path.split() |> List.last()
+        {:ok, integration} = Plausible.Auth.SSO.get_integration(integration_identifier)
+
+        assert integration.config.idp_signin_url == "http://signin.example.com"
+        assert integration.config.idp_entity_id == "abc123"
+        assert [%{domain: "example.com"}] = integration.sso_domains
       end
 
       defp get_lv(conn) do
