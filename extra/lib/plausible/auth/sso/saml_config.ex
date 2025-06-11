@@ -12,6 +12,8 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
 
   use Ecto.Schema
 
+  alias Plausible.Auth.SSO
+
   import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
@@ -26,17 +28,30 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
     field :idp_metadata, :string
   end
 
+  @spec configured?(t()) :: boolean()
+  def configured?(config) do
+    !!(config.idp_signin_url && config.idp_entity_id && config.idp_cert_pem)
+  end
+
+  @spec entity_id(SSO.Integration.t()) :: String.t()
+  def entity_id(integration) do
+    PlausibleWeb.Endpoint.url() <> "/sso/" <> integration.identifier
+  end
+
+  @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(struct, params) do
     struct
     |> cast(params, @fields)
   end
 
+  @spec update_changeset(t(), map()) :: Ecto.Changeset.t()
   def update_changeset(struct, params) do
     struct
     |> cast(params, @fields)
     |> validate_required(@required_fields)
     |> validate_url(:idp_signin_url)
     |> validate_pem(:idp_cert_pem)
+    |> update_change(:idp_entity_id, &String.trim/1)
   end
 
   defp validate_url(changeset, field) do
@@ -52,12 +67,23 @@ defmodule Plausible.Auth.SSO.SAMLConfig do
 
   defp validate_pem(changeset, field) do
     if pem = get_change(changeset, field) do
+      pem = clean_pem(pem)
+
       case X509.Certificate.from_pem(pem) do
-        {:ok, _cert} -> changeset
+        {:ok, _cert} -> put_change(changeset, field, pem)
         {:error, _} -> add_error(changeset, field, "invalid certificate", validation: :cert_pem)
       end
     else
       changeset
     end
+  end
+
+  defp clean_pem(pem) do
+    pem
+    |> String.split("\n")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.join("\n")
+    |> String.trim()
   end
 end

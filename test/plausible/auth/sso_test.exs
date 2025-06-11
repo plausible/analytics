@@ -73,13 +73,40 @@ defmodule Plausible.Auth.SSOTest do
         assert {:ok, integration} =
                  SSO.update_integration(integration, %{
                    idp_signin_url: "https://example.com",
-                   idp_entity_id: "some-entity",
+                   idp_entity_id: "  some-entity  ",
                    idp_cert_pem: @cert_pem
                  })
 
         assert integration.config.idp_signin_url == "https://example.com"
         assert integration.config.idp_entity_id == "some-entity"
-        assert integration.config.idp_cert_pem == @cert_pem
+
+        assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
+                 X509.Certificate.from_pem(@cert_pem)
+      end
+
+      test "updates integration with whitespace around PEM" do
+        malformed_pem =
+          @cert_pem
+          |> String.split("\n")
+          |> Enum.map_join("\n\n", &("   " <> &1 <> "   "))
+
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+
+        assert {:ok, integration} =
+                 SSO.update_integration(integration, %{
+                   idp_signin_url: "https://example.com",
+                   idp_entity_id: "some-entity",
+                   idp_cert_pem: malformed_pem
+                 })
+
+        assert integration.config.idp_signin_url == "https://example.com"
+        assert integration.config.idp_entity_id == "some-entity"
+
+        assert integration.config.idp_cert_pem == String.trim(@cert_pem)
+
+        assert X509.Certificate.from_pem(integration.config.idp_cert_pem) ==
+                 X509.Certificate.from_pem(@cert_pem)
       end
 
       test "optionally accepts metadata" do
@@ -400,6 +427,18 @@ defmodule Plausible.Auth.SSOTest do
 
         assert team.policy.sso_default_role == :editor
         assert team.policy.sso_session_timeout_minutes == 360
+      end
+
+      test "returns changeset on invalid input" do
+        team = new_site().team
+
+        assert {:error, changeset} =
+                 SSO.update_policy(team, sso_session_timeout_minutes: "1024000005")
+
+        assert %{sso_session_timeout_minutes: [:number]} =
+                 Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
+                   opts[:validation]
+                 end)
       end
     end
 

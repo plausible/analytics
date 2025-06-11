@@ -15,20 +15,36 @@ defmodule Plausible.Auth.SSO do
           {:sso_default_role, Teams.Policy.sso_member_role()}
           | {:sso_session_timeout_minutes, non_neg_integer()}
 
-  @spec get_integration(String.t()) :: {:ok, SSO.Integration.t()} | {:error, :not_found}
-  def get_integration(identifier) when is_binary(identifier) do
-    query =
-      from(i in SSO.Integration,
-        inner_join: t in assoc(i, :team),
-        where: i.identifier == ^identifier,
-        preload: [team: t]
-      )
+  @spec get_integration_for(Teams.Team.t()) :: {:ok, SSO.Integration.t()} | {:error, :not_found}
+  def get_integration_for(%Teams.Team{} = team) do
+    query = integration_query() |> where([i], i.team_id == ^team.id)
 
     if integration = Repo.one(query) do
       {:ok, integration}
     else
       {:error, :not_found}
     end
+  end
+
+  @spec get_integration(String.t()) :: {:ok, SSO.Integration.t()} | {:error, :not_found}
+  def get_integration(identifier) when is_binary(identifier) do
+    query = integration_query() |> where([i], i.identifier == ^identifier)
+
+    if integration = Repo.one(query) do
+      {:ok, integration}
+    else
+      {:error, :not_found}
+    end
+  end
+
+  defp integration_query() do
+    from(i in SSO.Integration,
+      inner_join: t in assoc(i, :team),
+      as: :team,
+      left_join: d in assoc(i, :sso_domains),
+      as: :sso_domains,
+      preload: [team: t, sso_domains: d]
+    )
   end
 
   @spec initiate_saml_integration(Teams.Team.t()) :: SSO.Integration.t()
@@ -96,10 +112,15 @@ defmodule Plausible.Auth.SSO do
     params = Map.new(attrs)
     policy_changeset = Teams.Policy.update_changeset(team.policy, params)
 
-    team
-    |> Ecto.Changeset.change()
-    |> Ecto.Changeset.put_embed(:policy, policy_changeset)
-    |> Repo.update()
+    changeset =
+      team
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.put_embed(:policy, policy_changeset)
+
+    case Repo.update(changeset) do
+      {:ok, integration} -> {:ok, integration}
+      {:error, changeset} -> {:error, changeset.changes.policy}
+    end
   end
 
   @spec set_force_sso(Teams.Team.t(), Teams.Policy.force_sso_mode()) ::

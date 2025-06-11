@@ -152,6 +152,9 @@ defmodule PlausibleWeb.Router do
 
       plug :fetch_session
       plug :fetch_live_flash
+    end
+
+    pipeline :sso_saml_auth do
       plug :protect_from_forgery, with: :clear_session
     end
 
@@ -165,7 +168,12 @@ defmodule PlausibleWeb.Router do
     scope "/sso/saml", PlausibleWeb do
       pipe_through [PlausibleWeb.Plugs.GateSSO, :sso_saml]
 
-      get "/signin/:integration_id", SSOController, :saml_signin
+      scope [] do
+        pipe_through :sso_saml_auth
+
+        get "/signin/:integration_id", SSOController, :saml_signin
+      end
+
       post "/consume/:integration_id", SSOController, :saml_consume
       post "/csp-report", SSOController, :csp_report
     end
@@ -445,6 +453,11 @@ defmodule PlausibleWeb.Router do
 
     get "/team/general", SettingsController, :team_general
     post "/team/general/name", SettingsController, :update_team_name
+
+    on_ee do
+      get "/sso/general", SSOController, :sso_settings
+    end
+
     post "/team/invitations/:invitation_id/accept", InvitationController, :accept_invitation
     post "/team/invitations/:invitation_id/reject", InvitationController, :reject_invitation
     delete "/team/invitations/:invitation_id", InvitationController, :remove_team_invitation

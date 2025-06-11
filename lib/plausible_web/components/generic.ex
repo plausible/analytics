@@ -404,6 +404,8 @@ defmodule PlausibleWeb.Components.Generic do
   attr :id_suffix, :string, default: ""
   attr :disabled, :boolean, default: false
 
+  attr(:rest, :global)
+
   def toggle_switch(assigns) do
     ~H"""
     <button
@@ -415,6 +417,7 @@ defmodule PlausibleWeb.Components.Generic do
       x-on:click={"#{@js_active_var} = !#{@js_active_var}"}
       x-bind:aria-checked={@js_active_var}
       disabled={@disabled}
+      {@rest}
     >
       <span
         class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
