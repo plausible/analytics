@@ -1,66 +1,67 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
-  @moduletag :ee_only
-
-  import Phoenix.LiveViewTest
-  import Plausible.Test.Support.HTML
-  require Plausible.Billing.Subscription.Status
-  alias Plausible.{Repo, Billing, Billing.Subscription}
-
-  @v1_10k_yearly_plan_id "572810"
-  @v1_50m_yearly_plan_id "650653"
-  @v2_20m_yearly_plan_id "653258"
-  @v5_starter_5m_monthly_plan_id "910425"
-  @v4_growth_10k_monthly_plan_id "857097"
-  @v4_growth_200k_yearly_plan_id "857081"
-  @v5_growth_10k_yearly_plan_id "910430"
-  @v5_growth_200k_yearly_plan_id "910434"
-  @v4_business_5m_monthly_plan_id "857111"
-  @v5_business_5m_monthly_plan_id "910457"
-  @v3_business_10k_monthly_plan_id "857481"
-
-  @monthly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="monthly"]/
-  @yearly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="yearly"]/
-  @interval_button_active_class "bg-indigo-600 text-white"
-  @slider_input ~s/input[name="slider"]/
-  @slider_value "#slider-value"
-
-  @starter_plan_box "#starter-plan-box"
-  @starter_plan_tooltip "#starter-plan-box .tooltip-content"
-  @starter_price_tag_amount "#starter-price-tag-amount"
-  @starter_price_tag_interval "#starter-price-tag-interval"
-  @starter_discount_price_tag_amount "#starter-discount-price-tag-amount"
-  @starter_discount_price_tag_strikethrough_amount "#starter-discount-price-tag-strikethrough-amount"
-  @starter_vat_notice "#starter-vat-notice"
-  @starter_highlight_pill "#{@starter_plan_box} #highlight-pill"
-  @starter_checkout_button "#starter-checkout"
-
-  @growth_plan_box "#growth-plan-box"
-  @growth_plan_tooltip "#growth-plan-box .tooltip-content"
-  @growth_price_tag_amount "#growth-price-tag-amount"
-  @growth_price_tag_interval "#growth-price-tag-interval"
-  @growth_discount_price_tag_amount "#growth-discount-price-tag-amount"
-  @growth_discount_price_tag_strikethrough_amount "#growth-discount-price-tag-strikethrough-amount"
-  @growth_vat_notice "#growth-vat-notice"
-  @growth_highlight_pill "#{@growth_plan_box} #highlight-pill"
-  @growth_checkout_button "#growth-checkout"
-
-  @business_plan_box "#business-plan-box"
-  @business_price_tag_amount "#business-price-tag-amount"
-  @business_price_tag_interval "#business-price-tag-interval"
-  @business_discount_price_tag_amount "#business-discount-price-tag-amount"
-  @business_discount_price_tag_strikethrough_amount "#business-discount-price-tag-strikethrough-amount"
-  @business_vat_notice "#business-vat-notice"
-  @business_highlight_pill "#{@business_plan_box} #highlight-pill"
-  @business_checkout_button "#business-checkout"
-
-  @enterprise_plan_box "#enterprise-plan-box"
-  @enterprise_highlight_pill "#enterprise-highlight-pill"
-
-  @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
   on_ee do
+    use Plausible.Teams.Test
+    @moduletag :ee_only
+
+    import Phoenix.LiveViewTest
+    import Plausible.Test.Support.HTML
+    require Plausible.Billing.Subscription.Status
+    alias Plausible.{Repo, Billing, Billing.Subscription}
+
+    @v1_10k_yearly_plan_id "572810"
+    @v1_50m_yearly_plan_id "650653"
+    @v2_20m_yearly_plan_id "653258"
+    @v5_starter_5m_monthly_plan_id "910425"
+    @v4_growth_10k_monthly_plan_id "857097"
+    @v4_growth_200k_yearly_plan_id "857081"
+    @v5_growth_10k_yearly_plan_id "910430"
+    @v5_growth_200k_yearly_plan_id "910434"
+    @v4_business_5m_monthly_plan_id "857111"
+    @v5_business_5m_monthly_plan_id "910457"
+    @v3_business_10k_monthly_plan_id "857481"
+
+    @monthly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="monthly"]/
+    @yearly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="yearly"]/
+    @interval_button_active_class "bg-indigo-600 text-white"
+    @slider_input ~s/input[name="slider"]/
+    @slider_value "#slider-value"
+
+    @starter_plan_box "#starter-plan-box"
+    @starter_plan_tooltip "#starter-plan-box .tooltip-content"
+    @starter_price_tag_amount "#starter-price-tag-amount"
+    @starter_price_tag_interval "#starter-price-tag-interval"
+    @starter_discount_price_tag_amount "#starter-discount-price-tag-amount"
+    @starter_discount_price_tag_strikethrough_amount "#starter-discount-price-tag-strikethrough-amount"
+    @starter_vat_notice "#starter-vat-notice"
+    @starter_highlight_pill "#{@starter_plan_box} #highlight-pill"
+    @starter_checkout_button "#starter-checkout"
+
+    @growth_plan_box "#growth-plan-box"
+    @growth_plan_tooltip "#growth-plan-box .tooltip-content"
+    @growth_price_tag_amount "#growth-price-tag-amount"
+    @growth_price_tag_interval "#growth-price-tag-interval"
+    @growth_discount_price_tag_amount "#growth-discount-price-tag-amount"
+    @growth_discount_price_tag_strikethrough_amount "#growth-discount-price-tag-strikethrough-amount"
+    @growth_vat_notice "#growth-vat-notice"
+    @growth_highlight_pill "#{@growth_plan_box} #highlight-pill"
+    @growth_checkout_button "#growth-checkout"
+
+    @business_plan_box "#business-plan-box"
+    @business_price_tag_amount "#business-price-tag-amount"
+    @business_price_tag_interval "#business-price-tag-interval"
+    @business_discount_price_tag_amount "#business-discount-price-tag-amount"
+    @business_discount_price_tag_strikethrough_amount "#business-discount-price-tag-strikethrough-amount"
+    @business_vat_notice "#business-vat-notice"
+    @business_highlight_pill "#{@business_plan_box} #highlight-pill"
+    @business_checkout_button "#business-checkout"
+
+    @enterprise_plan_box "#enterprise-plan-box"
+    @enterprise_highlight_pill "#enterprise-highlight-pill"
+
+    @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
+
     describe "for a user with no subscription" do
       setup [:create_user, :create_site, :log_in]
 
