@@ -68,13 +68,8 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         html = render(lv)
 
         assert element_exists?(html, "form#sso-sp-config")
-        assert element_exists?(html, "form#sso-saml-form")
 
         lv |> element("form#sso-saml-form") |> render_submit()
-        html = render(lv)
-
-        assert element_exists?(html, "form#sso-sp-config-form")
-
         lv |> element("form#sso-sp-config-form") |> render_submit()
 
         text = text(render(lv))
@@ -92,10 +87,6 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
             idp_cert_pem: @cert_pem
           }
         })
-
-        html = render(lv)
-
-        assert element_exists?(html, "form#sso-add-domain-form")
 
         lv
         |> element("form#sso-add-domain-form")
