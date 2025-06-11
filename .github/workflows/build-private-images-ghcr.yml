@@ -69,11 +69,16 @@ jobs:
           customHeaders: '{"Content-Type": "application/json"}'
           data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-private-images.yml\">Build failed</a>"}'
 
-      - name: Get first line of commit message
+      - name: Get first line and Co-Authored-By lines of the commit message
         if: ${{ success() && github.ref == 'refs/heads/master' }}
         id: commitmsg
-        run: | 
-          echo "first_line=$(echo '${{ github.event.head_commit.message }}' | head -n1)" >> $GITHUB_OUTPUT
+        run: |
+          first_line=$(echo "${{ github.event.head_commit.message }}" | head -n1)
+          co_authors=$(echo "${{ github.event.head_commit.message }}" | grep -h 'Co-authored-by:' | sort -u | cut -d: -f2- | paste -sd, -)
+          {
+            echo "first_line=$first_line"
+            echo "co_authors=$co_authors"
+          } >> $GITHUB_OUTPUT
 
       - name: Notify team on success
         if: ${{ success() && github.ref == 'refs/heads/master' }}
@@ -85,7 +90,7 @@ jobs:
           escapeData: 'true'
           data: |
             {
-              "content": "<h1>🚀 Deploying ${{ steps.commitmsg.outputs.first_line }}</h1><p>Author: ${{ github.event.head_commit.author.name }}</p><p>Commit: <a href=\"${{ github.event.head_commit.url }}\">${{ github.sha }}</a></p>"
+              "content": "<h1>🚀 Deploying ${{ steps.commitmsg.outputs.first_line }}</h1><p>Author(s): ${{ github.event.head_commit.author.name }}<br/>${{ steps.commitmsg.outputs.co_authors}}</p><p>Commit: <a href=\"${{ github.event.head_commit.url }}\">${{ github.sha }}</a></p>"
             }
 
       - name: Set Honeycomb marker on success
