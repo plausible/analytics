@@ -242,7 +242,7 @@ for (const mode of ['legacy', 'web']) {
           web: { ...DEFAULT_CONFIG, fileDownloads: ['iso'] },
           legacy:
             '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.js" file-types="iso"></script>'
-        })(mode),
+        }, mode),
         bodyContent: `<a href="${isoFileURL}" target="__blank">📥</a><a href="${csvFileURL}" target="__blank">📥</a>`
       })
       await page.goto(url)
