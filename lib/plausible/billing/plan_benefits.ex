@@ -3,8 +3,6 @@ defmodule Plausible.Billing.PlanBenefits do
 
   alias Plausible.Billing.Plan
 
-  @shared_link_feature_labels ["Shared Links", "Embedded Dashboards"]
-
   @doc """
   This function takes a starter plan and returns a list representing
   the different benefits a user gets when subscribing to this plan.
@@ -33,12 +31,11 @@ defmodule Plausible.Billing.PlanBenefits do
       if(Enum.empty?(starter_benefits), do: nil, else: "Everything in Starter"),
       site_limit_benefit(growth_plan),
       team_member_limit_benefit(growth_plan),
-      if(Enum.empty?(starter_benefits), do: nil, else: "Team Management"),
-      if(Enum.empty?(starter_benefits), do: nil, else: "Saved Segments")
+      "Team Management",
+      if(Enum.empty?(starter_benefits), do: "Saved Segments", else: nil)
     ]
     |> Kernel.++(feature_benefits(growth_plan))
     |> Kernel.--(starter_benefits)
-    |> maybe_remove_new_starter_features(starter_benefits)
     |> Enum.filter(& &1)
   end
 
@@ -59,7 +56,6 @@ defmodule Plausible.Billing.PlanBenefits do
     |> Kernel.++(feature_benefits(plan))
     |> Kernel.--(growth_benefits)
     |> Kernel.--(starter_benefits)
-    |> maybe_remove_new_starter_features(starter_benefits)
     |> Enum.filter(& &1)
   end
 
@@ -107,19 +103,6 @@ defmodule Plausible.Billing.PlanBenefits do
     |> Enum.filter(& &1)
   end
 
-  # In case Starter tier is not available for the team, starter_benefits
-  # gets passed as `[]` into `for_growth/2` and `for_business/3`. However
-  # even then we don't want the Growth or Business box to render any new
-  # Starter features. That is to create balance between the number Growth,
-  # Business and Enterprise benefits.
-  defp maybe_remove_new_starter_features(benefits, starter_benefits) do
-    if Enum.empty?(starter_benefits) do
-      benefits -- @shared_link_feature_labels
-    else
-      benefits
-    end
-  end
-
   defp data_retention_benefit(%Plan{} = plan) do
     if plan.data_retention_in_years, do: "#{plan.data_retention_in_years} years of data retention"
   end
@@ -143,7 +126,7 @@ defmodule Plausible.Billing.PlanBenefits do
       case feature_mod.name() do
         :goals -> ["Goals and custom events"]
         :stats_api -> ["Stats API (600 requests per hour)", "Looker Studio Connector"]
-        :shared_links -> @shared_link_feature_labels
+        :shared_links -> ["Shared Links", "Embedded Dashboards"]
         :revenue_goals -> ["Ecommerce revenue attribution"]
         _ -> [feature_mod.display_name()]
       end

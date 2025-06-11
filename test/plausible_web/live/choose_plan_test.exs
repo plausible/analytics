@@ -1196,10 +1196,14 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
         assert growth_box =~ "Up to 50 sites"
         assert growth_box =~ "Unlimited team members"
+        assert growth_box =~ "Team Management"
+        assert growth_box =~ "Saved Segments"
         assert growth_box =~ "Goals and custom events"
         assert growth_box =~ "Custom Properties"
         assert growth_box =~ "Stats API (600 requests per hour)"
         assert growth_box =~ "Looker Studio Connector"
+        assert growth_box =~ "Shared Links"
+        assert growth_box =~ "Embedded Dashboards"
 
         assert business_box =~ "Everything in Growth"
         assert business_box =~ "Funnels"
