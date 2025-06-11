@@ -307,7 +307,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
             <.td>{domain.status}</.td>
             <.td actions>
               <.styled_link
-                id="verify-domain-#{domain.identifier}"
+                id={"verify-domain-#{domain.identifier}"}
                 phx-click="verify-domain"
                 phx-value-identifier={domain.identifier}
               >
