@@ -10,6 +10,8 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 
+    alias Plausible.Auth.SSO
+
     @cert_pem """
     -----BEGIN CERTIFICATE-----
     MIIFdTCCA12gAwIBAgIUNcATm3CidmlEMMsZa9KBZpWYCVcwDQYJKoZIhvcNAQEL
@@ -64,13 +66,13 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
       test "init setup - basic walk through", %{conn: conn} do
         {lv, _html} = get_lv(conn)
-        lv |> element("form#sso-init-form") |> render_submit()
+        lv |> element("form#sso-init") |> render_submit()
         html = render(lv)
 
         assert element_exists?(html, "form#sso-sp-config")
 
-        lv |> element("form#sso-saml-form") |> render_submit()
-        lv |> element("form#sso-sp-config-form") |> render_submit()
+        lv |> element("form#sso-idp-form") |> render_submit()
+        lv |> element("form#sso-idp-config") |> render_submit()
 
         text = text(render(lv))
 
@@ -79,7 +81,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         assert text =~ "Certificate in PEM format can't be blank"
 
         lv
-        |> element("form#sso-sp-config-form")
+        |> element("form#sso-idp-config")
         |> render_submit(%{
           saml_config: %{
             idp_signin_url: "http://signin.example.com",
@@ -89,14 +91,14 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         })
 
         lv
-        |> element("form#sso-add-domain-form")
+        |> element("form#sso-add-domain")
         |> render_submit()
 
         text = text(render(lv))
         assert text =~ "Domain can't be blank"
 
         lv
-        |> element("form#sso-add-domain-form")
+        |> element("form#sso-add-domain")
         |> render_submit(%{
           domain: %{
             domain: "example.com"
@@ -106,7 +108,7 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         text = render(lv) |> text()
         assert text =~ "Verifying domain"
 
-        lv |> element("form#show-manage-form") |> render_submit()
+        lv |> element("form#show-manage") |> render_submit()
 
         html = render(lv)
         text = text(html)
@@ -116,17 +118,162 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
 
         sp_entity_id = text_of_attr(html, "#sp-entity-id", "value")
         integration_identifier = sp_entity_id |> Path.split() |> List.last()
-        {:ok, integration} = Plausible.Auth.SSO.get_integration(integration_identifier)
+        {:ok, integration} = SSO.get_integration(integration_identifier)
 
         assert integration.config.idp_signin_url == "http://signin.example.com"
         assert integration.config.idp_entity_id == "abc123"
         assert [%{domain: "example.com"}] = integration.sso_domains
       end
 
+      test "renders integration summary", %{conn: conn, team: team} do
+        setup_integration(team, "example.com")
+
+        {_lv, html} = get_lv(conn)
+
+        assert element_exists?(html, "h2 a#sso-manage-config")
+        assert element_exists?(html, "h2 a#sso-domains-config")
+        assert element_exists?(html, "h2 a#sso-policy-config")
+      end
+
+      test "edit idp config", %{conn: conn, team: team} do
+        setup_integration(team, "example.com")
+
+        {lv, _html} = get_lv(conn)
+
+        lv |> element("form#show-idp-form") |> render_submit()
+
+        html = render(lv)
+
+        assert element_exists?(html, "input#sso-idp-config_idp_signin_url")
+        assert element_exists?(html, "input#sso-idp-config_idp_entity_id")
+        assert element_exists?(html, "textarea#sso-idp-config_idp_cert_pem")
+
+        lv
+        |> element("form#sso-idp-config")
+        |> render_submit(%{
+          saml_config: %{
+            idp_signin_url: "http://updated.example.com",
+            idp_entity_id: "zxc345",
+            idp_cert_pem: @cert_pem
+          }
+        })
+
+        html = render(lv)
+        assert element_exists?(html, "h2 a#sso-manage-config")
+
+        assert text_of_attr(html, "input#sso-idp-config_idp_signin_url", "value") ==
+                 "http://updated.example.com"
+
+        assert text_of_attr(html, "input#sso-idp-config_idp_entity_id", "value") == "zxc345"
+      end
+
+      test "add another domain", %{conn: conn, team: team} do
+        setup_integration(team, "org.example.com")
+
+        {lv, _html} = get_lv(conn)
+
+        lv |> element("form#show-domain-setup") |> render_submit()
+
+        lv
+        |> element("form#sso-add-domain")
+        |> render_submit(%{
+          domain: %{
+            domain: "new.example.com"
+          }
+        })
+
+        html = render(lv)
+        assert text(html) =~ "Verifying domain new.example.com"
+
+        lv |> element("form#show-manage") |> render_submit()
+
+        text = text(render(lv))
+        assert text =~ "org.example.com"
+        assert text =~ "new.example.com"
+      end
+
+      test "policy update", %{conn: conn, team: team} do
+        setup_integration(team, "org.example.com")
+        {lv, html} = get_lv(conn)
+
+        assert text_of_attr(
+                 html,
+                 ~s|#sso-policy_sso_default_role option[selected="selected"]|,
+                 "value"
+               ) == "viewer"
+
+        assert text_of_attr(html, ~s|#sso-policy_sso_session_timeout_minutes|, "value") == "360"
+
+        lv
+        |> element("form#sso-policy")
+        |> render_submit(%{
+          policy: %{
+            sso_default_role: "owner",
+            sso_session_timeout_minutes: "710"
+          }
+        })
+
+        html = render(lv)
+
+        assert text_of_attr(
+                 html,
+                 ~s|#sso-policy_sso_default_role option[selected="selected"]|,
+                 "value"
+               ) == "owner"
+
+        assert text_of_attr(html, ~s|#sso-policy_sso_session_timeout_minutes|, "value") == "710"
+      end
+
+      test "force SSO toggle", %{conn: conn, team: team, user: user} do
+        setup_integration(team, "org.example.com")
+        {_lv, html} = get_lv(conn)
+
+        assert element_exists?(html, "button#enable-force-sso-toggle[disabled]")
+
+        user
+        |> Ecto.Changeset.change(totp_enabled: true, totp_secret: "secret")
+        |> Plausible.Repo.update!()
+
+        identity = new_identity("Lance Wurst", "lance@org.example.com")
+        {:ok, _, _, _sso_user} = SSO.provision_user(identity)
+
+        {lv, html} = get_lv(conn)
+
+        refute element_exists?(html, "button#enable-force-sso-toggle[disabled]")
+
+        lv
+        |> element("#enable-force-sso-toggle")
+        |> render_click()
+
+        assert Plausible.Repo.reload(team).policy.force_sso == :all_but_owners
+      end
+
+      defp setup_integration(team, domain) do
+        integration = SSO.initiate_saml_integration(team)
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        {:ok, _integration} =
+          SSO.update_integration(integration, %{
+            idp_signin_url: "https://#{domain}",
+            idp_entity_id: "some-entity",
+            idp_cert_pem: @cert_pem
+          })
+      end
+
       defp get_lv(conn) do
         conn = assign(conn, :live_module, PlausibleWeb.Live.SSOManagement)
         {:ok, lv, html} = live(conn, Routes.sso_path(conn, :sso_settings))
         {lv, html}
+      end
+
+      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
+        %SSO.Identity{
+          id: id,
+          name: name,
+          email: email,
+          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
+        }
       end
     end
   end

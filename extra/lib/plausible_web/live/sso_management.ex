@@ -39,8 +39,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
         current_team={@current_team}
       />
 
-      <.saml_form_view
-        :if={@mode == :saml_form}
+      <.idp_form_view
+        :if={@mode == :idp_form}
         integration={@integration}
         config_changeset={@config_changeset}
       />
@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
   def init_view(assigns) do
     ~H"""
-    <form id="sso-init-form" for={} phx-submit="init-sso">
+    <form id="sso-init" for={} phx-submit="init-sso">
       <p class="text-sm">Click below to start setting up Single Sign-On for your team.</p>
 
       <.button type="submit">Start Configuring SSO</.button>
@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
         </ul>
       </div>
 
-      <form id="sso-saml-form" for={} phx-submit="show-saml-form">
+      <form id="sso-idp-form" for={} phx-submit="show-idp-form">
         <p class="text-sm">Click below to start setting up Single Sign-On for your team.</p>
 
         <.button type="submit">Start Configuring</.button>
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
     """
   end
 
-  def saml_form_view(assigns) do
+  def idp_form_view(assigns) do
     ~H"""
     <div class="flex-col space-y-6">
       <p class="text-sm">
@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
       <.form
         :let={f}
-        id="sso-sp-config-form"
+        id="sso-idp-config"
         for={@config_changeset}
         class="flex-col space-y-4"
         phx-submit="update-integration"
@@ -154,7 +154,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
       <.form
         :let={f}
-        id="sso-add-domain-form"
+        id="sso-add-domain"
         for={@domain_changeset}
         class="flex-col space-y-4"
         phx-submit="add-domain"
@@ -201,7 +201,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
         </li>
       </ul>
 
-      <form id="show-manage-form" for={} phx-submit="show-manage">
+      <form id="show-manage" for={} phx-submit="show-manage">
         <.button type="submit">Continue</.button>
       </form>
     </div>
@@ -254,16 +254,16 @@ defmodule PlausibleWeb.Live.SSOManagement do
             Current Identity Provider configuration:
           </p>
 
-          <.form :let={f} id="sso-sp-config-form" for={} class="flex-col space-y-4">
+          <.form :let={f} id="sso-idp-config" for={} class="flex-col space-y-4">
             <.input
-              name="idp_signin_url"
+              field={f[:idp_signin_url]}
               value={@integration.config.idp_signin_url}
               label="Sign-in URL"
               readonly={true}
             />
 
             <.input
-              name="idp_entity_id"
+              field={f[:idp_entity_id]}
               value={@integration.config.idp_entity_id}
               label="Entity ID"
               readonly={true}
@@ -278,7 +278,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
             />
           </.form>
 
-          <form id="show-saml-form" for={} phx-submit="show-saml-form">
+          <form id="show-idp-form" for={} phx-submit="show-idp-form">
             <.button type="submit">Edit</.button>
           </form>
         </div>
@@ -332,7 +332,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           </:tbody>
         </.table>
 
-        <form id="show-domain-form" for={} phx-submit="show-domain-form">
+        <form id="show-domain-setup" for={} phx-submit="show-domain-setup">
           <.button type="submit">Add Domain</.button>
         </form>
       </div>
@@ -360,6 +360,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           <div class="flex itemx-center mb-3">
             <PlausibleWeb.Components.Generic.toggle_switch
               id="enable-force-sso"
+              id_suffix="toggle"
               js_active_var="active"
               disabled={not @can_toggle_force_sso?}
               phx-click="toggle-force-sso"
@@ -380,7 +381,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       <div class="flex-col space-y-3">
         <.form
           :let={f}
-          id="sso-policy-form"
+          id="sso-policy"
           for={@policy_changeset}
           class="flex-col space-y-4"
           phx-submit="update-policy"
@@ -418,8 +419,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, socket}
   end
 
-  def handle_event("show-saml-form", _params, socket) do
-    {:noreply, route_mode(socket, :saml_form)}
+  def handle_event("show-idp-form", _params, socket) do
+    {:noreply, route_mode(socket, :idp_form)}
   end
 
   def handle_event("update-integration", params, socket) do
@@ -432,8 +433,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
           |> route_mode()
 
         {:error, changeset} ->
-          socket
-          |> assign(:config_changeset, changeset)
+          assign(socket, :config_changeset, changeset)
       end
 
     {:noreply, socket}
@@ -462,7 +462,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, route_mode(socket, :manage)}
   end
 
-  def handle_event("show-domain-form", _params, socket) do
+  def handle_event("show-domain-setup", _params, socket) do
     {:noreply, route_mode(socket, :domain_setup)}
   end
 
@@ -537,8 +537,11 @@ defmodule PlausibleWeb.Live.SSOManagement do
     socket =
       case SSO.update_policy(team, attrs) do
         {:ok, team} ->
+          policy_changeset = Teams.Policy.update_changeset(team.policy, %{})
+
           socket
           |> assign(:current_team, team)
+          |> assign(:policy_changeset, policy_changeset)
 
         {:error, changeset} ->
           socket
@@ -609,7 +612,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
     |> load(mode)
   end
 
-  defp load(socket, :saml_form) do
+  defp load(socket, :idp_form) do
     assign(
       socket,
       :config_changeset,

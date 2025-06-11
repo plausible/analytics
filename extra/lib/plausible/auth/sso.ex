@@ -112,10 +112,15 @@ defmodule Plausible.Auth.SSO do
     params = Map.new(attrs)
     policy_changeset = Teams.Policy.update_changeset(team.policy, params)
 
-    team
-    |> Ecto.Changeset.change()
-    |> Ecto.Changeset.put_embed(:policy, policy_changeset)
-    |> Repo.update()
+    changeset =
+      team
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.put_embed(:policy, policy_changeset)
+
+    case Repo.update(changeset) do
+      {:ok, integration} -> {:ok, integration}
+      {:error, changeset} -> {:error, changeset.changes.policy}
+    end
   end
 
   @spec set_force_sso(Teams.Team.t(), Teams.Policy.force_sso_mode()) ::

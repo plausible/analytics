@@ -88,8 +88,7 @@ defmodule Plausible.Auth.SSOTest do
         malformed_pem =
           @cert_pem
           |> String.split("\n")
-          |> Enum.map(&("   " <> &1 <> "   "))
-          |> Enum.join("\n\n")
+          |> Enum.map_join("\n\n", &("   " <> &1 <> "   "))
 
         team = new_site().team
         integration = SSO.initiate_saml_integration(team)
@@ -428,6 +427,18 @@ defmodule Plausible.Auth.SSOTest do
 
         assert team.policy.sso_default_role == :editor
         assert team.policy.sso_session_timeout_minutes == 360
+      end
+
+      test "returns changeset on invalid input" do
+        team = new_site().team
+
+        assert {:error, changeset} =
+                 SSO.update_policy(team, sso_session_timeout_minutes: "1024000005")
+
+        assert %{sso_session_timeout_minutes: [:number]} =
+                 Ecto.Changeset.traverse_errors(changeset, fn {_msg, opts} ->
+                   opts[:validation]
+                 end)
       end
     end
 
