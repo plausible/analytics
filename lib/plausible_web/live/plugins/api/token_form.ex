@@ -36,8 +36,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
        token: token,
        form: form,
        domain: domain,
-       rendered_by: pid,
-       tabs: %{custom_events: true, pageviews: false}
+       rendered_by: pid
      )}
   end
 
