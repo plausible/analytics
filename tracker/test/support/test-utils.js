@@ -44,7 +44,7 @@ export const mockRequest = function (page, path) {
  * @param {Array|Function} [args.shouldIgnoreRequest] - When provided, ignores certain requests
  * @param {number} [args.responseDelay] - When provided, delays the response from the Plausible
  *  API by the given number of milliseconds.
- *  @param {Function} [args.mockRequestTimeout] - How long to wait for the requests to be made
+ *  @param {number} [args.mockRequestTimeout] - How long to wait for the requests to be made
  */
 export const expectPlausibleInAction = async function (page, {
   action,

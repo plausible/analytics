@@ -32,11 +32,14 @@ for (const mode of ['legacy', 'web']) {
       })
       const { url } = await initializePageDynamically(page, {
         testId,
-        scriptConfig: switchByMode({
-          web: { ...DEFAULT_CONFIG, fileDownloads: true },
-          legacy:
-            '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.js"></script>'
-        }, mode),
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: true },
+            legacy:
+              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+          },
+          mode
+        ),
         bodyContent: `<a href="${filePath}">📥</a>`
       })
       await page.goto(url)
@@ -66,11 +69,14 @@ for (const mode of ['legacy', 'web']) {
       })
       const { url } = await initializePageDynamically(page, {
         testId,
-        scriptConfig: switchByMode({
-          web: { ...DEFAULT_CONFIG, fileDownloads: true },
-          legacy:
-            '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
-        }, mode),
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: true },
+            legacy:
+              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+          },
+          mode
+        ),
         bodyContent: `<a href="${pdfUrl}" target="__blank">📥</a>`
       })
       await page.goto(url)
@@ -103,11 +109,14 @@ for (const mode of ['legacy', 'web']) {
       })
       const { url } = await initializePageDynamically(page, {
         testId,
-        scriptConfig: switchByMode({
-          web: { ...DEFAULT_CONFIG, fileDownloads: true },
-          legacy:
-            '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
-        }, mode),
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: true },
+            legacy:
+              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+          },
+          mode
+        ),
         bodyContent: `<a href="${pdfUrl}">📥</a>`
       })
       await page.goto(url)
@@ -135,11 +144,14 @@ for (const mode of ['legacy', 'web']) {
       })
       const { url } = await initializePageDynamically(page, {
         testId,
-        scriptConfig: switchByMode({
-          web: { ...DEFAULT_CONFIG, fileDownloads: true },
-          legacy:
-            '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
-        }, mode),
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: true },
+            legacy:
+              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+          },
+          mode
+        ),
         bodyContent: `<a href="${pdfUrl}"><div><span>📥</span></div></a>`
       })
       await page.goto(url)
@@ -167,11 +179,14 @@ for (const mode of ['legacy', 'web']) {
       })
       const { url } = await initializePageDynamically(page, {
         testId,
-        scriptConfig: switchByMode({
-          web: { ...DEFAULT_CONFIG, fileDownloads: true },
-          legacy:
-            '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
-        }, mode),
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: true },
+            legacy:
+              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+          },
+          mode
+        ),
         bodyContent: `<a href="${pdfUrl}?user=foo%secret=123">Download PDF</a>`
       })
       await page.goto(url)
@@ -198,11 +213,14 @@ for (const mode of ['legacy', 'web']) {
       })
       const { url } = await initializePageDynamically(page, {
         testId,
-        scriptConfig: switchByMode({
-          web: { ...DEFAULT_CONFIG, fileDownloads: true },
-          legacy:
-            '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.js"></script>'
-        }, mode),
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: true },
+            legacy:
+              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+          },
+          mode
+        ),
         bodyContent: `<a href="https://example.com/file.iso">📥</a>`
       })
       await page.goto(url)
@@ -238,11 +256,14 @@ for (const mode of ['legacy', 'web']) {
 
       const { url } = await initializePageDynamically(page, {
         testId,
-        scriptConfig: switchByMode({
-          web: { ...DEFAULT_CONFIG, fileDownloads: ['iso'] },
-          legacy:
-            '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.js" file-types="iso"></script>'
-        }, mode),
+        scriptConfig: switchByMode(
+          {
+            web: { ...DEFAULT_CONFIG, fileDownloads: ['iso'] },
+            legacy:
+              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js" file-types="iso"></script>'
+          },
+          mode
+        ),
         bodyContent: `<a href="${isoFileURL}" target="__blank">📥</a><a href="${csvFileURL}" target="__blank">📥</a>`
       })
       await page.goto(url)
@@ -318,4 +339,62 @@ test.describe('file downloads feature edge cases (esm)', () => {
     })
     await expect(isoMock.getRequestList()).resolves.toHaveLength(1)
   })
+})
+
+test.describe('file downloads feature edge cases (legacy .compat extension)', () => {
+  for (const { caseName, fulfill } of [
+    {
+      caseName: 'if event sending is slow, starts exactly one download',
+      fulfill: {
+        status: 200,
+        contentType: 'text/plain',
+        body: 'ok'
+      }
+    },
+    {
+      caseName: 'if event sending fails, starts exactly one download',
+      fulfill: {
+        status: 400,
+        contentType: 'text/plain',
+        body: 'Bad Request'
+      }
+    }
+  ])
+    test(caseName, async ({ page }, { testId }) => {
+      const filePath = '/file.csv'
+      const downloadableFileMock = await mockManyRequests({
+        page,
+        path: `${LOCAL_SERVER_ADDR}${filePath}`,
+        fulfill: {
+          contentType: 'text/csv'
+        },
+        countOfRequestsToAwait: 2,
+        mockRequestTimeoutMs: 10000
+      })
+      const eventsApiMock = await mockManyRequests({
+        page,
+        path: '/api/event',
+        fulfill,
+        responseDelay: 3000,
+        countOfRequestsToAwait: 2,
+        mockRequestTimeoutMs: 7000
+      })
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig:
+          '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
+        bodyContent: `<a href="${filePath}">📥</a>`
+      })
+      await page.goto(url)
+      await page.click('a')
+
+      await Promise.all([
+        expect(eventsApiMock.getRequestList()).resolves.toEqual([
+          expect.objectContaining({
+            n: 'File Download'
+          })
+        ]),
+        expect(downloadableFileMock.getRequestList()).resolves.toHaveLength(1)
+      ])
+    })
 })
