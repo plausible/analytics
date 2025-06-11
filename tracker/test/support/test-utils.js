@@ -204,3 +204,14 @@ function checkEqual(a, b) {
 export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
+
+export function switchByMode(cases, mode) {
+  switch (mode) {
+    case 'web':
+      return cases.web
+    case 'legacy':
+      return cases.legacy
+    default:
+      throw new Error(`Unimplemented mode: ${mode}`)
+  }
+}
