@@ -293,7 +293,6 @@ defmodule PlausibleWeb.AuthController do
 
         conn
         |> TwoFactor.Session.set_2fa_user(user)
-        |> tap(&IO.inspect(get_session(&1)))
         |> redirect(to: Routes.auth_path(conn, :verify_2fa, query_params))
     end
   end
@@ -401,8 +400,6 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def verify_2fa_form(conn, _params) do
-    IO.inspect(get_session(conn))
-
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
@@ -619,9 +616,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp redirect_to_login(conn) do
-    redirect(conn,
-      to: Routes.auth_path(conn, :login_form) |> IO.inspect(label: :redirect_to_login)
-    )
+    redirect(conn, to: Routes.auth_path(conn, :login_form))
   end
 
   defp maybe_log_failed_login_attempts(message) do
