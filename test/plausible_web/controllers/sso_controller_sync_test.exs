@@ -1,15 +1,15 @@
 defmodule PlausibleWeb.SSOControllerSyncTest do
   use PlausibleWeb.ConnCase
 
-  use Plausible.Teams.Test
-
-  alias Plausible.Auth
-  alias Plausible.Auth.SSO
-  alias Plausible.Repo
-
   @moduletag :ee_only
 
   on_ee do
+    use Plausible.Teams.Test
+
+    alias Plausible.Auth
+    alias Plausible.Auth.SSO
+    alias Plausible.Repo
+
     describe "sso_enabled = false" do
       setup do
         patch_env(:sso_enabled, false)
