@@ -87,4 +87,4 @@ export type PlausibleRequestPayload = {
   $?: PlausibleEventRevenue,
   // Whether the event is interactive
   i?: boolean,
-} & Record<string, any>
+} & Record<string, unknown>
