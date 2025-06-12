@@ -1,7 +1,6 @@
 defmodule Plausible.Session.Salts do
   use GenServer
   use Plausible.Repo
-  require Logger
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: opts[:name] || __MODULE__)
