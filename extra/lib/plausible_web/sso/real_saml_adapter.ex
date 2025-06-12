@@ -45,7 +45,6 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
         conn
         |> Plug.Conn.configure_session(renew: true)
         |> set_cookie(
-          integration_id: integration.identifier,
           relay_state: relay_state,
           return_to: return_to
         )
@@ -63,6 +62,7 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
   end
 
   def consume(conn, _params) do
+    integration_id = conn.path_params["integration_id"]
     saml_response = conn.body_params["SAMLResponse"]
     relay_state = conn.body_params["RelayState"] |> safe_decode_www_form()
 
@@ -70,7 +70,7 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
       {:ok, cookie} ->
         conn
         |> clear_cookie()
-        |> consume(cookie, saml_response, relay_state)
+        |> consume(integration_id, cookie, saml_response, relay_state)
 
       {:error, :session_expired} ->
         Phoenix.Controller.redirect(conn,
@@ -79,13 +79,16 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
     end
   end
 
-  defp consume(conn, cookie, saml_response, relay_state) do
-    with {:ok, integration} <- SSO.get_integration(cookie.integration_id),
-         :ok <- validate_authresp(cookie, integration, relay_state),
-         {:ok, {root, assertion}} = SimpleSaml.parse_response(saml_response),
-         {:ok, cert} = X509.Certificate.from_pem(integration.config.idp_cert_pem),
+  @verify_opts if Mix.env() == :test, do: [skip_time_conditions?: true], else: []
+
+  defp consume(conn, integration_id, cookie, saml_response, relay_state) do
+    with {:ok, integration} <- SSO.get_integration(integration_id),
+         :ok <- validate_authresp(cookie, relay_state),
+         {:ok, {root, assertion}} <- SimpleSaml.parse_response(saml_response),
+         {:ok, cert} <- convert_pem_cert(integration.config.idp_cert_pem),
          public_key = X509.Certificate.public_key(cert),
-         :ok <- SimpleSaml.verify_and_validate_response(root, assertion, public_key),
+         :ok <-
+           SimpleSaml.verify_and_validate_response(root, assertion, public_key, @verify_opts),
          {:ok, attributes} <- extract_attributes(root) do
       session_timeout_minutes = integration.team.policy.sso_session_timeout_minutes
 
@@ -116,6 +119,13 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
   defp error_by_reason(:not_found), do: "Wrong email."
   defp error_by_reason(reason), do: "Authentication failed (reason: #{inspect(reason)})."
 
+  defp convert_pem_cert(cert) do
+    case X509.Certificate.from_pem(cert) do
+      {:ok, cert} -> {:ok, cert}
+      {:error, _} -> {:error, :malformed_certificate}
+    end
+  end
+
   defp name_from_attributes(attributes) do
     [attributes.first_name, attributes.last_name]
     |> Enum.reject(&is_nil/1)
@@ -131,16 +141,20 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
       found = get_attributes(attribute_nodes)
 
       attributes = %{
-        email: found["email"],
-        first_name: found["first_name"],
-        last_name: found["last_name"]
+        email: String.trim(found["email"] || ""),
+        first_name: String.trim(found["first_name"] || ""),
+        last_name: String.trim(found["last_name"] || "")
       }
 
       cond do
-        !attributes.email ->
+        attributes.email == "" ->
           {:error, :missing_email_attribute}
 
-        !attributes.first_name && !attributes.last_name ->
+        # very rudimentary way to check if the attribute is at least email-like
+        not String.contains?(attributes.email, "@") or String.length(attributes.email) < 3 ->
+          {:error, :invalid_email_attribute}
+
+        attributes.first_name == "" and attributes.last_name == "" ->
           {:error, :missing_name_attributes}
 
         true ->
@@ -177,19 +191,11 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
     )
   end
 
-  defp validate_authresp(cookie, integration, relay_state) do
-    cond do
-      cookie.relay_state == nil || cookie.relay_state != relay_state ->
-        {:error, :invalid_relay_state}
-
-      cookie.integration_id == nil || cookie.integration_id != integration.identifier ->
-        {:error, :invalid_integration_id}
-
-      cookie.return_to == nil ->
-        {:error, :invalid_return_to}
-
-      true ->
-        :ok
+  defp validate_authresp(cookie, relay_state) do
+    if relay_state != "" && cookie.relay_state == relay_state do
+      :ok
+    else
+      {:error, :invalid_relay_state}
     end
   end
 
@@ -197,9 +203,9 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
     24 |> :crypto.strong_rand_bytes() |> Base.url_encode64()
   end
 
-  defp set_cookie(conn, attrs) do
+  @doc false
+  def set_cookie(conn, attrs) do
     attrs = %{
-      integration_id: Keyword.fetch!(attrs, :integration_id),
       relay_state: Keyword.fetch!(attrs, :relay_state),
       return_to: Keyword.fetch!(attrs, :return_to)
     }
