@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
           phx-click-away="close-token-modal"
         >
           <%= if @token_generated do %>
-            <div :if={@token_generated} class="mt-4">
+            <div class="mt-4">
               <.input_with_clipboard
                 id="token-clipboard"
                 name="token_clipboard"
