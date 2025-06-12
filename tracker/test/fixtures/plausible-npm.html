@@ -19,7 +19,8 @@
 
   <a id="outbound-link" href="https://example.com">Outbound link</a>
 
-  <a id="manual-pageview" onclick="window.track('pageview', { u: '/:test-plausible' })">Manual pageview</a>
+  <a id="manual-pageview-1" onclick="window.track('pageview', { u: '/:test-plausible' })">Manual pageview</a>
+  <a id="manual-pageview-2" onclick="window.track('pageview', { url: '/:test-plausible-2' })">Manual pageview 2</a>
 
   <a id="custom-event" onclick="window.track('Custom event', { props: { author: 'Karl' } })">Custom event</a>
 

@@ -34,6 +34,13 @@ export interface PlausibleConfig {
   // Custom properties to add to all events tracked.
   // If passed as a function, it will be called when `track` is called.
   customProperties?: CustomProperties | ((eventName: string) => CustomProperties)
+
+  // A function that can be used to transform the payload before it is sent to the API.
+  // If the function returns null or any other falsy value, the event will be ignored.
+  //
+  // This can be used to avoid sending certain types of events, or modifying any event
+  // parameters, e.g. to clean URLs of values that should not be recorded.
+  transformRequest?: (payload: PlausibleRequestPayload) => PlausibleRequestPayload | null
 }
 
 export interface PlausibleEventOptions {
@@ -56,7 +63,7 @@ export interface PlausibleEventOptions {
 
   // Overrides the URL of the page that the event is being tracked on.
   // If not provided, `location.href` will be used.
-  u?: string
+  url?: string
 }
 
 export type CustomProperties = Record<string, string>
@@ -67,3 +74,20 @@ export type PlausibleEventRevenue = {
   // Currency is an ISO 4217 string representing the currency code, e.g. "USD" or "EUR"
   currency: string
 }
+
+export type PlausibleRequestPayload = {
+  // Event name
+  n: string,
+  // URL of the event
+  u: string,
+  // Domain of the event
+  d: string,
+  // Referrer
+  r?: string | null,
+  // Custom properties
+  p?: CustomProperties,
+  // Revenue information
+  $?: PlausibleEventRevenue,
+  // Whether the event is interactive
+  i?: boolean,
+} & Record<string, unknown>
