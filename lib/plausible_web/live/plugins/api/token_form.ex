@@ -62,7 +62,6 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
                 name="token_clipboard"
                 label="Plugin Token"
                 value={@token.raw}
-                onfocus="this.value = this.value;"
               />
             </div>
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
