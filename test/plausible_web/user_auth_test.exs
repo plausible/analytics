@@ -76,7 +76,7 @@ defmodule PlausibleWeb.UserAuthTest do
         conn: conn,
         user: user
       } do
-        team = new_site(owner: user).team
+        team = new_site(owner: user).team |> Plausible.Teams.complete_setup()
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
@@ -189,12 +189,12 @@ defmodule PlausibleWeb.UserAuthTest do
              conn: conn,
              user: user
            } do
-        team = new_site().team
+        team = new_site().team |> Plausible.Teams.complete_setup()
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
         add_member(team, user: user, role: :editor)
-        another_team = new_site().team
+        another_team = new_site().team |> Plausible.Teams.complete_setup()
         add_member(another_team, user: user, role: :viewer)
 
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)

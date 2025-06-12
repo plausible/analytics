@@ -569,6 +569,52 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute get_session(conn, :user_token)
     end
 
+    on_ee do
+      test "SSO owner user - logs in", %{conn: conn} do
+        owner = new_user(name: "Jane Shelley", email: "jane@example.com", password: "password")
+        team = new_site(owner: owner).team
+        team = Plausible.Teams.complete_setup(team)
+
+        # Setup SSO
+        integration = Auth.SSO.initiate_saml_integration(team)
+
+        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
+        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(owner.name, owner.email)
+        {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
+
+        conn = post(conn, "/login", email: owner.email, password: "password")
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        assert conn.resp_cookies["session_2fa"].max_age == 0
+        assert %{sessions: [%{token: token}]} = owner |> Repo.reload!() |> Repo.preload(:sessions)
+        assert get_session(conn, :user_token) == token
+      end
+
+      test "SSO user other than owner - renders login form again", %{conn: conn} do
+        owner = new_user()
+        team = new_site(owner: owner).team
+        member = new_user(name: "Jane Shelley", email: "jane@example.com", password: "password")
+        add_member(team, user: member, role: :viewer)
+
+        # Setup SSO
+        integration = Auth.SSO.initiate_saml_integration(team)
+
+        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
+        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(member.name, member.email)
+        {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
+
+        conn = post(conn, "/login", email: member.email, password: "password")
+
+        assert get_session(conn, :user_token) == nil
+        assert html_response(conn, 200) =~ "Enter your account credentials"
+      end
+    end
+
     test "email does not exist - renders login form again", %{conn: conn} do
       conn = post(conn, "/login", email: "user@example.com", password: "password")
 

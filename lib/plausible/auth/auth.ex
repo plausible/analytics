@@ -57,9 +57,24 @@ defmodule Plausible.Auth do
     Repo.get_by(Auth.User, opts)
   end
 
-  @spec get_user_by(Keyword.t()) :: {:ok, Auth.User.t()} | {:error, :user_not_found}
-  def get_user_by(opts) do
-    case Repo.get_by(Auth.User, opts) do
+  @spec lookup(String.t()) :: {:ok, Auth.User.t()} | {:error, :user_not_found}
+  def lookup(email) do
+    query =
+      on_ee do
+        from(
+          u in Auth.User,
+          left_join: tm in assoc(u, :team_memberships),
+          left_join: t in assoc(tm, :team),
+          where: u.email == ^email,
+          where:
+            u.type == :standard or
+              (u.type == :sso and tm.role == :owner and t.setup_complete == true)
+        )
+      else
+        from(u in Auth.User, where: u.email == ^email)
+      end
+
+    case Repo.one(query) do
       %Auth.User{} = user -> {:ok, user}
       nil -> {:error, :user_not_found}
     end

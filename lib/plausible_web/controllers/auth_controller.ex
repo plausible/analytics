@@ -234,7 +234,7 @@ defmodule PlausibleWeb.AuthController do
 
   def login(conn, %{"email" => email, "password" => password} = params) do
     with :ok <- Auth.rate_limit(:login_ip, conn),
-         {:ok, user} <- Auth.get_user_by(email: email),
+         {:ok, user} <- Auth.lookup(email),
          :ok <- Auth.rate_limit(:login_user, user),
          :ok <- Auth.check_password(user, password),
          :ok <- check_2fa_verified(conn, user) do
