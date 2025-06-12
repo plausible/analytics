@@ -15,14 +15,14 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
     describe "unauthenticated" do
       test "not allowed if not logged in", %{conn: conn} do
         conn = get(conn, @cs_index)
-        assert response(conn, 403) == "Not allowed"
+        assert redirected_to(conn, 302) == "/login"
       end
     end
 
     describe "authenticated regular user" do
       test "not allowed if not superadmin", %{conn: conn} do
         conn = get(conn, @cs_index)
-        assert response(conn, 403) == "Not allowed"
+        assert redirected_to(conn, 302) == "/login"
       end
     end
 

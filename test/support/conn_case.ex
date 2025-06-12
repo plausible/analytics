@@ -42,6 +42,7 @@ defmodule PlausibleWeb.ConnCase do
     # rate limiting during tests
     conn =
       Phoenix.ConnTest.build_conn()
+      |> Plug.Conn.put_private(:phoenix_endpoint, PlausibleWeb.Endpoint)
       |> Map.put(:secret_key_base, secret_key_base())
       |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
 
