@@ -36,7 +36,10 @@ export interface PlausibleConfig {
   customProperties?: CustomProperties | ((eventName: string) => CustomProperties)
 
   // A function that can be used to transform the payload before it is sent to the API.
-  // If the function returns null, the event will be ignored.
+  // If the function returns null or any other falsy value, the event will be ignored.
+  //
+  // This can be used to avoid sending certain types of events, or modifying any event
+  // parameters, e.g. to clean URLs of values that should not be recorded.
   transformRequest?: (payload: PlausibleRequestPayload) => PlausibleRequestPayload | null
 }
 
