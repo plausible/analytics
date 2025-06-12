@@ -275,5 +275,30 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
         ]
       })
     })
+
+    test('transformRequest props are sent with engagement events', async ({ page }) => {
+      const transformRequest = (payload) => {
+        payload.p = payload.p || {}
+
+        window.requestCount = (window.requestCount || 0) + 1
+        payload.p.requestCount = window.requestCount
+
+        return payload
+      }
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await openPage(page, {}, { skipPlausibleInit: true })
+          await initPlausible(page, { transformRequest })
+          await page.click('#custom-event')
+          await hideAndShowCurrentTab(page, { delay: 200 })
+        },
+        expectedRequests: [
+          { n: 'pageview', p: { requestCount: 1 } },
+          { n: 'Custom event', p: { author: 'Karl', requestCount: 2 } },
+          { n: 'engagement', p: { requestCount: 1 } }
+        ]
+      })
+    })
   })
 }
