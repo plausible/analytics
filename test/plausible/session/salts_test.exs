@@ -47,7 +47,7 @@ defmodule Plausible.Session.SaltsTest do
     assert count == 2
   end
 
-  test "salts refresh when another node roates them" do
+  test "salts refresh when another node rotates them" do
     t1 = ~U[2024-06-10 15:29:40Z]
     {:ok, _} = Salts.start_link(name: :node_1, now: t1)
     {:ok, _} = Salts.start_link(name: :node_2, now: t1)
