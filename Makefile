@@ -63,7 +63,7 @@ sso:
   -p 8080:8080 \
   -e SIMPLESAMLPHP_SP_ENTITY_ID=http://localhost:8000/sso/$(integration_id) \
   -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=http://localhost:8000/sso/saml/consume/$(integration_id) \
-  -v $$PWD/extra/fixtures/authsources.php:/var/www/simplesamlphp/config/authsources.php -d kenchan0130/simplesamlphp
+  -v $$PWD/extra/fixture/authsources.php:/var/www/simplesamlphp/config/authsources.php -d kenchan0130/simplesamlphp
 
 	@sleep 2
 

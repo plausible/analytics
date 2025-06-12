@@ -228,10 +228,10 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
       end
     end
 
-    @assertion File.read!("extra/fixtures/assertion.base64")
-    @assertion_missing_email File.read!("extra/fixtures/assertion_missing_email.base64")
-    @assertion_invalid_email File.read!("extra/fixtures/assertion_invalid_email.base64")
-    @assertion_missing_name File.read!("extra/fixtures/assertion_missing_name.base64")
+    @assertion File.read!("extra/fixture/assertion.base64")
+    @assertion_missing_email File.read!("extra/fixture/assertion_missing_email.base64")
+    @assertion_invalid_email File.read!("extra/fixture/assertion_invalid_email.base64")
+    @assertion_missing_name File.read!("extra/fixture/assertion_missing_name.base64")
 
     describe "saml_consume/2 (real SAML)" do
       setup %{conn: conn} do
