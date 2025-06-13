@@ -122,6 +122,8 @@ defmodule Plausible.MixProject do
       {:ref_inspector, "~> 2.0"},
       {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
       {:sentry, "~> 10.8.1"},
+      {:simple_saml, git: "https://github.com/zoldar/simple_saml.git", branch: "zoldar/ns-fix"},
+      {:xml_builder, "~> 2.1"},
       {:siphash, "~> 3.2"},
       {:timex, "~> 3.7"},
       {:ua_inspector,
