@@ -27,6 +27,22 @@ config :plausible, PlausibleWeb.Endpoint,
     ]
   ]
 
+config :plausible, PlausibleWeb.InternalEndpoint,
+  server: true,
+  debug_errors: true,
+  code_reloader: true,
+  check_origin: false,
+  live_reload: [
+    dirs: [
+      "extra"
+    ],
+    patterns: [
+      ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
+      ~r"lib/plausible_web/(controllers|live|components|templates|views|plugs)/.*(ex|heex)$",
+      ~r"storybook/.*(exs)$"
+    ]
+  ]
+
 config :plausible, paddle_api: Plausible.Billing.DevPaddleApiMock
 
 config :phoenix, :stacktrace_depth, 20
