@@ -18,14 +18,6 @@ export const mockRequest = function (page, path) {
   })
 }
 
-export const metaKey = function() {
-  if (process.platform === 'darwin') {
-    return 'Meta'
-  } else {
-    return 'Control'
-  }
-}
-
 /**
  * A powerful utility function that makes it easy to assert on the event
  * requests that should or should not have been made after doing a page
@@ -52,7 +44,7 @@ export const metaKey = function() {
  * @param {Array|Function} [args.shouldIgnoreRequest] - When provided, ignores certain requests
  * @param {number} [args.responseDelay] - When provided, delays the response from the Plausible
  *  API by the given number of milliseconds.
- *  @param {Function} [args.mockRequestTimeout] - How long to wait for the requests to be made
+ *  @param {number} [args.mockRequestTimeout] - How long to wait for the requests to be made
  */
 export const expectPlausibleInAction = async function (page, {
   action,
@@ -68,13 +60,14 @@ export const expectPlausibleInAction = async function (page, {
   const requestsToExpect = expectedRequestCount ? expectedRequestCount : expectedRequests.length
   const requestsToAwait = awaitedRequestCount ? awaitedRequestCount : requestsToExpect + refutedRequests.length
 
-  const getRequestList = await mockManyRequests({
+  const { getRequestList } = await mockManyRequests({
     page,
     path: pathToMock,
+    fulfill: { status: 202, contentType: 'text/plain', body: 'ok' },
     responseDelay,
     shouldIgnoreRequest,
-    numberOfRequests: requestsToAwait,
-    mockRequestTimeout: mockRequestTimeout
+    countOfRequestsToAwait: requestsToAwait,
+    mockRequestTimeoutMs: mockRequestTimeout
   })
   await action()
   const requestBodies = await getRequestList()
@@ -208,6 +201,17 @@ function checkEqual(a, b) {
   return a === b
 }
 
-function delay(ms) {
+export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+export function switchByMode(cases, mode) {
+  switch (mode) {
+    case 'web':
+      return cases.web
+    case 'legacy':
+      return cases.legacy
+    default:
+      throw new Error(`Unimplemented mode: ${mode}`)
+  }
 }

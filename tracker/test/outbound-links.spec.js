@@ -1,4 +1,4 @@
-import { mockRequest, metaKey, expectPlausibleInAction } from './support/test-utils'
+import { mockRequest, expectPlausibleInAction } from './support/test-utils'
 import { expect, test } from '@playwright/test'
 
 test.describe('outbound-links extension', () => {
@@ -9,7 +9,7 @@ test.describe('outbound-links extension', () => {
     const navigationRequestMock = mockRequest(page, outboundURL)
 
     await expectPlausibleInAction(page, {
-      action: () => page.click('#link', { modifiers: [metaKey()] }),
+      action: () => page.click('#link', { modifiers: ['ControlOrMeta'] }),
       expectedRequests: [{n: 'Outbound Link: Click', p: { url: outboundURL }}]
     })
 
