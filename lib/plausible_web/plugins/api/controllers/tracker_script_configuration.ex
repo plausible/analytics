@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.TrackerScriptConfiguration do
   @spec get(Plug.Conn.t(), %{}) :: Plug.Conn.t()
   def get(conn, _params) do
     site = conn.assigns.authorized_site
-    configuration = PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site.id)
+    configuration = PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(site)
 
     conn
     |> put_view(Views.TrackerScriptConfiguration)
