@@ -40,10 +40,11 @@ provider "checkly" {
 }
 
 resource "checkly_check" "plausible-io-api-health" {
-  name      = "Check plausible.io/api/health"
-  type      = "API"
-  activated = true
-  frequency = 1
+  name             = "Check plausible.io/api/health"
+  type             = "API"
+  activated        = true
+  frequency        = 0
+  frequency_offset = 30
 
   group_id = checkly_check_group.reachability.id
 
@@ -83,10 +84,11 @@ resource "checkly_check" "plausible-io-api-health" {
 }
 
 resource "checkly_check" "plausible-io-lb-health" {
-  name      = "Check ingress.lb.plausible.io/api/health"
-  type      = "API"
-  activated = true
-  frequency = 1
+  name             = "Check ingress.lb.plausible.io/api/health"
+  type             = "API"
+  activated        = true
+  frequency        = 0
+  frequency_offset = 30
 
   group_id = checkly_check_group.reachability.id
 
@@ -159,10 +161,11 @@ resource "checkly_check" "websocket-plausible-io--health" {
 }
 
 resource "checkly_check" "plausible-io-ingestion" {
-  name      = "Check plausible.io/api/event"
-  type      = "API"
-  activated = true
-  frequency = 1
+  name             = "Check plausible.io/api/event"
+  type             = "API"
+  activated        = true
+  frequency        = 0
+  frequency_offset = 30
 
   group_id = checkly_check_group.reachability.id
 
@@ -244,11 +247,12 @@ resource "checkly_check" "plausible-io-tracker-script" {
 }
 
 resource "checkly_check" "ingest-plausible-io-ingestion" {
-  name      = "Check ingest.plausible.io/api/event"
-  type      = "API"
-  activated = true
-  frequency = 1
-  group_id  = checkly_check_group.reachability.id
+  name             = "Check ingest.plausible.io/api/event"
+  type             = "API"
+  activated        = true
+  frequency        = 0
+  frequency_offset = 30
+  group_id         = checkly_check_group.reachability.id
 
   retry_strategy {
     type        = "FIXED"
