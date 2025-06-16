@@ -1,5 +1,11 @@
 .PHONY: help install server clickhouse clickhouse-prod clickhouse-stop postgres postgres-client postgres-prod postgres-stop
 
+require = \
+	  $(foreach 1,$1,$(__require))
+__require = \
+	    $(if $(value $1),, \
+	    $(error Provide required parameter: $1$(if $(value 2), ($(strip $2)))))
+
 help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
@@ -56,6 +62,36 @@ minio: ## Start a transient container with a recent version of minio (s3)
 
 minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
+
+sso:
+	$(call require, integration_id)
+	@echo "Setting up local IdP service..."
+	@docker run --name=idp \
+  -p 8080:8080 \
+  -e SIMPLESAMLPHP_SP_ENTITY_ID=http://localhost:8000/sso/$(integration_id) \
+  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=http://localhost:8000/sso/saml/consume/$(integration_id) \
+  -v $$PWD/extra/fixture/authsources.php:/var/www/simplesamlphp/config/authsources.php -d kenchan0130/simplesamlphp
+
+	@sleep 2
+
+	@echo "Use the following IdP configuration:" 
+	@echo ""
+	@echo "Sign-in URL: http://localhost:8080/simplesaml/saml2/idp/SSOService.php"
+	@echo ""
+	@echo "Entity ID: http://localhost:8080/simplesaml/saml2/idp/metadata.php"
+	@echo ""
+	@echo "PEM Certificate:"
+	@curl http://localhost:8080/simplesaml/module.php/saml/idp/certs.php/idp.crt 2>/dev/null
+	@echo ""
+	@echo ""
+	@echo "Following accounts are configured:"
+	@echo "- user@plausible.test / plausible"
+	@echo "- user1@plausible.test / plausible"
+	@echo "- user2@plausible.test / plausible"
+	
+sso-stop:
+	docker stop idp
+	docker remove idp
 
 loadtest-server:
 	@echo "Ensure your OTP installation is built with --enable-lock-counter"
