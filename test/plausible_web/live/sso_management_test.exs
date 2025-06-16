@@ -277,15 +277,6 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         {:ok, lv, html} = live(conn, Routes.sso_path(conn, :sso_settings))
         {lv, html}
       end
-
-      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
-        %SSO.Identity{
-          id: id,
-          name: name,
-          email: email,
-          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
-        }
-      end
     end
   end
 end

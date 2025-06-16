@@ -1,5 +1,6 @@
 defmodule Plausible.TestUtils do
   use Plausible.Repo
+  use Plausible
   alias Plausible.Factory
 
   defmacro __using__(_) do
@@ -327,5 +328,16 @@ defmodule Plausible.TestUtils do
     File.mkdir_p!(tmp_dir)
     ExUnit.Callbacks.on_exit(fn -> File.rm_rf!(tmp_dir) end)
     tmp_dir
+  end
+
+  on_ee do
+    def new_identity(name, email, id \\ Ecto.UUID.generate()) do
+      %Plausible.Auth.SSO.Identity{
+        id: id,
+        name: name,
+        email: email,
+        expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
+      }
+    end
   end
 end

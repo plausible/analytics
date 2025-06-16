@@ -820,14 +820,5 @@ defmodule Plausible.Auth.SSOTest do
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
       end
     end
-
-    defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
-      %SSO.Identity{
-        id: id,
-        name: name,
-        email: email,
-        expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
-      }
-    end
   end
 end

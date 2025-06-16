@@ -210,15 +210,6 @@ defmodule PlausibleWeb.UserAuthTest do
         assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
         assert get_session(conn, :user_token)
       end
-
-      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
-        %SSO.Identity{
-          id: id,
-          name: name,
-          email: email,
-          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
-        }
-      end
     end
   end
 
