@@ -798,7 +798,7 @@ cloud_queues = [
   lock_sites: 1,
   legacy_time_on_page_cutoff: 1,
   purge_cdn_cache: 1,
-  sso_domain_validations: 32
+  sso_domain_ownership_verification: 32
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)

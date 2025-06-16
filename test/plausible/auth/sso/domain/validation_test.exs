@@ -1,4 +1,4 @@
-defmodule Plausible.Auth.SSO.Domain.ValidationTest do
+defmodule Plausible.Auth.SSO.Domain.VerificationTest do
   use Plausible.DataCase, async: true
   use Plausible
 
@@ -8,7 +8,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
     use Plausible.Teams.Test
 
     alias Plasusible.Test.Support.DNSServer
-    alias Plausible.Auth.SSO.Domain.Validation
+    alias Plausible.Auth.SSO.Domain.Verification
     alias Plug.Conn
 
     setup do
@@ -22,11 +22,11 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
       test "dns_txt" do
         {:ok, port} = DNSServer.start("plausible-sso-verification=ex4mpl3")
 
-        refute Validation.dns_txt("example.com", "failing-identifier",
+        refute Verification.dns_txt("example.com", "failing-identifier",
                  nameservers: [{{0, 0, 0, 0}, port}]
                )
 
-        assert Validation.dns_txt("example.com", "ex4mpl3", nameservers: [{{0, 0, 0, 0}, port}])
+        assert Verification.dns_txt("example.com", "ex4mpl3", nameservers: [{{0, 0, 0, 0}, port}])
       end
 
       test "url", %{bypass: bypass} do
@@ -34,11 +34,11 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
           Conn.resp(conn, 200, "ex4mpl3")
         end)
 
-        refute Validation.url("example.com", "failing-identifier",
+        refute Verification.url("example.com", "failing-identifier",
                  url_override: "http://localhost:#{bypass.port}/test"
                )
 
-        assert Validation.url("example.com", "ex4mpl3",
+        assert Verification.url("example.com", "ex4mpl3",
                  url_override: "http://localhost:#{bypass.port}/test"
                )
       end
@@ -54,11 +54,11 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
           """)
         end)
 
-        refute Validation.meta_tag("example.com", "failing-identifier",
+        refute Verification.meta_tag("example.com", "failing-identifier",
                  url_override: "http://localhost:#{bypass.port}/test"
                )
 
-        assert Validation.meta_tag("example.com", "ex4mpl3",
+        assert Verification.meta_tag("example.com", "ex4mpl3",
                  url_override: "http://localhost:#{bypass.port}/test"
                )
       end
@@ -72,7 +72,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
           """)
         end)
 
-        refute Validation.meta_tag("example.com", "ex4mpl3",
+        refute Verification.meta_tag("example.com", "ex4mpl3",
                  url_override: "http://localhost:#{bypass.port}/test"
                )
       end
@@ -86,7 +86,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
           """)
         end)
 
-        refute Validation.meta_tag("example.com", "ex4mpl3",
+        refute Verification.meta_tag("example.com", "ex4mpl3",
                  url_override: "http://localhost:#{bypass.port}/test"
                )
       end
@@ -103,7 +103,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
           """)
         end)
 
-        assert Validation.meta_tag("example.com", "ex4mpl3",
+        assert Verification.meta_tag("example.com", "ex4mpl3",
                  url_override: "http://localhost:#{bypass.port}/test"
                )
       end
@@ -116,7 +116,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
         Bypass.stub(bypass, "GET", "/", fn _conn -> raise "should never be called" end)
 
         assert {:ok, :dns_txt} =
-                 Validation.run("example.com", "ex4mpl3",
+                 Verification.run("example.com", "ex4mpl3",
                    url_override: "http://localhost:#{bypass.port}/",
                    nameservers: [{{0, 0, 0, 0}, dns_port}]
                  )
@@ -128,7 +128,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
         end)
 
         assert {:ok, :url} =
-                 Validation.run("example.com", "ex4mpl3",
+                 Verification.run("example.com", "ex4mpl3",
                    url_override: "http://localhost:#{bypass.port}/"
                  )
       end
@@ -144,7 +144,7 @@ defmodule Plausible.Auth.SSO.Domain.ValidationTest do
         end)
 
         assert {:ok, :meta_tag} =
-                 Validation.run("example.com", "ex4mpl3",
+                 Verification.run("example.com", "ex4mpl3",
                    url_override: "http://localhost:#{bypass.port}/"
                  )
       end
