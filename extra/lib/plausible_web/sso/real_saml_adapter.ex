@@ -12,8 +12,7 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
   @cookie_name "session_saml"
   @cookie_seconds 10 * 60
 
-  def signin(conn, params) do
-    integration_id = params["integration_id"]
+  def signin(conn, %{"integration_id" => integration_id} = params) do
     email = params["email"]
     return_to = params["return_to"]
 
