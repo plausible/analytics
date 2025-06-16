@@ -106,12 +106,12 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         domain = generate_domain()
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
 
-        cerified_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        verified_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        assert cerified_domain.id == sso_domain.id
-        assert cerified_domain.verified_via == :dns_txt
-        assert cerified_domain.status == :verified
-        assert cerified_domain.last_verified_at
+        assert verified_domain.id == sso_domain.id
+        assert verified_domain.verified_via == :dns_txt
+        assert verified_domain.status == :verified
+        assert verified_domain.last_verified_at
       end
 
       test "does mark domain as in progress, when no skip flag passed", %{
@@ -120,12 +120,12 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         domain = generate_domain()
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
 
-        incerified_domain = SSO.Domains.verify(sso_domain, verification_opts: [methods: []])
+        unverified_domain = SSO.Domains.verify(sso_domain, verification_opts: [methods: []])
 
-        assert incerified_domain.id == sso_domain.id
-        refute incerified_domain.verified_via
-        assert incerified_domain.status == :in_progress
-        assert incerified_domain.last_verified_at
+        assert unverified_domain.id == sso_domain.id
+        refute unverified_domain.verified_via
+        assert unverified_domain.status == :in_progress
+        assert unverified_domain.last_verified_at
       end
     end
 
