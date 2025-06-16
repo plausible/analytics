@@ -446,7 +446,9 @@ defmodule Plausible.Auth.SSOTest do
     describe "check_force_sso/2" do
       test "returns ok when conditions are met for setting all_but_owners" do
         # Owner with MFA enabled
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -465,7 +467,9 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error when one owner does not have MFA configured" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Owner without MFA
@@ -489,7 +493,9 @@ defmodule Plausible.Auth.SSOTest do
 
       test "returns error when there's no provisioned SSO user present" do
         # Owner with MFA enabled
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -504,7 +510,9 @@ defmodule Plausible.Auth.SSOTest do
 
       test "returns error when there's no verified SSO domain present" do
         # Owner with MFA enabled
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -519,7 +527,9 @@ defmodule Plausible.Auth.SSOTest do
 
       test "returns error when there's no SSO domain present" do
         # Owner with MFA enabled
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -530,7 +540,9 @@ defmodule Plausible.Auth.SSOTest do
 
       test "returns error when there's no SSO integration present" do
         # Owner with MFA enabled
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         assert {:error, :no_integration} = SSO.check_force_sso(team, :all_but_owners)
@@ -545,7 +557,9 @@ defmodule Plausible.Auth.SSOTest do
 
     describe "set_enforce_sso/2" do
       test "sets enforce mode to all_but_owners when conditions met" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -573,7 +587,9 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "sets enforce mode to none" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -599,7 +615,9 @@ defmodule Plausible.Auth.SSOTest do
 
     describe "check_can_remove_integration/1" do
       test "returns ok if conditions to remove integration met" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -622,7 +640,9 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error if force SSO enabled" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -648,7 +668,9 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error if SSO user present" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -670,7 +692,9 @@ defmodule Plausible.Auth.SSOTest do
 
     describe "remove_integration/1,2" do
       test "removes integration when conditions met" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -696,7 +720,9 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "returns error when conditions not met" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration
@@ -719,7 +745,9 @@ defmodule Plausible.Auth.SSOTest do
       end
 
       test "succeeds when SSO user present and force flag set" do
-        owner = new_user(totp_enabled: true, totp_secret: "secret")
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
         team = new_site(owner: owner).team
 
         # Setup integration

@@ -9,11 +9,15 @@ defmodule Plausible.Auth.SSO.DomainsTest do
     use Plausible.Auth.SSO.Domain.Status
     use Oban.Testing, repo: Plausible.Repo
 
+    alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Teams
 
     setup do
-      owner = new_user(totp_enabled: true, totp_secret: "secret")
+      owner = new_user()
+      {:ok, owner, _} = Auth.TOTP.initiate(owner)
+      {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
+
       team = new_site(owner: owner).team
 
       integration = SSO.initiate_saml_integration(team)
