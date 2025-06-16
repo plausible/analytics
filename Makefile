@@ -1,5 +1,11 @@
 .PHONY: help install server clickhouse clickhouse-prod clickhouse-stop postgres postgres-client postgres-prod postgres-stop
 
+require = \
+	$(foreach 1,$1,$(__require))
+__require = \
+	  $(if $(value $1),, \
+	  $(error Provide required parameter: $1$(if $(value 2), ($(strip $2)))))
+
 help:
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
@@ -58,12 +64,13 @@ minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
 
 sso:
+	$(call require, integration_id)
 	@echo "Setting up local IdP service..."
 	@docker run --name=idp \
-  -p 8080:8080 \
-  -e SIMPLESAMLPHP_SP_ENTITY_ID=http://localhost:8000/sso/$(integration_id) \
-  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=http://localhost:8000/sso/saml/consume/$(integration_id) \
-  -v $$PWD/extra/fixtures/authsources.php:/var/www/simplesamlphp/config/authsources.php -d kenchan0130/simplesamlphp
+	  -p 8080:8080 \
+	  -e SIMPLESAMLPHP_SP_ENTITY_ID=http://localhost:8000/sso/$(integration_id) \
+	  -e SIMPLESAMLPHP_SP_ASSERTION_CONSUMER_SERVICE=http://localhost:8000/sso/saml/consume/$(integration_id) \
+	  -v $$PWD/extra/fixtures/authsources.php:/var/www/simplesamlphp/config/authsources.php -d kenchan0130/simplesamlphp
 
 	@sleep 2
 
