@@ -131,7 +131,7 @@ defmodule Plausible.Auth.SSO.Domains do
     end
   end
 
-  @spec mark_validated!(SSO.Domain.t(), SSO.Domain.validation_method(), DateTime.t()) ::
+  @spec mark_validated!(SSO.Domain.t(), SSO.Domain.validation_method(), NaiveDateTime.t()) ::
           SSO.Domain.t()
   def mark_validated!(sso_domain, method, now \\ NaiveDateTime.utc_now(:second)) do
     sso_domain
@@ -139,7 +139,7 @@ defmodule Plausible.Auth.SSO.Domains do
     |> Repo.update!()
   end
 
-  @spec mark_invalid!(SSO.Domain.t(), atom(), DateTime.t()) :: SSO.Domain.t()
+  @spec mark_invalid!(SSO.Domain.t(), atom(), NaiveDateTime.t()) :: SSO.Domain.t()
   def mark_invalid!(sso_domain, status, now \\ NaiveDateTime.utc_now(:second)) do
     sso_domain
     |> SSO.Domain.invalid_changeset(now, status)
