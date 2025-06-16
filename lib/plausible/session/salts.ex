@@ -42,7 +42,8 @@ defmodule Plausible.Session.Salts do
       end
 
     true = :ets.insert(name, {:state, state})
-    Process.send_after(self(), {:refresh, now}, :timer.seconds(90))
+    interval = Application.get_env(:plausible, __MODULE__)[:interval] || :timer.seconds(90)
+    Process.send_after(self(), {:refresh, now}, interval)
     :ok
   end
 
