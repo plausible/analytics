@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.2] - 2025-06-16
+
 - Support for `config.transformRequest`
 - Support for passing `url` as option when calling `track`
 - Drop support for `meta` argument.
