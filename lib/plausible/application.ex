@@ -138,9 +138,9 @@ defmodule Plausible.Application do
             warmers: [
               refresh_all:
                 {PlausibleWeb.TrackerScriptCache.All,
-                 interval: :timer.minutes(60) + Enum.random(1..:timer.seconds(10))},
+                 interval: :timer.minutes(180) + Enum.random(1..:timer.seconds(10))},
               refresh_updated_recently:
-                {PlausibleWeb.TrackerScriptCache.RecentlyUpdated, interval: :timer.seconds(60)}
+                {PlausibleWeb.TrackerScriptCache.RecentlyUpdated, interval: :timer.seconds(120)}
             ]
           )
         end,
