@@ -6,22 +6,10 @@ defmodule PlausibleWeb.Dogfood do
   def script_params(assigns) do
     %{
       script_url: script_url(assigns),
-      api_destination: api_destination(),
       location_override: location_override(assigns),
       custom_properties: custom_properties(assigns),
       capture_on_localhost: Application.get_env(:plausible, :environment) == "dev"
     }
-  end
-
-  defp api_destination() do
-    # Temporary override to do more testing of the new ingest.plausible.io endpoint
-    # for accepting events. In staging and locally will fall back to
-    # staging.plausible.io/api/event and localhost:8000/api/event respectively.
-    if Application.get_env(:plausible, :environment) == "prod" do
-      "https://ingest.plausible.io/api/event"
-    else
-      "#{PlausibleWeb.Endpoint.url()}/api/event"
-    end
   end
 
   defp script_url(assigns) do
