@@ -194,7 +194,7 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
        when byte_size(relay_state) == 32 do
     :ok
   end
-  
+
   defp validate_authresp(_, _), do: {:error, :invalid_relay_state}
 
   defp gen_id() do
