@@ -190,13 +190,12 @@ defmodule PlausibleWeb.SSO.RealSAMLAdapter do
     )
   end
 
-  defp validate_authresp(cookie, relay_state) do
-    if relay_state != "" && cookie.relay_state == relay_state do
-      :ok
-    else
-      {:error, :invalid_relay_state}
-    end
+  defp validate_authresp(%{relay_state: relay_state}, relay_state)
+       when byte_size(relay_state) == 32 do
+    :ok
   end
+  
+  defp validate_authresp(_, _), do: {:error, :invalid_relay_state}
 
   defp gen_id() do
     24 |> :crypto.strong_rand_bytes() |> Base.url_encode64()
