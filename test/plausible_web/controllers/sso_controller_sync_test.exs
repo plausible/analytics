@@ -228,10 +228,10 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
       end
     end
 
-    @assertion File.read!("extra/fixture/assertion.base64")
-    @assertion_missing_email File.read!("extra/fixture/assertion_missing_email.base64")
-    @assertion_invalid_email File.read!("extra/fixture/assertion_invalid_email.base64")
-    @assertion_missing_name File.read!("extra/fixture/assertion_missing_name.base64")
+    @assertion File.read!("extra/fixture/assertion.xml")
+    @assertion_missing_email File.read!("extra/fixture/assertion_missing_email.xml")
+    @assertion_invalid_email File.read!("extra/fixture/assertion_invalid_email.xml")
+    @assertion_missing_name File.read!("extra/fixture/assertion_missing_name.xml")
 
     describe "saml_consume/2 (real SAML)" do
       setup %{conn: conn} do
@@ -252,7 +252,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
         sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        {:ok, root_node} = @assertion |> Base.decode64!(ignore: :whitespace) |> SimpleXml.parse()
+        {:ok, root_node} = @assertion |> SimpleXml.parse()
         {:ok, assertion_node} = SimpleXml.XmlNode.first_child(root_node, "*:Assertion")
         {:ok, subject_node} = SimpleXml.XmlNode.first_child(assertion_node, "*:Subject")
         {:ok, name_id_node} = SimpleXml.XmlNode.first_child(subject_node, "*:NameID")
@@ -297,7 +297,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         name_id: name_id
       } do
         params = %{
-          "SAMLResponse" => @assertion,
+          "SAMLResponse" => Base.encode64(@assertion),
           "RelayState" => relay_state
         }
 
@@ -335,7 +335,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         relay_state: relay_state
       } do
         params = %{
-          "SAMLResponse" => @assertion,
+          "SAMLResponse" => Base.encode64(@assertion),
           "RelayState" => relay_state
         }
 
@@ -350,7 +350,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         integration: integration
       } do
         params = %{
-          "SAMLResponse" => @assertion,
+          "SAMLResponse" => Base.encode64(@assertion),
           "RelayState" => Ecto.UUID.generate()
         }
 
@@ -367,7 +367,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         conn: conn,
         integration: integration
       } do
-        params = %{"SAMLResponse" => @assertion}
+        params = %{"SAMLResponse" => Base.encode64(@assertion)}
 
         conn = post(conn, Routes.sso_path(conn, :saml_consume, integration.identifier), params)
 
@@ -411,7 +411,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         )
 
         params = %{
-          "SAMLResponse" => @assertion,
+          "SAMLResponse" => Base.encode64(@assertion),
           "RelayState" => relay_state
         }
 
@@ -432,7 +432,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         {:ok, integration} = SSO.update_integration(integration, %{idp_cert_pem: @other_cert_pem})
 
         params = %{
-          "SAMLResponse" => @assertion,
+          "SAMLResponse" => Base.encode64(@assertion),
           "RelayState" => relay_state
         }
 
@@ -451,7 +451,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         relay_state: relay_state
       } do
         params = %{
-          "SAMLResponse" => @assertion_missing_email,
+          "SAMLResponse" => Base.encode64(@assertion_missing_email),
           "RelayState" => relay_state
         }
 
@@ -470,7 +470,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         relay_state: relay_state
       } do
         params = %{
-          "SAMLResponse" => @assertion_invalid_email,
+          "SAMLResponse" => Base.encode64(@assertion_invalid_email),
           "RelayState" => relay_state
         }
 
@@ -489,7 +489,7 @@ defmodule PlausibleWeb.SSOControllerSyncTest do
         relay_state: relay_state
       } do
         params = %{
-          "SAMLResponse" => @assertion_missing_name,
+          "SAMLResponse" => Base.encode64(@assertion_missing_name),
           "RelayState" => relay_state
         }
 
