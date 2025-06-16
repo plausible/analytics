@@ -18,13 +18,8 @@ if (csrfToken && websocketUrl) {
   Hooks.Metrics = {
     mounted() {
       this.handleEvent('send-metrics', ({ event_name }) => {
-        const afterMetrics = () => {
-          this.pushEvent('send-metrics-after', { event_name })
-        }
-        setTimeout(afterMetrics, 5000)
-        if (window.trackCustomEvent) {
-          window.trackCustomEvent(event_name, { callback: afterMetrics })
-        }
+        window.plausible(event_name)
+        this.pushEvent('send-metrics-after', { event_name })
       })
     }
   }

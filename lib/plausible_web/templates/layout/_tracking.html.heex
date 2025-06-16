@@ -1,44 +1,29 @@
 <%= on_ee do %>
-  <%= if !@conn.assigns[:skip_plausible_tracking] do %>
-    <script
-      defer
-      data-api={PlausibleWeb.Dogfood.api_destination()}
-      data-domain={PlausibleWeb.Dogfood.domain(@conn)}
-      src={PlausibleWeb.Dogfood.script_url()}
-    >
-    </script>
-    <script>
-      window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
+  <script
+    :if={
+      !@conn.assigns[:skip_plausible_tracking] and
+        Application.get_env(:plausible, :environment) not in ["test", "ce_test"]
+    }
+    data-script-params={JSON.encode!(PlausibleWeb.Dogfood.script_params(@conn.assigns))}
+  >
+    var scriptParams = JSON.parse(document.currentScript.dataset.scriptParams)
 
-      <%= if @conn.assigns[:dogfood_page_path] do %>
-        const pageUrl = '<%= Path.join(plausible_url(), @conn.assigns[:dogfood_page_path]) %>'
-      <% else %>
-        const pageUrl = window.location.href
-      <% end %>
+    window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)},window.plausible.init=function(i){window.plausible.o=i||{}};var script=document.createElement("script");script.type="text/javascript",script.defer=!0,script.src=scriptParams.script_url;var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(script,r);
 
-      const props = {
-        logged_in: <%= is_map(@conn.assigns[:current_user]) %>,
+    plausible.init({
+      endpoint: scriptParams.api_destination,
+      captureOnLocalhost: scriptParams.capture_on_localhost,
+      customProperties: {
+        ...scriptParams.custom_properties,
         browser_language: navigator.language || navigator.userLanguage
-      }
-
-      <%= if @conn.assigns[:current_user] do %>
-        props.theme = '<%= @conn.assigns[:current_user].theme %>'
-      <% end %>
-
-      const defaultEventOptions = {u: pageUrl, props: props}
-
-      window.trackCustomEvent = function(event_name, options) {
-        plausible(event_name, {...defaultEventOptions, ...options})
-      }
-
-      plausible('pageview', defaultEventOptions)
-
-      window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-          // Page was restored from bfcache - trigger a pageview
-          plausible('pageview', defaultEventOptions);
+      },
+      transformRequest: function (payload) {
+        if (scriptParams.location_override) {
+          payload.u = scriptParams.location_override
         }
-      })
-    </script>
-  <% end %>
+
+        return payload
+      }
+    })
+  </script>
 <% end %>
