@@ -459,6 +459,7 @@ PlausibleWeb.RequireAccountPlug.html
 PlausibleWeb.RequireLoggedOutPlug.html
 PlausibleWeb.Router.html
 PlausibleWeb.SSO.FakeSAMLAdapter.html
+PlausibleWeb.SSO.RealSAMLAdapter.html
 PlausibleWeb.SSOController.html
 PlausibleWeb.SSOView.html
 PlausibleWeb.SettingsController.html
@@ -499,8 +500,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-F9C1DA2F.js
-dist/sidebar_items-A3DF8455.js
+dist/search_data-AD34B4E2.js
+dist/sidebar_items-1BFD8B12.js
 index.html
 readme.html
 search.html
