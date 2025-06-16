@@ -1,6 +1,6 @@
-defmodule Plausible.Auth.SSO.Domain.Validation do
+defmodule Plausible.Auth.SSO.Domain.Verification do
   @moduledoc """
-  SSO domain validation chain
+  SSO domain ownership verification chain
 
   1. DNS TXT `{domain}` record lookup. 
      Successful expectation contains `plausible-sso-verification={domain-identifier}` record.
@@ -24,13 +24,13 @@ defmodule Plausible.Auth.SSO.Domain.Validation do
   @prefix "plausible-sso-verification"
 
   @spec run(String.t(), String.t(), Keyword.t()) ::
-          {:ok, Domain.validation_method()} | {:error, :invalid}
+          {:ok, Domain.verification_method()} | {:error, :unverified}
   def run(sso_domain, domain_identifier, opts \\ []) do
-    available_methods = Domain.validation_methods()
+    available_methods = Domain.verification_methods()
     methods = Keyword.get(opts, :methods, available_methods)
     true = Enum.all?(methods, &(&1 in available_methods))
 
-    Enum.reduce_while(methods, {:error, :invalid}, fn method, acc ->
+    Enum.reduce_while(methods, {:error, :unverified}, fn method, acc ->
       case apply(__MODULE__, method, [sso_domain, domain_identifier, opts]) do
         true -> {:halt, {:ok, method}}
         false -> {:cont, acc}
@@ -114,7 +114,7 @@ defmodule Plausible.Auth.SSO.Domain.Validation do
 
   @after_compile __MODULE__
   def __after_compile__(_env, _bytecode) do
-    available_methods = Domain.validation_methods()
+    available_methods = Domain.verification_methods()
 
     exported_funs =
       :functions
