@@ -30,7 +30,10 @@ defmodule Plausible.Auth.SSO.Domain do
     field :domain, :string
     field :validated_via, Ecto.Enum, values: @validation_methods
     field :last_validated_at, :naive_datetime
-    field :status, Ecto.Enum, values: [:pending, :validated], default: :pending
+
+    field :status, Ecto.Enum,
+      values: [:pending, :in_progress, :validated, :invalid],
+      default: :pending
 
     belongs_to :sso_integration, Plausible.Auth.SSO.Integration
 
@@ -59,13 +62,13 @@ defmodule Plausible.Auth.SSO.Domain do
     |> put_change(:status, :validated)
   end
 
-  @spec invalid_changeset(t(), NaiveDateTime.t()) :: Ecto.Changeset.t()
-  def invalid_changeset(sso_domain, now) do
+  @spec invalid_changeset(t(), NaiveDateTime.t(), atom()) :: Ecto.Changeset.t()
+  def invalid_changeset(sso_domain, now, status \\ :in_progress) do
     sso_domain
     |> change()
     |> put_change(:validated_via, nil)
     |> put_change(:last_validated_at, now)
-    |> put_change(:status, :pending)
+    |> put_change(:status, status)
   end
 
   @spec valid_domain?(String.t()) :: boolean()

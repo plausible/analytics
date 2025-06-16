@@ -114,7 +114,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         assert valid_domain.last_validated_at
       end
 
-      test "does not mark domain as validated when no skip flag passed", %{
+      test "does mark domain as in progress, when no skip flag passed", %{
         integration: integration
       } do
         domain = generate_domain()
@@ -124,7 +124,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
         assert invalid_domain.id == sso_domain.id
         refute invalid_domain.validated_via
-        assert invalid_domain.status == :pending
+        assert invalid_domain.status == :in_progress
         assert invalid_domain.last_validated_at
       end
     end
