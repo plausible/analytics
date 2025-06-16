@@ -27,8 +27,8 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
         assert sso_domain.domain == domain
         assert is_binary(sso_domain.identifier)
-        refute sso_domain.validated_via
-        refute sso_domain.last_validated_at
+        refute sso_domain.verified_via
+        refute sso_domain.last_verified_at
         assert sso_domain.status == :pending
       end
 
@@ -100,18 +100,18 @@ defmodule Plausible.Auth.SSO.DomainsTest do
     end
 
     describe "verify/2" do
-      test "marks domain as validated when skip_checks? option passed", %{
+      test "marks domain as verified when skip_checks? option passed", %{
         integration: integration
       } do
         domain = generate_domain()
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
 
-        valid_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+        verified_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
 
-        assert valid_domain.id == sso_domain.id
-        assert valid_domain.validated_via == :dns_txt
-        assert valid_domain.status == :validated
-        assert valid_domain.last_validated_at
+        assert verified_domain.id == sso_domain.id
+        assert verified_domain.verified_via == :dns_txt
+        assert verified_domain.status == :verified
+        assert verified_domain.last_verified_at
       end
 
       test "does mark domain as in progress, when no skip flag passed", %{
@@ -120,12 +120,12 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         domain = generate_domain()
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
 
-        invalid_domain = SSO.Domains.verify(sso_domain, verification_opts: [methods: []])
+        unverified_domain = SSO.Domains.verify(sso_domain, verification_opts: [methods: []])
 
-        assert invalid_domain.id == sso_domain.id
-        refute invalid_domain.validated_via
-        assert invalid_domain.status == :in_progress
-        assert invalid_domain.last_validated_at
+        assert unverified_domain.id == sso_domain.id
+        refute unverified_domain.verified_via
+        assert unverified_domain.status == :in_progress
+        assert unverified_domain.last_verified_at
       end
     end
 
@@ -164,7 +164,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         assert found_sso_domain.id == sso_domain.id
       end
 
-      test "returns error if matching domain is not validated", %{integration: integration} do
+      test "returns error if matching domain is not verified", %{integration: integration} do
         domain = generate_domain()
         {:ok, _sso_domain} = SSO.Domains.add(integration, domain)
 

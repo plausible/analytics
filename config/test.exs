@@ -48,3 +48,5 @@ config :plausible, Plausible.HelpScout,
   req_opts: [
     plug: {Req.Test, Plausible.HelpScout}
   ]
+
+config :plausible, Plausible.Session.Salts, interval: :timer.hours(1)

@@ -546,18 +546,18 @@ defmodule PlausibleWeb.Email do
   end
 
   on_ee do
-    def sso_domain_validation_success(domain, user) do
+    def sso_domain_verification_success(domain, user) do
       priority_email()
       |> to(user.email)
       |> subject("Your SSO domain #{domain} is ready!")
-      |> render("sso_domain_validation_success.html", domain: domain)
+      |> render("sso_domain_verification_success.html", domain: domain)
     end
 
-    def sso_domain_validation_failure(domain, user) do
+    def sso_domain_verification_failure(domain, user) do
       priority_email()
       |> to(user)
-      |> subject("SSO domain #{domain} validation failure")
-      |> render("sso_domain_validation_failure.html", domain: domain)
+      |> subject("SSO domain #{domain} verification failure")
+      |> render("sso_domain_verification_failure.html", domain: domain)
     end
   end
 

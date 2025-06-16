@@ -1,4 +1,4 @@
-defmodule Plausible.Auth.SSO.Domain.Validation.Worker do
+defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
   @moduledoc """
   Background service validating SSO domains ownership
 
@@ -6,7 +6,7 @@ defmodule Plausible.Auth.SSO.Domain.Validation.Worker do
   (former will fail the verification, latter will succeed with `dns_txt` method)
   """
   use Oban.Worker,
-    queue: :sso_domain_validations,
+    queue: :sso_domain_ownership_verification,
     unique: true
 
   alias Plausible.Auth.SSO
@@ -19,7 +19,7 @@ defmodule Plausible.Auth.SSO.Domain.Validation.Worker do
     {:ok, result} =
       Repo.transaction(fn ->
         with {:ok, sso_domain} <- SSO.Domains.get(domain) do
-          SSO.Domains.mark_invalid!(sso_domain, :in_progress)
+          SSO.Domains.mark_unverified!(sso_domain, :in_progress)
         end
 
         {:ok, job} =
@@ -55,9 +55,9 @@ defmodule Plausible.Auth.SSO.Domain.Validation.Worker do
     case SSO.Domains.get(domain) do
       {:ok, sso_domain} ->
         case SSO.Domains.verify(sso_domain, service_opts) do
-          %SSO.Domain{status: :validated} = validated ->
-            validation_complete(sso_domain)
-            {:ok, validated}
+          %SSO.Domain{status: :verified} = verified ->
+            verification_complete(sso_domain)
+            {:ok, verified}
 
           _ ->
             {:snooze, snooze_backoff(attempt)}
@@ -69,20 +69,20 @@ defmodule Plausible.Auth.SSO.Domain.Validation.Worker do
   end
 
   def perform(job) do
-    validation_failure(job.args["domain"])
+    verification_failure(job.args["domain"])
     {:cancel, :max_snoozes}
   end
 
-  defp validation_complete(sso_domain) do
+  defp verification_complete(sso_domain) do
     send_success_notification(sso_domain)
 
     :ok
   end
 
-  defp validation_failure(domain) do
+  defp verification_failure(domain) do
     with {:ok, sso_domain} <- SSO.Domains.get(domain) do
       sso_domain
-      |> SSO.Domains.mark_invalid!(:invalid)
+      |> SSO.Domains.mark_unverified!(:unverified)
       |> send_failure_notification()
     end
 
@@ -94,7 +94,7 @@ defmodule Plausible.Auth.SSO.Domain.Validation.Worker do
 
     Enum.each(owners, fn owner ->
       sso_domain.domain
-      |> PlausibleWeb.Email.sso_domain_validation_success(owner)
+      |> PlausibleWeb.Email.sso_domain_verification_success(owner)
       |> Plausible.Mailer.send()
     end)
 
@@ -106,7 +106,7 @@ defmodule Plausible.Auth.SSO.Domain.Validation.Worker do
 
     Enum.each(owners, fn owner ->
       sso_domain.domain
-      |> PlausibleWeb.Email.sso_domain_validation_failure(owner)
+      |> PlausibleWeb.Email.sso_domain_verification_failure(owner)
       |> Plausible.Mailer.send()
     end)
 
