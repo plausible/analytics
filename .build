@@ -16,8 +16,8 @@ Plausible.Auth.ApiKey.html
 Plausible.Auth.EmailActivationCode.html
 Plausible.Auth.EmailVerification.html
 Plausible.Auth.Password.html
-Plausible.Auth.SSO.Domain.Validation.Worker.html
-Plausible.Auth.SSO.Domain.Validation.html
+Plausible.Auth.SSO.Domain.Verification.Worker.html
+Plausible.Auth.SSO.Domain.Verification.html
 Plausible.Auth.SSO.Domain.html
 Plausible.Auth.SSO.Domains.html
 Plausible.Auth.SSO.Identity.html
@@ -501,8 +501,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-233BAE50.js
-dist/sidebar_items-AA43D697.js
+dist/search_data-A3A9A52B.js
+dist/sidebar_items-1F27841E.js
 index.html
 readme.html
 search.html

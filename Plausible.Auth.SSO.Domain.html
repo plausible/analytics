@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-K7URE6B4.js"></script>
-    <script src="dist/sidebar_items-AA43D697.js"></script>
+    <script src="dist/sidebar_items-1F27841E.js"></script>
     <script src="docs_config.js"></script>
     <script async src="dist/html-PVRIOB7F.js"></script>
 
@@ -141,9 +141,9 @@ Pages
 <p>Once SSO integration is initiated, it's possible to start
 allow-listing domains for it, in parallel with finalizing
 the setup on IdP's end.</p><p>Each pending domain should be periodically checked for
-validity by testing for presence of TXT record, meta tag
+ownership verification by testing for presence of TXT record, meta tag
 or URL. The moment whichever of them succeeds first, 
-the domain is marked as validated with method and timestamp 
+the domain is marked as verified with method and timestamp 
 recorded.</p>
     </section>
 
@@ -171,7 +171,7 @@ recorded.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:validation_method/0" data-no-tooltip translate="no">validation_method()</a>
+        <a href="#t:verification_method/0" data-no-tooltip translate="no">verification_method()</a>
 
       </div>
 
@@ -193,15 +193,7 @@ recorded.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#invalid_changeset/3" data-no-tooltip translate="no">invalid_changeset(sso_domain, now, status \\ :in_progress)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#valid_changeset/3" data-no-tooltip translate="no">valid_changeset(sso_domain, method, now)</a>
+        <a href="#unverified_changeset/3" data-no-tooltip translate="no">unverified_changeset(sso_domain, now, status \\ :in_progress)</a>
 
       </div>
 
@@ -217,7 +209,15 @@ recorded.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#validation_methods/0" data-no-tooltip translate="no">validation_methods()</a>
+        <a href="#verification_methods/0" data-no-tooltip translate="no">verification_methods()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#verified_changeset/3" data-no-tooltip translate="no">verified_changeset(sso_domain, method, now)</a>
 
       </div>
 
@@ -261,12 +261,12 @@ recorded.</p>
   id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   identifier: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  last_validated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  last_verified_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   sso_integration: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   sso_integration_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   status: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  validated_via: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+  verified_via: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
 }</pre>
 
       </div>
@@ -274,13 +274,13 @@ recorded.</p>
 
   </section>
 </section>
-<section class="detail" id="t:validation_method/0">
+<section class="detail" id="t:verification_method/0">
 
   <div class="detail-header">
-    <a href="#t:validation_method/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
+    <a href="#t:verification_method/0" class="detail-link" data-no-tooltip aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">validation_method()</h1>
+    <h1 class="signature" translate="no">verification_method()</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso/domain.ex#L23" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -293,7 +293,7 @@ recorded.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> validation_method() :: :meta_tag | :url | :dns_txt</pre>
+          <pre translate="no"><span class="attribute">@type</span> verification_method() :: :meta_tag | :url | :dns_txt</pre>
 
       </div>
 
@@ -339,15 +339,15 @@ recorded.</p>
 
   </section>
 </section>
-<section class="detail" id="invalid_changeset/3">
+<section class="detail" id="unverified_changeset/3">
 
-    <span id="invalid_changeset/2"></span>
+    <span id="unverified_changeset/2"></span>
 
   <div class="detail-header">
-    <a href="#invalid_changeset/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#unverified_changeset/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">invalid_changeset(sso_domain, now, status \\ :in_progress)</h1>
+    <h1 class="signature" translate="no">unverified_changeset(sso_domain, now, status \\ :in_progress)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso/domain.ex#L66" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -360,34 +360,7 @@ recorded.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> invalid_changeset(<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="valid_changeset/3">
-
-  <div class="detail-header">
-    <a href="#valid_changeset/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <h1 class="signature" translate="no">valid_changeset(sso_domain, method, now)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso/domain.ex#L57" class="icon-action" rel="help" aria-label="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> valid_changeset(<a href="#t:t/0">t</a>(), <a href="#t:validation_method/0">validation_method</a>(), <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>()) ::
-  <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> unverified_changeset(<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
@@ -420,13 +393,13 @@ recorded.</p>
 
   </section>
 </section>
-<section class="detail" id="validation_methods/0">
+<section class="detail" id="verification_methods/0">
 
   <div class="detail-header">
-    <a href="#validation_methods/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
+    <a href="#verification_methods/0" class="detail-link" data-no-tooltip aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
-    <h1 class="signature" translate="no">validation_methods()</h1>
+    <h1 class="signature" translate="no">verification_methods()</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso/domain.ex#L26" class="icon-action" rel="help" aria-label="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -439,7 +412,34 @@ recorded.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> validation_methods() :: [<a href="#t:validation_method/0">validation_method</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> verification_methods() :: [<a href="#t:verification_method/0">verification_method</a>()]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="verified_changeset/3">
+
+  <div class="detail-header">
+    <a href="#verified_changeset/3" class="detail-link" data-no-tooltip aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <h1 class="signature" translate="no">verified_changeset(sso_domain, method, now)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/auth/sso/domain.ex#L57" class="icon-action" rel="help" aria-label="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> verified_changeset(<a href="#t:t/0">t</a>(), <a href="#t:verification_method/0">verification_method</a>(), <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>()) ::
+  <a href="https://hexdocs.pm/ecto/3.12.5/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
