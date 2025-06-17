@@ -103,6 +103,26 @@ track('Purchase', { revenue: { amount: 15.99, currency: 'USD' } })
 
 More information can be found in [ecommerce revenue tracking docs](https://plausible.io/docs/ecommerce-revenue-tracking)
 
+### Callbacks
+
+When calling `track`, you can pass in a custom callback.
+
+```javascript
+import { track } from 'macobo-test-tracker'
+
+track('some-event', {
+  callback: (result) => {
+    if (result?.status) {
+      console.debug("Request to plausible done. Status:", result.status)
+    } else if (result?.error) {
+      console.log("Error handling request:", result.error)
+    } else {
+      console.log("Request was ignored")
+    }
+  }
+})
+```
+
 ### Opt out and exclude yourself from the analytics
 
 Since plausible-tracker is bundled with your application code, using an ad-blocker to exclude your visits isn't an option. Fortunately Plausible has an alternative for this scenario: plausible-tracker will not send events if `localStorage.plausible_ignore` is set to `"true"`.

@@ -62,7 +62,8 @@ export interface PlausibleEventOptions {
   // Called when request to `endpoint` completes or is ignored.
   // When request is ignored, the result will be undefined.
   // When request was delivered, the result will be an object with the response status code of the request.
-  callback?: (result?: { status: number } | undefined) => void
+  // When there was a network error, the result will be an object with the error object.
+  callback?: (result?: { status: number } | { error: unknown } | undefined) => void
 
   // Overrides the URL of the page that the event is being tracked on.
   // If not provided, `location.href` will be used.
