@@ -25,7 +25,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
     Oban.cancel_job(job)
   end
 
-  @spec enqueue(String.t()) :: {:ok, %Oban.Job{}}
+  @spec enqueue(String.t()) :: {:ok, Oban.Job.t()}
   def enqueue(domain) do
     {:ok, result} =
       Repo.transaction(fn ->
