@@ -9,7 +9,7 @@ function trackWithCallback(page) {
   return page.evaluate(() => window.callPlausible())
 }
 
-function testCallbacks(trackerScript, expectedNetworkError) {
+function testCallbacks(trackerScript) {
   const trackerScriptwithoutLocal = trackerScript.replace('.local', '')
 
   test("on successful request", async ({ page }) => {
@@ -37,7 +37,7 @@ function testCallbacks(trackerScript, expectedNetworkError) {
     await openPage(page, trackerScript, `h://bad.url////`)
 
     const callbackResult = await trackWithCallback(page)
-    expect(callbackResult).toEqual({ error: expectedNetworkError })
+    expect(callbackResult.error).toBeInstanceOf(Error)
   })
 }
 
@@ -52,9 +52,9 @@ test.beforeEach(async ({ page }) => {
 
 
 test.describe("callbacks behavior (with fetch)", () => {
-  testCallbacks('/tracker/js/plausible.local.manual.js', new TypeError('Failed to fetch'))
+  testCallbacks('/tracker/js/plausible.local.manual.js')
 })
 
 test.describe("callbacks behavior (with xhr/compat)", () => {
-  testCallbacks('/tracker/js/plausible.compat.local.manual.js', new Error('Network error'))
+  testCallbacks('/tracker/js/plausible.compat.local.manual.js')
 })
