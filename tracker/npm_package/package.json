@@ -1,6 +1,6 @@
 {
   "name": "macobo-test-tracker",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Plausible Analytics official frontend tracking library",
   "scripts": {
     "test": "echo \"Error: Testing done in the tracker folder\" && exit 1"
