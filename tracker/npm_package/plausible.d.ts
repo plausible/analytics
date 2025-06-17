@@ -31,6 +31,9 @@ export interface PlausibleConfig {
   // Whether to capture events on localhost. Defaults to false.
   captureOnLocalhost?: boolean
 
+  // Whether to log on ignored events. Defaults to true.
+  logging?: boolean
+
   // Custom properties to add to all events tracked.
   // If passed as a function, it will be called when `track` is called.
   customProperties?: CustomProperties | ((eventName: string) => CustomProperties)

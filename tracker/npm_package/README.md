@@ -51,6 +51,7 @@ See also [plausible.d.ts](https://github.com/plausible/analytics/blob/master/tra
 | `fileDownloads` |  Whether to track file downloads. | `false` |
 | `formSubmissions` | Whether to track form submissions. | `false` |
 | `captureOnLocalhost` | Whether to capture events on localhost. | `false` |
+| `logging` | Whether to log on ignored events. | `true` |
 | `customProperties` | Object or function that returns custom properties for a given event. | `{}` |
 | `transformRequest` | Function that allows transforming or ignoring requests | |
 

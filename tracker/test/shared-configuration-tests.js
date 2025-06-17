@@ -5,9 +5,10 @@ import {
   mockRequest,
   e as expecting,
   isPageviewEvent,
-  isEngagementEvent
+  isEngagementEvent,
+  delay
 } from './support/test-utils'
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 // Wrapper around calling `plausible.init` in the page context for users of `testPlausibleConfiguration`
 export async function callInit(page, config, parent) {
@@ -49,13 +50,36 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
       })
     })
 
-    test('does not trigger any events when `local` config is disabled', async ({ page }) => {
+    test('does not trigger any events when `local` config is disabled but console.warns', async ({ page }) => {
+      const consolePromise = page.waitForEvent('console')
+
       await expectPlausibleInAction(page, {
         action: () => openPage(page, { captureOnLocalhost: false }),
         expectedRequests: [],
         refutedRequests: [{ n: 'pageview' }]
       })
+
+      const warning = await consolePromise
+      expect(warning.type()).toBe("warning")
+      expect(warning.text()).toEqual('Ignoring Event: localhost')
     })
+
+    test('does not log when `local` and `logging` config is disabled', async ({ page }) => {
+      const consolePromise = page.waitForEvent('console')
+
+      await expectPlausibleInAction(page, {
+        action: async () => {
+          await openPage(page, {}, { skipPlausibleInit: true })
+          await initPlausible(page, { captureOnLocalhost: false, logging: false })
+        },
+        expectedRequests: [],
+        refutedRequests: [{ n: 'pageview' }]
+      })
+
+      const result = await Promise.race([consolePromise, delay(1000)])
+      expect(result).toBeUndefined()
+    })
+
     test('does not track pageview props without the feature being enabled', async ({ page }) => {
       await expectPlausibleInAction(page, {
         action: async () => {
