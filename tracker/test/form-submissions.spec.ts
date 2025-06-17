@@ -38,7 +38,7 @@ test('does not track form submissions when the feature is disabled', async ({
     expectedRequests: [{ n: 'pageview' }],
     refutedRequests: [
       {
-        n: 'Form Submission'
+        n: 'Form: Submission'
       }
     ]
   })
@@ -70,7 +70,7 @@ test.describe('form submissions feature is enabled', () => {
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
         {
-          n: 'Form Submission',
+          n: 'Form: Submission',
           p: { path: url }
         }
       ]
@@ -101,7 +101,7 @@ test.describe('form submissions feature is enabled', () => {
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
         {
-          n: 'Form Submission',
+          n: 'Form: Submission',
           p: { path: url }
         }
       ]
@@ -140,7 +140,7 @@ test.describe('form submissions feature is enabled', () => {
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
         {
-          n: 'Form Submission',
+          n: 'Form: Submission',
           p: { path: url }
         }
       ]
@@ -174,7 +174,7 @@ test.describe('form submissions feature is enabled', () => {
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
         {
-          n: 'Form Submission',
+          n: 'Form: Submission',
           p: { path: url }
         }
       ]
@@ -208,7 +208,7 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [{ n: 'pageview' }],
       refutedRequests: [
         {
-          n: 'Form Submission'
+          n: 'Form: Submission'
         }
       ]
     })
@@ -241,7 +241,7 @@ test.describe('form submissions feature is enabled', () => {
       expectedRequests: [{ n: 'pageview' }],
       refutedRequests: [
         {
-          n: 'Form Submission'
+          n: 'Form: Submission'
         }
       ]
     })
@@ -276,7 +276,7 @@ test.describe('form submissions feature is enabled', () => {
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
         {
-          n: 'Form Submission',
+          n: 'Form: Submission',
           p: { path: url }
         }
       ]
@@ -290,7 +290,7 @@ test.describe('form submissions feature is enabled', () => {
       shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent],
       expectedRequests: [
         {
-          n: 'Form Submission',
+          n: 'Form: Submission',
           p: { path: url }
         }
       ]

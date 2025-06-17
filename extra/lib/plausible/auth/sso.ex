@@ -216,7 +216,7 @@ defmodule Plausible.Auth.SSO do
       )
 
     domains = Enum.flat_map(integrations, & &1.sso_domains)
-    no_verified_domains? = Enum.all?(domains, &(&1.status != :validated))
+    no_verified_domains? = Enum.all?(domains, &(&1.status != :verified))
 
     cond do
       integrations == [] -> {:error, :no_integration}

@@ -5,9 +5,9 @@ defmodule Plausible.Auth.SSO.Domain do
   the setup on IdP's end.
 
   Each pending domain should be periodically checked for
-  validity by testing for presence of TXT record, meta tag
+  ownership verification by testing for presence of TXT record, meta tag
   or URL. The moment whichever of them succeeds first, 
-  the domain is marked as validated with method and timestamp 
+  the domain is marked as verified with method and timestamp 
   recorded.
   """
 
@@ -19,18 +19,21 @@ defmodule Plausible.Auth.SSO.Domain do
 
   @type t() :: %__MODULE__{}
 
-  @validation_methods [:dns_txt, :url, :meta_tag]
-  @type validation_method() :: unquote(Enum.reduce(@validation_methods, &{:|, [], [&1, &2]}))
+  @verification_methods [:dns_txt, :url, :meta_tag]
+  @type verification_method() :: unquote(Enum.reduce(@verification_methods, &{:|, [], [&1, &2]}))
 
-  @spec validation_methods() :: list(validation_method())
-  def validation_methods(), do: @validation_methods
+  @spec verification_methods() :: list(verification_method())
+  def verification_methods(), do: @verification_methods
 
   schema "sso_domains" do
     field :identifier, Ecto.UUID
     field :domain, :string
-    field :validated_via, Ecto.Enum, values: @validation_methods
-    field :last_validated_at, :naive_datetime
-    field :status, Ecto.Enum, values: [:pending, :validated], default: :pending
+    field :verified_via, Ecto.Enum, values: @verification_methods
+    field :last_verified_at, :naive_datetime
+
+    field :status, Ecto.Enum,
+      values: [:pending, :in_progress, :verified, :unverified],
+      default: :pending
 
     belongs_to :sso_integration, Plausible.Auth.SSO.Integration
 
@@ -49,23 +52,23 @@ defmodule Plausible.Auth.SSO.Domain do
     |> put_assoc(:sso_integration, integration)
   end
 
-  @spec valid_changeset(t(), validation_method(), NaiveDateTime.t()) ::
+  @spec verified_changeset(t(), verification_method(), NaiveDateTime.t()) ::
           Ecto.Changeset.t()
-  def valid_changeset(sso_domain, method, now) do
+  def verified_changeset(sso_domain, method, now) do
     sso_domain
     |> change()
-    |> put_change(:validated_via, method)
-    |> put_change(:last_validated_at, now)
-    |> put_change(:status, :validated)
+    |> put_change(:verified_via, method)
+    |> put_change(:last_verified_at, now)
+    |> put_change(:status, :verified)
   end
 
-  @spec invalid_changeset(t(), NaiveDateTime.t()) :: Ecto.Changeset.t()
-  def invalid_changeset(sso_domain, now) do
+  @spec unverified_changeset(t(), NaiveDateTime.t(), atom()) :: Ecto.Changeset.t()
+  def unverified_changeset(sso_domain, now, status \\ :in_progress) do
     sso_domain
     |> change()
-    |> put_change(:validated_via, nil)
-    |> put_change(:last_validated_at, now)
-    |> put_change(:status, :pending)
+    |> put_change(:verified_via, nil)
+    |> put_change(:last_verified_at, now)
+    |> put_change(:status, status)
   end
 
   @spec valid_domain?(String.t()) :: boolean()

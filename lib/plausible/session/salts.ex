@@ -1,7 +1,6 @@
 defmodule Plausible.Session.Salts do
   use GenServer
   use Plausible.Repo
-  require Logger
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: opts[:name] || __MODULE__)
@@ -9,8 +8,6 @@ defmodule Plausible.Session.Salts do
 
   @impl true
   def init(opts) do
-    Process.flag(:trap_exit, true)
-
     name = opts[:name] || __MODULE__
     now = opts[:now] || DateTime.utc_now()
     clean_old_salts(now)
@@ -23,8 +20,13 @@ defmodule Plausible.Session.Salts do
         {:read_concurrency, true}
       ])
 
-    salts =
-      Repo.all(from s in "salts", select: s.salt, order_by: [desc: s.inserted_at], limit: 2)
+    refresh(name, now)
+
+    {:ok, name}
+  end
+
+  def refresh(name, now) do
+    salts = Repo.all(from s in "salts", select: s.salt, order_by: [desc: s.id], limit: 2)
 
     state =
       case salts do
@@ -39,13 +41,19 @@ defmodule Plausible.Session.Salts do
           %{previous: nil, current: new}
       end
 
-    log_state("init", state)
     true = :ets.insert(name, {:state, state})
-    {:ok, name}
+    interval = Application.get_env(:plausible, __MODULE__)[:interval] || :timer.seconds(90)
+    Process.send_after(self(), {:refresh, now}, interval)
+    :ok
   end
 
   def rotate(name \\ __MODULE__, now \\ DateTime.utc_now()) do
     GenServer.call(name, {:rotate, now})
+  end
+
+  def fetch(name \\ __MODULE__) do
+    [state: state] = :ets.lookup(name, :state)
+    state
   end
 
   @impl true
@@ -59,20 +67,18 @@ defmodule Plausible.Session.Salts do
         previous: current
       }
 
-    log_state("rotated", state)
     true = :ets.insert(name, {:state, state})
     {:reply, :ok, name}
   end
 
-  def fetch(name \\ __MODULE__) do
-    [state: state] = :ets.lookup(name, :state)
-
-    state
+  @impl true
+  def handle_info({:refresh, now}, name) do
+    refresh(name, now)
+    {:noreply, name}
   end
 
   defp generate_and_persist_new_salt(now) do
     salt = :crypto.strong_rand_bytes(16)
-    Logger.warning("[salts] generated #{:erlang.phash2(salt)}")
     Repo.insert_all("salts", [%{salt: salt, inserted_at: now}])
     salt
   end
@@ -82,18 +88,5 @@ defmodule Plausible.Session.Salts do
       DateTime.shift(now, hour: -48)
 
     Repo.delete_all(from s in "salts", where: s.inserted_at < ^h48_ago)
-  end
-
-  @impl true
-  def terminate(_reason, name) do
-    log_state("terminating", fetch(name))
-  end
-
-  defp log_state(stage, state) do
-    %{current: current, previous: previous} = state
-
-    Logger.warning(
-      "[salts] stage=#{stage} current=#{:erlang.phash2(current)} previous=#{:erlang.phash2(previous)}"
-    )
   end
 end
