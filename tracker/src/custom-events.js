@@ -176,7 +176,7 @@ export function init() {
   if (COMPILE_CONFIG && config.formSubmissions) {
     function trackFormSubmission(e) {
       if (e.target.hasAttribute('novalidate') || e.target.checkValidity()) {
-        track('Form Submission', { props: { path: location.pathname } });
+        track('Form: Submission', { props: { path: location.pathname } });
       }
     }
 
