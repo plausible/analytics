@@ -1,6 +1,6 @@
 import { init as initEngagementTracking } from './engagement'
 import { init as initConfig, config } from './config'
-import { init as initCustomEvents } from './custom-events'
+import { init as initCustomEvents, DEFAULT_FILE_TYPES } from './custom-events'
 import { init as initAutocapture } from './autocapture'
 import { track } from './track'
 
@@ -52,4 +52,4 @@ if (COMPILE_PLAUSIBLE_WEB) {
 }
 
 // In npm module, we export the init and track functions
-// export { init, track }
+// export { init, track, DEFAULT_FILE_TYPES }

@@ -95,3 +95,6 @@ export type PlausibleRequestPayload = {
   // Whether the event is interactive
   i?: boolean,
 } & Record<string, unknown>
+
+// Default file types that are tracked when `fileDownloads` is enabled.
+export const DEFAULT_FILE_TYPES: string[]

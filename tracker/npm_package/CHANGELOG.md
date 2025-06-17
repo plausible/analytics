@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `logging` option
 - Improve `callback` option
-- Improve `fileDownloads` typing
+- Improve `fileDownloads` typing, export `DEFAULT_FILE_TYPES`
 
 ## [0.2.2] - 2025-06-16
 
