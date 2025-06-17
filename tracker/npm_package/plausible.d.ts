@@ -23,7 +23,7 @@ export interface PlausibleConfig {
   outboundLinks?: boolean
 
   // Whether to track file downloads. Defaults to false.
-  fileDownloads?: boolean
+  fileDownloads?: boolean | { fileExtensions: string[] }
 
   // Whether to track form submissions. Defaults to false.
   formSubmissions?: boolean

@@ -156,8 +156,8 @@ export function init() {
 
   if (COMPILE_FILE_DOWNLOADS && (!COMPILE_CONFIG || config.fileDownloads)) {
     if (COMPILE_CONFIG) {
-      if (Array.isArray(config.fileDownloads)) {
-        fileTypesToTrack = config.fileDownloads
+      if (typeof config.fileDownloads === 'object' && Array.isArray(config.fileDownloads.fileExtensions)) {
+        fileTypesToTrack = config.fileDownloads.fileExtensions
       }
     } else {
       var fileTypesAttr = scriptEl.getAttribute('file-types')

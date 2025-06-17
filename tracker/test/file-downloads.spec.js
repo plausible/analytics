@@ -94,7 +94,7 @@ test.describe('file downloads', () => {
   })
 
   test('tracks iso but not pdf files when config.fileDownloads includes "iso"', async ({ page }) => {
-    await openPage(page, { fileDownloads: ['iso'] })
+    await openPage(page, { fileDownloads: { fileExtensions: ['iso'] } })
 
     await expectPlausibleInAction(page, {
       action: async () => {
@@ -111,7 +111,7 @@ test.describe('file downloads', () => {
   })
 
   test('ignores malformed value but enables the feature', async ({ page }) => {
-    await openPage(page, { fileDownloads: 'iso' })
+    await openPage(page, { fileDownloads: { fileExtensions: 'iso' } })
 
     await expectPlausibleInAction(page, {
       action: async () => {
