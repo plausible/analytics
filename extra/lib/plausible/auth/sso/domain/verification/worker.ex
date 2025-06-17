@@ -9,6 +9,8 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
     queue: :sso_domain_ownership_verification,
     unique: true
 
+  use Plausible.Auth.SSO.Domain.Status
+
   alias Plausible.Auth.SSO
   alias Plausible.Repo
 
@@ -30,7 +32,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
     {:ok, result} =
       Repo.transaction(fn ->
         with {:ok, sso_domain} <- SSO.Domains.get(domain) do
-          SSO.Domains.mark_unverified!(sso_domain, :in_progress)
+          SSO.Domains.mark_unverified!(sso_domain, Status.in_progress())
         end
 
         {:ok, job} =
@@ -66,7 +68,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
     case SSO.Domains.get(domain) do
       {:ok, sso_domain} ->
         case SSO.Domains.verify(sso_domain, service_opts) do
-          %SSO.Domain{status: :verified} = verified ->
+          %SSO.Domain{status: Status.verified()} = verified ->
             verification_complete(sso_domain)
             {:ok, verified}
 
@@ -93,7 +95,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
   defp verification_failure(domain) do
     with {:ok, sso_domain} <- SSO.Domains.get(domain) do
       sso_domain
-      |> SSO.Domains.mark_unverified!(:unverified)
+      |> SSO.Domains.mark_unverified!(Status.unverified())
       |> send_failure_notification()
     end
 

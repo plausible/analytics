@@ -11,6 +11,8 @@ defmodule Plausible.Auth.SSO do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  use Plausible.Auth.SSO.Domain.Status
+
   @type policy_attr() ::
           {:sso_default_role, Teams.Policy.sso_member_role()}
           | {:sso_session_timeout_minutes, non_neg_integer()}
@@ -216,7 +218,7 @@ defmodule Plausible.Auth.SSO do
       )
 
     domains = Enum.flat_map(integrations, & &1.sso_domains)
-    no_verified_domains? = Enum.all?(domains, &(&1.status != :verified))
+    no_verified_domains? = Enum.all?(domains, &(&1.status != Status.verified()))
 
     cond do
       integrations == [] -> {:error, :no_integration}

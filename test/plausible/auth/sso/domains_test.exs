@@ -6,6 +6,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
   on_ee do
     use Plausible.Teams.Test
+    use Plausible.Auth.SSO.Domain.Status
 
     alias Plausible.Auth.SSO
     alias Plausible.Teams
@@ -29,7 +30,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
         assert is_binary(sso_domain.identifier)
         refute sso_domain.verified_via
         refute sso_domain.last_verified_at
-        assert sso_domain.status == :pending
+        assert sso_domain.status == Status.pending()
       end
 
       test "normalizes domain before adding", %{integration: integration} do
@@ -110,7 +111,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
         assert verified_domain.id == sso_domain.id
         assert verified_domain.verified_via == :dns_txt
-        assert verified_domain.status == :verified
+        assert verified_domain.status == Status.verified()
         assert verified_domain.last_verified_at
       end
 
@@ -124,7 +125,7 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
         assert unverified_domain.id == sso_domain.id
         refute unverified_domain.verified_via
-        assert unverified_domain.status == :in_progress
+        assert unverified_domain.status == Status.in_progress()
         assert unverified_domain.last_verified_at
       end
     end

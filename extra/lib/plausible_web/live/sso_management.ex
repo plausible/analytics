@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
   alias Plausible.Teams
 
   alias PlausibleWeb.Router.Helpers, as: Routes
+  use Plausible.Auth.SSO.Domain.Status
 
   @refresh_integration_interval :timer.seconds(5)
 
@@ -207,11 +208,14 @@ defmodule PlausibleWeb.Live.SSOManagement do
 
       <form id="verify-domain-submit" for={} phx-submit="verify-domain-submit">
         <.input type="hidden" name="domain" value={@domain.domain} />
-        <.button :if={@domain.status in [:in_progress, :unverified, :verified]} type="submit">
+        <.button
+          :if={@domain.status in [Status.in_progress(), Status.unverified(), Status.verified()]}
+          type="submit"
+        >
           Run verification now
         </.button>
 
-        <.button :if={@domain.status == :pending} type="submit">Continue</.button>
+        <.button :if={@domain.status == Status.pending()} type="submit">Continue</.button>
       </form>
     </div>
     """
@@ -312,8 +316,8 @@ defmodule PlausibleWeb.Live.SSOManagement do
           <:tbody :let={domain}>
             <.td>{domain.domain}</.td>
             <.td>{Calendar.strftime(domain.inserted_at, "%b %-d, %Y at %H:%m UTC")}</.td>
-            <.td :if={domain.status != :in_progress}>{domain.status}</.td>
-            <.td :if={domain.status == :in_progress}>
+            <.td :if={domain.status != Status.in_progress()}>{domain.status}</.td>
+            <.td :if={domain.status == Status.in_progress()}>
               <.spinner class="w-4 h-4" />
             </.td>
             <.td actions>

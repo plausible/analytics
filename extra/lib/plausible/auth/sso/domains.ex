@@ -9,6 +9,8 @@ defmodule Plausible.Auth.SSO.Domains do
   alias Plausible.Auth.SSO
   alias Plausible.Repo
 
+  use Plausible.Auth.SSO.Domain.Status
+
   @spec add(SSO.Integration.t(), String.t()) ::
           {:ok, SSO.Domain.t()} | {:error, Ecto.Changeset.t()}
   def add(integration, domain) do
@@ -75,7 +77,7 @@ defmodule Plausible.Auth.SSO.Domains do
         inner_join: i in assoc(d, :sso_integration),
         inner_join: t in assoc(i, :team),
         where: d.domain == ^search,
-        where: d.status == :verified,
+        where: d.status == ^Status.verified(),
         preload: [sso_integration: {i, team: t}]
       )
       |> Repo.one()

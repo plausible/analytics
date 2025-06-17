@@ -3,15 +3,13 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
   use Plausible
 
   on_ee do
-    use Oban.Testing, repo: Plausible.Repo
-
     use Bamboo.Test, shared: true
-
-    alias Plausible.Auth.SSO.Domain.Verification.Worker
+    use Oban.Testing, repo: Plausible.Repo
+    use Plausible.Auth.SSO.Domain.Status
+    use Plausible.Teams.Test
 
     alias Plausible.Auth.SSO
-
-    use Plausible.Teams.Test
+    alias Plausible.Auth.SSO.Domain.Verification.Worker
 
     test "no sso domain cancels the job" do
       assert {:cancel, :domain_not_found} =
@@ -53,18 +51,18 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
       end
 
       test "enqueue resets domain status", %{sso_domain: sso_domain} do
-        %{status: :unverified} = SSO.Domains.mark_unverified!(sso_domain, :unverified)
+        %{status: Status.unverified()} = SSO.Domains.mark_unverified!(sso_domain, :unverified)
         {:ok, _} = Worker.enqueue(sso_domain.domain)
-        assert Plausible.Repo.reload!(sso_domain).status == :in_progress
+        assert Plausible.Repo.reload!(sso_domain).status == Status.in_progress()
       end
 
       test "domain is marked as in progress and job is snoozed", %{domain: domain} do
-        assert {:ok, %{status: :pending}} = SSO.Domains.get(domain)
+        assert {:ok, %{status: Status.pending()}} = SSO.Domains.get(domain)
 
         assert {:snooze, 15} =
                  perform_job(Worker, %{"domain" => domain}, meta: %{bypass_checks: true})
 
-        assert {:ok, %{status: :in_progress}} = SSO.Domains.get(domain)
+        assert {:ok, %{status: Status.in_progress()}} = SSO.Domains.get(domain)
 
         assert {:snooze, 7680} =
                  perform_job(Worker, %{"domain" => domain},
@@ -72,7 +70,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
                    meta: %{bypass_checks: true}
                  )
 
-        assert {:ok, %{status: :in_progress}} = SSO.Domains.get(domain)
+        assert {:ok, %{status: Status.in_progress()}} = SSO.Domains.get(domain)
       end
 
       test "domain is marked as verified and emails are sent", %{
@@ -82,7 +80,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
       } do
         owner2 = add_member(team, role: :owner)
 
-        assert {:ok, %{status: :verified}} =
+        assert {:ok, %{status: Status.verified()}} =
                  perform_job(Worker, %{"domain" => domain}, meta: %{skip_checks: true})
 
         assert_email_delivered_with(
