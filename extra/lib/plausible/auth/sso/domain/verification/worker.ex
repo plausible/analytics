@@ -15,6 +15,17 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
   # roughly around 34h, given the snooze back-off
   @max_snoozes 14
 
+  @spec cancel(String.t()) :: :ok
+  def cancel(domain) do
+    {:ok, job} =
+      %{domain: domain}
+      |> new()
+      |> Oban.insert()
+
+    Oban.cancel_job(job)
+  end
+
+  @spec enqueue(String.t()) :: {:ok, %Oban.Job{}}
   def enqueue(domain) do
     {:ok, result} =
       Repo.transaction(fn ->

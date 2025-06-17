@@ -29,6 +29,13 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
       assert_enqueued(worker: Worker, args: %{domain: "example.com"})
     end
 
+    test "enqueue then cancel" do
+      {:ok, _} = Worker.enqueue("example.com")
+      assert_enqueued(worker: Worker, args: %{domain: "example.com"})
+      :ok = Worker.cancel("example.com")
+      refute_enqueued(worker: Worker, args: %{domain: "example.com"})
+    end
+
     describe "integration set up" do
       setup do
         owner = new_user()

@@ -17,6 +17,12 @@ defmodule Plausible.Auth.SSO.Domains do
     Repo.insert(changeset)
   end
 
+  @spec kick_off_verification(String.t()) :: :ok
+  def kick_off_verification(domain) when is_binary(domain) do
+    {:ok, _} = SSO.Domain.Verification.Worker.enqueue(domain)
+    :ok
+  end
+
   @spec verify(SSO.Domain.t(), Keyword.t()) :: SSO.Domain.t()
   def verify(%SSO.Domain{} = sso_domain, opts \\ []) do
     skip_checks? = Keyword.get(opts, :skip_checks?, false)
@@ -90,7 +96,13 @@ defmodule Plausible.Auth.SSO.Domains do
 
     case {check, force_deprovision?} do
       {:ok, _} ->
-        Repo.delete!(sso_domain)
+        {:ok, :ok} =
+          Repo.transaction(fn ->
+            Repo.delete!(sso_domain)
+            :ok = SSO.Domain.Verification.Worker.cancel(sso_domain.domain)
+            :ok
+          end)
+
         :ok
 
       {{:error, :sso_users_present}, true} ->
@@ -100,6 +112,7 @@ defmodule Plausible.Auth.SSO.Domains do
           Repo.transaction(fn ->
             Enum.each(domain_users, &SSO.deprovision_user!/1)
             Repo.delete!(sso_domain)
+            :ok = SSO.Domain.Verification.Worker.cancel(sso_domain.domain)
             :ok
           end)
 
