@@ -3,6 +3,7 @@ defmodule Plausible.Auth.SSOTest do
   use Plausible
 
   on_ee do
+    use Oban.Testing, repo: Plausible.Repo
     use Plausible.Teams.Test
 
     alias Plausible.Auth
@@ -745,6 +746,50 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.type == :standard
         refute sso_user.sso_identity_id
         refute sso_user.sso_integration_id
+      end
+
+      test "cancels verification jobs for all domains when integration is removed" do
+        team = new_site().team
+
+        integration = SSO.initiate_saml_integration(team)
+        domain1 = "example-#{Enum.random(1..10_000)}.com"
+        domain2 = "test-#{Enum.random(1..10_000)}.com"
+
+        {:ok, _} = SSO.Domains.add(integration, domain1)
+        {:ok, _} = SSO.Domains.add(integration, domain2)
+
+        :ok = SSO.Domains.kick_off_verification(domain1)
+        :ok = SSO.Domains.kick_off_verification(domain2)
+
+        assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain1})
+        assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain2})
+
+        assert :ok = SSO.remove_integration(integration)
+
+        refute Repo.reload(integration)
+        refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain1})
+        refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain2})
+      end
+
+      test "cancels verification jobs when integration is force removed with SSO users" do
+        team = new_site().team
+
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity("Test User", "test@" <> domain)
+        {:ok, _, _, _} = SSO.provision_user(identity)
+
+        :ok = SSO.Domains.kick_off_verification(domain)
+        assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
+
+        assert :ok = SSO.remove_integration(integration, force_deprovision?: true)
+
+        refute Repo.reload(integration)
+        refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
       end
     end
 

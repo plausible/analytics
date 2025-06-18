@@ -186,15 +186,23 @@ defmodule Plausible.Auth.SSO do
 
     case {check, force_deprovision?} do
       {:ok, _} ->
-        Repo.delete!(integration)
+        {:ok, :ok} =
+          Repo.transaction(fn ->
+            integration = Repo.preload(integration, :sso_domains)
+            Enum.each(integration.sso_domains, &SSO.Domain.Verification.Worker.cancel(&1.domain))
+            Repo.delete!(integration)
+            :ok
+          end)
+
         :ok
 
       {{:error, :sso_users_present}, true} ->
-        users = Repo.preload(integration, :users).users
-
         {:ok, :ok} =
           Repo.transaction(fn ->
+            users = Repo.preload(integration, :users).users
+            integration = Repo.preload(integration, :sso_domains)
             Enum.each(users, &deprovision_user!/1)
+            Enum.each(integration.sso_domains, &SSO.Domain.Verification.Worker.cancel(&1.domain))
             Repo.delete!(integration)
             :ok
           end)

@@ -102,20 +102,17 @@ defmodule Plausible.Auth.SSO.Domains do
           Repo.transaction(fn ->
             Repo.delete!(sso_domain)
             :ok = SSO.Domain.Verification.Worker.cancel(sso_domain.domain)
-            :ok
           end)
 
         :ok
 
       {{:error, :sso_users_present}, true} ->
-        domain_users = users_by_domain(sso_domain)
-
         {:ok, :ok} =
           Repo.transaction(fn ->
+            domain_users = users_by_domain(sso_domain)
             Enum.each(domain_users, &SSO.deprovision_user!/1)
             Repo.delete!(sso_domain)
             :ok = SSO.Domain.Verification.Worker.cancel(sso_domain.domain)
-            :ok
           end)
 
         :ok
