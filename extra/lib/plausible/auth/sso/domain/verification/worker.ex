@@ -46,7 +46,10 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
       })
       when attempt <= @max_snoozes do
     service_opts = [
-      skip_checks?: meta["skip_checks"] == true
+      skip_checks?: meta["skip_checks"] == true,
+      verification_opts: [
+        nameservers: Application.get_env(:plausible, :sso_verification_nameservers) || []
+      ]
     ]
 
     service_opts =

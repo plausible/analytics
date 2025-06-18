@@ -15,7 +15,9 @@ defmodule PlausibleWeb.Live.SSOManagement do
   def mount(_params, _session, socket) do
     socket = load_integration(socket, socket.assigns.current_team)
 
-    Process.send_after(self(), :refresh_integration, @refresh_integration_interval)
+    if connected?(socket) do
+      Process.send_after(self(), :refresh_integration, @refresh_integration_interval)
+    end
 
     {:ok, route_mode(socket)}
   end
@@ -597,6 +599,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
   end
 
   def handle_info(:refresh_integration, socket) do
+    Process.send_after(self(), :refresh_integration, @refresh_integration_interval)
     {:noreply, load_integration(socket, socket.assigns.current_team)}
   end
 
