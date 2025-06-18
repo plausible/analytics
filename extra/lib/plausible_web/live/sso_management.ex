@@ -209,7 +209,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
       </.notice>
 
       <form id="verify-domain-submit" for={} phx-submit="verify-domain-submit">
-        <.input type="hidden" name="domain" value={@domain.domain} />
+        <.input type="hidden" name="identifier" value={@domain.identifier} />
         <.button
           :if={@domain.status in [Status.in_progress(), Status.unverified(), Status.verified()]}
           type="submit"
@@ -488,10 +488,16 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, socket}
   end
 
-  def handle_event("verify-domain-submit", %{"domain" => domain}, socket) do
-    SSO.Domains.start_verification(domain)
+  def handle_event("verify-domain-submit", params, socket) do
+    integration = socket.assigns.integration
+    sso_domain = Enum.find(integration.sso_domains, &(&1.identifier == params["identifier"]))
 
-    {:noreply, route_mode(load_integration(socket, socket.assigns.current_team), :manage)}
+    if sso_domain do
+      SSO.Domains.start_verification(sso_domain.domain)
+      {:noreply, route_mode(load_integration(socket, socket.assigns.current_team), :manage)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("show-domain-setup", _params, socket) do
