@@ -50,12 +50,6 @@ defmodule Plausible.Auth.SSO.Domain.Verification.WorkerTest do
          sso_domain: sso_domain}
       end
 
-      test "enqueue resets domain status", %{sso_domain: sso_domain} do
-        %{status: Status.unverified()} = SSO.Domains.mark_unverified!(sso_domain, :unverified)
-        {:ok, _} = Worker.enqueue(sso_domain.domain)
-        assert Plausible.Repo.reload!(sso_domain).status == Status.in_progress()
-      end
-
       test "domain is marked as in progress and job is snoozed", %{domain: domain} do
         assert {:ok, %{status: Status.pending()}} = SSO.Domains.get(domain)
 

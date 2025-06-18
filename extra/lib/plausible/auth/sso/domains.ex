@@ -7,6 +7,7 @@ defmodule Plausible.Auth.SSO.Domains do
 
   alias Plausible.Auth
   alias Plausible.Auth.SSO
+  alias Plausible.Auth.SSO.Domain.Verification
   alias Plausible.Repo
 
   use Plausible.Auth.SSO.Domain.Status
@@ -19,9 +20,31 @@ defmodule Plausible.Auth.SSO.Domains do
     Repo.insert(changeset)
   end
 
-  @spec kick_off_verification(String.t()) :: :ok
-  def kick_off_verification(domain) when is_binary(domain) do
-    {:ok, _} = SSO.Domain.Verification.Worker.enqueue(domain)
+  @spec start_verification(String.t()) :: SSO.Domain.t()
+  def start_verification(domain) when is_binary(domain) do
+    {:ok, result} =
+      Repo.transaction(fn ->
+        with {:ok, sso_domain} <- get(domain) do
+          sso_domain = mark_unverified!(sso_domain, Status.in_progress())
+          {:ok, _} = Verification.Worker.enqueue(domain)
+          {:ok, sso_domain}
+        end
+      end)
+
+    result
+  end
+
+  @spec cancel_verification(String.t()) :: :ok
+  def cancel_verification(domain) when is_binary(domain) do
+    {:ok, :ok} =
+      Repo.transaction(fn ->
+        with {:ok, sso_domain} <- get(domain) do
+          mark_unverified!(sso_domain, Status.unverified())
+        end
+
+        :ok = Verification.Worker.cancel(domain)
+      end)
+
     :ok
   end
 
@@ -101,7 +124,7 @@ defmodule Plausible.Auth.SSO.Domains do
         {:ok, :ok} =
           Repo.transaction(fn ->
             Repo.delete!(sso_domain)
-            :ok = SSO.Domain.Verification.Worker.cancel(sso_domain.domain)
+            :ok = cancel_verification(sso_domain.domain)
           end)
 
         :ok
@@ -112,7 +135,7 @@ defmodule Plausible.Auth.SSO.Domains do
             domain_users = users_by_domain(sso_domain)
             Enum.each(domain_users, &SSO.deprovision_user!/1)
             Repo.delete!(sso_domain)
-            :ok = SSO.Domain.Verification.Worker.cancel(sso_domain.domain)
+            cancel_verification(sso_domain.domain)
           end)
 
         :ok

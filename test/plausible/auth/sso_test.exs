@@ -758,8 +758,8 @@ defmodule Plausible.Auth.SSOTest do
         {:ok, _} = SSO.Domains.add(integration, domain1)
         {:ok, _} = SSO.Domains.add(integration, domain2)
 
-        :ok = SSO.Domains.kick_off_verification(domain1)
-        :ok = SSO.Domains.kick_off_verification(domain2)
+        {:ok, _} = SSO.Domains.start_verification(domain1)
+        {:ok, _} = SSO.Domains.start_verification(domain2)
 
         assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain1})
         assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain2})
@@ -783,7 +783,7 @@ defmodule Plausible.Auth.SSOTest do
         identity = new_identity("Test User", "test@" <> domain)
         {:ok, _, _, _} = SSO.provision_user(identity)
 
-        :ok = SSO.Domains.kick_off_verification(domain)
+        {:ok, _} = SSO.Domains.start_verification(domain)
         assert_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
 
         assert :ok = SSO.remove_integration(integration, force_deprovision?: true)

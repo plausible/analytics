@@ -29,22 +29,13 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
 
   @spec enqueue(String.t()) :: {:ok, Oban.Job.t()}
   def enqueue(domain) do
-    {:ok, result} =
-      Repo.transaction(fn ->
-        with {:ok, sso_domain} <- SSO.Domains.get(domain) do
-          SSO.Domains.mark_unverified!(sso_domain, Status.in_progress())
-        end
+    {:ok, job} =
+      %{domain: domain}
+      |> new()
+      |> Oban.insert()
 
-        {:ok, job} =
-          %{domain: domain}
-          |> new()
-          |> Oban.insert()
-
-        :ok = Oban.retry_job(job)
-        {:ok, job}
-      end)
-
-    result
+    :ok = Oban.retry_job(job)
+    {:ok, job}
   end
 
   @impl true

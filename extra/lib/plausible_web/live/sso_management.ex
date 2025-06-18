@@ -309,19 +309,31 @@ defmodule PlausibleWeb.Live.SSOManagement do
         <.table rows={@integration.sso_domains}>
           <:thead>
             <.th>Domain</.th>
-            <.th>Added at</.th>
+            <.th hide_on_mobile>Added at</.th>
             <.th>Status</.th>
             <.th invisible>Actions</.th>
           </:thead>
           <:tbody :let={domain}>
             <.td>{domain.domain}</.td>
-            <.td>{Calendar.strftime(domain.inserted_at, "%b %-d, %Y at %H:%m UTC")}</.td>
+            <.td hide_on_mobile>
+              {Calendar.strftime(domain.inserted_at, "%b %-d, %Y at %H:%m UTC")}
+            </.td>
             <.td :if={domain.status != Status.in_progress()}>{domain.status}</.td>
             <.td :if={domain.status == Status.in_progress()}>
-              <.spinner class="w-4 h-4" />
+              <div class="flex items-center gap-x-2">
+                <.spinner class="w-4 h-4" />
+                <.styled_link
+                  id={"cancel-verify-domain-#{domain.identifier}"}
+                  phx-click="cancel-verify-domain"
+                  phx-value-identifier={domain.identifier}
+                >
+                  Cancel
+                </.styled_link>
+              </div>
             </.td>
             <.td actions>
               <.styled_link
+                :if={domain.status != Status.in_progress()}
                 id={"verify-domain-#{domain.identifier}"}
                 phx-click="verify-domain"
                 phx-value-identifier={domain.identifier}
@@ -475,7 +487,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
   end
 
   def handle_event("verify-domain-submit", %{"domain" => domain}, socket) do
-    :ok = SSO.Domains.kick_off_verification(domain)
+    SSO.Domains.start_verification(domain)
 
     {:noreply, route_mode(load_integration(socket, socket.assigns.current_team), :manage)}
   end
@@ -499,6 +511,21 @@ defmodule PlausibleWeb.Live.SSOManagement do
     else
       {:noreply, route_mode(socket, :manage)}
     end
+  end
+
+  def handle_event("cancel-verify-domain", params, socket) do
+    integration = socket.assigns.integration
+    domain = Enum.find(integration.sso_domains, &(&1.identifier == params["identifier"]))
+
+    socket =
+      if domain do
+        :ok = SSO.Domains.cancel_verification(domain.domain)
+        load_integration(socket, socket.assigns.current_team)
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   def handle_event("remove-domain", params, socket) do
