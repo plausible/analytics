@@ -335,7 +335,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
             </.td>
             <.td actions>
               <.styled_link
-                :if={domain.status != Status.in_progress()}
+                :if={domain.status not in [Status.in_progress(), Status.verified()]}
                 id={"verify-domain-#{domain.identifier}"}
                 phx-click="verify-domain"
                 phx-value-identifier={domain.identifier}
