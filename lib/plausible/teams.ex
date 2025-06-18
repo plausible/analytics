@@ -219,10 +219,10 @@ defmodule Plausible.Teams do
     end
   end
 
-  @spec get_by_owner(Auth.User.t()) ::
+  @spec get_by_owner(Auth.User.t(), Keyword.t()) ::
           {:ok, Teams.Team.t()} | {:error, :no_team | :multiple_teams}
-  def get_by_owner(user) do
-    get_owned_team(user)
+  def get_by_owner(user, opts \\ []) do
+    get_owned_team(user, opts)
   end
 
   @spec update_accept_traffic_until(Teams.Team.t()) :: Teams.Team.t()

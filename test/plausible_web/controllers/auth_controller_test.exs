@@ -613,6 +613,30 @@ defmodule PlausibleWeb.AuthControllerTest do
         assert get_session(conn, :user_token) == nil
         assert html_response(conn, 200) =~ "Enter your account credentials"
       end
+
+      test "SSO user other than owner with personal team - renders login form again", %{
+        conn: conn
+      } do
+        owner = new_user()
+        team = new_site(owner: owner).team
+        member = new_user(name: "Jane Shelley", email: "jane@example.com", password: "password")
+        {:ok, _} = Plausible.Teams.get_or_create(member)
+        add_member(team, user: member, role: :viewer)
+
+        # Setup SSO
+        integration = Auth.SSO.initiate_saml_integration(team)
+
+        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
+        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(member.name, member.email)
+        {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
+
+        conn = post(conn, "/login", email: member.email, password: "password")
+
+        assert get_session(conn, :user_token) == nil
+        assert html_response(conn, 200) =~ "Enter your account credentials"
+      end
     end
 
     test "email does not exist - renders login form again", %{conn: conn} do

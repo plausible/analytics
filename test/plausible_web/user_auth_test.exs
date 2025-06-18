@@ -210,6 +210,33 @@ defmodule PlausibleWeb.UserAuthTest do
         assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
         assert get_session(conn, :user_token)
       end
+
+      test "passes through for user matching SSO identity with active personal team, redirecting to team",
+           %{
+             conn: conn,
+             user: user
+           } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+        # personal team with site created
+        new_site(owner: user)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
+        assert get_session(conn, :user_token)
+      end
     end
   end
 

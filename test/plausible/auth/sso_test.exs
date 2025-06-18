@@ -256,6 +256,36 @@ defmodule Plausible.Auth.SSOTest do
         assert sso_user.last_sso_login
       end
 
+      test "provisions SSO user from existing user with personal team", %{
+        integration: integration,
+        team: team,
+        domain: domain,
+        sso_domain: sso_domain
+      } do
+        user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
+        {:ok, _} = Plausible.Teams.get_or_create(user)
+        add_member(team, user: user, role: :editor)
+
+        # guest membership on a site on another team should not affect provisioning
+        another_team_site = new_site()
+        add_guest(another_team_site, user: user, role: :editor)
+
+        identity = new_identity(user.name, user.email)
+
+        assert {:ok, :standard, matched_team, sso_user} = SSO.provision_user(identity)
+
+        assert matched_team.id == team.id
+        assert sso_user.id == user.id
+        assert sso_user.email == identity.email
+        assert sso_user.type == :sso
+        assert sso_user.name == identity.name
+        assert sso_user.sso_identity_id == identity.id
+        assert sso_user.sso_integration_id == integration.id
+        assert sso_user.sso_domain_id == sso_domain.id
+        assert sso_user.email_verified
+        assert sso_user.last_sso_login
+      end
+
       test "provisions existing SSO user", %{
         integration: integration,
         team: team,
@@ -318,11 +348,48 @@ defmodule Plausible.Auth.SSOTest do
       } do
         user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
         add_member(team, user: user, role: :editor)
-        another_team = new_site().team
+        another_team = new_site().team |> Plausible.Teams.complete_setup()
         add_member(another_team, user: user, role: :viewer)
         identity = new_identity(user.name, user.email)
 
         assert {:error, :multiple_memberships, matched_team, matched_user} =
+                 SSO.provision_user(identity)
+
+        assert matched_team.id == team.id
+        assert matched_user.id == user.id
+      end
+
+      test "does not provision from existing user with personal team with subscription", %{
+        team: team,
+        domain: domain
+      } do
+        user =
+          new_user(email: "jane@" <> domain, name: "Jane Sculley") |> subscribe_to_growth_plan()
+
+        add_member(team, user: user, role: :editor)
+
+        identity = new_identity(user.name, user.email)
+
+        assert {:error, :active_personal_team, matched_team, matched_user} =
+                 SSO.provision_user(identity)
+
+        assert matched_team.id == team.id
+        assert matched_user.id == user.id
+      end
+
+      test "does not provision from existing user with personal team with site", %{
+        team: team,
+        domain: domain
+      } do
+        user = new_user(email: "jane@" <> domain, name: "Jane Sculley")
+
+        new_site(owner: user)
+
+        add_member(team, user: user, role: :editor)
+
+        identity = new_identity(user.name, user.email)
+
+        assert {:error, :active_personal_team, matched_team, matched_user} =
                  SSO.provision_user(identity)
 
         assert matched_team.id == team.id

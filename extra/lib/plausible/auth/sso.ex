@@ -8,10 +8,13 @@ defmodule Plausible.Auth.SSO do
 
   alias Plausible.Auth
   alias Plausible.Auth.SSO
+  alias Plausible.Billing.Subscription
   alias Plausible.Repo
   alias Plausible.Teams
 
   use Plausible.Auth.SSO.Domain.Status
+
+  require Plausible.Billing.Subscription.Status
 
   @type policy_attr() ::
           {:sso_default_role, Teams.Policy.sso_member_role()}
@@ -74,7 +77,7 @@ defmodule Plausible.Auth.SSO do
   @spec provision_user(SSO.Identity.t()) ::
           {:ok, :standard | :sso | :integration, Teams.Team.t(), Auth.User.t()}
           | {:error, :integration_not_found | :over_limit}
-          | {:error, :multiple_memberships, Teams.Team.t(), Auth.User.t()}
+          | {:error, :multiple_memberships | :active_personal_team, Teams.Team.t(), Auth.User.t()}
   def provision_user(identity) do
     case find_user(identity) do
       {:ok, :standard, user, integration, domain} ->
@@ -394,6 +397,7 @@ defmodule Plausible.Auth.SSO do
 
     with :ok <- ensure_team_member(integration.team, user),
          :ok <- ensure_one_membership(user, integration.team),
+         :ok <- ensure_empty_personal_team(user, integration.team),
          :ok <- Auth.UserSessions.revoke_all(user),
          {:ok, user} <- Repo.update(changeset) do
       {:ok, :standard, integration.team, user}
@@ -467,10 +471,31 @@ defmodule Plausible.Auth.SSO do
   end
 
   defp ensure_one_membership(user, team) do
-    if Teams.Users.team_member?(user, except: [team.id]) do
+    if Teams.Users.team_member?(user, except: [team.id], only_setup?: true) do
       {:error, :multiple_memberships, team, user}
     else
       :ok
+    end
+  end
+
+  defp ensure_empty_personal_team(user, team) do
+    case Teams.get_by_owner(user, only_not_setup?: true) do
+      {:ok, personal_team} ->
+        subscription = Teams.Billing.get_subscription(personal_team)
+
+        no_subscription? =
+          is_nil(subscription) or subscription.status == Subscription.Status.deleted()
+
+        zero_sites? = Teams.owned_sites_count(personal_team) == 0
+
+        if no_subscription? and zero_sites? do
+          :ok
+        else
+          {:error, :active_personal_team, team, user}
+        end
+
+      {:error, :no_team} ->
+        :ok
     end
   end
 end
