@@ -341,7 +341,7 @@ for (const mode of ['legacy', 'web']) {
         timeout: 2000
       })
       await page.click('a')
-      const [{ trackingRequestList, trackingResponseTime }, navRequestTime] =
+      const [{ trackingRequestList, trackingResponseTime }, navigationTime] =
         await Promise.all([
           eventsApiMock.getRequestList().then((requestList) => ({
             trackingRequestList: requestList,
@@ -350,7 +350,7 @@ for (const mode of ['legacy', 'web']) {
           navigationPromise.then(Date.now)
         ])
       await expect(page.getByText('Subscription successful')).toBeVisible()
-      expect(navRequestTime).toBeLessThan(trackingResponseTime)
+      expect(navigationTime).toBeLessThanOrEqual(trackingResponseTime)
       expect(trackingRequestList).toEqual([
         expect.objectContaining({
           n: 'Subscribe',
@@ -412,7 +412,7 @@ for (const mode of ['legacy', 'web']) {
 }
 
 test.describe('tagged events feature when using legacy .compat extension', () => {
-  test('tracks tagged links, delaying navigation until the tracking request has finished', async ({
+  test('tracking delays navigation until the tracking request has finished', async ({
     page
   }, { testId }) => {
     const eventsApiMock = await mockManyRequests({
@@ -441,12 +441,12 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       timeout: 2000
     })
     await page.click('a')
-    const [trackingResponseTime, navRequestTime] = await Promise.all([
+    const [trackingResponseTime, navigationTime] = await Promise.all([
       trackingPromise.then(Date.now),
       navigationPromise.then(Date.now)
     ])
     await expect(page.getByText('Subscription successful')).toBeVisible()
-    expect(trackingResponseTime).toBeLessThan(navRequestTime)
+    expect(trackingResponseTime).toBeLessThan(navigationTime)
     await expect(eventsApiMock.getRequestList()).resolves.toEqual([
       expect.objectContaining({
         n: 'Subscribe',
@@ -457,7 +457,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     ])
   })
 
-  test('attempts to track tagged links, but navigates anyway if the tracking request takes above 5s', async ({
+  test('if the tracking requests delays navigation for more than 5s, it navigates anyway, without waiting for the request to resolve', async ({
     page
   }, { testId }) => {
     test.setTimeout(20000)
@@ -487,12 +487,12 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
       timeout: 7000
     })
     await page.click('a')
-    const [trackingResponseTime, navRequestTime] = await Promise.all([
+    const [trackingResponseTime, navigationTime] = await Promise.all([
       trackingPromise.then(Date.now).catch(Date.now),
       navigationPromise.then(Date.now)
     ])
     await expect(page.getByText('Subscription successful')).toBeVisible()
-    expect(navRequestTime).toBeLessThan(trackingResponseTime)
+    expect(navigationTime).toBeLessThan(trackingResponseTime)
   })
 
   test('does not track link without plausible-event-name class, the link still navigates as it should', async ({

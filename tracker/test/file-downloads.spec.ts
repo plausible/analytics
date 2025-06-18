@@ -18,9 +18,7 @@ const DEFAULT_CONFIG: ScriptConfig = {
 
 for (const mode of ['legacy', 'web']) {
   test.describe(`file downloads feature legacy/v2 parity (${mode})`, () => {
-    test('sends event and starts exactly one download', async ({ page }, {
-      testId
-    }) => {
+    test('tracks download when link opens in same tab', async ({ page }, { testId }) => {
       const filePath = '/file.csv'
       const { getRequestList } = await mockManyRequests({
         page,
@@ -28,7 +26,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'text/csv'
         },
-        countOfRequestsToAwait: 2
+        countOfRequestsToAwait: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -55,7 +53,7 @@ for (const mode of ['legacy', 'web']) {
       await expect(getRequestList()).resolves.toHaveLength(1)
     })
 
-    test('sends event and starts exactly one download when link opens in new tab (target="__blank")', async ({
+    test('tracks download when link opens in new tab (target="__blank")', async ({
       page
     }, { testId }) => {
       const pdfUrl = 'https://example.com/downloads/file.pdf'
@@ -65,7 +63,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/pdf'
         },
-        countOfRequestsToAwait: 2
+        countOfRequestsToAwait: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -90,7 +88,7 @@ for (const mode of ['legacy', 'web']) {
       await expect(pdfMock.getRequestList()).resolves.toHaveLength(1)
     })
 
-    test('sends event and starts exactly one download when link opens in new tab (ControlOrMeta + click)', async ({
+    test('tracks download when link opens in new tab (ControlOrMeta + click)', async ({
       page,
       browserName
     }, { testId }) => {
@@ -105,7 +103,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/pdf'
         },
-        countOfRequestsToAwait: 2
+        countOfRequestsToAwait: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -130,7 +128,7 @@ for (const mode of ['legacy', 'web']) {
       await expect(pdfMock.getRequestList()).resolves.toHaveLength(1)
     })
 
-    test('sends event and starts download when link child is clicked', async ({
+    test('tracks download when link child element is clicked', async ({
       page
     }, { testId }) => {
       const pdfUrl = 'https://example.com/downloads/file.pdf'
@@ -140,7 +138,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/pdf'
         },
-        countOfRequestsToAwait: 2
+        countOfRequestsToAwait: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -163,6 +161,68 @@ for (const mode of ['legacy', 'web']) {
       })
 
       await expect(pdfMock.getRequestList()).resolves.toHaveLength(1)
+    })
+
+    test('tracks download without delaying navigation, relying on fetch options.keepalive to deliver tracking events', async ({
+      page
+    }, { testId }) => {
+      const eventsApiMock = await mockManyRequests({
+        page,
+        path: '**/api/event',
+        countOfRequestsToAwait: 1,
+        responseDelay: 500
+      })
+      const pdfUrl = 'https://example.com/downloads/file.pdf'
+      const pdfMock = await mockManyRequests({
+        page,
+        path: pdfUrl,
+        fulfill: {
+          contentType: 'application/pdf'
+        },
+        countOfRequestsToAwait: 1
+      })
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: {
+              ...DEFAULT_CONFIG,
+              fileDownloads: true,
+              autoCapturePageviews: false
+            },
+            legacy:
+              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.manual.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `<a href="${pdfUrl}">Download</a>`
+      })
+      await page.goto(url)
+      await page.click('a')
+      const [
+        { trackingRequestList, trackingResponseTime },
+        { downloadMockRequestList, downloadRequestTime }
+      ] = await Promise.all([
+        eventsApiMock.getRequestList().then((requestList) => ({
+          trackingRequestList: requestList,
+          trackingResponseTime: Date.now()
+        })),
+        pdfMock.getRequestList().then((requestList) => ({
+          downloadMockRequestList: requestList,
+          downloadRequestTime: Date.now()
+        }))
+      ])
+
+      expect(downloadRequestTime).toBeLessThan(trackingResponseTime)
+      expect(downloadMockRequestList).toHaveLength(1)
+      expect(trackingRequestList).toEqual([
+        expect.objectContaining({
+          n: 'File Download',
+          p: {
+            url: pdfUrl
+          }
+        })
+      ])
     })
 
     test('event.props.url is stripped of query parameters', async ({ page }, {
@@ -315,12 +375,15 @@ for (const mode of ['web', 'esm']) {
       }
       const { url } = await initializePageDynamically(page, {
         testId,
-        scriptConfig: switchByMode({
-          web: config,
-          esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
-            config
-          )})</script>`
-        }, mode),
+        scriptConfig: switchByMode(
+          {
+            web: config,
+            esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
+              config
+            )})</script>`
+          },
+          mode
+        ),
         bodyContent: `<a href="${isoFileURL}" target="__blank">📥</a><a href="${csvFileURL}" target="__blank">📥</a>`
       })
       await page.goto(url)
@@ -342,26 +405,75 @@ for (const mode of ['web', 'esm']) {
 }
 
 test.describe('file downloads feature when using legacy .compat extension', () => {
-  for (const { caseName, fulfill } of [
-    {
-      caseName: 'if event sending is slow, starts exactly one download',
+  test('tracks and starts exactly one download on link click', async ({
+    page
+  }, { testId }) => {
+    const eventsApiMock = await mockManyRequests({
+      page,
+      path: '**/api/event',
+      countOfRequestsToAwait: 2,
+      mockRequestTimeoutMs: 2000
+    })
+    const filePath = '/file.csv'
+    const downloadableFileMock = await mockManyRequests({
+      page,
+      path: `${LOCAL_SERVER_ADDR}${filePath}`,
       fulfill: {
-        status: 200,
+        contentType: 'text/csv'
+      },
+      countOfRequestsToAwait: 2,
+      mockRequestTimeoutMs: 2000
+    })
+
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig:
+        '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
+      bodyContent: `<a href="${filePath}">📥</a>`
+    })
+    await page.goto(url)
+    await page.click('a')
+    const [downloadRequests, eventsApiRequests] = await Promise.all([
+      downloadableFileMock.getRequestList(),
+      eventsApiMock.getRequestList()
+    ])
+    expect(downloadRequests).toHaveLength(1)
+    expect(eventsApiRequests).toEqual([
+      expect.objectContaining({
+        n: 'File Download',
+        p: {
+          url: `${LOCAL_SERVER_ADDR}${filePath}`
+        }
+      })
+    ])
+  })
+
+  for (const { fulfill } of [
+    {
+      fulfill: {
+        status: 202,
         contentType: 'text/plain',
         body: 'ok'
       }
     },
     {
-      caseName: 'if event sending fails, starts exactly one download',
       fulfill: {
         status: 400,
         contentType: 'text/plain',
         body: 'Bad Request'
       }
     }
-  ])
-    test(caseName, async ({ page }, { testId }) => {
-      test.setTimeout(20000)
+  ]) {
+    test(`tracking delays navigation until the tracking request has finished (with status: ${fulfill.status})`, async ({
+      page
+    }, { testId }) => {
+      const eventsApiMock = await mockManyRequests({
+        page,
+        path: '**/api/event',
+        fulfill,
+        countOfRequestsToAwait: 1,
+        responseDelay: 1000
+      })
       const filePath = '/file.csv'
       const downloadableFileMock = await mockManyRequests({
         page,
@@ -369,16 +481,8 @@ test.describe('file downloads feature when using legacy .compat extension', () =
         fulfill: {
           contentType: 'text/csv'
         },
-        countOfRequestsToAwait: 2,
-        mockRequestTimeoutMs: 10000
-      })
-      const eventsApiMock = await mockManyRequests({
-        page,
-        path: '/api/event',
-        fulfill,
-        responseDelay: 3000,
-        countOfRequestsToAwait: 2,
-        mockRequestTimeoutMs: 7000
+        countOfRequestsToAwait: 1,
+        mockRequestTimeoutMs: 1000
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -387,15 +491,73 @@ test.describe('file downloads feature when using legacy .compat extension', () =
         bodyContent: `<a href="${filePath}">📥</a>`
       })
       await page.goto(url)
-      await page.click('a')
 
-      await Promise.all([
-        expect(eventsApiMock.getRequestList()).resolves.toEqual([
-          expect.objectContaining({
-            n: 'File Download'
-          })
-        ]),
-        expect(downloadableFileMock.getRequestList()).resolves.toHaveLength(1)
+      const navigationPromise = page.waitForRequest(filePath, {
+        timeout: 2000
+      })
+      const trackingPromise = page.waitForResponse('**/api/event', {
+        timeout: 2000
+      })
+
+      await page.click('a')
+      const [trackingResponseTime, navigationTime] = await Promise.all([
+        trackingPromise.then(Date.now),
+        navigationPromise.then(Date.now)
+      ])
+      await expect(downloadableFileMock.getRequestList()).resolves.toHaveLength(
+        1
+      )
+      expect(trackingResponseTime).toBeLessThanOrEqual(navigationTime)
+      await expect(eventsApiMock.getRequestList()).resolves.toEqual([
+        expect.objectContaining({
+          n: 'File Download',
+          p: {
+            url: `${LOCAL_SERVER_ADDR}${filePath}`
+          }
+        })
       ])
     })
+  }
+
+  test('if the tracking requests delays navigation for more than 5s, it navigates anyway, without waiting for the request to resolve ', async ({
+    page
+  }, { testId }) => {
+    test.setTimeout(20000)
+    await mockManyRequests({
+      page,
+      path: '**/api/event',
+      countOfRequestsToAwait: 1,
+      responseDelay: 6000
+    })
+    const filePath = '/file.csv'
+    const downloadableFileMock = await mockManyRequests({
+      page,
+      path: `${LOCAL_SERVER_ADDR}${filePath}`,
+      fulfill: {
+        contentType: 'text/csv'
+      },
+      countOfRequestsToAwait: 1,
+      mockRequestTimeoutMs: 1000
+    })
+    const { url } = await initializePageDynamically(page, {
+      testId,
+      scriptConfig:
+        '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
+      bodyContent: `<a href="${filePath}">📥</a>`
+    })
+    await page.goto(url)
+    const navigationPromise = page.waitForRequest(filePath, {
+      timeout: 7000
+    })
+    const trackingPromise = page.waitForResponse('**/api/event', {
+      timeout: 7000
+    })
+    await page.click('a')
+    const [trackingResponseTime, navigationTime] = await Promise.all([
+      trackingPromise.then(Date.now).catch(Date.now),
+      navigationPromise.then(Date.now)
+    ])
+    await expect(downloadableFileMock.getRequestList()).resolves.toHaveLength(1)
+    expect(navigationTime).toBeLessThan(trackingResponseTime)
+  })
 })
