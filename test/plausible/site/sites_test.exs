@@ -1,5 +1,6 @@
 defmodule Plausible.SitesTest do
   use Plausible.DataCase
+  use Plausible
   use Plausible.Teams.Test
 
   alias Plausible.Sites
@@ -114,6 +115,30 @@ defmodule Plausible.SitesTest do
       assert {:ok, %{site: site}} = Sites.create(user, params, editor_team)
 
       assert site.team_id == editor_team.id
+    end
+  end
+
+  on_ee do
+    describe "create a site - SSO user" do
+      setup [:create_user, :create_team, :create_site, :setup_sso, :provision_sso_user]
+
+      test "creates a site for SSO user in a setup team", %{user: user, team: team} do
+        params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+        assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+                 Sites.create(user, params, team)
+      end
+
+      test "does not allow creating a site in SSO user's personal team", %{team: team} do
+        user = add_member(team, role: :editor)
+        {:ok, personal_team} = Plausible.Teams.get_or_create(user)
+        identity = new_identity(user.name, user.email)
+        {:ok, _, _, user} = Plausible.Auth.SSO.provision_user(identity)
+
+        params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+        assert {:error, _, :permission_denied, _} = Sites.create(user, params, personal_team)
+      end
     end
   end
 

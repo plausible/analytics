@@ -46,13 +46,20 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
+  @spec can_add_site?(Teams.Team.t(), Auth.User.t()) :: boolean()
   def can_add_site?(team, user) do
-    case team_role(team, user) do
-      {:ok, role} when role in [:owner, :admin, :editor] ->
-        true
+    user_type = Plausible.Users.type(user)
 
-      _ ->
-        false
+    role =
+      case team_role(team, user) do
+        {:ok, role} -> role
+        {:error, _} -> :not_a_member
+      end
+
+    case {user_type, role, team} do
+      {:sso, :owner, %{setup_complete: false}} -> false
+      {_, role, _} when role in [:owner, :admin, :editor] -> true
+      _ -> false
     end
   end
 
