@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Live.SSOMangementTest do
   use PlausibleWeb.ConnCase, async: false
+  use Oban.Testing, repo: Plausible.Repo
 
   @moduletag :ee_only
 
@@ -108,7 +109,12 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         text = render(lv) |> text()
         assert text =~ "Verifying domain"
 
-        lv |> element("form#show-manage") |> render_submit()
+        lv |> element("form#verify-domain-submit") |> render_submit()
+
+        assert_enqueued(
+          worker: SSO.Domain.Verification.Worker,
+          args: %{domain: "example.com"}
+        )
 
         html = render(lv)
         text = text(html)
@@ -185,7 +191,12 @@ defmodule PlausibleWeb.Live.SSOMangementTest do
         html = render(lv)
         assert text(html) =~ "Verifying domain new.example.com"
 
-        lv |> element("form#show-manage") |> render_submit()
+        lv |> element("form#verify-domain-submit") |> render_submit()
+
+        assert_enqueued(
+          worker: SSO.Domain.Verification.Worker,
+          args: %{domain: "new.example.com"}
+        )
 
         text = text(render(lv))
         assert text =~ "org.example.com"

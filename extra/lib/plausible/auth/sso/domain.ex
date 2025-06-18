@@ -25,6 +25,8 @@ defmodule Plausible.Auth.SSO.Domain do
   @spec verification_methods() :: list(verification_method())
   def verification_methods(), do: @verification_methods
 
+  use Plausible.Auth.SSO.Domain.Status
+
   schema "sso_domains" do
     field :identifier, Ecto.UUID
     field :domain, :string
@@ -32,8 +34,8 @@ defmodule Plausible.Auth.SSO.Domain do
     field :last_verified_at, :naive_datetime
 
     field :status, Ecto.Enum,
-      values: [:pending, :in_progress, :verified, :unverified],
-      default: :pending
+      values: Status.all(),
+      default: Status.pending()
 
     belongs_to :sso_integration, Plausible.Auth.SSO.Integration
 
@@ -59,11 +61,11 @@ defmodule Plausible.Auth.SSO.Domain do
     |> change()
     |> put_change(:verified_via, method)
     |> put_change(:last_verified_at, now)
-    |> put_change(:status, :verified)
+    |> put_change(:status, Status.verified())
   end
 
   @spec unverified_changeset(t(), NaiveDateTime.t(), atom()) :: Ecto.Changeset.t()
-  def unverified_changeset(sso_domain, now, status \\ :in_progress) do
+  def unverified_changeset(sso_domain, now, status \\ Status.in_progress()) do
     sso_domain
     |> change()
     |> put_change(:verified_via, nil)

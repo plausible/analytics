@@ -312,6 +312,23 @@ sso_saml_adapter =
     "real" -> PlausibleWeb.SSO.RealSAMLAdapter
   end
 
+sso_verification_nameservers =
+  case get_var_from_path_or_env(config_dir, "SSO_VERIFICATION_NAMESERVERS") do
+    nil ->
+      []
+
+    some ->
+      some
+      |> String.split(",")
+      |> Enum.map(fn addr ->
+        uri = URI.parse("dns://#{addr}")
+        host = uri.host
+        port = uri.port || 53
+        {:ok, addr} = :inet.parse_address(to_charlist(host))
+        {addr, port}
+      end)
+  end
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -323,7 +340,8 @@ config :plausible,
   data_dir: data_dir,
   session_transfer_dir: session_transfer_dir,
   sso_enabled: sso_enabled,
-  sso_saml_adapter: sso_saml_adapter
+  sso_saml_adapter: sso_saml_adapter,
+  sso_verification_nameservers: sso_verification_nameservers
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,

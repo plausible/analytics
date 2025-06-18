@@ -11,6 +11,8 @@ defmodule Plausible.Auth.SSO do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  use Plausible.Auth.SSO.Domain.Status
+
   @type policy_attr() ::
           {:sso_default_role, Teams.Policy.sso_member_role()}
           | {:sso_session_timeout_minutes, non_neg_integer()}
@@ -184,15 +186,23 @@ defmodule Plausible.Auth.SSO do
 
     case {check, force_deprovision?} do
       {:ok, _} ->
-        Repo.delete!(integration)
+        {:ok, :ok} =
+          Repo.transaction(fn ->
+            integration = Repo.preload(integration, :sso_domains)
+            Enum.each(integration.sso_domains, &SSO.Domains.cancel_verification(&1.domain))
+            Repo.delete!(integration)
+            :ok
+          end)
+
         :ok
 
       {{:error, :sso_users_present}, true} ->
-        users = Repo.preload(integration, :users).users
-
         {:ok, :ok} =
           Repo.transaction(fn ->
+            users = Repo.preload(integration, :users).users
+            integration = Repo.preload(integration, :sso_domains)
             Enum.each(users, &deprovision_user!/1)
+            Enum.each(integration.sso_domains, &SSO.Domains.cancel_verification(&1.domain))
             Repo.delete!(integration)
             :ok
           end)
@@ -216,7 +226,7 @@ defmodule Plausible.Auth.SSO do
       )
 
     domains = Enum.flat_map(integrations, & &1.sso_domains)
-    no_verified_domains? = Enum.all?(domains, &(&1.status != :verified))
+    no_verified_domains? = Enum.all?(domains, &(&1.status != Status.verified()))
 
     cond do
       integrations == [] -> {:error, :no_integration}

@@ -7,7 +7,10 @@ defmodule Plausible.Auth.SSO.Domains do
 
   alias Plausible.Auth
   alias Plausible.Auth.SSO
+  alias Plausible.Auth.SSO.Domain.Verification
   alias Plausible.Repo
+
+  use Plausible.Auth.SSO.Domain.Status
 
   @spec add(SSO.Integration.t(), String.t()) ::
           {:ok, SSO.Domain.t()} | {:error, Ecto.Changeset.t()}
@@ -15,6 +18,34 @@ defmodule Plausible.Auth.SSO.Domains do
     changeset = SSO.Domain.create_changeset(integration, domain)
 
     Repo.insert(changeset)
+  end
+
+  @spec start_verification(String.t()) :: SSO.Domain.t()
+  def start_verification(domain) when is_binary(domain) do
+    {:ok, result} =
+      Repo.transaction(fn ->
+        with {:ok, sso_domain} <- get(domain) do
+          sso_domain = mark_unverified!(sso_domain, Status.in_progress())
+          {:ok, _} = Verification.Worker.enqueue(domain)
+          {:ok, sso_domain}
+        end
+      end)
+
+    result
+  end
+
+  @spec cancel_verification(String.t()) :: :ok
+  def cancel_verification(domain) when is_binary(domain) do
+    {:ok, :ok} =
+      Repo.transaction(fn ->
+        with {:ok, sso_domain} <- get(domain) do
+          mark_unverified!(sso_domain, Status.unverified())
+        end
+
+        :ok = Verification.Worker.cancel(domain)
+      end)
+
+    :ok
   end
 
   @spec verify(SSO.Domain.t(), Keyword.t()) :: SSO.Domain.t()
@@ -69,7 +100,7 @@ defmodule Plausible.Auth.SSO.Domains do
         inner_join: i in assoc(d, :sso_integration),
         inner_join: t in assoc(i, :team),
         where: d.domain == ^search,
-        where: d.status == :verified,
+        where: d.status == ^Status.verified(),
         preload: [sso_integration: {i, team: t}]
       )
       |> Repo.one()
@@ -90,17 +121,21 @@ defmodule Plausible.Auth.SSO.Domains do
 
     case {check, force_deprovision?} do
       {:ok, _} ->
-        Repo.delete!(sso_domain)
+        {:ok, :ok} =
+          Repo.transaction(fn ->
+            Repo.delete!(sso_domain)
+            :ok = cancel_verification(sso_domain.domain)
+          end)
+
         :ok
 
       {{:error, :sso_users_present}, true} ->
-        domain_users = users_by_domain(sso_domain)
-
         {:ok, :ok} =
           Repo.transaction(fn ->
+            domain_users = users_by_domain(sso_domain)
             Enum.each(domain_users, &SSO.deprovision_user!/1)
             Repo.delete!(sso_domain)
-            :ok
+            cancel_verification(sso_domain.domain)
           end)
 
         :ok

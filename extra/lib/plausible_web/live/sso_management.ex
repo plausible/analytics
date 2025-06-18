@@ -8,13 +8,16 @@ defmodule PlausibleWeb.Live.SSOManagement do
   alias Plausible.Teams
 
   alias PlausibleWeb.Router.Helpers, as: Routes
+  use Plausible.Auth.SSO.Domain.Status
 
-  @fake_verify_interval :timer.seconds(10)
+  @refresh_integration_interval :timer.seconds(5)
 
   def mount(_params, _session, socket) do
     socket = load_integration(socket, socket.assigns.current_team)
 
-    Process.send_after(self(), :fake_domain_verify, @fake_verify_interval)
+    if connected?(socket) do
+      Process.send_after(self(), :refresh_integration, @refresh_integration_interval)
+    end
 
     {:ok, route_mode(socket)}
   end
@@ -172,7 +175,7 @@ defmodule PlausibleWeb.Live.SSOManagement do
     <div class="flex-col space-y-6">
       <p class="text-sm">Verifying domain {@domain.domain}</p>
 
-      <p class="text-sm">You can verify the domain using one of 3 methods:</p>
+      <p class="text-sm">You can verify ownership of the domain using one of 3 methods:</p>
 
       <ul class="list-disc ml-4 space-y-6">
         <li>
@@ -201,8 +204,20 @@ defmodule PlausibleWeb.Live.SSOManagement do
         </li>
       </ul>
 
-      <form id="show-manage" for={} phx-submit="show-manage">
-        <.button type="submit">Continue</.button>
+      <.notice>
+        We'll keep checking your domain ownership. Once any of the above verification methods succeeds, we'll send you an e-mail. Thank you for your patience.
+      </.notice>
+
+      <form id="verify-domain-submit" for={} phx-submit="verify-domain-submit">
+        <.input type="hidden" name="identifier" value={@domain.identifier} />
+        <.button
+          :if={@domain.status in [Status.in_progress(), Status.unverified(), Status.verified()]}
+          type="submit"
+        >
+          Run verification now
+        </.button>
+
+        <.button :if={@domain.status == Status.pending()} type="submit">Continue</.button>
       </form>
     </div>
     """
@@ -296,16 +311,31 @@ defmodule PlausibleWeb.Live.SSOManagement do
         <.table rows={@integration.sso_domains}>
           <:thead>
             <.th>Domain</.th>
-            <.th>Added at</.th>
+            <.th hide_on_mobile>Added at</.th>
             <.th>Status</.th>
             <.th invisible>Actions</.th>
           </:thead>
           <:tbody :let={domain}>
             <.td>{domain.domain}</.td>
-            <.td>{Calendar.strftime(domain.inserted_at, "%b %-d, %Y at %H:%m UTC")}</.td>
-            <.td>{domain.status}</.td>
+            <.td hide_on_mobile>
+              {Calendar.strftime(domain.inserted_at, "%b %-d, %Y at %H:%m UTC")}
+            </.td>
+            <.td :if={domain.status != Status.in_progress()}>{domain.status}</.td>
+            <.td :if={domain.status == Status.in_progress()}>
+              <div class="flex items-center gap-x-2">
+                <.spinner class="w-4 h-4" />
+                <.styled_link
+                  id={"cancel-verify-domain-#{domain.identifier}"}
+                  phx-click="cancel-verify-domain"
+                  phx-value-identifier={domain.identifier}
+                >
+                  Cancel
+                </.styled_link>
+              </div>
+            </.td>
             <.td actions>
               <.styled_link
+                :if={domain.status not in [Status.in_progress(), Status.verified()]}
                 id={"verify-domain-#{domain.identifier}"}
                 phx-click="verify-domain"
                 phx-value-identifier={domain.identifier}
@@ -458,8 +488,16 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, socket}
   end
 
-  def handle_event("show-manage", _params, socket) do
-    {:noreply, route_mode(socket, :manage)}
+  def handle_event("verify-domain-submit", params, socket) do
+    integration = socket.assigns.integration
+    sso_domain = Enum.find(integration.sso_domains, &(&1.identifier == params["identifier"]))
+
+    if sso_domain do
+      SSO.Domains.start_verification(sso_domain.domain)
+      {:noreply, route_mode(load_integration(socket, socket.assigns.current_team), :manage)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("show-domain-setup", _params, socket) do
@@ -481,6 +519,21 @@ defmodule PlausibleWeb.Live.SSOManagement do
     else
       {:noreply, route_mode(socket, :manage)}
     end
+  end
+
+  def handle_event("cancel-verify-domain", params, socket) do
+    integration = socket.assigns.integration
+    domain = Enum.find(integration.sso_domains, &(&1.identifier == params["identifier"]))
+
+    socket =
+      if domain do
+        :ok = SSO.Domains.cancel_verification(domain.domain)
+        load_integration(socket, socket.assigns.current_team)
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   def handle_event("remove-domain", params, socket) do
@@ -551,29 +604,9 @@ defmodule PlausibleWeb.Live.SSOManagement do
     {:noreply, socket}
   end
 
-  def handle_info(:fake_domain_verify, %{assigns: %{integration: integration}} = socket)
-      when not is_nil(integration) do
-    sso_domains =
-      integration.sso_domains
-      |> Enum.map(fn domain ->
-        if domain.status == :pending do
-          SSO.Domains.verify(domain, skip_checks?: true)
-        else
-          domain
-        end
-      end)
-
-    Process.send_after(self(), :fake_domain_verify, @fake_verify_interval)
-
-    integration = %{integration | sso_domains: sso_domains}
-
-    {:noreply, assign(socket, :integration, integration)}
-  end
-
-  def handle_info(:fake_domain_verify, socket) do
-    Process.send_after(self(), :fake_domain_verify, @fake_verify_interval)
-
-    {:noreply, socket}
+  def handle_info(:refresh_integration, socket) do
+    Process.send_after(self(), :refresh_integration, @refresh_integration_interval)
+    {:noreply, load_integration(socket, socket.assigns.current_team)}
   end
 
   defp load_integration(socket, team) do

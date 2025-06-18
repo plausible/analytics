@@ -9,29 +9,33 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
     queue: :sso_domain_ownership_verification,
     unique: true
 
+  use Plausible.Auth.SSO.Domain.Status
+
   alias Plausible.Auth.SSO
   alias Plausible.Repo
 
   # roughly around 34h, given the snooze back-off
   @max_snoozes 14
 
+  @spec cancel(String.t()) :: :ok
+  def cancel(domain) do
+    {:ok, job} =
+      %{domain: domain}
+      |> new()
+      |> Oban.insert()
+
+    Oban.cancel_job(job)
+  end
+
+  @spec enqueue(String.t()) :: {:ok, Oban.Job.t()}
   def enqueue(domain) do
-    {:ok, result} =
-      Repo.transaction(fn ->
-        with {:ok, sso_domain} <- SSO.Domains.get(domain) do
-          SSO.Domains.mark_unverified!(sso_domain, :in_progress)
-        end
+    {:ok, job} =
+      %{domain: domain}
+      |> new()
+      |> Oban.insert()
 
-        {:ok, job} =
-          %{domain: domain}
-          |> new()
-          |> Oban.insert()
-
-        :ok = Oban.retry_job(job)
-        {:ok, job}
-      end)
-
-    result
+    :ok = Oban.retry_job(job)
+    {:ok, job}
   end
 
   @impl true
@@ -42,7 +46,10 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
       })
       when attempt <= @max_snoozes do
     service_opts = [
-      skip_checks?: meta["skip_checks"] == true
+      skip_checks?: meta["skip_checks"] == true,
+      verification_opts: [
+        nameservers: Application.get_env(:plausible, :sso_verification_nameservers) || []
+      ]
     ]
 
     service_opts =
@@ -55,7 +62,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
     case SSO.Domains.get(domain) do
       {:ok, sso_domain} ->
         case SSO.Domains.verify(sso_domain, service_opts) do
-          %SSO.Domain{status: :verified} = verified ->
+          %SSO.Domain{status: Status.verified()} = verified ->
             verification_complete(sso_domain)
             {:ok, verified}
 
@@ -82,7 +89,7 @@ defmodule Plausible.Auth.SSO.Domain.Verification.Worker do
   defp verification_failure(domain) do
     with {:ok, sso_domain} <- SSO.Domains.get(domain) do
       sso_domain
-      |> SSO.Domains.mark_unverified!(:unverified)
+      |> SSO.Domains.mark_unverified!(Status.unverified())
       |> send_failure_notification()
     end
 

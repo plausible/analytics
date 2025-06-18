@@ -93,6 +93,14 @@ sso-stop:
 	docker stop idp
 	docker remove idp
 
+generate-corefile:
+	$(call require, integration_id)
+	integration_id=$(integration_id) envsubst < $(PWD)/extra/fixture/Corefile.template > $(PWD)/extra/fixture/Corefile.gen.$(integration_id)
+
+mock-dns: generate-corefile
+	$(call require, integration_id)
+	docker run --rm -p 5353:53/udp -v $(PWD)/extra/fixture/Corefile.gen.$(integration_id):/Corefile coredns/coredns:latest -conf Corefile
+
 loadtest-server:
 	@echo "Ensure your OTP installation is built with --enable-lock-counter"
 	MIX_ENV=load ERL_FLAGS="-emu_type lcnt +Mdai max" iex -S mix do phx.digest + phx.server
