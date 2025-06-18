@@ -33,13 +33,24 @@ const RESPONSE_BODY_TEMPLATE = `
 
 const PLAUSIBLE_WEB_SNIPPET = compileWebSnippet()
 
-function getConfiguredPlausibleWebSnippet(scriptConfig: ScriptConfig): string {
-  return PLAUSIBLE_WEB_SNIPPET.replace(
+function getConfiguredPlausibleWebSnippet({
+  autoCapturePageviews,
+  ...injectedScriptConfig
+}: ScriptConfig): string {
+  const snippet = PLAUSIBLE_WEB_SNIPPET.replace(
     '<%= plausible_script_url %>',
     `/tracker/js/plausible-web.js?script_config=${encodeURIComponent(
-      JSON.stringify(scriptConfig)
+      JSON.stringify(injectedScriptConfig)
     )}`
   )
+  // This option, if provided, must be lifted to script init(overrides) overrides, otherwise it is ignored. It was not meant to be injected.
+  if (autoCapturePageviews !== undefined) {
+    return snippet.replace(
+      'plausible.init()',
+      `plausible.init({"autoCapturePageviews":${JSON.stringify(autoCapturePageviews)}})`
+    )
+  }
+  return snippet
 }
 
 export async function initializePageDynamically(

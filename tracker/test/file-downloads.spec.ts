@@ -17,7 +17,7 @@ const DEFAULT_CONFIG: ScriptConfig = {
 }
 
 for (const mode of ['legacy', 'web']) {
-  test.describe(`file downloads feature (${mode})`, () => {
+  test.describe(`file downloads feature legacy/v2 parity (${mode})`, () => {
     test('sends event and starts exactly one download', async ({ page }, {
       testId
     }) => {
@@ -284,64 +284,64 @@ for (const mode of ['legacy', 'web']) {
   })
 }
 
-test.describe('file downloads feature edge cases (esm)', () => {
-  test('malformed `fileDownloads: "iso"` option enables the feature with default file types', async ({
-    page
-  }, { testId }) => {
-    const csvFileURL = `https://example.com/file.csv`
-    const isoFileURL = `https://example.com/file.iso`
+for (const mode of ['web', 'esm']) {
+  test.describe(`file downloads feature v2-specific (${mode})`, () => {
+    test('malformed `fileDownloads: "iso"` option enables the feature with default file types', async ({
+      page
+    }, { testId }) => {
+      const csvFileURL = `https://example.com/file.csv`
+      const isoFileURL = `https://example.com/file.iso`
 
-    const csvMock = await mockManyRequests({
-      page,
-      path: csvFileURL,
-      fulfill: {
-        contentType: 'text/csv'
-      },
-      countOfRequestsToAwait: 1
-    })
-    const isoMock = await mockManyRequests({
-      page,
-      path: isoFileURL,
-      fulfill: {
-        contentType: 'application/octet-stream'
-      },
-      countOfRequestsToAwait: 1
-    })
+      const csvMock = await mockManyRequests({
+        page,
+        path: csvFileURL,
+        fulfill: {
+          contentType: 'text/csv'
+        },
+        countOfRequestsToAwait: 1
+      })
+      const isoMock = await mockManyRequests({
+        page,
+        path: isoFileURL,
+        fulfill: {
+          contentType: 'application/octet-stream'
+        },
+        countOfRequestsToAwait: 1
+      })
 
-    const { url } = await initializePageDynamically(page, {
-      testId,
-      scriptConfig: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track</script>`,
-      bodyContent: `<a href="${isoFileURL}" target="__blank">📥</a><a href="${csvFileURL}" target="__blank">📥</a>`
-    })
-    await page.goto(url)
-    await page.evaluate(
-      (config) => {
-        // @ts-ignore see scriptConfig above
-        window.init(config)
-      },
-      {
+      const config = {
         ...DEFAULT_CONFIG,
-        fileDownloads: 'iso' // malformed option
+        fileDownloads: 'iso'
       }
-    )
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode({
+          web: config,
+          esm: `<script type="module">import { init, track } from '/tracker/js/npm_package/plausible.js'; window.init = init; window.track = track; init(${JSON.stringify(
+            config
+          )})</script>`
+        }, mode),
+        bodyContent: `<a href="${isoFileURL}" target="__blank">📥</a><a href="${csvFileURL}" target="__blank">📥</a>`
+      })
+      await page.goto(url)
+      await expectPlausibleInAction(page, {
+        action: () => page.click(`a[href="${csvFileURL}"]`),
+        expectedRequests: [{ n: 'File Download', p: { url: csvFileURL } }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+      await expect(csvMock.getRequestList()).resolves.toHaveLength(1)
 
-    await expectPlausibleInAction(page, {
-      action: () => page.click(`a[href="${csvFileURL}"]`),
-      expectedRequests: [{ n: 'File Download', p: { url: csvFileURL } }],
-      shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      await expectPlausibleInAction(page, {
+        action: () => page.click(`a[href="${isoFileURL}"]`),
+        refutedRequests: [{ n: 'File Download' }],
+        shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
+      })
+      await expect(isoMock.getRequestList()).resolves.toHaveLength(1)
     })
-    await expect(csvMock.getRequestList()).resolves.toHaveLength(1)
-
-    await expectPlausibleInAction(page, {
-      action: () => page.click(`a[href="${isoFileURL}"]`),
-      refutedRequests: [{ n: 'File Download' }],
-      shouldIgnoreRequest: [isPageviewEvent, isEngagementEvent]
-    })
-    await expect(isoMock.getRequestList()).resolves.toHaveLength(1)
   })
-})
+}
 
-test.describe('file downloads feature edge cases (legacy .compat extension)', () => {
+test.describe('file downloads feature when using legacy .compat extension', () => {
   for (const { caseName, fulfill } of [
     {
       caseName: 'if event sending is slow, starts exactly one download',
@@ -361,6 +361,7 @@ test.describe('file downloads feature edge cases (legacy .compat extension)', ()
     }
   ])
     test(caseName, async ({ page }, { testId }) => {
+      test.setTimeout(20000)
       const filePath = '/file.csv'
       const downloadableFileMock = await mockManyRequests({
         page,

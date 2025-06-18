@@ -209,6 +209,8 @@ export function switchByMode(cases, mode) {
   switch (mode) {
     case 'web':
       return cases.web
+    case 'esm': 
+      return cases.esm
     case 'legacy':
       return cases.legacy
     default:
