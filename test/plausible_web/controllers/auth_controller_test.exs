@@ -685,6 +685,43 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  on_ee do
+    describe "POST /password/request-reset - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user]
+
+      test "initiates reset for owner SSO user email", %{conn: conn, user: user} do
+        mock_captcha_success()
+        conn = post(conn, "/password/request-reset", %{email: user.email})
+
+        assert html_response(conn, 200)
+
+        assert_email_delivered_with(
+          subject: "Plausible password reset",
+          to: [nil: user.email]
+        )
+      end
+
+      test "does not initiate reset for non-owner SSO user", %{conn: conn, user: user, team: team} do
+        add_member(team, role: :owner)
+
+        assert {:ok, _} =
+                 Plausible.Teams.Memberships.UpdateRole.update(team, user.id, "editor", user)
+
+        assert Plausible.Teams.Memberships.team_role(team, user) == {:ok, :editor}
+
+        mock_captcha_success()
+        conn = post(conn, "/password/request-reset", %{email: user.email})
+
+        assert html_response(conn, 200)
+
+        refute_email_delivered_with(
+          subject: "Plausible password reset",
+          to: [nil: user.email]
+        )
+      end
+    end
+  end
+
   describe "GET /password/reset" do
     test "with valid token - shows form", %{conn: conn} do
       user = insert(:user)
@@ -746,6 +783,20 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, "/logout", %{redirect: "/docs"})
 
       assert redirected_to(conn, 302) == "/docs"
+    end
+  end
+
+  on_ee do
+    describe "DELETE /me - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "refuses to delete SSO user", %{conn: conn, user: user} do
+        conn = delete(conn, "/me")
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        assert Repo.reload(user)
+      end
     end
   end
 
@@ -1122,6 +1173,23 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
+    end
+  end
+
+  on_ee do
+    describe "POST /2fa/disable - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "refuses to disable for SSO user", %{conn: conn, user: user} do
+        {:ok, user, _} = Auth.TOTP.initiate(user)
+        {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+        conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "password"})
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        assert user |> Repo.reload!() |> Auth.TOTP.enabled?()
+      end
     end
   end
 

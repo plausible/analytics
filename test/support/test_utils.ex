@@ -100,6 +100,27 @@ defmodule Plausible.TestUtils do
     {:ok, conn: conn}
   end
 
+  on_ee do
+    alias Plausible.Auth.SSO
+
+    def setup_sso(%{team: team}) do
+      team = Plausible.Teams.complete_setup(team)
+      integration = SSO.initiate_saml_integration(team)
+
+      {:ok, sso_domain} = SSO.Domains.add(integration, "example.com")
+      _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+      {:ok, team: team, sso_integration: integration, sso_domain: sso_domain}
+    end
+
+    def provision_sso_user(%{user: user}) do
+      identity = new_identity(user.name, user.email)
+      {:ok, _, _, sso_user} = SSO.provision_user(identity)
+
+      {:ok, user: sso_user}
+    end
+  end
+
   def init_session(conn) do
     opts =
       Plug.Session.init(

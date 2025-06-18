@@ -30,7 +30,7 @@ defmodule PlausibleWeb.AuthController do
            :activate_form,
            :activate,
            :request_activation_code,
-           :initiate_2fa,
+           :initiate_2fa_setup,
            :verify_2fa_setup_form,
            :verify_2fa_setup,
            :disable_2fa,
@@ -39,6 +39,9 @@ defmodule PlausibleWeb.AuthController do
            :switch_team
          ]
   )
+
+  plug Plausible.Plugs.RestrictType,
+       :sso when action in [:delete_me, :disable_2fa]
 
   plug(
     :clear_2fa_user
@@ -169,21 +172,21 @@ defmodule PlausibleWeb.AuthController do
 
   def password_reset_request(conn, %{"email" => email} = params) do
     if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      user = Repo.get_by(Plausible.Auth.User, email: email)
+      case Auth.lookup(email) do
+        {:ok, _user} ->
+          token = Auth.Token.sign_password_reset(email)
+          url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
+          email_template = PlausibleWeb.Email.password_reset_email(email, url)
+          Plausible.Mailer.deliver_later(email_template)
 
-      if user do
-        token = Auth.Token.sign_password_reset(email)
-        url = PlausibleWeb.Endpoint.url() <> "/password/reset?token=#{token}"
-        email_template = PlausibleWeb.Email.password_reset_email(email, url)
-        Plausible.Mailer.deliver_later(email_template)
+          Logger.debug(
+            "Password reset e-mail sent. In dev environment GET /sent-emails for details."
+          )
 
-        Logger.debug(
-          "Password reset e-mail sent. In dev environment GET /sent-emails for details."
-        )
+          render(conn, "password_reset_request_success.html", email: email)
 
-        render(conn, "password_reset_request_success.html", email: email)
-      else
-        render(conn, "password_reset_request_success.html", email: email)
+        {:error, _} ->
+          render(conn, "password_reset_request_success.html", email: email)
       end
     else
       render(conn, "password_reset_request_form.html",
