@@ -3,8 +3,6 @@ defmodule Plausible.Stats.Sampling do
   Sampling related functions
   """
   @default_sample_threshold 10_000_000
-  # 1 percent
-  @min_sample_rate 0.01
 
   import Ecto.Query
 
@@ -56,17 +54,21 @@ defmodule Plausible.Stats.Sampling do
   end
 
   defp decide_sample_rate(site, query) do
+    sampling_adjustments? = FunWithFlags.enabled?(:sampling_adjustments, for: site)
+
     site.id
     |> SamplingCache.get()
-    |> fractional_sample_rate(query)
+    |> fractional_sample_rate(query, sampling_adjustments?)
   end
 
-  def fractional_sample_rate(nil = _traffic_30_day, _query), do: :no_sampling
+  def fractional_sample_rate(nil = _traffic_30_day, _query, _sampling_adjustments?),
+    do: :no_sampling
 
-  def fractional_sample_rate(traffic_30_day, query) do
+  def fractional_sample_rate(traffic_30_day, query, sampling_adjustments?) do
     date_range = Query.date_range(query)
     duration = Date.diff(date_range.last, date_range.first)
-    estimated_traffic = traffic_30_day / 30.0 * duration
+
+    estimated_traffic = estimate_traffic(traffic_30_day, duration, query, sampling_adjustments?)
 
     fraction =
       if(estimated_traffic > 0,
@@ -79,7 +81,27 @@ defmodule Plausible.Stats.Sampling do
       duration < 1 -> :no_sampling
       # If sampling doesn't have a significant effect, don't sample
       fraction > 0.4 -> :no_sampling
-      true -> max(fraction, @min_sample_rate)
+      true -> max(fraction, min_sample_rate(sampling_adjustments?))
     end
   end
+
+  defp min_sample_rate(false = _sampling_adjustments?), do: 0.01
+  defp min_sample_rate(true = _sampling_adjustments?), do: 0.007
+
+  defp estimate_traffic(traffic_30_day, duration, query, sampling_adjustments?) do
+    duration_adjusted_traffic = traffic_30_day / 30.0 * duration
+
+    if sampling_adjustments? do
+      duration_adjusted_traffic
+      |> estimate_by_filters(query.filters)
+    else
+      duration_adjusted_traffic
+    end
+  end
+
+  @filter_traffic_multiplier 1 / 20.0
+  defp estimate_by_filters(estimation, []), do: estimation
+
+  defp estimate_by_filters(estimation, [_filter | rest]),
+    do: estimate_by_filters(estimation * @filter_traffic_multiplier, rest)
 end
