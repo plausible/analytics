@@ -141,13 +141,12 @@ defmodule Plausible.Teams do
 
   If the user already has an owner membership in an existing team,
   that team is returned.
-
-  If the user has a non-guest membership other than owner, `:no_team` error
-  is returned.
   """
-  @spec get_or_create(Auth.User.t()) :: {:ok, Teams.Team.t()} | {:error, :multiple_teams}
+  @spec get_or_create(Auth.User.t()) ::
+          {:ok, Teams.Team.t()} | {:error, :multiple_teams | :permission_denied}
   def get_or_create(user) do
-    with {:error, :no_team} <- get_owned_team(user, only_not_setup?: true) do
+    with :ok <- check_user_type(user),
+         {:error, :no_team} <- get_owned_team(user, only_not_setup?: true) do
       case create_my_team(user) do
         {:ok, team} ->
           {:ok, team}
@@ -160,6 +159,14 @@ defmodule Plausible.Teams do
 
   @spec force_create_my_team(Auth.User.t()) :: Teams.Team.t()
   def force_create_my_team(user) do
+    # This is going to crash hard for SSO user. This shouldn't happen
+    # under normal circumstances except in case of a _very_ unlucky timing.
+    # Manual resolution is necessary anyway.
+    case check_user_type(user) do
+      :ok -> :pass
+      _ -> raise "SSO user tried to force create a personal team"
+    end
+
     {:ok, team} =
       Repo.transaction(fn ->
         clear_autocreated(user)
@@ -341,6 +348,14 @@ defmodule Plausible.Teams do
 
       _teams ->
         {:error, :multiple_teams}
+    end
+  end
+
+  defp check_user_type(user) do
+    if Plausible.Users.type(user) == :sso do
+      {:error, :permission_denied}
+    else
+      :ok
     end
   end
 
