@@ -467,9 +467,7 @@ defmodule Plausible.Auth.SSO do
   end
 
   defp ensure_one_membership(user, team) do
-    query = Teams.Users.teams_query(user)
-
-    if Repo.aggregate(query, :count) > 1 do
+    if Teams.Users.team_member?(user, except: [team.id]) do
       {:error, :multiple_memberships, team, user}
     else
       :ok
