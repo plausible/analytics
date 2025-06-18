@@ -34,7 +34,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -71,7 +71,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -111,7 +111,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -146,7 +146,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -191,7 +191,7 @@ for (const mode of ['legacy', 'web']) {
               autoCapturePageviews: false
             },
             legacy:
-              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.manual.js"></script>'
+              '<script defer src="/tracker/js/plausible.file-downloads.local.manual.js"></script>'
           },
           mode
         ),
@@ -243,7 +243,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -277,7 +277,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: true },
             legacy:
-              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js"></script>'
           },
           mode
         ),
@@ -320,7 +320,7 @@ for (const mode of ['legacy', 'web']) {
           {
             web: { ...DEFAULT_CONFIG, fileDownloads: ['iso'] },
             legacy:
-              '<script id="plausible" defer src="/tracker/js/plausible.file-downloads.local.js" file-types="iso"></script>'
+              '<script defer src="/tracker/js/plausible.file-downloads.local.js" file-types="iso"></script>'
           },
           mode
         ),
