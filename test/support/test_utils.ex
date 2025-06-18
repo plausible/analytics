@@ -53,6 +53,7 @@ defmodule Plausible.TestUtils do
 
     conn =
       conn
+      |> Plug.Conn.fetch_session()
       |> Plug.Conn.put_session(:current_team_id, team.identifier)
 
     {:ok, conn: conn, team: team}

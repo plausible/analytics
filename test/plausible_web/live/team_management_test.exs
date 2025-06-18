@@ -50,6 +50,51 @@ defmodule PlausibleWeb.Live.TeamMangementTest do
     end
   end
 
+  on_ee do
+    describe "live - SSO user" do
+      setup [
+        :create_user,
+        :create_team,
+        :setup_sso,
+        :provision_sso_user,
+        :log_in,
+        :setup_team
+      ]
+
+      test "fails to save layout with SSO user updated to owner with Force SSO but without MFA",
+           %{
+             conn: conn,
+             team: team,
+             user: user
+           } do
+        {:ok, user, _} = Plausible.Auth.TOTP.initiate(user)
+        {:ok, _user, _} = Plausible.Auth.TOTP.enable(user, :skip_verify)
+        {:ok, team} = Plausible.Auth.SSO.set_force_sso(team, :all_but_owners)
+        member = add_member(team, role: :viewer)
+
+        {:ok, _, _, _member} =
+          new_identity(member.name, member.email)
+          |> Plausible.Auth.SSO.provision_user()
+
+        lv = get_liveview(conn)
+
+        html = render(lv)
+
+        assert text_of_element(
+                 html,
+                 "#{member_el()}:nth-of-type(1) button"
+               ) == "Owner"
+
+        assert text_of_element(html, "#{member_el()}:nth-of-type(2) button") == "Viewer"
+
+        change_role(lv, 2, "owner")
+        html = render(lv)
+
+        assert html =~ "User must have 2FA enabled to become an owner"
+      end
+    end
+  end
+
   describe "live" do
     setup [:create_user, :log_in, :create_team, :setup_team]
 
