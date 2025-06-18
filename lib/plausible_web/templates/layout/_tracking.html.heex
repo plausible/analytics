@@ -1,9 +1,7 @@
 <%= on_ee do %>
   <script
-    :if={
-      !@conn.assigns[:skip_plausible_tracking] and
-        Application.get_env(:plausible, :environment) not in ["test", "ce_test"]
-    }
+    :if={!@conn.assigns[:skip_plausible_tracking]}
+    id="dogfood-script"
     data-script-params={JSON.encode!(PlausibleWeb.Dogfood.script_params(@conn.assigns))}
   >
     var scriptParams = JSON.parse(document.currentScript.dataset.scriptParams)
@@ -19,8 +17,9 @@
       transformRequest: function (payload) {
         if (scriptParams.location_override) {
           payload.u = scriptParams.location_override
+        } else if (scriptParams.domain_to_replace) {
+          payload.u = payload.u.replace(scriptParams.domain_to_replace, ':dashboard')
         }
-
         return payload
       }
     })

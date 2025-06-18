@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Dogfood do
   def script_params(assigns) do
     %{
       script_url: script_url(assigns),
+      domain_to_replace: domain_to_replace(assigns),
       location_override: location_override(assigns),
       custom_properties: custom_properties(assigns),
       capture_on_localhost: Application.get_env(:plausible, :environment) == "dev"
@@ -38,9 +39,24 @@ defmodule PlausibleWeb.Dogfood do
 
           # PlausibleWeb.Tracker.get_or_create_tracker_script_configuration!(1).id
           ""
+
+        env in ["test", "ce_test"] ->
+          ""
       end
 
     "#{PlausibleWeb.Endpoint.url()}/js/s-#{tracker_script_config_id}.js"
+  end
+
+  # TRICKY: The React dashboard uses history-based SPA navigation
+  # which triggers pageviews on routes that the backend is unaware
+  # of (e.g.`/:domain/pages`). As opposed to other site paths like
+  # `/:domain/settings/general` we cannot override the entire URL.
+  # To still make sure we're not capturing customer domains we run
+  # a string replace in `payload.u`.
+  defp domain_to_replace(assigns) do
+    if not is_nil(assigns[:site]) and assigns[:demo] != true do
+      URI.encode_www_form(assigns.site.domain)
+    end
   end
 
   defp location_override(%{dogfood_page_path: path}) when is_binary(path) do
