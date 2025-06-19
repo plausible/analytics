@@ -86,7 +86,7 @@ defmodule Plausible.Stats.Sampling do
   end
 
   defp min_sample_rate(false = _sampling_adjustments?), do: 0.01
-  defp min_sample_rate(true = _sampling_adjustments?), do: 0.007
+  defp min_sample_rate(true = _sampling_adjustments?), do: 0.013
 
   defp estimate_traffic(traffic_30_day, duration, query, sampling_adjustments?) do
     duration_adjusted_traffic = traffic_30_day / 30.0 * duration
@@ -100,8 +100,6 @@ defmodule Plausible.Stats.Sampling do
   end
 
   @filter_traffic_multiplier 1 / 20.0
-  defp estimate_by_filters(estimation, []), do: estimation
-
-  defp estimate_by_filters(estimation, [_filter | rest]),
-    do: estimate_by_filters(estimation * @filter_traffic_multiplier, rest)
+  defp estimate_by_filters(estimation, filters),
+    do: estimation * @filter_traffic_multiplier ** length(filters)
 end

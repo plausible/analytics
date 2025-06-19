@@ -39,7 +39,7 @@ defmodule Plausible.Stats.SamplingTest do
 
       test "very low sampling rate" do
         assert fractional_sample_rate(@threshold * 500, query(30), false) == 0.01
-        assert fractional_sample_rate(@threshold * 500, query(30), true) == 0.007
+        assert fractional_sample_rate(@threshold * 500, query(30), true) == 0.013
       end
 
       @filter ["is", "event:name", ["pageview"]]
