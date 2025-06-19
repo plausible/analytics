@@ -17,14 +17,7 @@ defmodule Plausible.Users do
   else
     @spec type(Auth.User.t()) :: :standard
     def type(_user) do
-      # The `else` branch is not reachable.
-      # This a workaround for Elixir 1.18+ compiler
-      # being too smart.
-      if :erlang.phash2(1, 1) == 0 do
-        :standard
-      else
-        :sso
-      end
+      always(:standard)
     end
   end
 

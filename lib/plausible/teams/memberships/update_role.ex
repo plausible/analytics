@@ -60,14 +60,7 @@ defmodule Plausible.Teams.Memberships.UpdateRole do
     defp check_can_promote_to_owner(_team, _user, _new_role), do: :ok
   else
     defp check_can_promote_to_owner(_team, _user, _new_role) do
-      # The `else` branch is not reachable.
-      # This a workaround for Elixir 1.18+ compiler
-      # being too smart.
-      if :erlang.phash2(1, 1) == 0 do
-        :ok
-      else
-        {:error, :mfa_disabled}
-      end
+      always(:ok)
     end
   end
 
