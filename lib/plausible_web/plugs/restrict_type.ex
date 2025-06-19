@@ -7,12 +7,14 @@ defmodule Plausible.Plugs.RestrictUserType do
 
   alias PlausibleWeb.Router.Helpers, as: Routes
 
-  def init(type), do: type
+  def init(opts) do
+    Keyword.fetch!(opts, :deny)
+  end
 
-  def call(conn, type) do
+  def call(conn, deny_type) do
     user = conn.assigns[:current_user]
 
-    if user && Plausible.Users.type(user) == type do
+    if user && Plausible.Users.type(user) == deny_type do
       conn
       |> Phoenix.Controller.redirect(to: Routes.site_path(conn, :index))
       |> halt()

@@ -41,7 +41,7 @@ defmodule PlausibleWeb.AuthController do
   )
 
   plug Plausible.Plugs.RestrictUserType,
-       :sso when action in [:delete_me, :disable_2fa]
+       [deny: :sso] when action in [:delete_me, :disable_2fa]
 
   plug(
     :clear_2fa_user
