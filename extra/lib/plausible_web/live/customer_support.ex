@@ -57,6 +57,12 @@ defmodule PlausibleWeb.Live.CustomerSupport do
             <p class="font-sans pl-2 mb-1">
               Like above, but only finds team(s) with subscription (in any status).
             </p>
+
+            <strong>team:</strong>input <strong>+sso</strong>
+            <br />
+            <p class="font-sans pl-2 mb-1">
+              Like above, but only finds team(s) with SSO integrations (in any status).
+            </p>
           </div>
         </div>
       </div>
@@ -207,6 +213,13 @@ defmodule PlausibleWeb.Live.CustomerSupport do
         [limit: 90, with_subscription_only?: true]
       else
         [limit: 90]
+      end
+
+    opts =
+      if "sso" in mods do
+        Keyword.merge(opts, with_sso_only?: true)
+      else
+        opts
       end
 
     {[Resource.Team], input, opts}

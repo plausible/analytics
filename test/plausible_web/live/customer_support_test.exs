@@ -2,6 +2,7 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Teams.Test
   use Plausible
+
   @moduletag :ee_only
 
   on_ee do
@@ -9,6 +10,8 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
 
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
+
+    alias Plausible.Auth.SSO
 
     describe "unauthenticated" do
       test "not allowed if not logged in", %{conn: conn} do
@@ -88,6 +91,31 @@ defmodule PlausibleWeb.Live.CustomerSupportTest do
         assert_search_result(html, "team", team3.id)
 
         type_into_input(lv, "filter-text", "team:Team T +sub")
+        html = render(lv)
+
+        refute_search_result(html, "team", team1.id)
+        assert_search_result(html, "team", team2.id)
+        refute_search_result(html, "team", team3.id)
+
+        type_into_input(lv, "filter-text", "team:Team T +sso")
+        html = render(lv)
+        refute_search_result(html, "team", team1.id)
+        refute_search_result(html, "team", team2.id)
+        refute_search_result(html, "team", team3.id)
+
+        integration = SSO.initiate_saml_integration(team2)
+
+        SSO.Domains.add(integration, "some-sso.example.com")
+
+        SSO.initiate_saml_integration(team3)
+
+        type_into_input(lv, "filter-text", "team:Team T +sso")
+        html = render(lv)
+        refute_search_result(html, "team", team1.id)
+        assert_search_result(html, "team", team2.id)
+        assert_search_result(html, "team", team3.id)
+
+        type_into_input(lv, "filter-text", "team:some-sso +sso")
         html = render(lv)
 
         refute_search_result(html, "team", team1.id)

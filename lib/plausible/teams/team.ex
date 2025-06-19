@@ -50,6 +50,7 @@ defmodule Plausible.Teams.Team do
     has_many :team_invitations, Plausible.Teams.Invitation
     has_one :subscription, Plausible.Billing.Subscription
     has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
+    has_one :sso_integration, Plausible.Auth.SSO.Integration
 
     has_many :ownerships, Plausible.Teams.Membership,
       where: [role: :owner],
