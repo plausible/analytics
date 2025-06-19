@@ -1,7 +1,6 @@
 import {
   expectPlausibleInAction,
   hideAndShowCurrentTab,
-  mockRequest,
   e as expecting,
   isPageviewEvent,
   isEngagementEvent
@@ -31,9 +30,11 @@ export async function callInit(page, config, parent) {
 
 export function testPlausibleConfiguration({ openPage, initPlausible, fixtureName, fixtureTitle }) {
   test.describe('shared configuration tests', () => {
-    test.beforeEach(({ page }) => {
+    test.beforeEach(async ({ page }) => {
       // Mock file download requests
-      mockRequest(page, 'https://awesome.website.com/file.pdf')
+      await page.context().route('https://awesome.website.com/file.pdf', async (request) => {
+        await request.fulfill({status: 200, contentType: 'application/pdf', body: 'mocked pdf content'})
+      })
     })
 
     test('triggers pageview and engagement automatically', async ({ page }) => {

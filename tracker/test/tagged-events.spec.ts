@@ -315,7 +315,7 @@ for (const mode of ['legacy', 'web']) {
       const eventsApiMock = await mockManyRequests({
         page,
         path: '**/api/event',
-        countOfRequestsToAwait: 1,
+        awaitedRequestCount: 1,
         responseDelay: 500
       })
       const targetPage = await initializePageDynamically(page, {
@@ -418,7 +418,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     const eventsApiMock = await mockManyRequests({
       page,
       path: '**/api/event',
-      countOfRequestsToAwait: 1,
+      awaitedRequestCount: 1,
       responseDelay: 1000
     })
     const targetPage = await initializePageDynamically(page, {
@@ -464,7 +464,7 @@ test.describe('tagged events feature when using legacy .compat extension', () =>
     await mockManyRequests({
       page,
       path: '**/api/event',
-      countOfRequestsToAwait: 1,
+      awaitedRequestCount: 1,
       responseDelay: 6000
     })
     const targetPage = await initializePageDynamically(page, {

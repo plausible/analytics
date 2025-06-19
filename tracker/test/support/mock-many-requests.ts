@@ -10,10 +10,10 @@ export async function mockManyRequests({
   page,
   path,
   fulfill,
-  countOfRequestsToAwait,
+  awaitedRequestCount,
   responseDelay,
   shouldIgnoreRequest,
-  mockRequestTimeoutMs = 3000
+  mockRequestTimeout = 3000
 }: {
   page: Page
   path: string
@@ -28,16 +28,16 @@ export async function mockManyRequests({
     body?: string
   }
   /**
-   * When there's at least `countOfRequestsToAwait` unignored requests on this route,
-   * getRequestList resolves without waiting for `mockRequestTimeoutMs`.
-   * If there's less than `countOfRequestsToAwait` unignored requests on this route, it
-   * takes `mockRequestTimeoutMs` to resolve `getRequestList`.
+   * When there's at least `awaitedRequestCount` unignored requests on this route,
+   * getRequestList resolves without waiting for `mockRequestTimeout`.
+   * If there's less than `awaitedRequestCount` unignored requests on this route, it
+   * takes `mockRequestTimeout` to resolve `getRequestList`.
    * This is so as not miss unexpected requests that are sent slowly.
    */
-  countOfRequestsToAwait: number
+  awaitedRequestCount: number
   responseDelay?: number
   shouldIgnoreRequest?: ShouldIgnoreRequest | ShouldIgnoreRequest[]
-  mockRequestTimeoutMs?: number
+  mockRequestTimeout?: number
 }) {
   const requestList: unknown[] = []
   await page.context().route(path, async (route, request) => {
@@ -59,10 +59,10 @@ export async function mockManyRequests({
       let i = 0
       const POLL_INTERVAL_MS = 10
       const interval = setInterval(() => {
-        if (i > mockRequestTimeoutMs / POLL_INTERVAL_MS) {
+        if (i > mockRequestTimeout / POLL_INTERVAL_MS) {
           clearInterval(interval)
           resolve(requestList)
-        } else if (requestList.length === countOfRequestsToAwait) {
+        } else if (requestList.length === awaitedRequestCount) {
           clearInterval(interval)
           resolve(requestList)
         } else {

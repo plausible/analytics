@@ -47,7 +47,7 @@ for (const mode of ['legacy', 'web'])
             contentType: 'text/html',
             body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
           },
-          countOfRequestsToAwait: 1
+          awaitedRequestCount: 1
         })
         const { url } = await initializePageDynamically(page, {
           testId,
@@ -85,7 +85,7 @@ for (const mode of ['legacy', 'web'])
       const eventsApiMock = await mockManyRequests({
         page,
         path: '**/api/event',
-        countOfRequestsToAwait: 1,
+        awaitedRequestCount: 1,
         responseDelay: 500
       })
       const outboundUrl = 'https://other.example.com/target'
@@ -97,7 +97,7 @@ for (const mode of ['legacy', 'web'])
           contentType: 'text/html',
           body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -151,7 +151,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     const eventsApiMock = await mockManyRequests({
       page,
       path: '**/api/event',
-      countOfRequestsToAwait: 1,
+      awaitedRequestCount: 1,
       responseDelay: 1000
     })
     const outboundUrl = 'https://other.example.com/target'
@@ -163,7 +163,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         contentType: 'text/html',
         body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
       },
-      countOfRequestsToAwait: 1
+      awaitedRequestCount: 1
     })
     const { url } = await initializePageDynamically(page, {
       testId,
@@ -205,7 +205,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await mockManyRequests({
       page,
       path: '**/api/event',
-      countOfRequestsToAwait: 1,
+      awaitedRequestCount: 1,
       responseDelay: 6000
     })
     const outboundUrl = 'https://other.example.com/target'
@@ -217,7 +217,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         contentType: 'text/html',
         body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
       },
-      countOfRequestsToAwait: 1
+      awaitedRequestCount: 1
     })
     const { url } = await initializePageDynamically(page, {
       testId,
@@ -254,7 +254,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         contentType: 'text/html',
         body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
       },
-      countOfRequestsToAwait: 1
+      awaitedRequestCount: 1
     })
     const { url } = await initializePageDynamically(page, {
       testId,
@@ -284,7 +284,7 @@ test.describe('outbound links feature when using legacy .compat extension', () =
         contentType: 'text/html',
         body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
       },
-      countOfRequestsToAwait: 2
+      awaitedRequestCount: 2
     })
     const { url } = await initializePageDynamically(page, {
       testId,

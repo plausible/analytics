@@ -4,20 +4,6 @@ import { mockManyRequests } from "./mock-many-requests"
 
 export const tracker_script_version = packageJson.tracker_script_version
 
-// Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
-// data. If the request is not made, resolves to null after 3 seconds.
-export const mockRequest = function (page, path) {
-  return new Promise((resolve, _reject) => {
-    const requestTimeoutTimer = setTimeout(() => resolve(null), 3000)
-
-    page.route(path, (route, request) => {
-      clearTimeout(requestTimeoutTimer)
-      resolve(request)
-      return route.fulfill({ status: 202, contentType: 'text/plain', body: 'ok' })
-    })
-  })
-}
-
 /**
  * A powerful utility function that makes it easy to assert on the event
  * requests that should or should not have been made after doing a page
@@ -66,8 +52,8 @@ export const expectPlausibleInAction = async function (page, {
     fulfill: { status: 202, contentType: 'text/plain', body: 'ok' },
     responseDelay,
     shouldIgnoreRequest,
-    countOfRequestsToAwait: requestsToAwait,
-    mockRequestTimeoutMs: mockRequestTimeout
+    awaitedRequestCount: requestsToAwait,
+    mockRequestTimeout
   })
   await action()
   const requestBodies = await getRequestList()

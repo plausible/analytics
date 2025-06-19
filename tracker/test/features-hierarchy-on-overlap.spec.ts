@@ -25,7 +25,7 @@ for (const mode of ['legacy', 'web']) {
           contentType: 'application/pdf',
           body: 'mocked pdf content'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
 
       const { url } = await initializePageDynamically(page, {
@@ -68,7 +68,7 @@ for (const mode of ['legacy', 'web']) {
           contentType: 'application/pdf',
           body: 'mocked pdf content'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
 
       const { url } = await initializePageDynamically(page, {
@@ -112,7 +112,7 @@ for (const mode of ['legacy', 'web']) {
           contentType: 'application/pdf',
           body: 'mocked pdf content'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
 
       const { url } = await initializePageDynamically(page, {

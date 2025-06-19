@@ -26,7 +26,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'text/csv'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -63,7 +63,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/pdf'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -103,7 +103,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/pdf'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -138,7 +138,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/pdf'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -169,7 +169,7 @@ for (const mode of ['legacy', 'web']) {
       const eventsApiMock = await mockManyRequests({
         page,
         path: '**/api/event',
-        countOfRequestsToAwait: 1,
+        awaitedRequestCount: 1,
         responseDelay: 500
       })
       const pdfUrl = 'https://example.com/downloads/file.pdf'
@@ -179,7 +179,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/pdf'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -235,7 +235,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/pdf'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -269,7 +269,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/octet-stream'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -303,7 +303,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'text/csv'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const isoMock = await mockManyRequests({
         page,
@@ -311,7 +311,7 @@ for (const mode of ['legacy', 'web']) {
         fulfill: {
           contentType: 'application/octet-stream'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
 
       const { url } = await initializePageDynamically(page, {
@@ -358,7 +358,7 @@ for (const mode of ['web', 'esm']) {
         fulfill: {
           contentType: 'text/csv'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
       const isoMock = await mockManyRequests({
         page,
@@ -366,7 +366,7 @@ for (const mode of ['web', 'esm']) {
         fulfill: {
           contentType: 'application/octet-stream'
         },
-        countOfRequestsToAwait: 1
+        awaitedRequestCount: 1
       })
 
       const config = {
@@ -411,8 +411,8 @@ test.describe('file downloads feature when using legacy .compat extension', () =
     const eventsApiMock = await mockManyRequests({
       page,
       path: '**/api/event',
-      countOfRequestsToAwait: 2,
-      mockRequestTimeoutMs: 2000
+      awaitedRequestCount: 2,
+      mockRequestTimeout: 2000
     })
     const filePath = '/file.csv'
     const downloadableFileMock = await mockManyRequests({
@@ -421,8 +421,8 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       fulfill: {
         contentType: 'text/csv'
       },
-      countOfRequestsToAwait: 2,
-      mockRequestTimeoutMs: 2000
+      awaitedRequestCount: 2,
+      mockRequestTimeout: 2000
     })
 
     const { url } = await initializePageDynamically(page, {
@@ -471,7 +471,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
         page,
         path: '**/api/event',
         fulfill,
-        countOfRequestsToAwait: 1,
+        awaitedRequestCount: 1,
         responseDelay: 1000
       })
       const filePath = '/file.csv'
@@ -481,8 +481,8 @@ test.describe('file downloads feature when using legacy .compat extension', () =
         fulfill: {
           contentType: 'text/csv'
         },
-        countOfRequestsToAwait: 1,
-        mockRequestTimeoutMs: 1000
+        awaitedRequestCount: 1,
+        mockRequestTimeout: 1000
       })
       const { url } = await initializePageDynamically(page, {
         testId,
@@ -526,7 +526,7 @@ test.describe('file downloads feature when using legacy .compat extension', () =
     await mockManyRequests({
       page,
       path: '**/api/event',
-      countOfRequestsToAwait: 1,
+      awaitedRequestCount: 1,
       responseDelay: 6000
     })
     const filePath = '/file.csv'
@@ -536,8 +536,8 @@ test.describe('file downloads feature when using legacy .compat extension', () =
       fulfill: {
         contentType: 'text/csv'
       },
-      countOfRequestsToAwait: 1,
-      mockRequestTimeoutMs: 1000
+      awaitedRequestCount: 1,
+      mockRequestTimeout: 1000
     })
     const { url } = await initializePageDynamically(page, {
       testId,
