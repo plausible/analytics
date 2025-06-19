@@ -1,4 +1,4 @@
-defmodule Plausible.Plugs.RestrictType do
+defmodule Plausible.Plugs.RestrictUserType do
   @moduledoc """
   Plug for restricting user access by type.
   """

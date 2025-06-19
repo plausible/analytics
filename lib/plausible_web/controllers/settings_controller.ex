@@ -17,7 +17,7 @@ defmodule PlausibleWeb.SettingsController do
   plug Plausible.Plugs.AuthorizeTeamAccess,
        [:owner] when action in [:team_danger_zone, :delete_team]
 
-  plug Plausible.Plugs.RestrictType,
+  plug Plausible.Plugs.RestrictUserType,
        :sso when action in [:update_name, :update_email, :update_password]
 
   def index(conn, _params) do
