@@ -78,6 +78,70 @@ for (const mode of ['legacy', 'web'])
         await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
       })
     }
+
+    test('tracks links without delaying navigation, relying on fetch options.keepalive to deliver tracking events', async ({
+      page
+    }, { testId }) => {
+      const eventsApiMock = await mockManyRequests({
+        page,
+        path: '**/api/event',
+        countOfRequestsToAwait: 1,
+        responseDelay: 500
+      })
+      const outboundUrl = 'https://other.example.com/target'
+      const outboundMock = await mockManyRequests({
+        page,
+        path: outboundUrl,
+        fulfill: {
+          status: 200,
+          contentType: 'text/html',
+          body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+        },
+        countOfRequestsToAwait: 1
+      })
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig: switchByMode(
+          {
+            web: {
+              ...DEFAULT_CONFIG,
+              outboundLinks: true,
+              autoCapturePageviews: false
+            },
+            legacy:
+              '<script defer src="/tracker/js/plausible.local.manual.outbound-links.js"></script>'
+          },
+          mode
+        ),
+        bodyContent: `<a href="${outboundUrl}">>➡️</a>`
+      })
+      await page.goto(url)
+      await page.click('a')
+      const [
+        { trackingRequestList, trackingResponseTime },
+        { downloadMockRequestList, downloadRequestTime }
+      ] = await Promise.all([
+        eventsApiMock.getRequestList().then((requestList) => ({
+          trackingRequestList: requestList,
+          trackingResponseTime: Date.now()
+        })),
+        outboundMock.getRequestList().then((requestList) => ({
+          downloadMockRequestList: requestList,
+          downloadRequestTime: Date.now()
+        }))
+      ])
+
+      expect(downloadRequestTime).toBeLessThan(trackingResponseTime)
+      expect(downloadMockRequestList).toHaveLength(1)
+      expect(trackingRequestList).toEqual([
+        expect.objectContaining({
+          n: 'Outbound Link: Click',
+          p: {
+            url: outboundUrl
+          }
+        })
+      ])
+    })
   })
 
 test.describe('outbound links feature when using legacy .compat extension', () => {
