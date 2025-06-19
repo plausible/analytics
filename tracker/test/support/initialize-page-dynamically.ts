@@ -1,42 +1,74 @@
-import { Page } from "@playwright/test";
-import { ScriptConfig } from "./types";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const TEMPLATE = readFileSync(
-  path.resolve(__dirname, "./dynamic-page-template.html")
-).toString();
+import { Page } from '@playwright/test'
+import { ScriptConfig } from './types'
+import { compileWebSnippet } from '../../compiler'
 
 interface DynamicPageOptions {
-  scriptConfig: ScriptConfig;
+  /** string like `<script defer id="plausible" src="/plausible.compat.local.js"></script>` or ScriptConfig to be set to web snippet */
+  scriptConfig: ScriptConfig | string
   /** vanilla HTML string, which can contain JS, will be set in the body of the page */
-  bodyContent: string;
-  testId: string;
+  bodyContent: string
+  testId: string
+  /** optional path to append to the dynamic page URL */
+  path?: string
 }
 
 interface DynamicPageInfo {
   /** the url where the page is served */
-  url: string;
+  url: string
+}
+
+const RESPONSE_BODY_TEMPLATE = `
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Plausible Playwright tests</title>
+    <script>// Plausible script</script>
+  </head>
+  <body></body>
+</html>
+`
+
+const PLAUSIBLE_WEB_SNIPPET = compileWebSnippet()
+
+function getConfiguredPlausibleWebSnippet({
+  autoCapturePageviews,
+  ...injectedScriptConfig
+}: ScriptConfig): string {
+  const snippet = PLAUSIBLE_WEB_SNIPPET.replace(
+    '<%= plausible_script_url %>',
+    `/tracker/js/plausible-web.js?script_config=${encodeURIComponent(
+      JSON.stringify(injectedScriptConfig)
+    )}`
+  )
+  // This option, if provided, must be lifted to script init(overrides) overrides, otherwise it is ignored. It was not meant to be injected.
+  if (autoCapturePageviews !== undefined) {
+    return snippet.replace(
+      'plausible.init()',
+      `plausible.init({"autoCapturePageviews":${JSON.stringify(autoCapturePageviews)}})`
+    )
+  }
+  return snippet
 }
 
 export async function initializePageDynamically(
   page: Page,
-  { testId, scriptConfig, bodyContent }: DynamicPageOptions
+  { testId, scriptConfig, bodyContent, path = '' }: DynamicPageOptions
 ): Promise<DynamicPageInfo> {
-  const url = `/dynamic/${testId}`;
-  await page.route(url, async (route) => {
+  const url = `/dynamic/${testId}${path}`
+  await page.context().route(url, async (route) => {
+    const responseBody = RESPONSE_BODY_TEMPLATE.replace(
+      '<script>// Plausible script</script>',
+      typeof scriptConfig === 'string'
+        ? scriptConfig
+        : getConfiguredPlausibleWebSnippet(scriptConfig)
+    ).replace('<body></body>', `<body>${bodyContent}</body>`)
     await route.fulfill({
-      body: TEMPLATE.replace(
-        "<%= plausible_script_url %>",
-        `/tracker/js/plausible-web.js?script_config=${encodeURIComponent(
-          JSON.stringify(scriptConfig)
-        )}`
-      ).replace("<body></body>", `<body>${bodyContent}</body>`),
-      contentType: "text/html",
-    });
-  });
-  return { url };
+      body: responseBody,
+      contentType: 'text/html'
+    })
+  })
+  return { url }
 }
