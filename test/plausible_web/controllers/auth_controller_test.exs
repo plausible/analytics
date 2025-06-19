@@ -501,6 +501,23 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn) == "/sites"
     end
 
+    test "valid email and password, user on multiple teams - logs the user in", %{conn: conn} do
+      user = insert(:user, password: "password")
+
+      # first team
+      new_site(owner: user)
+
+      # another team
+      another_team = new_site().team |> Plausible.Teams.complete_setup()
+      add_member(another_team, user: user, role: :owner)
+
+      conn = post(conn, "/login", email: user.email, password: "password")
+
+      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+      assert get_session(conn, :user_token) == token
+      assert redirected_to(conn) == "/sites"
+    end
+
     test "valid email and password with return_to set - redirects properly", %{conn: conn} do
       user = insert(:user, password: "password")
 

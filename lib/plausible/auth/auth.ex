@@ -64,11 +64,10 @@ defmodule Plausible.Auth do
         from(
           u in Auth.User,
           left_join: tm in assoc(u, :team_memberships),
+          on: u.type == :sso and tm.role == :owner,
           left_join: t in assoc(tm, :team),
           where: u.email == ^email,
-          where:
-            u.type == :standard or
-              (u.type == :sso and tm.role == :owner and t.setup_complete == true)
+          where: u.type == :standard or (u.type == :sso and t.setup_complete == true)
         )
       else
         from(u in Auth.User, where: u.email == ^email)
