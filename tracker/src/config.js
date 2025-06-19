@@ -27,8 +27,9 @@ export function init(overrides) {
     Object.assign(config, overrides, {
       // Explicitly set domain before any overrides are applied as `plausible-web` does not support overriding it
       domain: config.domain,
-      // autoCapturePageviews defaults to `true`
-      autoCapturePageviews: overrides.autoCapturePageviews !== false
+      // Configuration which defaults to `true`
+      autoCapturePageviews: overrides.autoCapturePageviews !== false,
+      logging: overrides.logging !== false
     })
   } else if (COMPILE_PLAUSIBLE_NPM) {
     if (config.isInitialized) {
@@ -41,13 +42,15 @@ export function init(overrides) {
       overrides.endpoint = 'https://plausible.io/api/event'
     }
     Object.assign(config, overrides, {
-      autoCapturePageviews: overrides.autoCapturePageviews !== false
+      autoCapturePageviews: overrides.autoCapturePageviews !== false,
+      logging: overrides.logging !== false
     })
     config.isInitialized = true
   } else {
     // Legacy variant
     config.endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint()
     config.domain = scriptEl.getAttribute('data-domain')
+    config.logging = true
   }
 }
 

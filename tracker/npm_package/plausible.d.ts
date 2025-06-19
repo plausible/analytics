@@ -23,13 +23,16 @@ export interface PlausibleConfig {
   outboundLinks?: boolean
 
   // Whether to track file downloads. Defaults to false.
-  fileDownloads?: boolean
+  fileDownloads?: boolean | { fileExtensions: string[] }
 
   // Whether to track form submissions. Defaults to false.
   formSubmissions?: boolean
 
   // Whether to capture events on localhost. Defaults to false.
   captureOnLocalhost?: boolean
+
+  // Whether to log on ignored events. Defaults to true.
+  logging?: boolean
 
   // Custom properties to add to all events tracked.
   // If passed as a function, it will be called when `track` is called.
@@ -59,7 +62,8 @@ export interface PlausibleEventOptions {
   // Called when request to `endpoint` completes or is ignored.
   // When request is ignored, the result will be undefined.
   // When request was delivered, the result will be an object with the response status code of the request.
-  callback?: (result?: { status: number } | undefined) => void
+  // When there was a network error, the result will be an object with the error object.
+  callback?: (result?: { status: number } | { error: unknown } | undefined) => void
 
   // Overrides the URL of the page that the event is being tracked on.
   // If not provided, `location.href` will be used.
@@ -91,3 +95,6 @@ export type PlausibleRequestPayload = {
   // Whether the event is interactive
   i?: boolean,
 } & Record<string, unknown>
+
+// Default file types that are tracked when `fileDownloads` is enabled.
+export const DEFAULT_FILE_TYPES: string[]

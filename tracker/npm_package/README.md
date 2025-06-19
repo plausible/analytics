@@ -51,6 +51,7 @@ See also [plausible.d.ts](https://github.com/plausible/analytics/blob/master/tra
 | `fileDownloads` |  Whether to track file downloads. | `false` |
 | `formSubmissions` | Whether to track form submissions. | `false` |
 | `captureOnLocalhost` | Whether to capture events on localhost. | `false` |
+| `logging` | Whether to log on ignored events. | `true` |
 | `customProperties` | Object or function that returns custom properties for a given event. | `{}` |
 | `transformRequest` | Function that allows transforming or ignoring requests | |
 
@@ -101,6 +102,26 @@ track('Purchase', { revenue: { amount: 15.99, currency: 'USD' } })
 ```
 
 More information can be found in [ecommerce revenue tracking docs](https://plausible.io/docs/ecommerce-revenue-tracking)
+
+### Callbacks
+
+When calling `track`, you can pass in a custom callback.
+
+```javascript
+import { track } from 'macobo-test-tracker'
+
+track('some-event', {
+  callback: (result) => {
+    if (result?.status) {
+      console.debug("Request to plausible done. Status:", result.status)
+    } else if (result?.error) {
+      console.log("Error handling request:", result.error)
+    } else {
+      console.log("Request was ignored")
+    }
+  }
+})
+```
 
 ### Opt out and exclude yourself from the analytics
 
