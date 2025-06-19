@@ -130,19 +130,19 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
             "site_limit" => "1000",
             "team_member_limit" => "30",
             "hourly_api_request_limit" => "1000",
-            "features[]" => [
-              "false",
-              "false",
-              "false",
-              "teams",
-              "false",
-              "shared_links",
-              "false",
-              "false",
-              "false",
-              "false",
-              "sites_api"
-            ]
+            "features[]" => %{
+              "stats_api" => "false",
+              "outbound_links" => "false",
+              "form_submissions" => "false",
+              "file_downloads" => "false",
+              "funnels" => "false",
+              "props" => "false",
+              "shared_segments" => "false",
+              "revenue_goals" => "false",
+              "site_segments" => "false",
+              "shared_links" => "true",
+              "sites_api" => "true"
+            }
           }
         })
 
@@ -163,18 +163,19 @@ defmodule PlausibleWeb.Live.CustomerSupport.TeamsTest do
             "site_limit" => "1000",
             "team_member_limit" => "30",
             "hourly_api_request_limit" => "1000",
-            "features[]" => [
-              "false",
-              "false",
-              "false",
-              "false",
-              "shared_links",
-              "false",
-              "false",
-              "false",
-              "false",
-              "sites_api"
-            ]
+            "features[]" => %{
+              "stats_api" => "false",
+              "outbound_links" => "false",
+              "form_submissions" => "false",
+              "file_downloads" => "false",
+              "funnels" => "false",
+              "props" => "false",
+              "shared_segments" => "false",
+              "revenue_goals" => "false",
+              "site_segments" => "false",
+              "shared_links" => "true",
+              "sites_api" => "true"
+            }
           }
         })
 
