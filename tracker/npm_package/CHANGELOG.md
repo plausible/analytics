@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.2.4] - 2025-06-19
+
 - Add `logging` option
 - Improve `callback` option
 - Improve `fileDownloads` typing, export `DEFAULT_FILE_TYPES`
