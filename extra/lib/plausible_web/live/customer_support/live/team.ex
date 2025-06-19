@@ -358,10 +358,9 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
               :if={not mod.free?()}
               x-on:change="featureChangeCallback(event)"
               type="checkbox"
-              name={"#{f.name}[features[]][]"}
-              value={mod.name()}
+              value={mod in (f.source.changes[:features] || [])}
+              name={"#{f.name}[features[]][#{mod.name()}]"}
               label={mod.display_name()}
-              checked={mod in (f.source.changes[:features] || [])}
             />
 
             <div class="mt-8 flex align-center gap-x-4">
@@ -878,7 +877,12 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
   end
 
   defp update_features_to_list(params) do
-    Map.put(params, "features", Enum.reject(params["features[]"], &(&1 == "false" or &1 == "")))
+    features =
+      params["features[]"]
+      |> Enum.reject(fn {_key, value} -> value == "false" or value == "" end)
+      |> Enum.map(fn {key, _value} -> key end)
+
+    Map.put(params, "features", features)
   end
 
   defp preview_number(n) do
