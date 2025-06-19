@@ -50,7 +50,7 @@ export function testPlausibleConfiguration({ openPage, initPlausible, fixtureNam
       })
     })
 
-    test('does not trigger any events when `local` config is disabled but console.warns', async ({ page }) => {
+    test('logs, does not trigger any events when `local` config is disabled', async ({ page }) => {
       const consolePromise = page.waitForEvent('console')
 
       await expectPlausibleInAction(page, {
