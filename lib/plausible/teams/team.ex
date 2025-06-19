@@ -51,6 +51,10 @@ defmodule Plausible.Teams.Team do
     has_one :subscription, Plausible.Billing.Subscription
     has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
 
+    on_ee do
+      has_one :sso_integration, Plausible.Auth.SSO.Integration
+    end
+
     has_many :ownerships, Plausible.Teams.Membership,
       where: [role: :owner],
       preload_order: [asc: :id]
