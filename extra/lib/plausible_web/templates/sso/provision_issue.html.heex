@@ -1,0 +1,19 @@
+<.focus_box>
+  <:title>
+    Single Sign-On enforcement
+  </:title>
+
+  <p :if={@issue == :multiple_memberships} class="text-sm">
+    To access this team, you must first leave all other teams.
+  </p>
+
+  <p :if={@issue == :active_personal_team} class="text-sm">
+    To access this team, you must either remove or transfer all sites
+    you own under "My Personal Sites". You also have to cancel subscription
+    on "My Personal Sites" if there's an active one.
+  </p>
+
+  <p :if={@issue == :not_a_member} class="text-sm">
+    To access this team, you must join as a team member first.
+  </p>
+</.focus_box>

@@ -217,6 +217,25 @@ defmodule Plausible.Auth.SSO do
     end
   end
 
+  @spec check_ready_to_provision(Auth.User.t(), Teams.Team.t()) ::
+          :ok | {:error, :not_a_member | :multiple_memberships | :active_personal_team}
+  def check_ready_to_provision(%{type: :sso} = _user, _team), do: :ok
+
+  def check_ready_to_provision(user, team) do
+    result =
+      with :ok <- ensure_team_member(team, user),
+           :ok <- ensure_one_membership(user, team) do
+        ensure_empty_personal_team(user, team)
+      end
+
+    case result do
+      :ok -> :ok
+      {:error, :integration_not_found} -> {:error, :not_a_member}
+      {:error, :multiple_memberships, _, _} -> {:error, :multiple_memberships}
+      {:error, :active_personal_team, _, _} -> {:error, :active_personal_team}
+    end
+  end
+
   defp check_integration_configured(team) do
     integrations =
       Repo.all(

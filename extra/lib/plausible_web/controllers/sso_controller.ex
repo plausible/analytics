@@ -45,6 +45,22 @@ defmodule PlausibleWeb.SSOController do
     end
   end
 
+  def provision_notice(conn, _params) do
+    render(conn, "provision_notice.html")
+  end
+
+  def provision_issue(conn, params) do
+    issue =
+      case params["issue"] do
+        "not_a_member" -> :not_a_member
+        "multiple_memberships" -> :multiple_memberships
+        "active_personal_team" -> :active_personal_team
+        _ -> :unknown
+      end
+
+    render(conn, "provision_issue.html", issue: issue)
+  end
+
   def saml_signin(conn, params) do
     saml_adapter().signin(conn, params)
   end

@@ -8,6 +8,7 @@ defmodule Plausible.Auth.SSOTest do
 
     alias Plausible.Auth
     alias Plausible.Auth.SSO
+    alias Plausible.Teams
 
     describe "initiate_saml_integration/1" do
       test "initiates new saml integration" do
@@ -885,6 +886,85 @@ defmodule Plausible.Auth.SSOTest do
 
         refute Repo.reload(integration)
         refute_enqueued(worker: SSO.Domain.Verification.Worker, args: %{domain: domain})
+      end
+    end
+
+    describe "check_ready_to_provision/2" do
+      setup do
+        owner = new_user()
+        {:ok, owner, _} = Auth.TOTP.initiate(owner)
+        {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
+        team = new_site(owner: owner).team |> Teams.complete_setup()
+
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        {:ok,
+         team: team,
+         owner: owner,
+         integration: integration,
+         sso_domain: sso_domain,
+         domain: domain}
+      end
+
+      test "returns ok for user who is already of type SSO", %{domain: domain, team: team} do
+        identity = new_identity("Lance Wurst", "lance@" <> domain)
+        {:ok, _, _, sso_user} = SSO.provision_user(identity)
+
+        assert :ok = SSO.check_ready_to_provision(sso_user, team)
+      end
+
+      test "returns ok for standard user who meets criteria", %{team: team} do
+        member = add_member(team, role: :viewer)
+
+        assert :ok = SSO.check_ready_to_provision(member, team)
+
+        # non-active personal team
+        {:ok, _personal_team} = Teams.get_or_create(member)
+
+        # guest membership in another team's site
+        another_team_site = new_site()
+        add_guest(another_team_site, user: member, role: :editor)
+      end
+
+      test "returns error for non-member or guest-only user", %{team: team} do
+        user = new_user()
+
+        assert {:error, :not_a_member} = SSO.check_ready_to_provision(user, team)
+
+        site = new_site(team: team)
+        guest = add_guest(site, role: :editor)
+
+        assert {:error, :not_a_member} = SSO.check_ready_to_provision(guest, team)
+      end
+
+      test "returns error for user with more than one membership", %{team: team} do
+        user = new_user()
+        add_member(team, user: user, role: :viewer)
+        another_team = new_site().team |> Teams.complete_setup()
+        add_member(another_team, user: user, role: :editor)
+
+        assert {:error, :multiple_memberships} = SSO.check_ready_to_provision(user, team)
+      end
+
+      test "returns error for personal team with sites", %{team: team} do
+        user = new_user()
+        add_member(team, user: user, role: :viewer)
+
+        {:ok, personal_team} = Teams.get_or_create(user)
+        new_site(team: personal_team)
+
+        assert {:error, :active_personal_team} = SSO.check_ready_to_provision(user, team)
+      end
+
+      test "returns error for personal team active subscription", %{team: team} do
+        user = new_user() |> subscribe_to_growth_plan()
+        add_member(team, user: user, role: :viewer)
+
+        assert {:error, :active_personal_team} = SSO.check_ready_to_provision(user, team)
       end
     end
   end

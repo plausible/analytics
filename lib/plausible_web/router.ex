@@ -468,6 +468,11 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
+    on_ee do
+      get "/sso/notice", SSOController, :provision_notice
+      get "/sso/issue", SSOController, :provision_issue
+    end
+
     get "/logout", AuthController, :logout
     delete "/me", AuthController, :delete_me
 
