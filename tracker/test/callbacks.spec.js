@@ -9,32 +9,31 @@ function trackWithCallback(page) {
   return page.evaluate(() => window.callPlausible())
 }
 
-function testCallbacks(trackerScript) {
-  const trackerScriptwithoutLocal = trackerScript.replace('.local', '')
-
+function testCallbacks(trackerScriptSrc) {
   test("on successful request", async ({ page }) => {
-    await openPage(page, trackerScript)
+    await openPage(page, trackerScriptSrc)
 
     const callbackResult = await trackWithCallback(page)
     expect(callbackResult).toEqual({ status: 202 })
   })
 
   test('on ignored request', async ({ page }) => {
-    await openPage(page, trackerScriptwithoutLocal)
+    const trackerScriptSrcwithoutLocal = trackerScriptSrc.replace('.local', '')
+    await openPage(page, trackerScriptSrcwithoutLocal)
 
     const callbackResult = await trackWithCallback(page)
     expect(callbackResult).toEqual(undefined)
   })
 
   test('on 404', async ({ page }) => {
-    await openPage(page, trackerScript, `${LOCAL_SERVER_ADDR}/api/404`)
+    await openPage(page, trackerScriptSrc, `${LOCAL_SERVER_ADDR}/api/404`)
 
     const callbackResult = await trackWithCallback(page)
     expect(callbackResult).toEqual({ status: 404 })
   })
 
   test('on network error', async ({ page }) => {
-    await openPage(page, trackerScript, `h://bad.url////`)
+    await openPage(page, trackerScriptSrc, `h://bad.url////`)
 
     const callbackResult = await trackWithCallback(page)
     expect(callbackResult.error).toBeInstanceOf(Error)
