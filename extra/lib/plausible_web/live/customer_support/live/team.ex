@@ -897,7 +897,7 @@ defmodule PlausibleWeb.CustomerSupport.Live.Team do
     ~H"""
     <.input
       name={"#{@for.name}-preview"}
-      label="Preview (read-only)"
+      label="Preview"
       autocomplete="off"
       width="w-[500]"
       readonly
