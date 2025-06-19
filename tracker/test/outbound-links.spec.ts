@@ -1,6 +1,6 @@
 import { initializePageDynamically } from './support/initialize-page-dynamically'
 import { mockManyRequests } from './support/mock-many-requests'
-import { expectPlausibleInAction, switchByMode } from './support/test-utils'
+import { e, expectPlausibleInAction, switchByMode } from './support/test-utils'
 import { expect, test } from '@playwright/test'
 import { ScriptConfig } from './support/types'
 import { LOCAL_SERVER_ADDR } from './support/server'
@@ -145,6 +145,88 @@ for (const mode of ['legacy', 'web'])
   })
 
 test.describe('outbound links feature when using legacy .compat extension', () => {
+  for (const { caseName, linkAttributes, click, expected, skip } of [
+    {
+      caseName: 'navigates when left clicking on link',
+      linkAttributes: '',
+      click: { element: 'a' },
+      expected: { requestsOnSamePage: 1, requestsOnOtherPages: 0 }
+    },
+    {
+      caseName: 'navigates when left clicking on link with Ctrl or Meta key',
+      linkAttributes: '',
+      click: { element: 'a', modifiers: ['ControlOrMeta' as const] },
+      expected: { requestsOnSamePage: 0, requestsOnOtherPages: 1 },
+      skip: (browserName) =>
+        test.skip(
+          browserName === 'webkit',
+          'does not open links with such clicks (works when testing manually in macOS Safari)'
+        )
+    },
+    {
+      caseName:
+        'navigates when left clicking on child element of target="_blank" link',
+      linkAttributes: 'target="_blank"',
+      click: { element: 'a[target="_blank"] > h1' },
+      expected: { requestsOnSamePage: 0, requestsOnOtherPages: 1 }
+    },
+    {
+      caseName:
+        'does not navigate when left clicking on link that has called event.preventDefault()',
+      linkAttributes: 'onclick="event.preventDefault()"',
+      click: { element: 'a' },
+      expected: { requestsOnSamePage: 0, requestsOnOtherPages: 0 }
+    }
+  ]) {
+    test(`tracks and ${caseName}`, async ({ page, browserName }, {
+      testId
+    }) => {
+      if (skip) {
+        skip(browserName)
+      }
+      const outboundUrl = 'https://other.example.com/target'
+      const [outboundMockForOtherPages, outboundMockForSamePage] =
+        await Promise.all(
+          [{ scopeMockToPage: false }, { scopeMockToPage: true }].map(
+            (options) =>
+              mockManyRequests({
+                ...options,
+                page,
+                path: outboundUrl,
+                fulfill: {
+                  status: 200,
+                  contentType: 'text/html',
+                  body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+                },
+                awaitedRequestCount: 2,
+                mockRequestTimeout: 2000
+              })
+          )
+        )
+
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig:
+          '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
+        bodyContent: `<a ${linkAttributes} href="${outboundUrl}"><h1>➡️</h1></a>`
+      })
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click(click.element, { modifiers: click.modifiers }),
+        expectedRequests: [
+          { n: 'Outbound Link: Click', p: { url: outboundUrl } }
+        ]
+      })
+
+      const [requestsOnOtherPages, requestsOnSamePage] = await Promise.all([
+        outboundMockForOtherPages.getRequestList().then((d) => d.length),
+        outboundMockForSamePage.getRequestList().then((d) => d.length)
+      ])
+      expect({ requestsOnOtherPages, requestsOnSamePage }).toEqual(expected)
+    })
+  }
+
   test(`tracking delays navigation until the tracking request has finished`, async ({
     page
   }, { testId }) => {
@@ -240,65 +322,5 @@ test.describe('outbound links feature when using legacy .compat extension', () =
     await expect(page.getByText('other page')).toBeVisible()
     await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
     expect(navigationTime).toBeLessThan(trackingResponseTime)
-  })
-
-  test('sends event when left clicking on link, but does not navigate if event.preventDefault() has been called on the click event', async ({
-    page
-  }, { testId }) => {
-    const outboundUrl = 'https://other.example.com/target'
-    const outboundMock = await mockManyRequests({
-      page,
-      path: outboundUrl,
-      fulfill: {
-        status: 200,
-        contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
-      },
-      awaitedRequestCount: 1
-    })
-    const { url } = await initializePageDynamically(page, {
-      testId,
-      scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-      bodyContent: `<a href="${outboundUrl}">➡️</a><script>document.querySelector('a').addEventListener('click', (e) => {e.preventDefault()})</script>`
-    })
-    await page.goto(url)
-
-    await expectPlausibleInAction(page, {
-      action: () => page.click('a'),
-      expectedRequests: [{ n: 'Outbound Link: Click', p: { url: outboundUrl } }]
-    })
-
-    await expect(outboundMock.getRequestList()).resolves.toHaveLength(0)
-  })
-
-  test('sends event and opens link in new tab if the link has target="__blank"', async ({
-    page
-  }, { testId }) => {
-    const outboundUrl = 'https://other.example.com/target'
-    const outboundMock = await mockManyRequests({
-      page,
-      path: outboundUrl,
-      fulfill: {
-        status: 200,
-        contentType: 'text/html',
-        body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
-      },
-      awaitedRequestCount: 2
-    })
-    const { url } = await initializePageDynamically(page, {
-      testId,
-      scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.outbound-links.js"></script>',
-      bodyContent: `<a target="__blank" href="${outboundUrl}">➡️</a>`
-    })
-    await page.goto(url)
-
-    await expectPlausibleInAction(page, {
-      action: () => page.click('a'),
-      expectedRequests: [{ n: 'Outbound Link: Click', p: { url: outboundUrl } }]
-    })
-
-    await expect(outboundMock.getRequestList()).resolves.toHaveLength(1)
   })
 })

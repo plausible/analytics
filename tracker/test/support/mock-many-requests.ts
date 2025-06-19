@@ -6,15 +6,14 @@ type ShouldIgnoreRequest = (requestData?: RequestData) => boolean
 
 const DEFAULT_RESPONSE = { status: 200, contentType: 'text/plain', body: 'ok' }
 
-export async function mockManyRequests({
-  page,
-  path,
-  fulfill,
-  awaitedRequestCount,
-  responseDelay,
-  shouldIgnoreRequest,
-  mockRequestTimeout = 3000
-}: {
+interface MockManyRequestsOptions {
+  /**
+   * Set `scopeMockToPage` to `true` if there is a need to verify that the mock request
+   * happens on the passed `page`.
+   * Default value is `false`, which means it records requests that open in new tabs as well.
+   * Note: You can create two mocks for the same path, one on the page and other on the browser if needed.
+   */
+  scopeMockToPage?: boolean
   page: Page
   path: string
   /**
@@ -38,9 +37,21 @@ export async function mockManyRequests({
   responseDelay?: number
   shouldIgnoreRequest?: ShouldIgnoreRequest | ShouldIgnoreRequest[]
   mockRequestTimeout?: number
-}) {
+}
+
+export async function mockManyRequests({
+  scopeMockToPage,
+  page,
+  path,
+  fulfill,
+  awaitedRequestCount,
+  responseDelay,
+  shouldIgnoreRequest,
+  mockRequestTimeout = 3000
+}: MockManyRequestsOptions) {
   const requestList: unknown[] = []
-  await page.context().route(path, async (route, request) => {
+  const scope = scopeMockToPage ? page : page.context()
+  await scope.route(path, async (route, request) => {
     if (responseDelay) {
       await delay(responseDelay)
     }

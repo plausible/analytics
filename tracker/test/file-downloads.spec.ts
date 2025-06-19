@@ -18,7 +18,9 @@ const DEFAULT_CONFIG: ScriptConfig = {
 
 for (const mode of ['legacy', 'web']) {
   test.describe(`file downloads feature legacy/v2 parity (${mode})`, () => {
-    test('tracks download when link opens in same tab', async ({ page }, { testId }) => {
+    test('tracks download when link opens in same tab', async ({ page }, {
+      testId
+    }) => {
       const filePath = '/file.csv'
       const { getRequestList } = await mockManyRequests({
         page,
@@ -53,7 +55,7 @@ for (const mode of ['legacy', 'web']) {
       await expect(getRequestList()).resolves.toHaveLength(1)
     })
 
-    test('tracks download when link opens in new tab (target="__blank")', async ({
+    test('tracks download when link opens in new tab (target="_blank")', async ({
       page
     }, { testId }) => {
       const pdfUrl = 'https://example.com/downloads/file.pdf'
@@ -75,7 +77,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${pdfUrl}" target="__blank">📥</a>`
+        bodyContent: `<a href="${pdfUrl}" target="_blank">📥</a>`
       })
       await page.goto(url)
 
@@ -324,7 +326,7 @@ for (const mode of ['legacy', 'web']) {
           },
           mode
         ),
-        bodyContent: `<a href="${isoFileURL}" target="__blank">📥</a><a href="${csvFileURL}" target="__blank">📥</a>`
+        bodyContent: `<a href="${isoFileURL}" target="_blank">📥</a><a href="${csvFileURL}" target="_blank">📥</a>`
       })
       await page.goto(url)
       await expectPlausibleInAction(page, {
@@ -384,7 +386,7 @@ for (const mode of ['web', 'esm']) {
           },
           mode
         ),
-        bodyContent: `<a href="${isoFileURL}" target="__blank">📥</a><a href="${csvFileURL}" target="__blank">📥</a>`
+        bodyContent: `<a href="${isoFileURL}" target="_blank">📥</a><a href="${csvFileURL}" target="_blank">📥</a>`
       })
       await page.goto(url)
       await expectPlausibleInAction(page, {
@@ -405,48 +407,91 @@ for (const mode of ['web', 'esm']) {
 }
 
 test.describe('file downloads feature when using legacy .compat extension', () => {
-  test('tracks and starts exactly one download on link click', async ({
-    page
-  }, { testId }) => {
-    const eventsApiMock = await mockManyRequests({
+  for (const { clickName, linkAttributes, click, expected, skip } of [
+    {
+      clickName: 'when left clicking on link',
+      linkAttributes: '',
+      click: { element: 'a' },
+      expected: { downloadsOnSamePage: 1, downloadsOnOtherPages: 0 }
+    },
+    {
+      clickName: 'when left clicking on link with Ctrl or Meta key',
+      linkAttributes: '',
+      click: { element: 'a', modifiers: ['ControlOrMeta' as const] },
+      expected: { downloadsOnSamePage: 0, downloadsOnOtherPages: 1 },
+      skip: (browserName) =>
+        test.skip(
+          browserName === 'webkit',
+          'does not open links with such clicks (works when testing manually in macOS Safari)'
+        )
+    },
+    {
+      clickName: 'when left clicking on child element of target="_blank" link',
+      linkAttributes: 'target="_blank"',
+      click: { element: 'a[target="_blank"] > h1' },
+      expected: { downloadsOnSamePage: 0, downloadsOnOtherPages: 1 }
+    }
+  ]) {
+    test(`tracks and starts exactly one download ${clickName}`, async ({
       page,
-      path: '**/api/event',
-      awaitedRequestCount: 2,
-      mockRequestTimeout: 2000
-    })
-    const filePath = '/file.csv'
-    const downloadableFileMock = await mockManyRequests({
-      page,
-      path: `${LOCAL_SERVER_ADDR}${filePath}`,
-      fulfill: {
-        contentType: 'text/csv'
-      },
-      awaitedRequestCount: 2,
-      mockRequestTimeout: 2000
-    })
+      browserName
+    }, { testId }) => {
+      if (skip) {
+        skip(browserName)
+      }
 
-    const { url } = await initializePageDynamically(page, {
-      testId,
-      scriptConfig:
-        '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
-      bodyContent: `<a href="${filePath}">📥</a>`
-    })
-    await page.goto(url)
-    await page.click('a')
-    const [downloadRequests, eventsApiRequests] = await Promise.all([
-      downloadableFileMock.getRequestList(),
-      eventsApiMock.getRequestList()
-    ])
-    expect(downloadRequests).toHaveLength(1)
-    expect(eventsApiRequests).toEqual([
-      expect.objectContaining({
-        n: 'File Download',
-        p: {
-          url: `${LOCAL_SERVER_ADDR}${filePath}`
-        }
+      const eventsApiMock = await mockManyRequests({
+        page,
+        path: '**/api/event',
+        awaitedRequestCount: 2,
+        mockRequestTimeout: 2000
       })
-    ])
-  })
+      const filePath = '/file.csv'
+      const [downloadMockForOtherPages, downloadMockForSamePage] =
+        await Promise.all(
+          [{ scopeMockToPage: false }, { scopeMockToPage: true }].map(
+            (options) =>
+              mockManyRequests({
+                ...options,
+                page,
+                path: `${LOCAL_SERVER_ADDR}${filePath}`,
+                fulfill: {
+                  contentType: 'text/csv'
+                },
+                awaitedRequestCount: 2,
+                mockRequestTimeout: 2000
+              })
+          )
+        )
+
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig:
+          '<script id="plausible" defer src="/tracker/js/plausible.compat.file-downloads.local.manual.js"></script>',
+        bodyContent: `<a ${linkAttributes} href="${filePath}"><h1>📥</h1></a>`
+      })
+      await page.goto(url)
+      await page.click(click.element, { modifiers: click.modifiers })
+      const [downloadsOnSamePage, downloadsOnOtherPages, eventsApiRequests] =
+        await Promise.all([
+          downloadMockForSamePage.getRequestList().then((d) => d.length),
+          downloadMockForOtherPages.getRequestList().then((d) => d.length),
+          eventsApiMock.getRequestList()
+        ])
+      expect({
+        downloadsOnSamePage,
+        downloadsOnOtherPages
+      }).toEqual(expected)
+      expect(eventsApiRequests).toEqual([
+        expect.objectContaining({
+          n: 'File Download',
+          p: {
+            url: `${LOCAL_SERVER_ADDR}${filePath}`
+          }
+        })
+      ])
+    })
+  }
 
   for (const { fulfill } of [
     {

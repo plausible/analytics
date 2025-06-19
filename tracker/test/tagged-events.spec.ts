@@ -412,6 +412,87 @@ for (const mode of ['legacy', 'web']) {
 }
 
 test.describe('tagged events feature when using legacy .compat extension', () => {
+  for (const { caseName, linkAttributes, click, expected, skip } of [
+    {
+      caseName: 'navigates when left clicking on tagged link',
+      linkAttributes: '',
+      click: { element: 'a' },
+      expected: { requestsOnSamePage: 1, requestsOnOtherPages: 0 }
+    },
+    {
+      caseName:
+        'navigates when left clicking on tagged link with Ctrl or Meta key',
+      linkAttributes: '',
+      click: { element: 'a', modifiers: ['ControlOrMeta' as const] },
+      expected: { requestsOnSamePage: 0, requestsOnOtherPages: 1 },
+      skip: (browserName) =>
+        test.skip(
+          browserName === 'webkit',
+          'does not open links with such clicks (works when testing manually in macOS Safari)'
+        )
+    },
+    {
+      caseName:
+        'navigates when left clicking on child element of target="_blank" tagged link',
+      linkAttributes: 'target="_blank"',
+      click: { element: 'a[target="_blank"] > h1' },
+      expected: { requestsOnSamePage: 0, requestsOnOtherPages: 1 }
+    },
+    {
+      caseName:
+        'does not navigate when left clicking on tagged link that has called event.preventDefault()',
+      linkAttributes: 'onclick="event.preventDefault()"',
+      click: { element: 'a' },
+      expected: { requestsOnSamePage: 0, requestsOnOtherPages: 0 }
+    }
+  ]) {
+    test(`tracks and ${caseName}`, async ({ page, browserName }, {
+      testId
+    }) => {
+      if (skip) {
+        skip(browserName)
+      }
+      const outboundUrl = 'https://other.example.com/target'
+      const [outboundMockForOtherPages, outboundMockForSamePage] =
+        await Promise.all(
+          [{ scopeMockToPage: false }, { scopeMockToPage: true }].map(
+            (options) =>
+              mockManyRequests({
+                ...options,
+                page,
+                path: outboundUrl,
+                fulfill: {
+                  status: 200,
+                  contentType: 'text/html',
+                  body: '<!DOCTYPE html><html><head><title>other page</title></head><body>other page</body></html>'
+                },
+                awaitedRequestCount: 2,
+                mockRequestTimeout: 2000
+              })
+          )
+        )
+
+      const { url } = await initializePageDynamically(page, {
+        testId,
+        scriptConfig:
+          '<script id="plausible" defer src="/tracker/js/plausible.compat.local.manual.tagged-events.js"></script>',
+        bodyContent: `<a class="plausible-event-name=outbound" ${linkAttributes} href="${outboundUrl}"><h1>➡️</h1></a>`
+      })
+      await page.goto(url)
+
+      await expectPlausibleInAction(page, {
+        action: () => page.click(click.element, { modifiers: click.modifiers }),
+        expectedRequests: [{ n: 'outbound', p: { url: outboundUrl } }]
+      })
+
+      const [requestsOnOtherPages, requestsOnSamePage] = await Promise.all([
+        outboundMockForOtherPages.getRequestList().then((d) => d.length),
+        outboundMockForSamePage.getRequestList().then((d) => d.length)
+      ])
+      expect({ requestsOnOtherPages, requestsOnSamePage }).toEqual(expected)
+    })
+  }
+
   test('tracking delays navigation until the tracking request has finished', async ({
     page
   }, { testId }) => {

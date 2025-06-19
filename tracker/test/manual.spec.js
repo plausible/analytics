@@ -36,4 +36,12 @@ test.describe('manual extension', () => {
       expectedRequests: [{n: 'CustomEvent', u: `https://example.com/custom/location`}]
     })
   })
+
+  test('can trigger custom events with interactive: false', async ({ page }) => {
+    await page.goto('/manual.html')
+    await expectPlausibleInAction(page, {
+      action: () => page.evaluate(() => window.plausible('Non-Interactive Custom Event', { interactive: false })),
+      expectedRequests: [{n: 'Non-Interactive Custom Event', u: `${LOCAL_SERVER_ADDR}/manual.html`, i: false}]
+    })
+  })
 })
