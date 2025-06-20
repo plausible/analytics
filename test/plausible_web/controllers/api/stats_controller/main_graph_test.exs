@@ -1062,10 +1062,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors&interval=month"
         )
 
-      assert %{
-               "error" =>
-                 "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"
-             } == json_response(conn, 400)
+      assert_matches %{
+                       "error" =>
+                         "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"
+                     } = json_response(conn, 400)
     end
 
     test "returns error when the interval is not valid", %{
@@ -1078,10 +1078,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors&interval=biweekly"
         )
 
-      assert %{
-               "error" =>
-                 "Invalid value for interval. Accepted values are: minute, hour, day, week, month"
-             } == json_response(conn, 400)
+      assert_matches %{
+                       "error" =>
+                         "Invalid value for interval. Accepted values are: minute, hour, day, week, month"
+                     } = json_response(conn, 400)
     end
 
     test "displays visitors for a month on a weekly scale", %{conn: conn, site: site} do
