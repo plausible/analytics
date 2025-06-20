@@ -17,7 +17,7 @@ defmodule Plausible.Teams.Memberships.Remove do
 
       {:ok, _} =
         Repo.transaction(fn ->
-          Repo.delete!(team_membership)
+          delete_membership!(team_membership)
 
           Plausible.Segments.after_user_removed_from_team(
             team_membership.team,
@@ -31,6 +31,18 @@ defmodule Plausible.Teams.Memberships.Remove do
 
       {:ok, team_membership}
     end
+  end
+
+  defp delete_membership!(team_membership) do
+    user = team_membership.user
+
+    Repo.delete!(team_membership)
+
+    if Plausible.Users.type(user) == :sso do
+      {:ok, :deleted} = Plausible.Auth.delete_user(user)
+    end
+
+    :ok
   end
 
   defp check_can_remove_membership(:owner, _), do: :ok

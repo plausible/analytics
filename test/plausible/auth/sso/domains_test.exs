@@ -9,11 +9,15 @@ defmodule Plausible.Auth.SSO.DomainsTest do
     use Plausible.Auth.SSO.Domain.Status
     use Oban.Testing, repo: Plausible.Repo
 
+    alias Plausible.Auth
     alias Plausible.Auth.SSO
     alias Plausible.Teams
 
     setup do
-      owner = new_user(totp_enabled: true, totp_secret: "secret")
+      owner = new_user()
+      {:ok, owner, _} = Auth.TOTP.initiate(owner)
+      {:ok, owner, _} = Auth.TOTP.enable(owner, :skip_verify)
+
       team = new_site(owner: owner).team
 
       integration = SSO.initiate_saml_integration(team)
@@ -337,15 +341,6 @@ defmodule Plausible.Auth.SSO.DomainsTest do
 
     defp generate_domain() do
       "example-#{Enum.random(1..10_000)}.com"
-    end
-
-    defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
-      %SSO.Identity{
-        id: id,
-        name: name,
-        email: email,
-        expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
-      }
     end
   end
 end

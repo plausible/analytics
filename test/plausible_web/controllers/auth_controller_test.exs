@@ -501,6 +501,23 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn) == "/sites"
     end
 
+    test "valid email and password, user on multiple teams - logs the user in", %{conn: conn} do
+      user = insert(:user, password: "password")
+
+      # first team
+      new_site(owner: user)
+
+      # another team
+      another_team = new_site().team |> Plausible.Teams.complete_setup()
+      add_member(another_team, user: user, role: :owner)
+
+      conn = post(conn, "/login", email: user.email, password: "password")
+
+      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+      assert get_session(conn, :user_token) == token
+      assert redirected_to(conn) == "/sites"
+    end
+
     test "valid email and password with return_to set - redirects properly", %{conn: conn} do
       user = insert(:user, password: "password")
 
@@ -567,6 +584,76 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
       refute get_session(conn, :user_token)
+    end
+
+    on_ee do
+      test "SSO owner user - logs in", %{conn: conn} do
+        owner = new_user(name: "Jane Shelley", email: "jane@example.com", password: "password")
+        team = new_site(owner: owner).team
+        team = Plausible.Teams.complete_setup(team)
+
+        # Setup SSO
+        integration = Auth.SSO.initiate_saml_integration(team)
+
+        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
+        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(owner.name, owner.email)
+        {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
+
+        conn = post(conn, "/login", email: owner.email, password: "password")
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        assert conn.resp_cookies["session_2fa"].max_age == 0
+        assert %{sessions: [%{token: token}]} = owner |> Repo.reload!() |> Repo.preload(:sessions)
+        assert get_session(conn, :user_token) == token
+      end
+
+      test "SSO user other than owner - renders login form again", %{conn: conn} do
+        owner = new_user()
+        team = new_site(owner: owner).team
+        member = new_user(name: "Jane Shelley", email: "jane@example.com", password: "password")
+        add_member(team, user: member, role: :viewer)
+
+        # Setup SSO
+        integration = Auth.SSO.initiate_saml_integration(team)
+
+        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
+        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(member.name, member.email)
+        {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
+
+        conn = post(conn, "/login", email: member.email, password: "password")
+
+        assert get_session(conn, :user_token) == nil
+        assert html_response(conn, 200) =~ "Enter your account credentials"
+      end
+
+      test "SSO user other than owner with personal team - renders login form again", %{
+        conn: conn
+      } do
+        owner = new_user()
+        team = new_site(owner: owner).team
+        member = new_user(name: "Jane Shelley", email: "jane@example.com", password: "password")
+        {:ok, _} = Plausible.Teams.get_or_create(member)
+        add_member(team, user: member, role: :viewer)
+
+        # Setup SSO
+        integration = Auth.SSO.initiate_saml_integration(team)
+
+        {:ok, sso_domain} = Auth.SSO.Domains.add(integration, "example.com")
+        _sso_domain = Auth.SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(member.name, member.email)
+        {:ok, _, _, _sso_user} = Auth.SSO.provision_user(identity)
+
+        conn = post(conn, "/login", email: member.email, password: "password")
+
+        assert get_session(conn, :user_token) == nil
+        assert html_response(conn, 200) =~ "Enter your account credentials"
+      end
     end
 
     test "email does not exist - renders login form again", %{conn: conn} do
@@ -639,6 +726,43 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  on_ee do
+    describe "POST /password/request-reset - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user]
+
+      test "initiates reset for owner SSO user email", %{conn: conn, user: user} do
+        mock_captcha_success()
+        conn = post(conn, "/password/request-reset", %{email: user.email})
+
+        assert html_response(conn, 200)
+
+        assert_email_delivered_with(
+          subject: "Plausible password reset",
+          to: [nil: user.email]
+        )
+      end
+
+      test "does not initiate reset for non-owner SSO user", %{conn: conn, user: user, team: team} do
+        add_member(team, role: :owner)
+
+        assert {:ok, _} =
+                 Plausible.Teams.Memberships.UpdateRole.update(team, user.id, "editor", user)
+
+        assert Plausible.Teams.Memberships.team_role(team, user) == {:ok, :editor}
+
+        mock_captcha_success()
+        conn = post(conn, "/password/request-reset", %{email: user.email})
+
+        assert html_response(conn, 200)
+
+        refute_email_delivered_with(
+          subject: "Plausible password reset",
+          to: [nil: user.email]
+        )
+      end
+    end
+  end
+
   describe "GET /password/reset" do
     test "with valid token - shows form", %{conn: conn} do
       user = insert(:user)
@@ -700,6 +824,20 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, "/logout", %{redirect: "/docs"})
 
       assert redirected_to(conn, 302) == "/docs"
+    end
+  end
+
+  on_ee do
+    describe "DELETE /me - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "refuses to delete SSO user", %{conn: conn, user: user} do
+        conn = delete(conn, "/me")
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        assert Repo.reload(user)
+      end
     end
   end
 
@@ -1076,6 +1214,23 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
+    end
+  end
+
+  on_ee do
+    describe "POST /2fa/disable - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "refuses to disable for SSO user", %{conn: conn, user: user} do
+        {:ok, user, _} = Auth.TOTP.initiate(user)
+        {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+        conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "password"})
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        assert user |> Repo.reload!() |> Auth.TOTP.enabled?()
+      end
     end
   end
 

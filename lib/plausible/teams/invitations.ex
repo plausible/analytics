@@ -252,7 +252,11 @@ defmodule Plausible.Teams.Invitations do
     team_invitation = Repo.preload(team_invitation, [:team, :inviter])
     now = NaiveDateTime.utc_now(:second)
 
-    do_accept(team_invitation, user, now, guest_invitations: [])
+    if Plausible.Users.type(user) == :sso do
+      {:error, :permission_denied}
+    else
+      do_accept(team_invitation, user, now, guest_invitations: [])
+    end
   end
 
   @doc false

@@ -1,5 +1,5 @@
 <.settings_tiles>
-  <.tile>
+  <.tile :if={Plausible.Users.type(@current_user) == :standard}>
     <:title>
       <a id="update-name">Your Name</a>
     </:title>
@@ -17,6 +17,18 @@
       <.button type="submit">
         Change Name
       </.button>
+    </.form>
+  </.tile>
+
+  <.tile :if={Plausible.Users.type(@current_user) == :sso}>
+    <:title>
+      <a id="view-name">Your Name</a>
+    </:title>
+    <:subtitle>
+      The name associated with your account
+    </:subtitle>
+    <.form :let={f} for={@name_changeset}>
+      <.input type="text" field={f[:name]} disabled={true} label="Name" width="w-1/2" />
     </.form>
   </.tile>
 

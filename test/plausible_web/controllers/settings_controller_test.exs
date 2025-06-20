@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.SettingsControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
+  use Plausible
   use Plausible.Repo
   use Plausible.Teams.Test
 
@@ -672,6 +673,23 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  on_ee do
+    describe "POST /preferences/name - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "refuses to update for SSO user", %{conn: conn, user: user} do
+        conn =
+          post(conn, Routes.settings_path(conn, :update_name), %{
+            "user" => %{"name" => "New name"}
+          })
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        assert Repo.reload!(user).name == user.name
+      end
+    end
+  end
+
   describe "POST /security/password" do
     setup [:create_user, :log_in]
 
@@ -843,6 +861,37 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
   end
 
+  on_ee do
+    describe "POST /security/password - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "refuses to update for SSO user", %{conn: conn, user: user} do
+        password = "very-long-very-secret-123"
+        new_password = "super-long-super-secret-999"
+
+        original =
+          user
+          |> Auth.User.set_password(password)
+          |> Repo.update!()
+
+        conn =
+          post(conn, Routes.settings_path(conn, :update_password), %{
+            "user" => %{
+              "password" => new_password,
+              "old_password" => password,
+              "password_confirmation" => new_password
+            }
+          })
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        current_hash = Repo.reload!(user).password_hash
+        assert current_hash == original.password_hash
+        assert Plausible.Auth.Password.match?(password, current_hash)
+      end
+    end
+  end
+
   describe "POST /security/email" do
     setup [:create_user, :log_in]
 
@@ -945,6 +994,34 @@ defmodule PlausibleWeb.SettingsControllerTest do
         })
 
       assert html_response(conn, 200) =~ "can&#39;t be the same"
+    end
+  end
+
+  on_ee do
+    describe "POST /security/email - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "refuses to update for SSO user", %{conn: conn, user: user} do
+        password = "very-long-very-secret-123"
+
+        user
+        |> Auth.User.set_password(password)
+        |> Repo.update!()
+
+        assert user.email_verified
+
+        conn =
+          post(conn, Routes.settings_path(conn, :update_email), %{
+            "user" => %{"email" => "new" <> user.email, "password" => password}
+          })
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+        updated_user = Repo.reload!(user)
+
+        assert updated_user.email == user.email
+        assert updated_user.email_verified
+      end
     end
   end
 
@@ -1246,6 +1323,45 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       assert html =~ "You are the sole owner of one or more teams"
       refute html =~ "Delete my account"
+    end
+  end
+
+  on_ee do
+    describe "Account Settings - SSO user" do
+      setup [:create_user, :create_site, :create_team, :setup_sso, :provision_sso_user, :log_in]
+
+      test "does not allow to update name in preferences", %{conn: conn} do
+        conn = get(conn, Routes.settings_path(conn, :preferences))
+        assert html = html_response(conn, 200)
+        refute html =~ "Change Name"
+      end
+
+      test "does not allow to update email in security settings", %{conn: conn} do
+        conn = get(conn, Routes.settings_path(conn, :security))
+        assert html = html_response(conn, 200)
+        refute html =~ "Change Email"
+      end
+
+      test "does not allow to change password in security settings", %{conn: conn} do
+        conn = get(conn, Routes.settings_path(conn, :security))
+        assert html = html_response(conn, 200)
+        refute html =~ "Change Password"
+      end
+
+      test "does not allow to disable 2FA in security settings", %{conn: conn, user: user} do
+        {:ok, user, _} = Auth.TOTP.initiate(user)
+        {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+        conn = get(conn, Routes.settings_path(conn, :security))
+        assert html = html_response(conn, 200)
+        assert text_of_element(html, "button[disabled]") =~ "Disable 2FA"
+      end
+
+      test "does not show account danger zone", %{conn: conn} do
+        conn = get(conn, Routes.settings_path(conn, :preferences))
+        assert html = html_response(conn, 200)
+        refute html =~ "/settings/danger-zone"
+      end
     end
   end
 

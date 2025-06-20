@@ -1,5 +1,5 @@
 <.settings_tiles>
-  <.tile docs="change-email">
+  <.tile :if={Plausible.Users.type(@current_user) == :standard} docs="change-email">
     <:title>
       <a id="update-email">Email Address</a>
     </:title>
@@ -31,7 +31,26 @@
     </.form>
   </.tile>
 
-  <.tile docs="reset-password">
+  <.tile :if={Plausible.Users.type(@current_user) == :sso}>
+    <:title>
+      <a id="view-email">Email Address</a>
+    </:title>
+    <:subtitle>
+      Address associated with your account
+    </:subtitle>
+    <.form :let={f} for={@email_changeset}>
+      <.input
+        type="text"
+        name="user[current_email]"
+        value={f.data.email}
+        label="Current Email"
+        width="w-1/2"
+        disabled
+      />
+    </.form>
+  </.tile>
+
+  <.tile :if={Plausible.Users.type(@current_user) == :standard} docs="reset-password">
     <:title>
       <a id="update-password">Password</a>
     </:title>
@@ -97,6 +116,7 @@
     <div x-data="{disable2FAOpen: false, regenerate2FAOpen: false}">
       <div :if={@totp_enabled?}>
         <.button
+          disabled={Plausible.Users.type(@current_user) == :sso}
           x-on:click="disable2FAOpen = true; $refs.disable2FAPassword.value = ''"
           theme="danger"
           mt?={false}

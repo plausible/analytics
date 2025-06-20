@@ -172,6 +172,26 @@ defmodule Plausible.TeamsTest do
     end
   end
 
+  on_ee do
+    describe "get_or_create/1 - SSO user" do
+      setup [:create_user, :create_team, :setup_sso, :provision_sso_user]
+
+      test "does not allow creating personal team to SSO user", %{user: user} do
+        assert {:error, :permission_denied} = Teams.get_or_create(user)
+      end
+    end
+
+    describe "force_create_my_team/1 - SSO user" do
+      setup [:create_user, :create_team, :setup_sso, :provision_sso_user]
+
+      test "crashes when trying to create a team for SSO user", %{user: user} do
+        assert_raise RuntimeError, ~r/SSO user tried to force create a personal team/, fn ->
+          Teams.force_create_my_team(user)
+        end
+      end
+    end
+  end
+
   describe "get_by_owner/1" do
     test "returns error if user does not own any team" do
       user = new_user()
