@@ -475,6 +475,7 @@ PlausibleWeb.Team.Notice.html
 PlausibleWeb.TestController.html
 PlausibleWeb.Tracker.html
 PlausibleWeb.TrackerPlug.html
+PlausibleWeb.TrackerScriptCache.html
 PlausibleWeb.TwoFactor.Session.html
 PlausibleWeb.UnsubscribeController.html
 PlausibleWeb.UnsubscribeView.html
@@ -501,8 +502,8 @@ dist/lato-latin-ext-300-normal-VPGGJKJL.woff2
 dist/lato-latin-ext-400-normal-N27NCBWW.woff2
 dist/lato-latin-ext-700-normal-Q2L5DVMW.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-CDB060F2.js
-dist/sidebar_items-86C4F71E.js
+dist/search_data-B8F2A05B.js
+dist/sidebar_items-7054E770.js
 index.html
 readme.html
 search.html
