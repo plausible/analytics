@@ -91,6 +91,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_element(resp, "title") == "Plausible Analytics: Live Demo"
       assert resp =~ "Login"
+      assert resp =~ "Want these stats for your website?"
       assert resp =~ "Getting started"
     end
 
@@ -1481,5 +1482,102 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/share/#{site2.domain}?auth=#{link2.slug}")
       assert html_response(conn, 200) =~ "Enter password"
     end
+  end
+
+  describe "dogfood tracking" do
+    @describetag :ee_only
+
+    test "does not set domain_to_replace on live demo dashboard", %{conn: conn} do
+      site = new_site(domain: "plausible.io", public: true)
+      populate_stats(site, [build(:pageview)])
+      conn = get(conn, "/#{site.domain}")
+      script_params = html_response(conn, 200) |> get_script_params()
+
+      assert %{
+               "location_override" => nil,
+               "domain_to_replace" => nil
+             } = script_params
+    end
+
+    test "sets domain_to_replace on any other dashboard", %{conn: conn} do
+      site = new_site(domain: "öö.ee", public: true)
+      populate_stats(site, [build(:pageview)])
+      conn = get(conn, "/#{site.domain}")
+      script_params = html_response(conn, 200) |> get_script_params()
+
+      assert %{
+               "location_override" => nil,
+               "domain_to_replace" => "%C3%B6%C3%B6.ee"
+             } = script_params
+    end
+
+    test "sets domain_to_replace on live demo shared link", %{conn: conn} do
+      site = new_site(domain: "plausible.io", public: true)
+      link = insert(:shared_link, site: site)
+
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/share/#{site.domain}/?auth=#{link.slug}")
+      script_params = html_response(conn, 200) |> get_script_params()
+
+      assert %{
+               "location_override" => nil,
+               "domain_to_replace" => "plausible.io"
+             } = script_params
+    end
+
+    test "sets location_override on a locked dashboard", %{conn: conn} do
+      locked_site = new_site(public: true)
+      locked_site.team |> Ecto.Changeset.change(locked: true) |> Repo.update!()
+
+      conn = get(conn, "/" <> locked_site.domain)
+      html = html_response(conn, 200)
+
+      script_params = html |> get_script_params()
+
+      assert html =~ "Dashboard Locked"
+      assert script_params["location_override"] == PlausibleWeb.Endpoint.url() <> "/:dashboard"
+    end
+
+    test "sets location_override on a locked shared link", %{conn: conn} do
+      locked_site = new_site()
+      link = insert(:shared_link, site: locked_site)
+
+      insert(:starter_subscription, team: locked_site.team)
+
+      conn = get(conn, "/share/#{locked_site.domain}/?auth=#{link.slug}")
+      html = html_response(conn, 200)
+
+      script_params = get_script_params(html)
+
+      assert html =~ "Shared Link Unavailable"
+
+      assert script_params["location_override"] ==
+               PlausibleWeb.Endpoint.url() <> "/share/:dashboard"
+    end
+
+    test "sets location_override on shared_link_password.html", %{conn: conn} do
+      site = new_site()
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      conn = get(conn, "/share/#{site.domain}?auth=#{link.slug}")
+      html = html_response(conn, 200)
+
+      script_params = get_script_params(html)
+
+      assert html =~ "Enter password"
+
+      assert script_params["location_override"] ==
+               PlausibleWeb.Endpoint.url() <> "/share/:dashboard"
+    end
+  end
+
+  defp get_script_params(html) do
+    html
+    |> find("#dogfood-script")
+    |> text_of_attr("data-script-params")
+    |> JSON.decode!()
   end
 end

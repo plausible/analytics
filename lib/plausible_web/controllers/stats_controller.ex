@@ -58,7 +58,7 @@ defmodule PlausibleWeb.StatsController do
     current_user = conn.assigns[:current_user]
     stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats? = not Teams.locked?(site.team) or site_role == :super_admin
-    demo = site.domain == PlausibleWeb.Endpoint.host()
+    demo = site.domain == "plausible.io"
     dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
 
@@ -83,7 +83,6 @@ defmodule PlausibleWeb.StatsController do
           demo: demo,
           flags: flags,
           is_dbip: is_dbip(),
-          dogfood_page_path: dogfood_page_path,
           segments: segments,
           load_dashboard_js: true,
           hide_footer?: if(ce?() || demo, do: false, else: site_role != :public)
@@ -392,7 +391,6 @@ defmodule PlausibleWeb.StatsController do
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),
           demo: false,
-          dogfood_page_path: "/share/:dashboard",
           shared_link_auth: shared_link.slug,
           embedded: embedded?,
           background: conn.params["background"],
