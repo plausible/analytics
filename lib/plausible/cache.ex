@@ -107,7 +107,7 @@ defmodule Plausible.Cache do
       @spec refresh_updated_recently(Keyword.t()) :: :ok
       def refresh_updated_recently(opts \\ []) do
         recently_updated_query =
-          from [s, _rg] in base_db_query(),
+          from [s, ...] in base_db_query(),
             order_by: [asc: s.updated_at],
             where: s.updated_at > ago(^15, "minute")
 

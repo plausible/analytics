@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Tracker do
   def plausible_main_config(tracker_script_configuration) do
     %{
       domain: tracker_script_configuration.site.domain,
-      endpoint: "#{PlausibleWeb.Endpoint.url()}/api/event",
+      endpoint: tracker_ingestion_endpoint(),
       hashBasedRouting: tracker_script_configuration.hash_based_routing,
       outboundLinks: tracker_script_configuration.outbound_links,
       fileDownloads: tracker_script_configuration.file_downloads,
@@ -118,5 +118,15 @@ defmodule PlausibleWeb.Tracker do
 
   defp changeset(tracker_script_configuration, config_update, :plugins_api) do
     TrackerScriptConfiguration.plugins_api_changeset(tracker_script_configuration, config_update)
+  end
+
+  defp tracker_ingestion_endpoint() do
+    # :TRICKY: Normally we would use PlausibleWeb.Endpoint.url() here, but
+    # that requires the endpoint to be started. We start the TrackerScriptCache
+    # before the endpoint is started, so we need to use the base_url directly.
+
+    endpoint_config = Application.fetch_env!(:plausible, PlausibleWeb.Endpoint)
+    base_url = Keyword.get(endpoint_config, :base_url)
+    "#{base_url}/api/event"
   end
 end
