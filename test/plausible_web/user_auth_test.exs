@@ -76,7 +76,7 @@ defmodule PlausibleWeb.UserAuthTest do
         conn: conn,
         user: user
       } do
-        team = new_site(owner: user).team
+        team = new_site(owner: user).team |> Plausible.Teams.complete_setup()
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
@@ -189,12 +189,12 @@ defmodule PlausibleWeb.UserAuthTest do
              conn: conn,
              user: user
            } do
-        team = new_site().team
+        team = new_site().team |> Plausible.Teams.complete_setup()
         integration = SSO.initiate_saml_integration(team)
         domain = "example-#{Enum.random(1..10_000)}.com"
         user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
         add_member(team, user: user, role: :editor)
-        another_team = new_site().team
+        another_team = new_site().team |> Plausible.Teams.complete_setup()
         add_member(another_team, user: user, role: :viewer)
 
         {:ok, sso_domain} = SSO.Domains.add(integration, domain)
@@ -211,13 +211,31 @@ defmodule PlausibleWeb.UserAuthTest do
         assert get_session(conn, :user_token)
       end
 
-      defp new_identity(name, email, id \\ Ecto.UUID.generate()) do
-        %SSO.Identity{
-          id: id,
-          name: name,
-          email: email,
-          expires_at: NaiveDateTime.add(NaiveDateTime.utc_now(:second), 6, :hour)
-        }
+      test "passes through for user matching SSO identity with active personal team, redirecting to team",
+           %{
+             conn: conn,
+             user: user
+           } do
+        team = new_site().team
+        integration = SSO.initiate_saml_integration(team)
+        domain = "example-#{Enum.random(1..10_000)}.com"
+        user = user |> Ecto.Changeset.change(email: "jane@" <> domain) |> Repo.update!()
+        add_member(team, user: user, role: :editor)
+        # personal team with site created
+        new_site(owner: user)
+
+        {:ok, sso_domain} = SSO.Domains.add(integration, domain)
+        _sso_domain = SSO.Domains.verify(sso_domain, skip_checks?: true)
+
+        identity = new_identity(user.name, user.email)
+
+        conn =
+          conn
+          |> init_session()
+          |> UserAuth.log_in_user(identity)
+
+        assert redirected_to(conn, 302) == Routes.site_path(conn, :index, __team: team.identifier)
+        assert get_session(conn, :user_token)
       end
     end
   end
